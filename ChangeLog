@@ -1,3 +1,8 @@
+*** 19991024_1 by lusky
+revved patchlevel to b112
+disallow -ve limit on mode #channel +l (db)
+
+
 *** 19991017_1 by lusky
 revved patchlevel to b111
 commented about NO_JOIN_ON_SPLIT being broken in config.h
