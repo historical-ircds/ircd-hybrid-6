@@ -1,3 +1,11 @@
+*** 19990825_1 by lusky
+bumped patchlevel.h to b100
+more kill path fixes (db)
+m_oper fix for local oper flags (db)
+ReadMessageFile stat fix (db)
+cleanup of tools/Makefile.in (jl)
+
+
 *** 19990819_1 by lusky
 call release_client_dns_reply for servers too (th)
 fixes for U and X lines (db)
