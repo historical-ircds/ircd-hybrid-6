@@ -1,3 +1,7 @@
+*** 20010604_7 by leeh
+- commited cryptserv now the conflicts are gone
+
+
 *** 20010604_6 by leeh
 - commited initial revision of HIDE_SERVERS_IPS, to mask servers ips
   from everyone (including opers)
