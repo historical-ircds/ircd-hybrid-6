@@ -405,6 +405,7 @@
 
 #undef CRYPT_LINKS             /* allow encrypted server-server links */
 #define CRYPT_LINKS_CNPREFIX '@'
+#define CRYPT_LINKS_CIPHERPREFIX ','
 #define CRYPT_LINKS_PRIVATEKEYFILE "private.key"
 
 /* USE_EGD -  if your system does not have *random devices and you want to
@@ -709,6 +710,16 @@
  * can be chanopped, but cannot chanop anyone else.
  */
 #define LITTLE_I_LINES
+
+/* -----------------  approved on EFnet section -------------------- 
+ *
+ * if you are not an efnet admin, you might want to undefine some of
+ * these.. -db
+ */
+
+/* If this is defined, hack ops is simply not allowed at all
+ */
+#define NO_HACK_OPS
 
 /* ----------------- not approved on EFnet section -------------------- 
  *

@@ -733,6 +733,16 @@
  */
 #define LITTLE_I_LINES
 
+/* -----------------  approved on EFnet section -------------------- 
+ *
+ * if you are not an efnet admin, you might want to undefine some of
+ * these.. -db
+ */
+
+/* If this is defined, hack ops is simply not allowed at all
+ */
+#define NO_HACK_OPS
+
 /* ----------------- not approved on EFnet section -------------------- 
  *
  * if you are not an efnet admin, you might want to define some of

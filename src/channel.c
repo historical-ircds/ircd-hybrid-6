@@ -3674,12 +3674,17 @@ int     m_sjoin(struct Client *cptr,
     tstosend = oldts;
   else if (newts < oldts)
     {
+#ifdef NO_HACK_OPS
+      keep_our_modes = NO;
+      chptr->channelts = tstosend = newts;
+#else
       if (doesop)
         keep_our_modes = NO;
       if (haveops && !doesop)
           tstosend = oldts;
       else
         chptr->channelts = tstosend = newts;
+#endif
     }
   else
     {
