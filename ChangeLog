@@ -1,3 +1,9 @@
+*** 20010611_3 by greg
+check if the pid we read from PPATH is ourselves .. handles /restarts.
+
+(thanks for pointing this out goes to Walter)
+
+
 *** 20010611_2 by leeh
 - do CHANMODE_E a different way.. we can *always* support them, just 
   ignoring clients doing mode +e, (not -e) and exempts on join..
