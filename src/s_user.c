@@ -2865,12 +2865,12 @@ int	m_quit(aClient *cptr,
 	    }
 
 	  /* If its a client that has joined at least one channel
-	   * but not messaged anyone at all.. it might be trying to exit
-	   * with a spam message.
+	   * but not messaged anyone or a channel at all.. it might
+	   * be trying to exit with a spam message.
 	   */
 
 	  if(sptr->last_join_time &&
-	     !sptr->person_privmsgs && !sptr->channel_privmsgs)
+	     !(sptr->person_privmsgs | sptr->channel_privmsgs))
 	    {
 	      sendto_realops("Possible spambot exiting %s [%s@%s] [%s]",
 			     sptr->name, sptr->user->username,
