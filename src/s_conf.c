@@ -1470,7 +1470,7 @@ int 	initconf(int opt, int fd,int use_include)
 
   Reg	char	*tmp, *s;
   int	i, dontadd;
-  char	line[512];
+  char	line[BUFSIZE];
   int	ccount = 0, ncount = 0;
   u_long vaddr;
   aConfItem *aconf = NULL;

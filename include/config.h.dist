@@ -72,17 +72,6 @@
 
 #include "defs.h"
 
-/* USE_FAST_FD_ISSET - experimental! - crawl inside of FD_ISSET macro
- * This one is experimental, though it works on SUNOS and freebsd
- * It is NOT portable, and "crawls" carnally inside the FD_ISSET macro
- * but should be a faster way of doing select() in s_bsd.c
- *
- * The idea is to pre-calculate the bit map mask needed shifting it
- * over as needed, the FD_ISSET calculates the bitmask and array
- * offset every single time.
- */
-#define USE_FAST_FD_ISSET
-
 /* DPATH SPATH CPATH MPATH KPATH - directoy and files locations
  * Full pathnames and defaults of irc system's support files. Please note that
  * these are only the recommended names and paths. Change as needed.

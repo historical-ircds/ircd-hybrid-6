@@ -4730,7 +4730,8 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
 {
   int   in, out;
   int	pairme = NO;
-  char	buf[256], buff[256];
+  char	buf[BUFSIZE];
+  char  buff[BUFSIZE];	/* matches line definition in s_conf.c */
   char	temppath[256];
 
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
@@ -4884,7 +4885,7 @@ K:bar:No reason (1997/08/30 14.56):foo
 	  char *found_user;
 	  char *found_comment;
 
-	  strcpy(buff,buf);
+	  strncpy(buff,buf,BUFSIZ);	/* extra paranoia */
 
 	  p = strchr(buff,'\n');
 	  if(p)

@@ -890,16 +890,6 @@ static	int	bad_command()
 #define LOADCFREQ 5	/* every 5s */
 #define LOADRECV 40	/* 40k/s */
 
-/* following section is for experimental use 
- * READ_CLIENTS_NUM down through do_read_message
- */
-#define READ_CLIENTS_NUM 3	/* read connected clients (non oper/server) */
-#define READ_MESSAGE_NUM 7	/* read everything */
-
-int do_read_clients = 0;
-int do_read_message = 0;
-/* end of experimental use section */
-
 int lifesux = 1;
 int LRV = LOADRECV;
 time_t LCF = LOADCFREQ;
@@ -1497,8 +1487,11 @@ time_t io_loop(time_t delay)
   io_loop_count++;
 #endif
 
+  /* non blocking read servers, i.e. no select() */
   read_servers();
-  read_opers();
+  /* non blocking read opers, i.e. no select() */
+  read_opers(); 
+  /* read using select() */
   read_message(delay);
   if(lifesux)
     read_servers();

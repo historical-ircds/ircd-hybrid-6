@@ -1044,13 +1044,13 @@ void	close_connection(aClient *cptr)
 	    close_connection(cptr->acpt);
 	}
     }
+
   for (; highest_fd > 0; highest_fd--)
     if (local[highest_fd])
       break;
 
   det_confs_butmask(cptr, 0);
   cptr->from = NULL; /* ...this should catch them! >:) --msa */
-
 }
 #ifdef MAXBUFFERS
 /*
@@ -1486,7 +1486,6 @@ int read_packet(aClient *cptr, int msg_ready)
       return 1;
 }
 
-
 void read_servers()
 {
   register aClient *cptr;
@@ -1517,35 +1516,6 @@ void read_clients()
     }
 }
 
-  /*
-    USE_FAST_FD_ISSET
-
-    The idea with this, is to save the compute over and over again
-    of nearly the same thing. 
-
-    In SUNOS and BSD the following is done for a FD_ISSET
-
-    (p)->fd_bits[(n)/NFDBITS] & (1 << ((n) % NFDBITS)))
-
-
-    Thats one divide, one left shift, and one AND for every case
-    of FD_ISSET used.
-    What I have done here, is saved the last value of offset, and mask
-    and increment them for use on the next fd. hopefully adding up to
-    some CPU savings.
-
-    The caveats are the following:
-
-    1) sizeof(NFDBITS) != sizeof(int) 
-
-    2) structure element fd_bits might not be, i.e. its linux or some
-       variant.
-
-       i.e. basically, we now have carnal knowledge of the internals
-       of what happens in an FD_ISSET()
-
-       -Dianora
-   */
 
 /*
  * Check all connections for new connections and input data that is to be
@@ -1564,16 +1534,11 @@ void read_clients()
 #endif
   time_t	delay2 = delay, now;
   u_long	usec = 0;
-  int  auth = 0;
   int	res, length, fd;
+  int	auth = 0;
   register int i;
   int rr;
   time_t	last_full_to_opers_notice = (time_t)0;
-#ifdef USE_FAST_FD_ISSET
-  int fd_mask;
-  int fd_offset;
-#endif
-
 
 #ifdef	pyr
   (void) gettimeofday(&nowt, NULL);
@@ -1582,168 +1547,75 @@ void read_clients()
   now = timeofday;
 #endif
 
-  FD_ZERO(read_set);
-  FD_ZERO(write_set);
-
-#ifdef USE_FAST_FD_ISSET
-  fd_mask = 1;
-  fd_offset = 0;
-#endif
-
-  /*
-  if(delay > 1)
+  for (res = 0;;)
     {
-      wait.tv_sec = 0;
-      wait.tv_usec = 500000;
-      select(0,(fd_set *)NULL,(fd_set *)NULL,(fd_set *)NULL,&wait);
-    }
-    */
+      FD_ZERO(read_set);
+      FD_ZERO(write_set);
 
-  /* First part, fill in the fd sets with the bits for
-   * each fd to look for in the select()
-   */
-
-  for(i=0;i<=highest_fd;i++)
-    {
-      if (!(cptr = local[i]))
+      for(i=0; i <= highest_fd; i++)
 	{
-#ifdef USE_FAST_FD_ISSET
-	  fd_mask <<= 1;
-	  if(!fd_mask)
+	  if (!(cptr = local[i]))
+	    continue;
+	  if (IsLog(cptr))
+	    continue;
+	  if (DoingAuth(cptr))
 	    {
-	      fd_offset++;
-	      fd_mask = 1;
+	      auth++;
+	      Debug((DEBUG_NOTICE,"auth on %x %d", cptr, i));
+	      FD_SET(cptr->authfd, read_set);
+	      if (cptr->flags & FLAGS_WRAUTH)
+		FD_SET(cptr->authfd, write_set);
 	    }
-#endif
-	  continue;
-	}
-
-#ifdef DEBUGMODE
-      if (IsLog(cptr))
-	{
-#ifdef USE_FAST_FD_ISSET
-	  fd_mask <<= 1;
-	  if(!fd_mask)
+	  if (DoingDNS(cptr) || DoingAuth(cptr))
+	    continue;
+	  if (IsMe(cptr) && IsListening(cptr))
 	    {
-	      fd_offset++;
-	      fd_mask = 1;
-	    }
-#endif
-	  continue;
-	}
-#endif
-
-      if (DoingAuth(cptr))
-	{
-	  auth++;
-	  Debug((DEBUG_NOTICE,"auth on %x %d", cptr, i));
-	  FD_SET(cptr->authfd, read_set);
-	  if (cptr->flags & FLAGS_WRAUTH)
-	    FD_SET(cptr->authfd, write_set);
-
-#ifdef USE_FAST_FD_ISSET
-	  fd_mask <<= 1;
-	  if(!fd_mask)
-	    {
-	      fd_offset++;
-	      fd_mask = 1;
-	    }
-#endif
-	  continue;
-	}
-
-      if (DoingDNS(cptr))
-	{
-#ifdef USE_FAST_FD_ISSET
-	  fd_mask <<= 1;
-	  if(!fd_mask)
-	    {
-	      fd_offset++;
-	      fd_mask = 1;
-	    }
-#endif
-	  continue;
-	}
-
-      if (IsMe(cptr))
-	{
-	  if(IsListening(cptr))
-	    {
-#ifdef USE_FAST_FD_ISSET
-	      read_set->fds_bits[fd_offset] |= fd_mask;
-#else
 	      FD_SET(i, read_set);
-#endif
 	    }
-	}
-      else /* if(!IsMe(cptr)) */
-	{
-	  if (DBufLength(&cptr->recvQ) && delay2 > 2)
-	    delay2 = 1;
-	  if (DBufLength(&cptr->recvQ) < 4088)	
+	  else if (!IsMe(cptr))
 	    {
-#ifdef USE_FAST_FD_ISSET
-	      read_set->fds_bits[fd_offset] |= fd_mask;
-#else
-	      FD_SET(i, read_set);
-#endif
+	      if (DBufLength(&cptr->recvQ) && delay2 > 2)
+		delay2 = 1;
+	      if (DBufLength(&cptr->recvQ) < 4088)	
+		{
+		  FD_SET(i, read_set);
+		}
 	    }
-	}
 
-      if (DBufLength(&cptr->sendQ) || IsConnecting(cptr)
+	  if (DBufLength(&cptr->sendQ) || IsConnecting(cptr)
 #ifdef ZIP_LINKS
-	  || ((cptr->flags2 & FLAGS2_ZIP) && (cptr->zip->outcount > 0))
+	      || ((cptr->flags2 & FLAGS2_ZIP) && (cptr->zip->outcount > 0))
 #endif
-	  )
+	      )
 #ifndef	pyr
-#ifdef USE_FAST_FD_ISSET
-	  write_set->fds_bits[fd_offset] |= fd_mask;
-#else
 	  FD_SET(i, write_set);
-#endif
 #else
-	{
-	  if (!(cptr->flags & FLAGS_BLOCKED))
-	    {
-#ifdef USE_FAST_FD_ISSET
-	      write_set->fds_bits[fd_offset] |= fd_mask;
-#else
-	      FD_SET(i, write_set);
-#endif
-	    }
+	  {
+	    if (!(cptr->flags & FLAGS_BLOCKED))
+	      {
+		FD_SET(i, write_set);
+	      }
+	    else
+	      delay2 = 0, usec = 500000;
+	  }
+	  if (now - cptr->lw.tv_sec &&
+	      nowt.tv_usec - cptr->lw.tv_usec < 0)
+	    us = 1000000;
 	  else
-	    delay2 = 0, usec = 500000;
-	}
-
-      if (now - cptr->lw.tv_sec &&
-	  nowt.tv_usec - cptr->lw.tv_usec < 0)
-	us = 1000000;
-      else
-	us = 0;
-      us += nowt.tv_usec;
-      if (us - cptr->lw.tv_usec > 500000)
-	cptr->flags &= ~FLAGS_BLOCKED;
+	    us = 0;
+	  us += nowt.tv_usec;
+	  if (us - cptr->lw.tv_usec > 500000)
+	    cptr->flags &= ~FLAGS_BLOCKED;
 #endif
-
-#ifdef USE_FAST_FD_ISSET
-      fd_mask <<= 1;
-      if(!fd_mask)
-	{
-	  fd_offset++;
-	  fd_mask = 1;
 	}
-#endif
-    }
       
-  if (resfd >= 0)
-    {
-      FD_SET(resfd, read_set);
-    }
-  wait.tv_sec = MIN(delay2, delay);
-  wait.tv_usec = usec;
+      if (resfd >= 0)
+	{
+	  FD_SET(resfd, read_set);
+	}
+      wait.tv_sec = MIN(delay2, delay);
+      wait.tv_usec = usec;
 
-  for(res=0;;)
-    {
 #ifdef	HPUX
       nfds = select(FD_SETSIZE, (fd_set *)read_set, (fd_set *)write_set,
 		    (fd_set *)0, &wait);
@@ -1761,16 +1633,9 @@ void read_clients()
         }   
 
       if (nfds == -1 && errno == EINTR)
-	{	
-         return -1;
-	}
-      /* DEBUG */
-      else if(nfds == -1 && errno == EBADF)
 	{
-	  Debug((DEBUG_DEBUG,"EBADF on fd %d",i));
-	  sendto_realops("EBADF on fd %d",i);
+	  return -1;
 	}
-      /* DEBUG */
       else if (nfds >= 0)
 	break;
       report_error("select %s:%s", &me);
@@ -1790,47 +1655,20 @@ void read_clients()
       FD_CLR(resfd, read_set);
     }
 
-#ifdef USE_FAST_FD_ISSET
-  fd_mask = 1;
-  fd_offset = 0;
-#endif
-
   for ( i = 0; i <= highest_fd; i++ )
     {
       if (!(cptr = local[i]))
-	{
-#ifdef USE_FAST_FD_ISSET
-	  fd_mask <<= 1;
-	  if(!fd_mask)
-	    {
-	      fd_offset++;
-	      fd_mask = 1;
-	    }
-#endif
-	  continue;
-	}
+	continue;
   
-#ifdef DEBUGMODE
       if(IsLog(cptr))
-	{
-	  Debug((DEBUG_NOTICE,"trying to read stderr"));
-#ifdef USE_FAST_FD_ISSET
-	  fd_mask <<= 1;
-	  if(!fd_mask)
-	    {
-	      fd_offset++;
-	      fd_mask = 1;
-	    }
-#endif
-	  continue;
-	}
-#endif
+	continue;
     
       /*
        * Check the auth fd's first...
        */
-      if (DoingAuth(cptr) && (cptr->authfd >= 0))
+      if ((auth>0) && (cptr->authfd >= 0))
 	{
+	  auth--;
 	  if ((nfds > 0) && FD_ISSET(cptr->authfd, write_set))
 	    {
 	      nfds--;
@@ -1847,22 +1685,13 @@ void read_clients()
        * Now see if there's a connection pending...
        */
 
-#ifdef USE_FAST_FD_ISSET
-      if (IsListening(cptr) &&
-	  (read_set->fds_bits[fd_offset] & fd_mask))
-#else
       if (IsListening(cptr) && FD_ISSET(i, read_set))
-#endif
 	{
 	  static struct sockaddr_in	addr;
 	  int addrlen = sizeof(struct sockaddr_in);
 	  char host[HOSTLEN+2];
 
-#ifdef USE_FAST_FD_ISSET
-	  read_set->fds_bits[fd_offset] &= ~fd_mask;
-#else
 	  FD_CLR(i, read_set);
-#endif
 	  nfds--;
 	  cptr->lasttime = timeofday;
 	  /*
@@ -1900,14 +1729,6 @@ void read_clients()
 #endif
 
 	      (void)close(fd);
-#ifdef USE_FAST_FD_ISSET
-	      fd_mask <<= 1;
-	      if(!fd_mask)
-		{
-		  fd_offset++;
-		  fd_mask = 1;
-		}
-#endif
 	      continue;
 	    }
 
@@ -1937,30 +1758,13 @@ void read_clients()
 	      cptr->acpt = &me;
 	  }
 
-#ifdef USE_FAST_FD_ISSET
-      if (IsMe(cptr))
-	{
-	  fd_mask <<= 1;
-	  if(!fd_mask)
-	    {
-	      fd_offset++;
-	      fd_mask = 1;
-	    }
-	  continue;
-	}
-#else
       if (IsMe(cptr))
 	continue;
-#endif
 
       /*
        * See if we can write...
        */
-#ifdef USE_FAST_FD_ISSET
-      if (write_set->fds_bits[fd_offset] & fd_mask)
-#else
       if (FD_ISSET(i, write_set))
-#endif
 	{
 	  int	write_err = 0;
 	  nfds--;
@@ -1974,110 +1778,45 @@ void read_clients()
 	    (void)send_queued(cptr);
 	  if (IsDead(cptr) || write_err)
 	    {
-#ifdef USE_FAST_FD_ISSET
-	      if( read_set->fds_bits[fd_offset] & fd_mask)
-		{
-		  nfds--;
-		  read_set->fds_bits[fd_offset] &= ~fd_mask;
-		}
-#else
 	      if (FD_ISSET(i, read_set))
 		{
 		  nfds--;
 		  FD_CLR(i, read_set);
 		}
-#endif
 	      (void)exit_client(cptr, cptr, &me,
 				(cptr->flags & FLAGS_SENDQEX) ? 
 				"SendQ Exceeded" :
 				strerror(get_sockerr(cptr)));
-#ifdef USE_FAST_FD_ISSET
-	      fd_mask <<= 1;
-	      if(!fd_mask)
-		{
-		  fd_offset++;
-		  fd_mask = 1;
-		}
-#endif
 	      continue;
 	    }
 	}
       length = 1;	/* for fall through case */
       rr = 0;
-#ifdef USE_FAST_FD_ISSET
-      rr = read_set->fds_bits[fd_offset] & fd_mask;
-
-      if (!NoNewLine(cptr) || rr)
-	length = read_packet(cptr, rr);
-#else
       rr = FD_ISSET(i, read_set);
       if (!NoNewLine(cptr) || rr)
 	length = read_packet(cptr, rr);
-#endif
 #ifdef DEBUGMODE
        readcalls++;
 #endif
 
       if ((length != FLUSH_BUFFER) && IsDead(cptr))
 	{
-#ifdef USE_FAST_FD_ISSET
-	  if( read_set->fds_bits[fd_offset] & fd_mask)
-	    {
-	      nfds--;
-	      read_set->fds_bits[fd_offset] &= ~fd_mask;
-	    }
-#else
 	  if (FD_ISSET(i, read_set))
 	    {
 	      nfds--;
 	      FD_CLR(i, read_set);
 	    }
-#endif
 	  (void)exit_client(cptr, cptr, &me,
 			    (cptr->flags & FLAGS_SENDQEX) ? "SendQ Exceeded" :
 			    strerror(get_sockerr(cptr)));
-#ifdef USE_FAST_FD_ISSET
-	  fd_mask <<= 1;
-	  if(!fd_mask)
-	    {
-	      fd_offset++;
-	      fd_mask = 1;
-	    }
-#endif
 	  continue;
 	}
-#ifdef USE_FAST_FD_ISSET
-      if((read_set->fds_bits[fd_offset] & fd_mask) && length > 0)
-	{
-	  fd_mask <<= 1;
-	  if(!fd_mask)
-	    {
-	      fd_offset++;
-	      fd_mask = 1;
-	    }
-	  continue;
-	}
-#else
       if (!FD_ISSET(i, read_set) && length > 0)
 	continue;
-#endif
       nfds--;
 
-#ifdef USE_FAST_FD_ISSET
-      if (length > 0)
-	{
-	  fd_mask <<= 1;
-	  if(!fd_mask)
-	    {
-	      fd_offset++;
-	      fd_mask = 1;
-	    }
-	  continue;
-	}
-#else
       if (length > 0)
 	continue;
-#endif    
       /*
       ** ...hmm, with non-blocking sockets we might get
       ** here from quite valid reasons, although.. why
@@ -2108,15 +1847,6 @@ void read_clients()
 	  (void)ircsprintf(errmsg,"Read error: %d (%s)",errno,strerror(errno));
 	  (void)exit_client(cptr, cptr, &me, errmsg);
 	}
-
-#ifdef USE_FAST_FD_ISSET
-      fd_mask <<= 1;
-      if(!fd_mask)
-	{
-	  fd_offset++;
-	  fd_mask = 1;
-	}
-#endif
     }
   return 0;
 }
@@ -2189,14 +1919,7 @@ int	read_message(time_t delay)
   register	int i;
   static aClient	*authclnts[MAXCONNECTIONS];
   char		errmsg[255];
-  /*
-  if(delay > 1)
-    {
-      wait.tv_sec = 0;
-      wait.tv_usec = 500000;
-      select(0,(fd_set *)NULL,(fd_set *)NULL,(fd_set *)NULL,&wait);
-    }
-    */
+
   for (res = 0;;)
     {
       nbr_pfds = 0;

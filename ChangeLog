@@ -1,6 +1,10 @@
 
 *** HYBRID CHANGELOG
 *** Newest entries at top
+
+version hybrid-6-b46   15-Feb-1999
+* FAST_FD_ISSET was causing the high CPU, *sigh* ok ripped out for now
+-Dianora
 	
 version hybrid-6-b45    9-Feb-1999
 * may as well use the same numeric for not being able to join a channel
