@@ -342,9 +342,25 @@ int	m_squit(aClient *cptr,
       /*
       ** This is actually protocol error. But, well, closing
       ** the link is very proper answer to that...
+      **
+      ** Closing the client's connection probably wouldn't do much
+      ** good.. any oper out there should know that the proper way
+      ** to disconnect is /QUIT :)  -- David-R
+      **
+      ** its still valid if its not a local client, its then
+      ** a protocol error for sure -Dianora
       */
-      server = cptr->sockhost;
-      acptr = cptr;
+      if(MyClient(sptr))
+        {
+          sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+               me.name, parv[0], "SQUIT");
+          return 0;
+        }
+      else
+        {
+          server = cptr->sockhost;
+          acptr = cptr;
+        }
     }
 
   /*
