@@ -2428,7 +2428,7 @@ int	m_stats(aClient *cptr,
               }
             else
               {
-                if(IsAnOper(acptr) || IsServer(acptr))
+                if(IsIPHidden(acptr) || IsServer(acptr))
                   sendto_one(sptr, Lformat, me.name,
                      RPL_STATSLINKINFO, parv[0],
                      get_client_name(acptr, HIDEME),
@@ -6009,7 +6009,7 @@ int	m_trace(aClient *cptr,
           sendto_one(sptr, rpl_str(RPL_TRACEOPERATOR),
                      me.name, parv[0], class,
 		     name, 
-		     IsAnOper(sptr)?ip:"255.255.255.255",
+		     IsAnOper(sptr)?ip:"127.0.0.1",
 		     now - acptr->lasttime,
 		     (acptr->user)?(now - acptr->user->last):0);
         }
@@ -6017,7 +6017,9 @@ int	m_trace(aClient *cptr,
         {
           sendto_one(sptr,rpl_str(RPL_TRACEUSER),
                      me.name, parv[0], class,
-		     name, ip, now - acptr->lasttime,
+		     name, 
+		     IsIPHidden(acptr)?"127.0.0.1":ip,
+		     now - acptr->lasttime,
 		     (acptr->user)?(now - acptr->user->last):0);
         }
       sendto_one(sptr, rpl_str(RPL_ENDOFTRACE),me.name,
@@ -6115,13 +6117,15 @@ int	m_trace(aClient *cptr,
 			   rpl_str(RPL_TRACEOPERATOR),
 			   me.name,
 			   parv[0], class,
-			   name, IsAnOper(sptr)?ip:"255.255.255.255",
+			   name, IsAnOper(sptr)?ip:"127.0.0.1",
 			   now - acptr->lasttime,
 			   (acptr->user)?(now - acptr->user->last):0);
 	      else
 		sendto_one(sptr,rpl_str(RPL_TRACEUSER),
 			   me.name, parv[0], class,
-			   name, ip, now - acptr->lasttime,
+			   name,
+			   IsIPHidden(acptr)?"127.0.0.1":ip,
+			   now - acptr->lasttime,
 			   (acptr->user)?(now - acptr->user->last):0);
 	      cnt++;
 	    }
@@ -6301,7 +6305,7 @@ int	m_ltrace(aClient *cptr,
 			   rpl_str(RPL_TRACEOPERATOR),
 			   me.name, parv[0], class,
 			   name, 
-			   IsAnOper(sptr)?ip:"255.255.255.255", 
+			   IsAnOper(sptr)?ip:"127.0.0.1", 
 			   now - acptr->lasttime,
 			   (acptr->user)?(now - acptr->user->last):0);
 	      cnt++;

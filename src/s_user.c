@@ -3526,6 +3526,7 @@ int	m_oper(aClient *cptr,
 	    SetOper(sptr);
 	    sptr->flags |= (OPER_UMODES);
 	  }
+      SetIPHidden(sptr);
       Count.oper++;
       *--s =  '@';
       SetElined(cptr);
@@ -3777,7 +3778,7 @@ int     m_usrip(aClient *cptr,
 	  }
 	else
 	  {
-	    if(IsAnOper(acptr))
+	    if(IsIPHidden(acptr))
 	       (void)ircsprintf(buf2, "%s%s=%c%s@127.0.0.1",
 				acptr->name,
 				IsAnOper(acptr) ? "*" : "",

@@ -245,6 +245,8 @@ int	attach_Iline(aClient *cptr,
 			     cptr->name,host,cptr->hostip,me.name);
 	      strncpyzt(cptr->sockhost,"oper.",sizeof(cptr->sockhost));
 	      strcat(cptr->sockhost,me.name);
+	      SetIPSpoof(cptr);
+	      SetIPHidden(cptr);
 	    }
 	  else
 	    strncpyzt(cptr->sockhost,host,sizeof(cptr->sockhost));

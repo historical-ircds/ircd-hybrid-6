@@ -2,6 +2,12 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b59   17-Apr-1999
+* if client is being spoofed in I line, don't show real IP to non opers
+  in trace or stats L
+* consistently use 127.0.0.1 for spoofed/oper ip's	
+-Dianora
+	
 version hybrid-6-b58   17-Apr-1999
 * SOLARIS7 64bit USERS: this code appears to tickle a bug in gcc and egcs
   ONLY on 64-bit Solaris7.  You must compile on a 32bit kernel, then you

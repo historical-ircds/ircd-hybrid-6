@@ -246,7 +246,9 @@ typedef struct	MessageFileItem aMessageFile;
 #define FLAGS2_IDLE_LINED   0x10000
 #endif
 #define FLAGS2_ALREADY_EXITED	0x20000 /* kludge grrrr */
-#define FLAGS2_IP_SPOOFING	0x40000
+#define FLAGS2_IP_SPOOFING	0x40000	/* client IP is spoofed */
+#define FLAGS2_IP_HIDDEN	0x80000	/* client IP should be hidden
+					   from non opers */
 
 /* for sendto_ops_lev */
 #define CCONN_LEV	1
@@ -342,7 +344,10 @@ typedef struct	MessageFileItem aMessageFile;
 #define SetBlined(x)		((x)->flags2 |= FLAGS2_B_LINED)
 #define IsFlined(x)		((x)->flags2 & FLAGS2_F_LINED)
 #define SetFlined(x)		((x)->flags2 |= FLAGS2_F_LINED)
+#define SetIPSpoof(x)		((x)->flags2 |= FLAGS2_IP_SPOOFING)
 #define IsIPSpoof(x)		((x)->flags2 & FLAGS2_IP_SPOOFING)
+#define SetIPHidden(x)		((x)->flags2 |= FLAGS2_IP_HIDDEN)
+#define IsIPHidden(x)		((x)->flags2 & FLAGS2_IP_HIDDEN)
 
 #ifdef IDLE_CHECK
 #define SetIdlelined(x)		((x)->flags2 |= FLAGS2_IDLE_LINED)
