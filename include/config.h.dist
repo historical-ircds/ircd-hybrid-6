@@ -699,12 +699,14 @@
 
 /* ----------------- not approved on EFnet section --------------------
  *
- * if you are an efnet admin, some of these are not officially supported, so
- * you may want to undef some -- fl_
+ * if you are not an efnet admin - we recommend you enable most of these.. 
+ * --fl_
  */
 
 /* Ignore bogus timestamps from other servers. Yes this will desync
  * the network, but it will allow chanops to resync with a valid non TS 0
+ *
+ * This should be enabled network wide, or not at all.
  */
 #undef  IGNORE_BOGUS_TS
 
