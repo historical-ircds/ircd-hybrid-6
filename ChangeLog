@@ -1,3 +1,8 @@
+*** 20011204_5 by androsyn
+Going to need libadns linked in to do something useful with that there
+fangled thing
+
+
 *** 20011204_4 by androsyn
 It be nice if I committed adns.c into the tree
 
