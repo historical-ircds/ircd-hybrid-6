@@ -31,11 +31,4 @@ struct Client;
 
 extern  int     parse (struct Client *, char *, char *);
 extern  void    init_tree_parse (struct Message *);
-extern struct Client* find_chasing (struct Client *, char *, int *);
-extern struct Client* find_client(const char* name, struct Client* client);
-extern struct Client* find_name (char *, struct Client *);
-extern struct Client* find_person (char *, struct Client *);
-extern struct Client* find_server(const char* name, struct Client* dflt_client);
-extern struct Client* find_userhost (char *, char *, struct Client *, int *);
-
 #endif /* INCLUDED_parse_h_h */

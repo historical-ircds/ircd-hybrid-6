@@ -528,4 +528,12 @@ extern void     count_remote_client_memory(int *, int *);
 extern  int     check_registered (struct Client *);
 extern  int     check_registered_user (struct Client *);
 
+extern struct Client* find_chasing (struct Client *, char *, int *);
+extern struct Client* find_client(const char* name, struct Client* client);
+extern struct Client* find_server_by_name(const char* name);
+extern struct Client* find_person (char *, struct Client *);
+extern struct Client* find_server(const char* name);
+extern struct Client* find_userhost (char *, char *, struct Client *, int *);
+
+
 #endif /* INCLUDED_client_h */

@@ -66,8 +66,7 @@ extern struct Channel* hash_find_channel(const char* name,
                                          struct Channel* chan);
 extern struct Client* hash_find_client(const char* name, 
                                        struct Client* client);
-extern struct Client* hash_find_server(const char* name, 
-                                       struct Client* client);
+extern struct Client* hash_find_server(const char* name);
 
 #endif  /* INCLUDED_hash_h */
 
