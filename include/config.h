@@ -406,12 +406,23 @@
 /* CRYPT_LINKS - Enable encrypted links between one server and another by
  * use of a defineable password prefix. Requires the other defines below.
  */
+/* Warning: As of 8/7/2001 this is not allowed on EFnet, and it was
+ * implemented due to confusion relating to what was approved by the CFV
+ * -A1kmm */
 #undef CRYPT_LINKS
+
+#ifndef CRYPTLINKS
+/* A less CPU intensive alternative to cryptlinks... */
+#define USE_KSERVER
+#endif
 
 /* CRYPT_LINKS_CNPREFIX - This is the prefix that will go in a c/n password
  * field to indicate this will be an encrypted link.
  */
 #define CRYPT_LINKS_CNPREFIX '@'
+/* KSERVER_CNPREFIX - The same but for c/n password field for KSERVERs.
+ */
+#define KSERVER_CNPREFIX '%'
 
 /* CRYPT_LINKS_CIPHERPREFIX - This is the character that delimits the public
  * key filename for a server and the prefered crypt preference.

@@ -18,179 +18,9 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *   $Id$
  */
 
-/*
- * $Id$
- *
- * $Log$
- * Revision 1.46  2001/06/16 15:47:02  db
- * - ok fixed a "dropped c line" bug. the problem was, both the hostname
- *   and servername have to match in attach_cn_lines, thats because
- *   you could have two servers on the same ip with different server names
- * - also fixed a minor typo here and there
- *
- * Revision 1.45  2000/12/01 06:28:47  lusky
- * added Gline Exemption flag ('_') to Ilines
- *
- * Revision 1.44  2000/08/22 05:03:55  lusky
- * added support for CIDR IP tklines, just like normal klines
- *
- * Revision 1.43  1999/08/10 03:32:14  lusky
- * remove <sys/syslog.h> check from configure, assume <syslog.h> exists (sw)
- * cleaned up attach_Iline some more (db)
- *
- * Revision 1.41  1999/07/29 07:06:48  tomh
- * new m_commands
- *
- * Revision 1.40  1999/07/28 05:00:41  tomh
- * Finish net cleanup of connects (mostly).
- * NOTE: Please check this carefully to make sure it still works right.
- * The original code was entirely too twisted to be sure I got everything right.
- *
- * Revision 1.39  1999/07/27 00:51:53  tomh
- * more connect cleanups
- *
- * Revision 1.38  1999/07/26 05:46:35  tomh
- * new functions for s_conf cleaning up connect
- *
- * Revision 1.37  1999/07/25 18:05:06  tomh
- * untangle m_commands
- *
- * Revision 1.36  1999/07/25 17:27:40  db
- * - moved aConfItem defs from struct.h to s_conf.h
- *
- * Revision 1.35  1999/07/24 02:55:45  wnder
- * removed #ifdef for obsolete R_LINES (CONF_RESTRICT as well).
- *
- * Revision 1.34  1999/07/23 02:45:39  db
- * - include file fixes
- *
- * Revision 1.33  1999/07/23 02:38:30  db
- * - more include file fixes
- *
- * Revision 1.32  1999/07/22 03:19:11  tomh
- * work on socket code
- *
- * Revision 1.31  1999/07/22 02:44:22  db
- * - built m_gline.h, scache.h , moved more stuff from h.h
- *
- * Revision 1.30  1999/07/21 23:12:10  db
- * - more h.h pruning
- *
- * Revision 1.29  1999/07/21 21:54:28  db
- * - yet more h.h cleanups, the nightmare that never ends
- *
- * Revision 1.28  1999/07/21 05:45:05  tomh
- * untabify headers
- *
- * Revision 1.27  1999/07/20 09:11:21  db
- * - moved getfield from parse.c to s_conf.c which is the only place its used
- * - removed duplicate prototype from h.h , it was in dline_conf.h already
- * - send.c needs s_zip.h included to know about ziplinks
- *
- * Revision 1.26  1999/07/20 08:28:03  db
- * - more removal of stuff from h.h
- *
- * Revision 1.25  1999/07/20 08:20:33  db
- * - more cleanups from h.h
- *
- * Revision 1.24  1999/07/20 04:37:11  tomh
- * more cleanups
- *
- * Revision 1.23  1999/07/19 09:05:14  tomh
- * Work on char attributes for nick names, changed isvalid macro
- * Const correctness changes
- * Fixed file close bug on successful read
- * Header cleanups
- * Checked all strncpy_irc usage added terminations where needed
- *
- * Revision 1.22  1999/07/18 17:50:52  db
- * - more header cleanups
- *
- * Revision 1.21  1999/07/18 17:27:02  db
- * - a few more header cleanups
- * - motd.c included channel.h, no need
- *
- * Revision 1.20  1999/07/18 07:00:24  tomh
- * add new file
- *
- * Revision 1.19  1999/07/17 03:23:15  db
- * - my bad.
- * - fixed prototype in s_conf.h
- * - fixed typo of password for passwd in s_conf.c
- *
- * Revision 1.18  1999/07/17 03:13:03  db
- * - corrected type casting problems, mainly const char *
- * - moved prototype for safe_write into s_conf.h
- *
- * Revision 1.17  1999/07/16 11:57:31  db
- * - more cleanups
- * - removed unused function in FLUD code
- *
- * Revision 1.16  1999/07/16 09:57:54  db
- * - even more cleanups. moved prototype from h.h to s_conf.h
- *
- * Revision 1.15  1999/07/16 09:36:00  db
- * - rename some function names to make function clearer
- * - moved prototypes into headers
- * - made some functions static
- * - added some needed comments
- *
- * Revision 1.14  1999/07/16 04:16:59  db
- * - optimized get_conf_name
- * - replaced char * with const char * for filename
- *
- * Revision 1.13  1999/07/15 22:26:43  db
- * - fixed core bug in m_kline.c, probably should add extra sanity test there
- *   REDUNDANT_KLINES was using aconf->name instead of aconf->user
- * - cleaning up conf file generation etc.
- *
- * Revision 1.12  1999/07/15 02:45:07  db
- * - added conf_connect_allowed()
- *
- * Revision 1.11  1999/07/15 02:34:18  db
- * - redid m_kline, moved conf file writing from m_kline into s_conf.c
- *   thus "hiding" the details of where the kline gets written..
- *   Temporarily removed Shadowfax's LOCKFILE code until this settles down.
- *
- * Revision 1.10  1999/07/13 01:42:58  db
- * - cleaned up conf file handling, handled by read_conf_files()
- *
- * Revision 1.9  1999/07/11 21:09:35  tomh
- * sockhost cleanup and a lot of other stuff
- *
- * Revision 1.8  1999/07/11 02:44:17  db
- * - redid motd handling completely. most of the motd handling is now
- *   done in motd.c
- *   motd handling includes, motd, oper motd, help file
- *
- * Revision 1.7  1999/07/09 06:55:45  tomh
- * Changed resolver code to use reference counting instead of blind hostent
- * removal. This will ensure that if a client resolved we will always get
- * it's hostent. Currently we are saving the hostent for the life of the client,
- * but it can be released once the access checks are finished so the resolver
- * cache stays reasonably sized.
- *
- * Revision 1.6  1999/07/08 23:04:06  db
- * - fixed goof in s_conf.h
- *
- * Revision 1.5  1999/07/08 22:46:22  db
- * - changes to centralize config.h ircd config files to one struct
- *
- * Revision 1.4  1999/07/04 09:00:48  tomh
- * more cleanup, only call delete_resolver_queries when there are outstanding requests
- *
- * Revision 1.3  1999/07/03 20:24:20  tomh
- * clean up class macros, includes
- *
- * Revision 1.2  1999/07/03 08:13:09  tomh
- * cleanup dependencies
- *
- * Revision 1.1  1999/06/23 00:28:37  tomh
- * added fileio module, changed file read/write code to use fileio, removed dgets, new header s_conf.h, new module files fileio.h fileio.c
- *
- */
 #ifndef INCLUDED_config_h
 #include "config.h"             /* defines */
 #endif
@@ -230,9 +60,11 @@ struct ConfItem
   time_t           hold;     /* Hold action until this time (calendar time) */
   struct Class*    c_class;     /* Class of connection */
   int              dns_pending; /* 1 if dns query pending, 0 otherwise */
-#ifdef CRYPT_LINKS
+#if defined(CRYPT_LINKS) || defined(USE_KSERVER)
   char *           rsa_public_keyfile; /* RSA public key filename */
+#ifdef CRYPT_LINKS
   struct CipherDef *cipher;            /* Cipher selection; ptr to Cipher[] */
+#endif
 #endif
 };
 
@@ -302,7 +134,8 @@ typedef struct QlineItem {
 #ifdef LITTLE_I_LINES
 #define CONF_FLAGS_LITTLE_I_LINE        0x8000
 #endif
-
+#define CONF_FLAGS_ENCRYPTED            0x10000
+#define CONF_FLAGS_KSERVER              0x20000
 
 
 /* Macros for aConfItem */
@@ -316,6 +149,8 @@ typedef struct QlineItem {
 #define IsConfBlined(x)         ((x)->flags & CONF_FLAGS_B_LINED)
 #define IsConfFlined(x)         ((x)->flags & CONF_FLAGS_F_LINED)
 #define IsConfExemptGline(x)    ((x)->flags & CONF_FLAGS_EXEMPTGLINE)
+#define IsConfEncrypted(x)      ((x)->flags & CONF_FLAGS_ENCRYPTED)
+#define IsConfKserver(x)        ((x)->flags & CONF_FLAGS_KSERVER)
 
 #ifdef IDLE_CHECK
 #define IsConfIdlelined(x)      ((x)->flags & CONF_FLAGS_IDLE_LINED)

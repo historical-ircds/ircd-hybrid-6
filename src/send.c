@@ -191,7 +191,7 @@ send_message(aClient *to, char *msg, int len)
                         msg = zip_buffer(to, msg, &len, 0);
 
           #ifdef CRYPT_LINKS
-		if (len && to->crypt)
+		if (len && to->crypt && to->crypt->OutCipher)
 		  if (crypt_encrypt(to, msg, len) == CRYPT_ERROR)
 		    return dead_link(to, "Encryption failure for %s");
 
@@ -200,7 +200,7 @@ send_message(aClient *to, char *msg, int len)
 
         #else /* ZIP_LINKS */
           #ifdef CRYPT_LINKS
-	        if (len && to->crypt)
+	        if (len && to->crypt && to->crypt->OutCipher)
 	          if (crypt_encrypt(to, msg, len) == CRYPT_ERROR)
 		    return dead_link(to, "Encryption failure for %s");
           #endif /* CRYPT_LINKS */

@@ -26,7 +26,7 @@
 
 #include "config.h"
 
-#ifdef CRYPT_LINKS
+#if defined(CRYPT_LINKS) || defined(USE_KSERVER)
 
 #include <openssl/ssl.h>
 #include <openssl/crypto.h>
@@ -101,18 +101,23 @@ struct CipherDef
 
 extern struct CipherDef Ciphers[];
 
+#endif /* CRYPT_LINKS*/
+#if defined(CRYPT_LINKS) || defined(USE_KSERVER)
 struct CryptData
 {
+#ifdef CRYPT_LINKS
   struct CipherDef *InCipher;
   void *            InState;
   unsigned char     inkey[64];
   struct CipherDef *OutCipher;
   void *            OutState;
   unsigned char     outkey[64];
+  int flags; /* XXX Do we even use these? */
+#endif
   RSA *             RSAKey;
-  int               flags;
 };
-
+#endif
+#ifdef CRYPT_LINKS
 
 
 struct CipherDef *crypt_selectcipher(char *);

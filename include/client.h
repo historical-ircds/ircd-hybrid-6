@@ -214,8 +214,10 @@ struct Client
 #ifdef ZIP_LINKS
   struct Zdata*     zip;        /* zip data */
 #endif
-#ifdef CRYPT_LINKS
+#if defined(CRYPT_LINKS) || defined(USE_KSERVER)
   struct CryptData *crypt;      /* Encrypted link info */
+#endif
+#ifdef CRYPT_LINKS
   struct CipherDef *cipher;     /* Supported cipher */
 #endif
   short             lastsq;     /* # of 2k blocks when sendqueued called last*/
