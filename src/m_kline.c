@@ -570,6 +570,29 @@ m_kline(aClient *cptr,
     }
 
   /*
+   * Check for # in user@host
+   */
+
+  if(strchr(host, '#'))
+    {
+#ifdef SLAVE_SERVERS
+      if(!IsServer(sptr))
+#endif
+        sendto_one(sptr, ":%s NOTICE %s :Invalid character '#' in hostname",
+                   me.name, parv[0]);
+      return 0;
+    }
+  if(strchr(user, '#'))
+    { 
+#ifdef SLAVE_SERVERS
+      if(!IsServer(sptr))
+#endif  
+        sendto_one(sptr, ":%s NOTICE %s :Invalid character '#' in username",
+                   me.name, parv[0]);
+      return 0;
+    }   
+
+  /*
    * Now we must check the user and host to make sure there
    * are at least NONWILDCHARS non-wildcard characters in
    * them, otherwise assume they are attempting to kline
