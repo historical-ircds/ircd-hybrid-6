@@ -531,6 +531,8 @@ va_dcl
 	continue;
 
       acptr = lp->value.cptr;
+      if (acptr->from == one)
+	continue;
 
       i = acptr->from->fd;
       if (MyConnect(acptr) && IsRegisteredUser(acptr))

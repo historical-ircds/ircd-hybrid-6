@@ -166,7 +166,7 @@ int     m_whowas(aClient *cptr,
   p = strchr(parv[1],',');
   if(p)
     *p = '\0';
-  s = parv[1];
+  nick = parv[1];
     {
       temp = WHOWASHASH[hash_whowas_name(nick)];
       found = 0;

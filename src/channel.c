@@ -3243,8 +3243,11 @@ int	m_invite(aClient *cptr,
        * The NOTICE is sent from the local server.  -- David-R          */
       if (chptr && (chptr->mode.mode & MODE_INVITEONLY))
 	sendto_channel_type(cptr, &me, chptr, MODE_CHANOP,
-	  ":%s NOTICE %s :%s has invited %s to %s.", me.name, chptr->chname,
-			    parv[0], acptr->name, chptr->chname);
+	  ":%s NOTICE %s :%s has invited %s to %s.",
+			    sptr->name,
+			    chptr->chname,
+			    parv[0],
+			    acptr->name, chptr->chname);
 
     }
 
