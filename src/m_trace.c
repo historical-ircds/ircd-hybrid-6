@@ -217,10 +217,11 @@ int m_trace(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 #if (defined SERVERHIDE) || (defined HIDE_SERVERS_IPS)
                      "255.255.255.255",
 #else
-#ifndef SPOOF_NOTICE
-		             IsIPHidden(acptr)?"255.255.255.255":ip,
+#ifdef HIDE_SPOOF_IPS
+		             IsIPSpoof(acptr) ? "255.255.255.255" : ip,
 #else
-		             IsAnOper(sptr)?ip:(IsIPHidden(acptr)?"255.255.255.255":ip),
+		             IsAnOper(sptr) ? ip : 
+			     (IsIPSpoof(acptr) ? "255.255.255.255" : ip),
 #endif
 #endif
                      now - acptr->lasttime,
@@ -234,10 +235,11 @@ int m_trace(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 #if (defined SERVERHIDE) || (defined HIDE_SERVERS_IPS)
                      "255.255.255.255",
 #else
-#ifndef SPOOF_NOTICE
-		             IsIPHidden(acptr)?"255.255.255.255":ip,
+#ifdef HIDE_SPOOF_IPS
+		             IsIPSpoof(acptr) ? "255.255.255.255" : ip,
 #else
-		             IsAnOper(sptr)?ip:(IsIPHidden(acptr)?"255.255.255.255":ip),
+		             IsAnOper(sptr) ? ip : 
+			     (IsIPSpoof(acptr) ? "255.255.255.255" : ip),
 #endif
 #endif
                      now - acptr->lasttime,
@@ -348,22 +350,24 @@ int m_trace(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
                            me.name,
                            parv[0], c_class,
                            name,
-#ifndef SPOOF_NOTICE
-                           IsIPHidden(acptr)?"255.255.255.255":ip,
+#ifdef HIDE_SPOOF_IPS
+                           IsIPSpoof(acptr) ? "255.255.255.255" : ip,
 #else
-                           IsAnOper(sptr)?ip:(IsIPHidden(acptr)?"255.255.255.255":ip),
-#endif /* !SPOOF_NOTICE */
+                           IsAnOper(sptr) ? ip : 
+			   (IsIPSpoof(acptr) ? "255.255.255.255" : ip),
+#endif /* HIDE_SPOOF_IPS */
                            now - acptr->lasttime,
                            (acptr->user)?(now - acptr->user->last):0);
               else
                 sendto_one(sptr,form_str(RPL_TRACEUSER),
                            me.name, parv[0], c_class,
                            name,
-#ifndef SPOOF_NOTICE
-                           IsIPHidden(acptr)?"255.255.255.255":ip,
+#ifdef HIDE_SPOOF_IPS
+                           IsIPSpoof(acptr) ? "255.255.255.255" : ip,
 #else
-                           IsAnOper(sptr)?ip:(IsIPHidden(acptr)?"255.255.255.255":ip),
-#endif /* !SPOOF_NOTICE */
+                           IsAnOper(sptr) ? ip :
+			   (IsIPSpoof(acptr) ? "255.255.255.255" : ip),
+#endif /* HIDE_SPOOF_IPS */
                            now - acptr->lasttime,
                            (acptr->user)?(now - acptr->user->last):0);
               cnt++;

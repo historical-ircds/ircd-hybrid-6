@@ -132,6 +132,12 @@
  */
 #define HIDE_SERVERS_IPS
 
+/* HIDE_SPOOF_IPS
+ * Define this to hide the ips of people spoofing from /trace etc, the +c
+ * notice and from /stats I
+ */
+#undef HIDE_SPOOF_IPS
+   
 /* HIDE_ERROR_MESSAGES
  * ERROR messages coming from servers can sometimes have IPs in them.
  * This will not show any error messages that are received, a
@@ -333,8 +339,9 @@
 
 /* SPOOF_NOTICE - See a notice when a user connects with a
  * spoofed I: line
- * err, this also will now not show spoofed i-lines to opers who
- * /stats i.
+ *
+ * This will no longer hide spoofed I: or the ips of spoofs, use
+ * HIDE_SPOOF_IPS
  */
 #define SPOOF_NOTICE
 

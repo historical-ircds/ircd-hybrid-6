@@ -736,9 +736,9 @@ static int register_user(aClient *cptr, aClient *sptr,
       sendto_realops_flags(FLAGS_CCONN,
                          "Client connecting: %s (%s@%s) [%s] {%d}",
                          nick, sptr->username, sptr->host,
-#ifndef SPOOF_NOTICE
-                         IsIPHidden(sptr) ? "255.255.255.255" : 
-#endif /* !SPOOF_NOTICE */
+#ifdef HIDE_SPOOF_IPS
+                         IsIPSpoof(sptr) ? "255.255.255.255" : 
+#endif /* HIDE_SPOOF_IPS */
                          inetntoa((char *)&sptr->ip),
                          get_client_class(sptr));
 

@@ -1286,13 +1286,13 @@ void report_mtrie_conf_links(struct Client *sptr, int flags)
           /* Non local opers do not need to know about
            * I lines that do spoofing 
            */
-#ifdef SPOOF_NOTICE
+#ifdef HIDE_SPOOF_IPS
+	  if(IsConfDoSpoofIp(found_conf))
+	    continue;
+#else
           if(!(MyConnect(sptr) && IsAnOper(sptr)) &&
              IsConfDoSpoofIp(found_conf))
             continue;
-#else
-	  if(IsConfDoSpoofIp(found_conf))
-	    continue;
 #endif
           get_printable_conf(found_conf, &name, &host, &pass, &user, &port );
 
@@ -1482,12 +1482,13 @@ report_sub_mtrie(struct Client *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
                       /* Non local opers do not need to know about
                        * I lines that do spoofing
                        */
-#ifdef SPOOF_NOTICE
+#ifdef HIDE_SPOOF_IPS
+		      if (IsConfDoSpoofIp(aconf))
+		        continue;
+#else
                       if(!(MyConnect(sptr) && IsAnOper(sptr))
                          && IsConfDoSpoofIp(aconf))
                         continue;
-#else
-                      if (IsConfDoSpoofIp(aconf)) continue;
 #endif
 
                       c = 'I';
@@ -1532,12 +1533,13 @@ report_sub_mtrie(struct Client *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
                       /* Non local opers do not need to know about
                        * I lines that do spoofing
                        */
-#ifdef SPOOF_NOTICE
+#ifdef HIDE_SPOOF_IPS
+		      if (IsConfDoSpoofIp(aconf))
+		        continue;
+#else
                       if(!(MyConnect(sptr) && IsAnOper(sptr))
                          && IsConfDoSpoofIp(aconf))
                         continue;
-#else
-                      if (IsConfDoSpoofIp(aconf)) continue;
 #endif
 
                       c = 'I';
