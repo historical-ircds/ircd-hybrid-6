@@ -412,6 +412,16 @@
 #define CRYPT_LINKS_CNPREFIX '@'
 #define CRYPT_LINKS_PRIVATEKEYFILE "private.key"
 
+/* USE_EGD -  if your system does not have *random devices and you want to
+ * be able to use OpenSSL and CRYPT_LINKS, define this and option below if
+ * necessary. Beware - EGD is *very* CPU intensitive process when
+ * gathering data for its pool. */
+#undef USE_EGD
+
+/* EGD_POOL - define location of EGD pool. Not necessary for OpenSSL >=
+ * 0.9.7 since it will automagically check locations. */
+#undef EGD_POOL "/var/run/egd-pool"
+
 /* SHOW_INVISIBLE_LUSERS - show invisible clients in LUSERS
  * As defined this will show the correct invisible count for anyone who does
  * LUSERS on your server. On a large net this doesnt mean much, but on a

@@ -542,6 +542,12 @@ int crypt_initserver(struct Client * cptr, struct ConfItem * cline, struct ConfI
   }
   cptr->crypt->RSAKey = rsakey;
 
+  /* Seed OpenSSL PRNG with EGD enthropy pool -kre */
+#if defined USE_EGD && defined EGD_POOL
+  if (RAND_egd(EGD_POOL) == -1)
+    return CRYPT_ERROR;
+#endif /* USE_EGD */
+
   /* Generate our inkey */
   if (!RAND_pseudo_bytes(cptr->crypt->inkey, sizeof(cptr->crypt->inkey)))
     return CRYPT_ERROR;
