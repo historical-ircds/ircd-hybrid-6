@@ -35,3 +35,7 @@ into the next release of ircd-hybrid.  If hybrid crashes on you,
 PLEASE CONTACT ircd-hybrid@the-project.org ASAP with a backtrace of
 the core.  The hybrid team can't fix bugs if no one tells us about them!
 
+There is now a mailing list for general discussion of Hybrid.  To subscribe
+to the Hybrid List, send email to hybrid-request@the-project.org with
+the subject "subscribe".
+

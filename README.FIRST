@@ -19,3 +19,7 @@ NEW DEBUGGING MODE: if you run ircd with the -s flag, it will send
 errors that are normally syslogged to stderr.  This is very useful
 if you don't have syslogging set up and ircd won't run.
 
+There is now a mailing list for general discussion of Hybrid.  To subscribe
+to the Hybrid List, send email to hybrid-request@the-project.org with
+the subject "subscribe".
+
