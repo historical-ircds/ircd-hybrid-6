@@ -1,3 +1,9 @@
+*** 20000820_1 by lusky
+first shot at fixing a really old bug with USE_POLL that would cause the
+  server to not parse queued commands until there was additional activity
+  on the descriptor.
+
+
 *** 20000812_2 by lusky
 yet another test commit
 
