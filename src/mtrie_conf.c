@@ -1527,7 +1527,7 @@ report_sub_mtrie(struct Client *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
               if(aconf->status & flags)
                 {
                   get_printable_conf(aconf, &name, &host, &pass,
-				     &oper_reason, &user, &port)
+				     &oper_reason, &user, &port);
 
                   if (aconf->status == CONF_KILL)
                     {
