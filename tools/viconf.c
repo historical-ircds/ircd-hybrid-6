@@ -19,11 +19,6 @@
  * probably we should have an #ifdef SYSV?
  * -Dianora
  */
-/*
- * USE_RCS assumes "ci" is in PATH, I suppose we should make
- * this CI_PATH or some such in config.h
- * -Dianora
- */
 
 #ifdef SOL20
 #include <wait.h>
@@ -60,21 +55,6 @@ int main(int argc, char *argv[])
       exit(errno);
     }
 
-#ifdef USE_RCS
-  switch(fork())
-    {
-    case -1:
-      fprintf(stderr, "error forking, %d\n", errno);
-      exit(errno);
-    case 0:		/* Child */
-      execlp("ci", "ci", "-l", filename, NULL);
-      fprintf(stderr, "error running ci, %d\n", errno);
-      exit(errno);
-    default:
-      wait(0);
-    }
-#endif
-
   /* ed config file */
   switch(fork())
     {
@@ -90,21 +70,6 @@ int main(int argc, char *argv[])
     default:
       wait(0);
     }
-
-#ifdef USE_RCS
-  switch(fork())
-    {
-    case -1:
-      fprintf(stderr, "error forking, %d\n", errno);
-      exit(errno);
-    case 0:		/* Child */
-      execlp("ci", "ci", "-l", filename, NULL);
-      fprintf(stderr, "error running ci, %d\n", errno);
-      exit(errno);
-    default:
-      wait(0);
-    }
-#endif
 
   unlink(lockpath);
   return 0;
