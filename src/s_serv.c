@@ -659,10 +659,10 @@ int server_estab(struct Client *cptr)
           ServerStats->is_ref++;
           sendto_realops("Username mismatch [%s]v[%s] : %s",
                      n_conf->user, cptr->username,
-#ifndef HIDE_SERVERS_IPS
-                     get_client_name(cptr, TRUE));
-#else
+#ifdef HIDE_SERVERS_IPS
                      get_client_name(cptr, MASK_IP));
+#else
+                     get_client_name(cptr, TRUE));
 #endif
           sendto_one(cptr, "ERROR :No Username Match");
           return exit_client(cptr, cptr, cptr, "Bad User");
@@ -676,10 +676,10 @@ int server_estab(struct Client *cptr)
         {
           zip_free(cptr);
           sendto_realops("Unable to setup compressed link for %s",
-#ifndef HIDE_SERVERS_IPS
-                      get_client_name(cptr, TRUE));
-#else
+#ifdef HIDE_SERVERS_IPS
                       get_client_name(cptr, MASK_IP));
+#else
+                      get_client_name(cptr, TRUE));
 #endif
           return exit_client(cptr, cptr, &me, "zip_init() failed");
         }
@@ -716,10 +716,10 @@ int server_estab(struct Client *cptr)
    * XXX - this should be in s_bsd
    */
   if (!set_sock_buffers(cptr->fd, READBUF_SIZE))
-#ifndef HIDE_SERVERS_IPS
-    report_error(SETBUF_ERROR_MSG, get_client_name(cptr, TRUE), errno);
-#else
+#ifdef HIDE_SERVERS_IPS
     report_error(SETBUF_ERROR_MSG, get_client_name(cptr, MASK_IP), errno);
+#else
+    report_error(SETBUF_ERROR_MSG, get_client_name(cptr, TRUE), errno);
 #endif
 
   /* LINKLIST */
@@ -874,10 +874,10 @@ int server_estab(struct Client *cptr)
   */
   if ((cptr->flags2 & FLAGS2_ZIP) && cptr->zip->out->total_in)
     sendto_realops("Connect burst to %s: %lu, compressed: %lu (%3.1f%%)",
-#ifndef HIDE_SERVERS_IPS
-                get_client_name(cptr, TRUE),
-#else
+#ifdef HIDE_SERVERS_IPS
                 get_client_name(cptr, MASK_IP),
+#else
+                get_client_name(cptr, TRUE),
 #endif
                 cptr->zip->out->total_in,cptr->zip->out->total_out,
                 (100.0*(float)cptr->zip->out->total_out) /
