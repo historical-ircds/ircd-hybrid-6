@@ -1,12 +1,13 @@
-blalloc.o: blalloc.c ../include/blalloc.h ../include/ircd_defs.h \
- ../include/config.h ../include/setup.h ../include/irc_string.h \
+blalloc.o: blalloc.c ../include/config.h ../include/setup.h \
+ ../include/blalloc.h ../include/ircd_defs.h ../include/irc_string.h \
  ../include/s_log.h ../include/send.h
 channel.o: channel.c ../include/channel.h ../include/config.h \
- ../include/setup.h ../include/ircd_defs.h ../include/client.h \
- ../include/dbuf.h ../include/common.h ../include/hash.h \
- ../include/irc_string.h ../include/ircd.h ../include/list.h \
- ../include/numeric.h ../include/s_serv.h ../include/s_user.h \
- ../include/send.h ../include/struct.h ../include/whowas.h
+ ../include/setup.h ../include/ircd_defs.h ../include/m_commands.h \
+ ../include/client.h ../include/dbuf.h ../include/common.h \
+ ../include/flud.h ../include/hash.h ../include/irc_string.h \
+ ../include/ircd.h ../include/list.h ../include/numeric.h \
+ ../include/s_serv.h ../include/s_user.h ../include/send.h \
+ ../include/struct.h ../include/whowas.h
 class.o: class.c ../include/class.h ../include/client.h \
  ../include/config.h ../include/setup.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/common.h ../include/ircd.h \
@@ -17,12 +18,13 @@ client.o: client.c ../include/client.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../include/dbuf.h \
  ../include/class.h ../include/blalloc.h ../include/channel.h \
  ../include/common.h ../include/dline_conf.h ../include/fdlist.h \
- ../include/hash.h ../include/irc_string.h ../include/ircd.h \
- ../include/list.h ../include/m_gline.h ../include/numeric.h \
- ../include/res.h ../include/s_bsd.h ../include/s_conf.h \
- ../include/fileio.h ../include/motd.h ../include/s_log.h \
- ../include/s_misc.h ../include/s_serv.h ../include/send.h \
- ../include/struct.h ../include/whowas.h ../include/s_debug.h
+ ../include/flud.h ../include/hash.h ../include/irc_string.h \
+ ../include/ircd.h ../include/list.h ../include/m_gline.h \
+ ../include/numeric.h ../include/res.h ../include/s_bsd.h \
+ ../include/s_conf.h ../include/fileio.h ../include/motd.h \
+ ../include/s_log.h ../include/s_misc.h ../include/s_serv.h \
+ ../include/send.h ../include/struct.h ../include/whowas.h \
+ ../include/s_debug.h
 dbuf.o: dbuf.c ../include/dbuf.h ../include/config.h \
  ../include/setup.h ../include/common.h ../include/irc_string.h \
  ../include/ircd_defs.h
@@ -42,12 +44,13 @@ flud.o: flud.c ../include/flud.h ../include/config.h \
  ../include/list.h ../include/numeric.h ../include/send.h \
  ../include/channel.h ../include/struct.h ../include/blalloc.h \
  ../include/s_stats.h
-hash.o: hash.c ../include/s_conf.h ../include/config.h \
- ../include/setup.h ../include/fileio.h ../include/ircd_defs.h \
- ../include/motd.h ../include/channel.h ../include/client.h \
- ../include/dbuf.h ../include/common.h ../include/hash.h \
- ../include/irc_string.h ../include/ircd.h ../include/numeric.h \
- ../include/send.h ../include/struct.h ../include/s_debug.h
+hash.o: hash.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/s_conf.h ../include/fileio.h \
+ ../include/ircd_defs.h ../include/motd.h ../include/channel.h \
+ ../include/client.h ../include/dbuf.h ../include/common.h \
+ ../include/hash.h ../include/irc_string.h ../include/ircd.h \
+ ../include/numeric.h ../include/send.h ../include/struct.h \
+ ../include/s_debug.h
 irc_string.o: irc_string.c ../include/irc_string.h \
  ../include/ircd_defs.h ../include/config.h ../include/setup.h \
  ../include/list.h
@@ -113,24 +116,24 @@ m_error.o: m_error.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/common.h ../include/ircd.h \
  ../include/numeric.h ../include/send.h ../include/s_debug.h
-m_gline.o: m_gline.c ../include/m_gline.h ../include/config.h \
- ../include/setup.h ../include/ircd_defs.h ../include/channel.h \
- ../include/client.h ../include/dbuf.h ../include/common.h \
- ../include/dline_conf.h ../include/irc_string.h ../include/ircd.h \
- ../include/m_kline.h ../include/mtrie_conf.h ../include/numeric.h \
- ../include/s_conf.h ../include/fileio.h ../include/motd.h \
- ../include/s_misc.h ../include/scache.h ../include/send.h \
- ../include/struct.h
+m_gline.o: m_gline.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/m_gline.h ../include/ircd_defs.h \
+ ../include/channel.h ../include/client.h ../include/dbuf.h \
+ ../include/common.h ../include/dline_conf.h ../include/irc_string.h \
+ ../include/ircd.h ../include/m_kline.h ../include/mtrie_conf.h \
+ ../include/numeric.h ../include/s_conf.h ../include/fileio.h \
+ ../include/motd.h ../include/s_misc.h ../include/scache.h \
+ ../include/send.h ../include/struct.h
 m_htm.o: m_htm.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/common.h ../include/irc_string.h \
  ../include/ircd.h ../include/numeric.h ../include/send.h
-m_info.o: m_info.c ../include/m_info.h ../include/config.h \
- ../include/setup.h ../include/channel.h ../include/ircd_defs.h \
- ../include/client.h ../include/dbuf.h ../include/common.h \
- ../include/irc_string.h ../include/ircd.h ../include/numeric.h \
- ../include/s_serv.h ../include/s_user.h ../include/send.h \
- ../include/struct.h
+m_info.o: m_info.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/m_info.h ../include/channel.h \
+ ../include/ircd_defs.h ../include/client.h ../include/dbuf.h \
+ ../include/common.h ../include/irc_string.h ../include/ircd.h \
+ ../include/numeric.h ../include/s_serv.h ../include/s_user.h \
+ ../include/send.h ../include/struct.h
 m_ison.o: m_ison.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/irc_string.h ../include/ircd.h \
@@ -145,14 +148,14 @@ m_kill.o: m_kill.c ../include/m_commands.h ../include/config.h \
  ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
  ../include/s_log.h ../include/s_serv.h ../include/send.h \
  ../include/whowas.h ../include/irc_string.h
-m_kline.o: m_kline.c ../include/m_kline.h ../include/channel.h \
- ../include/config.h ../include/setup.h ../include/ircd_defs.h \
- ../include/class.h ../include/client.h ../include/dbuf.h \
- ../include/common.h ../include/dline_conf.h ../include/irc_string.h \
- ../include/ircd.h ../include/mtrie_conf.h ../include/numeric.h \
- ../include/s_conf.h ../include/fileio.h ../include/motd.h \
- ../include/s_log.h ../include/s_misc.h ../include/send.h \
- ../include/struct.h ../include/hash.h
+m_kline.o: m_kline.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/m_kline.h ../include/channel.h \
+ ../include/ircd_defs.h ../include/class.h ../include/client.h \
+ ../include/dbuf.h ../include/common.h ../include/dline_conf.h \
+ ../include/irc_string.h ../include/ircd.h ../include/mtrie_conf.h \
+ ../include/numeric.h ../include/s_conf.h ../include/fileio.h \
+ ../include/motd.h ../include/s_log.h ../include/s_misc.h \
+ ../include/send.h ../include/struct.h ../include/hash.h
 m_links.o: m_links.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/irc_string.h ../include/ircd.h \
@@ -249,14 +252,14 @@ m_squit.o: m_squit.c ../include/m_commands.h ../include/config.h \
  ../include/s_serv.h ../include/send.h
 m_stats.o: m_stats.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/class.h ../include/client.h \
- ../include/ircd_defs.h ../include/dbuf.h ../include/common.h \
- ../include/dline_conf.h ../include/irc_string.h ../include/ircd.h \
- ../include/listener.h ../include/msg.h ../include/mtrie_conf.h \
- ../include/m_gline.h ../include/numeric.h ../include/scache.h \
- ../include/send.h ../include/s_bsd.h ../include/s_conf.h \
- ../include/fileio.h ../include/motd.h ../include/s_debug.h \
- ../include/s_misc.h ../include/s_serv.h ../include/s_stats.h \
- ../include/s_user.h
+ ../include/ircd_defs.h ../include/dbuf.h ../include/channel.h \
+ ../include/common.h ../include/dline_conf.h ../include/irc_string.h \
+ ../include/ircd.h ../include/listener.h ../include/msg.h \
+ ../include/mtrie_conf.h ../include/m_gline.h ../include/numeric.h \
+ ../include/scache.h ../include/send.h ../include/s_bsd.h \
+ ../include/struct.h ../include/s_conf.h ../include/fileio.h \
+ ../include/motd.h ../include/s_debug.h ../include/s_misc.h \
+ ../include/s_serv.h ../include/s_stats.h ../include/s_user.h
 m_svinfo.o: m_svinfo.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/common.h ../include/irc_string.h \
@@ -308,20 +311,18 @@ m_whois.o: m_whois.c ../include/m_commands.h ../include/config.h \
  ../include/irc_string.h
 match.o: match.c ../include/irc_string.h ../include/ircd_defs.h \
  ../include/config.h ../include/setup.h
-motd.o: motd.c ../include/motd.h ../include/ircd_defs.h \
- ../include/config.h ../include/setup.h ../include/ircd.h \
- ../include/s_bsd.h ../include/fileio.h ../include/res.h \
- ../include/s_conf.h ../include/class.h ../include/send.h \
- ../include/numeric.h ../include/client.h ../include/dbuf.h \
- ../include/irc_string.h ../include/s_serv.h
+motd.o: motd.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/motd.h ../include/ircd_defs.h \
+ ../include/ircd.h ../include/s_bsd.h ../include/fileio.h \
+ ../include/res.h ../include/s_conf.h ../include/class.h \
+ ../include/send.h ../include/numeric.h ../include/client.h \
+ ../include/dbuf.h ../include/irc_string.h ../include/s_serv.h
 mtrie_conf.o: mtrie_conf.c ../include/mtrie_conf.h ../include/class.h \
  ../include/client.h ../include/config.h ../include/setup.h \
  ../include/ircd_defs.h ../include/dbuf.h ../include/common.h \
  ../include/dline_conf.h ../include/irc_string.h ../include/ircd.h \
  ../include/numeric.h ../include/s_conf.h ../include/fileio.h \
  ../include/motd.h ../include/send.h ../include/struct.h
-oratime.o: oratime.c ../include/oratime.h ../include/config.h \
- ../include/setup.h
 numeric.o: numeric.c ../include/numeric.h ../include/config.h \
  ../include/setup.h ../include/irc_string.h ../include/ircd_defs.h \
  ../include/common.h messages.tab
@@ -338,21 +339,23 @@ parse.o: parse.c ../include/parse.h ../include/channel.h \
  ../include/numeric.h ../include/s_log.h ../include/s_stats.h \
  ../include/send.h ../include/struct.h ../include/msg.h \
  ../include/m_commands.h
-res.o: res.c ../include/res.h ../include/client.h ../include/config.h \
- ../include/setup.h ../include/ircd_defs.h ../include/dbuf.h \
- ../include/common.h ../include/irc_string.h ../include/ircd.h \
- ../include/numeric.h ../include/restart.h ../include/s_bsd.h \
- ../include/send.h ../include/struct.h ../include/s_debug.h
+res.o: res.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/res.h ../include/client.h \
+ ../include/ircd_defs.h ../include/dbuf.h ../include/common.h \
+ ../include/irc_string.h ../include/ircd.h ../include/numeric.h \
+ ../include/restart.h ../include/s_bsd.h ../include/send.h \
+ ../include/struct.h ../include/s_debug.h
 restart.o: restart.c ../include/restart.h ../include/common.h \
  ../include/ircd.h ../include/config.h ../include/setup.h \
  ../include/send.h ../include/struct.h ../include/s_debug.h \
  ../include/s_log.h
-s_auth.o: s_auth.c ../include/s_auth.h ../include/config.h \
- ../include/setup.h ../include/client.h ../include/ircd_defs.h \
- ../include/dbuf.h ../include/common.h ../include/fdlist.h \
- ../include/irc_string.h ../include/ircd.h ../include/numeric.h \
- ../include/res.h ../include/s_bsd.h ../include/s_log.h \
- ../include/s_stats.h ../include/send.h ../include/struct.h
+s_auth.o: s_auth.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/s_auth.h ../include/client.h \
+ ../include/ircd_defs.h ../include/dbuf.h ../include/common.h \
+ ../include/fdlist.h ../include/irc_string.h ../include/ircd.h \
+ ../include/numeric.h ../include/res.h ../include/s_bsd.h \
+ ../include/s_log.h ../include/s_stats.h ../include/send.h \
+ ../include/struct.h
 s_bsd.o: s_bsd.c ../include/s_bsd.h ../include/class.h \
  ../include/client.h ../include/config.h ../include/setup.h \
  ../include/ircd_defs.h ../include/dbuf.h ../include/common.h \
@@ -363,15 +366,15 @@ s_bsd.o: s_bsd.c ../include/s_bsd.h ../include/class.h \
  ../include/motd.h ../include/s_log.h ../include/s_serv.h \
  ../include/s_stats.h ../include/s_zip.h ../zlib/zlib.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/send.h ../include/struct.h
-s_conf.o: s_conf.c ../include/s_conf.h ../include/config.h \
- ../include/setup.h ../include/fileio.h ../include/ircd_defs.h \
- ../include/motd.h ../include/channel.h ../include/class.h \
- ../include/client.h ../include/dbuf.h ../include/common.h \
- ../include/dline_conf.h ../include/hash.h ../include/irc_string.h \
- ../include/ircd.h ../include/list.h ../include/listener.h \
- ../include/mtrie_conf.h ../include/numeric.h ../include/res.h \
- ../include/s_bsd.h ../include/s_log.h ../include/send.h \
- ../include/struct.h ../include/s_debug.h
+s_conf.o: s_conf.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/s_conf.h ../include/fileio.h \
+ ../include/ircd_defs.h ../include/motd.h ../include/channel.h \
+ ../include/class.h ../include/client.h ../include/dbuf.h \
+ ../include/common.h ../include/dline_conf.h ../include/hash.h \
+ ../include/irc_string.h ../include/ircd.h ../include/list.h \
+ ../include/listener.h ../include/mtrie_conf.h ../include/numeric.h \
+ ../include/res.h ../include/s_bsd.h ../include/s_log.h \
+ ../include/send.h ../include/struct.h ../include/s_debug.h
 s_debug.o: s_debug.c ../include/s_debug.h ../include/channel.h \
  ../include/config.h ../include/setup.h ../include/ircd_defs.h \
  ../include/class.h ../include/client.h ../include/dbuf.h \
@@ -405,16 +408,17 @@ s_stats.o: s_stats.c ../include/s_stats.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/irc_string.h ../include/ircd.h \
  ../include/numeric.h ../include/s_bsd.h ../include/send.h
-s_user.o: s_user.c ../include/s_user.h ../include/config.h \
- ../include/setup.h ../include/channel.h ../include/ircd_defs.h \
- ../include/class.h ../include/client.h ../include/dbuf.h \
- ../include/common.h ../include/fdlist.h ../include/flud.h \
- ../include/hash.h ../include/irc_string.h ../include/ircd.h \
- ../include/list.h ../include/listener.h ../include/motd.h \
- ../include/msg.h ../include/numeric.h ../include/s_bsd.h \
- ../include/s_conf.h ../include/fileio.h ../include/s_log.h \
- ../include/s_serv.h ../include/s_stats.h ../include/scache.h \
- ../include/send.h ../include/struct.h ../include/whowas.h
+s_user.o: s_user.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/s_user.h ../include/channel.h \
+ ../include/ircd_defs.h ../include/class.h ../include/client.h \
+ ../include/dbuf.h ../include/common.h ../include/fdlist.h \
+ ../include/flud.h ../include/hash.h ../include/irc_string.h \
+ ../include/ircd.h ../include/list.h ../include/listener.h \
+ ../include/motd.h ../include/msg.h ../include/numeric.h \
+ ../include/s_bsd.h ../include/s_conf.h ../include/fileio.h \
+ ../include/s_log.h ../include/s_serv.h ../include/s_stats.h \
+ ../include/scache.h ../include/send.h ../include/struct.h \
+ ../include/whowas.h
 s_zip.o: s_zip.c ../include/client.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../include/dbuf.h \
  ../include/s_zip.h ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h \
@@ -423,7 +427,8 @@ s_zip.o: s_zip.c ../include/client.h ../include/config.h \
 scache.o: scache.c ../include/client.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../include/dbuf.h \
  ../include/common.h ../include/irc_string.h ../include/ircd.h \
- ../include/numeric.h ../include/send.h ../include/struct.h
+ ../include/numeric.h ../include/send.h ../include/struct.h \
+ ../include/scache.h
 send.o: send.c ../include/send.h ../include/config.h \
  ../include/setup.h ../include/channel.h ../include/ircd_defs.h \
  ../include/class.h ../include/client.h ../include/dbuf.h \
