@@ -1270,6 +1270,8 @@ m_dline(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   aconf->status = CONF_DLINE;
   DupString(aconf->host,host);
   DupString(aconf->passwd,buffer);
+  if (oper_reason != NULL)
+    DupString(aconf->oper_reason, oper_reason);
 
   aconf->ip = ip_host;
   aconf->ip_mask = ip_mask;
