@@ -98,6 +98,7 @@ char *infotext[] =
   "ThemBones           Brian Kraemer       kraemer@u.washington.edu",
   "White_Dragon        Chip Norkus         wd@dal.net",
   "WintrHawk           Jake Khuon          khuon@GCtr.Net",
+  "xyst                Greg Prosser        greg@arrogant.org",
   "",
   "",
   "Developers and Contributors for previous versions:",
