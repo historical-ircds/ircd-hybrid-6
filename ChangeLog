@@ -1,3 +1,16 @@
+androsyn    2002/01/27 23:30:32 EST	(20020128_1)
+
+  Modified files:
+    adns                 event.c setup.c 
+  Log:
+  More adns fixes from the hybrid list.
+  
+  Revision  Changes    Path
+  1.6       +1 -4      ircd-hybrid-6/adns/event.c
+  1.8       +1 -4      ircd-hybrid-6/adns/setup.c
+
+
+
 androsyn    2002/01/27 23:26:10 EST	(20020128_0)
 
   Modified files:
