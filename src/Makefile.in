@@ -55,6 +55,7 @@ SRCS = \
 	m_users.c \
 	m_version.c \
 	m_wallops.c \
+	m_who.c \
 	match.c \
 	motd.c \
 	mtrie_conf.c \
