@@ -1,3 +1,7 @@
+*** 19991010_1 by lusky
+fixed bogus strncpy in s_conf.c report by Q (th)
+
+
 *** 19991009_3 by lusky
 updated RELNOTES to indicate that AIX is unsupported
 
