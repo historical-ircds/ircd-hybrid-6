@@ -1422,7 +1422,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IPS
                                  get_client_name(cptr, FALSE),
 #else
-                                 get_client_name(cptr, MASK_IP),
+                                 cptr->name,
 #endif
                                  parv[0],
                                  sptr->username,
@@ -1483,7 +1483,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IPS
                  get_client_name(cptr, FALSE));
 #else
-                 get_client_name(cptr, MASK_IP));
+                 cptr->name);
 #endif
       ServerStats->is_kill++;
       sendto_one(cptr, ":%s KILL %s :%s (%s <- %s)",
@@ -1496,7 +1496,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IPS
                  get_client_name(cptr, FALSE));
 #else
-                 get_client_name(cptr, MASK_IP));
+                 cptr->name);
 #endif
       sptr->flags |= FLAGS_KILLED;
       return exit_client(cptr, sptr, &me, "Nick/Server collision");
@@ -1639,7 +1639,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IPS	
                      get_client_name(cptr, FALSE));
 #else
-                     get_client_name(cptr, MASK_IP));
+                     cptr->name);
 #endif
           ServerStats->is_kill++;
           sendto_one(acptr, form_str(ERR_NICKCOLLISION),
@@ -1657,7 +1657,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IPS
 			     get_client_name(cptr, FALSE));
 #else
-                             get_client_name(cptr, MASK_IP));
+                             cptr->name);
 #endif
 #endif
           acptr->flags |= FLAGS_KILLED;
@@ -1679,7 +1679,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IPS
                            get_client_name(cptr, FALSE));
 #else
-                           get_client_name(cptr, MASK_IP));
+                           cptr->name);
 #endif
               else
                 sendto_realops("Nick collision on %s(%s <- %s)(newer killed)",
@@ -1687,7 +1687,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IPS
                            get_client_name(cptr, FALSE));
 #else
-                           get_client_name(cptr, MASK_IP));
+                           cptr->name);
 #endif
               
               ServerStats->is_kill++;
@@ -1702,7 +1702,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IPS
 				 get_client_name(cptr, FALSE));
 #else
-                                 get_client_name(cptr, MASK_IP));
+                                 cptr->name);
 #endif
 #endif
 
@@ -1727,7 +1727,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IPS
                  get_client_name(cptr, FALSE));
 #else
-                 get_client_name(cptr, MASK_IP));
+                 cptr->name);
 #endif
       ServerStats->is_kill++;
       sendto_one(acptr, form_str(ERR_NICKCOLLISION),
@@ -1740,7 +1740,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IPS
 			 acptr->name, get_client_name(cptr, FALSE));
 #else
-			 acptr->name, get_client_name(cptr, MASK_IP));
+			 acptr->name, cptr->name);
 #endif
 #endif
 
@@ -1753,7 +1753,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IP
 			 get_client_name(cptr, FALSE), sptr->name);
 #else
-			 get_client_name(cptr, MASK_IP), sptr->name);
+			 cptr->name, sptr->name);
 #endif
 #endif
 
@@ -1775,7 +1775,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IPS
                        get_client_name(cptr, FALSE));
 #else
-                       get_client_name(cptr, MASK_IP));
+                       cptr->name);
 #endif
           else
             sendto_realops("Nick change collision from %s to %s(%s <- %s)(newer killed)",
@@ -1783,7 +1783,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IPS
                        get_client_name(cptr, FALSE));
 #else
-                       get_client_name(cptr, MASK_IP));
+                       cptr->name);
 #endif
           ServerStats->is_kill++;
 
@@ -1794,7 +1794,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IPS
 			     acptr->name, get_client_name(cptr, FALSE));
 #else
-                             acptr->name, get_client_name(cptr, MASK_IP));
+                             acptr->name, cptr->name);
 #endif
 #endif
 
@@ -1812,7 +1812,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IPS
                        get_client_name(cptr, FALSE));
 #else
-                       get_client_name(cptr, MASK_IP));
+                       cptr->name);
 #endif
           else
             sendto_realops("Nick collision on %s(%s <- %s)(newer killed)",
@@ -1820,7 +1820,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IPS
                        get_client_name(cptr, FALSE));
 #else
-                       get_client_name(cptr, MASK_IP));
+                       cptr->name);
 #endif
           
           ServerStats->is_kill++;
@@ -1835,7 +1835,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IPS
 			     get_client_name(cptr, FALSE));
 #else
-			     get_client_name(cptr, MASK_IP));
+			     cptr->name);
 #endif
 #endif
 
@@ -2032,7 +2032,7 @@ int user_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef HIDE_SERVERS_IPS
                           get_client_name(cptr, FALSE), sptr->name);
 #else
-                          get_client_name(cptr, MASK_IP), sptr->name);
+                          cptr->name, sptr->name);
 #endif
                   /* while hiding the servers ips, lets send a server-sent
                      wallop about it! good idea! -gnp */

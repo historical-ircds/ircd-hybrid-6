@@ -295,7 +295,7 @@ int m_kill(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   */
   if (MyConnect(acptr) && MyConnect(sptr) && IsAnOper(sptr))
 #ifdef SERVERHIDE
-    ircsprintf(buf2, "Killed (%s): %s",
+    ircsprintf(buf2, "Killed (%s (%s))",
 #else
     ircsprintf(buf2, "Local kill by %s (%s)",
 #endif
