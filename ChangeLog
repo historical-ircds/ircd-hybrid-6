@@ -1,3 +1,7 @@
+*** 20000206_1 by lusky
+fixed spaces in src/Makefile.in (db)
+
+
 *** 20000201_1 by lusky
 fixed UMR in poll code (th)
 revved patchlevel to b121
