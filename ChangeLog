@@ -2,12 +2,16 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
-version hybrid-6-b47   19-Feb-1999
+version hybrid-6-b48   19-Feb-1999
 * allow all opers to see stats c IP's
 * added two more examples to Q lines, crush and cwush
 * added fix from syrk (Christophe Kalt) in res.c
 -Dianora
-	
+
+version hybrid-6-b47
+* oops I don't know what happened to this one, but irc.colorado.edu
+is running this one oops.
+
 version hybrid-6-b46   15-Feb-1999
 * put fdlist code back in. Ok, I goofed. mea culpa.
 * #ifdef USE_SYSLOG missing in ircd.c
