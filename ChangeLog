@@ -1,3 +1,20 @@
+jdc         2001/12/08 13:25:13 EST	(20011208_19)
+
+  Modified files:
+    .                    configure 
+    autoconf             configure.in 
+    src                  ircd.c 
+  Log:
+  - More zlib updates.  Now checks for version in configure, and leaves
+  only include/library version comparison up to ircd.c.
+  
+  Revision  Changes    Path
+  1.24      +3 -1      ircd-hybrid-6/autoconf/configure.in
+  1.25      +157 -98   ircd-hybrid-6/configure
+  1.157     +7 -27     ircd-hybrid-6/src/ircd.c
+
+
+
 db          2001/12/08 12:56:54 EST	(20011208_18)
 
   Modified files:
