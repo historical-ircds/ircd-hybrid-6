@@ -236,7 +236,6 @@ int	m_version(aClient *cptr,
    */
 
   static time_t last_used=0L;
-  static int last_count=0;
 
   if(!IsAnOper(sptr))
     {
@@ -1084,7 +1083,6 @@ int	m_info(aClient *cptr,
    */
 
   static time_t last_used=0L;
-  static int last_count=0;
 
   if(!IsAnOper(sptr))
     {
@@ -1694,7 +1692,6 @@ int	m_links(aClient *cptr,
    */
 
   static time_t last_used=0L;
-  static int last_count=0;
 
   if(!IsAnOper(sptr))
     {
@@ -1926,7 +1923,6 @@ int	m_stats(aClient *cptr,
    */
 
   static time_t last_used=0L;
-  static int last_count=0;
 
   if(!IsAnOper(sptr))
     {
@@ -2296,7 +2292,6 @@ int	m_help(aClient *cptr,
    */
 
   static time_t last_used=0L;
-  static int last_count=0;
 
   if(!IsAnOper(sptr))
     {
@@ -2358,7 +2353,6 @@ int	 m_lusers(aClient *cptr,
    */
 
   static time_t last_used=0L;
-  static int last_count=0;
 
   if(!IsAnOper(sptr))
     {
@@ -2820,7 +2814,6 @@ int	m_time(aClient *cptr,
    */
 
   static time_t last_used=0L;
-  static int last_count=0;
 
   if(!IsAnOper(sptr))
     {
@@ -2860,7 +2853,6 @@ int	m_admin(aClient *cptr,
    */
 
   static time_t last_used=0L;
-  static int last_count=0;
 
   if(!IsAnOper(sptr))
     {
@@ -5183,7 +5175,6 @@ int	m_trace(aClient *cptr,
    */
 
   static time_t last_used=0L;
-  static int last_count=0;
 
   if(!IsAnOper(sptr))
     {
@@ -5407,7 +5398,6 @@ int	m_motd(aClient *cptr,
    */
 
   static time_t last_used=0L;
-  static int last_count=0;
 
   if(!IsAnOper(sptr))
     {

@@ -1421,8 +1421,8 @@ int 	initconf(int opt, int fd)
 					{'r', '\r'}, {'t', '\t'}, {'v', '\v'},
 					{'\\', '\\'}, { 0, 0}};
   Reg	char	*tmp, *s;
-  int	i, dontadd;
-  char	line[512], c[80];
+  int	i, j, dontadd;
+  char	line[512];
   int	ccount = 0, ncount = 0;
   u_long vaddr;
 
@@ -1431,15 +1431,34 @@ int 	initconf(int opt, int fd)
   (void)dgets(-1, NULL, 0); /* make sure buffer is at empty pos */
   while ((i = dgets(fd, line, sizeof(line) - 1)) > 0)
     {
-      line[i] = '\0';
-      if ((tmp = (char *)index(line, '\n')))
-	*tmp = '\0';
-      else while(dgets(fd, c, sizeof(c) - 1) > 0)
-	if ((tmp = (char *)index(c, '\n')))
-	  {
-	    *tmp = '\0';
-	    break;
-	  }
+      /*
+       * hey, wait a minute, dgets returns when it finds EOL
+       * returning number of chars read, hence newline should
+       * be at 1 less the number of characters read.
+       *
+       * old code was...
+       *
+       * if ((tmp = (char *)index(line, '\n')))
+       *    *tmp = '\0';
+       */
+
+      if(i>0)
+	{
+	  if(line[i-1] == '\n')
+	    line[i-1] = '\0';
+	}
+      else
+	line[i] = '\0';
+
+      /* 
+       * There was code here to discard up till next
+       * EOL char if none detected just above.
+       * not =really= needed because
+       * 1) line would have to be 512 chars and longer
+       * 2) garbage is tossed if line[1] isn't a ':'
+       * 
+       */
+
       /*
        * Do quoting of characters and # detection.
        */

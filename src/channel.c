@@ -3081,6 +3081,8 @@ void sync_channels()
     {
       if(chptr->locally_created)
 	{
+	  sendto_realops("*** resetting TS on locally created %s from %d to %d",
+			 chptr->chname,chptr->channelts,timeofday);
 	  chptr->channelts = timeofday;
 	}
     }

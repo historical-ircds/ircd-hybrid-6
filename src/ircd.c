@@ -1212,7 +1212,7 @@ time_t io_loop(time_t delay)
 		       "System clock was reset into the future - (%d+60 > %d)",
 		       timeofday, lasttimeofday);
       report_error(to_send, &me);
-      /*      sync_channels(); */
+      sync_channels();
     }
 
   NOW = timeofday;
