@@ -1868,16 +1868,21 @@ int user_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
         case 'o':
           if(what == MODE_ADD)
             {
-              if(IsServer(cptr))
+              if(IsServer(cptr) && !IsOper(sptr))
                 {
                   ++Count.oper;
-
                   SetOper(sptr);
-                  sptr->umodes |= FLAGS_OPER;
                 }
             }
           else
             {
+	      /* Only decrement the oper counts if an oper to begin with
+               * found by Pat Szuta, Perly , perly@xnet.com 
+               */
+
+              if(!IsAnOper(sptr))
+                break;
+
               sptr->umodes &= ~(FLAGS_OPER|FLAGS_LOCOP);
 
               Count.oper--;

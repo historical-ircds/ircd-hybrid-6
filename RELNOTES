@@ -60,6 +60,9 @@ without a ~, use an I line such as:
 	I:NOMATCH::-*db@*some.host.on.the.net
 This will match this user, and will remove the ~ as seen on the net.
 
+KNOWN BUGS:
+There is a possibility that ircd will core dump if you there are errors
+in your conf file.
 
 Send bug reports to ircd-hybrid@the-project.org.  Please include a gdb
 backtrace and a copy of your config.h.

@@ -395,16 +395,11 @@ struct Client
  * flags macros.
  */
 #define IsPerson(x)             (IsClient(x) && (x)->user)
-#define IsInvisible(x)          ((x)->flags & FLAGS_INVISIBLE)
-
 #define DoAccess(x)             ((x)->flags & FLAGS_CHKACCESS)
 #define IsLocal(x)              ((x)->flags & FLAGS_LOCAL)
 #define IsDead(x)               ((x)->flags & FLAGS_DEADSOCKET)
-#define SetInvisible(x)         ((x)->umodes |= FLAGS_INVISIBLE)
 #define SetAccess(x)            ((x)->flags |= FLAGS_CHKACCESS)
 #define NoNewLine(x)            ((x)->flags & FLAGS_NONL)
-#define ClearInvisible(x)       ((x)->umodes &= ~FLAGS_INVISIBLE)
-#define ClearWallops(x)         ((x)->umodes &= ~FLAGS_WALLOP)
 #define ClearAccess(x)          ((x)->flags &= ~FLAGS_CHKACCESS)
 #define MyConnect(x)            ((x)->local_flag != 0)
 #define MyClient(x)             (MyConnect(x) && IsClient(x))
@@ -421,7 +416,11 @@ struct Client
 #define IsPrivileged(x)         (IsAnOper(x) || IsServer(x))
 
 /* umode flags */
+#define IsInvisible(x)          ((x)->umodes & FLAGS_INVISIBLE)
+#define SetInvisible(x)         ((x)->umodes |= FLAGS_INVISIBLE)
+#define ClearInvisible(x)       ((x)->umodes &= ~FLAGS_INVISIBLE)
 #define SendWallops(x)          ((x)->umodes & FLAGS_WALLOP)
+#define ClearWallops(x)         ((x)->umodes &= ~FLAGS_WALLOP)
 #define SendServNotice(x)       ((x)->umodes & FLAGS_SERVNOTICE)
 #define SendOperwall(x)         ((x)->umodes & FLAGS_OPERWALL)
 #define SendCConnNotice(x)      ((x)->umodes & FLAGS_CCONN)
