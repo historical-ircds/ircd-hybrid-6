@@ -78,8 +78,8 @@ static  void    channel_modes (aClient *, char *, char *, aChannel *);
 static  int     del_banid (aChannel *, char *);
 static  int     del_exceptid (aChannel *, char *);
 static  int     del_denyid (aChannel *, char *);
-static  void    clear_bans_exceptions(aClient *,aChannel *);
-static  void    clear_denies_allows(aClient *,aChannel *);
+static  void    clear_bans_exceptions_denies(aClient *,aChannel *);
+static  void    free_bans_exceptions_denies(aChannel *);
 static  int     is_banned (aClient *, aChannel *);
 static  void    set_mode (aClient *, aClient *, aChannel *, int, char **);
 static  void    sub1_from_channel (aChannel *);
@@ -571,6 +571,11 @@ static void del_matching_exception(aClient *cptr,aChannel *chptr)
           MyFree(tmp->value.cp);
 #endif
           free_link(tmp);
+	  /* num_bed should never be < 0 */
+	  if(chptr->num_bed > 0)
+	    chptr->num_bed--;
+	  else
+	    chptr->num_bed = 0;
           return;
         }
     }
@@ -2548,36 +2553,8 @@ static  void    sub1_from_channel(aChannel *chptr)
           while ((tmp = chptr->invites))
             del_invite(tmp->value.cptr, chptr);
 
-          tmp = chptr->banlist;
-          while (tmp)
-            {
-              obtmp = tmp;
-              tmp = tmp->next;
-#ifdef BAN_INFO
-              MyFree(obtmp->value.banptr->banstr);
-              MyFree(obtmp->value.banptr->who);
-              MyFree(obtmp->value.banptr);
-#else
-              MyFree(obtmp->value.cp);
-#endif
-              free_link(obtmp);
-            }
-
-          tmp = chptr->exceptlist;
-          while (tmp)
-            {
-              obtmp = tmp;
-              tmp = tmp->next;
-#ifdef BAN_INFO
-              MyFree(obtmp->value.banptr->banstr);
-              MyFree(obtmp->value.banptr->who);
-              MyFree(obtmp->value.banptr);
-#else
-              MyFree(obtmp->value.cp);
-#endif
-              free_link(obtmp);
-            }
-          chptr->banlist = chptr->exceptlist = NULL;
+	  /* free all bans/exceptions/denies */
+	  free_bans_exceptions_denies( chptr );
 
           if (chptr->prevch)
             chptr->prevch->nextch = chptr->nextch;
@@ -2597,7 +2574,7 @@ static  void    sub1_from_channel(aChannel *chptr)
 }
 
 /*
- * clear_bans_exceptions
+ * clear_bans_exceptions_denies
  *
  * I could have re-written del_banid/del_exceptid to do this
  *
@@ -2605,7 +2582,7 @@ static  void    sub1_from_channel(aChannel *chptr)
  * -Dianora
  */
 
-static void clear_bans_exceptions(aClient *sptr, aChannel *chptr)
+static void clear_bans_exceptions_denies(aClient *sptr, aChannel *chptr)
 {
   static char modebuf[MODEBUFLEN];
   register Link *next_ban;
@@ -2717,48 +2694,6 @@ static void clear_bans_exceptions(aClient *sptr, aChannel *chptr)
                            ":%s MODE %s %s %s %s %s %s",
                            sptr->name,chptr->chname,modebuf,b1,b2,b3,b4);
 
-  for(ban = chptr->banlist; ban; ban = next_ban)
-    {
-      next_ban = ban->next;
-#ifdef BAN_INFO
-      MyFree(ban->value.banptr->banstr);
-      MyFree(ban->value.banptr->who);
-      MyFree(ban->value.banptr);
-#else
-      MyFree(ban->value.cp);
-#endif
-      free_link(ban);
-    }
-
-  for(ban = chptr->exceptlist; ban; ban = next_ban)
-    {
-      next_ban = ban->next;
-#ifdef BAN_INFO
-      MyFree(ban->value.banptr->banstr);
-      MyFree(ban->value.banptr->who);
-      MyFree(ban->value.banptr);
-#else
-      MyFree(ban->value.cp);
-#endif
-      free_link(ban);
-    }
-
-  chptr->banlist = chptr->exceptlist = NULL;
-}
-
-/*
- * clear_denies_allows
- *
- */
-
-static void clear_denies_allows(aClient *sptr, aChannel *chptr)
-{
-  static char modebuf[MODEBUFLEN];
-  register Link *next_ban;
-  register Link *ban;
-  char *b1,*b2,*b3,*b4;
-  char *mp;
-
   b1="";
   b2="";
   b3="";
@@ -2801,7 +2736,6 @@ static void clear_denies_allows(aClient *sptr, aChannel *chptr)
           b2="";
           b3="";
           b4="";
-
           mp = modebuf;
           *mp = '\0';
         }
@@ -2811,6 +2745,50 @@ static void clear_denies_allows(aClient *sptr, aChannel *chptr)
     sendto_channel_butserv(chptr, &me,
                            ":%s MODE %s %s %s %s %s %s",
                            sptr->name,chptr->chname,modebuf,b1,b2,b3,b4);
+
+
+  /* free all bans/exceptions/denies */
+  free_bans_exceptions_denies(chptr);
+}
+
+/*
+ * free_bans_exceptions_denies
+ *
+ * inputs	- pointer to channel structure
+ * output	- none
+ * side effects	- all bans/exceptions denies are freed for channel
+ */
+
+static void free_bans_exceptions_denies(struct Channel *chptr)
+{
+  Link *ban;
+  Link *next_ban;
+
+  for(ban = chptr->banlist; ban; ban = next_ban)
+    {
+      next_ban = ban->next;
+#ifdef BAN_INFO
+      MyFree(ban->value.banptr->banstr);
+      MyFree(ban->value.banptr->who);
+      MyFree(ban->value.banptr);
+#else
+      MyFree(ban->value.cp);
+#endif
+      free_link(ban);
+    }
+
+  for(ban = chptr->exceptlist; ban; ban = next_ban)
+    {
+      next_ban = ban->next;
+#ifdef BAN_INFO
+      MyFree(ban->value.banptr->banstr);
+      MyFree(ban->value.banptr->who);
+      MyFree(ban->value.banptr);
+#else
+      MyFree(ban->value.cp);
+#endif
+      free_link(ban);
+    }
 
   for(ban = chptr->denylist; ban; ban = next_ban)
     {
@@ -2825,9 +2803,8 @@ static void clear_denies_allows(aClient *sptr, aChannel *chptr)
       free_link(ban);
     }
 
-  chptr->denylist = NULL;
+  chptr->banlist = chptr->exceptlist = chptr->denylist = NULL;
 }
-
 
 
 #ifdef NEED_SPLITCODE
@@ -2902,8 +2879,16 @@ void remove_empty_channels()
 
       if(empty_channel_list->users)             /* sanity test */
         {
+	  /* This is an oddity, rather than an out and out error
+	   * if this happens, a client managed to join the channel
+	   * making it non zero users, and I didn't notice. That means
+	   * strictly speaking its an error. However, if this entry is
+	   * ignored, its a non fatal one.
+	   */
+#if 0
           sendto_ops("non zero user count in remove_empty_channels");
           sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
+#endif
           empty_channel_list->next_empty_channel = (aChannel *)NULL;
           empty_channel_list->last_empty_channel = (aChannel *)NULL;
           continue;
@@ -4665,8 +4650,7 @@ int     m_sjoin(aClient *cptr,
       if (doesop)
         keep_our_modes = NO;
 
-      clear_bans_exceptions(sptr,chptr);
-      clear_denies_allows(sptr,chptr);
+      clear_bans_exceptions_denies(sptr,chptr);
 
       if (haveops && !doesop)
         {
