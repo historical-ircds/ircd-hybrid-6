@@ -109,7 +109,7 @@ static int user_modes[]		= { FLAGS_OPER, 'o',
 
 /* internally defined functions */
 #ifdef BOTCHECK
-static int botreject(char *, aClient *, char *);
+static int botreject(char *);
 static int rejecting_bot(aClient *, int, char **);
 #endif
 
@@ -612,7 +612,7 @@ static	int	register_user(aClient *cptr,
       report_and_set_user_flags(sptr, aconf);
 
 #ifdef BOTCHECK
-      isbot = botreject(bottemp,cptr,nick);
+      isbot = botreject(bottemp);
 #endif
 
       /* Limit clients */
@@ -3947,7 +3947,7 @@ void	send_umode_out(aClient *cptr,
  **   Reject a bot based on a fake hostname...
  **           -Taner
  **/
-static int botreject(char *host,aClient *sptr,char *nick)
+static int botreject(char *host)
 {
 
 /*
