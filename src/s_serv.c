@@ -5398,7 +5398,11 @@ int	m_rehash(aClient *cptr,
       if(mycmp(parv[1],"DNS") == 0)
 	{
 	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], "DNS");
+#ifdef CUSTOM_ERR
           sendto_ops("%s is rehashing DNS while whistling innocently",
+#else
+          sendto_ops("%s is rehashing DNS",
+#endif
                  parv[0]);
 	  flush_cache();	/* flush the dns cache */
 	  close(spare_fd);
@@ -5418,7 +5422,11 @@ int	m_rehash(aClient *cptr,
 	{
 	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], "temp klines");
 	  flush_temp_klines();
+#ifdef CUSTOM_ERR
 	  sendto_ops("%s is clearing temp klines while whistling innocently",
+#else
+	  sendto_ops("%s is clearing temp klines",
+#endif
 		 parv[0]);
 	  found = YES;
 	}
@@ -5427,7 +5435,11 @@ int	m_rehash(aClient *cptr,
 	{
 	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], "g-lines");
 	  flush_glines();
+#ifdef CUSTOM_ERR
 	  sendto_ops("%s is clearing G-lines while whistling innocently",
+#else
+	  sendto_ops("%s is clearing G-lines",
+#endif
 		 parv[0]);
 	  found = YES;
 	}
@@ -5436,7 +5448,11 @@ int	m_rehash(aClient *cptr,
 	{
 	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], "garbage collecting");
 	  block_garbage_collect();
+#ifdef CUSTOM_ERR
 	  sendto_ops("%s is garbage collecting while whistling innocently",
+#else
+	  sendto_ops("%s is garbage collecting",
+#endif
 		 parv[0]);
 	  found = YES;
 	}
@@ -5472,7 +5488,12 @@ int	m_rehash(aClient *cptr,
       else if(mycmp(parv[1],"dlines") == 0)
 	{
 	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
-	  sendto_ops("%s is rehashing Server config file while whistling innocently",
+          /* this does a full rehash right now, so report it as such */
+#ifdef CUSTOM_ERR
+	  sendto_ops("%s is rehashing server config file while whistling innocently",
+#else
+	  sendto_ops("%s is rehashing server config file",
+#endif
 		     parv[0]);
 #ifdef USE_SYSLOG
 	  syslog(LOG_NOTICE, "REHASH From %s\n", get_client_name(sptr, FALSE));
@@ -5505,7 +5526,11 @@ int	m_rehash(aClient *cptr,
   else
     {
       sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
-      sendto_ops("%s is rehashing Server config file while whistling innocently",
+#ifdef CUSTOM_ERR
+      sendto_ops("%s is rehashing server config file while whistling innocently",
+#else
+      sendto_ops("%s is rehashing server config file",
+#endif
 		 parv[0]);
 #ifdef USE_SYSLOG
       syslog(LOG_NOTICE, "REHASH From %s\n", get_client_name(sptr, FALSE));
