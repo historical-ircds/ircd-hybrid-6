@@ -673,23 +673,47 @@ sendto_channel_type_notice(aClient *from, aChannel *chptr, int type, char *messa
  * send the knock to local clients in the channel
  */
 void
-send_knock(aClient *from, aChannel *chptr, int type, char *message)
+send_knock(aClient *sptr, aClient *cptr, aChannel *chptr, int type, 
+           char *message, char *key)
 {
   Link *lp;
   aClient *acptr;
+  int lindex;
 
+  current_serial++;
+  
   for(lp = chptr->members; lp; lp = lp->next)
   {
-    if(!(lp->flags& type))
+    if(!(lp->flags & type))
       continue;
 
     acptr = lp->value.cptr;
 
-    if(!MyClient(acptr))
+    if(acptr->from == cptr)
       continue;
+      
+    if(MyClient(acptr))
+    {
+      sendto_prefix_one(acptr, sptr, ":%s NOTICE %s :%s",
+                        sptr->name, acptr->name, message);
+      continue;
+    }
 
-    sendto_prefix_one(acptr, from, ":%s NOTICE %s :%s",
-                      from->name, acptr->name, message);
+    lindex = acptr->from->fd;
+
+    if(sentalong[lindex] != current_serial)
+    {
+      if(IsCapable(acptr->from, CAP_KNOCK))
+      {
+        sendto_one(acptr, ":%s KNOCK %s %s",
+	           sptr->name, chptr->chname, key);
+
+        sentalong[lindex] = current_serial;
+      }
+      else
+        sendto_one(acptr, ":%s NOTICE %s :%s",
+	           sptr->name, acptr->name, message);
+    }
   }
 }
 

@@ -2985,21 +2985,28 @@ int     m_knock(struct Client *cptr,
 
     /* bit of paranoid, be a shame if it cored for this -Dianora */
     if(sptr->user)
-      {
-        ircsprintf(message,"KNOCK: %s (%s [%s@%s] has asked for an invite)",
+    {
+      ircsprintf(message,"KNOCK: %s (%s [%s@%s] has asked for an invite)",
                    chptr->chname,
                    sptr->name,
                    sptr->username,
                    sptr->host);
-        send_knock(sptr, chptr, MODE_CHANOP, message);
-      }
+      send_knock(sptr, cptr, chptr, MODE_CHANOP, message,
+                 (parc > 3) ? parv[3] : "");
+    }
   }
 
 #endif
 
+  /* send_knock is called if we have knock enabled.. if we dont, forward the
+   * knock anyway. --fl_
+   */
+#ifndef USE_KNOCK
   sendto_match_cap_servs(NULL, cptr, CAP_KNOCK,
                          ":%s KNOCK %s %s",
-			 sptr->name, name, (parc > 3) ? parv[3] : "");
+			  sptr->name, name, (parc > 3) ? parv[3] : "");
+#endif
+  
   return 0;
 }
 
