@@ -1,3 +1,15 @@
+db          2001/12/13 00:21:24 EST	(20011213_0)
+
+  Modified files:
+    src                  ircd.c 
+  Log:
+  - change submitted by hwy to allow cygwin compilation
+  
+  Revision  Changes    Path
+  1.160     +4 -0      ircd-hybrid-6/src/ircd.c
+
+
+
 leeh        2001/12/12 18:04:08 EST	(20011212_5)
 
   Modified files:
