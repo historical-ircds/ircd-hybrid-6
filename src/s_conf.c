@@ -2475,7 +2475,8 @@ static void initconf(FBFILE* file, int use_include)
                    * NOTE: strcpy ok since we already know the length
                    */
                   strcpy(chptr->chname, aconf->name);
-                  chptr->juped;
+/*                chptr->juped;   what the hell was that there for?*/
+                  chptr->juped = 1;  /* maybe this ? */
                   if (channel)
                     channel->prevch = chptr;
                   chptr->prevch = NULL;
