@@ -1,3 +1,9 @@
+*** 20010606_11 by kreator
+- fixed problems with configure under solaris 2.7 not detecting ssl -
+  added missing #include <stdlib.h> for exit(). done that for all
+  configure
+
+
 *** 20010606_10 by jdc
 * MFH7 (merge from hybrid-7) OpenSSL changes to configure, and the
   proper Makefile templates.  OpenSSL should work happily now.
