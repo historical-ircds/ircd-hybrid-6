@@ -44,7 +44,7 @@
 #include "internal.h"
 
 #ifndef INADDR_LOOPBACK
-#define INADDR_LOOPBACK inet_addr("127.0.0.1")
+#define INADDR_LOOPBACK 0x7f000001
 #endif 
 static void readconfig(adns_state ads, const char *filename, int warnmissing);
 
@@ -57,13 +57,13 @@ static void addserver(adns_state ads, struct in_addr addr) {
   
   for (i=0; i<ads->nservers; i++) {
     if (ads->servers[i].addr.s_addr == addr.s_addr) {
-      adns__debug(ads,-1,0,"duplicate nameserver %s ignored",inet_ntoa(addr));
+      adns__debug(ads,-1,0,"duplicate nameserver %s ignored",inetntoa((const char *)&addr));
       return;
     }
   }
   
   if (ads->nservers>=MAXSERVERS) {
-    adns__diag(ads,-1,0,"too many nameservers, ignoring %s",inet_ntoa(addr));
+    adns__diag(ads,-1,0,"too many nameservers, ignoring %s",inetntoa((const char *)&addr));
     return;
   }
 
@@ -120,7 +120,7 @@ static void ccf_nameserver(adns_state ads, const char *fn, int lno, const char *
     configparseerr(ads,fn,lno,"invalid nameserver address `%s'",buf);
     return;
   }
-  adns__debug(ads,-1,0,"using nameserver %s",inet_ntoa(ia));
+  adns__debug(ads,-1,0,"using nameserver %s",inetntoa((const char *)&ia));
   addserver(ads,ia);
 }
 
