@@ -1,3 +1,7 @@
+*** 20010608_1 by kreator
+- add simple support for EGD seeding of OpenSSL PRNG
+
+
 *** 20010607_5 by db
 Another patch from Walter Campbell
 
