@@ -254,8 +254,8 @@ static  struct  resinfo {
  * From bind 8.3, these aren't in earlier versions of bind
  *
  */
-extern u_int16_t  _getshort(const u_char *);
-extern u_int32_t  _getlong(const u_char *);
+extern u_short  _getshort(const u_char *);
+extern u_long   _getlong(const u_char *);
 /*
  * int
  * res_isourserver(ina)
