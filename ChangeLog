@@ -1,3 +1,7 @@
+*** 20011204_16 by androsyn
+Resolved a minor issue with locals shadowing globals.
+
+
 *** 20011204_15 by androsyn
 Fix a minor compile warning.
 
