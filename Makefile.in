@@ -22,6 +22,9 @@ RM=@RM@
 # Default CFLAGS
 CFLAGS = -g -O2 -DNDEBUG
 
+# Default make flags - you may want to uncomment this on a multicpu machine
+#MFLAGS = -j 4
+
 #
 # For developers
 # CFLAGS= -g -O2 -Wall
@@ -77,7 +80,7 @@ SHELL=/bin/sh
 SUBDIRS=zlib src tools
 # ZSUBDIRS=zlib $(SUBDIRS)
 
-MAKE = make 'CFLAGS=${CFLAGS}' 'INSTALL=${INSTALL}' 'LDFLAGS=${LDFLAGS}'
+MAKE = make ${MFLAGS} 'CFLAGS=${CFLAGS}' 'INSTALL=${INSTALL}' 'LDFLAGS=${LDFLAGS}'
 # ZMAKE = make 'CFLAGS=${CFLAGS}' 'INSTALL=${INSTALL}' 'LDFLAGS=${LDFLAGS}'
 
 all:	build

@@ -384,6 +384,12 @@
  */
 #define INIT_LOG_LEVEL L_NOTICE
 
+/* USE_LOGFILE - log errors and such to LPATH
+ * If you wish to have the server send 'vital' messages about server
+ * to a logfile, define USE_LOGFILE.
+ */
+#define USE_LOGFILE
+
 /* USE_SYSLOG - log errors and such to syslog()
  * If you wish to have the server send 'vital' messages about server
  * through syslog, define USE_SYSLOG. Only system errors and events critical
@@ -391,7 +397,6 @@
  * syslog() is used instead of the above file. It is not recommended that
  * this option is used unless you tell the system administrator beforehand
  * and obtain their permission to send messages to the system log files.
- *
  */
 #define USE_SYSLOG
 
