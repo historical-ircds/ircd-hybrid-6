@@ -418,7 +418,7 @@ int attach_Iline(aClient* cptr, const char* username, char **preason)
       if (aconf->status & CONF_CLIENT)
         {
 #ifdef GLINES
-          if ( (gkill_conf = find_gkill(cptr)) )
+          if ( !IsConfElined(aconf) && (gkill_conf = find_gkill(cptr)) )
             {
               *preason = gkill_conf->passwd;
               sendto_one(cptr, ":%s NOTICE %s :*** G-lined",

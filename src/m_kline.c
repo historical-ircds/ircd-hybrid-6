@@ -1195,7 +1195,7 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
   DupString(aconf->passwd,buffer);
 
   aconf->ip = ip_host;
-  aconf->ip_mask &= ip_mask;
+  aconf->ip_mask = ip_mask;
 
   add_Dline(aconf);
 
