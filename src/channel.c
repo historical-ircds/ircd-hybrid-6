@@ -2285,7 +2285,7 @@ static  int     can_join(struct Client *sptr, struct Channel *chptr, char *key, 
   if( chptr->mode.mode & MODE_JUPED )
     {
       sendto_ops_flags(FLAGS_SPY,
-             "User %s (%s@%s) is attemping to join locally juped channel %s",
+             "User %s (%s@%s) is attempting to join locally juped channel %s",
                      sptr->name,
                      sptr->username, sptr->host,chptr->chname);
       return (ERR_BADCHANNAME);

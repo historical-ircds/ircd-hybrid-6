@@ -374,7 +374,11 @@ const unsigned int CharAttrs[] = {
 /* + */      PRINT_C|CHAN_C|NONEOS_C,
 /* , */      PRINT_C|NONEOS_C,
 /* - */      PRINT_C|NICK_C|CHAN_C|NONEOS_C|USER_C|HOST_C,
+#ifdef ALLOW_DOT_IN_IDENT
+/* . */      PRINT_C|KWILD_C|CHAN_C|NONEOS_C|USER_C|HOST_C|SERV_C,
+#else
 /* . */      PRINT_C|KWILD_C|CHAN_C|NONEOS_C|HOST_C|SERV_C,
+#endif
 #ifdef RFC1035_ANAL
 /* / */      PRINT_C|CHAN_C|NONEOS_C,
 #else

@@ -169,6 +169,12 @@
  */
 #define RFC1035_ANAL
 
+/* ALLOW_DOT_IN_IDENT
+ * Defining this will allow periods in ident replies.  Use of this is
+ * strongly discouraged on public networks
+ */
+#undef ALLOW_DOT_IN_IDENT
+
 /* MAX_MULTI_MESSAGES
  * Maximum number of recipients to a PRIVMSG.  Any more than MAX_MULTI_MESSAGES
  * will not be sent.  If MAX_MULTI_MESSAGES is 1, then any PRIVMSG with a ',' in

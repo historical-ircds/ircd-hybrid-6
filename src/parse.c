@@ -317,7 +317,7 @@ int parse(aClient *cptr, char *buffer, char *bufend)
       sendto_one(from,
                  ":%s %d %s %s :Register first.",
                  me.name, ERR_NOTREGISTERED,
-                 from->name, ch);
+                 BadPtr(from->name) ? "*" : from->name, ch);
       return -1;
     }
 

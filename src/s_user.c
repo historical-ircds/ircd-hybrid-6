@@ -1370,7 +1370,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
       (IsServer(cptr) && strcmp(nick, parv[1])))
     {
       sendto_one(sptr, form_str(ERR_ERRONEUSNICKNAME),
-                 me.name, parv[0], parv[1]);
+                 me.name, BadPtr(parv[0]) ? "*" : parv[0], parv[1]);
       
       if (IsServer(cptr))
         {
@@ -1790,7 +1790,7 @@ int m_user(aClient* cptr, aClient* sptr, int parc, char *parv[])
       *parv[3] == '\0' || *parv[4] == '\0')
     {
       sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
-                 me.name, parv[0], "USER");
+                 me.name, BadPtr(parv[0]) ? "*" : parv[0], "USER");
       if (IsServer(cptr))
         sendto_realops("bad USER param count for %s from %s",
                        parv[0], get_client_name(cptr, FALSE));
