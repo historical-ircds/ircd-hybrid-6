@@ -1,3 +1,8 @@
+*** 20010617_4 by db
+- upped patchlevel to 6.1b2
+
+
+
 *** 20010617_3 by db
 - backwards #ifndef's give me a headache, besides the rest of the code
   uses #ifdef HIDE_SERVERS IPS
