@@ -1,3 +1,8 @@
+*** 20001124_2 by lusky
+added a bunch of casts to fix signedness warnings with irix compiler and
+  with gcc -Wall -pedantic
+
+
 *** 20001124_1 by lusky
 fixed IPQuadTab corruption issue [werd!@#@!#!@] (db/pvr)
 added hide_ops (db)
