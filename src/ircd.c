@@ -20,33 +20,34 @@
  * $Id$
  */
 #include "ircd.h"
-#include "ircd_signal.h"
-#include "struct.h"
+#include "channel.h"
+#include "class.h"
 #include "common.h"
 #include "dline_conf.h"
-#include "numeric.h"
-#include "res.h"
-#include "class.h"
-#include "s_auth.h"
-#include "channel.h"
-#include "list.h"
-#include "parse.h"
-#include "mtrie_conf.h"
-#include "s_conf.h"
-#include "motd.h"
-#include "s_bsd.h"
-#include "send.h"
-#include "s_err.h"
-#include "hash.h"
-#include "whowas.h"
 #include "fdlist.h"
-#include "restart.h"
+#include "hash.h"
+#include "ircd_signal.h"
+#include "list.h"
 #include "m_gline.h"
-#include "scache.h"
-#include "s_misc.h"
-#include "s_zip.h"
+#include "motd.h"
+#include "msg.h"         /* msgtab */
+#include "mtrie_conf.h"
+#include "numeric.h"
+#include "parse.h"
+#include "res.h"
+#include "restart.h"
+#include "s_auth.h"
+#include "s_bsd.h"
+#include "s_conf.h"
 #include "s_debug.h"
-#include "msg.h"      /* msgtab */
+#include "s_err.h"
+#include "s_misc.h"
+#include "s_serv.h"      /* try_connections */
+#include "s_zip.h"
+#include "scache.h"
+#include "send.h"
+#include "struct.h"
+#include "whowas.h"
 
 #include <string.h>
 #include <errno.h>
@@ -63,7 +64,6 @@
 #include <unistd.h>
 #endif /* SETUID_ROOT */
 
-#define MIN_CONN_FREQ 300
 
 #ifdef  REJECT_HOLD
 int reject_held_fds = 0;
@@ -113,114 +113,6 @@ int     rehashed = YES;
 int     dline_in_progress = NO; /* killing off matching D lines ? */
 time_t  nextconnect = 1;        /* time for next try_connections call */
 time_t  nextping = 1;           /* same as above for check_pings() */
-int     autoconn = 1;           /* allow auto conns or not */
-
-/*
- * try_connections
- *
- *      Scan through configuration and try new connections.
- *      Returns the calendar time when the next call to this
- *      function should be made latest. (No harm done if this
- *      is called earlier or later...)
- */
-static time_t try_connections(time_t currenttime)
-{
-  aConfItem     *aconf;
-  aClient       *cptr;
-  aConfItem     **pconf;
-  int           connecting, confrq;
-  time_t        next = 0;
-  aClass        *cltmp;
-  aConfItem     *con_conf = (aConfItem *)NULL;
-  int           con_class = 0;
-
-  connecting = FALSE;
-  Debug((DEBUG_NOTICE,"Connection check at   : %s",
-         myctime(currenttime)));
-  for (aconf = ConfigItemList; aconf; aconf = aconf->next )
-    {
-      /* Also when already connecting! (update holdtimes) --SRB */
-      if (!(aconf->status & CONF_CONNECT_SERVER) || aconf->port <= 0)
-        continue;
-      cltmp = ClassPtr(aconf);
-      /*
-      ** Skip this entry if the use of it is still on hold until
-      ** future. Otherwise handle this entry (and set it on hold
-      ** until next time). Will reset only hold times, if already
-      ** made one successfull connection... [this algorithm is
-      ** a bit fuzzy... -- msa >;) ]
-      */
-
-      if ((aconf->hold > currenttime))
-        {
-          if ((next > aconf->hold) || (next == 0))
-            next = aconf->hold;
-          continue;
-        }
-
-      if( (confrq = get_con_freq(cltmp)) < MIN_CONN_FREQ )
-        confrq = MIN_CONN_FREQ;
-
-      aconf->hold = currenttime + confrq;
-      /*
-      ** Found a CONNECT config with port specified, scan clients
-      ** and see if this server is already connected?
-      */
-      cptr = find_server(aconf->name);
-      
-      if (!cptr && (Links(cltmp) < MaxLinks(cltmp)) &&
-          (!connecting || (ClassType(cltmp) > con_class)))
-        {
-          con_class = ClassType(cltmp);
-          con_conf = aconf;
-          /* We connect only one at time... */
-          connecting = TRUE;
-        }
-      if ((next > aconf->hold) || (next == 0))
-        next = aconf->hold;
-    }
-
-  if(autoconn == 0)
-    {
-      if(connecting)
-        sendto_ops("Connection to %s[%s] activated.",
-                 con_conf->name, con_conf->host);
-      sendto_ops("WARNING AUTOCONN is 0, autoconns are disabled");
-      Debug((DEBUG_NOTICE,"Next connection check : %s", myctime(next)));
-      return (next);
-    }
-
-  if (connecting)
-    {
-      if (con_conf->next)  /* are we already last? */
-        {
-          for (pconf = &ConfigItemList; (aconf = *pconf);
-               pconf = &(aconf->next))
-            /* put the current one at the end and
-             * make sure we try all connections
-             */
-            if (aconf == con_conf)
-              *pconf = aconf->next;
-          (*pconf = con_conf)->next = 0;
-        }
-
-      if(!(con_conf->flags & CONF_FLAGS_ALLOW_AUTO_CONN))
-        {
-          sendto_ops("Connection to %s[%s] activated but autoconn is off.",
-                     con_conf->name, con_conf->host);
-          sendto_ops("WARNING AUTOCONN on %s[%s] is disabled",
-                     con_conf->name, con_conf->host);
-        }
-      else
-        {
-          if (connect_server(con_conf, 0, 0))
-            sendto_ops("Connection to %s[%s] activated.",
-                       con_conf->name, con_conf->host);
-        }
-    }
-  Debug((DEBUG_NOTICE,"Next connection check : %s", myctime(next)));
-  return (next);
-}
 
 
 /*

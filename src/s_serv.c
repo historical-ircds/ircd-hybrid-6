@@ -60,8 +60,10 @@
 #include <errno.h>
 #include <time.h>
 
-int     max_connection_count = 1;
-int     max_client_count = 1;
+#define MIN_CONN_FREQ 300
+
+int max_connection_count = 1;
+int max_client_count = 1;
 
 extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 
@@ -71,12 +73,13 @@ static void show_opers(struct Client *);
 static void show_ports(struct Client *); 
 static void set_autoconn(struct Client *,char *,char *,int);
 static void report_specials(struct Client *,int,int);
-static int m_set_parser(char *);
+static int  m_set_parser(char *);
 
 #ifdef PACE_WALLOPS
 time_t last_used_wallops = 0L;
 #endif
 
+static int autoconn = 1;           /* allow auto conns or not */
 
 /*
  * hunt_server - Do the basic thing in delivering the message (command)
@@ -174,6 +177,111 @@ int hunt_server(aClient *cptr, aClient *sptr, char *command,
   sendto_one(sptr, form_str(ERR_NOSUCHSERVER), me.name,
              parv[0], parv[server]);
   return(HUNTED_NOSUCH);
+}
+
+/*
+ * try_connections - scan through configuration and try new connections.
+ * Returns the calendar time when the next call to this
+ * function should be made latest. (No harm done if this
+ * is called earlier or later...)
+ */
+time_t try_connections(time_t currenttime)
+{
+  aConfItem     *aconf;
+  aClient       *cptr;
+  aConfItem     **pconf;
+  int           connecting, confrq;
+  time_t        next = 0;
+  aClass        *cltmp;
+  aConfItem     *con_conf = (aConfItem *)NULL;
+  int           con_class = 0;
+
+  connecting = FALSE;
+  Debug((DEBUG_NOTICE,"Connection check at   : %s",
+         myctime(currenttime)));
+  for (aconf = ConfigItemList; aconf; aconf = aconf->next )
+    {
+      /* Also when already connecting! (update holdtimes) --SRB */
+      if (!(aconf->status & CONF_CONNECT_SERVER) || aconf->port <= 0)
+        continue;
+      cltmp = ClassPtr(aconf);
+      /*
+      ** Skip this entry if the use of it is still on hold until
+      ** future. Otherwise handle this entry (and set it on hold
+      ** until next time). Will reset only hold times, if already
+      ** made one successfull connection... [this algorithm is
+      ** a bit fuzzy... -- msa >;) ]
+      */
+
+      if ((aconf->hold > currenttime))
+        {
+          if ((next > aconf->hold) || (next == 0))
+            next = aconf->hold;
+          continue;
+        }
+
+      if( (confrq = get_con_freq(cltmp)) < MIN_CONN_FREQ )
+        confrq = MIN_CONN_FREQ;
+
+      aconf->hold = currenttime + confrq;
+      /*
+      ** Found a CONNECT config with port specified, scan clients
+      ** and see if this server is already connected?
+      */
+      cptr = find_server(aconf->name);
+      
+      if (!cptr && (Links(cltmp) < MaxLinks(cltmp)) &&
+          (!connecting || (ClassType(cltmp) > con_class)))
+        {
+          con_class = ClassType(cltmp);
+          con_conf = aconf;
+          /* We connect only one at time... */
+          connecting = TRUE;
+        }
+      if ((next > aconf->hold) || (next == 0))
+        next = aconf->hold;
+    }
+
+  if(autoconn == 0)
+    {
+      if(connecting)
+        sendto_ops("Connection to %s[%s] activated.",
+                 con_conf->name, con_conf->host);
+      sendto_ops("WARNING AUTOCONN is 0, autoconns are disabled");
+      Debug((DEBUG_NOTICE,"Next connection check : %s", myctime(next)));
+      return (next);
+    }
+
+  if (connecting)
+    {
+      if (con_conf->next)  /* are we already last? */
+        {
+          for (pconf = &ConfigItemList; (aconf = *pconf);
+               pconf = &(aconf->next))
+            /* put the current one at the end and
+             * make sure we try all connections
+             */
+            if (aconf == con_conf)
+              *pconf = aconf->next;
+          (*pconf = con_conf)->next = 0;
+        }
+
+      if(!(con_conf->flags & CONF_FLAGS_ALLOW_AUTO_CONN))
+        {
+          sendto_ops("Connection to %s[%s] activated but autoconn is off.",
+                     con_conf->name, con_conf->host);
+          sendto_ops("WARNING AUTOCONN on %s[%s] is disabled",
+                     con_conf->name, con_conf->host);
+        }
+      else
+        {
+          if (connect_server(con_conf, 0, 0))
+            sendto_ops("Connection to %s[%s] activated.",
+                       con_conf->name, con_conf->host);
+        }
+    }
+  Debug((DEBUG_NOTICE,"Next connection check : %s", myctime(next)));
+  return (next);
 }
 
 /*

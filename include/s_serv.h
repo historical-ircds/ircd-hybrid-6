@@ -25,6 +25,10 @@
 #ifndef INCLUDED_config_h
 #include "config.h"
 #endif
+#ifndef INCLUDED_sys_types_h
+#include <sys/types.h>
+#define INCLUDED_sys_types_h
+#endif
 
 struct Client;
 
@@ -94,10 +98,11 @@ extern struct Capability captab[];
 #define HUNTED_ISME     0       /* if this server should execute the command */
 #define HUNTED_PASS     1       /* if message passed onwards successfully */
 
-extern void send_capabilities(struct Client* client, int use_zip);
-extern int  hunt_server(struct Client* cptr, struct Client* sptr,
-                        char* command, int server, int parc, char** parv);
-extern int  server_estab(struct Client* cptr);
+extern void   send_capabilities(struct Client* client, int use_zip);
+extern int    hunt_server(struct Client* cptr, struct Client* sptr,
+                          char* command, int server, int parc, char** parv);
+extern int    server_estab(struct Client* cptr);
+extern time_t try_connections(time_t currenttime);
 
 #endif /* INCLUDED_s_serv_h */
 

@@ -48,18 +48,18 @@ hash.o: hash.c ../include/s_conf.h ../include/config.h \
  ../include/ircd.h ../include/send.h ../include/s_err.h
 irc_string.o: irc_string.c ../include/irc_string.h ../include/list.h
 ircd.o: ircd.c ../include/ircd.h ../include/config.h \
- ../include/setup.h ../include/ircd_signal.h ../include/struct.h \
- ../include/ircd_defs.h ../include/client.h ../include/dbuf.h \
- ../include/common.h ../include/irc_string.h ../include/dline_conf.h \
- ../include/numeric.h ../include/res.h ../include/class.h \
- ../include/s_auth.h ../include/channel.h ../include/list.h \
- ../include/parse.h ../include/mtrie_conf.h ../include/s_conf.h \
- ../include/fileio.h ../include/motd.h ../include/s_bsd.h \
- ../include/send.h ../include/s_err.h ../include/hash.h \
- ../include/whowas.h ../include/fdlist.h ../include/restart.h \
- ../include/m_gline.h ../include/scache.h ../include/s_misc.h \
+ ../include/setup.h ../include/channel.h ../include/ircd_defs.h \
+ ../include/class.h ../include/common.h ../include/irc_string.h \
+ ../include/dline_conf.h ../include/fdlist.h ../include/hash.h \
+ ../include/ircd_signal.h ../include/list.h ../include/m_gline.h \
+ ../include/motd.h ../include/msg.h ../include/mtrie_conf.h \
+ ../include/numeric.h ../include/parse.h ../include/res.h \
+ ../include/restart.h ../include/s_auth.h ../include/s_bsd.h \
+ ../include/s_conf.h ../include/fileio.h ../include/s_debug.h \
+ ../include/s_err.h ../include/s_misc.h ../include/s_serv.h \
  ../include/s_zip.h ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h \
- ../include/s_debug.h ../include/msg.h
+ ../include/scache.h ../include/send.h ../include/struct.h \
+ ../include/client.h ../include/dbuf.h ../include/whowas.h
 ircd_signal.o: ircd_signal.c ../include/ircd_signal.h \
  ../include/send.h ../include/config.h ../include/setup.h \
  ../include/restart.h ../include/ircd.h
