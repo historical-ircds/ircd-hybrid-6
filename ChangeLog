@@ -1,3 +1,9 @@
+*** 19990804_1 by lusky
+fix for IP Klines in stats from Diane
+fix for broken m_unkline.c from Diane it would unkline everything
+fix for lusers from Tom
+
+
 *** 19990803_2 by lusky
 bumped patchlevel for new tarball
 
