@@ -163,4 +163,9 @@ int dbuf_delete (dbuf *, int);
 extern  int     dbuf_getmsg (dbuf *, char *, int);
 extern  void     dbuf_init(void);
 
+extern  int     dbufalloc;
+extern  int     dbufblocks;
+extern  int     maxdbufalloc;
+extern  int     maxdbufblocks;
+
 #endif /* __dbuf_include__ */

@@ -23,6 +23,7 @@
 #include "s_conf.h"
 #include "class.h"
 #include "list.h"
+#include "dbuf.h"
 #include "res.h"
 #include "send.h"
 

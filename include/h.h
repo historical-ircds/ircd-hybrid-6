@@ -61,20 +61,14 @@ extern struct Channel* channel;
 extern struct stats* ircstp;
 extern  int     bootopt;
 
-extern  int     dbufalloc;
-extern  int     dbufblocks;
 extern  int     debuglevel;
-extern  int     maxdbufalloc;
-extern  int     maxdbufblocks;
 extern  int     highest_fd;
 extern  int     debuglevel;
 extern  int     debugtty;
-extern  int     maxusersperchannel;
 extern  char*   debugmode;
 
 extern void     outofmemory(void);               /* list.c */
 extern  time_t  check_fdlists (time_t);
-extern  void    flush_server_connections(void);
 
 extern struct Client* find_chasing (struct Client *, char *, int *);
 extern struct Client* find_client(const char* name, struct Client* client);
