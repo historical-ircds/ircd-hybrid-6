@@ -520,13 +520,12 @@ static  char *  replies[] = {
 /* 476 ERR_BADCHANMASK, */      ":%s 476 %s %s :Bad Channel Mask",
 /* 477 ERR_MODELESS, */         ":%s 477 %s %s :Channel does not support modes",
 /* 478 ERR_BANLISTFULL, */      ":%s 478 %s %s %s :Channel ban list is full",
-/* 479 ERR_BADCHANNAME */
-                ":%s 479 %s %s :Cannot join channel (illegal name)",
+/* 479 ERR_BADCHANNAME */       ":%s 479 %s %s :Illegal channel name",
 /* 480 */       (char *)NULL,
 /* 481 ERR_NOPRIVILEGES, */
                 ":%s 481 %s :Permission Denied- You're not an IRC operator",
 /* 482 ERR_CHANOPRIVSNEEDED, */ ":%s 482 %s %s :You're not channel operator",
-/* 483 ERR_CANTKILLSERVER, */   ":%s 483 %s :You cant kill a server!",
+/* 483 ERR_CANTKILLSERVER, */   ":%s 483 %s :You can't kill a server!",
 /* 484 */       (char *)NULL,
 /* 485 */       (char *)NULL,
 /* 486 */       (char *)NULL,
@@ -545,7 +544,7 @@ static  char *  replies[] = {
 /* 499 */       (char *)NULL,
 /* 500 */       (char *)NULL,
 /* 501 ERR_UMODEUNKNOWNFLAG, */ ":%s 501 %s :Unknown MODE flag",
-/* 502 ERR_USERSDONTMATCH, */   ":%s 502 %s :Cant change mode for other users",
+/* 502 ERR_USERSDONTMATCH, */   ":%s 502 %s :Can't change mode for other users",
 /* 503 ERR_GHOSTEDCLIENT, */    ":%s 503 %s :Message could not be delivered to %s",
 /* 504 LAST ERR_LAST_ERR_MSG, */        ":%s 504 %s :Last Error Message",
                 (char *)NULL

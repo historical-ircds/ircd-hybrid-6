@@ -32,6 +32,10 @@
 #include "send.h"
 #include "struct.h"
 
+#ifdef DEBUGMODE
+#include "s_debug.h"
+#endif
+
 #define MSGTAB
 #include "msg.h"
 #undef MSGTAB

@@ -22,7 +22,9 @@ Usermodes: (* designates that the umode is oper only)
        * +y     - Can see stats/links/admin requests to name a few.
        * +d     - Can see server debug messages.
        * +n     - Can see client nick changes.
-  
+       * +b     - Can see possible bot warnings.
+       * +x     - Can see new server introduction messages.
+
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 Oper Commands: (+ indicates that /quote must be used with ircII)
@@ -174,7 +176,6 @@ COMMAND         - USAGE and DESCRIPTION
                   KLINE 10 <nick|user@host> :cool off for 10 minutes
 
 + UNKLINE       - UNKLINE <user@host>
-                  -- If compiled with UNKLINE --
                   Will attempt to unkline the given <user@host>
                   Will unkline a temporary kline.
 

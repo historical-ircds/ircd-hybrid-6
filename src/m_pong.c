@@ -30,6 +30,10 @@
 #include "channel.h"
 #include "irc_string.h"
 
+#ifdef DEBUGMODE
+#include "s_debug.h"
+#endif
+
 /*
  * m_functions execute protocol messages on this server:
  *

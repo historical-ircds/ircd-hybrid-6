@@ -42,6 +42,10 @@
 #include "send.h"
 #include "struct.h"
 
+#ifdef DEBUGMODE
+#include "s_debug.h"
+#endif
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>

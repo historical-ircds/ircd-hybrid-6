@@ -1036,7 +1036,7 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
   if ( parc < 2 )
     {
       sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
-                 me.name, parv[0], "KLINE");
+                 me.name, parv[0], "DLINE");
       return 0;
     }
 

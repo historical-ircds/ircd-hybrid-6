@@ -35,6 +35,10 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 
+#ifdef DEBUGMODE
+#include <errno.h>
+#endif
+
 #include <limits.h>
 #if (CHAR_BIT != 8)
 #error this code needs to be able to address individual octets 

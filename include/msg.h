@@ -102,7 +102,6 @@ typedef struct MessageTree MESSAGE_TREE;
 #define MSG_KICK     "KICK"     /* KICK */
 #define MSG_USERHOST "USERHOST" /* USER -> USRH */
 #define MSG_ISON     "ISON"     /* ISON */
-#define MSG_USRIP    "USRIP"    /* USRIP */
 #define MSG_REHASH   "REHASH"   /* REHA */
 #define MSG_RESTART  "RESTART"  /* REST */
 #define MSG_CLOSE    "CLOSE"    /* CLOS */

@@ -52,7 +52,6 @@ static  int     send_message (aClient *, char *, int);
 
 static  void vsendto_prefix_one(register aClient *, register aClient *, const char *, va_list);
 static  void vsendto_one(aClient *, const char *, va_list);
-static  void vsendto_one(aClient *, const char *, va_list);
 static  void vsendto_realops(const char *, va_list);
 
 static  unsigned long sentalong[MAXCONNECTIONS];
