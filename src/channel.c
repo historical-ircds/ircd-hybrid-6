@@ -3694,6 +3694,7 @@ int     m_sjoin(struct Client *cptr,
     }
   else
     {
+#ifndef NO_HACK_OPS    
       if (haveops)
         keep_new_modes = NO;
       if (doesop && !haveops)
@@ -3702,6 +3703,10 @@ int     m_sjoin(struct Client *cptr,
         }
       else
         tstosend = oldts;
+#else
+      keep_new_modes = NO;
+      tstosend = oldts;
+#endif      
     }
 
   if (!keep_new_modes)
