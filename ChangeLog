@@ -1,3 +1,5 @@
+*** 20000812_1 by lusky
+
 *** 20000809_2 by lusky
 changed the sendto_ops to sendto_realops for dupe gline votes (gp)
 add G to the version flags to indicate G-line capability (gp)
