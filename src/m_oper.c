@@ -152,7 +152,7 @@ int m_oper(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       sendto_one(sptr, form_str(ERR_NOOPERHOST), me.name, parv[0]);
 #if defined(FAILED_OPER_NOTICE) && defined(SHOW_FAILED_OPER_ID)
 #ifdef SHOW_FAILED_OPER_PASSWD
-      sendto_realops("Failed OPER attempt [%s(%s)] - identity mismatch: %s [%s@%s]",
+      sendto_realops("Failed OPER attempt [%s(%s)] - identity mismatch: %s (%s@%s)",
         name, password, sptr->name, sptr->username, sptr->host);
 #else
       sendto_realops("Failed OPER attempt - host mismatch by %s (%s@%s)",
