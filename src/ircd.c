@@ -116,7 +116,8 @@ extern  void read_oper_motd();		/* defined in s_serv.c */
 extern  void read_help();		/* defined in s_serv.c */
 extern  void sync_channels(time_t);	/* defined in channel.c */
 
-char	**myargv;
+static char **myargv;
+
 int	portnum = -1;	              /* Server port number, listening this */
 
 int	debuglevel = -1;		/* Server debug level */
@@ -1144,16 +1145,19 @@ normal user.\n");
   ConfigFileEntry.opermotd = (aMessageFile *)NULL;
   read_oper_motd();
 #endif 
-  ConfigFileEntry.motd = (aMessageFile *)NULL;
+
   ConfigFileEntry.helpfile = (aMessageFile *)NULL;
+  read_help();
 
+  ConfigFileEntry.motd = (aMessageFile *)NULL;
   ConfigFileEntry.motd_last_changed_date[0] = '\0';
-
   read_motd();
+
 #ifdef AMOTD
+  ConfigFileEntry.amotd = (aMessageFile *)NULL;
   read_amotd();
 #endif
-  read_help();
+
   clear_client_hash_table();
   clear_channel_hash_table();
   clear_scache_hash_table();	/* server cache name table */
@@ -1163,18 +1167,18 @@ normal user.\n");
   initclass();
   initwhowas();
   initstats();
-  init_tree_parse(msgtab);
+  init_tree_parse(msgtab);	/* tree parse code (orabidoo) */
   NOW = time(NULL);
+
   init_fdlist(&serv_fdlist);
   init_fdlist(&oper_fdlist);
   init_fdlist(&default_fdlist);
-
-  open_debugfile();
-  NOW = time(NULL);
-
 #ifndef NO_PRIORITY
   init_fdlist(&busycli_fdlist);
 #endif
+
+  open_debugfile();
+  NOW = time(NULL);
 
   if((timeofday = time(NULL)) == -1)
     {
