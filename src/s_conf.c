@@ -58,14 +58,14 @@ extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 struct sockaddr_in vserv;
 char        specific_virtual_host;
 
-int safe_write(aClient *,char *, int, char *);
+int safe_write(aClient *,const char *, int, char *);
 
 /* internally defined functions */
 
 static void lookup_confhost(aConfItem* aconf);
 static int     SplitUserHost( aConfItem * );
 
-static FBFILE*  openconf(char* filename);
+static FBFILE*  openconf(const char* filename);
 static void	initconf(FBFILE*, int);
 static void     clear_out_old_conf(void);
 static void     flush_deleted_I_P(void);
@@ -1573,7 +1573,7 @@ int rehash(aClient *cptr,aClient *sptr,int sig)
  * returns 0 (NULL) on any error or else the fd opened from which to read the
  * configuration file from.  
  */
-static FBFILE* openconf(char *filename)
+static FBFILE* openconf(const char *filename)
 {
   return fbopen(filename, "r");
 }
@@ -3163,7 +3163,7 @@ void GetPrintableaConfItem(aConfItem *aconf, char **name, char **host,
 void read_conf_files(int cold)
 {
   FBFILE* file = 0;     /* initconf */
-  char *filename;	/* kline or conf filename */
+  const char *filename;	/* kline or conf filename */
 
   filename = get_conf_name(CONF_TYPE);
 
@@ -3299,7 +3299,7 @@ void write_kline_or_dline_to_conf_and_notice_opers(
   char *timebuffer;
 #endif
   int out;
-  char *filename;		/* filename to use for kline */
+  const char *filename;		/* filename to use for kline */
 
   filename = get_conf_name(type);
 
@@ -3393,8 +3393,21 @@ void write_kline_or_dline_to_conf_and_notice_opers(
   return;
 }
 
-int safe_write(aClient *sptr,
-		      char *filename, int out,char *buffer)
+/*
+ * safe_write
+ *
+ * inputs	- client pointer
+ * 		- filename to write to
+ *		- open fd to be writing on
+ *		- buffer to write
+ * output	- -1 if error on write, 0 if ok
+ * side effects	- function tries to write buffer safely
+ *		  i.e. checking for disk full errors etc.
+ */
+       
+int
+safe_write(aClient *sptr,
+	   const char *filename, int out,char *buffer)
 {
   if (write(out,buffer,strlen(buffer)) <= 0)
     {
@@ -3405,18 +3418,25 @@ int safe_write(aClient *sptr,
   return(0);
 }
 
-char *get_conf_name(KlineType type)
+/* get_conf_name
+ *
+ * inputs	- type of conf file to return name of file for
+ * output	- pointer to filename for type of conf
+ * side effects	- none
+ */
+
+const char *
+get_conf_name(KlineType type)
 {
-  static char filenamebuf[PATH_MAX+1];
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
+  static char filenamebuf[PATH_MAX+1];
   static  char    timebuffer[MAX_DATE_STRING];
   struct tm *tmptr;
 #endif
 
   if(type == CONF_TYPE)
     {
-      strncpy(filenamebuf,ConfigFileEntry.configfile,PATH_MAX);
-      return(filenamebuf);
+      return(ConfigFileEntry.configfile);
     }
   else if(type == KLINE_TYPE)
     {
@@ -3424,13 +3444,11 @@ char *get_conf_name(KlineType type)
       tmptr = localtime(&NOW);
       strftime(timebuffer, MAX_DATE_STRING, "%Y%m%d", tmptr);
       ircsprintf(filenamebuf, "%s.%s", ConfigFileEntry.klinefile, timebuffer);
-#else
-      strncpy(filenamebuf,ConfigFileEntry.klinefile,PATH_MAX);
-#endif			
       return(filenamebuf);
+#else
+      return(ConfigFileEntry.klinefile);
+#endif			
     }
-  else if(type == DLINE_TYPE)
-    strncpy(filenamebuf,ConfigFileEntry.dlinefile,PATH_MAX);
 
-  return( filenamebuf );
+  return(ConfigFileEntry.dlinefile);
 }

@@ -88,7 +88,7 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
   char  buff[BUFSIZE];	/* matches line definition in s_conf.c */
   char	temppath[256];
 
-  char  *filename;		/* filename to use for unkline */
+  const char  *filename;		/* filename to use for unkline */
 
   char	*user,*host;
   char  *p;
