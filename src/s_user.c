@@ -3677,6 +3677,8 @@ int	m_umode(aClient *cptr,
 	    {
 	      if(IsServer(cptr))
 		{
+		  Count.oper--;
+
 		  SetOper(sptr);
 		  sptr->umodes |= FLAGS_OPER;
 		}
@@ -3685,6 +3687,38 @@ int	m_umode(aClient *cptr,
 	    {
 	      sptr->flags &= ~(FLAGS_OPER|FLAGS_LOCOP);
 	      sptr->umodes &= ~(FLAGS_OPER|FLAGS_LOCOP);
+
+	      Count.oper--;
+
+	      if (MyConnect(sptr))
+		{
+		  aClient *prev_cptr = (aClient *)NULL;
+		  aClient *cur_cptr = oper_cptr_list;
+
+		  delfrom_fdlist(sptr->fd, &oper_fdlist);
+		  
+		  sptr->flags2 &= ~(FLAGS2_OPER_GLOBAL_KILL|
+				    FLAGS2_OPER_REMOTE|
+				    FLAGS2_OPER_UNKLINE|
+				    FLAGS2_OPER_GLINE|
+				    FLAGS2_OPER_N|
+				    FLAGS2_OPER_K);
+		  while(cur_cptr)
+		    {
+		      if(sptr == cur_cptr) 
+			{
+			  if(prev_cptr)
+			    prev_cptr->next_oper_client = cur_cptr->next_oper_client;
+			  else
+			    oper_cptr_list = cur_cptr->next_oper_client;
+			  cur_cptr->next_oper_client = (aClient *)NULL;
+			  break;
+			}
+		      else
+			prev_cptr = cur_cptr;
+		      cur_cptr = cur_cptr->next_oper_client;
+		    }
+		}
 	    }
 	  break;
 
