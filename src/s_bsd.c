@@ -1100,7 +1100,9 @@ int read_message(time_t delay, unsigned char mask)        /* mika */
      */
     if (FD_ISSET(i, write_set)) {
       --nfds;
-      if (IsConnecting(cptr) && completed_connection(cptr)) {
+      if (IsConnecting(cptr)) {
+        if (!completed_connection(cptr))
+          exit_client(cptr, cptr, &me, "Lost C/N Line");
         send_queued(cptr);
         if (!IsDead(cptr))
           continue;
@@ -1380,7 +1382,9 @@ int read_message(time_t delay, unsigned char mask)
 
       if (rw)
         {
-          if (IsConnecting(cptr) && completed_connection(cptr)) {
+          if (IsConnecting(cptr)) {
+            if (!completed_connection(cptr))
+              exit_client(cptr, cptr, &me, "Lost C/N Line");
             send_queued(cptr);
             if (!IsDead(cptr))
               continue;
