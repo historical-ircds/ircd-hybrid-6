@@ -27,10 +27,7 @@
 #ifndef INCLUDED_config_h
 #include "config.h"       /* config settings */
 #endif
-#ifndef INCLUDED_zlib_h
-#include "zlib.h"         /* z_stream */
-#define INCLUDED_zlib_h
-#endif
+#include <zlib.h>         /* z_stream */
 
 struct Client;
 

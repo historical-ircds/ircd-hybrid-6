@@ -1,9 +1,10 @@
 adns.o: adns.c ../include/fileio.h ../include/res.h \
  ../include/config.h ../include/setup.h ../include/ircd_defs.h \
- ../include/../adns/adns.h ../include/send.h ../include/s_conf.h \
- ../include/motd.h ../include/s_bsd.h ../include/s_log.h \
- ../include/client.h ../include/dbuf.h ../include/numeric.h \
- ../adns/internal.h ../adns/adns.h ../adns/dlist.h
+ ../include/../adns/adns.h ../include/irc_string.h ../include/send.h \
+ ../include/s_conf.h ../include/motd.h ../include/s_bsd.h \
+ ../include/s_log.h ../include/client.h ../include/dbuf.h \
+ ../include/numeric.h ../adns/internal.h ../adns/adns.h \
+ ../adns/dlist.h
 blalloc.o: blalloc.c ../include/config.h ../include/setup.h \
  ../include/blalloc.h ../include/ircd_defs.h ../include/irc_string.h \
  ../include/s_log.h ../include/send.h
@@ -43,7 +44,8 @@ dline_conf.o: dline_conf.c ../include/dline_conf.h ../include/class.h \
 fdlist.o: fdlist.c ../include/fdlist.h ../include/client.h \
  ../include/config.h ../include/setup.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/res.h \
- ../include/fileio.h ../include/../adns/adns.h ../include/s_bsd.h
+ ../include/fileio.h ../include/../adns/adns.h ../include/irc_string.h \
+ ../include/s_bsd.h
 fileio.o: fileio.c ../include/fileio.h
 flud.o: flud.c ../include/flud.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
@@ -72,9 +74,9 @@ ircd.o: ircd.c ../include/ircd.h ../include/config.h \
  ../include/../adns/adns.h ../include/restart.h ../include/s_auth.h \
  ../include/s_bsd.h ../include/s_conf.h ../include/s_debug.h \
  ../include/s_log.h ../include/s_misc.h ../include/s_serv.h \
- ../include/s_stats.h ../include/s_zip.h ../zlib/zlib.h \
- ../zlib/zconf.h ../zlib/setup.h ../include/scache.h ../include/send.h \
- ../include/struct.h ../include/whowas.h ../include/blalloc.h
+ ../include/s_stats.h ../include/s_zip.h ../include/scache.h \
+ ../include/send.h ../include/struct.h ../include/whowas.h \
+ ../include/blalloc.h
 ircd_signal.o: ircd_signal.c ../include/ircd_signal.h \
  ../include/ircd.h ../include/config.h ../include/setup.h \
  ../include/restart.h ../include/s_log.h ../include/send.h
@@ -110,7 +112,7 @@ m_close.o: m_close.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
  ../include/s_bsd.h ../include/res.h ../include/fileio.h \
- ../include/../adns/adns.h ../include/send.h
+ ../include/../adns/adns.h ../include/irc_string.h ../include/send.h
 m_connect.o: m_connect.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/common.h ../include/ircd.h \
@@ -330,9 +332,9 @@ match.o: match.c ../include/irc_string.h ../include/ircd_defs.h \
 motd.o: motd.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/motd.h ../include/ircd_defs.h \
  ../include/ircd.h ../include/s_bsd.h ../include/res.h \
- ../include/fileio.h ../include/../adns/adns.h ../include/s_conf.h \
- ../include/class.h ../include/send.h ../include/numeric.h \
- ../include/client.h ../include/dbuf.h ../include/irc_string.h \
+ ../include/fileio.h ../include/../adns/adns.h ../include/irc_string.h \
+ ../include/s_conf.h ../include/class.h ../include/send.h \
+ ../include/numeric.h ../include/client.h ../include/dbuf.h \
  ../include/s_serv.h
 mtrie_conf.o: mtrie_conf.c ../include/mtrie_conf.h ../include/class.h \
  ../include/client.h ../include/config.h ../include/setup.h \
@@ -347,8 +349,7 @@ packet.o: packet.c ../include/packet.h ../include/client.h \
  ../include/config.h ../include/setup.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/common.h ../include/ircd.h \
  ../include/list.h ../include/parse.h ../include/s_zip.h \
- ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h ../include/struct.h \
- ../include/irc_string.h
+ ../include/struct.h ../include/irc_string.h
 parse.o: parse.c ../include/parse.h ../include/channel.h \
  ../include/config.h ../include/setup.h ../include/ircd_defs.h \
  ../include/client.h ../include/dbuf.h ../include/common.h \
@@ -369,15 +370,14 @@ s_auth.o: s_auth.c ../include/m_commands.h ../include/config.h \
  ../include/s_stats.h ../include/send.h ../include/struct.h
 s_bsd.o: s_bsd.c ../include/s_bsd.h ../include/res.h \
  ../include/config.h ../include/setup.h ../include/ircd_defs.h \
- ../include/fileio.h ../include/../adns/adns.h ../include/class.h \
- ../include/client.h ../include/dbuf.h ../include/common.h \
- ../include/fdlist.h ../include/irc_string.h ../include/ircd.h \
+ ../include/fileio.h ../include/../adns/adns.h ../include/irc_string.h \
+ ../include/class.h ../include/client.h ../include/dbuf.h \
+ ../include/common.h ../include/fdlist.h ../include/ircd.h \
  ../include/list.h ../include/listener.h ../include/numeric.h \
  ../include/packet.h ../include/restart.h ../include/s_auth.h \
  ../include/s_conf.h ../include/motd.h ../include/s_log.h \
  ../include/s_serv.h ../include/s_stats.h ../include/s_zip.h \
- ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h ../include/send.h \
- ../include/struct.h
+ ../include/send.h ../include/struct.h
 s_conf.o: s_conf.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/s_conf.h ../include/fileio.h \
  ../include/ircd_defs.h ../include/motd.h ../include/channel.h \
@@ -393,9 +393,9 @@ s_debug.o: s_debug.c ../include/s_debug.h ../include/channel.h \
  ../include/class.h ../include/client.h ../include/dbuf.h \
  ../include/common.h ../include/hash.h ../include/ircd.h \
  ../include/list.h ../include/numeric.h ../include/res.h \
- ../include/fileio.h ../include/../adns/adns.h ../include/s_conf.h \
- ../include/motd.h ../include/s_log.h ../include/scache.h \
- ../include/send.h ../include/struct.h
+ ../include/fileio.h ../include/../adns/adns.h ../include/irc_string.h \
+ ../include/s_conf.h ../include/motd.h ../include/s_log.h \
+ ../include/scache.h ../include/send.h ../include/struct.h
 s_log.o: s_log.c ../include/s_log.h ../include/irc_string.h \
  ../include/ircd_defs.h ../include/config.h ../include/setup.h \
  ../include/ircd.h ../include/s_misc.h
@@ -415,8 +415,7 @@ s_serv.o: s_serv.c ../include/s_serv.h ../include/config.h \
  ../include/../adns/adns.h ../include/struct.h ../include/s_bsd.h \
  ../include/s_conf.h ../include/motd.h ../include/s_log.h \
  ../include/s_stats.h ../include/s_user.h ../include/s_zip.h \
- ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h ../include/scache.h \
- ../include/send.h ../include/s_debug.h
+ ../include/scache.h ../include/send.h ../include/s_debug.h
 s_stats.o: s_stats.c ../include/s_stats.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/irc_string.h ../include/ircd.h \
@@ -435,10 +434,10 @@ s_user.o: s_user.c ../include/m_commands.h ../include/config.h \
  ../include/send.h ../include/struct.h ../include/whowas.h
 s_zip.o: s_zip.c ../include/client.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../include/dbuf.h \
- ../include/s_zip.h ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h \
- ../include/irc_string.h ../include/packet.h ../include/s_bsd.h \
- ../include/res.h ../include/fileio.h ../include/../adns/adns.h \
- ../include/s_serv.h ../include/send.h ../include/struct.h
+ ../include/s_zip.h ../include/irc_string.h ../include/packet.h \
+ ../include/s_bsd.h ../include/res.h ../include/fileio.h \
+ ../include/../adns/adns.h ../include/s_serv.h ../include/send.h \
+ ../include/struct.h
 scache.o: scache.c ../include/client.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../include/dbuf.h \
  ../include/common.h ../include/irc_string.h ../include/ircd.h \
@@ -450,10 +449,9 @@ send.o: send.c ../include/send.h ../include/config.h \
  ../include/common.h ../include/irc_string.h ../include/ircd.h \
  ../include/m_commands.h ../include/numeric.h ../include/s_bsd.h \
  ../include/res.h ../include/fileio.h ../include/../adns/adns.h \
- ../include/s_serv.h ../include/s_zip.h ../zlib/zlib.h ../zlib/zconf.h \
- ../zlib/setup.h ../include/sprintf_irc.h ../include/struct.h \
- ../include/s_conf.h ../include/motd.h ../include/s_debug.h \
- ../include/s_log.h
+ ../include/s_serv.h ../include/s_zip.h ../include/sprintf_irc.h \
+ ../include/struct.h ../include/s_conf.h ../include/motd.h \
+ ../include/s_debug.h ../include/s_log.h
 sprintf_irc.o: sprintf_irc.c ../include/sprintf_irc.h
 whowas.o: whowas.c ../include/whowas.h ../include/ircd_defs.h \
  ../include/config.h ../include/setup.h ../include/client.h \

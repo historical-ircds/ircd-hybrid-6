@@ -79,8 +79,7 @@ CFLAGS = -g -O2 -DNDEBUG
 
 
 SHELL=/bin/sh
-SUBDIRS=adns zlib src tools
-# ZSUBDIRS=zlib $(SUBDIRS)
+SUBDIRS=adns src tools
 
 MAKE = make ${MFLAGS} 'CFLAGS=${CFLAGS}' 'INSTALL=${INSTALL}' 'LDFLAGS=${LDFLAGS}'
 # ZMAKE = make 'CFLAGS=${CFLAGS}' 'INSTALL=${INSTALL}' 'LDFLAGS=${LDFLAGS}'
@@ -93,8 +92,6 @@ build:
 		echo "Doing so now."; \
 		sh configure; \
 	fi
-#	cd zlib; \
-#	${ZMAKE} build; cd ..
 	@for i in $(SUBDIRS); do \
 		echo "Building $$i";\
 		cd $$i;\

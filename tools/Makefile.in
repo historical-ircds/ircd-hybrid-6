@@ -4,7 +4,7 @@ CC=@CC@
 RM=@RM@
 
 IRCDLIBS     = @LIBS@
-INCLUDEDIR   = -I../include -I../zlib
+INCLUDEDIR   = -I../include
 
 mkpasswd_SOURCES = mkpasswd.c
 mkpasswd_OBJECTS = mkpasswd.o
@@ -49,7 +49,5 @@ lint:
 
 # DO NOT DELETE
 
-mkpasswd.o: ../include/setup.h ../zlib/zlib.h
-mkpasswd.o: ../zlib/zconf.h
+mkpasswd.o: ../include/setup.h
 viconf.o: ../include/config.h ../include/setup.h
-viconf.o: ../zlib/zlib.h ../zlib/zconf.h
