@@ -1,3 +1,9 @@
+*** 20001108_1 by lusky
+removed bogus C++ comment (cab)
+added CIDR documentation
+fixed a cast in s_zip.c (cab)
+
+
 *** 20001101_1 by lusky
 disallow DNS command from non-opers
 format string snafu in ts_warn()
