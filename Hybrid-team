@@ -4,24 +4,24 @@ $Id$
 with the instability and all-out "dirtiness" of the efnet ircd's
 available. "hybrid" is the name for the collective efforts of a group
 of people, all of us.
-
+ 
 Anyone is welcome to contribute to this effort. We are serious about this.
-
+ 
   We have run the code through "purify", a commercial program designed
 to find memory leaks. It continues to be checked with malloc tools today.
-The code has been prototyped. Profiling has also been done to catch 
+The code has been prototyped. Profiling has also been done to catch
 slow portions of the code. "crufty" code has been re-written, obsolete
 code has been ripped out. We have also looked at making the code as easy
-to setup up and run as possible using configure etc. 
-Finally speed enhancements and other enhancements have been made to this ircd,
-and continue to be made to this ircd. 
-
- That is not to say that there are still not bugs, There are always bugs.
-But we review each others work on this project, and are open
-to bug reports.
-
+to setup up and run as possible using configure, et cetera.
+Finally speed enhancements and other enhancements have been made to this
+ircd, and continue to be made to this ircd.
+ 
+  That is not to say that there are still not bugs; there are always bugs.
+But we review eachother's work on this project, and are open to publically
+submittable bug reports.
+ 
 The core team as, of this major release:
-
+ 
 cosine, Patrick Alken <wnder@uwns.underworld.net>
 Dianora, Diane Bruce <db@db.net>
 is, Edward Brocklesby <ejb@leguin.org.uk>
@@ -29,10 +29,10 @@ Neph|l|m, Adel Mezibra <adel@cybercable.fr>
 pro, Bill Jonus <proggy@earthling.net>
 Rodder, Jon Lusky <lusky@blown.net>
 Wohali, Joan Touzet <joant@cadence.com>
-
+ 
 The following people have contributed blood, sweat, and/or code to
 this release of hybrid, in nick alphabetical order:
-
+ 
 Bleep, Thomas Helvey <tomh@inxpress.net>
 CBongo, Chris Bongaarts <cab@tc.umn.edu>
 comstud, Chris Behrens <cbehrens@concentric.net>
@@ -40,6 +40,7 @@ echo, Adam J. Durana <adam@caca.com>
 FlashMan, Craig A. Huegen <chuegen@quadrunner.com>
 jailbird, Dustin Marquess <jailbird@alcatraz.fdf.net>
 johan, Johannes Erdfelt <jerdfelt@eng.mindspring.net>
+koitsu/k9, Jeremy Chadwick <jdc@best.net>
 LarZ, Matthew Ramsey <mjr@blackened.com>
 orabidoo, Roger Espel LLima <espel@unix.bigots.org>
 Seaner, Sean McVeigh <sdlmcvei@uwaterloo.ca>
@@ -49,7 +50,27 @@ ThemBones, Brian Kraemer <kraemer@u.washington.edu>
 White_Dragon, Chip Norkus, <wd@dal.net>
 WintrHawk, Jake Khuon <khuon@GCtr.Net>
 xyst, Greg Prosser, <greg@arrogant.org>
-
+ 
+Developers and Contributors for previous versions:
+ 
+Chris Portman       Keith Fralick       Jon Mischo
+Sam Noble           Taner Halicioglu    Darren Reed
+Markku Savela       Greg Lindahl        Jarkko Oikarinen
+Armin Gruner        Matthew Green       Chuck Kane
+Matt Lyle           Vesa Ruokonen       Nicolas PIOCH
+Stellan Klebom      Dan Goodwin         Mike Bolotski
+Ian Frechette       Markku Jarvinen     Kimmo Suominen
+Jeff Trim           Vijay Subramaniam   Karl Kleinpaste
+Bill Wisner         Tom Davis           Hugo Calendar
+Tom Hopkins         Stephen van den Berg
+Bo Adler            Michael Sandrof     Jon Solomon
+Jan Peterson        Helen Rose          Paul Graham
+ 
 Others are welcome. Always.
-
-email bug fixes/complaints/rotten tomatoes to ircd-hybrid@the-project.org
+ 
+Thanks also goes to those persons not mentioned here who have added
+their advice, opinions, and code to IRC.
+Thanks also to those who provide the kind sys admins who let me and
+others continue to develop IRC.
+ 
+Email fixes/complaints/rotten tomatoes to ircd-hybrid@the-project.org.
