@@ -158,15 +158,9 @@ extern int m_ison(aClient *,aClient *,int,char **);
 extern int m_svinfo(aClient *,aClient *,int,char **);
 extern int m_sjoin(aClient *,aClient *,int,char **);
 extern int m_operwall(aClient *,aClient *,int,char **);
-#if defined(OPER_REHASH) || defined(LOCOP_REHASH)
-extern	int	m_rehash(aClient *,aClient *,int,char **);
-#endif
-#if defined(OPER_RESTART) || defined(LOCOP_RESTART)
-extern	int	m_restart(aClient *,aClient *,int,char **);
-#endif
-#if defined(OPER_DIE) || defined(LOCOP_DIE)
-extern	int	m_die(aClient *,aClient *,int,char **);
-#endif
+extern int m_rehash(aClient *,aClient *,int,char **);
+extern int m_restart(aClient *,aClient *,int,char **);
+extern int m_die(aClient *,aClient *,int,char **);
 extern int m_hash(aClient *,aClient *,int,char **);
 extern int m_dns(aClient *,aClient *,int,char **);
 extern int m_htm(aClient *,aClient *,int,char **);
@@ -215,32 +209,20 @@ struct Message msgtab[] = {
 #endif /* LWALLOPS */
 
 #ifdef IDLE_FROM_MSG
+
   /* Only m_private has reset idle flag set */
-#ifdef ANTI_IP_SPOOF
-  /* if ANTI_IP_SPOOF, allow user to send PONG even when not registered */
-  { MSG_PONG,    m_pong,     0, MAXPARA, 1, 1, 0, 0L },
-  { MSG_PING,    m_ping,     0, MAXPARA, 1, 0, 0, 0L },
-#else
-  /* if not ANTI_IP_SPOOF don't allow user to send PONG when not registered */
   { MSG_PONG,    m_pong,     0, MAXPARA, 1, 0, 0, 0L },
   { MSG_PING,    m_ping,     0, MAXPARA, 1, 0, 0, 0L },
-#endif
 
 #else
+
   /* else for IDLE_FROM_MSG */
   /* reset idle flag sense is reversed, only reset idle time
    * when its 0, for IDLE_FROM_MSG ping/pong do not reset idle time
    */
 
-#ifdef ANTI_IP_SPOOF
-  /* if ANTI_IP_SPOOF, allow user to send PONG even when not registered */
-  { MSG_PONG,    m_pong,     0, MAXPARA, 1, 1, 1, 0L },
-  { MSG_PING,    m_ping,     0, MAXPARA, 1, 0, 1, 0L },
-#else
-  /* if not ANTI_IP_SPOOF don't allow user to send PONG when not registered */
   { MSG_PONG,    m_pong,     0, MAXPARA, 1, 0, 1, 0L },
   { MSG_PING,    m_ping,     0, MAXPARA, 1, 0, 1, 0L },
-#endif
 
 #endif	/* IDLE_FROM_MSG */
 
@@ -293,15 +275,9 @@ struct Message msgtab[] = {
   { MSG_GLINE,   m_gline,    0, MAXPARA, 1, 0, 0, 0L },
   { MSG_HASH,    m_hash,     0, MAXPARA, 1, 0, 0, 0L },
   { MSG_DNS,     m_dns,      0, MAXPARA, 1, 0, 0, 0L },
-#if defined(OPER_REHASH) || defined(LOCOP_REHASH)
   { MSG_REHASH,  m_rehash,   0, MAXPARA, 1, 0, 0, 0L },
-#endif
-#if defined(OPER_RESTART) || defined(LOCOP_RESTART)
   { MSG_RESTART, m_restart,  0, MAXPARA, 1, 0, 0, 0L },
-#endif
-#if defined(OPER_DIE) || defined(LOCOP_DIE)
   { MSG_DIE, m_die,          0, MAXPARA, 1, 0, 0, 0L },
-#endif
   { MSG_HTM,	m_htm,	     0, MAXPARA, 1, 0, 0, 0L },
   { MSG_SET,	m_set,	     0, MAXPARA, 1, 0, 0, 0L },
   { MSG_TESTLINE,	m_testline,	     0, MAXPARA, 1, 0, 0, 0L },

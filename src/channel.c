@@ -4335,10 +4335,10 @@ int	m_sjoin(aClient *cptr,
   for (ip = 0; flags[ip].mode; ip++)
     if ((flags[ip].mode & mode.mode) && !(flags[ip].mode & oldmode->mode))
       {
-	if (what != 1)
+	if (!plusSent)
 	  {
 	    *mbuf++ = '+';
-	    what = 1;
+	    plusSent = YES;
 	  }
 	*mbuf++ = flags[ip].letter;
       }
@@ -4346,55 +4346,55 @@ int	m_sjoin(aClient *cptr,
 
   if((MODE_PRIVATE    & mode.mode) && !(MODE_PRIVATE    & oldmode->mode))
     {
-      if (what != 1)
+      if (!plusSent)
 	{
 	  *mbuf++ = '+';
-	  what = 1;
+	  plusSent = YES;
 	}
       *mbuf++ = 'p';
     }
   if((MODE_SECRET     & mode.mode) && !(MODE_SECRET     & oldmode->mode))
     {
-      if (what != 1)
+      if (!plusSent)
 	{
 	  *mbuf++ = '+';
-	  what = 1;
+	  plusSent = YES;
 	}
       *mbuf++ = 's';
     }
   if((MODE_MODERATED  & mode.mode) && !(MODE_MODERATED  & oldmode->mode))
     {
-      if (what != 1)
+      if (!plusSent)
 	{
 	  *mbuf++ = '+';
-	  what = 1;
+	  plusSent = 1;
 	}
       *mbuf++ = 'm';
     }
   if((MODE_NOPRIVMSGS & mode.mode) && !(MODE_NOPRIVMSGS & oldmode->mode))
     {
-      if (what != 1)
+      if (!plusSent)
 	{
 	  *mbuf++ = '+';
-	  what = 1;
+	  plusSent = 1;
 	}
       *mbuf++ = 'n';
     }
   if((MODE_TOPICLIMIT & mode.mode) && !(MODE_TOPICLIMIT & oldmode->mode))
     {
-      if (what != 1)
+      if (!plusSent)
 	{
 	  *mbuf++ = '+';
-	  what = 1;
+	  plusSent = YES;
 	}
       *mbuf++ = 't';
     }
   if((MODE_INVITEONLY & mode.mode) && !(MODE_INVITEONLY & oldmode->mode))
     {
-      if (what != 1)
+      if (!plusSent)
 	{
 	  *mbuf++ = '+';
-	  what = 1;		/* This one is actually redundant now */
+	  plusSent = YES;		/* This one is actually redundant now */
 	}
       *mbuf++ = 'i';
     }
@@ -4415,74 +4415,71 @@ int	m_sjoin(aClient *cptr,
       */
   if((MODE_PRIVATE    & oldmode->mode) && !(MODE_PRIVATE    & mode.mode))
     {
-      if (what != -1)
-	{
-	  *mbuf++ = '-';
-	  what = -1;
-	}
+      *mbuf++ = '-';
+      minusSent = YES;
       *mbuf++ = 'p';
     }
   if((MODE_SECRET     & oldmode->mode) && !(MODE_SECRET     & mode.mode))
     {
-      if (what != -1)
+      if (!minusSent)
 	{
 	  *mbuf++ = '-';
-	  what = -1;
+	  minusSent = YES;
 	}
       *mbuf++ = 's';
     }
   if((MODE_MODERATED  & oldmode->mode) && !(MODE_MODERATED  & mode.mode))
     {
-      if (what != -1)
+      if (!minusSent)
 	{
 	  *mbuf++ = '-';
-	  what = -1;
+	  minusSent = YES;
 	}
       *mbuf++ = 'm';
     }
   if((MODE_NOPRIVMSGS & oldmode->mode) && !(MODE_NOPRIVMSGS & mode.mode))
     {
-      if (what != -1)
+      if (!minusSent)
 	{
 	  *mbuf++ = '-';
-	  what = -1;
+	  minusSent = YES;
 	}
       *mbuf++ = 'n';
     }
   if((MODE_TOPICLIMIT & oldmode->mode) && !(MODE_TOPICLIMIT & mode.mode))
     {
-      if (what != -1)
+      if (!minusSent)
 	{
 	  *mbuf++ = '-';
-	  what = -1;
+	  minusSent = YES;
 	}
       *mbuf++ = 't';
     }
   if((MODE_INVITEONLY & oldmode->mode) && !(MODE_INVITEONLY & mode.mode))
     {
-      if (what != -1)
+      if (!minusSent)
 	{
 	  *mbuf++ = '-';
-	  what = -1;
+	  minusSent = YES;
 	}
       *mbuf++ = 'i';
     }
 
   if (oldmode->limit && !mode.limit)
     {
-      if (what != -1)
+      if (!minusSent)
 	{
 	  *mbuf++ = '-';
-	  what = -1;
+	  minusSent = YES;
 	}
       *mbuf++ = 'l';
     }
   if (oldmode->key[0] && !mode.key[0])
     {
-      if (what != -1)
+      if (!minusSent)
 	{
 	  *mbuf++ = '-';
-	  what = -1;
+	  minusSent = YES;
 	}
       *mbuf++ = 'k';
       strcat(parabuf, oldmode->key);
@@ -4491,10 +4488,10 @@ int	m_sjoin(aClient *cptr,
     }
   if (mode.limit && oldmode->limit != mode.limit)
     {
-      if (what != 1)
+      if (!minusSent)
 	{
 	  *mbuf++ = '+';
-	  what = 1;
+	  minusSent = YES;
 	}
       *mbuf++ = 'l';
       (void)sprintf(numeric, "%-15d", mode.limit);
@@ -4506,7 +4503,7 @@ int	m_sjoin(aClient *cptr,
     }
   if (mode.key[0] && strcmp(oldmode->key, mode.key))
     {
-      if (what != 1)
+      if (!addSent)
 	{
 	  *mbuf++ = '+';
 	  what = 1;
