@@ -24,11 +24,22 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.1  1999/07/16 02:40:34  db
+ * - removed #ifdef HAVE_GET_RUSAGE, it still needs to be removed from configure
+ * - removed some debug counters that weren't terribly useful
+ * - always enabled stats r even without DEBUGMODE
+ * - moved prototype for send_usage() into s_debug.h
+ *
  */
 
 struct Client;
 
 extern void send_usage(struct Client*, char *);
+#ifdef DEBUGMODE
+extern	void	count_memory (struct Client *, char *);
+#endif
+
+extern	void	debug(int, char *, ...);
 
 #endif /* INCLUDED_s_debug_h */
 

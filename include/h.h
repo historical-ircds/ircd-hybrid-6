@@ -153,15 +153,7 @@ extern	void	initlists (void);
 extern  void	block_garbage_collect(void);	/* list.c */
 extern  void	block_destroy(void);		/* list.c */
 
-
 extern	int	dopacket (struct Client *, char *, int);
-
-/*VARARGS2*/
-extern	void	debug(int, char *, ...);
-#ifdef DEBUGMODE
-extern	void	send_listinfo (struct Client *, char *);
-extern	void	count_memory (struct Client *, char *);
-#endif
 
 #ifdef FLUD
 void	free_fluders();
