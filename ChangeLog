@@ -1,3 +1,8 @@
+*** 19990907_4 by lusky
+more dbuf fixes (th)
+check in send_message() that the descriptor is valid
+
+
 *** 19990907_3 by lusky
 changed killpath again.  I think I can live with this one.  (jl)
 
