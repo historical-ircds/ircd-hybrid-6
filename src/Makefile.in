@@ -30,7 +30,6 @@ SRCS = \
 	fileio.c \
 	hash.c \
 	ircd.c \
-	ircsprintf.c \
 	list.c \
 	m_gline.c \
 	m_info.c \
@@ -75,7 +74,6 @@ SRCS = \
 #	fileio.o \
 #	hash.o \
 #	ircd.o \
-#	ircsprintf.o \
 #	list.o \
 #	m_gline.o \
 #	m_info.o \
@@ -94,6 +92,7 @@ SRCS = \
 #	s_err.o \
 #	s_misc.o \
 #	s_numeric.o \
+#       sprintf_irc.o \
 #	s_serv.o \
 #	s_user.o \
 #	s_zip.o \
