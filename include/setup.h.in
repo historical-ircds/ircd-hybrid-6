@@ -35,6 +35,9 @@
 /* Define if you are running SOLARIS2.  */
 #undef OS_SOLARIS2
 
+/* Define if you have the getpagesize function.  */
+#undef HAVE_GETPAGESIZE
+
 /* Define if you have the <errno.h> header file.  */
 #undef HAVE_ERRNO_H
 
