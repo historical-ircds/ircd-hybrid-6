@@ -33,6 +33,7 @@
 #include "res.h"
 #include "restart.h"
 #include "send.h"
+#include "flud.h"
 
 #include <string.h>
 #include <stdlib.h>

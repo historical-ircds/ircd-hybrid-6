@@ -141,14 +141,5 @@ extern unsigned long tsdms;
 #define TMPRINT
 #endif
 
-#ifdef FLUD
-struct fludbot {
-        struct Client   *fluder;
-        int             count;
-        time_t          first_msg, last_msg;
-        struct fludbot  *next;
-};
-#endif /* FLUD */
-
 
 #endif /* INCLUDED_struct_h */
