@@ -66,6 +66,12 @@ struct timeval tsdnow, tsdthen;
 unsigned long tsdms;
 #endif
 
+typedef struct
+{
+  int mode;
+  char letter;
+}FLAG_ITEM;
+
 /*
 ** number of seconds to add to all readings of time() when making TS's
 ** -orabidoo
@@ -725,16 +731,20 @@ static	int	set_mode(aClient *cptr,
 			 char *pbuf)
 {
   static	Link	chops[MAXMODEPARAMS];
-  static	int	flags[] = {
-    MODE_PRIVATE,    'p', MODE_SECRET,     's',
-    MODE_MODERATED,  'm', MODE_NOPRIVMSGS, 'n',
-    MODE_TOPICLIMIT, 't', MODE_INVITEONLY, 'i',
-    MODE_VOICE,	 'v', MODE_KEY,	       'k',
-    0x0, 0x0 };
+  static	FLAG_ITEM	flags[] = {
+    {MODE_PRIVATE,    'p'},
+    {MODE_SECRET,     's'},
+    {MODE_MODERATED,  'm'},
+    {MODE_NOPRIVMSGS, 'n'},
+    {MODE_TOPICLIMIT, 't'},
+    {MODE_INVITEONLY, 'i'},
+    {MODE_VOICE,      'v'},
+    {MODE_KEY,	       'k'},
+    {0x0, 0x0} };
 
   Reg	Link	*lp;
   Reg	char	*curr = parv[0], *cp = (char *)NULL;
-  Reg	int	*ip;
+  Reg	int	ip;
   u_int	whatt = MODE_ADD;
   int	limitset = 0, count = 0, chasing = 0;
   int	nusers = 0, ischop, isok, isdeop, new, len;
@@ -1011,22 +1021,22 @@ static	int	set_mode(aClient *cptr,
 	    while ( (lp = chptr->invites) )
 	      del_invite(lp->value.cptr, chptr);
 	default:
-	  for (ip = flags; *ip; ip += 2)
-	    if (*(ip+1) == *curr)
+	  for (ip = 0; flags[ip].mode; ip++)
+	    if (flags[ip].letter == *curr)
 	      break;
       
-	  if (*ip)
+	  if (flags[ip].mode)
 	    {
 	      if (whatt == MODE_ADD)
 		{
-		  if (*ip == MODE_PRIVATE)
+		  if (flags[ip].mode == MODE_PRIVATE)
 		    new &= ~MODE_SECRET;
-		  else if (*ip == MODE_SECRET)
+		  else if (flags[ip].mode == MODE_SECRET)
 		    new &= ~MODE_PRIVATE;
-		  new |= *ip;
+		  new |= flags[ip].mode;
 		}
 	      else
-		new &= ~*ip;
+		new &= ~flags[ip].mode;
 	      count++;
 	    }
 	  else
@@ -1048,8 +1058,8 @@ static	int	set_mode(aClient *cptr,
 
   whatt = 0;
 
-  for (ip = flags; *ip; ip += 2)
-    if ((*ip & new) && !(*ip & oldm.mode))
+  for (ip = 0; flags[ip].mode; ip++)
+    if ((flags[ip].mode & new) && !(flags[ip].mode & oldm.mode))
       {
 	if (whatt == 0)
 	  {
@@ -1057,12 +1067,12 @@ static	int	set_mode(aClient *cptr,
 	    whatt = 1;
 	  }
 	if (isok)
-	  mode->mode |= *ip;
-	*mbuf++ = *(ip+1);
+	  mode->mode |= flags[ip].mode;
+	*mbuf++ = flags[ip].letter;
       }
 
-  for (ip = flags; *ip; ip += 2)
-    if ((*ip & oldm.mode) && !(*ip & new))
+  for (ip = 0; flags[ip].mode; ip++)
+    if ((flags[ip].mode & oldm.mode) && !(flags[ip].mode & new))
       {
 	if (whatt != -1)
 	  {
@@ -1070,8 +1080,8 @@ static	int	set_mode(aClient *cptr,
 	    whatt = -1;
 	  }
 	if (ischop)
-	  mode->mode &= ~*ip;
-	*mbuf++ = *(ip+1);
+	  mode->mode &= ~flags[ip].mode;
+	*mbuf++ = flags[ip].letter;
       }
   
   if (limitset && !nusers && mode->limit)
@@ -2058,6 +2068,82 @@ int	count_channels(aClient *sptr)
   return (count);
 }
 
+/* m_knock
+**    parv[0] = sender prefix
+**    parv[1] = channel
+**  The KNOCK command has the following syntax:
+**   :<sender> KNOCK <channel>
+**  If a user is not banned from the channel they can use the KNOCK
+**  command to have the server NOTICE the channel operators notifying
+**  they would like to join.  Helpful if the channel is invite-only, the
+**  key is forgotten, or the channel is full (INVITE can bypass each one
+**  of these conditions.  Concept by Dianora <db@db.net> and written by
+**  David-R <rientjes@mail.whidbey.net>
+**
+** Just some flood control added here, five minute delay between each
+** KNOCK -Dianora
+**/
+int	m_knock(aClient *cptr,
+	       aClient *sptr,
+	       int parc,
+	       char *parv[])
+{
+  Reg	aChannel	*chptr;
+  char	*p, *name;
+
+  if (parc < 2)
+    {
+      sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
+		 "KNOCK");
+      return 0;
+    }
+
+  /* quickly added flood control on KNOCK
+   * the ugly possibility still exists, 400 clones could all KNOCK
+   * on a channel at once, flooding all the ops. *ugh*
+   * Remember when life was simpler?
+   * -Dianora
+   */
+
+  if( (sptr->last_knock + KNOCK_DELAY) > NOW)
+    {
+      sendto_one(sptr,":%s NOTICE %s :*** Notice -- Wait %d seconds before another knock",
+		 me.name,
+		 sptr->name,
+		 KNOCK_DELAY - (NOW - sptr->last_knock));
+      return 0;
+    }
+
+  sptr->last_knock = NOW;
+
+  /* We will cut at the first comma reached, however we will not *
+   * process anything afterwards.  -- David-R                    */
+
+  name = strtoken(&p, parv[1], ",");
+
+  if (!IsChannelName(name) || !(chptr = find_channel(name, NullChn)))
+    {
+      sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
+		 name);
+      return 0;
+    }
+
+  if (is_banned(sptr, chptr))
+    {
+      sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN), me.name, parv[0],
+		 name);
+      return 0;
+    }
+
+  sendto_one(sptr,":%s NOTICE %s :*** Notice -- Your KNOCK has been delivered",
+		 me.name,
+		 sptr->name);
+
+  sendto_channel_type(cptr, &me, chptr, MODE_CHANOP,
+	      ":%s NOTICE %s :%s has knocked on the channel door.", me.name,
+		      chptr->chname, parv[0]);
+}
+
 /*
 ** m_topic
 **	parv[0] = sender prefix
@@ -2236,12 +2322,18 @@ int	m_invite(aClient *cptr,
       if (acptr->user->away)
 	sendto_one(sptr, rpl_str(RPL_AWAY), me.name, parv[0],
 		   acptr->name, acptr->user->away);
+
+      /* Send a NOTICE to all channel operators concerning chanops who  *
+       * INVITE other users to the channel when it is invite-only (+i). *
+       * The NOTICE is sent from the local server.  -- David-R          */
+      if (chptr && (chptr->mode.mode & MODE_INVITEONLY))
+	sendto_channel_type(cptr, &me, chptr, MODE_CHANOP,
+	  ":%s NOTICE %s :%s has invited %s to %s.", me.name, chptr->chname,
+			    parv[0], acptr->name, chptr->chname);
+
     }
-  /* I don't see any harm in allowing an invite chain entry to be
-   * made even if the channel isn't +i -Dianora
-   */
+
   if (MyConnect(acptr))
-    /*    if (chptr && (chptr->mode.mode & MODE_INVITEONLY) && */
     if (chptr && sptr->user && is_chan_op(sptr, chptr))
       add_invite(acptr, chptr);
   sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s",parv[0],
@@ -2538,6 +2630,7 @@ static	void sjoin_sendit(aClient *cptr,
  * and to clients
  */
 
+
 int	m_sjoin(aClient *cptr,
 		aClient *sptr,
 		int parc,
@@ -2548,17 +2641,22 @@ int	m_sjoin(aClient *cptr,
   ts_val	newts, oldts, tstosend;
   static	Mode mode, *oldmode;
   Link	*l;
-  int	args = 0, haveops = 0, keepourmodes = 1, keepnewmodes = 1,
-    doesop = 0, what = 0, pargs = 0, *ip, fl, people = 0, isnew;
-  Reg	char *s, *s0;
+  int	args = 0, haveops = 0, keepourmodes = 1, keepnewmodes = 1;
+  int   doesop = 0, what = 0, pargs = 0, fl, people = 0, isnew;
+  int ip;
+  register	char *s, *s0;
   static	char numeric[16], sjbuf[BUFSIZE];
   char	*mbuf = modebuf, *t = sjbuf, *p;
-  
-  static	int	flags[] = {
-    MODE_PRIVATE,    'p', MODE_SECRET,     's',
-    MODE_MODERATED,  'm', MODE_NOPRIVMSGS, 'n',
-    MODE_TOPICLIMIT, 't', MODE_INVITEONLY, 'i',
-    0x0, 0x0 };
+
+
+  static	FLAG_ITEM	flags[] = {
+    {MODE_PRIVATE,    'p'},
+    {MODE_SECRET,     's'},
+    {MODE_MODERATED,  'm'},
+    {MODE_NOPRIVMSGS, 'n'},
+    {MODE_TOPICLIMIT, 't'},
+    {MODE_INVITEONLY, 'i'},
+    {0x0, 0x0} };
 
   if (IsClient(sptr) || parc < 5)
     return 0;
@@ -2682,25 +2780,26 @@ int	m_sjoin(aClient *cptr,
 	strcpy(mode.key, oldmode->key);
     }
 
-  for (ip = flags; *ip; ip += 2)
-    if ((*ip & mode.mode) && !(*ip & oldmode->mode))
+  for (ip = 0; flags[ip].mode; ip++)
+    if ((flags[ip].mode & mode.mode) && !(flags[ip].mode & oldmode->mode))
       {
 	if (what != 1)
 	  {
 	    *mbuf++ = '+';
 	    what = 1;
 	  }
-	*mbuf++ = *(ip+1);
+	*mbuf++ = flags[ip].letter;
       }
-  for (ip = flags; *ip; ip += 2)
-    if ((*ip & oldmode->mode) && !(*ip & mode.mode))
+
+  for (ip = 0; flags[ip].mode; ip++)
+    if ((flags[ip].mode & oldmode->mode) && !(flags[ip].mode & mode.mode))
       {
 	if (what != -1)
 	  {
 	    *mbuf++ = '-';
 	    what = -1;
 	  }
-	*mbuf++ = *(ip+1);
+	*mbuf++ = flags[ip].letter;
       }
   if (oldmode->limit && !mode.limit)
     {

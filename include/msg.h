@@ -86,6 +86,7 @@
 #endif
 
 #define MSG_LOCOPS   "LOCOPS"	/* LOCOPS */
+#define MSG_KNOCK	   "KNOCK"  /* KNOCK */
 
 #define MAXPARA    15 
 
@@ -100,6 +101,7 @@ extern int m_gline(aClient *,aClient *,int,char **);
 extern int m_locops(aClient *,aClient *,int,char **);
 
 extern int m_private(aClient *,aClient *,int,char **);
+extern int m_knock(aClient *,aClient *,int,char **);
 extern int m_topic(aClient *,aClient *,int,char **);
 extern int m_join(aClient *,aClient *,int,char **);
 extern int m_part(aClient *,aClient *,int,char **);
@@ -194,6 +196,7 @@ struct Message msgtab[] = {
   { MSG_MODE,    m_mode,     0, MAXPARA, 1, 0, 0, 0L },
   { MSG_QUIT,    m_quit,     0, MAXPARA, 1, 1, 0, 0L },
   { MSG_PART,    m_part,     0, MAXPARA, 1, 0, 0, 0L },
+  { MSG_KNOCK,   m_knock,    0, MAXPARA, 1, 0, 0, 0L },
   { MSG_TOPIC,   m_topic,    0, MAXPARA, 1, 0, 0, 0L },
   { MSG_INVITE,  m_invite,   0, MAXPARA, 1, 0, 0, 0L },
   { MSG_KICK,    m_kick,     0, MAXPARA, 1, 0, 0, 0L },

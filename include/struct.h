@@ -596,6 +596,7 @@ struct Client
   time_t	last_nick_change;
   int		number_of_nick_changes;
 #endif
+  time_t	last_knock;	/* don't allow knock to flood */
 #ifdef ANTI_IP_SPOOF
   long		random_ping;	/* spoofers won't see this */
 #endif

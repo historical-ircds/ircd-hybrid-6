@@ -391,11 +391,9 @@
  */
 #define MOTD_WAIT 10
 
-/* MOTD_MAX
- * max use count before delay above comes into effect
+/* KNOCK_DELAY 5 minutes per each KNOCK should be enough
  */
-
-#define MOTD_MAX 3
+#define KNOCK_DELAY 300
 
 /* EXTRA_BOT_NOTICES - Have the server send extra bot notices?
  */
