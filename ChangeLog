@@ -3,6 +3,10 @@
 *** Newest entries at top
 
 
+version hybrid-6-b68   10-May-1999
+* corrected a few missing tests in mtrie_conf.c
+-Dianora
+	
 version hybrid-6-b68   8-May-1999
 * more cleanup
 * RedHat 6.0 / glibc fixes

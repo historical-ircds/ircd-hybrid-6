@@ -73,7 +73,7 @@ static DOMAIN_PIECE *find_or_add_host_piece(DOMAIN_LEVEL *,int,char *);
 static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *,int,char *,char *);
 static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *,int,char *,char *);
 static void find_or_add_user_piece(DOMAIN_PIECE *,aConfItem *,int,char *);
-static aConfItem *find_user_piece(DOMAIN_PIECE *,char *,char *);
+static aConfItem *find_user_piece(DOMAIN_PIECE *,int,char *,char *);
 
 static aConfItem *look_in_unsortable_ilines(char *,char *);
 static aConfItem *look_in_unsortable_klines(char *,char *);
@@ -347,7 +347,7 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
   last_ptr = (DOMAIN_PIECE *)NULL;
   user = aconf->name;
 
-  if(user[0] == '*' && user[1] == '\0')
+  if((user[0] == '*') && (user[1] == '\0') && *host_piece != '*')
     {
       /* its empty, so add the given aconf, and return. done */
       if(!(piece_ptr->wild_conf_ptr))
@@ -427,7 +427,8 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
       found_aconf=ptr->conf_ptr;
 
       if( (!matches(ptr->host_piece,host_piece)) &&
-	  (!matches(found_aconf->name,user)) )
+	  (!matches(found_aconf->name,user)) &&
+	  (found_aconf->status & flags) )
 	{
 	  found_aconf->status |= flags;
 	  piece_ptr->flags |= flags;
@@ -483,6 +484,7 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
 /* find_user_piece
  *
  * inputs	- pointer to current level 
+ *		- int flags
  *		- piece of domain name being looked for
  *		- username
  * output	- pointer to next DOMAIN_LEVEL to use
@@ -490,7 +492,7 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
  *
  */
 
-static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr,
+static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr, int flags,
 		     char *host_piece,char *user)
 {
   DOMAIN_PIECE *ptr;
@@ -507,7 +509,8 @@ static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr,
       aconf=ptr->conf_ptr;
 
       if( (!matches(ptr->host_piece,host_piece)) &&
-	  (!matches(aconf->name,user)))
+	  (!matches(aconf->name,user)) &&
+	  (aconf->status & flags) )
 	{
 	  match = YES;
 	  if(aconf->flags & CONF_FLAGS_E_LINED)
@@ -617,9 +620,7 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 	  first_aconf = (aConfItem *)NULL;
 	  for(pptr = ptr; pptr; pptr=pptr->next_piece)
 	    {
-	      if(first_aconf)
-		break;
-	      else if(pptr->conf_ptr)
+	      if(!first_aconf && pptr->conf_ptr)
 		{
 		  aconf= pptr->conf_ptr;
 		  if( (!matches(pptr->host_piece,host_piece)) &&
@@ -634,14 +635,12 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 	  /* special cased *@*.something
 	   * K-lines should match the username@*.something case first
 	   * an I line might include an E line
-	   * There should be only one *@*. aconf in this list
+	   * There should be only one *@*.something aconf in this list
 	   */
 
 	  for(pptr = ptr; pptr; pptr=pptr->next_piece)
 	    {
-	      if(!pptr->wild_conf_ptr)
-		continue;
-	      if(pptr->wild_conf_ptr->status & flags)
+	      if(pptr->wild_conf_ptr && (pptr->wild_conf_ptr->status & flags))
 		second_aconf = pptr->wild_conf_ptr;
 	    }
 	}
@@ -919,7 +918,7 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
     }
 
   if(stack_pointer == 0)
-    return(find_user_piece(cur_piece,cur_dns_piece,user));
+    return(find_user_piece(cur_piece,flags,cur_dns_piece,user));
 
   if(cur_piece->next_level)
     cur_level = cur_piece->next_level;
@@ -927,14 +926,14 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
     {
       aconf = find_wild_host_piece(cur_level,flags,cur_dns_piece,user);
 
-      if((aconf = find_user_piece(cur_piece,cur_dns_piece,user)))
+      if((aconf = find_user_piece(cur_piece,flags,cur_dns_piece,user)))
 	return(aconf);
       else
 	{
 
 	  if(!cur_piece)
 	    return((aConfItem *)NULL);
-	  return(find_user_piece(cur_piece,cur_dns_piece,user));
+	  return(find_user_piece(cur_piece,flags,cur_dns_piece,user));
 	}
     }
 
