@@ -1,3 +1,7 @@
+*** 20010619_3 by wcampbel
+Oops, reference to modules removed.
+
+
 *** 20010619_2 by wcampbel
 Updated the Release notes, and document the gdb bt procedure (backported from
 Hyb7)
