@@ -1,3 +1,9 @@
+*** 20010617_3 by db
+- backwards #ifndef's give me a headache, besides the rest of the code
+  uses #ifdef HIDE_SERVERS IPS
+
+
+
 *** 20010617_2 by greg
 This morning on my way to coburg and with and archived copy of CVS source for
 hybrid 6 taken last night at about midnight, I did the following. If I remember,
