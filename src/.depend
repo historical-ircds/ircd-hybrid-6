@@ -25,8 +25,6 @@ class.o: class.c ../include/class.h ../include/struct.h \
  ../include/common.h ../include/match.h ../include/numeric.h \
  ../include/h.h ../include/mtrie_conf.h ../include/fdlist.h \
  ../include/s_conf.h ../include/fileio.h ../include/motd.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/limits.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/syslimits.h \
  ../include/send.h
 client.o: client.c ../include/client.h ../include/config.h \
  ../include/setup.h ../include/defs.h ../include/ircd_defs.h \
@@ -49,7 +47,6 @@ dline_conf.o: dline_conf.c ../include/struct.h ../include/config.h \
  ../include/class.h ../include/h.h ../include/mtrie_conf.h \
  ../include/fdlist.h ../include/s_conf.h ../include/fileio.h \
  ../include/motd.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/limits.h \
  ../include/dline_conf.h ../include/send.h
 fdlist.o: fdlist.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/defs.h ../include/ircd_defs.h \
@@ -74,7 +71,6 @@ ircd.o: ircd.c ../include/struct.h ../include/config.h \
  ../include/class.h ../include/s_auth.h ../include/h.h \
  ../include/mtrie_conf.h ../include/fdlist.h ../include/s_conf.h \
  ../include/fileio.h ../include/motd.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/limits.h \
  ../include/s_bsd.h ../include/send.h
 ircsprintf.o: ircsprintf.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/defs.h ../include/ircd_defs.h \
@@ -96,7 +92,6 @@ m_gline.o: m_gline.c ../include/struct.h ../include/config.h \
  ../include/match.h ../include/sys.h ../include/numeric.h \
  ../include/msg.h ../include/channel.h ../include/s_conf.h \
  ../include/fileio.h ../include/motd.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/limits.h \
  ../include/send.h ../include/h.h ../include/mtrie_conf.h \
  ../include/fdlist.h ../include/dline_conf.h
 m_info.o: m_info.c ../include/struct.h ../include/config.h \
@@ -113,7 +108,6 @@ m_kline.o: m_kline.c ../include/struct.h ../include/config.h \
  ../include/match.h ../include/sys.h ../include/numeric.h \
  ../include/msg.h ../include/channel.h ../include/s_conf.h \
  ../include/fileio.h ../include/motd.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/limits.h \
  ../include/class.h ../include/send.h ../include/h.h \
  ../include/mtrie_conf.h ../include/fdlist.h ../include/dline_conf.h
 m_unkline.o: m_unkline.c ../include/struct.h ../include/config.h \
@@ -123,7 +117,6 @@ m_unkline.o: m_unkline.c ../include/struct.h ../include/config.h \
  ../include/match.h ../include/sys.h ../include/numeric.h \
  ../include/msg.h ../include/channel.h ../include/s_conf.h \
  ../include/fileio.h ../include/motd.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/limits.h \
  ../include/send.h ../include/h.h ../include/mtrie_conf.h \
  ../include/fdlist.h ../include/dline_conf.h
 match.o: match.c ../include/match.h
@@ -134,7 +127,6 @@ motd.o: motd.c ../include/sys.h ../include/setup.h ../zlib/zlib.h \
  ../include/client.h ../include/dbuf.h ../include/fdlist.h \
  ../include/s_bsd.h ../include/fileio.h ../include/res.h \
  ../include/s_conf.h ../include/motd.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/limits.h \
  ../include/class.h ../include/send.h ../include/numeric.h
 mtrie_conf.o: mtrie_conf.c ../include/sys.h ../include/setup.h \
  ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h ../include/numeric.h \
@@ -142,7 +134,6 @@ mtrie_conf.o: mtrie_conf.c ../include/sys.h ../include/setup.h \
  ../include/config.h ../include/defs.h ../include/ircd_defs.h \
  ../include/hash.h ../include/client.h ../include/dbuf.h \
  ../include/s_conf.h ../include/fileio.h ../include/motd.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/limits.h \
  ../include/class.h ../include/h.h ../include/mtrie_conf.h \
  ../include/fdlist.h ../include/send.h ../include/dline_conf.h
 packet.o: packet.c ../include/struct.h ../include/config.h \
@@ -180,15 +171,12 @@ s_bsd.o: s_bsd.c ../include/s_bsd.h ../include/struct.h \
  ../include/common.h ../include/match.h ../include/sys.h \
  ../include/res.h ../include/s_conf.h ../include/fileio.h \
  ../include/motd.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/limits.h \
  ../include/s_auth.h ../include/class.h ../include/numeric.h \
  ../include/h.h ../include/mtrie_conf.h ../include/fdlist.h \
  ../include/send.h
 s_conf.o: s_conf.c ../include/s_conf.h ../include/config.h \
  ../include/setup.h ../include/defs.h ../include/fileio.h \
  ../include/ircd_defs.h ../include/motd.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/limits.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/syslimits.h \
  ../include/class.h ../include/struct.h ../zlib/zlib.h ../zlib/zconf.h \
  ../zlib/setup.h ../include/hash.h ../include/client.h \
  ../include/dbuf.h ../include/common.h ../include/match.h \
@@ -200,8 +188,6 @@ s_debug.o: s_debug.c ../include/struct.h ../include/config.h \
  ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h ../include/hash.h \
  ../include/client.h ../include/dbuf.h ../include/s_conf.h \
  ../include/fileio.h ../include/motd.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/limits.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/syslimits.h \
  ../include/class.h ../include/res.h ../include/send.h \
  ../include/numeric.h ../include/common.h ../include/match.h \
  ../include/sys.h ../include/h.h ../include/mtrie_conf.h \
@@ -214,8 +200,6 @@ s_err.o: s_err.c ../include/struct.h ../include/config.h \
 s_misc.o: s_misc.c ../include/s_conf.h ../include/config.h \
  ../include/setup.h ../include/defs.h ../include/fileio.h \
  ../include/ircd_defs.h ../include/motd.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/limits.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/syslimits.h \
  ../include/struct.h ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h \
  ../include/hash.h ../include/client.h ../include/dbuf.h \
  ../include/res.h ../include/common.h ../include/match.h \
@@ -238,7 +222,6 @@ s_serv.o: s_serv.c ../include/struct.h ../include/config.h \
  ../include/mtrie_conf.h ../include/fdlist.h ../include/s_bsd.h \
  ../include/dline_conf.h ../include/fileio.h ../include/res.h \
  ../include/s_conf.h ../include/motd.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/limits.h \
  ../include/class.h ../include/send.h
 s_user.o: s_user.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/defs.h ../include/ircd_defs.h \
@@ -247,7 +230,6 @@ s_user.o: s_user.c ../include/struct.h ../include/config.h \
  ../include/match.h ../include/sys.h ../include/numeric.h \
  ../include/msg.h ../include/channel.h ../include/s_conf.h \
  ../include/fileio.h ../include/motd.h \
- /usr/lib/gcc-lib/i386-redhat-linux/egcs-2.91.66/include/limits.h \
  ../include/class.h ../include/s_bsd.h ../include/h.h \
  ../include/mtrie_conf.h ../include/fdlist.h ../include/send.h \
  ../include/blalloc.h
