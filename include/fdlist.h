@@ -2,7 +2,7 @@
 #define _IRCD_DOG3_FDLIST
 
 typedef struct fdstruct {
-  int entry [MAXCONNECTIONS+2];
+  unsigned char entry [MAXCONNECTIONS+2];
 } fdlist;
 
 void addto_fdlist( int a, fdlist *b);
