@@ -1,3 +1,10 @@
+*** 20010721_2 by leeh
+- disable IP connects if hide servers ips is defined.. 
+
+  we should *not* need to be protecting people from their own opers..
+  ergo: this sucks.
+
+
 *** 20010721_1 by jdc
 - src/s_bsd.c: connect_server(): "Host x.x.x.x is not enabled" message
   changed to use aconf->name not aconf->host; "Host" also changed to
