@@ -60,8 +60,8 @@
 #endif
 
 #define MAXPACKET       1024  /* rfc sez 512 but we expand names so ... */
-#define RES_MAXALIASES  35    /* maximum aliases allowed */
-#define RES_MAXADDRS    35    /* maximum addresses allowed */
+#define RES_MAXALIASES  1	/* 35    /* maximum aliases allowed */
+#define RES_MAXADDRS    1	/* 35    /* maximum addresses allowed */
 
 /*
  * macros used to calulate offsets into fixed query buffer
