@@ -800,6 +800,8 @@ int main(int argc, char *argv[])
   setup_signals();
   initialize_message_files();
 
+  isupport = make_isupport();
+
   dbuf_init();  /* set up some dbuf stuff to control paging */
   init_hash();
 

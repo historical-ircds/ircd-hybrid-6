@@ -140,6 +140,7 @@ extern const char* form_str(int);
 #define RPL_YOURHOST         002
 #define RPL_CREATED          003
 #define RPL_MYINFO           004
+#define RPL_ISUPPORT         005
 
 /*
  * Numeric replies from server commands.

@@ -785,6 +785,7 @@ static int register_user(aClient *cptr, aClient *sptr,
       sendto_one(sptr, form_str(RPL_CREATED),me.name,nick,creation);
       sendto_one(sptr, form_str(RPL_MYINFO), me.name, parv[0],
                  me.name, ircd_version);
+      sendto_one(sptr, form_str(RPL_ISUPPORT), me.name, parv[0], isupport);
       /* Increment the total number of clients since (re)start */
       Count.totalrestartcount++;
       show_lusers(sptr, sptr, 1, parv);

@@ -23,6 +23,7 @@
  *  $Id$
  */
 #include "s_misc.h"
+#include "channel.h"
 #include "client.h"
 #include "common.h"
 #include "irc_string.h"
@@ -200,6 +201,27 @@ void serv_info(aClient *cptr,char *name)
   sendto_one(cptr, ":%s %d %s :Server recv: %7.2f %s (%4.1f K/s)",
              me.name, RPL_STATSDEBUG, name, _GMKv(me.receiveK), _GMKs(me.receiveK),
              (float)((float)me.receiveK / (float)uptime));
+}
+
+/* Make ISUPPORT string */
+char *make_isupport()
+{
+  static char tisupport[200];
+
+  ircsprintf(tisupport, "WALLCHOPS PREFIX=(ov)@+ CHANTYPES=#& MAXCHANNELS=%d "
+                        "NICKLEN=%d TOPICLEN=%d KICKLEN=%d NETWORK=%s "
+#ifdef CHANMODE_E
+                        "CHANMODES=be,k,l,imnpst EXCEPTS"
+#else
+                        "CHANMODES=b,k,l,imnpst"
+#endif
+#ifdef USE_KNOCK
+                        " KNOCK"
+#endif
+                        " MODES=%d", MAXCHANNELSPERUSER, NICKLEN, TOPICLEN,
+			KILLLEN, NETWORK_NAME, MAXMODEPARAMS);
+
+  return tisupport;
 }
 
 
