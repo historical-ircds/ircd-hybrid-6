@@ -95,6 +95,12 @@ Info MyInformation[] = {
 
   { "BUFFERPOOL", "", BUFFERPOOL, "Maximum size of all SendQs" },
 
+#ifdef CHANMODE_E
+  { "CHANMODE_E", "ON", 0, "Enable channel mode +e" },
+#else
+  { "CHANMODE_E", "OFF", 0, "Enable channel mode +e" },
+#endif /* CHANMODE_E */
+
 #ifdef CLIENT_FLOOD
   { "CLIENT_FLOOD", "", CLIENT_FLOOD, "Client Excess Flood Threshold" },
 #else
@@ -142,6 +148,11 @@ Info MyInformation[] = {
 #else
   { "DEBUGMODE", "OFF", 0, "Debugging Mode" },
 #endif /* DEBUGMODE */
+
+#ifdef ANTI_DRONE_FLOOD
+  { "DEFAULT_DRONE_TIME", "", DEFAULT_DRONE_TIME, "ANTI_DRONE_FLOOD Parameter" },
+  { "DEFAULT_DRONE_COUNT", "", DEFAULT_DRONE_COUNT, "ANTI_DRONE_FLOOD Parameter" },
+#endif /* ANTI_DRONE_FLOOD */
 
 #ifdef DEFAULT_SERVER_SPLIT_RECOVERY_TIME
   { "DEFAULT_SERVER_SPLIT_RECOVERY_TIME", "", DEFAULT_SERVER_SPLIT_RECOVERY_TIME, "Time to Delay Split Status After Resynch" },
@@ -240,6 +251,12 @@ Info MyInformation[] = {
 #endif /* GLINES */
 
   { "HARD_FDLIMIT_", "", HARD_FDLIMIT_, "Maximum Number of File Descriptors Available" },
+
+#ifdef HIDE_ERROR_MESSAGES
+  { "HIDE_ERROR_MESSAGES", "ON", 0, "Hide ERROR messages from other servers" },
+#else
+  { "HIDE_ERROR_MESSAGES", "OFF", 0, "Hide ERROR messages from other servers" },
+#endif /* HIDE_ERROR_MESSAGES */
 
 #ifdef HIDE_OPS
   { "HIDE_OPS", "ON", 0, "Hide chanop status from non-chanops" },
@@ -376,6 +393,12 @@ Info MyInformation[] = {
   { "MAXSENDQLENGTH", "", MAXSENDQLENGTH, "Maximum Amount of Internal SendQ Buffering" },
   { "MAX_BUFFER", "", MAX_BUFFER, "Maximum Buffer Connections Allowed" },
 
+#ifdef MAXBUFFERS
+  { "MAXBUFFERS", "ON", 0, "Increase socket buffers" },
+#else
+  { "MAXBUFFERS", "OFF", 0, "Increase socket buffers" },
+#endif
+
 #ifdef ANTI_SPAMBOT
   { "MAX_JOIN_LEAVE_COUNT", "", MAX_JOIN_LEAVE_COUNT, "Anti SpamBot Parameter" },
 #endif /* ANTI_SPAMBOT */
@@ -388,7 +411,6 @@ Info MyInformation[] = {
 #endif /* ANTI_NICK_FLOOD */
 
   { "MAXCHANNELSPERUSER", "", MAXCHANNELSPERUSER, "Maximum Channels per User" },
-  { "MAXIMUM_LINKS", "", MAXIMUM_LINKS, "Maximum Links for Class 0" },
 
 #ifdef ANTI_SPAMBOT
   { "MIN_JOIN_LEAVE_TIME", "", MIN_JOIN_LEAVE_TIME, "Anti SpamBot Parameter" },
@@ -419,6 +441,12 @@ Info MyInformation[] = {
 #else
   { "NO_DEFAULT_INVISIBLE", "OFF", 0, "Do not Give Clients +i Mode Upon Connection" },
 #endif /* NO_DEFAULT_INVISIBLE */
+
+#ifdef NO_FAKE_GLINES
+  { "NO_FAKE_GLINES", "ON", 0, "Do not allow GLINES from users that do not exist" },
+#else
+  { "NO_FAKE_GLINES", "OFF", 0, "Do not allow GLINES from users that do not exist" },
+#endif /* NO_FAKE_GLINES */
 
 #ifdef NO_JOIN_ON_SPLIT
   { "NO_JOIN_ON_SPLIT", "ON", 0, "Users Cannot Join Channels During a NetSplit" },
@@ -479,12 +507,17 @@ Info MyInformation[] = {
 #endif /* P_LINES_OPER_ONLY */
 
   { "PACE_WAIT", "", PACE_WAIT, "Minimum Delay between uses of certain commands" },
+  { "PORTNUM", "", PORTNUM, "Default /connect port if not in ircd.conf" },
 
 #ifdef PPATH
   { "PPATH", PPATH, 0, "Path to Pid File" },
 #else
   { "PPATH", "NONE", 0, "Path to Pid File" },
 #endif /* PPATH */
+
+#ifdef REJECT_HOLD
+  { "REJECT_HELD_MAX", "", REJECT_HELD_MAX, "Maximum number of FD's used by REJECT_HOLD" },
+#endif
 
 #ifdef REJECT_HOLD
   { "REJECT_HOLD", "ON", 0, "Do not Dump a K-lined Client immediately" },
@@ -591,9 +624,9 @@ Info MyInformation[] = {
 #endif /* STATS_NOTICE */
 
 #ifdef STATS_P_NOTICE
-  { "STATS_P_NOTICE", "ON", 0, "Show Operators when a Client uses STATS P" },
+  { "STATS_P_NOTICE", "ON", 0, "Show Operators when a Client uses STATS p" },
 #else
-  { "STATS_P_NOTICE", "OFF", 0, "Show Operators when a Client uses STATS P" },
+  { "STATS_P_NOTICE", "OFF", 0, "Show Operators when a Client uses STATS p" },
 #endif /* STATS_P_NOTICE */
 
   { "TIMESEC", "", TIMESEC, "Time Interval to Wait Before Checking Pings" },
@@ -613,11 +646,29 @@ Info MyInformation[] = {
   { "TS_MAX_DELTA", "", TS_MAX_DELTA, "Maximum Allowed TS Delta from another Server" },
   { "TS_WARN_DELTA", "", TS_WARN_DELTA, "Maximum TS Delta before Sending Warning" },
 
+#ifdef TS5
+  { "TS5", "ON", 0, "Impossible to gain ops after a netsplit" },
+#else
+  { "TS5", "OFF", 0, "Impossible to gain ops after a netsplit" },
+#endif /* TS5 */
+
+#ifdef TS5_ONLY
+  { "TS5_ONLY", "ON", 0, "Only permit TS5 servers to directly link" },
+#else
+  { "TS5_ONLY", "OFF", 0, "Only permit TS5 servers to directly link" },
+#endif /* TS5_ONLY */
+
 #ifdef U_LINES_OPER_ONLY
   { "U_LINES_OPER_ONLY", "ON", 0, "Only allow Operators to use STATS U" },
 #else
   { "U_LINES_OPER_ONLY", "OFF", 0, "Only allow Operators to use STATS U" },
 #endif /* U_LINES_OPER_ONLY */
+
+#ifdef USE_KNOCK
+  { "USE_KNOCK", "ON", 0, "Enable the KNOCK command" },
+#else
+  { "USE_KNOCK", "OFF", 0, "Enable the KNOCK command" },
+#endif /* USE_KNOCK */
 
 #ifdef USE_LOGFILE
   { "USE_LOGFILE", "ON", 0, "Log Errors to LPATH" },
@@ -636,10 +687,6 @@ Info MyInformation[] = {
 #else
   { "USE_UH", "OFF", 0, "Include user@host for BAN_INFO" },
 #endif /* USE_UH */
-
-#ifdef WALLOPS_WAIT
-  { "WALLOPS_WAIT", "", WALLOPS_WAIT, "Delay between successive uses of the WALLOPS command" },
-#endif /* WALLOPS_WAIT */
 
 #ifdef WARN_NO_NLINE
   { "WARN_NO_NLINE", "ON", 0, "Show Operators of Servers without an N: line" },

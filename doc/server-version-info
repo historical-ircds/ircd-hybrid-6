@@ -2,7 +2,7 @@ $Id$
 Updated for Hybrid 6 (2000/11/26)
 
 When you type /version you will often see something like this:
-*** 2.8/hybrid-6rc6(20001110_1). irc.ins.net.uk ACHiIMpY TS3ow
+2.8/hybrid-6.2.1rc2(20011206_1). irc.ircd-hybrid.org AeGiKMpZ TS5ow
 
 Ever wondered what those funny chars mean after the version number? Well
 here they are:
