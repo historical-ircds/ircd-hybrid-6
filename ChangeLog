@@ -1,3 +1,10 @@
+*** 20010829_1 by lusky
+- Fix for messages_cust.tab dependencies (wc)
+- Fix for oper modes from conf (wc)
+- made IGNORE_BOGUS_TS undef by default for now
+
+
+
 *** 20010811_2 by lusky
 - revved patchlevel to 6.2rc1
 
