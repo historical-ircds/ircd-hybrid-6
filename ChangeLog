@@ -1,3 +1,8 @@
+*** 19990906_1 by lusky
+compromise on supressed killpath and just not send to non opers at all rather than send two to real opers (jl)
+more +k/-k fixes
+
+
 *** 19990904_2 by lusky
 more dbuf fixes (th)
 
