@@ -3539,9 +3539,6 @@ void write_kline_or_dline_to_conf_and_notice_opers(
                                                    char *current_date)
   {
   char buffer[1024];
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-  char *timebuffer;
-#endif
   int out;
   const char *filename;         /* filename to use for kline */
 
