@@ -99,8 +99,16 @@ static int user_modes[]		= { FLAGS_OPER, 'o',
 
 /* internally defined functions */
 #ifdef BOTCHECK
-static int botreject(char *);
-static int rejecting_bot(aClient *, int, char **);
+static int bot_check(char *);
+
+char *type_of_bot[]={
+  "NONE",
+  "eggdrop",
+  "vald/com/joh bot",
+  "spambot",
+  "annoy/ojnkbot"
+};
+
 #endif
 
 unsigned long my_rand(void);	/* provided by orabidoo */
@@ -416,11 +424,6 @@ static int register_user(aClient *cptr, aClient *sptr,
   short	      oldstatus = sptr->status;
   anUser*     user = sptr->user;
   char*       reason;
-#ifdef BOTCHECK
-  int	      isbot;
-  char	      bottemp[HOSTLEN + 1];
-  char*       type_of_bot;
-#endif
   char        tmpstr2[512];
 
   assert(0 != sptr);
@@ -472,6 +475,7 @@ static int register_user(aClient *cptr, aClient *sptr,
 	    {
 	      SetRejectHold(cptr);
 	      reject_held_fds++;
+	      release_client_dns_reply(cptr);
 	      return 0;
 	    }
 	  else
@@ -517,16 +521,9 @@ static int register_user(aClient *cptr, aClient *sptr,
 	    break;
 	  }
 	default:
+	  release_client_dns_reply(cptr);
 	  break;
 	}
-
-#ifdef BOTCHECK
-      /*
-       * Need to save this now, before its clobbered
-       */
-      strncpyzt(bottemp, sptr->host, HOSTLEN);
-#endif
-      /* strncpyzt(user->host, sptr->host, HOSTLEN); */
 
       if(!valid_hostname(sptr->host))
 	{
@@ -574,10 +571,6 @@ static int register_user(aClient *cptr, aClient *sptr,
       /* report if user has &^>= etc. and set flags as needed in sptr */
       report_and_set_user_flags(sptr, aconf);
 
-#ifdef BOTCHECK
-      isbot = botreject(bottemp);
-#endif
-
       /* Limit clients */
       /*
        * We want to be able to have servers and F-line clients
@@ -589,7 +582,7 @@ static int register_user(aClient *cptr, aClient *sptr,
       /* Except "F:" clients */
       if ( (
 #ifdef BOTCHECK
-	  !isbot &&
+	  !sptr->isbot &&
 #endif /* BOTCHECK */
           ((Count.local + 1) >= (MAXCLIENTS+MAX_BUFFER))) ||
             (((Count.local +1) >= (MAXCLIENTS - 5)) && !(IsFlined(sptr))))
@@ -600,30 +593,28 @@ static int register_user(aClient *cptr, aClient *sptr,
 	  return exit_client(cptr, sptr, &me,
 			     "Sorry, server is full - try later");
 	}
-
       /* botcheck */
 #ifdef BOTCHECK
-      if(rejecting_bot(sptr,isbot,&type_of_bot))
+      if(sptr->isbot)
 	{
 	  if(IsBlined(sptr))
 	    {
 	      sendto_realops_lev(CCONN_LEV,
 				 "Possible %s: %s (%s@%s) [B-lined]",
-				 type_of_bot, nick, user, sptr->host);
+				 type_of_bot[sptr->isbot],
+				 sptr->name, sptr->user, sptr->host);
 	    }
 	  else
 	    {
 	      sendto_realops_lev(REJ_LEV, "Rejecting %s: %s",
-				 type_of_bot, get_client_name(sptr,FALSE));
+				 type_of_bot[sptr->isbot],
+				 get_client_name(sptr,FALSE));
 	      ircstp->is_ref++;
-	      return exit_client(cptr, sptr, sptr, type_of_bot );
+	      return exit_client(cptr, sptr, sptr, type_of_bot[sptr->isbot] );
 	    }
 	}
 #endif
       /* End of botcheck */
-
-      if (oldstatus == STAT_MASTER && MyConnect(sptr))
-	m_oper(&me, sptr, 1, parv);
 
       /* valid user name check */
 
@@ -2629,6 +2620,10 @@ int m_user(aClient* cptr, aClient* sptr, int parc, char *parv[])
   char* host;
   char* server;
   char* realname;
+#ifdef BOTCHECK
+  int	      isbot;
+  char*       type_of_bot;
+#endif
  
   if (parc > 2 && (username = strchr(parv[1],'@')))
     *username = '\0'; 
@@ -2651,6 +2646,10 @@ int m_user(aClient* cptr, aClient* sptr, int parc, char *parv[])
   server   = (parc < 4 || BadPtr(parv[3])) ? "<noserver>" : parv[3];
   realname = (parc < 5 || BadPtr(parv[4])) ? "<bad-realname>" : parv[4];
   
+#ifdef BOTCHECK
+      isbot = bot_check(host);
+#endif
+
   return do_user(parv[0], cptr, sptr, username, host, server, realname);
 }
 
@@ -3802,13 +3801,12 @@ void	send_umode_out(aClient *cptr,
 
 #ifdef BOTCHECK
 /**
- ** botreject(host)
+ ** bot_check(host)
  **   Reject a bot based on a fake hostname...
  **           -Taner
  **/
-static int botreject(char *host)
+static int bot_check(char *host)
 {
-
 /*
  * Eggdrop Bots:	"USER foo 1 1 :foo"
  * Vlad, Com, joh Bots:	"USER foo null null :foo"
@@ -3820,44 +3818,6 @@ static int botreject(char *host)
   if (!strcmp(host, "x")) return 3;
 
   return 0;
-}
-
-static int rejecting_bot(aClient *sptr, int isbot,char **type_of_bot)
-{
-  /* Check bot type... */
-  switch (isbot)
-    {
-    case 0:       break;  /* it's ok */
-      return ( NO );
-      break;
-
-    case 1:       /* eggdrop */
-      *type_of_bot = "eggdrop";
-      return ( YES );
-      break;
-
-    case 2:       /* vlad/com bot */
-      *type_of_bot = "vlad/com/joh bot";
-      return ( YES );
-      break;
-
-    case 3:	/* SpamBot */
-      *type_of_bot = "Spambot";
-      return ( YES );
-      break;
-
-    case 4:       /* annoy/ojnkbot */
-      *type_of_bot = "annoy/ojnkbot";
-      return ( YES );
-      break;
-
-    default:      /* huh !? */
-      *type_of_bot = "bot";
-      return ( YES );
-      break;
-    }
-
-  return ( NO );
 }
 #endif
 
