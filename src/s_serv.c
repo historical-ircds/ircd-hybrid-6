@@ -281,12 +281,6 @@ time_t try_connections(time_t currenttime)
 
   if (connecting)
     {
-#if 0
-      /*
-       * XXX - wheee modify the list as we traverse it
-       * pointless, put the current one at the end of the list so we
-       * spin through it again?
-       */
       if (con_conf->next)  /* are we already last? */
         {
           struct ConfItem**  pconf;
@@ -300,7 +294,6 @@ time_t try_connections(time_t currenttime)
               *pconf = aconf->next;
           (*pconf = con_conf)->next = 0;
         }
-#endif
       if (!(con_conf->flags & CONF_FLAGS_ALLOW_AUTO_CONN))
         {
           sendto_ops("Connection to %s[%s] not activated, autoconn is off.",
