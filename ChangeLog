@@ -1,3 +1,24 @@
+lusky       2001/12/09 13:17:00 EST	(20011209_2)
+
+  Modified files:
+    .                    README.FIRST 
+    src                  adns.c channel.c ircd.c s_bsd.c 
+  Log:
+  - Added RedHat 4.2 to supported list (uses select())
+  - tv_buf was uninitialized for adns select() call
+  - compile warning on in channel.c
+  - moved check_pidfile() call to after we chdir()
+  - removed remants of old resolver from select code
+  
+  Revision  Changes    Path
+  1.14      +2 -2      ircd-hybrid-6/README.FIRST
+  1.5       +4 -1      ircd-hybrid-6/src/adns.c
+  1.225     +5 -5      ircd-hybrid-6/src/channel.c
+  1.158     +5 -5      ircd-hybrid-6/src/ircd.c
+  1.145     +5 -3      ircd-hybrid-6/src/s_bsd.c
+
+
+
 lusky       2001/12/09 12:37:24 EST	(20011209_1)
 
   Modified files:
