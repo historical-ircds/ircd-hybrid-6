@@ -671,11 +671,12 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
   if(iline_aconf_unsortable)
     iline_aconf = iline_aconf_unsortable;
 
-  /* Keep as close to the original semantics as possible, 
-   * IP mask OR dns name
+  /* 
+   * If there is no match found yet, and there is a legal IP to look at
+   * see if there is a matching IP CIDR, and use it.
    */
 
-  if(ip && host_is_legal_ip(host))
+  if(ip && !iline_aconf)
     {
       ip_iline_aconf = find_matching_ip_i_line(ip);
       if(ip_iline_aconf)
@@ -1583,13 +1584,11 @@ void add_to_ip_ilines(aConfItem *aconf)
 
   ip_host = host_name_to_ip(aconf->mask,&ip_mask); /*returns in =host= order*/
 
-  new_ip->ip = ip_host;
+  new_ip->ip = ip_host & ip_mask;
   new_ip->mask = ip_mask;
   new_ip->conf_entry = aconf;
 
-  if(ip_i_lines)
-    new_ip->next = ip_i_lines;
-
+  new_ip->next = ip_i_lines;
   ip_i_lines = new_ip;
 }
 
