@@ -2,6 +2,16 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b57   24-Mar-1999
+* integrated ChangeLog with README.hybrid
+* updated Hybrid-team and version.c.SH to reflect the current core team
+* updated INSTALL file to match current install_ircd script
+* updated all Makefiles with new makedepend info    
+* massive cleaning of the doc subdir
+* changed defaults in config.h for public consumption
+* install_ircd now installs viconf and mkpasswd
+-Rodder
+
 version hybrid-6-b54   23-Mar-1999
 * rewrote kline code (mtrie_conf.c), no more reverse, its faster now
   and ... works
