@@ -39,7 +39,7 @@ install: build
 
 # DO NOT DELETE
 
-mkpasswd.o: ../include/sys.h ../include/setup.h ../zlib/zlib.h
+mkpasswd.o: ../include/setup.h ../zlib/zlib.h
 mkpasswd.o: ../zlib/zconf.h
 viconf.o: ../include/config.h ../include/setup.h ../include/defs.h
-viconf.o: ../include/sys.h ../zlib/zlib.h ../zlib/zconf.h
+viconf.o: ../zlib/zlib.h ../zlib/zconf.h
