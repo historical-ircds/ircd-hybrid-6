@@ -37,7 +37,7 @@
 #include <openssl/rand.h>
 
 
-#ifndef HAVE_BF_CFB64_ENCRYPT
+#ifdef HAVE_BF_CFB64_ENCRYPT
 #define HAVE_CRYPT_BLOWFISH
 #include <openssl/blowfish.h>
 #endif

@@ -84,26 +84,26 @@ int do_des_decrypt(struct Client * cptr, char * Data, int Length);
 
 
 CipherDef Ciphers[] = {
-#ifdef HAVE_CRYPT_BLOWFISH
-  {"BF", 256, sizeof(BFState), do_bf256_init, do_bf_encrypt, do_bf_decrypt},
-  {"BF", 128, sizeof(BFState), do_bf128_init, do_bf_encrypt, do_bf_decrypt},
+#ifdef HAVE_CRYPT_DES
+  {"DES", 56, sizeof(DESState), do_des_init, do_des_encrypt, do_des_decrypt},
 #endif
-#ifdef HAVE_CRYPT_CAST
-  {"CAST", 128, sizeof(CASTState), do_cast_init, do_cast_encrypt, do_cast_decrypt},
-#endif
-#ifdef HAVE_CRYPT_IDEA
-  {"IDEA", 128, sizeof(IDEAState), do_idea_init, do_idea_encrypt, do_idea_decrypt},
+#ifdef HAVE_CRYPT_3DES
+  {"3DES", 168, sizeof(TDESState), do_tdes_init, do_tdes_encrypt, do_tdes_decrypt},
 #endif
 #ifdef HAVE_CRYPT_RC5
   {"RC5.8", 128, sizeof(RC5State), do_rc5_8_init, do_rc5_encrypt, do_rc5_decrypt},
   {"RC5.12", 128, sizeof(RC5State), do_rc5_12_init, do_rc5_encrypt, do_rc5_decrypt},
   {"RC5.16", 128, sizeof(RC5State), do_rc5_16_init, do_rc5_encrypt, do_rc5_decrypt},
 #endif
-#ifdef HAVE_CRYPT_3DES
-  {"3DES", 168, sizeof(TDESState), do_tdes_init, do_tdes_encrypt, do_tdes_decrypt},
+#ifdef HAVE_CRYPT_IDEA
+  {"IDEA", 128, sizeof(IDEAState), do_idea_init, do_idea_encrypt, do_idea_decrypt},
 #endif
-#ifdef HAVE_CRYPT_DES
-  {"DES", 56, sizeof(DESState), do_des_init, do_des_encrypt, do_des_decrypt},
+#ifdef HAVE_CRYPT_CAST
+  {"CAST", 128, sizeof(CASTState), do_cast_init, do_cast_encrypt, do_cast_decrypt},
+#endif
+#ifdef HAVE_CRYPT_BLOWFISH
+  {"BF", 128, sizeof(BFState), do_bf128_init, do_bf_encrypt, do_bf_decrypt},
+  {"BF", 256, sizeof(BFState), do_bf256_init, do_bf_encrypt, do_bf_decrypt},
 #endif
   {"", 0, 0, 0, 0, 0}
 };
@@ -449,6 +449,7 @@ int crypt_selectcipher(char *ciphers) {
 
     for (cipherIndex = 0; Ciphers[cipherIndex].name[0]; cipherIndex++)
     {
+          Ciphers[cipherIndex].name);
       if (!strcmp(Ciphers[cipherIndex].name, cipher) &&
          (Ciphers[cipherIndex].keysize == atoi(keysize)))
       {
@@ -456,6 +457,7 @@ int crypt_selectcipher(char *ciphers) {
       }
     }
   }
+
   return bestIndex;
 }
 
