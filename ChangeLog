@@ -1,3 +1,13 @@
+*** 20010609_1 by jdc
+- Fixes for cipher autoselection.  Order of ciphers was wrong; they
+  were being tested in order of best ("most secure") to worst.  The
+  last match is always picked, which would've been DES/56 on most
+  systems.
+- BF/256 and BF/128 would've never been made available; #ifdef was actually
+  a #ifndef (s_crypt.h).  Oops.
+
+
+
 *** 20010608_3 by db
 From Walter Campbell
 
