@@ -302,7 +302,7 @@ WriteKline(const char *filename, struct Client *sptr, struct Client *rcptr,
 
   if (oper_reason != NULL)
     {
-      ircsprintf(buffer, "K:%s:%s|%s (%s):%s\n",
+      ircsprintf(buffer, "K:%s:%s (%s) |%s:%s\n",
 		 host,
 		 reason,
 		 oper_reason,
