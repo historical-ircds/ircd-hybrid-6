@@ -34,16 +34,22 @@ SRCS = \
 	listener.c \
 	m_capab.c \
 	m_connect.c \
+	m_error.c \
 	m_gline.c \
 	m_info.c \
+	m_help.c \
 	m_kline.c \
 	m_links.c \
+	m_lusers.c \
 	m_pass.c \
 	m_server.c \
 	m_squit.c \
+	m_stats.c \
 	m_svinfo.c \
 	m_unkline.c \
+	m_users.c \
 	m_version.c \
+	m_wallops.c \
 	match.c \
 	motd.c \
 	mtrie_conf.c \
@@ -87,16 +93,22 @@ SRCS = \
 #	listener.o \
 #	m_capab.o \
 #	m_connect.o \
+#	m_error.o \
 #	m_gline.o \
+#	m_help.o \
 #	m_info.o \
 #	m_kline.o \
 #	m_links.o \
+#	m_lusers.o \
 #	m_pass.o \
 #	m_server.o \
 #	m_squit.o \
+#	m_stats.c \
 #	m_svinfo.o \
 #	m_unkline.o \
+#	m_users.o \
 #	m_version.o \
+#	m_wallops.o \
 #	match.o \
 #	motd.o \
 #	mtrie_conf.o \

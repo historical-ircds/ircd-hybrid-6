@@ -19,15 +19,16 @@
  *  $Id$
  */
 #include "listener.h"
+#include "client.h"
+#include "irc_string.h"
+#include "ircd.h"
+#include "ircd_defs.h"
+#include "numeric.h"
 #include "s_bsd.h"
 #include "s_conf.h"
-#include "ircd_defs.h"
-#include "client.h"
 #include "s_misc.h"
-#include "ircd.h"
-#include "struct.h"
 #include "send.h"
-#include "irc_string.h"
+#include "struct.h"
 
 #include <assert.h>
 #include <string.h>
@@ -83,6 +84,29 @@ const char* get_listener_name(const struct Listener* listener)
   ircsprintf(buf, "%s[%s/%u]", 
              listener->name, listener->name, listener->port);
   return buf;
+}
+
+/*
+ * show_ports - send port listing to a client
+ * inputs       - pointer to client to show ports to
+ * output       - none
+ * side effects - show ports
+ */
+void show_ports(struct Client* sptr)
+{
+  struct Listener* listener = 0;
+
+  for (listener = ListenerPollList; listener; listener = listener->next)
+    {
+      sendto_one(sptr, form_str(RPL_STATSPLINE),
+                 me.name,
+                 sptr->name,
+                 'P',
+                 listener->port,
+                 listener->name,
+                 listener->ref_count,
+                 (listener->active)?"active":"disabled");
+    }
 }
   
 /*

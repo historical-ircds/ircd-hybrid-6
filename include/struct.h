@@ -94,20 +94,6 @@ typedef struct  Zdata   aZdata;
 #define DEBUG_MALLOC 9  /* malloc/free calls */
 #define DEBUG_LIST  10  /* debug list use */
 
-
-struct  Counter {
-        int     server;         /* servers */
-        int     myserver;       /* my servers */
-        int     oper;           /* Opers */
-        int     chan;           /* Channels */
-        int     local;          /* Local Clients */
-        int     total;          /* total clients */
-        int     invisi;         /* invisible clients */
-        int     unknown;        /* unknown connections */
-        int     max_loc;        /* MAX local clients */
-        int     max_tot;        /* MAX global clients */
-};
-
 /*
  * statistics structures
  */

@@ -58,7 +58,10 @@
 #include <time.h>
 #include <sys/stat.h>
 
-extern ConfigFileEntryType ConfigFileEntry;
+
+#ifdef PACE_WALLOPS
+time_t LastUsedWallops = 0;
+#endif
 
 static int do_user (char *, aClient *, aClient*, char *, char *, char *,
                      char *);
@@ -155,6 +158,221 @@ void free_fluders(aClient *,aChannel *);
 void free_fludees(aClient *);
 #endif
 
+
+/*
+ * show_opers - send the client a list of opers
+ * inputs       - pointer to client to show opers to
+ * output       - none
+ * side effects - show who is opered on this server
+ */
+void show_opers(struct Client *cptr)
+{
+  register struct Client        *cptr2;
+  register int j=0;
+
+  for(cptr2 = oper_cptr_list; cptr2; cptr2 = cptr2->next_oper_client)
+    {
+      ++j;
+      if (MyClient(cptr) && IsAnOper(cptr))
+        {
+          sendto_one(cptr, ":%s %d %s :[%c][%s] %s (%s@%s) Idle: %d",
+                     me.name, RPL_STATSDEBUG, cptr->name,
+                     IsOper(cptr2) ? 'O' : 'o',
+                     oper_privs_as_string(cptr2,
+                                          cptr2->confs->value.aconf->port),
+                     cptr2->name,
+                     cptr2->username, cptr2->host,
+                     CurrentTime - cptr2->user->last);
+        }
+      else
+        {
+          sendto_one(cptr, ":%s %d %s :[%c] %s (%s@%s) Idle: %d",
+                     me.name, RPL_STATSDEBUG, cptr->name,
+                     IsOper(cptr2) ? 'O' : 'o',
+                     cptr2->name,
+                     cptr2->username, cptr2->host,
+                     CurrentTime - cptr2->user->last);
+        }
+    }
+
+  sendto_one(cptr, ":%s %d %s :%d OPER%s", me.name, RPL_STATSDEBUG,
+             cptr->name, j, (j==1) ? "" : "s");
+}
+
+/*
+ * show_lusers - total up counts and display to client
+ */
+int show_lusers(struct Client *cptr, struct Client *sptr, 
+                int parc, char *parv[])
+{
+#define LUSERS_CACHE_TIME 180
+  static long last_time=0;
+  static int    s_count = 0, c_count = 0, u_count = 0, i_count = 0;
+  static int    o_count = 0, m_client = 0, m_server = 0;
+  int forced;
+  struct Client *acptr;
+
+/*  forced = (parc >= 2); */
+  forced = (IsAnOper(sptr) && (parc > 3));
+
+/* (void)collapse(parv[1]); */
+
+  Count.unknown = 0;
+  m_server = Count.myserver;
+  m_client = Count.local;
+  i_count  = Count.invisi;
+  u_count  = Count.unknown;
+  c_count  = Count.total-Count.invisi;
+  s_count  = Count.server;
+  o_count  = Count.oper;
+  if (forced || (CurrentTime > last_time+LUSERS_CACHE_TIME))
+    {
+      last_time = CurrentTime;
+      /* only recount if more than a second has passed since last request */
+      /* use LUSERS_CACHE_TIME instead... */
+      s_count = 0; c_count = 0; u_count = 0; i_count = 0;
+      o_count = 0; m_client = 0; m_server = 0;
+
+      for (acptr = GlobalClientList; acptr; acptr = acptr->next)
+        {
+          switch (acptr->status)
+            {
+            case STAT_SERVER:
+              if (MyConnect(acptr))
+                m_server++;
+            case STAT_ME:
+              s_count++;
+              break;
+            case STAT_CLIENT:
+              if (IsOper(acptr))
+                o_count++;
+#ifdef  SHOW_INVISIBLE_LUSERS
+              if (MyConnect(acptr))
+                m_client++;
+              if (!IsInvisible(acptr))
+                c_count++;
+              else
+                i_count++;
+#else
+              if (MyConnect(acptr))
+                {
+                  if (IsInvisible(acptr))
+                    {
+                      if (IsAnOper(sptr))
+                        m_client++;
+                    }
+                  else
+                    m_client++;
+                }
+              if (!IsInvisible(acptr))
+                c_count++;
+              else
+                i_count++;
+#endif
+              break;
+            default:
+              u_count++;
+              break;
+            }
+        }
+      /*
+       * We only want to reassign the global counts if the recount
+       * time has expired, and NOT when it was forced, since someone
+       * may supply a mask which will only count part of the userbase
+       *        -Taner
+       */
+      if (!forced)
+        {
+          if (m_server != Count.myserver)
+            {
+              sendto_realops_flags(FLAGS_DEBUG, 
+                                 "Local server count off by %d",
+                                 Count.myserver - m_server);
+              Count.myserver = m_server;
+            }
+          if (s_count != Count.server)
+            {
+              sendto_realops_flags(FLAGS_DEBUG,
+                                 "Server count off by %d",
+                                 Count.server - s_count);
+              Count.server = s_count;
+            }
+          if (i_count != Count.invisi)
+            {
+              sendto_realops_flags(FLAGS_DEBUG,
+                                 "Invisible client count off by %d",
+                                 Count.invisi - i_count);
+              Count.invisi = i_count;
+            }
+          if ((c_count+i_count) != Count.total)
+            {
+              sendto_realops_flags(FLAGS_DEBUG, "Total client count off by %d",
+                                 Count.total - (c_count+i_count));
+              Count.total = c_count+i_count;
+            }
+          if (m_client != Count.local)
+            {
+              sendto_realops_flags(FLAGS_DEBUG,
+                                 "Local client count off by %d",
+                                 Count.local - m_client);
+              Count.local = m_client;
+            }
+          if (o_count != Count.oper)
+            {
+              sendto_realops_flags(FLAGS_DEBUG,
+                                 "Oper count off by %d", Count.oper - o_count);
+              Count.oper = o_count;
+            }
+          Count.unknown = u_count;
+        } /* Complain & reset loop */
+    } /* Recount loop */
+  
+#ifndef SHOW_INVISIBLE_LUSERS
+  if (IsAnOper(sptr) && i_count)
+#endif
+    sendto_one(sptr, form_str(RPL_LUSERCLIENT), me.name, parv[0],
+               c_count, i_count, s_count);
+#ifndef SHOW_INVISIBLE_LUSERS
+  else
+    sendto_one(sptr,
+               ":%s %d %s :There are %d users on %d servers", me.name,
+               RPL_LUSERCLIENT, parv[0], c_count,
+               s_count);
+#endif
+  if (o_count)
+    sendto_one(sptr, form_str(RPL_LUSEROP),
+               me.name, parv[0], o_count);
+  if (u_count > 0)
+    sendto_one(sptr, form_str(RPL_LUSERUNKNOWN),
+               me.name, parv[0], u_count);
+  /* This should be ok */
+  if (Count.chan > 0)
+    sendto_one(sptr, form_str(RPL_LUSERCHANNELS),
+               me.name, parv[0], Count.chan);
+  sendto_one(sptr, form_str(RPL_LUSERME),
+             me.name, parv[0], m_client, m_server);
+  sendto_one(sptr, form_str(RPL_LOCALUSERS), me.name, parv[0],
+             Count.local, Count.max_loc);
+  sendto_one(sptr, form_str(RPL_GLOBALUSERS), me.name, parv[0],
+             Count.total, Count.max_tot);
+
+  sendto_one(sptr, form_str(RPL_STATSCONN), me.name, parv[0],
+             MaxConnectionCount, MaxClientCount);
+  if (m_client > MaxClientCount)
+    MaxClientCount = m_client;
+  if ((m_client + m_server) > MaxConnectionCount)
+    {
+      MaxConnectionCount = m_client + m_server;
+      if (MaxConnectionCount % 10 == 0)
+        sendto_ops(
+                   "New highest connections: %d (%d clients)",
+                   MaxConnectionCount, MaxClientCount);
+    }
+
+  return 0;
+}
+
+  
 
 /*
 ** m_functions execute protocol messages on this server:

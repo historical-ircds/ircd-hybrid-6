@@ -32,6 +32,8 @@
 #include "ircd_defs.h"       /* HOSTLEN */
 #endif
 
+struct Client;
+
 struct Listener {
   struct Listener* next;               /* list node pointer */
   const char*      name;               /* listener name */
@@ -47,11 +49,12 @@ struct Listener {
 
 extern struct Listener* ListenerPollList; /* GLOBAL - listener list */
 
-extern void accept_connection(struct Listener* listener);
-extern void add_listener(int port, const char* vaddr_ip);
+extern void        accept_connection(struct Listener* listener);
+extern void        add_listener(int port, const char* vaddr_ip);
+extern void        close_listener(struct Listener* listener);
+extern void        close_listeners(void);
 extern const char* get_listener_name(const struct Listener* listener);
-extern void close_listener(struct Listener* listener);
-extern void mark_listeners_closing(void);
-extern void close_listeners(void);
+extern void        mark_listeners_closing(void);
+extern void        show_ports(struct Client* client);
 
 #endif /* INCLUDED_listener_h */

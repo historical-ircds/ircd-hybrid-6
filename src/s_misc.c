@@ -300,33 +300,4 @@ void serv_info(aClient *cptr,char *name)
              (float)((float)me.receiveK / (float)uptime));
 }
 
-/*
- * show_capabilities
- *
- * inputs       - pointer to an aClient
- * output       - pointer to static string
- * side effects - build up string representing capabilities of server listed
- */
-
-char *show_capabilities(struct Client *acptr)
-{
-  static char     msgbuf[BUFSIZE];
-  register        struct Capability *cap;
-
-  strcpy(msgbuf,"TS ");
-  if(!acptr->caps)        /* short circuit if no caps */
-    return(msgbuf);
-
-  for (cap=captab; cap->cap; cap++)
-    {
-      if(cap->cap & acptr->caps)
-        {
-          strcat(msgbuf, cap->name);
-          strcat(msgbuf, " ");
-        }
-    }
-  return(msgbuf);
-}
-
-
 

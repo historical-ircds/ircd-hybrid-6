@@ -243,6 +243,134 @@ void det_confs_butmask(struct Client* cptr, int mask)
 }
 
 /*
+ * rewrote to use a struct -Dianora
+ */
+static struct LinkReport {
+  int conf_type;
+  int rpl_stats;
+  int conf_char;
+} report_array[] = {
+  { CONF_CONNECT_SERVER,   RPL_STATSCLINE, 'C'},
+  { CONF_NOCONNECT_SERVER, RPL_STATSNLINE, 'N'},
+  { CONF_LEAF,             RPL_STATSLLINE, 'L'},
+  { CONF_OPERATOR,         RPL_STATSOLINE, 'O'},
+  { CONF_HUB,              RPL_STATSHLINE, 'H'},
+  { CONF_LOCOP,            RPL_STATSOLINE, 'o'},
+  { 0, 0, '\0' }
+};
+
+void report_configured_links(struct Client* sptr, int mask)
+{
+  struct ConfItem*   tmp;
+  struct LinkReport* p;
+  char*              host;
+  char*              pass;
+  char*              user;
+  char*              name;
+  int                port;
+
+  for (tmp = ConfigItemList; tmp; tmp = tmp->next) {
+    if (tmp->status & mask)
+      {
+        for (p = &report_array[0]; p->conf_type; p++)
+          if (p->conf_type == tmp->status)
+            break;
+        if(p->conf_type == 0)return;
+
+        get_printable_conf(tmp, &name, &host, &pass, &user, &port);
+
+        if(mask & (CONF_CONNECT_SERVER|CONF_NOCONNECT_SERVER))
+          {
+            char c;
+
+            c = p->conf_char;
+            if(tmp->flags & CONF_FLAGS_ZIP_LINK)
+              c = 'c';
+
+            /* Don't allow non opers to see actual ips */
+            if(IsAnOper(sptr))
+              sendto_one(sptr, form_str(p->rpl_stats), me.name,
+                         sptr->name, c,
+                         host,
+                         name,
+                         port,
+                         get_conf_class(tmp),
+                         oper_flags_as_string((int)tmp->hold));
+            else
+              sendto_one(sptr, form_str(p->rpl_stats), me.name,
+                         sptr->name, c,
+                         "*@127.0.0.1",
+                         name,
+                         port,
+                         get_conf_class(tmp));
+
+          }
+        else if(mask & (CONF_OPERATOR|CONF_LOCOP))
+          {
+            /* Don't allow non opers to see oper privs */
+            if(IsAnOper(sptr))
+              sendto_one(sptr, form_str(p->rpl_stats), me.name,
+                         sptr->name,
+                         p->conf_char,
+                         user, host, name,
+                         oper_privs_as_string((struct Client *)NULL,port),
+                         get_conf_class(tmp),
+                         oper_flags_as_string((int)tmp->hold));
+            else
+              sendto_one(sptr, form_str(p->rpl_stats), me.name,
+                         sptr->name, p->conf_char,
+                         user, host, name,
+                         "0",
+                         get_conf_class(tmp),
+                         "");
+          }
+        else
+          sendto_one(sptr, form_str(p->rpl_stats), me.name,
+                     sptr->name, p->conf_char,
+                     host, name, port,
+                     get_conf_class(tmp));
+      }
+  }
+}
+
+/*
+ * report_specials - report special conf entries
+ *
+ * inputs       - struct Client pointer to client to report to
+ *              - int flags type of special struct ConfItem to report
+ *              - int numeric for struct ConfItem to report
+ * output       - none
+ * side effects -
+ */
+void report_specials(struct Client* sptr, int flags, int numeric)
+{
+  struct ConfItem* this_conf;
+  struct ConfItem* aconf;
+  char*            name;
+  char*            host;
+  char*            pass;
+  char*            user;
+  int              port;
+
+  if (flags & CONF_XLINE)
+    this_conf = x_conf;
+  else if (flags & CONF_ULINE)
+    this_conf = u_conf;
+  else return;
+
+  for (aconf = this_conf; aconf; aconf = aconf->next)
+    if (aconf->status & flags)
+      {
+        get_printable_conf(aconf, &name, &host, &pass, &user, &port);
+
+        sendto_one(sptr, form_str(numeric),
+                   me.name,
+                   sptr->name,
+                   user,
+                   pass);
+      }
+}
+/*
  * find the first (best) I line to attach.
  */
 /*

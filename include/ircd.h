@@ -68,6 +68,19 @@ struct SetOptions
 #endif
 };
 
+struct Counter {
+  int     server;         /* servers */
+  int     myserver;       /* my servers */
+  int     oper;           /* Opers */
+  int     chan;           /* Channels */
+  int     local;          /* Local Clients */
+  int     total;          /* total clients */
+  int     invisi;         /* invisible clients */
+  int     unknown;        /* unknown connections */
+  int     max_loc;        /* MAX local clients */
+  int     max_tot;        /* MAX global clients */
+};
+
 extern struct SetOptions GlobalSetOptions;  /* defined in ircd.c */
 
 extern void     report_error_on_tty(const char* message);

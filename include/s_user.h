@@ -24,13 +24,26 @@
  */
 #ifndef INCLUDED_s_user_h
 #define INCLUDED_s_user_h
+#ifndef INCLUDED_config_h
+#include "config.h"
+#endif
+#ifndef INCLUDED_sys_types_h
+#include <sys/types.h>      /* time_t */
+#define INCLUDED_sys_types_h
+#endif
 
 struct Client;
+#ifdef PACE_WALLOPS
+extern time_t LastUsedWallops;
+#endif
 
-extern  void    send_umode (struct Client *, struct Client *,
-                            int, int, char *);
-extern  void    send_umode_out (struct Client*, struct Client *, int);
-extern  int     m_umode(struct Client *, struct Client *, int, char **);
-extern  int     show_lusers(struct Client *, struct Client *, int, char **);
+
+extern int   m_umode(struct Client *, struct Client *, int, char **);
+extern void  send_umode (struct Client *, struct Client *,
+                         int, int, char *);
+extern void  send_umode_out (struct Client*, struct Client *, int);
+extern int   show_lusers(struct Client *, struct Client *, int, char **);
+extern void  show_opers(struct Client* client);
+
 
 #endif

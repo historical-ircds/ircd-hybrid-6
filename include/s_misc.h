@@ -13,7 +13,6 @@ extern  void    initstats (void);
 extern  void    tstats  (struct Client *, char *);
 extern  char*   date(time_t);
 extern  struct  stats* ircstp;
-extern  char    *show_capabilities (struct Client *);
 extern  char    *smalldate(time_t);
 extern  char    *small_file_date(time_t);
 

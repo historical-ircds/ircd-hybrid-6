@@ -56,28 +56,17 @@ struct Capability
 #define ClearCap(x, cap)        ((x)->caps &= ~(cap))
 
 /*
-** list of recognized server capabilities.  "TS" is not on the list
-** because all servers that we talk to already do TS, and the kludged
-** extra argument to "PASS" takes care of checking that.  -orabidoo
-*/
-
-#ifdef DEFINE_CAPTAB
-struct Capability captab[] = 
-{
-/*  name        cap     */  
-
-#ifdef ZIP_LINKS
-  { "ZIP",      CAP_ZIP },
-#endif
-  { "QS",       CAP_QS },
-  { "EX",       CAP_EX },
-  { "CHW",      CAP_CHW },
-  { "DE",       CAP_DE },
-  { 0,   0 }
-};
-#else
+ * Globals
+ *
+ *
+ * list of recognized server capabilities.  "TS" is not on the list
+ * because all servers that we talk to already do TS, and the kludged
+ * extra argument to "PASS" takes care of checking that.  -orabidoo
+ */
 extern struct Capability captab[];
-#endif
+
+extern int MaxClientCount;     /* GLOBAL - highest number of clients */
+extern int MaxConnectionCount; /* GLOBAL - highest number of connections */
 
 /* 
  * allow DEFAULT_SERVER_SPLIT_RECOVERY_TIME minutes after server rejoins
@@ -99,13 +88,17 @@ extern struct Capability captab[];
 #define HUNTED_ISME     0       /* if this server should execute the command */
 #define HUNTED_PASS     1       /* if message passed onwards successfully */
 
-extern void   send_capabilities(struct Client* client, int use_zip);
-extern int    hunt_server(struct Client* cptr, struct Client* sptr,
-                          char* command, int server, int parc, char** parv);
-extern int    server_estab(struct Client* cptr);
-extern int    check_server(struct Client* server);
-extern time_t try_connections(time_t currenttime);
+
+extern int         check_server(struct Client* server);
+extern int         hunt_server(struct Client* cptr, struct Client* sptr,
+                               char* command, int server, 
+                               int parc, char** parv);
 extern const char* my_name_for_link(const char* name, struct ConfItem* conf);
+extern void        send_capabilities(struct Client* client, int use_zip);
+extern int         server_estab(struct Client* cptr);
+extern const char* show_capabilities(struct Client* client);
+extern void        show_servers(struct Client *);
+extern time_t      try_connections(time_t currenttime);
 
 #endif /* INCLUDED_s_serv_h */
 

@@ -24,6 +24,11 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.40  1999/07/28 05:00:41  tomh
+ * Finish net cleanup of connects (mostly).
+ * NOTE: Please check this carefully to make sure it still works right.
+ * The original code was entirely too twisted to be sure I got everything right.
+ *
  * Revision 1.39  1999/07/27 00:51:53  tomh
  * more connect cleanups
  *
@@ -308,9 +313,34 @@ typedef struct QlineItem {
 #define CONF_OPER_REHASH     64
 #define CONF_OPER_DIE       128
 
+typedef struct
+{
+  char *dpath;          /* DPATH if set from command line */
+  char *configfile;
+  char *klinefile;
+  char *dlinefile;
+
+#ifdef GLINES
+  char  *glinefile;
+#endif
+
+  MessageFile helpfile;
+  MessageFile motd;
+  MessageFile opermotd;
+} ConfigFileEntryType;
+
+/* aConfItems */
+/* conf uline link list root */
+extern struct ConfItem *u_conf;
+/* conf xline link list root */
+extern struct ConfItem *x_conf;
+/* conf qline link list root */
+extern struct QlineItem *q_conf;
 
 extern struct ConfItem* ConfigItemList;        /* GLOBAL - conf list head */
 extern int              specific_virtual_host; /* GLOBAL - used in s_bsd.c */
+extern struct ConfItem *temporary_klines;
+extern ConfigFileEntryType ConfigFileEntry;    /* GLOBAL - defined in ircd.c */
 
 extern void clear_ip_hash_table(void);
 extern void iphash_stats(struct Client *,struct Client *,int,char **,int);
@@ -362,17 +392,19 @@ extern struct ConfItem* find_special_conf(char *,int );
 extern struct ConfItem* find_is_klined(const char* host, 
                                        const char* name,
                                        unsigned long ip);
-extern  char    *show_iline_prefix(struct Client *,struct ConfItem *,char *);
-extern void   get_printable_conf(struct ConfItem *,
+extern char* show_iline_prefix(struct Client *,struct ConfItem *,char *);
+extern void get_printable_conf(struct ConfItem *,
                                     char **, char **, char **,
                                     char **, int *);
+extern void report_configured_links(struct Client* cptr, int mask);
+extern void report_specials(struct Client* sptr, int flags, int numeric);
 extern void report_qlines(struct Client* cptr);
 
 typedef enum {
   CONF_TYPE,
   KLINE_TYPE,
   DLINE_TYPE
-}KlineType;
+} KlineType;
 
 extern void write_kline_or_dline_to_conf_and_notice_opers(
                                                           KlineType,
@@ -391,31 +423,6 @@ extern  void    report_temp_klines(struct Client *);
 extern  int     is_address(char *,unsigned long *,unsigned long *); 
 extern  int     rehash (struct Client *, struct Client *, int);
 
-extern struct ConfItem *temporary_klines;
-
-typedef struct
-{
-  char *dpath;          /* DPATH if set from command line */
-  char *configfile;
-  char *klinefile;
-  char *dlinefile;
-
-#ifdef GLINES
-  char  *glinefile;
-#endif
-
-  MessageFile helpfile;
-  MessageFile motd;
-  MessageFile opermotd;
-} ConfigFileEntryType;
-
-/* aConfItems */
-/* conf uline link list root */
-extern struct ConfItem *u_conf;
-/* conf xline link list root */
-extern struct ConfItem *x_conf;
-/* conf qline link list root */
-extern struct QlineItem *q_conf;
 
 #endif /* INCLUDED_s_conf_h */
 
