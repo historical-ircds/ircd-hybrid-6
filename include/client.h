@@ -294,7 +294,11 @@ struct Client
  * ts stuff:
  *  if TS5_ONLY is defined, TS_MIN is 5, else 3
  */
+#ifdef TS5
 #define TS_CURRENT	5
+#else
+#define TS_CURRENT	3
+#endif
 
 #ifdef TS5_ONLY
 #define TS_MIN   	5
