@@ -1,3 +1,7 @@
+*** 20011204_10 by androsyn
+Cleaned up some stuff.  Got rid of the leaking dns queries as well.
+
+
 *** 20011204_9 by androsyn
 Change malloc to MyMalloc
 
