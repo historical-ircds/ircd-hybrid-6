@@ -1337,12 +1337,12 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
        * then its worth, just note the problem, and continue
        * -Dianora
        */
-      sendto_realops("BAD NICK: %s[%s@%s] on %s (from %s)", parv[1],
+      ts_warn("BAD NICK: %s[%s@%s] on %s (from %s)", parv[1],
                      (parc >= 6) ? parv[5] : "-",
                      (parc >= 7) ? parv[6] : "-",
                      (parc >= 8) ? parv[7] : "-", parv[0]);
-      
-     }
+      return 0;
+    }
 
   if ((parc >= 7) && (!strchr(parv[6], '.')))
     {
@@ -1351,8 +1351,9 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
        * isn't a single dot in the hostname, which is suspicious.
        * Don't fret about it just kill it. - ThemBones
        */
-      sendto_realops("BAD HOSTNAME: %s[%s@%s] on %s (from %s)",
+      ts_warn("BAD HOSTNAME: %s[%s@%s] on %s (from %s)",
                      parv[0], parv[5], parv[6], parv[7], parv[0]);
+      return 0;
     }
 
   fromTS = (parc > 6);
