@@ -61,6 +61,7 @@ struct Channel
   struct SLink*   invites;
   struct SLink*   banlist;
   struct SLink*   exceptlist;
+  struct SLink*   denylist;
   time_t          channelts;
   int             locally_created;  /* used to flag a locally created channel */
   int             keep_their_modes; /* used only on mode after sjoin */
@@ -125,6 +126,7 @@ extern  struct  Channel *channel;
 #define CHFL_DEOPPED    0x0004 /* deopped by us, modes need to be bounced */
 #define CHFL_BAN        0x0008 /* ban channel flag */
 #define CHFL_EXCEPTION  0x0010 /* exception to ban channel flag */
+#define CHFL_DENY       0x0020 /* regular expression deny flag */
 
 /* Channel Visibility macros */
 
@@ -140,9 +142,10 @@ extern  struct  Channel *channel;
 #define MODE_KEY        0x0200
 #define MODE_BAN        0x0400
 #define MODE_EXCEPTION  0x0800
+#define MODE_DENY       0x1000
 
-#define MODE_LIMIT      0x1000  /* was 0x0800 */
-#define MODE_FLAGS      0x1fff  /* was 0x0fff */
+#define MODE_LIMIT      0x2000  /* was 0x1000 */
+#define MODE_FLAGS      0x2fff  /* was 0x1fff */
 
 #ifdef NEED_SPLITCODE
 
@@ -161,14 +164,14 @@ extern int got_server_pong;
 #endif /* NEED_SPLITCODE */
 
 #ifdef JUPE_CHANNEL
-#define MODE_JUPED      0x2000
+#define MODE_JUPED      0x4000
 #endif
 
 /*
  * mode flags which take another parameter (With PARAmeterS)
  */
 #define MODE_WPARAS (MODE_CHANOP|MODE_VOICE|MODE_BAN|\
-                     MODE_EXCEPTION|MODE_KEY|MODE_LIMIT)
+                     MODE_EXCEPTION|MODE_DENY|MODE_KEY|MODE_LIMIT)
 
 /*
  * Undefined here, these are used in conjunction with the above modes in
