@@ -738,6 +738,12 @@
 #undef IDLE_CHECK
 #define IDLE_TIME 30
 
+/* If defined USE_IP_I_LINE_FIRST will search IP I lines first
+ * and use that in preference over the mtrie. (hi jimmie)
+ * -Dianora
+ */
+#undef USE_IP_I_LINE_FIRST
+
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 
 /* You shouldn't change anything below this line, unless absolutely needed. */
