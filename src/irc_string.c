@@ -128,9 +128,6 @@ char* strtoken(char** save, char* str, char* fs)
  * this new faster inet_ntoa was ripped from:
  * From: Thomas Helvey <tomh@inxpress.net>
  */
-/*
- * ripped from CSr31
- */
 static const char *IpQuadTab[] =
 {
     "0",   "1",   "2",   "3",   "4",   "5",   "6",   "7",   "8",   "9",

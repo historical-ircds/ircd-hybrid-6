@@ -904,9 +904,7 @@ int	m_mode(aClient *cptr,
   /* Now, try to find the channel in question */
   if (parc > 1)
     {
-      /* ZZZ I want a char attribe to tell me if this is a valid channel */
-
-      if( (parv[1][0] == '#') || (parv[1][0] == '&') )
+      if( IsChanPrefix(parv[1][0]) )
 	{
 	  /* Don't do any of this stuff at all
 	   * unless it looks like a channel name 

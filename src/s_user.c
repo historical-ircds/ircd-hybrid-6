@@ -1792,7 +1792,7 @@ static	int	m_message(aClient *cptr,
   ** channels are privmsg'd a lot more than other clients, moved up here
   ** plain old channel msg ?
   */
-  if( ((*nick == '#') || (*nick == '&'))
+  if( IsChanPrefix(*nick)
       && (IsPerson(sptr) && (chptr = find_channel(nick, NullChn))))
     {
 #ifdef	IDLE_CHECK
