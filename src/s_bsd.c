@@ -1316,7 +1316,6 @@ aClient	*add_connection(aClient *cptr, int fd)
   Link	lin;
   aClient *acptr;
   aConfItem *aconf = NULL;
-  aConfItem *found_conf = NULL;
   acptr = make_client(NULL);
 
   if (cptr != &me)

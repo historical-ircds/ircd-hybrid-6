@@ -3433,7 +3433,7 @@ int	is_address(char *host,
   int dot_count=0;
   char c;
 
-  while( c = *host)
+  while( (c = *host) )
     {
       if(isdigit(c))
 	{
