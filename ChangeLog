@@ -1,3 +1,9 @@
+*** 20010609_2 by jdc
+* Forgot to remove one extra line due to previous debugging session
+  with Hwy.  Line 452 needed to be deleted.  Oops.
+
+
+
 *** 20010609_1 by jdc
 - Fixes for cipher autoselection.  Order of ciphers was wrong; they
   were being tested in order of best ("most secure") to worst.  The
