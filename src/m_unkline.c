@@ -47,7 +47,7 @@
 extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 
 static int flush_write(aClient *, FBFILE* , char *, char *);
-static int remove_tkline_match(char *,char *);
+static int remove_tkline_match(char *,char *, unsigned long);
 
 /*
 ** m_unkline
@@ -77,6 +77,8 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
   char  *p;
   int   error_on_write = NO;
   mode_t oldumask;
+  unsigned long ip;
+  unsigned long ip_mask;
 
   ircsprintf(temppath, "%s%s.tmp", ConfigFileEntry.dpath,
 	     ConfigFileEntry.klinefile);
@@ -136,7 +138,10 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
       return 0;
     }
 
-  if(remove_tkline_match(host,user))
+  if(!(is_address(host, &ip, &ip_mask)))
+    ip = 0L;
+    
+  if(remove_tkline_match(host,user,(unsigned long)ip))
     {
       sendto_one(sptr, ":%s NOTICE %s :Un-klined [%s@%s] from temporary k-lines",
                  me.name, parv[0],user, host);
@@ -375,17 +380,43 @@ static int flush_write(aClient *sptr, FBFILE* out, char *buf, char *temppath)
 * un-kline a temporary k-line. 
 *
 */
-static int remove_tkline_match(char *host,char *user)
+static int remove_tkline_match(char *host,char *user, unsigned long ip)
 {
   aConfItem *kill_list_ptr;
   aConfItem *last_kill_ptr=(aConfItem *)NULL;
 
-  if(!temporary_klines)
+  if(!temporary_klines && !temporary_ip_klines)
     return NO;
 
-  kill_list_ptr = temporary_klines;
+  if(ip)
+  {
+    kill_list_ptr = temporary_ip_klines;
 
-  while(kill_list_ptr)
+    while(kill_list_ptr)
+    {
+      if((ip & kill_list_ptr->ip_mask) == kill_list_ptr->ip)
+      {
+        if(last_kill_ptr)
+	  last_kill_ptr->next = kill_list_ptr->next;
+	else
+	  temporary_ip_klines = kill_list_ptr->next;
+	free_conf(kill_list_ptr);
+	return YES;
+      }
+      else
+      {
+        last_kill_ptr = kill_list_ptr;
+	kill_list_ptr = kill_list_ptr->next;
+      }
+    }
+
+    return NO;
+  }
+  else
+  {
+    kill_list_ptr = temporary_klines;
+
+    while(kill_list_ptr)
     {
       if( !irccmp(kill_list_ptr->host,host)
           && !irccmp(kill_list_ptr->user,user)) /* match */
@@ -403,5 +434,6 @@ static int remove_tkline_match(char *host,char *user)
           kill_list_ptr = kill_list_ptr->next;
         }
     }
-  return NO;
+    return NO;
+  }
 }
