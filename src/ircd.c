@@ -1020,7 +1020,7 @@ normal user.\n");
 		    IRC_UID);
       (void)fprintf(stderr,"         changing to gid %d.\n",IRC_GID);
 
-      /* setgid/setuid changes suggested by ficus@neptho.net
+      /* setgid/setuid previous usage noted unsafe by ficus@neptho.net
        */
 
       if(setgid(IRC_GID) < 0)
