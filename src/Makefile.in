@@ -32,13 +32,16 @@ SRCS = \
 	ircd_signal.c \
 	list.c \
 	listener.c \
+	m_capab.c \
 	m_connect.c \
 	m_gline.c \
 	m_info.c \
 	m_kline.c \
+	m_links.c \
 	m_pass.c \
 	m_server.c \
 	m_squit.c \
+	m_svinfo.c \
 	m_unkline.c \
 	m_version.c \
 	match.c \
@@ -82,13 +85,16 @@ SRCS = \
 #	ircd_signal.o \
 #	list.o \
 #	listener.o \
+#	m_capab.o \
 #	m_connect.o \
 #	m_gline.o \
 #	m_info.o \
 #	m_kline.o \
+#	m_links.o \
 #	m_pass.o \
 #	m_server.o \
 #	m_squit.o \
+#	m_svinfo.o \
 #	m_unkline.o \
 #	m_version.o \
 #	match.o \

@@ -71,6 +71,9 @@ listener.o: listener.c ../include/listener.h ../include/ircd_defs.h \
  ../include/client.h ../include/dbuf.h ../include/s_misc.h \
  ../include/ircd.h ../include/struct.h ../include/send.h \
  ../include/irc_string.h
+m_capab.o: m_capab.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/irc_string.h ../include/s_serv.h
 m_connect.o: m_connect.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/common.h ../include/irc_string.h \
@@ -99,6 +102,11 @@ m_kline.o: m_kline.c ../include/struct.h ../include/config.h \
  ../include/send.h ../include/s_err.h ../include/ircd.h \
  ../include/s_misc.h ../include/m_kline.h ../include/dline_conf.h \
  ../include/mtrie_conf.h
+m_links.o: m_links.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/irc_string.h ../include/ircd.h \
+ ../include/numeric.h ../include/s_err.h ../include/s_serv.h \
+ ../include/send.h
 m_pass.o: m_pass.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/irc_string.h ../include/send.h \
@@ -117,6 +125,11 @@ m_squit.o: m_squit.c ../include/m_commands.h ../include/config.h \
  ../include/ircd.h ../include/numeric.h ../include/s_conf.h \
  ../include/fileio.h ../include/motd.h ../include/s_err.h \
  ../include/s_serv.h ../include/send.h
+m_svinfo.o: m_svinfo.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/common.h ../include/irc_string.h \
+ ../include/ircd.h ../include/numeric.h ../include/s_err.h \
+ ../include/send.h
 m_unkline.o: m_unkline.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../include/client.h \
  ../include/dbuf.h ../include/common.h ../include/irc_string.h \
