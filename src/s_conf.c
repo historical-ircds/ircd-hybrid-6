@@ -201,7 +201,7 @@ int	attach_Iline(aClient *cptr,
 
   if(cptr->flags & FLAGS_GOTID)
     {
-      aconf = find_matching_mtrie_conf(host,cptr->username,
+      aconf = find_matching_mtrie_conf(host,cptr->username,cptr->passwd,
 				       ntohl(cptr->ip.s_addr));
       if(aconf && !IsConfElined(aconf))
 	{
@@ -215,7 +215,7 @@ int	attach_Iline(aClient *cptr,
       non_ident[0] = '~';
       strncpy(&non_ident[1],username, USERLEN-1);
       non_ident[USERLEN] = '\0';
-      aconf = find_matching_mtrie_conf(host,non_ident,
+      aconf = find_matching_mtrie_conf(host,non_ident,cptr->passwd,
 				       ntohl(cptr->ip.s_addr));
       if(aconf && !IsConfElined(aconf))
 	{
@@ -2237,7 +2237,7 @@ aConfItem *find_is_klined(char *host,char *name,unsigned long ip)
    * or a CONF_CLIENT
    */
 
-  found_aconf = find_matching_mtrie_conf(host,name,ntohl(ip));
+  found_aconf = find_matching_mtrie_conf(host,name,(char *)NULL,ntohl(ip));
   if(found_aconf && found_aconf->status & CONF_KILL)
     return(found_aconf);
   else
