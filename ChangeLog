@@ -1,3 +1,21 @@
+greg        2001/12/20 02:49:32 EST	(20011220_1)
+
+  Modified files:
+    src                  s_bsd.c s_conf.c 
+  Log:
+  - add an extra field to the c line, it's now:
+    c:ip:pass:host:port:class[:bindaddr], where bindaddr is the ip to use for
+    outgoing connections, and is optional.  whee.
+  - i don't see obvious breakage, and i can't core it right away, but someone
+    please verify this code, since it's in an rc stage
+  - oh, and walter, this should be doc'd :)
+  
+  Revision  Changes    Path
+  1.146     +21 -1     ircd-hybrid-6/src/s_bsd.c
+  1.234     +6 -0      ircd-hybrid-6/src/s_conf.c
+
+
+
 greg        2001/12/20 00:38:00 EST	(20011220_0)
 
   Modified files:
