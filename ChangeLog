@@ -1,3 +1,11 @@
+*** 20010624_3 by greg
+- removed bogus if statement
+- damn style nazis
+- now show clients ip to registered clients instead of 255.255.255.255 in 
+  closing link notice
+- you are the closing link, goodbye
+
+
 *** 20010624_2 by db
 - removed SEPARATE_KLINES_BY_DATE no one ever used it. 
 
