@@ -405,6 +405,7 @@
 
 #undef CRYPT_LINKS             /* allow encrypted server-server links */
 #define CRYPT_LINKS_CNPREFIX '@'
+#define CRYPT_LINKS_CIPHERPREFIX ','
 #define CRYPT_LINKS_PRIVATEKEYFILE "private.key"
 
 /* USE_EGD -  if your system does not have *random devices and you want to
