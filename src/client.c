@@ -610,38 +610,34 @@ time_t check_pings(time_t currenttime)
 #if defined(SEND_FAKE_KILL_TO_CLIENT) && defined(IDLE_CHECK)
         {
 	  char *killer;
+	  char *p;
+
+	  /* This entire kludge goes away in hybrid-7 yech */
+	  p = strchr(dying_clients_reason[die_index], '|');
+	  if (p != NULL)
+	    *p = '\0';
+
 	  killer = "AutoKILL";
           if (fakekill)
             sendto_prefix_one(cptr, cptr, ":%s KILL %s :(%s)", killer,
             cptr->name, dying_clients_reason[die_index]);
-          /* ugh. this is horrible.
-           * but I can get away with this hack because of the
-           * block allocator, and right now,I want to find out
-           * just exactly why occasional already bit cleared errors
-           * are still happening
-           */
-          if(cptr->flags2 & FLAGS2_ALREADY_EXITED)
-            {
-              sendto_realops("Client already exited %X",cptr);
-            }
-          else
-            (void)exit_client(cptr, cptr, &me, dying_clients_reason[die_index]);
-          cptr->flags2 |= FLAGS2_ALREADY_EXITED;
+	  (void)exit_client(cptr, cptr, &me, dying_clients_reason[die_index]);
+	  if (p != NULL)
+	    *p = '|';
         }
 #else 
-          /* ugh. this is horrible.
-           * but I can get away with this hack because of the
-           * block allocator, and right now,I want to find out
-           * just exactly why occasional already bit cleared errors
-           * are still happening
-           */
-          if(cptr->flags2 & FLAGS2_ALREADY_EXITED)
-            {
-              sendto_realops("Client already exited %X",cptr);
-            }
-          else
-            (void)exit_client(cptr, cptr, &me, dying_clients_reason[die_index]);
-          cptr->flags2 |= FLAGS2_ALREADY_EXITED;          
+      {
+	char *p;
+
+	/* This entire kludge goes away in hybrid-7 yech */
+	p = strchr(dying_clients_reason[die_index], '|');
+	if (p != NULL)
+	  *p = '\0';
+	(void)exit_client(cptr, cptr, &me, dying_clients_reason[die_index]);
+	if (p != NULL)
+	  *p = '|';
+      }
+
 #endif /* SEND_FAKE_KILL_TO_CLIENT && IDLE_CHECK */
     }
 
