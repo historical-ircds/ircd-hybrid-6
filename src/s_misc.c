@@ -209,7 +209,8 @@ char *make_isupport()
   static char tisupport[200];
 
   ircsprintf(tisupport, "WALLCHOPS PREFIX=(ov)@+ CHANTYPES=#& MAXCHANNELS=%d "
-                        "NICKLEN=%d TOPICLEN=%d KICKLEN=%d NETWORK=%s "
+                        "MAXBANS=%d NICKLEN=%d TOPICLEN=%d KICKLEN=%d "
+                        "NETWORK=%s "
 #ifdef CHANMODE_E
                         "CHANMODES=be,k,l,imnpst EXCEPTS"
 #else
@@ -218,8 +219,8 @@ char *make_isupport()
 #ifdef USE_KNOCK
                         " KNOCK"
 #endif
-                        " MODES=%d", MAXCHANNELSPERUSER, NICKLEN, TOPICLEN,
-			KILLLEN, NETWORK_NAME, MAXMODEPARAMS);
+                        " MODES=%d", MAXCHANNELSPERUSER, MAXBANS, NICKLEN,
+                        TOPICLEN, KILLLEN, NETWORK_NAME, MAXMODEPARAMS);
 
   return tisupport;
 }
