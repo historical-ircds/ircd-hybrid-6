@@ -1,3 +1,23 @@
+*** 20010704_8 by greg
+Uh. Right ..
+
+- config.h	
+		made CRYPT_LINKS_PRIVATEKEYFILE deprecated, documented other
+		cryptlinks related options
+		prefer the me.name.key format. much cleaner.
+- include/m_info.h
+		show PRIVATEKEYFILE define as 'NONE' if no override
+- src/s_crypt.c	
+		made PRIVATEKEYFILE deprecated in favor of me.name
+
+TODO:
+- make ircd.pid stuff multi-ircd-in-one-dir friendly
+- keys not 2048 bits long? more descriptive errors?
+- more testing
+- more testing
+- rc to lightning/solidstreaming
+
+
 *** 20010704_7 by db
 - reformatted hard to read code. grrrr why do people do 
   function () { ?
