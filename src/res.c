@@ -311,7 +311,7 @@ int init_resolver(void)
  */
 void restart_resolver(void)
 {
-  flush_cache();  /* flush the dns cache */
+  /* flush_cache();  flush the dns cache */
   start_resolver();
 }
 
@@ -1585,17 +1585,6 @@ static void rem_cache(aCache* ocp)
   MyFree(ocp);
   --cachedCount;
   ++cainfo.ca_dels;
-}
-
-/*
- * flush_cache - remove all dns cache entries.
- */
-void  flush_cache()
-{
-  aCache* cp;
-
-  while ((cp = cacheTop))
-    rem_cache(cp);
 }
 
 /*
