@@ -64,7 +64,7 @@ int safe_write(aClient *,const char *, int, char *);
 static void lookup_confhost(aConfItem* aconf);
 static void do_include_conf(void);
 static int  SplitUserHost( aConfItem * );
-static char *getfield(char *newline)
+static char *getfield(char *newline);
 
 static FBFILE*  openconf(const char* filename);
 static void	initconf(FBFILE*, int);
@@ -1603,7 +1603,6 @@ static FBFILE* openconf(const char *filename)
 {
   return fbopen(filename, "r");
 }
-extern char *getfield();
 
 /*
 ** from comstud
