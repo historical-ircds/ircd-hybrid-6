@@ -13,6 +13,7 @@
 #include "struct.h"
 #include "h.h"
 #include "common.h"
+#include "send.h"
 
 #include <assert.h>
 #include <sys/time.h>

@@ -32,6 +32,7 @@
 #include "mtrie_conf.h"
 #include "s_conf.h"
 #include "s_bsd.h"
+#include "send.h"
 
 #include <sys/file.h>
 #include <sys/stat.h>

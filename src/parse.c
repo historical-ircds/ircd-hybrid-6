@@ -33,6 +33,7 @@ static char *rcs_version = "$Id$";
 #include "sys.h"
 #include "numeric.h"
 #include "h.h"
+#include "send.h"
 
 #if defined( HAVE_STRING_H )
 #include <string.h>

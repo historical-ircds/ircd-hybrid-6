@@ -55,6 +55,7 @@
 #include "s_conf.h"
 #include "class.h"
 #include "h.h"
+#include "send.h"
 
 #include "mtrie_conf.h"
 #include "dline_conf.h"

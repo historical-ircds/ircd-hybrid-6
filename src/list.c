@@ -29,6 +29,7 @@
 #include "blalloc.h"
 #include "res.h"
 #include "class.h"
+#include "send.h"
 /* #include "s_conf.h"
 
 #ifndef INADDR_NONE

@@ -35,6 +35,8 @@
 #include "s_bsd.h"
 #include "h.h"
 #include "res.h"
+#include "send.h"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/file.h>

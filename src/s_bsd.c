@@ -30,6 +30,8 @@
 #include "numeric.h"
 #include "h.h"
 #include "fdlist.h"
+#include "send.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <signal.h>

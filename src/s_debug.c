@@ -28,6 +28,8 @@ static char *rcs_version = "$Id$";
 #include "s_conf.h"
 #include "class.h"
 #include "res.h"
+#include "send.h"
+
 extern	void	count_whowas_memory(int *, u_long *);
 extern  void    count_ip_hash(int *,u_long *);	  /* defined in s_conf.c */
 extern  int	maxdbufblocks;			  /* defined in dbuf.c */

@@ -31,6 +31,7 @@
 #include "h.h"
 #include "mtrie_conf.h"
 #include "s_bsd.h"
+#include "send.h"
 
 #if defined(AIX) || defined(DYNIXPTX) || defined(SVR3)
 #include <time.h>

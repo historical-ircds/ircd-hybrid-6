@@ -24,6 +24,7 @@ static  char rcsid[] = "@(#)$Id$";
 #include "struct.h"
 #include "sys.h"
 #include "h.h"
+#include "send.h"
 
 #ifdef	ZIP_LINKS
 /*

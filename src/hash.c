@@ -30,6 +30,7 @@ static char *rcs_version = "$Id$";
 #include "msg.h"
 #include "hash.h"
 #include "h.h"
+#include "send.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>

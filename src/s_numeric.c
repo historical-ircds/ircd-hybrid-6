@@ -32,6 +32,7 @@ static char *rcs_version = "$Id$";
 #include "sys.h" 
 #include "numeric.h"
 #include "h.h"
+#include "send.h"
 
 static char buffer[1024];
 

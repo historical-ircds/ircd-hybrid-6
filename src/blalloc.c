@@ -20,6 +20,7 @@ static char *rcs_version = "$Id$";
 #include "h.h"
 #include "numeric.h"
 #include "blalloc.h"
+#include "send.h"
 
 /* ------------------------------------------------------------------------ */
 /* DEFINES                                                                  */

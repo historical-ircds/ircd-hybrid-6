@@ -30,6 +30,8 @@
 #include "h.h"
 #include "fdlist.h"
 #include "s_bsd.h"
+#include "send.h"
+
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <fcntl.h>

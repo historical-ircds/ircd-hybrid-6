@@ -32,6 +32,8 @@
 #include "class.h"
 #include "s_bsd.h"
 #include "h.h"
+#include "send.h"
+
 #include <sys/stat.h>
 #include <fcntl.h>
 #ifdef FLUD
@@ -567,6 +569,7 @@ static	int	register_user(aClient *cptr,
 		}
 	    }
 	}
+
 #ifndef FOLLOW_IDENT_RFC
       else if (IsGotId(sptr) && *sptr->username != '-')
 	strncpyzt(user->username, sptr->username, USERLEN + 1);

@@ -28,6 +28,7 @@ static char *rcs_version = "$Id$";
 #include "numeric.h"
 #include "h.h"
 #include "s_conf.h"
+#include "send.h"
 
 #define BAD_CONF_CLASS		-1
 #define BAD_PING		-2

@@ -3,6 +3,7 @@
 #include "sys.h"
 #include "numeric.h"
 #include "h.h"
+#include "send.h"
 
 #ifndef lint
 static char *rcs_version ="$Id$";

@@ -12,6 +12,7 @@
 #include "h.h"
 #include "s_conf.h"
 #include "dline_conf.h"
+#include "send.h"
 
 
 typedef struct ip_subtree

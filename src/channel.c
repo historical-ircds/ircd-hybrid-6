@@ -48,6 +48,7 @@ static char *rcs_version="$Id$";
 #include "numeric.h"
 #include "channel.h"
 #include "h.h"
+#include "send.h"
 
 #ifdef NEED_SPLITCODE
 int server_was_split=YES;
