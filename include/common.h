@@ -79,8 +79,21 @@
 extern void flush_connections();
 extern struct SLink *find_user_link(/* struct SLink *, struct Client * */);
 
+/* argh where should this go? */
+
+typedef struct
+{
+  int mode;
+  char letter;
+}FLAG_ITEM;
+
+
 /*
  * XXX - ACK!!!
+ */
+/*
+ * ZZZ - These can go away slowly as they are rewritten.
+ * calm down Tom.
  */
 #define MAXCLIENTS GlobalSetOptions.maxclients
 #define NOISYHTM   GlobalSetOptions.noisy_htm

@@ -42,9 +42,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#if 0
-#include <sys/time.h>
-#endif
+
 
 /* 
  * Number of aClient structures to preallocate at a time
@@ -276,7 +274,7 @@ static void release_client_state(struct Client* cptr)
     }
 
 #ifdef FLUD
-  if (MyFludConnect(cptr))
+  if (MyConnect(cptr))
     free_fluders(cptr, NULL);
   free_fludees(cptr);
 #endif

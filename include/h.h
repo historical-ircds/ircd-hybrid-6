@@ -190,10 +190,8 @@ void remove_one_ip(unsigned long);
 
 
 #ifdef FLUD
-int	check_for_flood();
 void	free_fluders();
 void	free_fludees();
-#define MyFludConnect(x)	(((x)->fd >= 0) || ((x)->fd == -2))
 #endif /* FLUD */
 
 #ifdef ANTI_SPAMBOT

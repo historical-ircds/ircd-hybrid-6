@@ -95,12 +95,6 @@ struct timeval tsdnow, tsdthen;
 unsigned long tsdms;
 #endif
 
-typedef struct
-{
-  int mode;
-  char letter;
-}FLAG_ITEM;
-
 
 static	char	*PartFmt = ":%s PART %s";
 /*
