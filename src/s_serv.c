@@ -305,16 +305,29 @@ time_t try_connections(time_t currenttime)
         }
       if (!(con_conf->flags & CONF_FLAGS_ALLOW_AUTO_CONN))
         {
+#ifdef HIDE_SERVERS_IPS
+          sendto_realops("Connection to %s not activated, autoconn is off.",
+			 con_conf->name);
+          sendto_realops("WARNING AUTOCONN on %s is disabled",
+			 con_conf->name);
+#else
           sendto_realops("Connection to %s[%s] not activated, autoconn is off.",
-                     con_conf->name, con_conf->host);
+			 con_conf->name, con_conf->host);
           sendto_realops("WARNING AUTOCONN on %s[%s] is disabled",
-                     con_conf->name, con_conf->host);
+			 con_conf->name, con_conf->host);
+#endif
         }
       else
         {
+#ifdef HIDE_SERVERS_IPS
+          if (connect_server(con_conf, 0, 0))
+            sendto_realops("Connection to %s activated.",
+			   con_conf->name);
+#else
           if (connect_server(con_conf, 0, 0))
             sendto_realops("Connection to %s[%s] activated.",
-                       con_conf->name, con_conf->host);
+			   con_conf->name, con_conf->host);
+#endif
         }
     }
   Debug((DEBUG_NOTICE,"Next connection check : %s", myctime(next)));
