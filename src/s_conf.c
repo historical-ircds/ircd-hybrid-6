@@ -1681,11 +1681,36 @@ static char *set_conf_flags(struct ConfItem *aconf,char *tmp)
 
 static void initconf(FBFILE* file, int use_include)
 {
-  static char  quotes[9][2] = {
-    {'b', '\b'}, {'f', '\f'}, {'n', '\n'},
-    {'r', '\r'}, {'t', '\t'}, {'v', '\v'},
-    {'\\', '\\'}, { 0, 0}
-  };
+  static char  quotes[] = {
+    0,    /*  */
+    0,    /* a */
+    '\b', /* b */
+    0,    /* c */
+    0,    /* d */
+    0,    /* e */
+    '\f', /* f */
+    0,    /* g */
+    0,    /* h */
+    0,    /* i */
+    0,    /* j */
+    0,    /* k */
+    0,    /* l */
+    0,    /* m */
+    '\n', /* n */
+    0,    /* o */
+    0,    /* p */
+    0,    /* q */
+    '\r', /* r */
+    0,    /* s */
+    '\t', /* t */
+    0,    /* u */
+    '\v', /* v */
+    0,    /* w */
+    0,    /* x */
+    0,    /* y */
+    0,    /* z */
+    0,0,0,0,0,0 
+    };
 
   char        *tmp, *s;
   int        i, dontadd;
@@ -1711,20 +1736,13 @@ static void initconf(FBFILE* file, int use_include)
       for (tmp = line; *tmp; tmp++)
         {
           if (*tmp == '\\')
-            {
-              for (i = 0; quotes[i][0]; i++)
-                if (quotes[i][0] == *(tmp+1))
-                  {
-                    *tmp = quotes[i][1];
-                    break;
-                  }
-              if (!quotes[i][0])
-                *tmp = *(tmp+1);
-              if (!*(tmp+1))
-                break;
-              else
-                for (s = tmp; (*s = *(s+1)); s++)
-                  ;
+	    {
+	      if ( *(tmp+1) == '\\' )
+                *tmp = '\\';
+	      else
+                *tmp = quotes[ (unsigned int) (*(tmp+1) & 0x1F) ];
+	      for (s = tmp; (*s = *(s+1)); s++)
+		;
             }
           else if (*tmp == '#')
             *tmp = '\0';
