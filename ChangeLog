@@ -1,3 +1,11 @@
+*** 20001230_1 by lusky
+revved patchlevel to rc8
+hard DoS could cause restart due to clock lag (db)
+Fixes issue of showing C/c/N IPs to users when they should be masked (jdc)
+Extends RPC_STATSCONN output to show total number of clients ever
+  connected since /restart or startup. (jdc)
+
+
 *** 20001221_2 by lusky
 added IP to I-line is full notice (pro)
 fixed rehash help (wc)
