@@ -1,3 +1,7 @@
+*** 20000626_2 by lusky
+ghost kill fix
+
+
 *** 20000626_1 by lusky
 revved patchlevel to rc2
 added db's I-line patch that was supposed to have been in rc1
