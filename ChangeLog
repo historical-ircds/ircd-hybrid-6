@@ -1,3 +1,9 @@
+*** 19990818_1 by db
+- backed out a change. You can't strcpy to a pointer without
+  allocating memory. 
+
+
+
 *** 19990817_2 by khuon
 Ugh!  Seems sendto_prefix_one() accepts different args now.
 
