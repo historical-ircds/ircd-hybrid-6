@@ -1,3 +1,12 @@
+*** 19990809_1 by lusky
+bumped patchlevel to b95
+removed unneeded arg to attach_Iline and fixed tklines for non-resolving hosts
+fixes to allow SLAVE_SERVER to work (db)
+RPL_MYINFO should report the user modes and channel modes available (db)
+missed the user mode +b for bots (db)
+applied neph's operwall/wallops pacing patch (db)
+
+
 *** 19990806_2 by lusky
 updated patchlevel.h to b94 for new tarball
 
