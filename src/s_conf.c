@@ -3144,7 +3144,7 @@ aConfItem *find_user_host_in_dline_hash(unsigned long host_ip,char *name,
 static int hash_dline_ip(unsigned long ip)
 {
   int hash;
-  hash = ((ip >>= 12) + ip) & (DLINE_HASH_SIZE-1);
+  hash = ( (ip >>= 10)  & DLINE_HASH_SIZE-1);
   return(hash);
 }
 

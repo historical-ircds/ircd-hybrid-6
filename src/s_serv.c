@@ -3001,23 +3001,6 @@ int	m_time(aClient *cptr,
 	       int parc,
 	       char *parv[])
 {
-  /* anti flooding code,
-   * I did have this in parse.c with a table lookup
-   * but I think this will be less inefficient doing it in each
-   * function that absolutely needs it
-   * -Dianora
-   */
-
-  static time_t last_used=0L;
-
-  if(!IsAnOper(sptr))
-    {
-      if((last_used + MOTD_WAIT) > NOW)
-	return 0;
-      else
-	last_used = NOW;
-    }
-
   if (hunt_server(cptr,sptr,":%s TIME :%s",1,parc,parv) == HUNTED_ISME)
     sendto_one(sptr, rpl_str(RPL_TIME), me.name,
 	       parv[0], me.name, date((long)0));
@@ -5577,18 +5560,17 @@ int	m_motd(aClient *cptr,
 
   static time_t last_used=0L;
 
+  if (hunt_server(cptr, sptr, ":%s MOTD :%s", 1,parc,parv)!=HUNTED_ISME)
+    return 0;
+
   if(!IsAnOper(sptr))
     {
       /* reject non local requests */
-      if(!MyConnect(sptr))
-	return 0;
-
       if((last_used + MOTD_WAIT) > NOW)
 	return 0;
       else
 	last_used = NOW;
     }
-
 
   /* Yes, its a kludge, but it works -Dianora */
 #ifdef AMOTD
@@ -5598,9 +5580,6 @@ int	m_motd(aClient *cptr,
       parc--;
     }
 #endif
-
-  if (hunt_server(cptr, sptr, ":%s MOTD :%s", 1,parc,parv)!=HUNTED_ISME)
-    return 0;
 
   sendto_realops_lev(SPY_LEV, "motd requested by %s (%s@%s) [%s]",
 		     sptr->name, sptr->user->username, sptr->user->host,

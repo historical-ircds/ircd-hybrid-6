@@ -1,4 +1,10 @@
 +hybrid-6 (October 12,1998)
+- fixed bad dns problem (kalt)
+- fixed m_topic (Dianora)
+- fixed m_motd oper notice in the wrong place (Dianora)
+- fixed m_lusers, added send_lusers() (Dianora)
+- removed pacing from m_time() (Dianora)
+- fixed remote m_info() for opers (Dianora)
 - added OPER_MOTD code, when oper opers up they get an unique motd (Dianora)
 - track maximum dbuf usage in stats Z
 - OS/2 mods from Roger Haskins (nth.tech@iname.com) (Rodder)

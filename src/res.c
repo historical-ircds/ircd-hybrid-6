@@ -604,7 +604,17 @@ static	int	proc_answer(ResRQ *rptr,
 	  if (ans == 1)
 	    hp->h_addrtype =  (class == C_IN) ?
 	      AF_INET : AF_UNSPEC;
-	  bcopy(cp, (char *)&dr, dlen);
+          if (dlen != sizeof(dr))
+            {
+              sendto_realops("Bad IP length (%d) returned for %s",
+                dlen, hostbuf);
+
+              Debug((DEBUG_DNS,
+                "Bad IP length (%d) returned for %s",
+                dlen, hostbuf));
+              return(-2); 
+            }
+	  bcopy(cp, (char *)&dr, sizeof(dr));
 	  adr->s_addr = dr.s_addr;
 	  Debug((DEBUG_INFO,"got ip # %s for %s",
 		 inetntoa((char *)adr), hostbuf));
