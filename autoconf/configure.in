@@ -177,12 +177,5 @@ int main()
     AC_DEFINE(SYSV_UNRELIABLE_SIGNALS) AC_MSG_RESULT(sysv), AC_MSG_RESULT(uknown)),
 AC_MSG_RESULT(unknown))
 
-dnl don't add more of these unless it's critical.  Trying to get rid of them.
-AC_MSG_CHECKING(operating system)
-case "$target" in
-*-solaris2*) AC_DEFINE(OS_SOLARIS2) AC_MSG_RESULT(Solaris 2.x) ;;
-*) AC_MSG_RESULT(nothing special required) ;;
-esac
-
 AC_OUTPUT(Makefile adns/Makefile src/Makefile tools/Makefile)
 

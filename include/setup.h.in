@@ -33,9 +33,6 @@
 /* Define if you have SYSV non-blocking sockets (FIONBIO) */
 #undef NBLOCK_SYSV
 
-/* Define if you are running SOLARIS2.  */
-#undef OS_SOLARIS2
-
 /* Define if you have the getpagesize function.  */
 #undef HAVE_GETPAGESIZE
 

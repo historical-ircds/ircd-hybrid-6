@@ -2365,6 +2365,19 @@ int     m_join(struct Client *cptr,
            if((chptr = hash_find_channel(name, NullChn)))
              flags = 0;
            else
+#ifdef NO_CREATE_ON_SPLIT
+             {
+               if (!IsAnOper(sptr))
+                 {
+                   if (server_was_split && MyClient(sptr) && (*name != '&'))
+                     {
+                       sendto_one(sptr, form_str(ERR_UNAVAILRESOURCE),
+                                  me.name, parv[0], name);
+                       continue;
+                     }
+                 }
+             }
+#endif /* NO_CREATE_ON_SPLIT */
              flags = CHFL_CHANOP;
 
            /* if its not a local channel, or isn't an oper

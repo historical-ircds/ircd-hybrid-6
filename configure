@@ -2376,16 +2376,6 @@ rm -fr conftest*
 fi
 
 
-echo $ac_n "checking operating system""... $ac_c" 1>&6
-echo "configure:2381: checking operating system" >&5
-case "$target" in
-*-solaris2*) cat >> confdefs.h <<\EOF
-#define OS_SOLARIS2 1
-EOF
- echo "$ac_t""Solaris 2.x" 1>&6 ;;
-*) echo "$ac_t""nothing special required" 1>&6 ;;
-esac
-
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure
