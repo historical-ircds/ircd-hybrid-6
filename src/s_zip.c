@@ -22,6 +22,7 @@
 #include "send.h"
 #include "irc_string.h"
 #include "s_bsd.h"
+#include "packet.h"
 
 #include <string.h>
 #include <stdlib.h>

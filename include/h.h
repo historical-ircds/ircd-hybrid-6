@@ -64,8 +64,6 @@ extern  int     deliver_it (struct Client *, char *, int);
 /* s_numeric.c */
 extern  int     do_numeric (int, struct Client *, struct Client *, int, char **);
 
-/* packet.c */
-extern  int     dopacket (struct Client *, char *, int);
 
 #endif /* INCLUDED_h_h */
 
