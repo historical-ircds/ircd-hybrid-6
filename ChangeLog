@@ -1,3 +1,10 @@
+*** 19990826_1 by lusky
+turned on ANTI_DRONE_FLOOD by default
+sync'd config.h.dist
+include class.h in m_message.c
+bumped patchlevel to b101
+
+
 *** 19990825_2 by lusky
 changed a strncpy to DupString in s_conf.c (db)
 
