@@ -507,7 +507,7 @@ int crypt_rsa_encode(RSA * rsakey, unsigned char * data,
 }
 
 #endif
-#if defined(USE_KSERVER) || defined(CRYPT_LINKS)
+#if defined(CRYPT_LINKS)
 void crypt_free(struct Client * cptr)
 {
   if (cptr->crypt)
@@ -715,7 +715,7 @@ int crypt_init()
 }
 
 #endif /* CRYPT_LINKS */
-#if defined(USE_KSERVER) || defined(CRYPT_LINKS)
+#if defined(CRYPT_LINKS)
 
 /*
  * crypt_parse_conf()
@@ -742,11 +742,6 @@ int crypt_parse_conf(struct ConfItem *aconf)
 #ifdef CRYPT_LINKS
   if (aconf->passwd[0] == CRYPT_LINKS_CNPREFIX)
     aconf->flags |= CONF_FLAGS_ENCRYPTED;
-  else
-#endif
-#ifdef USE_KSERVER
-  if (aconf->passwd[0] == KSERVER_CNPREFIX)
-    aconf->flags |= CONF_FLAGS_KSERVER;
   else
 #endif
     /* Not an encrypted link... */
@@ -814,65 +809,5 @@ int crypt_parse_conf(struct ConfItem *aconf)
   return(0);
 }
 
-#endif /* defined(USE_KSERVER) || defined(CRYPT_LINKS) */
+#endif /* defined(CRYPT_LINKS) */
 
-#ifdef USE_KSERVER
-int
-init_kserver(struct Client * cptr,
-             struct ConfItem * cline,
-             struct ConfItem * nline)
-{
-  FILE * keyfile;
-  RSA * rsakey = 0;
-
-  if ((cptr == NULL) || (cline == NULL) || (nline == NULL) )
-    return CRYPT_BADPARAM;
-
-  if (!IsConfKserver(cline) || !IsConfEncrypted(cline) ||
-      !IsConfKserver(nline) || !IsConfEncrypted(cline))
-    return CRYPT_NOT_ENCRYPTED;
-
-  /* Make sure rsa_public_keyfile and cipher fields aren't NULL. */
-  if ((cline->rsa_public_keyfile == NULL) ||
-      (nline->rsa_public_keyfile == NULL))
-  {
-    log(L_ERROR, "RSA public keyfile or cipher not defined for %s",
-         cptr->name);
-    return CRYPT_NOT_ENCRYPTED;
-  }
-
-  /* Make sure rsa_public_keyfile are the same for both the C and N. */
-  if (strcmp(cline->rsa_public_keyfile, nline->rsa_public_keyfile))
-  {
-    log(L_ERROR, "RSA public keyfile entries are not identical for %s",
-         cptr->name);
-    return CRYPT_NOT_ENCRYPTED;
-  }
-
-  /* Load the servers RSA key */
-  keyfile = fopen(nline->rsa_public_keyfile, "r");
-
-  if (keyfile == NULL)
-  {
-    log(L_ERROR, "Failed loading public key file for %s", cptr->name);
-    sendto_realops("Failed loading public key file for %s", cptr->name);
-    exit_client(cptr, cptr, cptr, "Failed to initialize RSA");
-    return CRYPT_ERROR;
-  }
-
-  rsakey = (RSA *) PEM_read_RSA_PUBKEY(keyfile, &rsakey, 0, 0);
-  fclose(keyfile);
-
-  if (!rsakey)
-  {
-    log(L_ERROR, "RSA public keyfiles or ciphers do not match for %s",
-         cptr->name);
-    sendto_realops("Failed reading public key file for %s", cptr->name);
-    exit_client(cptr, cptr, cptr, "Failed to initialize RSA");
-    return CRYPT_ERROR;
-  }
-  cptr->crypt = (struct CryptData *) MyMalloc(sizeof(struct CryptData));
-  memset(cptr->crypt, 0, sizeof(cptr->crypt));
-  cptr->crypt->RSAKey = rsakey;
-}
-#endif

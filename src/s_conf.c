@@ -2292,7 +2292,7 @@ static void initconf(FBFILE* file, int use_include)
               continue;
             }
 
-#if defined(CRYPT_LINKS) || defined(USE_KSERVER)
+#if defined(CRYPT_LINKS)
           if (crypt_parse_conf(aconf) < 0)
           {
             log(L_ERROR, "Bad C/N line information for %s", aconf->host);

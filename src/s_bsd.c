@@ -766,7 +766,7 @@ void close_connection(struct Client *cptr)
   if (IsServer(cptr))
     zip_free(cptr);
 #endif
-#if defined(CRYPT_LINKS) || defined(USE_KSERVER)
+#if defined(CRYPT_LINKS)
   crypt_free(cptr);
 #endif
   DBufClear(&cptr->sendQ);

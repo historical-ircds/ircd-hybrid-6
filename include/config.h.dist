@@ -403,10 +403,28 @@
  */
 #undef TRUE_NO_OPER_FLOOD
 
-#undef CRYPT_LINKS             /* allow encrypted server-server links */
+/* CRYPT_LINKS - Enable encrypted links between one server and another by
+ * use of a defineable password prefix. Requires the other defines below.
+ */
+#undef CRYPT_LINKS
+
+/* CRYPT_LINKS_CNPREFIX - This is the prefix that will go in a c/n password
+ * field to indicate this will be an encrypted link.
+ */
 #define CRYPT_LINKS_CNPREFIX '@'
+
+/* CRYPT_LINKS_CIPHERPREFIX - This is the character that delimits the public
+ * key filename for a server and the prefered crypt preference.
+ */
 #define CRYPT_LINKS_CIPHERPREFIX ','
-#define CRYPT_LINKS_PRIVATEKEYFILE "private.key"
+
+/* CRYPT_LINKS_PRIVATEKEYFILE - This is a filename of the RSA private key
+ * for this binary. There is no configuration option that will override this,
+ * so this will be binary-specific. This is deprecated. The filename now
+ * defaults to servername.key if this is left undefined.
+ * NOTE: LEAVE UNDEF IF YOU WANT THE DEFAULT BEHAVIOUR (you do)
+ #define CRYPT_LINKS_PRIVATEKEYFILE "private.key"
+ */
 
 /* USE_EGD -  if your system does not have *random devices and you want to
  * be able to use OpenSSL and CRYPT_LINKS, define this and option below if

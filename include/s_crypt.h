@@ -26,7 +26,7 @@
 
 #include "config.h"
 
-#if defined(CRYPT_LINKS) || defined(USE_KSERVER)
+#if defined(CRYPT_LINKS)
 
 #include <openssl/ssl.h>
 #include <openssl/crypto.h>
@@ -102,7 +102,7 @@ struct CipherDef
 extern struct CipherDef Ciphers[];
 
 #endif /* CRYPT_LINKS*/
-#if defined(CRYPT_LINKS) || defined(USE_KSERVER)
+#if defined(CRYPT_LINKS)
 struct CryptData
 {
 #ifdef CRYPT_LINKS

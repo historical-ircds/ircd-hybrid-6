@@ -214,7 +214,7 @@ struct Client
 #ifdef ZIP_LINKS
   struct Zdata*     zip;        /* zip data */
 #endif
-#if defined(CRYPT_LINKS) || defined(USE_KSERVER)
+#if defined(CRYPT_LINKS)
   struct CryptData *crypt;      /* Encrypted link info */
 #endif
 #ifdef CRYPT_LINKS

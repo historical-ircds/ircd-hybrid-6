@@ -60,7 +60,7 @@ struct ConfItem
   time_t           hold;     /* Hold action until this time (calendar time) */
   struct Class*    c_class;     /* Class of connection */
   int              dns_pending; /* 1 if dns query pending, 0 otherwise */
-#if defined(CRYPT_LINKS) || defined(USE_KSERVER)
+#if defined(CRYPT_LINKS)
   char *           rsa_public_keyfile; /* RSA public key filename */
 #ifdef CRYPT_LINKS
   struct CipherDef *cipher;            /* Cipher selection; ptr to Cipher[] */
@@ -135,7 +135,6 @@ typedef struct QlineItem {
 #define CONF_FLAGS_LITTLE_I_LINE        0x8000
 #endif
 #define CONF_FLAGS_ENCRYPTED            0x10000
-#define CONF_FLAGS_KSERVER              0x20000
 
 
 /* Macros for aConfItem */
@@ -150,7 +149,6 @@ typedef struct QlineItem {
 #define IsConfFlined(x)         ((x)->flags & CONF_FLAGS_F_LINED)
 #define IsConfExemptGline(x)    ((x)->flags & CONF_FLAGS_EXEMPTGLINE)
 #define IsConfEncrypted(x)      ((x)->flags & CONF_FLAGS_ENCRYPTED)
-#define IsConfKserver(x)        ((x)->flags & CONF_FLAGS_KSERVER)
 
 #ifdef IDLE_CHECK
 #define IsConfIdlelined(x)      ((x)->flags & CONF_FLAGS_IDLE_LINED)
