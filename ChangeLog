@@ -1,3 +1,7 @@
+*** 20001122_1 by lusky
+fixed the m_userhost fix
+
+
 *** 20001121_1 by lusky
 revved patchlevel to rc7
 redundant if in server_estab() (gp)
