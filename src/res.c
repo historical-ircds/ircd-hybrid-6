@@ -1009,7 +1009,7 @@ static	void	update_list(ResRQ *rptr,aCache *cachep)
     {
       for (j = 0, t = cp->he.h_name; t && j < MAXALIASES;
 	   t = cp->he.h_aliases[j++])
-	if (!mycmp(t, s))
+	if (!irccmp(t, s))
 	  break;
       if (!t && j < MAXALIASES-1)
 	{
@@ -1098,7 +1098,7 @@ static aCache  *find_cache_name(char *name)
 
   for (; cp; cp = cp->hname_next)
     for (i = 0, s = cp->he.h_name; s; s = cp->he.h_aliases[i++])
-      if (mycmp(s, name) == 0)
+      if (irccmp(s, name) == 0)
 	{
 	  cainfo.ca_na_hits++;
 	  update_list(NULL, cp);
@@ -1118,7 +1118,7 @@ static aCache  *find_cache_name(char *name)
       if (hashv == hash_name(cp->he.h_name))
 	continue;
       for (i = 0, s = cp->he.h_aliases[i]; s && i < MAXALIASES; i++)
-	if (!mycmp(name, s))
+	if (!irccmp(name, s))
 	  {
 	    cainfo.ca_na_hits++;
 	    update_list(NULL, cp);

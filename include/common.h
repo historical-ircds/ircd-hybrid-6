@@ -72,8 +72,8 @@ void	free();
 #endif
 #endif
 extern	int	matches (char *, char *);
-extern	int	mycmp (char *, char *);
-extern	int	myncmp (char *, char *, int);
+extern	int	irccmp (char *, char *);
+extern	int	ircncmp (char *, char *, int);
 #if !defined( HAVE_STRTOK )
 extern	char	*strtok (char *, char *); 
 #endif

@@ -178,7 +178,7 @@ char	*collapse(char *pattern)
 **		<0, if s1 lexicographically less than s2
 **		>0, if s1 lexicographically greater than s2
 */
-int	mycmp(char *s1,char *s2)
+int	irccmp(char *s1,char *s2)
 {
   Reg	unsigned char	*str1 = (unsigned char *)s1;
   Reg	unsigned char	*str2 = (unsigned char *)s2;
@@ -194,7 +194,7 @@ int	mycmp(char *s1,char *s2)
   return (res);
 }
 
-int	myncmp(char *str1,char *str2,int n)
+int	ircncmp(char *str1,char *str2,int n)
 {
   Reg	unsigned char	*s1 = (unsigned char *)str1;
   Reg	unsigned char	*s2 = (unsigned char *)str2;

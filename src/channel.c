@@ -245,7 +245,7 @@ static	int	add_banid(aClient *cptr, aChannel *chptr, char *banid)
 	     !match(banid,BANSTR(ban)))
 	    return -1;
 	}
-      else if (!mycmp(BANSTR(ban), banid))
+      else if (!irccmp(BANSTR(ban), banid))
 	return -1;
     }
 
@@ -320,7 +320,7 @@ static	int	add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
 	   !match(BANSTR(ex), eid) ||
 	   !match(eid,BANSTR(ex))))
 	return -1;
-      else if (!mycmp(BANSTR(ex), eid))
+      else if (!irccmp(BANSTR(ex), eid))
 	return -1;
     }
 
@@ -387,9 +387,9 @@ static	int	del_banid(aChannel *chptr, char *banid)
     return -1;
   for (ban = &(chptr->banlist); *ban; ban = &((*ban)->next))
 #ifdef BAN_INFO
-    if (mycmp(banid, (*ban)->value.banptr->banstr)==0)
+    if (irccmp(banid, (*ban)->value.banptr->banstr)==0)
 #else
-      if (mycmp(banid, (*ban)->value.cp)==0)
+      if (irccmp(banid, (*ban)->value.cp)==0)
 #endif
 	{
 	  tmp = *ban;
@@ -420,7 +420,7 @@ static	int	del_exceptid(aChannel *chptr, char *eid)
   if (!eid)
     return -1;
   for (ex = &(chptr->exceptlist); *ex; ex = &((*ex)->next))
-    if (mycmp(eid, BANSTR(*ex)) == 0)
+    if (irccmp(eid, BANSTR(*ex)) == 0)
       {
 	tmp = *ex;
 	*ex = tmp->next;
@@ -2093,7 +2093,7 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key, int *flags)
 	return (ERR_INVITEONLYCHAN);
     }
 
-  if (*chptr->mode.key && (BadPtr(key) || mycmp(chptr->mode.key, key)))
+  if (*chptr->mode.key && (BadPtr(key) || irccmp(chptr->mode.key, key)))
     return (ERR_BADCHANNELKEY);
 
   if (chptr->mode.limit && chptr->users >= chptr->mode.limit)

@@ -69,7 +69,7 @@ char *find_or_add(char *name)
   ptr = scache_hash[hash_index = hash(name)];
   while(ptr)
     {
-      if(!mycmp(ptr->name, name))
+      if(!irccmp(ptr->name, name))
 	return(ptr->name);
       else
 	ptr = ptr->next;

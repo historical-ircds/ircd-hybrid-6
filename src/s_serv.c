@@ -338,7 +338,7 @@ int	m_squit(aClient *cptr,
 	  aconf = cptr->serv->nline;
 	  if (!aconf)
 	    break;
-	  if (!mycmp(server, my_name_for_link(me.name, aconf)))
+	  if (!irccmp(server, my_name_for_link(me.name, aconf)))
 	    server = cptr->name;
 	  break; /* WARNING is normal here */
           /* NOTREACHED */
@@ -937,7 +937,7 @@ int	m_server_estab(aClient *cptr)
   int	split;
 
   inpath = get_client_name(cptr,TRUE); /* "refresh" inpath with host */
-  split = mycmp(cptr->name, cptr->sockhost);
+  split = irccmp(cptr->name, cptr->sockhost);
   host = cptr->name;
 
   if (!(aconf = find_conf(cptr->confs, host, CONF_NOCONNECT_SERVER)))
@@ -1173,7 +1173,7 @@ int	m_server_estab(aClient *cptr)
 		      acptr->name) == 0)
 	    continue;
 	  split = (MyConnect(acptr) &&
-		   mycmp(acptr->name, acptr->sockhost));
+		   irccmp(acptr->name, acptr->sockhost));
 
 	  /* DON'T give away the IP of the server here
 	   * if its a hub especially.
@@ -1597,7 +1597,7 @@ int	m_stats(aClient *cptr,
   if (parc > 2)
     {
       name = parv[2];
-      if (!mycmp(name, me.name))
+      if (!irccmp(name, me.name))
 	doall = 2;
       else if (matches(name, me.name) == 0)
 	doall = 1;
@@ -1631,7 +1631,7 @@ int	m_stats(aClient *cptr,
 	    continue;
 	  if (!doall && wilds && matches(name, acptr->name))
 	    continue;
-	  if (!(doall || wilds) && mycmp(name, acptr->name))
+	  if (!(doall || wilds) && irccmp(name, acptr->name))
 	    continue;
 
 	  /* I've added a sanity test to the "timeofday - acptr->since"
@@ -4976,7 +4976,7 @@ int	m_rehash(aClient *cptr,
 
   if(parc > 1)
     {
-      if(mycmp(parv[1],"DNS") == 0)
+      if(irccmp(parv[1],"DNS") == 0)
 	{
 	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], "DNS");
 #ifdef CUSTOM_ERR
@@ -4999,7 +4999,7 @@ int	m_rehash(aClient *cptr,
 					   and close/re-open res socket */
 	  found = YES;
 	}
-      else if(mycmp(parv[1],"TKLINES") == 0)
+      else if(irccmp(parv[1],"TKLINES") == 0)
 	{
 	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], "temp klines");
 	  flush_temp_klines();
@@ -5012,7 +5012,7 @@ int	m_rehash(aClient *cptr,
 	  found = YES;
 	}
 #ifdef GLINES
-      else if(mycmp(parv[1],"GLINES") == 0)
+      else if(irccmp(parv[1],"GLINES") == 0)
 	{
 	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], "g-lines");
 	  flush_glines();
@@ -5025,7 +5025,7 @@ int	m_rehash(aClient *cptr,
 	  found = YES;
 	}
 #endif
-      else if(mycmp(parv[1],"GC") == 0)
+      else if(irccmp(parv[1],"GC") == 0)
 	{
 	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], "garbage collecting");
 	  block_garbage_collect();
@@ -5037,7 +5037,7 @@ int	m_rehash(aClient *cptr,
 		 parv[0]);
 	  found = YES;
 	}
-      else if(mycmp(parv[1],"MOTD") == 0)
+      else if(irccmp(parv[1],"MOTD") == 0)
         {
 	  sendto_ops("%s is forcing re-reading of MOTD file",parv[0]);
           read_motd();
@@ -5047,26 +5047,26 @@ int	m_rehash(aClient *cptr,
 	  found = YES;
         }
 #ifdef OPER_MOTD
-      else if(mycmp(parv[1],"OMOTD") == 0)
+      else if(irccmp(parv[1],"OMOTD") == 0)
         {
 	  sendto_ops("%s is forcing re-reading of OPER MOTD file",parv[0]);
 	  read_oper_motd();
 	  found = YES;
         }
 #endif
-      else if(mycmp(parv[1],"HELP") == 0)
+      else if(irccmp(parv[1],"HELP") == 0)
         {
 	  sendto_ops("%s is forcing re-reading of oper help file",parv[0]);
           read_help();
 	  found = YES;
         }
-      else if(mycmp(parv[1],"dump") == 0)
+      else if(irccmp(parv[1],"dump") == 0)
 	{
 	  sendto_ops("%s is dumping conf file",parv[0]);
 	  rehash_dump(sptr,parv[0]);
 	  found = YES;
 	}
-      else if(mycmp(parv[1],"dlines") == 0)
+      else if(irccmp(parv[1],"dlines") == 0)
 	{
 	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
           /* this does a full rehash right now, so report it as such */
@@ -5340,7 +5340,7 @@ int	m_trace(aClient *cptr,
 	continue;
       if (!doall && wilds && matches(tname, acptr->name))
 	continue;
-      if (!dow && mycmp(tname, acptr->name))
+      if (!dow && irccmp(tname, acptr->name))
 	continue;
       name = get_client_name(acptr,FALSE);
       ip = inetntoa((char *)&acptr->ip);
@@ -5546,7 +5546,7 @@ int	m_ltrace(aClient *cptr,
 	continue;
       if (!doall && wilds && matches(tname, acptr->name))
 	continue;
-      if (!dow && mycmp(tname, acptr->name))
+      if (!dow && irccmp(tname, acptr->name))
 	continue;
       name = get_client_name(acptr,FALSE);
       ip = inetntoa((char *)&acptr->ip);

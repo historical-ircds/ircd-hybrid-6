@@ -50,8 +50,8 @@
 # include <string.h>
 # endif
 #endif
-#define	strcasecmp	mycmp
-#define	strncasecmp	myncmp
+#define	strcasecmp	irccmp
+#define	strncasecmp	ircncmp
 #if !defined( HAVE_INDEX )
 #define   index   strchr
 #define   rindex  strrchr

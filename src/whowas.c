@@ -101,7 +101,7 @@ aClient *get_history(char *nick,time_t timelimit)
   temp = WHOWASHASH[blah];
   for(;temp;temp=temp->next)
     {
-      if (mycmp(nick, temp->name))
+      if (irccmp(nick, temp->name))
 	continue;
       if (temp->logoff < timelimit)
 	continue;
@@ -186,7 +186,7 @@ int     m_whowas(aClient *cptr,
   found = 0;
   for(;temp;temp=temp->next)
     {
-      if (!mycmp(nick, temp->name))
+      if (!irccmp(nick, temp->name))
 	{
 	  sendto_one(sptr, rpl_str(RPL_WHOWASUSER),
 		     me.name, parv[0], temp->name,

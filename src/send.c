@@ -1543,7 +1543,7 @@ va_dcl
 		       to->user->host, to->from);
 	  return;
 	}
-      if (MyClient(to) && IsPerson(from) && !mycmp(par, from->name))
+      if (MyClient(to) && IsPerson(from) && !irccmp(par, from->name))
 	{
 	  user = from->user;
 	  (void)strcpy(sender, from->name);

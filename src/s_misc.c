@@ -301,7 +301,7 @@ char	*get_client_name(aClient *sptr,int showip)
       return sptr->name;
     }
 
-  if (mycmp(sptr->name,sptr->sockhost) || t_port[0])
+  if (irccmp(sptr->name,sptr->sockhost) || t_port[0])
     return nbuf;
   return sptr->name;
 }
