@@ -249,7 +249,7 @@ static int start_auth_query(struct AuthRequest* auth)
     ++ircstp->is_abad;
     return 0;
   }
-  if ((HARD_FDLIMIT - 10) <= fd) {
+  if ((HARD_FDLIMIT - 10) < fd) {
     sendto_ops("Can't allocate fd for auth on %s",
                 get_client_name(auth->client, TRUE));
 
@@ -271,7 +271,7 @@ static int start_auth_query(struct AuthRequest* auth)
   getsockname(auth->client->fd, (struct sockaddr*) &localaddr, &locallen);
   localaddr.sin_port = htons(0);
 
-  if (bind(fd, (struct sockaddr*)&localaddr, sizeof(localaddr)) == -1) {
+  if (bind(fd, (struct sockaddr*) &localaddr, sizeof(localaddr))) {
     report_error("binding auth stream socket %s:%s", auth->client);
     close(fd);
     return 0;
