@@ -1,3 +1,15 @@
+db          2002/01/13 19:19:34 EST	(20020114_0)
+
+  Modified files:
+    src                  s_user.c 
+  Log:
+  - committed two diffs made by Lee Hardy to fix double MODE
+  
+  Revision  Changes    Path
+  1.246     +2 -4      ircd-hybrid-6/src/s_user.c
+
+
+
 androsyn    2002/01/13 18:31:28 EST	(20020113_2)
 
   Modified files:
