@@ -1,3 +1,15 @@
+db          2001/12/10 14:51:49 EST	(20011210_7)
+
+  Modified files:
+    src                  channel.c 
+  Log:
+  - really, the "possible names abuser" is very obsolete. removed.
+  
+  Revision  Changes    Path
+  1.231     +1 -13     ircd-hybrid-6/src/channel.c
+
+
+
 db          2001/12/10 03:03:50 EST	(20011210_6)
 
   Modified files:
