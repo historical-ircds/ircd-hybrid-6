@@ -212,7 +212,7 @@ static  int     add_banid(aClient *cptr, aChannel *chptr, char *banid)
   Link  *ban;
 
   /* dont let local clients overflow the banlist */
-  if ((!IsServer(cptr)) && (chptr->num_bed == MAXBANS))
+  if ((!IsServer(cptr)) && (chptr->num_bed >= MAXBANS))
 	  if (MyClient(cptr))
 	    {
 	      sendto_one(cptr, form_str(ERR_BANLISTFULL),
@@ -281,7 +281,7 @@ static  int     add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
   Link  *ex, *ban;
 
   /* dont let local clients overflow the banlist */
-  if ((!IsServer(cptr)) && (chptr->num_bed == MAXBANS))
+  if ((!IsServer(cptr)) && (chptr->num_bed >= MAXBANS))
     if (MyClient(cptr))
       {
         sendto_one(cptr, form_str(ERR_BANLISTFULL),
@@ -355,7 +355,7 @@ static  int     add_denyid(aClient *cptr, aChannel *chptr, char *banid)
   /* truncate to REALLEN */
   banid[REALLEN]='\0';
 
-  if ((!IsServer(cptr)) && (chptr->num_bed == MAXBANS))
+  if ((!IsServer(cptr)) && (chptr->num_bed >= MAXBANS))
     if (MyClient(cptr))
       {
         sendto_one(cptr, form_str(ERR_BANLISTFULL),
