@@ -73,5 +73,7 @@ clean:
 distclean: clean
 	${RM} -f Makefile 
 
+depend:
+	${MKDEP} ${CPPFLAGS} ${SRCS} > .depend
 
 
