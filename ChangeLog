@@ -1,3 +1,11 @@
+*** 20010616_5 by db
+- ok fixed a "dropped c line" bug. the problem was, both the hostname
+  and servername have to match in attach_cn_lines, thats because
+  you could have two servers on the same ip with different server names
+- also fixed a minor typo here and there
+
+
+
 *** 20010616_4 by leeh
 - *ug*
   I think this catches all of the remaining get_client_name()'s.. 
