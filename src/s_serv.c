@@ -2077,6 +2077,7 @@ int	m_stats(aClient *cptr,
   struct	Message	*mptr;
   aClient	*acptr;
   char	stat = parc > 1 ? parv[1][0] : '\0';
+  int i;
   int	doall = 0, wilds = 0, valid_stats = 0;
   char	*name;
   static time_t last_used=0L;
@@ -2122,8 +2123,11 @@ int	m_stats(aClient *cptr,
        * are invisible not being visible to 'foreigners' who use
        * a wild card based search to list it.
        */
-      for(acptr=local_cptr_list;acptr;acptr=acptr->next_local_client)
+      for (i = 0; i <= highest_fd; i++)
 	{
+	  if (!(acptr = local[i]))
+	    continue;
+
           if (IsPerson(acptr) &&
               !IsAnOper(acptr) && !IsAnOper(sptr) &&
               (acptr != sptr))
@@ -2161,11 +2165,11 @@ int	m_stats(aClient *cptr,
 		     (int)acptr->receiveM, (int)acptr->receiveK,
 		     timeofday - acptr->firsttime,
 		     (timeofday > acptr->since) ? (timeofday - acptr->since):0,
-		     IsServer(acptr) ? "TS" : "-");
+		     IsServer(acptr) ? show_capabilities(acptr) : "-");
               }
             else
               {
-                if(IsAnOper(acptr))
+                if(IsAnOper(acptr) || IsServer(acptr))
                   sendto_one(sptr, Lformat, me.name,
                      RPL_STATSLINKINFO, parv[0],
                      get_client_name(acptr, HIDEME),
@@ -2174,7 +2178,7 @@ int	m_stats(aClient *cptr,
                      (int)acptr->receiveM, (int)acptr->receiveK,
                      timeofday - acptr->firsttime,
                      (timeofday > acptr->since) ? (timeofday - acptr->since):0,
-                     IsServer(acptr) ? "TS" : "-");
+                     IsServer(acptr) ? show_capabilities(acptr) : "-");
                  else
                   sendto_one(sptr, Lformat, me.name,
                      RPL_STATSLINKINFO, parv[0],
@@ -2186,7 +2190,7 @@ int	m_stats(aClient *cptr,
                      (int)acptr->receiveM, (int)acptr->receiveK,
                      timeofday - acptr->firsttime,
                      (timeofday > acptr->since) ? (timeofday - acptr->since):0,
-                     IsServer(acptr) ? "TS" : "-");
+                     IsServer(acptr) ? show_capabilities(acptr) : "-");
               }
 	}
       valid_stats++;

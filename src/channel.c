@@ -1083,6 +1083,14 @@ static  void     set_mode(aClient *cptr,
 
 	  if (!(who = find_chasing(sptr, arg, NULL)))
 	    break;
+
+	  /* there is always the remote possibility of picking up
+	   * a bogus user, be nasty to core for that. -Dianora
+	   */
+
+	  if (!who->user)
+	    break;
+
 	  /* no more of that mode bouncing crap */
 	  if (!IsMember(who, chptr))
 	    {
@@ -1132,7 +1140,7 @@ static  void     set_mode(aClient *cptr,
 
 	  *mbufw++ = plus;
 	  *mbufw++ = c;
-	  strcpy(pbufw, arg);
+	  strcpy(pbufw, who->name);
 	  pbufw += strlen(pbufw);
 	  *pbufw++ = ' ';
 	  len += tmp + 1;

@@ -37,9 +37,6 @@ static char *rcs_version="$Id$";
 #include <pwd.h>
 #include <signal.h>
 #include <fcntl.h>
-/* DEBUG */
-#include <sys/time.h>
-#include <sys/resource.h>
 
 #undef RUSAGE_SELF 0
 #undef RUSAGE_CHILDREN /* hack for old slackware */
@@ -98,9 +95,6 @@ extern	struct pkl *pending_klines;
 extern  void do_pending_klines(void);
 
 #endif
-
-/* DEBUG */
-extern int max_read_so_far;
 
 void	server_reboot();
 void	restart (char *);
@@ -1403,12 +1397,16 @@ time_t io_loop(time_t delay)
     delay = 1;
   else
     delay = MIN(delay, TIMESEC);
-  /*
-   * We want to read servers on every io_loop, as well
-   * as "busy" clients (which again, includes servers.
-   * If "lifesux", then we read servers AGAIN, and then
-   * flush any data to servers.
-   *	-Taner
+  /* This comment block below, is now just historical -db
+   *
+   * / *
+   * * We want to read servers on every io_loop, as well
+   * * as "busy" clients (which again, includes servers.
+   * * If "lifesux", then we read servers AGAIN, and then
+   * * flush any data to servers.
+   * *	-Taner
+   * * /
+   *
    */
 
   if((timeofday = time(NULL)) == -1)
@@ -1422,24 +1420,31 @@ time_t io_loop(time_t delay)
   Debug((DEBUG_DEBUG,"read_message call at: %s %d",
 	 myctime(NOW), NOW));
 
+  /* Use non block read, with no select() setup on servers
+   * and opers. Do the same for clients every second time.
+   * Do a full select() scan every five loops
+   *
+   * select() is an unbelievably expensive system call
+   *
+   */
   (void)read_servers();
   (void)read_opers();
 
   if (do_read_clients)
-  {
-	(void)read_clients();
-	do_read_clients = 0;
-  }
+    {
+      (void)read_clients();
+      do_read_clients = 0;
+    }
   else
-	do_read_clients = 1;
+    do_read_clients = 1;
 
   if (do_read_message == 5)	/* only call every 5 loops */
-  {
-  	read_message(delay);
-	do_read_message = 0;
-  }
+    {
+      read_message(delay);
+      do_read_message = 0;
+    }
   else
-	do_read_message++;
+    do_read_message++;
 
   /*
   ** ...perhaps should not do these loops every time,
