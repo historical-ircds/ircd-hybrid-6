@@ -175,40 +175,47 @@ static void auth_dns_callback(void* vptr, struct DNSReply* reply)
   struct AuthRequest* auth = (struct AuthRequest*) vptr;
 
   ClearDNSPending(auth);
-  if (reply) {
-    struct hostent* hp = reply->hp;
-    int i;
-    /*
-     * Verify that the host to ip mapping is correct both ways and that
-     * the ip#(s) for the socket is listed for the host.
-     */
-    for (i = 0; hp->h_addr_list[i]; ++i) {
-      if (memcmp(hp->h_addr_list[i], (char*) &auth->client->ip,
-                      sizeof(struct in_addr)) == 0)
-         break;
+  if (reply)
+    {
+      struct hostent* hp = reply->hp;
+      int i;
+      /*
+       * Verify that the host to ip mapping is correct both ways and that
+       * the ip#(s) for the socket is listed for the host.
+       */
+      for (i = 0; hp->h_addr_list[i]; ++i)
+	{
+	  if (memcmp(hp->h_addr_list[i], (char*) &auth->client->ip,
+		     sizeof(struct in_addr)) == 0)
+	    break;
+	}
+      if (!hp->h_addr_list[i])
+	{
+	  sendheader(auth->client, REPORT_IP_MISMATCH);
+	}
+      else
+	{
+	  ++reply->ref_count;
+	  auth->client->dns_reply = reply;
+	  strncpy_irc(auth->client->host, hp->h_name, HOSTLEN);
+	  sendheader(auth->client, REPORT_FIN_DNS);
+	}
     }
-    if (!hp->h_addr_list[i])
-      sendheader(auth->client, REPORT_IP_MISMATCH);
-    else {
-      ++reply->ref_count;
-      auth->client->dns_reply = reply;
-      strncpy_irc(auth->client->host, hp->h_name, HOSTLEN);
-      sendheader(auth->client, REPORT_FIN_DNS);
+  else
+    {
+      /*
+       * this should have already been done by s_bsd.c in add_connection
+       */
+      strcpy(auth->client->host, auth->client->sockhost);
+      sendheader(auth->client, REPORT_FAIL_DNS);
     }
-  }
-  else {
-    /*
-     * this should have already been done by s_bsd.c in add_connection
-     */
-    strcpy(auth->client->host, auth->client->sockhost);
-    sendheader(auth->client, REPORT_FAIL_DNS);
-  }
   auth->client->host[HOSTLEN] = '\0';
-  if (!IsDoingAuth(auth)) {
-    release_auth_client(auth->client);
-    unlink_auth_request(auth, &AuthIncompleteList);
-    free_auth_request(auth);
-  }
+  if (!IsDoingAuth(auth))
+    {
+      release_auth_client(auth->client);
+      unlink_auth_request(auth, &AuthIncompleteList);
+      free_auth_request(auth);
+    }
 }
 
 /*
@@ -228,10 +235,11 @@ static void auth_error(struct AuthRequest* auth)
 
   if (IsDNSPending(auth))
     link_auth_request(auth, &AuthIncompleteList);
-  else {
-    release_auth_client(auth->client);
-    free_auth_request(auth);
-  }
+  else
+    {
+      release_auth_client(auth->client);
+      free_auth_request(auth);
+    }
 }
 
 /*
@@ -249,21 +257,23 @@ static int start_auth_query(struct AuthRequest* auth)
   int                locallen = sizeof(struct sockaddr_in);
   int                fd;
 
-  if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-    report_error("creating auth stream socket %s:%s", 
-                 get_client_name(auth->client, TRUE), errno);
-    log(L_ERROR, "Unable to create auth socket for %s:%m",
-        get_client_name(auth->client, SHOW_IP));
-    ++ServerStats->is_abad;
-    return 0;
-  }
-  if ((MAXCONNECTIONS - 10) < fd) {
-    sendto_realops("Can't allocate fd for auth on %s",
-                get_client_name(auth->client, TRUE));
-
-    close(fd);
-    return 0;
-  }
+  if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+    {
+      report_error("creating auth stream socket %s:%s", 
+		   get_client_name(auth->client, TRUE), errno);
+      log(L_ERROR, "Unable to create auth socket for %s:%m",
+	  get_client_name(auth->client, SHOW_IP));
+      ++ServerStats->is_abad;
+      return 0;
+    }
+  if ((MAXCONNECTIONS - 10) < fd)
+    {
+      sendto_realops("Can't allocate fd for auth on %s",
+		     get_client_name(auth->client, TRUE));
+      
+      close(fd);
+      return 0;
+    }
 
   sendheader(auth->client, REPORT_DO_ID);
   if (!set_non_blocking(fd)) {
@@ -283,29 +293,32 @@ static int start_auth_query(struct AuthRequest* auth)
   getsockname(auth->client->fd, (struct sockaddr*) &localaddr, &locallen);
   localaddr.sin_port = htons(0);
 
-  if (bind(fd, (struct sockaddr*) &localaddr, sizeof(localaddr))) {
-    report_error("binding auth stream socket %s:%s", 
-                 get_client_name(auth->client, TRUE), errno);
-    close(fd);
-    return 0;
-  }
+  if (bind(fd, (struct sockaddr*) &localaddr, sizeof(localaddr)))
+    {
+      report_error("binding auth stream socket %s:%s", 
+		   get_client_name(auth->client, TRUE), errno);
+      close(fd);
+      return 0;
+    }
 
   memcpy(&sock.sin_addr, &auth->client->ip, sizeof(struct in_addr));
   
   sock.sin_port = htons(113);
   sock.sin_family = AF_INET;
 
-  if (connect(fd, (struct sockaddr*) &sock, sizeof(sock)) == -1) {
-    if (errno != EINPROGRESS) {
-      ServerStats->is_abad++;
-      /*
-       * No error report from this...
-       */
-      close(fd);
-      sendheader(auth->client, REPORT_FAIL_ID);
-      return 0;
+  if (connect(fd, (struct sockaddr*) &sock, sizeof(sock)) == -1)
+    {
+      if (errno != EINPROGRESS)
+	{
+	  ServerStats->is_abad++;
+	  /*
+	   * No error report from this...
+	   */
+	  close(fd);
+	  sendheader(auth->client, REPORT_FAIL_ID);
+	  return 0;
+	}
     }
-  }
 
   auth->fd = fd;
 
@@ -392,11 +405,12 @@ void start_auth(struct Client* client)
   sendheader(client, REPORT_DO_DNS);
 
   client->dns_reply = gethost_byaddr((const char*) &client->ip, &query);
-  if (client->dns_reply) {
-    ++client->dns_reply->ref_count;
-    strncpy_irc(client->host, client->dns_reply->hp->h_name, HOSTLEN);
-    sendheader(client, REPORT_FIN_DNSC);
-  }
+  if (client->dns_reply)
+    {
+      ++client->dns_reply->ref_count;
+      strncpy_irc(client->host, client->dns_reply->hp->h_name, HOSTLEN);
+      sendheader(client, REPORT_FIN_DNSC);
+    }
   else
     SetDNSPending(auth);
 
@@ -404,10 +418,11 @@ void start_auth(struct Client* client)
     link_auth_request(auth, &AuthPollList);
   else if (IsDNSPending(auth))
     link_auth_request(auth, &AuthIncompleteList);
-  else {
-    free_auth_request(auth);
-    release_auth_client(client);
-  }
+  else
+    {
+      free_auth_request(auth);
+      release_auth_client(client);
+    }
 }
 
 /*
@@ -419,39 +434,44 @@ void timeout_auth_queries(time_t now)
   struct AuthRequest* auth;
   struct AuthRequest* auth_next = 0;
 
-  for (auth = AuthPollList; auth; auth = auth_next) {
-    auth_next = auth->next;
-    if (auth->timeout < CurrentTime) {
-      if (-1 < auth->fd)
-        close(auth->fd);
+  for (auth = AuthPollList; auth; auth = auth_next)
+    {
+      auth_next = auth->next;
+      if (auth->timeout < CurrentTime)
+	{
+	  if (-1 < auth->fd)
+	    close(auth->fd);
 
-      sendheader(auth->client, REPORT_FAIL_ID);
-      if (IsDNSPending(auth)) {
-        delete_resolver_queries(auth);
-        sendheader(auth->client, REPORT_FAIL_DNS);
-      }
-      log(L_INFO, "DNS/AUTH timeout %s",
-          get_client_name(auth->client, SHOW_IP));
+	  sendheader(auth->client, REPORT_FAIL_ID);
+	  if (IsDNSPending(auth))
+	    {
+	      delete_resolver_queries(auth);
+	      sendheader(auth->client, REPORT_FAIL_DNS);
+	    }
+	  log(L_INFO, "DNS/AUTH timeout %s",
+	      get_client_name(auth->client, SHOW_IP));
 
-      auth->client->since = now;
-      release_auth_client(auth->client);
-      unlink_auth_request(auth, &AuthPollList);
-      free_auth_request(auth);
+	  auth->client->since = now;
+	  release_auth_client(auth->client);
+	  unlink_auth_request(auth, &AuthPollList);
+	  free_auth_request(auth);
+	}
     }
-  }
-  for (auth = AuthIncompleteList; auth; auth = auth_next) {
-    auth_next = auth->next;
-    if (auth->timeout < CurrentTime) {
-      delete_resolver_queries(auth);
-      sendheader(auth->client, REPORT_FAIL_DNS);
-      log(L_INFO, "DNS timeout %s", get_client_name(auth->client, SHOW_IP));
+  for (auth = AuthIncompleteList; auth; auth = auth_next)
+    {
+      auth_next = auth->next;
+      if (auth->timeout < CurrentTime)
+	{
+	  delete_resolver_queries(auth);
+	  sendheader(auth->client, REPORT_FAIL_DNS);
+	  log(L_INFO, "DNS timeout %s", get_client_name(auth->client, SHOW_IP));
 
-      auth->client->since = now;
-      release_auth_client(auth->client);
-      unlink_auth_request(auth, &AuthIncompleteList);
-      free_auth_request(auth);
+	  auth->client->since = now;
+	  release_auth_client(auth->client);
+	  unlink_auth_request(auth, &AuthIncompleteList);
+	  free_auth_request(auth);
+	}
     }
-  }
 }
 
 /*
@@ -470,23 +490,25 @@ void send_auth_query(struct AuthRequest* auth)
   int             tlen = sizeof(struct sockaddr_in);
 
   if (getsockname(auth->client->fd, (struct sockaddr *)&us,   &ulen) ||
-      getpeername(auth->client->fd, (struct sockaddr *)&them, &tlen)) {
-
-    log(L_INFO, "auth get{sock,peer}name error for %s:%m",
-        get_client_name(auth->client, SHOW_IP));
-    auth_error(auth);
-    return;
-  }
+      getpeername(auth->client->fd, (struct sockaddr *)&them, &tlen))
+    {
+      
+      log(L_INFO, "auth get{sock,peer}name error for %s:%m",
+	  get_client_name(auth->client, SHOW_IP));
+      auth_error(auth);
+      return;
+    }
   ircsprintf(authbuf, "%u , %u\r\n",
              (unsigned int) ntohs(them.sin_port),
              (unsigned int) ntohs(us.sin_port));
 
-  if (send(auth->fd, authbuf, strlen(authbuf), 0) == -1) {
-    if (EAGAIN == errno)
+  if (send(auth->fd, authbuf, strlen(authbuf), 0) == -1)
+    {
+      if (EAGAIN == errno)
+	return;
+      auth_error(auth);
       return;
-    auth_error(auth);
-    return;
-  }
+    }
   ClearAuthConnect(auth);
   SetAuthPending(auth);
 }
@@ -510,23 +532,28 @@ void read_auth_reply(struct AuthRequest* auth)
 
   len = recv(auth->fd, buf, AUTH_BUFSIZ, 0);
   
-  if (len > 0) {
-    buf[len] = '\0';
+  if (len > 0)
+    {
+      buf[len] = '\0';
 
-    if( (s = GetValidIdent(buf)) ) {
-      t = auth->client->username;
-      for (count = USERLEN; *s && count; s++) {
-        if(*s == '@') {
-            break;
-          }
-        if ( !IsSpace(*s) && *s != ':' ) {
-          *t++ = *s;
-          count--;
-        }
-      }
-      *t = '\0';
+      if( (s = GetValidIdent(buf)) )
+	{
+	  t = auth->client->username;
+	  for (count = USERLEN; *s && count; s++)
+	    {
+	      if(*s == '@')
+		{
+		  break;
+		}
+	      if ( !IsSpace(*s) && *s != ':' )
+		{
+		  *t++ = *s;
+		  count--;
+		}
+	    }
+	  *t = '\0';
+	}
     }
-  }
 
   if ((len < 0) && (EAGAIN == errno))
     return;
@@ -535,22 +562,25 @@ void read_auth_reply(struct AuthRequest* auth)
   auth->fd = -1;
   ClearAuth(auth);
   
-  if (!s) {
-    ++ServerStats->is_abad;
-    strcpy(auth->client->username, "unknown");
-  }
-  else {
-    sendheader(auth->client, REPORT_FIN_ID);
-    ++ServerStats->is_asuc;
-    SetGotId(auth->client);
-  }
+  if (!s)
+    {
+      ++ServerStats->is_abad;
+      strcpy(auth->client->username, "unknown");
+    }
+  else
+    {
+      sendheader(auth->client, REPORT_FIN_ID);
+      ++ServerStats->is_asuc;
+      SetGotId(auth->client);
+    }
   unlink_auth_request(auth, &AuthPollList);
 
   if (IsDNSPending(auth))
     link_auth_request(auth, &AuthIncompleteList);
-  else {
-    release_auth_client(auth->client);
-    free_auth_request(auth);
-  }
+  else
+    {
+      release_auth_client(auth->client);
+      free_auth_request(auth);
+    }
 }
 
