@@ -22,7 +22,6 @@
 #include "send.h"
 #include "struct.h"
 #include "common.h"
-#include "sys.h"
 #include "h.h"
 #include "class.h"
 #include "numeric.h"

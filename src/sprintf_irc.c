@@ -23,7 +23,6 @@
 
 #include "send.h"
 #include "common.h"
-#include "sys.h"
 
 #include <stdarg.h>
 
