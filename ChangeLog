@@ -1,3 +1,8 @@
+*** 20011008_3 by db
+- fixed another potential bug.
+
+
+
 *** 20011008_2 by db
 IP I lines should also check username
 
