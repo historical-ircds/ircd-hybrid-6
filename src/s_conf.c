@@ -16,15 +16,11 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ *  (C) 1988 University of Oulu,Computing Center and Jarkko Oikarinen"
+ *
+ *  $Id$
  */
-
-#ifndef lint
-static  char sccsid[] = "@(#)s_conf.c	2.56 02 Apr 1994 (C) 1988 University of Oulu, \
-Computing Center and Jarkko Oikarinen";
-
-static char *rcs_version = "$Id$";
-#endif
-
 #include "s_conf.h"
 #include "class.h"
 #include "struct.h"
@@ -114,9 +110,6 @@ static int count_users_on_this_ip(IP_ENTRY *,aClient *,char *);
 static IP_ENTRY *find_or_add_ip(aClient *);
 #endif
 
-/* externally defined routines */
-extern	void  delist_conf(aConfItem *);
-
 /* general conf items link list root */
 aConfItem* ConfigItemList = NULL;
 
@@ -153,16 +146,80 @@ extern void do_pending_klines(void);
 static void conf_dns_callback(void* vptr, struct hostent* hp)
 {
   aConfItem* aconf = (aConfItem*) vptr;
+  aconf->dns_pending = 0;
   if (hp)
     memcpy(&aconf->ipnum, hp->h_addr, sizeof(struct in_addr));
 }
 
-struct hostent* conf_dns_lookup(aConfItem* aconf)
+/*
+ * conf_dns_lookup - do a nameserver lookup of the conf host
+ * if the conf entry is currently doing a ns lookup do nothing, otherwise
+ * if the lookup returns a null pointer, set the conf dns_pending flag
+ */
+struct hostent* conf_dns_lookup(struct ConfItem* aconf)
 {
-  struct DNSQuery query;
-  query.vptr     = aconf;
-  query.callback = conf_dns_callback;
-  return gethost_byname(aconf->host, &query);
+  struct hostent* hp = 0;
+  if (!aconf->dns_pending) {
+    struct DNSQuery query;
+    query.vptr     = aconf;
+    query.callback = conf_dns_callback;
+    if (0 == (hp = gethost_byname(aconf->host, &query)))
+      aconf->dns_pending = 1;
+  }
+  return hp;
+}
+
+/*
+ * make_conf - create a new conf entry
+ */
+struct ConfItem* make_conf()
+{
+  struct ConfItem* aconf;
+
+  aconf = (struct ConfItem*) MyMalloc(sizeof(struct ConfItem));
+  memset(aconf, 0, sizeof(struct ConfItem));
+  aconf->status       = CONF_ILLEGAL;
+  aconf->ipnum.s_addr = INADDR_NONE;
+
+#if defined(NULL_POINTER_NOT_ZERO)
+  aconf->next = NULL;
+  aconf->host = aconf->passwd = aconf->name = NULL;
+  ClassPtr(aconf) = NULL;
+#endif
+  return (aconf);
+}
+
+/*
+ * delist_conf - remove conf item from ConfigItemList
+ */
+static void delist_conf(struct ConfItem* aconf)
+{
+  if (aconf == ConfigItemList)
+    ConfigItemList = ConfigItemList->next;
+  else
+    {
+      struct ConfItem* bconf;
+
+      for (bconf = ConfigItemList; aconf != bconf->next; bconf = bconf->next)
+        ;
+      bconf->next = aconf->next;
+    }
+  aconf->next = NULL;
+}
+
+void free_conf(struct ConfItem* aconf)
+{
+  assert(0 != aconf);
+
+  if (aconf->dns_pending)
+    delete_resolver_queries(aconf);
+  MyFree(aconf->host);
+  if (aconf->passwd)
+    memset(aconf->passwd, 0, strlen(aconf->passwd));
+  MyFree(aconf->passwd);
+  MyFree(aconf->user);
+  MyFree(aconf->name);
+  MyFree((char *)aconf);
 }
 
 /*

@@ -360,7 +360,7 @@ void count_memory(aClient *cptr,char *nick)
 
   count_whowas_memory(&wwu, &wwm);	/* no more away memory to count */
 
-  for (acptr = client; acptr; acptr = acptr->next)
+  for (acptr = GlobalClientList; acptr; acptr = acptr->next)
     {
       if (MyConnect(acptr))
 	{

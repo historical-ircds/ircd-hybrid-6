@@ -29,11 +29,12 @@
 #include "blalloc.h"
 #include "res.h"
 #include "class.h"
-#include "s_conf.h"
+/* #include "s_conf.h"
 
 #ifndef INADDR_NONE
 #define INADDR_NONE ((unsigned int) 0xffffffff)
 #endif
+*/
 
 extern int BlockHeapGarbageCollect(BlockHeap *);
 extern SetOptionsType GlobalSetOptions;
@@ -378,8 +379,8 @@ void remove_client_from_list(aClient *cptr)
     cptr->prev->next = cptr->next;
   else
     {
-      client = cptr->next;
-      client->prev = NULL;
+      GlobalClientList = cptr->next;
+      GlobalClientList->prev = NULL;
     }
   if (cptr->next)
     cptr->next->prev = cptr->prev;
@@ -435,8 +436,8 @@ void add_client_to_list(aClient *cptr)
    * since we always insert new clients to the top of the list,
    * this should mean the "me" is the bottom most item in the list.
    */
-  cptr->next = client;
-  client = cptr;
+  cptr->next = GlobalClientList;
+  GlobalClientList = cptr;
   if (cptr->next)
     cptr->next->prev = cptr;
   return;
@@ -500,52 +501,6 @@ void free_class(aClass *tmp)
 {
   MyFree((char *)tmp);
 }
-
-aConfItem *make_conf()
-{
-  register aConfItem *aconf;
-
-  aconf = (struct ConfItem *)MyMalloc(sizeof(aConfItem));
-  memset((void *)aconf, 0, sizeof(aConfItem));
-  /*  aconf->next = NULL; */
-  /* aconf->host = aconf->passwd = aconf->name = NULL; */
-  aconf->status = CONF_ILLEGAL;
-  /* aconf->clients = 0; */
-  /* aconf->port = 0; */
-  /* aconf->hold = 0; */
-  aconf->ipnum.s_addr = INADDR_NONE;
-  ClassPtr(aconf) = 0;
-  return (aconf);
-}
-
-void delist_conf(aConfItem *aconf)
-{
-  if (aconf == ConfigItemList)
-    ConfigItemList = ConfigItemList->next;
-  else
-    {
-      aConfItem       *bconf;
- 
-      for (bconf = ConfigItemList; aconf != bconf->next; bconf = bconf->next)
-	;
-      bconf->next = aconf->next;
-    }
-  aconf->next = NULL;
-}
-
-void free_conf(aConfItem *aconf)
-{
-  del_queries((char *)aconf);
-  MyFree(aconf->host);
-  if (aconf->passwd)
-    memset((void *)aconf->passwd, 0, strlen(aconf->passwd));
-  MyFree(aconf->passwd);
-  MyFree(aconf->user);
-  MyFree(aconf->name);
-  MyFree((char *)aconf);
-  return;
-}
-
 
 /*
 Attempt to free up some block memory

@@ -16,14 +16,9 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * $Id$
  */
-
-#ifndef lint
-static	char sccsid[] = "@(#)ircd.c	2.48 3/9/94 (C) 1988 University of Oulu, \
-Computing Center and Jarkko Oikarinen";
-static char *rcs_version="$Id$";
-#endif
-
 #include "struct.h"
 #include "common.h"
 #include "dline_conf.h"
@@ -102,7 +97,7 @@ struct	Counter	Count;
 
 time_t	NOW;
 aClient me;			/* That's me */
-aClient *client;		/* Pointer to beginning of Client list */
+aClient* GlobalClientList = 0;	/* Pointer to beginning of Client list */
 
 #ifdef  LOCKFILE
 extern  time_t  pending_kline_time;
@@ -154,8 +149,6 @@ int     rehashed = YES;
 int     dline_in_progress = NO;	/* killing off matching D lines ? */
 time_t	nextconnect = 1;	/* time for next try_connections call */
 time_t	nextping = 1;		/* same as above for check_pings() */
-time_t	nextdnscheck = 0;	/* next time to poll dns to force timeouts */
-time_t	nextexpire = 1;		/* next expire run on the dns cache */
 int	autoconn = 1;		/* allow auto conns or not */
 
 #ifdef	PROFIL
@@ -704,7 +697,7 @@ static	time_t	check_pings(time_t currenttime)
 #endif
 		  Debug((DEBUG_NOTICE,"DNS/AUTH timeout %s",
 			 get_client_name(cptr,TRUE)));
-		  del_queries((char *)cptr);
+		  delete_resolver_queries(cptr);
 		  ClearAuth(cptr);
 		  ClearDNS(cptr);
 		  SetAccess(cptr);
@@ -895,7 +888,7 @@ int	main(int argc, char *argv[])
 
   aConfItem *aconf;
 
-  client = &me;          /* Pointer to beginning of Client list */
+  GlobalClientList = &me;       /* Pointer to beginning of Client list */
   cold_start = YES;		/* set when server first starts up */
 
   if((timeofday = time(NULL)) == -1)
@@ -1459,12 +1452,9 @@ time_t io_loop(time_t delay)
   if (nextconnect && timeofday >= nextconnect)
     nextconnect = try_connections(timeofday);
   /*
-  ** DNS checks. One to timeout queries, one for cache expiries.
-  */
-  if (timeofday >= nextdnscheck)
-    nextdnscheck = timeout_query_list(timeofday);
-  if (timeofday >= nextexpire)
-    nextexpire = expire_cache(timeofday);
+   * DNS checks, use smaller of resolver delay or next ping
+   */
+  delay = MIN(timeout_resolver(timeofday), nextping);
   /*
   ** take the smaller of the two 'timed' event times as
   ** the time of next event (stops us being late :) - avalon
@@ -1472,10 +1462,6 @@ time_t io_loop(time_t delay)
   */
   if (nextconnect)
     delay = MIN(nextping, nextconnect);
-  else
-    delay = nextping;
-  delay = MIN(nextdnscheck, delay);
-  delay = MIN(nextexpire, delay);
   delay -= timeofday;
   /*
   ** Adjust delay to something reasonable [ad hoc values]

@@ -4002,7 +4002,7 @@ int	m_names( aClient *cptr,
   (void)strncpy(buf, "* * :", 6);
   idx = 5;
   flag = 0;
-  for (c2ptr = client; c2ptr; c2ptr = c2ptr->next)
+  for (c2ptr = GlobalClientList; c2ptr; c2ptr = c2ptr->next)
     {
       aChannel *ch3ptr;
       int	showflag = 0, secret = 0;

@@ -578,7 +578,7 @@ int	m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
 	register	aClient	*acptr;
 	int	bad = 0, listlength = 0;
 	
-	for (acptr = client; acptr; acptr = acptr->next) {
+	for (acptr = GlobalClientList; acptr; acptr = acptr->next) {
 	  if (hash_find_client(acptr->name,acptr) != acptr)
 	    {
 	      if (ch == 'V')
@@ -602,7 +602,7 @@ int	m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
 
 	sendto_one(sptr,"NOTICE %s :Rehashing Client List.", parv[0]);
 	clear_client_hash_table();
-	for (acptr = client; acptr; acptr = acptr->next)
+	for (acptr = GlobalClientList; acptr; acptr = acptr->next)
 	  (void)add_to_client_hash_table(acptr->name, acptr);
 	break;
       }

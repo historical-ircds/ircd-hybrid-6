@@ -19,14 +19,9 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ *  $Id$
  */
-
-#ifndef lint
-static  char sccsid[] = "@(#)s_misc.c	2.39 27 Oct 1993 (C) 1988 University of Oulu, \
-Computing Center and Jarkko Oikarinen";
-static char *rcs_version = "$Id$";
-#endif
-
 #include "s_conf.h"
 #include "struct.h"
 #include "common.h"
@@ -632,7 +627,7 @@ char	*comment	/* Reason for the exit */
               ** to do it.    MyConnect(sptr) has been set to false,
               ** so we look at servptr, which should be ok  -orabidoo
               */
-	      for (acptr = client; acptr; acptr = next)
+	      for (acptr = GlobalClientList; acptr; acptr = next)
 		{
 		  next = acptr->next;
 		  if (!IsServer(acptr) && acptr->from == sptr)
@@ -645,7 +640,7 @@ char	*comment	/* Reason for the exit */
 	      /*
 	      ** Second SQUIT all servers behind this link
 	      */
-	      for (acptr = client; acptr; acptr = next)
+	      for (acptr = GlobalClientList; acptr; acptr = next)
 		{
 		  next = acptr->next;
 		  if (IsServer(acptr) && acptr->from == sptr)

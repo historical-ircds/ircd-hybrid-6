@@ -19,17 +19,9 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ *  $Id$
  */
-
-
-#ifndef lint
-static  char sccsid[] = "@(#)s_user.c	2.68 07 Nov 1993 (C) 1988 University of Oulu, \
-Computing Center and Jarkko Oikarinen";
-
-static char *rcs_version="$Id$";
-
-#endif
-
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -320,7 +312,7 @@ int	hunt_server(aClient *cptr,
 	}
       else
 	{
-	  for (acptr = client;
+	  for (acptr = GlobalClientList;
 	       (acptr = next_client(acptr, parv[server]));
 	       acptr = acptr->next)
 	    {
@@ -433,9 +425,6 @@ static	int	register_user(aClient *cptr,
   char  *type_of_bot;
 #endif
   char tmpstr2[512];
-#if defined(KLINE_WITH_REASON) && !defined(REJECT_HOLD)
-  char safe_reason[MAX_REASON];
-#endif
 
   user->last = timeofday;
   parv[0] = sptr->name;
@@ -986,7 +975,7 @@ static int valid_username( anUser *user )
 
 static int tell_user_off(aClient *cptr, char **preason )
 {
-  char *p;
+  char* p = 0;
 
   /* Ok... if using REJECT_HOLD, I'm not going to dump
    * the client immediately, but just mark the client for exit
@@ -1018,16 +1007,15 @@ static int tell_user_off(aClient *cptr, char **preason )
 	    *p = '|';
 	}
       else
-#else
+#endif
 	sendto_one(cptr, ":%s NOTICE %s :*** Banned: No Reason",
 		   me.name,cptr->name);
-#endif
 #ifdef REJECT_HOLD
-      return( NO );
+      return NO;
     }
 #endif
 
-  return ( YES );
+  return YES;
 }
 
 /* report_and_set_user_flags
@@ -2248,7 +2236,7 @@ int	m_who(aClient *cptr,
 	}
       do_who(sptr, acptr, ch2ptr, NULL);
     }
-  else for (acptr = client; acptr; acptr = acptr->next)
+  else for (acptr = GlobalClientList; acptr; acptr = acptr->next)
     {
       aChannel *ch2ptr = NULL;
       int	showperson, isinvis;
@@ -2500,7 +2488,7 @@ int	m_whois(aClient *cptr,
 
       /* wild is true so here we go */
 
-      for (acptr = client; (acptr = next_client(acptr, nick));
+      for (acptr = GlobalClientList; (acptr = next_client(acptr, nick));
 	   acptr = acptr->next)
 	{
 	  if (IsServer(acptr))

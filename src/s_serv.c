@@ -282,7 +282,7 @@ int	m_squit(aClient *cptr,
       ** The following allows wild cards in SQUIT. Only useful
       ** when the command is issued by an oper.
       */
-      for (acptr = client; (acptr = next_client(acptr, server));
+      for (acptr = GlobalClientList; (acptr = next_client(acptr, server));
 	   acptr = acptr->next)
 	if (IsServer(acptr) || IsMe(acptr))
 	  break;
@@ -1293,7 +1293,7 @@ int	m_links(aClient *cptr,
 		       sptr->name, sptr->user->username,
 		       sptr->user->host, sptr->user->server);
   
-  for (acptr = client, (void)collapse(mask); acptr; acptr = acptr->next) 
+  for (acptr = GlobalClientList, collapse(mask); acptr; acptr = acptr->next) 
     {
       if (!IsServer(acptr) && !IsMe(acptr))
 	continue;
@@ -1976,7 +1976,7 @@ int show_lusers(aClient *cptr,
       s_count = 0; c_count = 0; u_count = 0; i_count = 0;
       o_count = 0; m_client = 0; m_server = 0;
 
-      for (acptr = client; acptr; acptr = acptr->next)
+      for (acptr = GlobalClientList; acptr; acptr = acptr->next)
 	{
 /*	  if (parc>1)
 	    {
@@ -3349,7 +3349,7 @@ int	m_trace(aClient *cptr,
       {
 	aClient	*ac2ptr;
 	
-	ac2ptr = next_client_double(client, tname);
+	ac2ptr = next_client_double(GlobalClientList, tname);
 	if (ac2ptr)
 	  sendto_one(sptr, form_str(RPL_TRACELINK), me.name, parv[0],
 		     version, debugmode, tname, ac2ptr->from->name);
@@ -3458,7 +3458,7 @@ int	m_trace(aClient *cptr,
    */
   if (doall)
    {
-    for (acptr = client; acptr; acptr = acptr->next)
+    for (acptr = GlobalClientList; acptr; acptr = acptr->next)
 #ifdef	SHOW_INVISIBLE_LUSERS
       if (IsPerson(acptr))
 	link_u[acptr->from->fd]++;
@@ -3641,7 +3641,7 @@ int	m_ltrace(aClient *cptr,
       {
 	aClient	*ac2ptr;
 	
-	ac2ptr = next_client(client, tname);
+	ac2ptr = next_client(GlobalClientList, tname);
 	if (ac2ptr)
 	  sendto_one(sptr, form_str(RPL_TRACELINK), me.name, parv[0],
 		     version, debugmode, tname, ac2ptr->from->name);
@@ -3679,9 +3679,12 @@ int	m_ltrace(aClient *cptr,
   /*
    * Count up all the servers and clients in a downlink.
    */
-  if (doall)
-    for (acptr = client; acptr; acptr = acptr->next)
-      if (IsServer(acptr)) link_s[acptr->from->fd]++;
+  if (doall) {
+    for (acptr = GlobalClientList; acptr; acptr = acptr->next) {
+      if (IsServer(acptr)) 
+        ++link_s[acptr->from->fd];
+    }
+  }
 
   /* report all direct connections */
   now = time(NULL);

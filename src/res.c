@@ -171,7 +171,10 @@ typedef struct cachetable {
 } CacheTable;
 
 
-int ResolverFileDescriptor = -1;   /* GLOBAL - used in s_bsd.c */
+int    ResolverFileDescriptor = -1;   /* GLOBAL - used in s_bsd.c */
+
+static time_t nextDNSCheck    = 0;
+static time_t nextCacheExpire = 1;
 
 /*
  * Keep a spare file descriptor open. res_init calls fopen to read the
@@ -415,7 +418,7 @@ static ResRQ* make_request(const struct DNSQuery* query)
  * timeout_query_list - Remove queries from the list which have been 
  * there too long without being resolved.
  */
-time_t timeout_query_list(time_t now)
+static time_t timeout_query_list(time_t now)
 {
   ResRQ*   request;
   ResRQ*   next_request = 0;
@@ -456,10 +459,46 @@ time_t timeout_query_list(time_t now)
 }
 
 /*
- * del_queries - called by the server to cleanup outstanding queries for
- * which there no longer exist clients or conf lines.
+ * expire_cache - removes entries from the cache which are older 
+ * than their expiry times. returns the time at which the server 
+ * should next poll the cache.
  */
-void del_queries(const void* vptr)
+static time_t expire_cache(time_t now)
+{
+  aCache* cp;
+  aCache* cp2;
+  time_t  next = 0;
+
+  for (cp = cacheTop; cp; cp = cp2) {
+    cp2 = cp->list_next;
+    if (now >= cp->expireat) {
+      cainfo.ca_expires++;
+      rem_cache(cp);
+    }
+    else if (!next || next > cp->expireat)
+      next = cp->expireat;
+  }
+  return (next > now) ? next : (now + AR_TTL);
+}
+
+/*
+ * timeout_resolver - check request list and cache for expired entries
+ */
+time_t timeout_resolver(time_t now)
+{
+  if (nextDNSCheck < now)
+    nextDNSCheck = timeout_query_list(now);
+  if (nextCacheExpire < now)
+    nextCacheExpire = expire_cache(now);
+  return MIN(nextDNSCheck, nextCacheExpire);
+}
+
+
+/*
+ * delete_resolver_queries - cleanup outstanding queries 
+ * for which there no longer exist clients or conf lines.
+ */
+void delete_resolver_queries(const void* vptr)
 {
   ResRQ* request;
   ResRQ* next_request;
@@ -536,8 +575,9 @@ struct hostent* gethost_byname(const char* name,
   ++reinfo.re_na_look;
   if ((cp = find_cache_name(name)))
     return &(cp->he.h);
-  else
-    do_query_name(query, name, NULL);
+
+  do_query_name(query, name, NULL);
+  nextDNSCheck = 1;
   return NULL;
 }
 
@@ -554,8 +594,9 @@ struct hostent* gethost_byaddr(const char* addr,
   ++reinfo.re_nu_look;
   if ((cp = find_cache_number(NULL, addr)))
     return &(cp->he.h);
-  else
-    do_query_number(query, (const struct in_addr*) addr, NULL);
+
+  do_query_number(query, (const struct in_addr*) addr, NULL);
+  nextDNSCheck = 1;
   return NULL;
 }
 /*
@@ -1533,29 +1574,6 @@ static void rem_cache(aCache* ocp)
   MyFree(ocp);
   --cachedCount;
   ++cainfo.ca_dels;
-}
-
-/*
- * expire_cache - removes entries from the cache which are older 
- * than their expiry times. returns the time at which the server 
- * should next poll the cache.
- */
-time_t expire_cache(time_t now)
-{
-  aCache* cp;
-  aCache* cp2;
-  time_t  next = 0;
-
-  for (cp = cacheTop; cp; cp = cp2) {
-    cp2 = cp->list_next;
-    if (now >= cp->expireat) {
-      cainfo.ca_expires++;
-      rem_cache(cp);
-    }
-    else if (!next || next > cp->expireat)
-      next = cp->expireat;
-  }
-  return (next > now) ? next : (now + AR_TTL);
 }
 
 /*

@@ -16,15 +16,9 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ *   $Id$
  */
-
-#ifndef lint
-static  char sccsid[] = "@(#)send.c	2.32 2/28/94 (C) 1988 University of Oulu, \
-Computing Center and Jarkko Oikarinen";
-
-static char *rcs_version = "$Id$";
-#endif
-
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -1108,7 +1102,7 @@ va_dcl
        * with sending it to all the clients that match on that server.
        */
 
-      for (acptr = client; acptr; acptr = acptr->next)
+      for (acptr = GlobalClientList; acptr; acptr = acptr->next)
 	if (IsRegisteredUser(acptr)
 	    && match_it(acptr, mask, what)
 	    && acptr->from == cptr)
@@ -1325,7 +1319,7 @@ va_dcl
   current_serial++;
 #endif
 
-  for (cptr = client; cptr; cptr = cptr->next)
+  for (cptr = GlobalClientList; cptr; cptr = cptr->next)
     {
       if (!SendWallops(cptr))
 	continue;
@@ -1393,7 +1387,7 @@ va_dcl
   current_serial++;
 #endif
 
-  for (cptr = client; cptr; cptr = cptr->next)
+  for (cptr = GlobalClientList; cptr; cptr = cptr->next)
     {
       if (!SendWallops(cptr))
 	continue;
