@@ -116,8 +116,6 @@ char	serveropts[] = {
 
 #include "numeric.h"
 #include "common.h"
-#include "sys.h"
-/* #include "whowas.h" */
 #include "hash.h"
 #include <sys/file.h>
 #ifdef HPUX

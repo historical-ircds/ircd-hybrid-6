@@ -27,7 +27,6 @@
 #include "struct.h"
 #include "common.h"
 #include "dline_conf.h"
-#include "sys.h"
 #include "numeric.h"
 #include "h.h"
 #include "mtrie_conf.h"

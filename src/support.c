@@ -20,7 +20,6 @@
  */
 #include "struct.h"
 #include "common.h"
-#include "sys.h"
 #include "h.h"
 
 #include <string.h>

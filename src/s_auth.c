@@ -31,7 +31,6 @@
 #include "send.h"
 #include "client.h"
 #include "common.h"
-#include "sys.h"
 #include "numeric.h"
 #include "s_bsd.h"
 #include "res.h"

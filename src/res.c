@@ -11,7 +11,6 @@
  *     --Bleep (Thomas Helvey <tomh@inxpress.net>)
  */
 #include "res.h"
-#include "sys.h"
 #include "numeric.h"
 #include "s_bsd.h"
 #include "struct.h"

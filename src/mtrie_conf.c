@@ -46,7 +46,6 @@
  * $Id$
  */
 #include "mtrie_conf.h"
-#include "sys.h"
 #include "numeric.h"
 #include "common.h"
 #include "struct.h"

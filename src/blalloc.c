@@ -9,7 +9,6 @@
 #include "blalloc.h"
 #include "struct.h"
 #include "common.h"
-#include "sys.h"
 #include "h.h"
 #include "numeric.h"
 #include "send.h"

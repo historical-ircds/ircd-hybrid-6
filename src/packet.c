@@ -22,7 +22,6 @@
  */ 
 #include "struct.h"
 #include "common.h"
-#include "sys.h"
 #include "msg.h"
 #include "h.h"
  

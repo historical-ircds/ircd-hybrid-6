@@ -23,7 +23,6 @@
 #include "listener.h"
 #include "struct.h"
 #include "common.h"
-#include "sys.h"
 #include "res.h"
 #include "s_conf.h"
 #include "s_auth.h"

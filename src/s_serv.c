@@ -28,7 +28,6 @@
 #undef CAPTAB
 
 #include "common.h"
-#include "sys.h"
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"

@@ -24,7 +24,6 @@
 #define MSGTAB
 #include "msg.h"
 #undef MSGTAB
-#include "sys.h"
 #include "numeric.h"
 #include "h.h"
 #include "send.h"

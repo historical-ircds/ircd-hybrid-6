@@ -21,7 +21,6 @@
  */
 #include "struct.h"
 #include "common.h"
-#include "sys.h"
 #include "h.h"
 #include <errno.h>
 #include <signal.h>

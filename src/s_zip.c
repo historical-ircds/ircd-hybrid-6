@@ -19,7 +19,6 @@
  *   $Id$
  */
 #include "struct.h"
-#include "sys.h"
 #include "h.h"
 #include "send.h"
 
