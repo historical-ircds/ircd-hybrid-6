@@ -115,9 +115,14 @@ int m_cryptauth(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
     {
       sendto_one(sptr, form_str(ERR_UNKNOWNCOMMAND), me.name, parv[0], "CRYPTAUTH");
 
+#ifdef HIDE_SERVERS_IPS
+      sendto_realops("CRYPTAUTH command from %s -- %s is a hacked server",
+      		     sptr->name, cptr->name);
+#else		     
       sendto_realops("CRYPTAUTH command from %s -- %s is a hacked server",
 		     get_client_name(sptr,SHOW_IP),
 		     get_client_name(cptr,SHOW_IP));
+#endif		     
       cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
       return exit_client(cptr, cptr, cptr, "Hacked server");
     }
@@ -132,8 +137,12 @@ int m_cryptauth(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
   /* And never from known servers */
   if (IsServer(cptr))
     {
+#ifdef HIDE_SERVERS_IPS
+      sendto_realops("CRYPTAUTH from server %s -- it's hacked", cptr->name);
+#else      
       sendto_realops("CRYPTAUTH from server %s -- it's hacked",
 		     get_client_name(cptr, SHOW_IP));
+#endif		     
       log(L_WARN, "CRYPTAUTH from server %s -- it's hacked",
 	  get_client_name(cptr, SHOW_IP));
       cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
@@ -142,8 +151,12 @@ int m_cryptauth(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
 
   if (parc < 3)
     {
+#ifdef HIDE_SERVERS_IPS
+      sendto_realops("Invalid CRYPTAUTH data from %s", cptr->name);
+#else      
       sendto_realops("Invalid CRYPTAUTH data from %s",
 		     get_client_name(cptr, SHOW_IP));
+#endif		     
       log(L_WARN, "Invalid CRYPTAUTH data from %s",
 	  get_client_name(cptr, SHOW_IP));
       if (cptr->crypt)
@@ -153,8 +166,12 @@ int m_cryptauth(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
   
   if (!cptr->crypt || !cptr->crypt->OutCipher || !cptr->crypt->OutState)
     {
+#ifdef HIDE_SERVERS_IPS
+      sendto_realops("Got CRYPTAUTH but no CRYPTSERV from %s", cptr->name);
+#else      
       sendto_realops("Got CRYPTAUTH but no CRYPTSERV from %s",
 		     get_client_name(cptr, SHOW_IP));
+#endif		     
       log(L_WARN, "Got CRYPTAUTH but no CRYPTSERV from %s",
 	  get_client_name(cptr, SHOW_IP));
       if (cptr->crypt)
@@ -164,8 +181,12 @@ int m_cryptauth(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
 
   if (cptr->crypt->InCipher || cptr->crypt->InState)
     {
+#ifdef HIDE_SERVERS_IPS
+      sendto_realops("Got multiple CRYPTAUTH from %s", cptr->name);
+#else      
       sendto_realops("Got multiple CRYPTAUTH from %s",
 		     get_client_name(cptr, SHOW_IP));
+#endif		     
       log(L_WARN, "Got multiple CRYPTAUTH from %s",
 	  get_client_name(cptr, SHOW_IP));
       cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
@@ -176,8 +197,13 @@ int m_cryptauth(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
 
   if (cipherIndex < 0)
     {
+#ifdef HIDE_SERVERS_IPS
+      sendto_realops("Unsupported cipher %s selected by %s", parv[1],
+                     cptr->name);
+#else		     
       sendto_realops("Unsupported cipher %s selected by %s", parv[1], 
 		     get_client_name(cptr, SHOW_IP));
+#endif		     
       log(L_WARN, "Unsupported cipher %s selected by %s", parv[1], 
 	  get_client_name(cptr, SHOW_IP));
       cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
@@ -191,8 +217,13 @@ int m_cryptauth(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
 
   if (crypt_rsa_decode(parv[2], key, &keylen) != CRYPT_DECRYPTED)
     {
+#ifdef HIDE_SERVERS_IPS
+      sendto_realops("Couldn't decrypt session key authentication data from %s",
+      		     cptr->name);
+#else		     
       sendto_realops("Couldn't decrypt session key authentication data from %s", 
 		     get_client_name(cptr, SHOW_IP));
+#endif		     
       log(L_WARN,"Couldn't decrypt session key authentication data from %s", 
 	  get_client_name(cptr, SHOW_IP));
       cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
@@ -202,8 +233,13 @@ int m_cryptauth(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
   if ((keylen * 8 < Ciphers[cipherIndex].keysize) || 
       (memcmp(key, cptr->crypt->inkey, Ciphers[cipherIndex].keysize / 8)))
     {
+#ifdef HIDE_SERVERS_IPS
+      sendto_realops("Invalid session key authentication data from %s",
+                     cptr->name);
+#else		     
       sendto_realops("Invalid session key authentication data from %s", 
 		     get_client_name(cptr, SHOW_IP));
+#endif		     
       log(L_WARN,"Invalid session key authentication data from %s", 
 	  get_client_name(cptr, SHOW_IP));
       cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
