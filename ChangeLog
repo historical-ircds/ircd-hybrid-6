@@ -1,3 +1,9 @@
+*** 20010606_9 by db
+- removed last remnants of broken code PRESERVE_CHANNEL_ON_SPLIT
+  NO_CHANOPS_ON_SPLIT (old version)
+
+
+
 *** 20010606_8 by davidt
 backport fix for empty SJOINs to hybrid-6, as my patch appeared to get lost somewhere..
 
