@@ -162,8 +162,8 @@ send_message(aClient *to, char *msg, int len)
 
 		if (IsDoingList(to)) {
       /* Pop the sendq for this message */
-      if (!IsAnOper(to))
-        sendto_ops("LIST blocked for %s", get_client_name(to, FALSE));
+      /*if (!IsAnOper(to))
+        sendto_ops("LIST blocked for %s", get_client_name(to, FALSE)); */
       SetSendqPop(to);
       return 0;
     }
@@ -378,8 +378,8 @@ send_queued(aClient *to)
     if (IsSendqPopped(to) && (DBufLength(&to->sendQ) == 0)) {
       char **parv;
       ClearSendqPop(to);
-      sendto_ops("LIST restarted at %d, %d for %s", to->listprogress,
-                 to->listprogress2, to->name);
+      /*sendto_ops("LIST restarted at %d, %d for %s", to->listprogress,
+        to->listprogress2, to->name);*/
       parv=(char**)malloc(sizeof(char**));
       parv[0]=(char*)malloc(strlen(to->name)+1);
       strcpy(parv[0], to->name);
