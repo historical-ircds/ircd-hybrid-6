@@ -328,10 +328,10 @@ void adns__diag(adns_state ads, int serv, adns_query qu,
 		const char *fmt, ...) ;
 
 int adns__vbuf_ensure(vbuf *vb, int want);
-int adns__vbuf_appendstr(vbuf *vb, const char *data); /* does not include nul */
-int adns__vbuf_append(vbuf *vb, const byte *data, int len);
+int adns__vbuf_appendstr(vbuf *vb, const char *); /* does not include nul */
+int adns__vbuf_append(vbuf *vb, const byte *, int len);
 /* 1=>success, 0=>realloc failed */
-void adns__vbuf_appendq(vbuf *vb, const byte *data, int len);
+void adns__vbuf_appendq(vbuf *vb, const byte *, int len);
 void adns__vbuf_init(vbuf *vb);
 void adns__vbuf_free(vbuf *vb);
 
@@ -497,7 +497,7 @@ void adns__reset_preserved(adns_query qu);
  */
 
 void adns__query_done(adns_query qu);
-void adns__query_fail(adns_query qu, adns_status stat);
+void adns__query_fail(adns_query qu, adns_status);
 
 /* From reply.c: */
 
