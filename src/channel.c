@@ -2748,6 +2748,14 @@ int	m_sjoin(aClient *cptr,
   chptr->locally_created = NO;
   oldts = chptr->channelts;
 
+  /* If there are no users on this channel, make sure mode is 0
+   */
+
+#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
+  if(chptr->users == 0)
+    chptr->mode.mode = 0;
+#endif
+
   /* If the TS goes to 0 for whatever reason, flag it
    * ya, I know its an invasion of privacy for those channels that
    * want to keep TS 0 *shrug* sorry
