@@ -5,6 +5,7 @@
 CC = @CC@
 RM = @RM@
 MKDEP = ${CC} -MM
+RANLIB = @RANLIB@
 
 IRCDLIBS = @LIBS@
 
@@ -51,8 +52,8 @@ OBJS = ${SRCS:.c=.o}
 
 libadns.a: ${OBJS}
 	rm -f $@
-	${AR} csqv $@ ${OBJS}
-
+	${AR} cqv $@ ${OBJS}
+	${RANLIB} $@
 
 all: libadns.a
 build: all

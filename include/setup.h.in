@@ -1,4 +1,3 @@
-/* $Id$ */
 /* include/setup.h.in.  Generated automatically from autoconf/configure.in by autoheader 2.13.  */
 
 /* Define if you have a working `mmap' system call.  */
