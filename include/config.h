@@ -1066,6 +1066,12 @@
  */
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
+#ifdef __EMX__
+#  undef IRC_UID
+#  undef IRC_GID
+#  undef USE_SYSLOG /* OS/2 doesn't have syslog */
+#endif
+
 #ifdef APOLLO
 #define RESTARTING_SYSTEMCALLS
 #endif                            /* read/write are restarted after signals

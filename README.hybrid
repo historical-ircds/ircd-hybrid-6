@@ -1,4 +1,6 @@
 +hybrid-6 (October 12,1998)
+- track maximum dbuf usage in stats Z
+- OS/2 mods from Roger Haskins (nth.tech@iname.com) (Rodder)
 - spare_fd kludge to fix rehash DNS on Solaris (Rodder)
 - fixed stderr logging (ircd -s) for report_error() when SYSLOG undef'd (Rodder)
 - ircd now understands .include "filename" in ircd.conf file (Dianora)

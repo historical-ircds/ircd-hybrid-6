@@ -22,6 +22,9 @@
 /* External definitions for functions in inet(3) */
 #include "config.h" /* for system definitions */
 
+#ifdef __EMX__
+#include <arpa/inet.h>
+#else
 #ifdef	__alpha
 #define	__u_l	unsigned int
 #else
@@ -48,3 +51,6 @@ extern __u_l inet_lnaof();
 extern __u_l inet_netof();
 #endif
 #undef __u_l
+
+#endif /* __EMX__ */
+

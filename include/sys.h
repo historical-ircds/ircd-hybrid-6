@@ -73,6 +73,10 @@ extern	char	*rindex (char *, char);
 #include <sys/time.h>
 #endif
 
+#ifdef __EMX__
+#  include <os2.h>
+#endif
+
 #define MyFree(x)       if ((x) != NULL) free(x)
 
 #ifdef NEXT

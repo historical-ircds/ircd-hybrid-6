@@ -34,7 +34,7 @@ static char *rcs_version = "$Id$";
 #include <sys/socket.h>
 
 extern	int errno; /* ...seems that errno.h doesn't define this everywhere */
-#if !defined(__FreeBSD__) && !defined(__NetBSD__) && !defined(__OpenBSD__) && !defined(__bsdi__) && !defined(__linux__)
+#if !defined(__FreeBSD__) && !defined(__NetBSD__) && !defined(__OpenBSD__) && !defined(__bsdi__) && !defined(__linux__) && !defined(__EMX__)
 extern	char	*sys_errlist[];
 #endif
 

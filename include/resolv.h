@@ -19,6 +19,7 @@
  *	@(#)resolv.h	5.10.1 (Berkeley) 6/1/90
  */
 
+#ifndef __EMX__
 /*
  * Resolver configuration file.
  * Normally not present, but may contain the address of the
@@ -76,4 +77,8 @@ struct state {
 extern struct state _res;
 extern char *p_cdname(), *p_rr(), *p_type(), *p_class(), *p_time();
 extern int	res_init();
+
+#else /* __EMX__ */
+#include <resolv.h>
+#endif /* __EMX__ */
 

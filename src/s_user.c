@@ -36,7 +36,9 @@ static char *rcs_version="$Id$";
 #include "msg.h"
 #include "channel.h"
 #include <sys/stat.h>
+#ifndef __EMX__
 #include <utmp.h>
+#endif /* __EMX__ */
 #include <fcntl.h>
 #include "h.h"
 #ifdef FLUD
