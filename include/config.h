@@ -74,7 +74,8 @@
  * SPATH = server executable,
  * CPATH = conf file,
  * MPATH = MOTD
- * KPATH = kline conf file 
+ * KPATH = kline conf file
+ * DLPATH = dline conf file
  *
  * OMOTD = path to MOTD for opers
  * 
@@ -89,36 +90,16 @@
  *
  */
 
-#define DPATH   "/usr/local/ircd/"
-#define SPATH   "/usr/local/ircd/ircd"
+#define DPATH   "/home/wnder/ircd-hybrid-6/"
+#define SPATH   "/home/wnder/ircd-hybrid-6/ircd"
 #define	CPATH	"ircd.conf"
 #define KPATH   "kline.conf"
+#define DLPATH "kline.conf"
 #define	MPATH	"ircd.motd"
 #define	LPATH	"ircd.log"
 #define	PPATH	"ircd.pid"
 #define HPATH	"opers.txt"
 #define OPATH   "opers.motd"
-
-/* DLINES_IN_KPATH - put (/quote) DLINES in your KPATH file.
- * Define this if you want DLINES in your KPATH file.  Otherwise DLINES
- * will be added to the main ircd.conf
- */
-#ifdef KPATH
-#undef DLINES_IN_KPATH
-#endif /* KPATH */
-
-/* LOCKFILE - Exclusive use of ircd.conf and kline.conf during writes
- *
- * This creates a lockfile prior to writes to ircd.conf or kline.conf, and
- * can be used in conjunction with viconf (included in the tools directory).
- * This prevents loss of data when klines are added while someone is manually
- * editting the file.  File writes will be retried at the next KLINE, DLINE,
- * REHASH, or after CHECK_PENDING_KLINES minutes have elapsed.
- *
- * If you do not wish to use this feature, leave LOCKFILE #undef 
- */
-#define LOCKFILE "ircd.conf.lock"
-#define	CHECK_PENDING_KLINES	10	/* in minutes */
 
 /* TS_MAX_DELTA and TS_WARN_DELTA -  allowed delta for TS when another
  * server connects.
@@ -388,7 +369,7 @@
  * to a leaf which just has 1 server (typically the uplink). Define this
  * correctly for performance reasons.
  */
-#undef	HUB
+#define	HUB
 
 /* CMDLINE_CONFIG - allow conf-file to be specified on command line
  * NOTE: defining CMDLINE_CONFIG and installing ircd SUID or SGID is a MAJOR
@@ -504,7 +485,7 @@
  * if there are no servers presently connected to this server
  * opers are not affected. 
  */
-#define NO_CHANOPS_WHEN_SPLIT
+#undef NO_CHANOPS_WHEN_SPLIT
 
 /* 
  * NO_JOIN_ON_SPLIT_SIMPLE

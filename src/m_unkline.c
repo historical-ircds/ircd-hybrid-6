@@ -88,7 +88,7 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
   char  buff[BUFSIZE];	/* matches line definition in s_conf.c */
   char	temppath[256];
 
-  const char  *filename;		/* filename to use for unkline */
+  char  *filename;		/* filename to use for unkline */
 
   char	*user,*host;
   char  *p;
@@ -178,9 +178,6 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
     {
       sendto_one(sptr, ":%s NOTICE %s :Cannot open %s",
 	me.name,parv[0],filename);
-#if defined(LOCKFILE) && !defined(SEPARATE_QUOTE_KLINES_BY_DATE)
-      (void)unlink(LOCKFILE);
-#endif
       return 0;
     }
 
@@ -190,9 +187,6 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
       sendto_one(sptr, ":%s NOTICE %s :Cannot open %s",
         me.name,parv[0],temppath);
       fbclose(in);
-#if defined (LOCKFILE) && !defined(SEPARATE_QUOTE_KLINES_BY_DATE)
-      (void)unlink(LOCKFILE);
-#endif
       umask(oldumask);			/* Restore the old umask */
       return 0;
     }
@@ -344,16 +338,9 @@ Then just ignore the line
     {
       sendto_one(sptr,":%s NOTICE %s :Couldn't write temp kline file, aborted",
         me.name,parv[0]);
-#if defined (LOCKFILE) && !defined(SEPARATE_QUOTE_KLINES_BY_DATE)
-      (void)unlink(LOCKFILE);
-#endif
       return -1;
     }
 
-#if defined (LOCKFILE) && !defined(SEPARATE_QUOTE_KLINES_BY_DATE)
-  (void)unlink(LOCKFILE);
-#endif
-	
   if(!pairme)
     {
       sendto_one(sptr, ":%s NOTICE %s :No K-Line for %s@%s",

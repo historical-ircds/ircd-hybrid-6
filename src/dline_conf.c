@@ -775,7 +775,7 @@ void walk_the_dlines(aClient *sptr, struct ip_subtree *tree)
       GetPrintableaConfItem(scan, &name, &host, &pass, &user, &port);
 
       sendto_one(sptr, form_str(RPL_STATSDLINE), me.name,
-		 sptr->name, c, name, pass);
+		 sptr->name, c, host, pass);
     }
   walk_the_dlines(sptr, tree->right);
 }

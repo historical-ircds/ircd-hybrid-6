@@ -302,17 +302,10 @@ int	m_info(aClient *cptr,
 #else
 #define OUT2 " LITTLE_I_LINES=0"
 #endif
-#ifdef LOCKFILE
-#define OUT3 " LOCKFILE=1"
-#else
-#define OUT3 " LOCKFILE=0"
-#endif
         sendto_one(sptr, form_str(RPL_INFO),
-                   me.name, parv[0], OUT1 OUT2 OUT3 );
+                   me.name, parv[0], OUT1 OUT2 );
 #undef OUT1
 #undef OUT2
-#undef OUT3
-#undef OUT4
 
 #ifdef LTRACE
 #define OUT1 "LTRACE=1"
@@ -625,12 +618,6 @@ int	m_info(aClient *cptr,
 #endif
         sendto_one(sptr, form_str(RPL_INFO),
                    me.name, parv[0], outstr);
-
-#ifdef LOCKFILE
-        ircsprintf(outstr,"CHECK_PENDING_KLINES=%d", CHECK_PENDING_KLINES);
-        sendto_one(sptr, form_str(RPL_INFO),
-                   me.name, parv[0], outstr);
-#endif
 
 #ifdef NEED_SPLITCODE
 	ircsprintf(outstr,"DEFAULT_SERVER_SPLIT_RECOVERY_TIME=%d",

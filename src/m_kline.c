@@ -22,8 +22,11 @@
  *
  *   $Id$
  */
-#include "struct.h"
 
+#include <signal.h>
+#include <fcntl.h>
+
+#include "struct.h"
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
@@ -32,6 +35,8 @@
 #include "s_conf.h"
 #include "class.h"
 #include "send.h"
+
+#include "m_kline.h"
 
 #ifndef __EMX__
 #include <utmp.h> /* old slackware utmp.h defines BYTE_ORDER */
@@ -55,7 +60,7 @@
 extern int rehashed;
 extern int dline_in_progress;	/* defined in ircd.c */
 int bad_tld(char *);
-extern int safe_write(aClient *,char *,char *,int,char *);
+extern int safe_write(aClient *, char *, int, char *);
 extern char *smalldate(time_t);		/* defined in s_misc.c */
 
 extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
@@ -64,18 +69,11 @@ extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 static int isnumber(char *);	/* return 0 if not, else return number */
 static char *cluster(char *);
 
-#ifdef LOCKFILE
-/* Shadowfax's lockfile code */
-void do_pending_klines(void);
-
-struct pkl {
-        char *comment;          /* Kline Comment */
-        char *kline;            /* Actual Kline */
-        struct pkl *next;       /* Next Pending Kline */
-} *pending_klines = NULL;
-
-time_t	pending_kline_time = 0;
-#endif
+/*
+ * Linked list of pending klines that need to be written to
+ * the conf
+ */
+aPendingLine *PendingLines = (aPendingLine *) NULL;
 
 #ifdef SLAVE_SERVERS
 extern aConfItem *find_special_conf(char *,int); /* defined in s_conf.c */
@@ -86,6 +84,288 @@ extern char *small_file_date(time_t);  /* defined in s_misc.c */
 #endif
 
 /*
+ * LockFile routines
+ */
+static aPendingLine *AddPending();
+static void DelPending(aPendingLine *);
+static int LockedFile(char *);
+static void WritePendingLines(char *);
+static void WriteKline(char *, aClient *, aClient *,
+                       char *, char *, char *, char *);
+static void WriteDline(char *, aClient *,
+                       char *, char *, char *);
+
+/*
+AddPending()
+ Add a pending K/D line to our linked list
+*/
+
+static aPendingLine *
+AddPending()
+
+{
+	aPendingLine *temp;
+
+	temp = (aPendingLine *) MyMalloc(sizeof(aPendingLine));
+
+	/*
+	 * insert the new entry into our list
+	 */
+	temp->next = PendingLines;
+	PendingLines = temp;
+
+	return (temp);
+} /* AddPending() */
+
+/*
+DelPending()
+ Delete pending line entry - assume calling function handles
+linked list manipulation (setting next field etc)
+*/
+
+static void
+DelPending(aPendingLine *pendptr)
+
+{
+	if (!pendptr)
+		return;
+
+	if (pendptr->user)
+		MyFree(pendptr->user);
+	MyFree(pendptr->host);
+	MyFree(pendptr->reason);
+	MyFree(pendptr->when);
+	MyFree(pendptr);
+} /* DelPending() */
+
+/*
+LockedFile()
+ Determine if 'filename' is currently locked. If it is locked,
+there should be a filename.lock file which contains the current
+pid of the editing process. Make sure the pid is valid before
+giving up.
+
+Return: 1 if locked
+        0 if not
+*/
+
+static int
+LockedFile(char *filename)
+
+{
+	char lockpath[PATH_MAX + 1];
+	char buffer[1024];
+	FILE *fileptr;
+	int killret;
+
+	if (!filename)
+		return (0);
+
+	sprintf(lockpath, "%s.lock", filename);
+
+	if ((fileptr = fopen(lockpath, "r")) == (FILE *) NULL)
+	{
+		/*
+		 * lockfile does not exist
+		 */
+		return (0);
+	}
+
+	if (fgets(buffer, sizeof(buffer) - 1, fileptr))
+	{
+		/*
+		 * If it is a valid lockfile, 'buffer' should now
+		 * contain the pid number of the editing process.
+		 * Send the pid a SIGCHLD to see if it is a valid
+		 * pid - it could be a remnant left over from a
+		 * crashed editor or system reboot etc.
+		 */
+
+		killret = kill(atoi(buffer), SIGCHLD);
+		if (killret == 0)
+		{
+			fclose(fileptr);
+			return (1);
+		}
+
+		/*
+		 * killret must be -1, which indicates an error (most
+		 * likely ESRCH - No such process), so it is ok to
+		 * proceed writing klines.
+		 */
+	}
+
+	fclose(fileptr);
+
+	 /*
+	  * Delete the outdated lock file
+	  */
+	unlink(lockpath);
+
+	return (0);
+} /* LockedFile() */
+
+static void
+WritePendingLines(char *filename)
+
+{
+	aPendingLine *ptmp;
+
+	if (!filename)
+		return;
+
+	while (PendingLines)
+	{
+		if (PendingLines->type == KLINE_TYPE)
+		{
+			WriteKline(filename,
+				PendingLines->sptr,
+				PendingLines->rcptr,
+				PendingLines->user,
+				PendingLines->host,
+				PendingLines->reason,
+				PendingLines->when);
+		}
+		else
+		{
+			WriteDline(filename,
+				PendingLines->sptr,
+				PendingLines->host,
+				PendingLines->reason,
+				PendingLines->when);
+		}
+
+		/*
+		 * Delete the K/D line from the list after we write
+		 * it out to the conf
+		 */
+		ptmp = PendingLines->next;
+		DelPending(PendingLines);
+		PendingLines = ptmp;
+	} /* while (PendingLines) */
+} /* WritePendingLines() */
+
+/*
+WriteKline()
+ Write out a kline to the kline configuration file
+*/
+
+static void
+WriteKline(char *filename, aClient *sptr, aClient *rcptr,
+           char *user, char *host, char *reason, char *when)
+
+{
+	char buffer[1024];
+	int out;
+
+	if (!filename)
+		return;
+
+	if ((out = open(filename, O_RDWR|O_APPEND|O_CREAT, 0644)) == (-1))
+	{
+		sendto_realops("Error opening %s: %s",
+			filename,
+			strerror(errno));
+		return;
+	}
+
+#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
+	fchmod(out, 0660);
+#endif
+
+#ifdef SLAVE_SERVERS
+	if (IsServer(sptr))
+	{
+		if (rcptr)
+			ircsprintf(buffer,
+				"#%s!%s@%s from %s K'd: %s@%s:%s\n",
+				rcptr->name,
+				rcptr->username,
+				rcptr->host,
+				sptr->name,
+				user,
+				host,
+				reason);
+	}
+	else
+#endif /* SLAVE_SERVERS */
+	{
+		ircsprintf(buffer,
+			"#%s!%s@%s K'd: %s@%s:%s\n",
+			sptr->name,
+			sptr->username,
+			sptr->host,
+			user, host,
+			reason);
+	}
+
+	if (safe_write(sptr, filename, out, buffer) == (-1))
+		return;
+
+	ircsprintf(buffer, "K:%s:%s (%s):%s\n",
+		host,
+		reason,
+		when,
+		user);
+
+	if (safe_write(sptr, filename, out, buffer) == (-1))
+		return;
+
+	(void) close(out);
+} /* WriteKline() */
+
+/*
+WriteDline()
+ Write out a dline to the kline configuration file
+*/
+
+static void
+WriteDline(char *filename, aClient *sptr,
+           char *host, char *reason, char *when)
+
+{
+	char buffer[1024];
+	int out;
+
+	if (!filename)
+		return;
+
+	if ((out = open(filename, O_RDWR|O_APPEND|O_CREAT, 0644)) == (-1))
+	{
+		sendto_realops("Error opening %s: %s",
+			filename,
+			strerror(errno));
+		return;
+	}
+
+#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
+	fchmod(out, 0660);
+#endif
+
+	ircsprintf(buffer,
+		"#%s!%s@%s D'd: %s:%s (%s)\n",
+		sptr->name,
+		sptr->username,
+		sptr->host,
+		host,
+		reason,
+		when);
+
+	if (safe_write(sptr, filename, out, buffer) == (-1))
+		return;
+
+	ircsprintf(buffer, "D:%s:%s (%s)\n",
+		host,
+		reason,
+		when);
+
+	if (safe_write(sptr, filename, out, buffer) == (-1))
+		return;
+
+	(void) close(out);
+} /* WriteDline() */
+
+/*
  * m_kline()
  *
  * re-worked a tad ... -Dianora
@@ -93,7 +373,8 @@ extern char *small_file_date(time_t);  /* defined in s_misc.c */
  * -Dianora
  */
 
-int     m_kline(aClient *cptr,
+int
+m_kline(aClient *cptr,
 		aClient *sptr,
 		int parc,
 		char *parv[])
@@ -115,6 +396,8 @@ int     m_kline(aClient *cptr,
   char *argv;
   unsigned long ip;
   unsigned long ip_mask;
+  char *kconf; /* kline conf file */
+
 #ifdef SLAVE_SERVERS
   char *slave_oper;
   aClient *rcptr=NULL;
@@ -427,23 +710,87 @@ int     m_kline(aClient *cptr,
   else
     add_mtrie_conf_entry(aconf,CONF_KILL);
 
+	sendto_realops("%s added K-Line for [%s@%s] [%s]",
+		sptr->name,
+		user,
+		host,
+		reason);
+
+#ifdef USE_SYSLOG
+
+	syslog(LOG_NOTICE,
+		"%s added K-Line for [%s@%s] [%s]",
+		sptr->name,
+		user,
+		host,
+		reason);
+
+#endif /* USE_SYSLOG */
+
+	kconf = get_conf_name(KLINE_TYPE);
+
+	/*
+	 * Check if the conf file is locked - if so, add the kline
+	 * to our pending kline list, to be written later, if not,
+	 * allow this kline to be written, and write out all other
+	 * pending klines as well
+	 */
+	if (LockedFile(kconf))
+	{
+		aPendingLine *pptr;
+
+		pptr = AddPending();
+
+		/*
+		 * Now fill in the fields
+		 */
+		pptr->type = KLINE_TYPE;
+		pptr->sptr = sptr;
+		pptr->user = strdup(user);
+		pptr->host = strdup(host);
+		pptr->reason = strdup(reason);
+		pptr->when = strdup(current_date);
+
+	#ifdef SLAVE_SERVERS
+		pptr->rcptr = rcptr;
+	#else
+		pptr->rcptr = (aClient *) NULL;
+	#endif
+
+		sendto_one(sptr,
+			":%s NOTICE %s :Added K-Line [%s@%s] (config file write delayed)",
+			me.name,
+			sptr->name,
+			user,
+			host);
+
+		return 0;
+	}
+	else if (PendingLines)
+		WritePendingLines(kconf);
+
+	sendto_one(sptr,
+		":%s NOTICE %s :Added K-Line [%s@%s] to %s",
+		me.name,
+		sptr->name,
+		user,
+		host,
+		kconf ? kconf : "configuration file");
+
+	/*
+	 * Write kline to configuration file
+	 */
 #ifdef SLAVE_SERVERS
-  write_kline_or_dline_to_conf_and_notice_opers( KLINE_TYPE,
-						 sptr, rcptr,
-						 user, host, reason,
-						 current_date);
+	WriteKline(kconf, sptr, rcptr, user, host, reason, current_date);
 #else
-  write_kline_or_dline_to_conf_and_notice_opers( KLINE_TYPE,
-						 sptr, NULL,
-						 user, host, reason,
-						 current_date);
+	WriteKline(kconf, sptr, (aClient *) NULL, user, host, reason, current_date);
 #endif
 
   rehashed = YES;
   dline_in_progress = NO;
   nextping = timeofday;
   return 0;
-}
+} /* m_kline() */
 
 /*
  * isnumber()
@@ -607,10 +954,9 @@ static char *cluster(char *hostname)
  * -Dianora
  */
 
-int     m_dline(aClient *cptr,
-		aClient *sptr,
-		int parc,
-		char *parv[])
+int
+m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
+
 {
   char *host, *reason;
   char *p;
@@ -621,6 +967,7 @@ int     m_dline(aClient *cptr,
   aConfItem *aconf;
   char buffer[1024];
   char *current_date;
+  char *dconf;
 
   if (!MyClient(sptr) || !IsAnOper(sptr))
     {
@@ -792,10 +1139,72 @@ int     m_dline(aClient *cptr,
 
   add_Dline(aconf);
 
-  write_kline_or_dline_to_conf_and_notice_opers( DLINE_TYPE,
-						 sptr, NULL,
-						 NULL, host, reason,
-						 current_date);
+	sendto_realops("%s added D-Line for [%s] [%s]",
+		sptr->name,
+		host,
+		reason);
+
+#ifdef USE_SYSLOG
+
+	syslog(LOG_NOTICE,
+		"%s added D-Line for [%s] [%s]",
+		sptr->name,
+		host,
+		reason);
+
+#endif /* USE_SYSLOG */
+
+	dconf = get_conf_name(DLINE_TYPE);
+
+	/*
+	 * Check if the conf file is locked - if so, add the dline
+	 * to our pending dline list, to be written later, if not,
+	 * allow this dline to be written, and write out all other
+	 * pending lines as well
+	 */
+	if (LockedFile(dconf))
+	{
+		aPendingLine *pptr;
+
+		pptr = AddPending();
+
+		/*
+		 * Now fill in the fields
+		 */
+		pptr->type = DLINE_TYPE;
+		pptr->sptr = sptr;
+		pptr->rcptr = (aClient *) NULL;
+		pptr->user = (char *) NULL;
+		pptr->host = strdup(host);
+		pptr->reason = strdup(reason);
+		pptr->when = strdup(current_date);
+
+		sendto_one(sptr,
+			":%s NOTICE %s :Added D-Line [%s] (config file write delayed)",
+			me.name,
+			sptr->name,
+			host);
+
+		return 0;
+	}
+	else if (PendingLines)
+		WritePendingLines(dconf);
+
+	sendto_one(sptr,
+		":%s NOTICE %s :Added D-Line [%s] to %s",
+		me.name,
+		sptr->name,
+		host,
+		dconf ? dconf : "configuration file");
+
+	/*
+	 * Write dline to configuration file
+	 */
+	WriteDline(dconf,
+		sptr,
+		host,
+		reason,
+		current_date);
 
   /*
   ** I moved the following 2 lines up here
@@ -808,7 +1217,7 @@ int     m_dline(aClient *cptr,
   dline_in_progress = YES;
   nextping = timeofday;
   return 0;
-}
+} /* m_dline() */
 
 
 /*
