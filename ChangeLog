@@ -1,3 +1,7 @@
+*** 20011204_11 by androsyn
+Added the cname_count crap to support classes in-addr resolution.
+
+
 *** 20011204_10 by androsyn
 Cleaned up some stuff.  Got rid of the leaking dns queries as well.
 
