@@ -1,5 +1,5 @@
 #!/bin/sh
 dd if=/dev/urandom of=randdata count=1 bs=2048
-/usr/local/ssl/bin/openssl genrsa -rand randdata -out private.key 2048
-/usr/local/ssl/bin/openssl rsa -in private.key -out public.key -pubout
+openssl genrsa -rand randdata -out private.key 2048
+openssl rsa -in private.key -out public.key -pubout
 rm randdata
