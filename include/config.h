@@ -709,6 +709,63 @@
 
 #undef NO_PRIORITY
 
+/* LITTLE_I_LINE support
+ * clients with a little i instead of an I in their I line
+ * can be chanopped, but cannot chanop anyone else.
+ */
+#define LITTLE_I_LINES
+
+/* ----------------- not approved on EFnet section -------------------- 
+ *
+ * if you are not an efnet admin, you might want to define some of
+ * these.. --fl_
+ */
+
+/* GLINES - global Kline-like bans
+ * Define this if you want GLINE support
+ * when this is defined, 3 completely different opers from
+ * three different servers must do the identical GLINE in order
+ * for the G line to take effect.
+ */
+#undef GLINES
+#define GLINEFILE       "gline.log"
+
+/* GLINE_TIME - local expire time for GLINES
+ * As configured here, a GLINE will last 12 hours
+ */
+#define GLINE_TIME      (12*3600)
+
+/* Ignore bogus timestamps from other servers. Yes this will desync
+ * the network, but it will allow chanops to resync with a valid non TS 0
+ */
+#undef IGNORE_BOGUS_TS
+
+/* CHANMODE_E
+ * /mode #channel +e allows you to add exceptions to bans.
+ * very useful if a friend has to use an aol.com account for a few days.
+ * e.g. You can continue to ban *.aol.com but allow an exception for them.
+ *
+ * Note, +e will NEVER be sent to a server that does not understand it.
+ *
+ * +e is supported by dalnet, ircnet, undernet but not EFNet atm. (june 9
+ * 2001)
+ */
+/* If you are not on EFNet it is recommended you define this.. --fl_ */
+/* #undef'ing this will NOT stop modes passing through your server,
+ * it will only stop them being used/set on your server.  This is to
+ * stop server "+e patches" and desyncs across a hub where leaf servers
+ * +e lists differ.   --fl_
+ */
+#undef CHANMODE_E
+
+/* USE_KNOCK
+ * KNOCK allows users to send a "knock" to a +i channel.
+ */
+#undef USE_KNOCK
+
+/* -------------- END NOT APPROVED ON EFNET SECTION --------------------- */
+
+
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 
 /* You shouldn't change anything below this line, unless absolutely needed. */
@@ -947,56 +1004,6 @@
  */
 #define USE_RCS
 
-/* ----------------- not approved on EFnet section -------------------- */
-/* GLINES - global Kline-like bans
- * Define this if you want GLINE support
- * when this is defined, 3 completely different opers from
- * three different servers must do the identical GLINE in order
- * for the G line to take effect.
- */
-#undef GLINES
-#define GLINEFILE       "gline.log"
-
-/* GLINE_TIME - local expire time for GLINES
- * As configured here, a GLINE will last 12 hours
- */
-#define GLINE_TIME      (12*3600)
-
-/* Ignore bogus timestamps from other servers. Yes this will desync
- * the network, but it will allow chanops to resync with a valid non TS 0
- */
-#undef IGNORE_BOGUS_TS
-
-/* CHANMODE_E
- * /mode #channel +e allows you to add exceptions to bans.
- * very useful if a friend has to use an aol.com account for a few days.
- * e.g. You can continue to ban *.aol.com but allow an exception for them.
- *
- * Note, +e will NEVER be sent to a server that does not understand it.
- *
- * Moreover, it will also be automatically removed if it is abused. 
- * The server understanding a +e will remove the +e exemption if an user
- * who is banned is then kicked. 
- *
- * +e is supported by dalnet, ircnet, undernet but not EFNet atm. (june 9 2001)
- */
-#undef CHANMODE_E
-
-/* USE_KNOCK
- * KNOCK allows users to send a "knock" to a +i channel.
- * It is not approved on EFNet at the moment.
- */
-#undef USE_KNOCK
-
-/*
- * This can lead to odd desyncs. So has been moved into the
- * not approved for EFNet section for now.
- *
- * LITTLE_I_LINE support
- * clients with a little i instead of an I in their I line
- * can be chanopped, but cannot chanop anyone else.
- */
-#undef LITTLE_I_LINES
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MAX_CLIENTS INIT_MAXCLIENTS
