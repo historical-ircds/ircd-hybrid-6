@@ -1,3 +1,10 @@
+*** 19991009_1 by lusky
+added -DNDEBUG back to CFLAGS (jl)
+put channel topic back before names (db)
+another umode hack fix (db)
+fixed a broken cast for IRIX (jl)
+
+
 *** 19990928_1 by lusky
 another +o hack fix (db)
 
