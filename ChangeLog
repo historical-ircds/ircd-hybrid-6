@@ -1,3 +1,8 @@
+*** 20010218_1 by lusky
+- revved patchlevel to 6.0.2
+- CLIENT_SERVER was missing from config.h
+
+
 *** 20010110_2 by lusky
 - revved patchlevel to 6.0.1
 
