@@ -120,4 +120,7 @@ void set_log_level(int level)
     logLevel = level;
 }
 
-
+int get_log_level(void)
+{
+  return( logLevel );
+}

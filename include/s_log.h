@@ -32,6 +32,7 @@
 
 extern void init_log(const char* filename);
 extern void close_log(void);
+extern int  get_log_level(void);
 extern void set_log_level(int level);
 extern void log(int priority, const char* fmt, ...);
 

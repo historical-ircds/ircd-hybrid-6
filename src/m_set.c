@@ -32,6 +32,7 @@
 #include "send.h"
 #include "common.h"   /* for NO */
 #include "channel.h"  /* for server_was_split */
+#include "s_log.h"
 
 #include <stdlib.h>  /* atoi */
 
@@ -124,7 +125,8 @@
 #define TOKEN_SPLITUSERS 10
 #define TOKEN_SPAMNUM 11
 #define TOKEN_SPAMTIME 12
-#define TOKEN_BAD 13
+#define TOKEN_LOG 13
+#define TOKEN_BAD 14
 
 static char *set_token_table[] = {
   "MAX",
@@ -140,6 +142,7 @@ static char *set_token_table[] = {
   "SPLITUSERS",
   "SPAMNUM",
   "SPAMTIME",
+  "LOG",
   NULL
 };
 
@@ -545,6 +548,31 @@ int m_set(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
           return 0;
           break;
 #endif
+        case TOKEN_LOG:
+          if(parc > 2)
+            {
+              int newval = atoi(parv[2]);
+
+              if(newval < L_WARN)
+                {
+                  sendto_one(sptr, ":%s NOTICE %s :LOG must be > %d (L_WARN)",
+                             me.name, parv[0], L_WARN);
+                  return 0;
+                }
+              if(newval > L_DEBUG)
+                newval = L_DEBUG;
+              set_log_level(newval); 
+              sendto_realops("%s has changed LOG level to %i",
+                             parv[0], newval);
+            }
+          else
+            {
+              sendto_one(sptr, ":%s NOTICE %s :LOG level is currently %i",
+                         me.name, parv[0], get_log_level());
+            }
+          return 0;
+          break;
+
         default:
         case TOKEN_BAD:
           break;
@@ -572,6 +600,8 @@ int m_set(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   sendto_one(sptr, ":%s NOTICE %s :Options: IDLETIME",
              me.name, parv[0]);
 #endif
+  sendto_one(sptr, ":%s NOTICE %s :Options: LOG",
+             me.name, parv[0]);
   return 0;
 }
 
