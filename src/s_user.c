@@ -1903,10 +1903,17 @@ static	int	m_message(aClient *cptr,
 	return 0;
 #endif
 #endif
-      parv[1] = canonize(parv[1]);
+      /* As Mortiis points out, if there is only one target,
+       * the call to canonize is silly
+       */
+      /*      parv[1] = canonize(parv[1]); */
     }
+  /* 
+   * If the target contains a , it will barf tough.
+   */
 
-  nick = strtoken(&p, parv[1], ",");
+  /*  nick = strtoken(&p, parv[1], ",");*/
+  nick = parv[1];
 
   sptr->since += 4;
     
@@ -2490,7 +2497,6 @@ int	m_whois(aClient *cptr,
   for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)
     {
       int	invis, showperson, member, wilds;
-      
       found = 0;
       (void)collapse(nick);
       wilds = (strchr(nick, '?') || strchr(nick, '*'));
