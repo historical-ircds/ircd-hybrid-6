@@ -464,10 +464,11 @@ static	int	register_user(aClient *cptr,
 
   reason = (char *)NULL;
 
+#define NOT_AUTHORIZED (-1)
 #define SOCKET_ERROR (-2)
 #define I_LINE_FULL (-3)
-#define NOT_AUTHORIZED (-4)
-#define KLINED_CLIENT (-5)
+#define I_LINE_FULL2 (-4)
+#define BANNED_CLIENT (-5)
 
   if (MyConnect(sptr))
     {
@@ -478,6 +479,7 @@ static	int	register_user(aClient *cptr,
 	  break;
 
 	case I_LINE_FULL:
+	case I_LINE_FULL2:
 	sendto_realops_lev(FULL_LEV, "%s for %s.",
 			   "I-line is full", get_client_host(sptr));
 #ifdef USE_SYSLOG
@@ -490,23 +492,35 @@ static	int	register_user(aClient *cptr,
 	  break;
 
 	case NOT_AUTHORIZED:
-	  ircstp->is_ref++;
 
-	  sendto_realops_lev(CCONN_LEV, "%s from %s [%s].",
-			     "Unauthorized client connection",
-			     get_client_host(sptr),
-			     inetntoa((char *)&sptr->ip));
+#ifdef REJECT_HOLD
 
-#ifdef USE_SYSLOG
-	  syslog(LOG_INFO,"%s from %s.",
-		 "Unauthorized client connection", get_client_host(sptr));
+	  /* Slow down the reconnectors who are rejected */
+	  if( (reject_held_fds != REJECT_HELD_MAX ) )
+	    {
+	      SetRejectHold(cptr);
+	      reject_held_fds++;
+	      return 0;
+	    }
+	  else
 #endif
-	  ircstp->is_ref++;
-	  return exit_client(cptr, sptr, &me,
-			     "You are not authorized to use this server");
+	    {
+	      ircstp->is_ref++;
+	      sendto_realops_lev(CCONN_LEV, "%s from %s [%s].",
+				 "Unauthorized client connection",
+				 get_client_host(sptr),
+				 inetntoa((char *)&sptr->ip));
+#ifdef USE_SYSLOG
+	      syslog(LOG_INFO,"%s from %s.",
+		     "Unauthorized client connection", get_client_host(sptr));
+#endif
+	      ircstp->is_ref++;
+	      return exit_client(cptr, sptr, &me,
+				 "You are not authorized to use this server");
+	    }
 	  break;
 
-	case KLINED_CLIENT:
+	case BANNED_CLIENT:
 	  {
 	    if(sptr->user)
 	      {
@@ -527,6 +541,9 @@ static	int	register_user(aClient *cptr,
 		return exit_client(cptr, sptr, &me,
 				   "Banned" );
 	      }
+	    else
+	      return 0;
+
 	    break;
 	  }
 	default:

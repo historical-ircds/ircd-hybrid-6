@@ -288,16 +288,6 @@ CT	      strncpyzt(cptr->sockhost,"oper.",sizeof(cptr->sockhost));
 	}
     }
 
-  /* Slow down the reconnectors who are rejected */
-
-#ifdef REJECT_HOLD
-  if( (reject_held_fds != REJECT_HELD_MAX ) )
-    {
-      SetRejectHold(cptr);
-      reject_held_fds++;
-    }
-#endif
-
   return -1;	/* -1 on no match *bleh* */
 }
 

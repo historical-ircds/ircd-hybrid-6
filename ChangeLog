@@ -1,6 +1,16 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b87 26-Jun-1999
+* enough changes to merit a patchlevel update
+* rewrote s_user.c register_user
+* removed a ton of useless defines, made them default
+-Dianora
+	
+version hybrid-6-b86 2[2-5]-Jun-1999
+* never released	
+-Dianora
+	
 version hybrid-6-b85 21-Jun-1999
 * worked on serial number some more..
 * fixed a few compile warnings related to the s_serv.c split
