@@ -100,7 +100,7 @@ m_info.o: m_info.c ../include/struct.h ../include/config.h \
  ../include/common.h ../include/irc_string.h ../include/numeric.h \
  ../include/msg.h ../include/channel.h ../include/send.h \
  ../include/fdlist.h ../include/h.h ../include/ircd.h \
- ../include/s_user.h
+ ../include/s_user.h ../include/m_info.h
 m_kline.o: m_kline.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../zlib/zlib.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \
