@@ -1,3 +1,12 @@
+*** 20010619_5 by leeh
+- added NO_FAKE_GLINES, to stop spoofed glines
+- heavy work on mo_gline(), not checking remote glines for invalid chars,
+  or even for how many wildcard strings they have is *bad* so I added
+  invalid_gline() and invalid_wildcard()
+
+  the code is a bit messy.. someone should audit this
+
+
 *** 20010619_4 by wcampbel
 Added a blank line at the bottom to attempt to correct the permissions
 
