@@ -503,8 +503,6 @@ static  int     cancel_clients(aClient *cptr,
    * kill all possible points that are causing confusion here,
    * I'm not sure I've got this all right...
    * - avalon
-   *
-   * knowing avalon, probably not.
    */
 
   /*
