@@ -1,3 +1,11 @@
+*** 20010603_7 by greg
+Some trivial, some not so trivial.
+
+- make n/N show up in /stats p even if not in O line
+- add more info to umode +x server intro. msg
+- add server split notices to umode +x (a-la +ins patch)
+
+
 *** 20010603_6 by db
 - don't show spoofs even to opers if SPOOF_NOTICE is not set
 
