@@ -22,6 +22,8 @@ AC_PROG_INSTALL
 dnl Checks for libraries.
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_FUNC(crypt,, AC_CHECK_LIB(descrypt, crypt,,AC_CHECK_LIB(crypt, crypt,,)))
+AC_CHECK_FUNC(inet_ntoa,, AC_CHECK_LIB(nsl, inet_ntoa,,))
+AC_CHECK_FUNC(inet_aton,, AC_CHECK_LIB(resolv, inet_aton,,))
 
 dnl Checks for header files.
 AC_HEADER_STDC
