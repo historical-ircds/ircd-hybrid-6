@@ -1,3 +1,16 @@
+leeh        2001/12/15 11:24:12 EST	(20011215_1)
+
+  Modified files:
+    src                  m_gline.c s_conf.c 
+  Log:
+  - removed a couple of ""'s
+  
+  Revision  Changes    Path
+  1.50      +1 -1      ircd-hybrid-6/src/m_gline.c
+  1.233     +1 -1      ircd-hybrid-6/src/s_conf.c
+
+
+
 db          2001/12/14 21:42:06 EST	(20011215_0)
 
   Modified files:
