@@ -193,13 +193,8 @@ static	int	add_banid(aClient *cptr, aChannel *chptr, char *banid)
 
   for (ban = chptr->banlist; ban; ban = ban->next)
     {
-#ifdef BAN_INFO
-      len += strlen(ban->value.banptr->banstr);
-#else
-      len += strlen(ban->value.cp);
-#endif
+      len = strlen(BANSTR(ban));
 
-#ifdef BAN_INFO
       if (MyClient(cptr))
 	{
 	  if((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
@@ -209,29 +204,12 @@ static	int	add_banid(aClient *cptr, aChannel *chptr, char *banid)
 			 chptr->chname, banid);
 	      return -1;
 	    }
-	  if(!match(ban->value.banptr->banstr, banid) ||
-	     !match(banid,ban->value.banptr->banstr))
+	  if(!match(BANSTR(ban), banid) ||
+	     !match(banid,BANSTR(ban)))
 	    return -1;
 	}
-      else if (!mycmp(ban->value.banptr->banstr, banid))
+      else if (!mycmp(BANSTR(ban), banid))
 	return -1;
-#else
-      if (MyClient(cptr))
-	{
-	  if((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
-	    {
-	      sendto_one(cptr, err_str(ERR_BANLISTFULL),
-			 me.name, cptr->name,
-			 chptr->chname, banid);
-	      return -1;
-	    }
-	  if(!match(ban->value.cp, banid) ||
-	     !match(banid, ban->value.cp))
-	    return -1;
-	}
-      else if (!mycmp(ban->value.cp, banid))
-	return -1;
-#endif
     }
 
   ban = make_link();
@@ -1295,19 +1273,18 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key)
     }
 #endif
 
-  if (is_banned(sptr, chptr))
-    return (ERR_BANNEDFROMCHAN);
-  if (chptr->mode.mode & MODE_INVITEONLY)
-    {
-      for (lp = sptr->user->invited; lp; lp = lp->next)
-	if (lp->value.chptr == chptr)
-	  break;
-      if (!lp)
-	return (ERR_INVITEONLYCHAN);
-    }
-  
   if (*chptr->mode.key && (BadPtr(key) || mycmp(chptr->mode.key, key)))
     return (ERR_BADCHANNELKEY);
+
+  for (lp = sptr->user->invited; lp; lp = lp->next)
+    if (lp->value.chptr == chptr)
+      return 0;
+
+  if (is_banned(sptr, chptr))
+    return (ERR_BANNEDFROMCHAN);
+
+  if (chptr->mode.mode & MODE_INVITEONLY)
+    return (ERR_INVITEONLYCHAN);
   
   if (chptr->mode.limit && chptr->users >= chptr->mode.limit)
     return (ERR_CHANNELISFULL);
@@ -2260,9 +2237,12 @@ int	m_invite(aClient *cptr,
 	sendto_one(sptr, rpl_str(RPL_AWAY), me.name, parv[0],
 		   acptr->name, acptr->user->away);
     }
+  /* I don't see any harm in allowing an invite chain entry to be
+   * made even if the channel isn't +i -Dianora
+   */
   if (MyConnect(acptr))
-    if (chptr && (chptr->mode.mode & MODE_INVITEONLY) &&
-	sptr->user && is_chan_op(sptr, chptr))
+    /*    if (chptr && (chptr->mode.mode & MODE_INVITEONLY) && */
+    if (chptr && sptr->user && is_chan_op(sptr, chptr))
       add_invite(acptr, chptr);
   sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s",parv[0],
 		    acptr->name, ((chptr) ? (chptr->chname) : parv[2]));
@@ -2301,19 +2281,23 @@ int	m_list(aClient *cptr,
       return 0;
     }
 
-  if (hunt_server(cptr, sptr, ":%s LIST %s %s", 2, parc, parv))
-    return 0;
+  /* anti flooding code */
+
+  if(IsAnOper(sptr))
+    if (hunt_server(cptr, sptr, ":%s LIST %s %s", 2, parc, parv))
+      return 0;
 
   name = strtoken(&p, parv[1], ",");
 
-  while(name)
+  /* while(name) */
+  if(name)
     {
       chptr = find_channel(name, NullChn);
       if (chptr && ShowChannel(sptr, chptr) && sptr->user)
 	sendto_one(sptr, rpl_str(RPL_LIST), me.name, parv[0],
 		   ShowChannel(sptr,chptr) ? name : "*",
 		   chptr->users, chptr->topic);
-      name = strtoken(&p, (char *)NULL, ",");
+      /*      name = strtoken(&p, (char *)NULL, ","); */
     }
   sendto_one(sptr, rpl_str(RPL_LISTEND), me.name, parv[0]);
   return 0;

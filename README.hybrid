@@ -1,4 +1,8 @@
-+hybrid-5.4 (9/14/98)
++hybrid-6 (9/19/98)
+- allow users who are invited to walk through any bans/limits (David-R)
+- disallow class -1 in conf file (David-R)
+- allow mode outside channel to see mode limit (David-R)
+- disabled the ability to set a ban including a prefixed colon (Dianora)
 - added kline matching on ip (CIDR) you can now kline
   user@ip.ip.ip.ip/mask (Dianora)
 - added ANTI_SPAMBOT_EXTRA (read config.h) added heuristics to catch

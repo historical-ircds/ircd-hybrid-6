@@ -60,6 +60,19 @@
 
 #define REPORT_DLINED   "NOTICE DLINE :*** You have been D-lined\n"
 
+/* sendheader from orabidoo TS4 */
+/* This needs rethinking.. problem is, client is not always unknown
+ * by the time this macro is seen. I think we will need to set a
+ * flag in flags2, something like "POTENTIAL_SERVER" and ignore sending
+ * the headers if its a potential server. The only fool proof way I can
+ * see for setting that flag is an entry in the "d-line" hash on the IP
+ * so it can be rapidly looked up after the accept()
+ * -Dianora
+ */
+#define sendheader(cptr, msg, len) do \
+   { if (IsUnknown(cptr)) send((cptr)->fd, (msg), (len), 0); } while(0)
+
+
 #include "hash.h"
 
 typedef	struct	ConfItem aConfItem;
@@ -97,7 +110,7 @@ typedef struct	MessageFileItem aMessageFile;
 #define	KEYLEN		23
 #define	BUFSIZE		512		/* WARNING: *DONT* CHANGE THIS!!!! */
 #define	MAXRECIPIENTS 	20
-#define	MAXBANS		25
+#define	MAXBANS		25	/* bans + exceptions together */
 #define	MAXBANLENGTH	1024
 
 #define OPERWALL_LEN    400		/* can be truncated on other servers */
@@ -685,7 +698,7 @@ typedef struct msg_tree
 
   - Dianora
 */
-typedef struct Ban
+typedef struct Ban	/* also used for exceptions -orabidoo */
 {
   char *banstr;
   char *who;
@@ -712,6 +725,13 @@ struct SLink
 };
 
 
+/* this should eliminate a lot of ifdef's in the main code... -orabidoo */
+#ifdef BAN_INFO
+#  define BANSTR(l)  ((l)->value.banptr->banstr)
+#else
+#  define BANSTR(l)  ((l)->value.cp)
+#endif
+
 /* channel structure */
 
 struct Channel
@@ -728,6 +748,7 @@ struct Channel
   Link	*members;
   Link	*invites;
   Link	*banlist;
+  Link  *exceptlist;	/* for future use */
   ts_val channelts;
   int locally_created;
 #ifdef FLUD
