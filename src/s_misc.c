@@ -628,7 +628,11 @@ char	*comment	/* Reason for the exit */
 		{
 		  next = acptr->next;
 		  if (IsServer(acptr) && acptr->from == sptr)
-		    exit_one_client(NULL, acptr, &me, me.name);
+		    {
+		      ts_warn("Dependent server %s not on llist!?", 
+		      	       acptr->name);
+		      exit_one_client(NULL, acptr, &me, me.name);
+		    }
 		}
 	    }
 	  else

@@ -2406,6 +2406,17 @@ int	m_whois(aClient *cptr,
   char	*p = NULL;
   int	found, len, mlen;
 
+  /* anti flooding code,
+   * I did have this in parse.c with a table lookup
+   * but I think this will be less inefficient doing it in each
+   * function that absolutely needs it
+   *
+   * flood control only =outgoing= whois in this case
+   * -Dianora
+   */
+
+  static time_t last_used=0L;
+
   if (parc < 2)
     {
       sendto_one(sptr, err_str(ERR_NONICKNAMEGIVEN),
@@ -2415,6 +2426,18 @@ int	m_whois(aClient *cptr,
 
   if (parc > 2)
     {
+      if(!IsAnOper(sptr))
+	{
+	  /* allow =incoming= requests
+	   * but rate limit outoing requests to 1 per MOTD_WAIT seconds
+	   */
+
+	  if((last_used + MOTD_WAIT) > NOW)
+	    return 0;
+	  else
+	    last_used = NOW;
+	}
+
       if (hunt_server(cptr,sptr,":%s WHOIS %s :%s", 1,parc,parv) !=
 	  HUNTED_ISME)
 	return 0;

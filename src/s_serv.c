@@ -2817,10 +2817,6 @@ int	m_time(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
-      /* reject non local requests */
-      if(!MyConnect(sptr))
-	return 0;
-
       if((last_used + MOTD_WAIT) > NOW)
 	return 0;
       else

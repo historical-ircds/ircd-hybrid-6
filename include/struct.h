@@ -772,6 +772,7 @@ struct Channel
 #define	CHFL_VOICE      0x0002 /* the power to speak */
 #define	CHFL_DEOPPED	0x0004 /* deopped by us, modes need to be bounced */
 #define	CHFL_BAN	0x0008 /* ban channel flag */
+#define CHFL_EXCEPTION  0x0010 /* exception to ban channel flag */
 
 /* Channel Visibility macros */
 
@@ -786,6 +787,7 @@ struct Channel
 #define	MODE_NOPRIVMSGS 0x0100
 #define	MODE_KEY	0x0200
 #define	MODE_BAN	0x0400
+#define MODE_EXCEPTION  0x0800
 
 #define	MODE_LIMIT	0x1000	/* was 0x0800 */
 #define	MODE_FLAGS	0x1fff	/* was 0x0fff */
@@ -797,7 +799,8 @@ struct Channel
 /*
  * mode flags which take another parameter (With PARAmeterS)
  */
-#define	MODE_WPARAS	(MODE_CHANOP|MODE_VOICE|MODE_BAN|MODE_KEY|MODE_LIMIT)
+#define	MODE_WPARAS (MODE_CHANOP|MODE_VOICE|MODE_BAN|\
+		     MODE_EXCEPTION|MODE_KEY|MODE_LIMIT)
 /*
  * Undefined here, these are used in conjunction with the above modes in
  * the source.

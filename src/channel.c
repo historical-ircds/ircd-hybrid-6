@@ -50,9 +50,11 @@ aChannel *channel = NullChn;
 
 static	void	add_invite (aClient *, aChannel *);
 static	int	add_banid (aClient *, aChannel *, char *);
+static	int	add_exceptid(aClient *, aChannel *, char *);
 static	int	can_join (aClient *, aChannel *, char *);
 static	void	channel_modes (aClient *, char *, char *, aChannel *);
 static	int	del_banid (aChannel *, char *);
+static	int	del_exceptid (aChannel *, char *);
 static	Link	*is_banned (aClient *, aChannel *);
 static	int	set_mode (aClient *, aClient *, aChannel *, int,
 			        char **, char *,char *);
@@ -60,6 +62,9 @@ static	void	sub1_from_channel (aChannel *);
 
 void	clean_channelname(unsigned char *);
 void	del_invite (aClient *, aChannel *);
+
+static char *pretty_mask(char *);
+static char *fix_key(char *);
 
 #ifdef ORATIMING
 struct timeval tsdnow, tsdthen; 
@@ -261,37 +266,144 @@ static	int	add_banid(aClient *cptr, aChannel *chptr, char *banid)
   return 0;
 }
 
+/* add_exceptid - add an id to the exception list for the channel  
+ * (belongs to cptr) 
+ */
+
+static	int	add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
+{
+  Reg	Link	*ex, *ban;
+  Reg	int	cnt = 0, len = 0;
+
+  if (MyClient(cptr))
+    {
+      for (ban = chptr->banlist; ban; ban = ban->next)
+	{
+	  len += strlen(BANSTR(ban));
+	  if (len > MAXBANLENGTH || ++cnt >= MAXBANS)
+		  return -1;
+	}
+    }
+
+  for (ex = chptr->exceptlist; ex; ex = ex->next)
+    {
+      len += strlen(BANSTR(ex));
+
+      if (MyClient(cptr) &&
+	  ((len > MAXBANLENGTH) || (++cnt >= MAXBANS) ||
+	   !match(BANSTR(ex), eid) ||
+	   !match(eid,BANSTR(ex))))
+	return -1;
+      else if (!mycmp(BANSTR(ex), eid))
+	return -1;
+    }
+
+  ex = make_link();
+  bzero((char *)ex, sizeof(Link));
+  ex->flags = CHFL_EXCEPTION;
+  ex->next = chptr->exceptlist;
+
+#ifdef BAN_INFO
+
+  ex->value.banptr = (aBan *)MyMalloc(sizeof(aBan));
+  ex->value.banptr->banstr = (char *)MyMalloc(strlen(eid)+1);
+  (void)strcpy(ex->value.banptr->banstr, eid);
+
+#ifdef USE_UH
+  if (IsPerson(cptr))
+    {
+      ex->value.banptr->who =
+	(char *)MyMalloc(strlen(cptr->name)+
+			 strlen(cptr->user->username)+
+			 strlen(cptr->user->host)+3);
+      (void)sprintf(ex->value.banptr->who, "%s!%s@%s",
+		    cptr->name, cptr->user->username, cptr->user->host);
+    }
+  else
+    {
+#endif
+      ex->value.banptr->who = (char *)MyMalloc(strlen(cptr->name)+1);
+      (void)strcpy(ex->value.banptr->who, cptr->name);
+#ifdef USE_UH
+    }
+#endif
+
+  ex->value.banptr->when = timeofday;
+
+#else
+
+  ex->value.cp = (char *)MyMalloc(strlen(eid)+1);
+  (void)strcpy(ex->value.cp, eid);
+
+#endif	/* #ifdef BAN_INFO */
+
+  chptr->exceptlist = ex;
+  return 0;
+}
+
 /*
  * del_banid - delete an id belonging to cptr
  * if banid is null, deleteall banids belonging to cptr.
+ *
+ * from orabidoo
  */
 static	int	del_banid(aChannel *chptr, char *banid)
 {
-	Reg Link **ban;
-	Reg Link *tmp;
+  register Link **ban;
+  register Link *tmp;
 
-	if (!banid)
-		return -1;
-	for (ban = &(chptr->banlist); *ban; ban = &((*ban)->next))
+  if (!banid)
+    return -1;
+  for (ban = &(chptr->banlist); *ban; ban = &((*ban)->next))
 #ifdef BAN_INFO
-                if (mycmp(banid, (*ban)->value.banptr->banstr)==0)
+    if (mycmp(banid, (*ban)->value.banptr->banstr)==0)
 #else
-	 	if (mycmp(banid, (*ban)->value.cp)==0)
+      if (mycmp(banid, (*ban)->value.cp)==0)
 #endif
-		    {
-			tmp = *ban;
-			*ban = tmp->next;
+	{
+	  tmp = *ban;
+	  *ban = tmp->next;
 #ifdef BAN_INFO
-                        MyFree(tmp->value.banptr->banstr);
-                        MyFree(tmp->value.banptr->who);
-			MyFree(tmp->value.banptr);
+	  MyFree(tmp->value.banptr->banstr);
+	  MyFree(tmp->value.banptr->who);
+	  MyFree(tmp->value.banptr);
 #else
-			MyFree(tmp->value.cp);
+	  MyFree(tmp->value.cp);
 #endif
-			free_link(tmp);
-			break;
-		    }
-	return 0;
+	  free_link(tmp);
+	  break;
+	}
+  return 0;
+}
+
+/*
+ * del_exceptid - delete an id belonging to cptr
+ *
+ * from orabidoo
+ */
+static	int	del_exceptid(aChannel *chptr, char *eid)
+{
+  register Link **ex;
+  register Link *tmp;
+
+  if (!eid)
+    return -1;
+  for (ex = &(chptr->exceptlist); *ex; ex = &((*ex)->next))
+    if (mycmp(eid, BANSTR(*ex)) == 0)
+      {
+	tmp = *ex;
+	*ex = tmp->next;
+#ifdef BAN_INFO
+	MyFree(tmp->value.banptr->banstr);
+	MyFree(tmp->value.banptr->who);
+	MyFree(tmp->value.banptr);
+#else
+	MyFree(tmp->value.cp);
+#endif
+	free_link(tmp);
+	break;
+      }
+  return 0;
 }
 
 /*
@@ -299,11 +411,14 @@ static	int	del_banid(aChannel *chptr, char *banid)
  *
  * IP_BAN_ALL from comstud
  * always on...
+ *
+ * +e code from orabidoo
  */
 
 static	Link	*is_banned(aClient *cptr,aChannel *chptr)
 {
-  Reg	Link	*tmp;
+  register Link	*tmp;
+  register Link *t2;
   char	s[NICKLEN+USERLEN+HOSTLEN+6];
   char  *s2;
 
@@ -315,17 +430,18 @@ static	Link	*is_banned(aClient *cptr,aChannel *chptr)
   s2 = make_nick_user_host(cptr->name, cptr->user->username,
 			   cptr->hostip);
 
-#ifdef BAN_INFO
   for (tmp = chptr->banlist; tmp; tmp = tmp->next)
-    if ((match(tmp->value.banptr->banstr, s) == 0) ||
-	(match(tmp->value.banptr->banstr, s2) == 0) )
+    if ((match(BANSTR(tmp), s) == 0) ||
+	(match(BANSTR(tmp), s2) == 0) )
       break;
-#else
-  for (tmp = chptr->banlist; tmp; tmp = tmp->next)
-    if ((match(tmp->value.cp, s) == 0) ||
-	(match(tmp->value.cp, s2) == 0) )
-      break;
-#endif
+
+  if (tmp)
+    {
+      for (t2 = chptr->exceptlist; t2; t2 = t2->next)
+	if ((match(BANSTR(t2), s) == 0) ||
+	    (match(BANSTR(t2), s2) == 0))
+	  return NULL;
+    }
   return (tmp);
 }
 
@@ -498,6 +614,14 @@ static	void	channel_modes(aClient *cptr,
   return;
 }
 
+/*
+ * only used to send +b and +e now 
+ *
+ * unlike orabidoo, I'm going to send the exception list in all
+ * cases, and well, just let our uplink toss them if it doesn't
+ * understand them.
+ */
+
 static	void	send_mode_list(aClient *cptr,
 			       char *chname,
 			       Link *top,
@@ -515,14 +639,8 @@ static	void	send_mode_list(aClient *cptr,
     {
       if (!(lp->flags & mask))
 	continue;
-      if (mask == CHFL_BAN)
-#ifdef BAN_INFO
-	name = lp->value.banptr->banstr;
-#else
-        name = lp->value.cp;
-#endif
-      else
-	name = lp->value.cptr->name;
+      name = BANSTR(lp);
+	
       if (strlen(parabuf) + strlen(name) + 10 < (size_t) MODEBUFLEN)
 	{
 	  (void)strcat(parabuf, " ");
@@ -633,8 +751,17 @@ void	send_channel_modes(aClient *cptr, aChannel *chptr)
   *parabuf = '\0';
   *modebuf = '+';
   modebuf[1] = '\0';
-  send_mode_list(cptr, chptr->chname, chptr->banlist, CHFL_BAN,
-		 'b');
+  send_mode_list(cptr, chptr->chname, chptr->banlist, CHFL_BAN,'b');
+
+  if (modebuf[1] || *parabuf)
+    sendto_one(cptr, ":%s MODE %s %s %s",
+	       me.name, chptr->chname, modebuf, parabuf);
+
+  *parabuf = '\0';
+  *modebuf = '+';
+  modebuf[1] = '\0';
+  send_mode_list(cptr, chptr->chname, chptr->exceptlist, CHFL_EXCEPTION,'e');
+
   if (modebuf[1] || *parabuf)
     sendto_one(cptr, ":%s MODE %s %s %s",
 	       me.name, chptr->chname, modebuf, parabuf);
@@ -717,6 +844,43 @@ int	m_mode(aClient *cptr,
   return 0;
 }
 
+/* stolen from Undernet's ircd  -orabidoo
+ *
+ */
+
+static	char	*pretty_mask(char *mask)
+{
+  register	char	*cp, *user, *host;
+
+  if ((user = index((cp = mask), '!')))
+    *user++ = '\0';
+  if ((host = rindex(user ? user : cp, '@')))
+    {
+      *host++ = '\0';
+      if (!user)
+	return make_nick_user_host(NULL, cp, host);
+    }
+  else if (!user && index(cp, '.'))
+    return make_nick_user_host(NULL, NULL, cp);
+  return make_nick_user_host(cp, user, host);
+}
+
+static	char	*fix_key(char *arg)
+{
+  Reg	u_char	*s, *t, c;
+
+  /* No more stripping the 8th bit or checking
+  ** for the +k bug... it's long dead.  -orab
+  */
+  for (s = t = (u_char *)arg; (c = *s); s++)
+    {
+      if (c != ':' && c > 0x20 && (c < 0x7f || c > 0xa0))
+	*t++ = c;
+    }
+  *t = '\0';
+  return arg;
+}
+
 /*
  * Check and try to apply the channel modes passed in the parv array for
  * the client ccptr to channel chptr.  The resultant changes are printed
@@ -747,11 +911,12 @@ static	int	set_mode(aClient *cptr,
   Reg	int	ip;
   u_int	whatt = MODE_ADD;
   int	limitset = 0, count = 0, chasing = 0;
-  int	nusers = 0, ischop, isok, isdeop, new, len;
+  int	nusers = 0, ischop, isok, isdeop, new, len, length_of_arg;
   int	keychange = 0, opcnt = 0;
   char	fm = '\0';
   aClient *who;
   Mode	*mode, oldm;
+  char *arg;
 
   *mbuf = *pbuf = '\0';
   if (parc < 1)
@@ -783,6 +948,19 @@ static	int	set_mode(aClient *cptr,
 	  *parv = check_string(*parv);
 	  if (MyClient(sptr) && opcnt >= MAXMODEPARAMS)
 	    break;
+
+	  /* You have to be on channel before you can op or voice
+	   * -Dianora
+	   */
+
+	  if (MyClient(sptr) && !IsMember(sptr, chptr))
+	    {
+	      sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
+			 me.name,
+			 sptr->name,
+			 chptr->chname);
+	      break;
+	    }
 	  /*
 	   * Check for nickname changes and try to follow these
 	   * to make sure the right client is affected by the
@@ -860,39 +1038,20 @@ static	int	set_mode(aClient *cptr,
 	  break;
 	case 'k':
 	  if (--parc <= 0)
-	    break;
-	  parv++;
+	    {
+	      /* allow arg-less mode -k */
+	      if (whatt == MODE_DEL)
+		arg = "*";
+	      else
+		break;
+	    }
+	  else
+	    arg = fix_key(check_string(*++parv));
+
 	  /* check now so we eat the parameter if present */
 	  if (keychange)
 	    break;
-	  *parv = check_string(*parv);
-	  {
-	    u_char	*s, *t;
-	    int abuse = NO;
-	    
-	    for (s = t = (u_char *)*parv; *s; s++)
-	      {
-		if (*s > 0x7f && *s <= 0xa0)
-		  abuse = YES;
-		*s &= 0x7f;
-		if (*s > (u_char)' ' && *s != ':')
-		  *t++ = *s;
-	      }
-	    *t = '\0';
-	    if (abuse)
-	      {
-                if(MyClient(sptr))
-		  {
-                    return exit_client(sptr, sptr, &me,
-                                  "Trying to abuse +k bug");
- 		  }
-		else
-	          sendto_ops("User %s trying to abuse +k bug",
-			 sptr->name);
-                return 0;
-              }
-	    if (t == (u_char *)*parv) break;
-	  }
+
 	  if (MyClient(sptr) && opcnt >= MAXMODEPARAMS)
 	    break;
 	  if (!fm)
@@ -909,7 +1068,7 @@ static	int	set_mode(aClient *cptr,
 		       (!*mode->key || IsServer(cptr)))
 		{
 		  lp = &chops[opcnt++];
-		  lp->value.cp = *parv;
+		  lp->value.cp = arg;
 		  if (strlen(lp->value.cp) >
 		      (size_t) KEYLEN)
 		    lp->value.cp[KEYLEN] = '\0';
@@ -919,7 +1078,7 @@ static	int	set_mode(aClient *cptr,
 	    }
 	  else if (whatt == MODE_DEL)
 	    {
-	      if (isok && (mycmp(mode->key, *parv) == 0 ||
+	      if (isok && (mycmp(mode->key, arg) == 0 ||
 			     IsServer(cptr)))
 		{
 		  lp = &chops[opcnt++];
@@ -930,6 +1089,77 @@ static	int	set_mode(aClient *cptr,
 	    }
 	  count++;
 	  break;
+
+	  /* Roger (orabidoo) had +e combined with +b
+	   * just harder to read IMO, so I have separated it
+	   * -Dianora
+	   */
+	case 'e':
+	  if (--parc <= 0)
+	    {
+#ifdef BAN_INFO
+	      for (lp = chptr->exceptlist; lp; lp = lp->next)
+		sendto_one(cptr, rpl_str(RPL_EXCEPTLIST),
+			   me.name, cptr->name,
+			   chptr->chname,
+			   lp->value.banptr->banstr,
+			   lp->value.banptr->who,
+			   lp->value.banptr->when);
+#else 
+	      for (lp = chptr->exceptlist; lp; lp = lp->next)
+		sendto_one(cptr, rpl_str(RPL_EXCEPTLIST),
+			   me.name, cptr->name,
+			   chptr->chname,
+			   lp->value.cp);
+#endif
+	      sendto_one(cptr, rpl_str(RPL_ENDOFEXCEPTLIST),
+			 me.name, cptr->name, chptr->chname);
+	      break;
+	    }
+       
+	  parv++;
+	  if (BadPtr(*parv))
+	    break;
+	  if (MyClient(sptr) && opcnt >= MAXMODEPARAMS)
+	    break;
+
+	  /* user-friendly ban mask generation, taken
+	  ** from Undernet's ircd  -orabidoo
+	  */
+
+	  if (MyClient(sptr))
+	    arg = collapse(pretty_mask(*parv));
+
+	  if (whatt == MODE_ADD)
+	    {
+	      /* Ignore colon at beginning of ban string
+	       * unfortunately,  I can't ignore all such strings
+	       * because otherwise the channel gets desynced.
+	       * but I can at least stop local clients from placing it
+	       *
+	       * Roger uses check_string() combined with an earlier test
+	       * in his TS4 code. The problem is, this means on a mixed net
+	       * one can't =remove= a colon prefixed ban if set from
+	       * an older server.
+	       *
+	       * -Dianora
+	       */
+
+	      if(MyClient(sptr) && (arg[0] == ':'))
+		break;
+	      lp = &chops[opcnt++];
+	      lp->value.cp = arg;
+	      lp->flags = MODE_ADD|MODE_EXCEPTION;
+	    }
+	  else if (whatt == MODE_DEL)
+	    {
+	      lp = &chops[opcnt++];
+	      lp->value.cp = arg;
+	      lp->flags = MODE_DEL|MODE_EXCEPTION;
+	    }
+	  count++;
+	  break;
+
 	case 'b':
 	  if (--parc <= 0)
 	    {
@@ -958,6 +1188,13 @@ static	int	set_mode(aClient *cptr,
 	    break;
 	  if (MyClient(sptr) && opcnt >= MAXMODEPARAMS)
 	    break;
+
+	  /* user-friendly ban mask generation, taken
+	  ** from Undernet's ircd  -orabidoo
+	  */
+	  if (MyClient(sptr))
+	    arg = collapse(pretty_mask(*parv));
+
 	  if (whatt == MODE_ADD)
 	    {
 	      /* Ignore colon at beginning of ban string
@@ -967,16 +1204,16 @@ static	int	set_mode(aClient *cptr,
 	       * -Dianora
 	       */
 
-	      if(MyClient(sptr) && (*parv[0] == ':'))
+	      if(MyClient(sptr) && (arg[0] == ':'))
 		break;
 	      lp = &chops[opcnt++];
-	      lp->value.cp = *parv;
+	      lp->value.cp = arg;
 	      lp->flags = MODE_ADD|MODE_BAN;
 	    }
 	  else if (whatt == MODE_DEL)
 	    {
 	      lp = &chops[opcnt++];
-	      lp->value.cp = *parv;
+	      lp->value.cp = arg;
 	      lp->flags = MODE_DEL|MODE_BAN;
 	    }
 	  count++;
@@ -1141,14 +1378,13 @@ static	int	set_mode(aClient *cptr,
 	      c = 'v';
 	      cp = lp->value.cptr->name;
 	      break;
+	    case MODE_EXCEPTION :
+	      c = 'e';
+	      cp = lp->value.cp;
+	      break;
 	    case MODE_BAN :
 	      c = 'b';
 	      cp = lp->value.cp;
-	      if ((user = index(cp, '!')))
-		*user++ = '\0';
-	      if ((host = rindex(user ? user : cp, '@')))
-		*host++ = '\0';
-	      cp = make_nick_user_host(cp, user, host);
 	      break;
 	    case MODE_KEY :
 	      c = 'k';
@@ -1162,6 +1398,9 @@ static	int	set_mode(aClient *cptr,
 	      cp = numeric;
 	      break;
 	    }
+
+	  if(!cp)	/* a little sanity test -Dianora */
+	    break;
 
 	  if (len + strlen(cp) + 2 > (size_t) MODEBUFLEN)
 				break;
@@ -1219,6 +1458,19 @@ static	int	set_mode(aClient *cptr,
 	      if (c == 'o' && whatt == MODE_ADD && isdeop &&
 		  !is_chan_op(lp->value.cptr, chptr))
 		set_deopped(lp, chptr);
+	      break;
+	    case MODE_EXCEPTION :
+	      if (isok && (((whatt & MODE_ADD) &&
+			     !add_exceptid(sptr, chptr, cp)) ||
+			     ((whatt & MODE_DEL) &&
+			     !del_exceptid(chptr, cp))))
+		{
+		  *mbuf++ = c;
+		  (void)strcat(pbuf, cp);
+		  len += strlen(cp);
+		  (void)strcat(pbuf, " ");
+		  len++;
+		}
 	      break;
 	    case MODE_BAN :
 	      if (isok && (((whatt & MODE_ADD) &&
@@ -2108,6 +2360,15 @@ int	m_knock(aClient *cptr,
   Reg	aChannel	*chptr;
   char	*p, *name;
 
+  /* anti flooding code,
+   * I did have this in parse.c with a table lookup
+   * but I think this will be less inefficient doing it in each
+   * function that absolutely needs it
+   *
+   * -Dianora
+   */
+  static time_t last_used=0L;
+
   if (parc < 2)
     {
       sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
@@ -2115,7 +2376,19 @@ int	m_knock(aClient *cptr,
       return 0;
     }
 
-  /* quickly added flood control on KNOCK
+  /* flood control server wide, clients on KNOCK
+   * opers are not flood controlled.
+   */
+
+  if(!IsAnOper(sptr))
+    {
+      if((last_used + MOTD_WAIT) > NOW)
+	return 0;
+      else
+	last_used = NOW;
+    }
+
+  /* flood control individual clients on KNOCK
    * the ugly possibility still exists, 400 clones could all KNOCK
    * on a channel at once, flooding all the ops. *ugh*
    * Remember when life was simpler?
@@ -2168,6 +2441,13 @@ int	m_knock(aClient *cptr,
 
   /* using &me and me.name won't deliver to clients not on this server
    * so, the notice will have to appear from the "knocker" ick.
+   *
+   * Ideally, KNOCK would be routable. Also it would be nice to add
+   * a new channel mode. Perhaps some day.
+   * For now, clients that don't want to see KNOCK requests will have
+   * to use client side filtering. 
+   *
+   * -Dianora
    */
 
   sendto_channel_type(cptr, sptr, chptr, MODE_CHANOP,
