@@ -1,3 +1,15 @@
+lusky       2001/12/11 21:02:03 EST	(20011212_1)
+
+  Modified files:
+    adns                 .depend 
+  Log:
+  updated .depend
+  
+  Revision  Changes    Path
+  1.2       +16 -11    ircd-hybrid-6/adns/.depend
+
+
+
 leeh        2001/12/11 19:29:15 EST	(20011212_0)
 
   Modified files:
