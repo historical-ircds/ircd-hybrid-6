@@ -19,9 +19,7 @@
  *
  *   $Id$
  */
-#include "irc_string.h"
-#include "send.h"
-#include "common.h"
+#include "sprintf_irc.h"
 
 #include <stdio.h>
 

@@ -30,6 +30,7 @@
 #include "s_bsd.h"
 #include "s_serv.h"
 #include "s_zip.h"
+#include "sprintf_irc.h"
 #include "struct.h"
 
 #include <stdio.h>
@@ -42,11 +43,6 @@
 
 static  char    sendbuf[2048];
 static  int     send_message (aClient *, char *, int);
-
-/*
- * vsprintf_irc - defined in sprintf_irc.c
- */
-extern int vsprintf_irc(char* str, const char* fmt, va_list args);
 
 static  void vsendto_prefix_one(register aClient *, register aClient *, const char *, va_list);
 static  void vsendto_one(aClient *, const char *, va_list);
