@@ -1,3 +1,7 @@
+*** 20010716_2 by leeh
+- this should be extended to ltrace/stats L.. 
+
+
 *** 20010716_1 by leeh
 - dont show ips for servers we're connecting to, or handshaking with
   (reported by cbehrens)
