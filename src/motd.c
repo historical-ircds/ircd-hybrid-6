@@ -150,7 +150,7 @@ int SendMessageFile(aClient *sptr, MessageFile *motdToPrint)
       break;
 
     default:
-      return;
+      return 0;
       /* NOT REACHED */
     }
 
@@ -180,12 +180,12 @@ int ReadMessageFile(MessageFile *MessageFileptr)
   struct tm *local_tm;
 
   /* used to clear out old MessageFile entries */
-  MessageFileLine *mptr;
-  MessageFileLine *next_mptr;
+  MessageFileLine *mptr = 0;
+  MessageFileLine *next_mptr = 0;
 
   /* used to add new MessageFile entries */
-  MessageFileLine *newMessageLine;
-  MessageFileLine *currentMessageLine;
+  MessageFileLine *newMessageLine = 0;
+  MessageFileLine *currentMessageLine = 0;
 
   char buffer[MESSAGELINELEN];
   char *p;
@@ -233,7 +233,8 @@ int ReadMessageFile(MessageFile *MessageFileptr)
 
       if (MessageFileptr->contentsOfFile)
 	{
-	  currentMessageLine->next = newMessageLine;
+          if (currentMessageLine)
+	    currentMessageLine->next = newMessageLine;
 	  currentMessageLine = newMessageLine;
 	}
       else

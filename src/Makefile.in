@@ -1,50 +1,114 @@
-CC=@CC@
-RM=@RM@
-IRCDLIBS=@LIBS@ ../zlib/libz.a
-INCLUDEDIR=-I../include -I../zlib
+#
+# Makefile.in for ircd/src
+#
+# $Id$
+#
+CC = @CC@
+RM = @RM@
+MKDEP = ${CC} -MM
 
-SRC = bsd.c channel.c class.c dbuf.c mtrie_conf.c \
- hash.c ircd.c ircsprintf.c dline_conf.c \
- list.c match.c packet.c parse.c res.c s_zip.c fdlist.c \
- s_auth.c s_bsd.c s_conf.c s_debug.c s_err.c s_misc.c s_numeric.c \
- s_serv.c client.c motd.c m_info.c m_kline.c m_gline.c m_unkline.c \
- s_user.c send.c support.c whowas.c scache.c blalloc.c \
- fileio.c
+IRCDLIBS = @LIBS@ ../zlib/libz.a
 
+INCLUDES = -I../include -I../zlib
+CPPFLAGS = ${INCLUDES} @CPPFLAGS@
+ 
+#
+# For developers
+# CFLAGS= -g -O2 -Wall 
+# CPPFLAGS = ${INCLUDES} -Dlint
+#
+
+SRCS = \
+	blalloc.c \
+	bsd.c \
+	channel.c \
+	class.c \
+	client.c \
+	dbuf.c \
+	dline_conf.c \
+	fdlist.c \
+	fileio.c \
+	hash.c \
+	ircd.c \
+	ircsprintf.c \
+	list.c \
+	m_gline.c \
+	m_info.c \
+	m_kline.c \
+	m_unkline.c \
+	match.c \
+	motd.c \
+	mtrie_conf.c \
+	packet.c \
+	parse.c \
+	res.c \
+	s_auth.c \
+	s_bsd.c \
+	s_conf.c \
+	s_debug.c \
+	s_err.c \
+	s_misc.c \
+	s_numeric.c \
+	s_serv.c \
+	s_user.c \
+	s_zip.c \
+	scache.c \
+	send.c \
+	support.c \
+	whowas.c
+
+#
 # Do it this way for Ultrix, and its portable at least
 # just make sure OBJ's match SRC's (pointed out by Ian)
+# Ultrix can't use gnu make????? feh --Bleep
 # 
-OBJ = bsd.o channel.o class.o dbuf.o mtrie_conf.o \
- hash.o ircd.o ircsprintf.o dline_conf.o \
- list.o match.o packet.o parse.o res.o s_zip.o fdlist.o \
- s_auth.o s_bsd.o s_conf.o s_debug.o s_err.o s_misc.o s_numeric.o \
- s_serv.o client.o motd.o m_info.o m_kline.o m_gline.o m_unkline.o \
- s_user.o send.o support.o whowas.o scache.o blalloc.o \
- fileio.o
+#OBJS = \
+#	blalloc.o \
+#	bsd.o \
+#	channel.o \
+#	class.o \
+#	client.o \
+#	dbuf.o \
+#	dline_conf.o \
+#	fdlist.o \
+#	fileio.o \
+#	hash.o \
+#	ircd.o \
+#	ircsprintf.o \
+#	list.o \
+#	m_gline.o \
+#	m_info.o \
+#	m_kline.o \
+#	m_unkline.o \
+#	match.o \
+#	motd.o \
+#	mtrie_conf.o \
+#	packet.o \
+#	parse.o \
+#	res.o \
+#	s_auth.o \
+#	s_bsd.o \
+#	s_conf.o \
+#	s_debug.o \
+#	s_err.o \
+#	s_misc.o \
+#	s_numeric.o \
+#	s_serv.o \
+#	s_user.o \
+#	s_zip.o \
+#	scache.o \
+#	send.o \
+#	support.o \
+#	whowas.o
 
-SOURCES = $(SRC)
-#OBJECTS = $(SOURCES:.c=.o) version.o
-OBJECTS = $(OBJ) version.o
+OBJS = ${SRCS:.c=.o}
 
 all: ircd
 
 build: all
 
-# Yuck - don't use this.
-depend:
-	makedepend $(INCLUDE) $(SOURCES)
-
-clean:
-	$(RM) -f $(OBJECTS) *~ ircd.core core ircd 
-
-distclean: clean
-	$(RM) -f Makefile version.c.last
-
-.c.o:
-	$(CC) $(CFLAGS) $(INCLUDEDIR) -c $<
-
-ircd: $(OBJECTS)
-	$(CC) ${LDFLAGS} -o ircd $(OBJECTS) $(IRCDLIBS)
+ircd: ${OBJS} version.o
+	${CC} ${LDFLAGS} -o $@ ${OBJS} version.o ${IRCDLIBS}
 	mv version.c version.c.last
 
 install: build
@@ -53,157 +117,19 @@ install: build
 version.c: version.c.SH
 	/bin/sh ./version.c.SH
 
+# this is really the default rule for c files
+.c.o:
+	${CC} ${CPPFLAGS} ${CFLAGS} -c $<
 
-# DO NOT DELETE
+.PHONY: depend clean distclean
+depend:
+	${MKDEP} ${CPPFLAGS} ${SRCS} > .depend
 
-blalloc.o: ../include/struct.h ../include/config.h ../include/setup.h
-blalloc.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-blalloc.o: ../include/class.h ../include/dbuf.h ../include/common.h
-blalloc.o: ../include/sys.h ../include/h.h ../include/mtrie_conf.h
-blalloc.o: ../include/fdlist.h ../include/numeric.h ../include/blalloc.h
-bsd.o: ../include/struct.h ../include/config.h ../include/setup.h
-bsd.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-bsd.o: ../include/class.h ../include/dbuf.h ../include/common.h
-bsd.o: ../include/sys.h ../include/h.h ../include/mtrie_conf.h
-bsd.o: ../include/fdlist.h
-channel.o: ../include/struct.h ../include/config.h ../include/setup.h
-channel.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-channel.o: ../include/class.h ../include/dbuf.h ../include/common.h
-channel.o: ../include/sys.h ../include/numeric.h ../include/channel.h
-channel.o: ../include/h.h ../include/mtrie_conf.h ../include/fdlist.h
-class.o: ../include/struct.h ../include/config.h ../include/setup.h
-class.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-class.o: ../include/class.h ../include/dbuf.h ../include/common.h
-class.o: ../include/numeric.h ../include/h.h ../include/mtrie_conf.h
-class.o: ../include/fdlist.h
-dbuf.o: ../include/struct.h ../include/config.h ../include/setup.h
-dbuf.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-dbuf.o: ../include/class.h ../include/dbuf.h ../include/common.h
-dbuf.o: ../include/sys.h ../include/h.h ../include/mtrie_conf.h
-dbuf.o: ../include/fdlist.h
-dline_conf.o: ../include/struct.h ../include/config.h ../include/setup.h
-dline_conf.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h
-dline_conf.o: ../include/hash.h ../include/class.h ../include/dbuf.h
-dline_conf.o: ../include/common.h ../include/sys.h ../include/numeric.h
-dline_conf.o: ../include/h.h ../include/mtrie_conf.h
-dline_conf.o: ../include/fdlist.h ../include/dline_conf.h
-fdlist.o: ../include/struct.h ../include/config.h ../include/setup.h
-fdlist.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-fdlist.o: ../include/class.h ../include/dbuf.h ../include/common.h
-fdlist.o: ../include/sys.h ../include/h.h ../include/mtrie_conf.h
-fdlist.o: ../include/fdlist.h
-hash.o: ../include/struct.h ../include/config.h ../include/setup.h
-hash.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-hash.o: ../include/class.h ../include/dbuf.h ../include/common.h
-hash.o: ../include/sys.h ../include/numeric.h ../include/msg.h ../include/h.h
-hash.o: ../include/mtrie_conf.h ../include/fdlist.h
-ircd.o: ../include/struct.h ../include/config.h ../include/setup.h
-ircd.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-ircd.o: ../include/class.h ../include/dbuf.h ../include/common.h
-ircd.o: ../include/dline_conf.h ../include/sys.h ../include/numeric.h
-ircd.o: ../include/msg.h ../include/h.h
-ircd.o: ../include/mtrie_conf.h ../include/fdlist.h
-list.o: ../include/struct.h ../include/config.h ../include/setup.h
-list.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-list.o: ../include/class.h ../include/dbuf.h ../include/common.h
-list.o: ../include/sys.h ../include/h.h ../include/mtrie_conf.h
-list.o: ../include/fdlist.h ../include/numeric.h ../include/blalloc.h
-match.o: ../include/struct.h ../include/config.h ../include/setup.h
-match.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-match.o: ../include/class.h ../include/dbuf.h ../include/common.h
-match.o: ../include/sys.h
-mtrie_conf.o: ../include/sys.h ../include/setup.h ../zlib/zlib.h
-mtrie_conf.o: ../zlib/zconf.h ../include/numeric.h ../include/common.h
-mtrie_conf.o: ../include/struct.h ../include/config.h ../include/defs.h
-mtrie_conf.o: ../include/hash.h ../include/class.h ../include/dbuf.h
-mtrie_conf.o: ../include/h.h ../include/mtrie_conf.h ../include/fdlist.h
-mtrie_conf.o: ../include/dline_conf.h
-packet.o: ../include/struct.h ../include/config.h ../include/setup.h
-packet.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-packet.o: ../include/class.h ../include/dbuf.h ../include/common.h
-packet.o: ../include/sys.h ../include/msg.h ../include/h.h
-packet.o: ../include/mtrie_conf.h ../include/fdlist.h
-parse.o: ../include/struct.h ../include/config.h ../include/setup.h
-parse.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-parse.o: ../include/class.h ../include/dbuf.h ../include/common.h
-parse.o: ../include/msg.h ../include/sys.h ../include/numeric.h
-parse.o: ../include/h.h ../include/mtrie_conf.h ../include/fdlist.h
-res.o: ../include/struct.h ../include/config.h ../include/setup.h
-res.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-res.o: ../include/class.h ../include/dbuf.h ../include/common.h
-res.o: ../include/sys.h ../include/res.h ../include/numeric.h ../include/h.h
-res.o: ../include/mtrie_conf.h ../include/fdlist.h
-s_auth.o: ../include/struct.h ../include/config.h ../include/setup.h
-s_auth.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-s_auth.o: ../include/class.h ../include/dbuf.h ../include/common.h
-s_auth.o: ../include/sys.h ../include/res.h ../include/numeric.h
-s_auth.o: ../include/patchlevel.h ../include/h.h
-s_auth.o: ../include/mtrie_conf.h ../include/fdlist.h
-s_bsd.o: ../include/struct.h ../include/config.h ../include/setup.h
-s_bsd.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-s_bsd.o: ../include/class.h ../include/dbuf.h ../include/common.h
-s_bsd.o: ../include/sys.h ../include/res.h ../include/numeric.h
-s_bsd.o: ../include/patchlevel.h
-s_bsd.o: ../include/h.h ../include/mtrie_conf.h
-s_bsd.o: ../include/fdlist.h
-s_conf.o: ../include/struct.h ../include/config.h ../include/setup.h
-s_conf.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-s_conf.o: ../include/class.h ../include/dbuf.h ../include/common.h
-s_conf.o: ../include/dline_conf.h ../include/sys.h ../include/numeric.h
-s_conf.o: ../include/h.h ../include/mtrie_conf.h
-s_conf.o: ../include/fdlist.h
-s_debug.o: ../include/struct.h ../include/config.h ../include/setup.h
-s_debug.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-s_debug.o: ../include/class.h ../include/dbuf.h ../include/numeric.h
-s_debug.o: ../include/common.h ../include/sys.h ../include/h.h
-s_debug.o: ../include/mtrie_conf.h ../include/fdlist.h
-s_err.o: ../include/struct.h ../include/config.h ../include/setup.h
-s_err.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-s_err.o: ../include/class.h ../include/dbuf.h ../include/numeric.h
-s_err.o: ../include/h.h ../include/mtrie_conf.h ../include/fdlist.h
-s_misc.o: ../include/struct.h ../include/config.h ../include/setup.h
-s_misc.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-s_misc.o: ../include/class.h ../include/dbuf.h ../include/common.h
-s_misc.o: ../include/sys.h ../include/numeric.h ../include/h.h
-s_misc.o: ../include/mtrie_conf.h ../include/fdlist.h
-s_numeric.o: ../include/struct.h ../include/config.h ../include/setup.h
-s_numeric.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h
-s_numeric.o: ../include/hash.h ../include/class.h ../include/dbuf.h
-s_numeric.o: ../include/common.h ../include/sys.h ../include/numeric.h
-s_numeric.o: ../include/h.h ../include/mtrie_conf.h ../include/fdlist.h
-s_serv.o: ../include/struct.h ../include/config.h ../include/setup.h
-s_serv.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-s_serv.o: ../include/class.h ../include/dbuf.h ../include/common.h
-s_serv.o: ../include/sys.h ../include/numeric.h ../include/msg.h
-s_serv.o: ../include/channel.h
-s_serv.o: ../include/h.h ../include/mtrie_conf.h ../include/fdlist.h
-s_serv.o: ../include/dline_conf.h
-s_user.o: ../include/struct.h ../include/config.h ../include/setup.h
-s_user.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-s_user.o: ../include/class.h ../include/dbuf.h ../include/common.h
-s_user.o: ../include/sys.h ../include/numeric.h ../include/msg.h
-s_user.o: ../include/channel.h ../include/h.h ../include/mtrie_conf.h
-s_user.o: ../include/fdlist.h ../include/blalloc.h
-s_zip.o: ../include/struct.h ../include/config.h ../include/setup.h
-s_zip.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-s_zip.o: ../include/class.h ../include/dbuf.h ../include/sys.h ../include/h.h
-s_zip.o: ../include/mtrie_conf.h ../include/fdlist.h
-scache.o: ../include/struct.h ../include/config.h ../include/setup.h
-scache.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-scache.o: ../include/class.h ../include/dbuf.h ../include/common.h
-scache.o: ../include/sys.h ../include/numeric.h ../include/h.h
-scache.o: ../include/mtrie_conf.h ../include/fdlist.h
-send.o: ../include/struct.h ../include/config.h ../include/setup.h
-send.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-send.o: ../include/class.h ../include/dbuf.h ../include/common.h
-send.o: ../include/sys.h ../include/h.h ../include/mtrie_conf.h
-send.o: ../include/fdlist.h ../include/numeric.h
-support.o: ../include/struct.h ../include/config.h ../include/setup.h
-support.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-support.o: ../include/class.h ../include/dbuf.h ../include/common.h
-support.o: ../include/sys.h
-whowas.o: ../include/struct.h ../include/config.h ../include/setup.h
-whowas.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-whowas.o: ../include/class.h ../include/dbuf.h ../include/common.h
-whowas.o: ../include/sys.h ../include/numeric.h ../include/h.h
-whowas.o: ../include/mtrie_conf.h ../include/fdlist.h
+clean:
+	${RM} -f ${OBJS} *~ ircd.core core ircd 
+
+distclean: clean
+	${RM} -f Makefile version.c.last .depend
+
+-include .depend
+
