@@ -112,7 +112,6 @@ static void set_autoconn(aClient *,char *,char *,int);
 static void report_specials(aClient *,int,int);
 extern void report_qlines(aClient *);
 static int m_set_parser(char *);
-int bad_tld(char *);
 
 #ifdef PACE_WALLOPS
 time_t last_used_wallops = 0L;
@@ -1945,20 +1944,6 @@ int show_lusers(aClient *cptr,
 
       for (acptr = GlobalClientList; acptr; acptr = acptr->next)
 	{
-/*	  if (parc>1)
-	    {
-	      if (!IsServer(acptr) && acptr->user)
-	        {
-		  if (!match(parv[1], acptr->user->server))
-		  continue;
-	        } 
-	      else
-	 	{
-	          if (!match(parv[1], acptr->name))
-		  continue;
-		}
-	    }
-*/
 	  switch (acptr->status)
 	    {
 	    case STAT_SERVER:

@@ -32,6 +32,7 @@
 #include "h.h"
 #include "dline_conf.h"
 #include "mtrie_conf.h"
+#include "m_kline.h"
 
 #include <assert.h>
 #include <string.h>
@@ -53,7 +54,6 @@ static  aConfItem *glines = (aConfItem *)NULL;
 static GLINE_PENDING *pending_glines;
 
 /* external functions */
-extern int bad_tld(char *);	/* defined in m_kline.c */
 extern char *small_file_date(time_t);  /* defined in s_misc.c */
 extern char *smalldate(time_t);		/* defined in s_misc.c */
 
@@ -105,6 +105,9 @@ int     m_gline(aClient *cptr,
   const char* oper_server;	/* server of oper requesting GLINE */
   char *user, *host;		/* user and host of GLINE "victim" */
   char *reason;			/* reason for "victims" demise */
+  char *p;
+  register char tmpch;
+  register int nonwild;
 #ifdef GLINES
   char buffer[512];
   char *current_date;
@@ -177,27 +180,65 @@ int     m_gline(aClient *cptr,
 	  return 0;
 	}
 
+  /*
+   * Now we must check the user and host to make sure there
+   * are at least NONWILDCHARS non-wildcard characters in
+   * them, otherwise assume they are attempting to gline
+   * *@* or some variant of that. This code will also catch
+   * people attempting to gline *@*.tld, as long as NONWILDCHARS
+   * is greater than 3. In that case, there are only 3 non-wild
+   * characters (tld), so if NONWILDCHARS is 4, the gline will
+   * be disallowed.
+   * -wnder
+   */
+
+  nonwild = 0;
+  p = user;
+  while ((tmpch = *p++))
+  {
+    if (!IsKWildChar(tmpch))
+    {
+      /*
+       * If we find enough non-wild characters, we can
+       * break - no point in searching further.
+       */
+      if (++nonwild >= NONWILDCHARS)
+      	break;
+    }
+  }
+
+  if (nonwild < NONWILDCHARS)
+  {
+    /*
+     * The user portion did not contain enough non-wild
+     * characters, try the host.
+     */
+    p = host;
+    while ((tmpch = *p++))
+    {
+      if (!IsKWildChar(tmpch))
+        if (++nonwild >= NONWILDCHARS)
+          break;
+    }
+  }
+
+  if (nonwild < NONWILDCHARS)
+  {
+    /*
+     * Not enough non-wild characters were found, assume
+     * they are trying to gline *@*.
+     */
+    if (MyClient(sptr))
+      sendto_one(sptr,
+        ":%s NOTICE %s :Please include at least %d non-wildcard characters with the user@host",
+        me.name,
+        parv[0],
+        NONWILDCHARS);
+
+    return 0;
+  }
+
       reason = parv[2];
-
-      if (match(user, "akjhfkahfasfjd") &&
-                match(host, "ldksjfl.kss...kdjfd.jfklsjf"))
-	{
-	  if(MyClient(sptr))
-	    sendto_one(sptr, ":%s NOTICE %s :Can't G-Line *@*", me.name,
-		       parv[0]);
-
-	  return 0;
-	}
-      
-      if (bad_tld(host))
-	{
-	  if(MyClient(sptr))
-	    sendto_one(sptr, ":%s NOTICE %s :Can't G-Line *@%s",
-		       me.name,
-		       parv[0],
-		       host);
-	  return 0;
-	}
 
       if (sptr->user && sptr->user->server)
 	oper_server = sptr->user->server;
