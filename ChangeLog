@@ -1,3 +1,18 @@
+db          2001/12/30 02:50:34 EST	(20011230_2)
+
+  Modified files:
+    .                    RELNOTES 
+    doc                  example.conf 
+  Log:
+  - updated some docs. IP I lines have to have user@IP
+  - RELNOTES notes this, and also asks for core etc. only if its cored
+  
+  Revision  Changes    Path
+  1.12      +6 -2      ircd-hybrid-6/RELNOTES
+  1.35      +6 -10     ircd-hybrid-6/doc/example.conf
+
+
+
 db          2001/12/29 22:36:49 EST	(20011230_1)
 
   Modified files:
