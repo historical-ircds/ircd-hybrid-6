@@ -67,7 +67,7 @@ static int  SplitUserHost( aConfItem * );
 static char *getfield(char *newline);
 
 static FBFILE*  openconf(const char* filename);
-static void	initconf(FBFILE*, int);
+static void     initconf(FBFILE*, int);
 static void     clear_out_old_conf(void);
 static void     flush_deleted_I_P(void);
 
@@ -371,13 +371,13 @@ int attach_Iline(aClient* cptr, struct hostent* hp,
 #ifdef LIMIT_UH
 static int
 attach_iline(
-	     aClient *cptr,
-	     aConfItem *aconf,char *username)
+             aClient *cptr,
+             aConfItem *aconf,char *username)
 #else
 static int
 attach_iline(
-	     aClient *cptr,
-	     aConfItem *aconf)
+             aClient *cptr,
+             aConfItem *aconf)
 #endif
 {
   IP_ENTRY *ip_found;
@@ -478,7 +478,7 @@ void clear_ip_hash_table()
 /* 
  * find_or_add_ip()
  *
- * inputs	- cptr
+ * inputs       - cptr
  *              - name
  *
  * output       - pointer to an IP_ENTRY element
@@ -835,8 +835,8 @@ int detach_conf(struct Client* cptr,struct ConfItem* aconf)
             {
               if (aconf->status & CONF_CLIENT_MASK)
                 {
-		  if (ConfLinks(aconf) > 0)
-		    --ConfLinks(aconf);
+                  if (ConfLinks(aconf) > 0)
+                    --ConfLinks(aconf);
                 }
               if (ConfMaxLinks(aconf) == -1 && ConfLinks(aconf) == 0)
                 {
@@ -1212,10 +1212,10 @@ aConfItem *find_conf_entry(aConfItem *aconf, int mask)
 /*
  * find_special_conf
  *
- * inputs	- pointer to char string to find
- * 		- mask of type of conf to compare on
- * output	- NULL or pointer to found aConfItem
- * side effects	- looks for a match on name field
+ * inputs       - pointer to char string to find
+ *              - mask of type of conf to compare on
+ * output       - NULL or pointer to found aConfItem
+ * side effects - looks for a match on name field
  */
 aConfItem *find_special_conf(char *to_find, int mask)
 {
@@ -1247,11 +1247,11 @@ aConfItem *find_special_conf(char *to_find, int mask)
 /*
  * find_q_line
  *
- * inputs	- nick to find
- *		- user to match
- *		- host to mask
- * output	- YES if found, NO if not found
- * side effects	- looks for matches on Q lined nick
+ * inputs       - nick to find
+ *              - user to match
+ *              - host to mask
+ * output       - YES if found, NO if not found
+ * side effects - looks for matches on Q lined nick
  */
 int find_q_line(char *nickToFind,char *user,char *host)
 {
@@ -1282,8 +1282,8 @@ int find_q_line(char *nickToFind,char *user,char *host)
 /*
  * clear_q_lines
  *
- * inputs	- none
- * output	- none
+ * inputs       - none
+ * output       - none
  * side effects - clear out the q lines
  */
 static void clear_q_lines()
@@ -1319,9 +1319,9 @@ static void clear_q_lines()
 /*
  * report_qlines
  *
- * inputs	- pointer to client to report to
- * output	- none
- * side effects	- all Q lines are listed to client 
+ * inputs       - pointer to client to report to
+ * output       - none
+ * side effects - all Q lines are listed to client 
  */
 
 void report_qlines(aClient *sptr)
@@ -1356,9 +1356,9 @@ void report_qlines(aClient *sptr)
 /*
  * add_q_line
  *
- * inputs	- pointer to aconf to add
- * output	- none
- * side effects	- given Q line is added to q line list 
+ * inputs       - pointer to aconf to add
+ * output       - none
+ * side effects - given Q line is added to q line list 
  */
 
 static void add_q_line(aConfItem *aconf)
@@ -1462,9 +1462,9 @@ static void makeQlineEntry(aQlineItem *qp, aConfItem *aconf, char *uath)
 /*
  * clear_special_conf
  * 
- * inputs	- pointer to pointer of root of special conf link list
- * output	- none
- * side effects	- clears given special conf lines
+ * inputs       - pointer to pointer of root of special conf link list
+ * output       - none
+ * side effects - clears given special conf lines
  */
 static void clear_special_conf(aConfItem **this_conf)
 {
@@ -1483,9 +1483,9 @@ static void clear_special_conf(aConfItem **this_conf)
 /*
  * rehash_dump
  *
- * inputs	- pointer to client requesting rehash dump
- * output	-
- * side effects	-
+ * inputs       - pointer to client requesting rehash dump
+ * output       -
+ * side effects -
  * partially reconstruct an ircd.conf file (tsk tsk, you should have
  * been making backups;but we've all done it)
  * I just cull out the N/C/O/o/A lines, you'll have to finish
@@ -1658,7 +1658,7 @@ static char *set_conf_flags(aConfItem *aconf,char *tmp)
 **    Read configuration file.
 **
 *
-* Inputs   	- file descriptor pointing to config file to use
+* Inputs        - file descriptor pointing to config file to use
 *
 **    returns -1, if file cannot be opened
 **             0, if file opened
@@ -2020,13 +2020,13 @@ static void initconf(FBFILE* file, int use_include)
        * P: line - listener port
        */
       if ( aconf->status & CONF_LISTEN_PORT)
-	{
-	  dontadd = 1;
-	  if((aconf->passwd[0] == '\0') || (aconf->passwd[0] == '*'))
-	    add_listener(aconf->port, NULL );
-	  else
-	    add_listener(aconf->port, (const char *)aconf->passwd);
-	}
+        {
+          dontadd = 1;
+          if((aconf->passwd[0] == '\0') || (aconf->passwd[0] == '*'))
+            add_listener(aconf->port, NULL );
+          else
+            add_listener(aconf->port, (const char *)aconf->passwd);
+        }
       else if(aconf->status & CONF_CLIENT_MASK)
         {
           if (0 == ClassPtr(aconf))
@@ -2086,7 +2086,7 @@ static void initconf(FBFILE* file, int use_include)
               continue;
             }
 
-	  lookup_confhost(aconf);
+          lookup_confhost(aconf);
         }
       
       /* o: or O: line */
@@ -3059,12 +3059,12 @@ char    *parv, *filename;
 /*
  * m_testline
  *
- * inputs	- pointer to physical connection request is coming from
- *		- pointer to source connection request is comming from
- *		- parc arg count
- *		- parv actual arguments
+ * inputs       - pointer to physical connection request is coming from
+ *              - pointer to source connection request is comming from
+ *              - parc arg count
+ *              - parv actual arguments
  *
- * side effects	- command to test I/K lines on server
+ * side effects - command to test I/K lines on server
  *
  * i.e. /quote testline user@host,ip
  *
@@ -3182,33 +3182,33 @@ void GetPrintableaConfItem(aConfItem *aconf, char **name, char **host,
 /*
  * read_conf_files
  *
- * inputs	- cold start YES or NO
- * output	- none
- * side effects	- read all conf files needed, ircd.conf kline.conf etc.
+ * inputs       - cold start YES or NO
+ * output       - none
+ * side effects - read all conf files needed, ircd.conf kline.conf etc.
  */
 
 void read_conf_files(int cold)
 {
   FBFILE* file = 0;     /* initconf */
-  const char *filename;	/* kline or conf filename */
+  const char *filename; /* kline or conf filename */
 
   filename = get_conf_name(CONF_TYPE);
 
   if ((file = openconf(filename)) == 0)
     {
       if(cold)
-	{
-	  Debug((DEBUG_FATAL, "Failed in reading configuration file %s",
-		 filename));
-	  (void)printf("Couldn't open configuration file %s\n",
-		       filename);
-	  exit(-1);
-	}
+        {
+          Debug((DEBUG_FATAL, "Failed in reading configuration file %s",
+                 filename));
+          (void)printf("Couldn't open configuration file %s\n",
+                       filename);
+          exit(-1);
+        }
       else
-	{
-	  sendto_ops("Can't open %s file aborting rehash!", filename );
-	  return;
-	}
+        {
+          sendto_ops("Can't open %s file aborting rehash!", filename );
+          return;
+        }
     }
 
   if(!cold)
@@ -3226,17 +3226,17 @@ void read_conf_files(int cold)
   if ((file = openconf(filename)) == 0)
     {
       if(cold)
-	{
-	  Debug((DEBUG_ERROR,"Failed reading kline file %s",
-		 filename));
-	  (void)printf("Couldn't open kline file %s\n",
-		       filename);
-	}
+        {
+          Debug((DEBUG_ERROR,"Failed reading kline file %s",
+                 filename));
+          (void)printf("Couldn't open kline file %s\n",
+                       filename);
+        }
       else
-	{
-	  sendto_ops("Can't open %s file klines could be missing!",
-		     filename);
-	}
+        {
+          sendto_ops("Can't open %s file klines could be missing!",
+                     filename);
+        }
     }
   else
     initconf(file, NO);
@@ -3246,9 +3246,9 @@ void read_conf_files(int cold)
 /*
  * clear_out_old_conf
  *
- * inputs	- none
- * output	- none
- * side effects	- Clear out the old configuration
+ * inputs       - none
+ * output       - none
+ * side effects - Clear out the old configuration
  */
 
 static void clear_out_old_conf(void)
@@ -3259,28 +3259,28 @@ static void clear_out_old_conf(void)
 
     while ((tmp2 = *tmp))
       {
-	if (tmp2->clients)
-	  {
-	    /*
-	    ** Configuration entry is still in use by some
-	    ** local clients, cannot delete it--mark it so
-	    ** that it will be deleted when the last client
-	    ** exits...
-	    */
-	    if (!(tmp2->status & CONF_CLIENT))
-	      {
-		*tmp = tmp2->next;
-		tmp2->next = NULL;
-	      }
-	    else
-	      tmp = &tmp2->next;
-	    tmp2->status |= CONF_ILLEGAL;
-	  }
-	else
-	  {
-	    *tmp = tmp2->next;
-	    free_conf(tmp2);
-	  }
+        if (tmp2->clients)
+          {
+            /*
+            ** Configuration entry is still in use by some
+            ** local clients, cannot delete it--mark it so
+            ** that it will be deleted when the last client
+            ** exits...
+            */
+            if (!(tmp2->status & CONF_CLIENT))
+              {
+                *tmp = tmp2->next;
+                tmp2->next = NULL;
+              }
+            else
+              tmp = &tmp2->next;
+            tmp2->status |= CONF_ILLEGAL;
+          }
+        else
+          {
+            *tmp = tmp2->next;
+            free_conf(tmp2);
+          }
       }
 
     /*
@@ -3302,9 +3302,9 @@ static void clear_out_old_conf(void)
 /*
  * flush_deleted_I_P
  *
- * inputs	- none
- * output	- none
- * side effects	- This function removes I/P conf items
+ * inputs       - none
+ * output       - none
+ * side effects - This function removes I/P conf items
  */
 
 static void flush_deleted_I_P(void)
@@ -3318,53 +3318,53 @@ static void flush_deleted_I_P(void)
   for (tmp = &ConfigItemList; (tmp2 = *tmp); )
     {
       if (!(tmp2->status & CONF_ILLEGAL))
-	tmp = &tmp2->next;
+        tmp = &tmp2->next;
       else
-	{
-	  *tmp = tmp2->next;
-	  tmp2->next = NULL;
-	  if (!tmp2->clients)
-	    free_conf(tmp2);
-	}
+        {
+          *tmp = tmp2->next;
+          tmp2->next = NULL;
+          if (!tmp2->clients)
+            free_conf(tmp2);
+        }
     }
 }
 
 /*
  * write_kline_or_dline_to_conf_and_notice_opers
  *
- * inputs	- kline or dline type flag
- * 		- client pointer to report to
- *		- server pointer to relay onto
- *		- user name of target
- *		- host name of target
- *		- reason for target
- *		- current tiny date string
- * output	- -1 if error on write, 0 if ok
- * side effects	- This function takes care of
- *		  finding right kline or dline conf file, writing
- *		  the right lines to this file, 
- *		  notifying the oper that their kline/dline is in place
- *		  notifying the opers on the server about the k/d line
- *		  forwarding the kline onto the next U lined server
- *		  
- * Bugs		- This function is still doing too much
+ * inputs       - kline or dline type flag
+ *              - client pointer to report to
+ *              - server pointer to relay onto
+ *              - user name of target
+ *              - host name of target
+ *              - reason for target
+ *              - current tiny date string
+ * output       - -1 if error on write, 0 if ok
+ * side effects - This function takes care of
+ *                finding right kline or dline conf file, writing
+ *                the right lines to this file, 
+ *                notifying the oper that their kline/dline is in place
+ *                notifying the opers on the server about the k/d line
+ *                forwarding the kline onto the next U lined server
+ *                
+ * Bugs         - This function is still doing too much
  */
 
 void write_kline_or_dline_to_conf_and_notice_opers(
-						   KlineType type,
-						   aClient *sptr,
-						   aClient *rcptr,
-						   char *user,
-						   char *host,
-						   char *reason,
-						   char *current_date)
+                                                   KlineType type,
+                                                   aClient *sptr,
+                                                   aClient *rcptr,
+                                                   char *user,
+                                                   char *host,
+                                                   char *reason,
+                                                   char *current_date)
   {
   char buffer[1024];
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
   char *timebuffer;
 #endif
   int out;
-  const char *filename;		/* filename to use for kline */
+  const char *filename;         /* filename to use for kline */
 
   filename = get_conf_name(type);
 
@@ -3373,19 +3373,19 @@ void write_kline_or_dline_to_conf_and_notice_opers(
 #endif
     {
       if(type == DLINE_TYPE)
-	{
-	  sendto_realops("%s added D-Line for [%s] [%s]",
-			 sptr->name, host, reason);
-	  sendto_one(sptr, ":%s NOTICE %s :Added D-Line [%s] to %s",
-		     me.name, sptr->name, host, filename);
-	}
+        {
+          sendto_realops("%s added D-Line for [%s] [%s]",
+                         sptr->name, host, reason);
+          sendto_one(sptr, ":%s NOTICE %s :Added D-Line [%s] to %s",
+                     me.name, sptr->name, host, filename);
+        }
       else
-	{
-	  sendto_realops("%s added K-Line for [%s@%s] [%s]",
-			 sptr->name, user, host, reason);
-	  sendto_one(sptr, ":%s NOTICE %s :Added K-Line [%s@%s] to %s",
-		     me.name, sptr->name, user, host, filename);
-	}
+        {
+          sendto_realops("%s added K-Line for [%s@%s] [%s]",
+                         sptr->name, user, host, reason);
+          sendto_one(sptr, ":%s NOTICE %s :Added K-Line [%s@%s] to %s",
+                     me.name, sptr->name, user, host, filename);
+        }
     }
 
   if ((out = open(filename, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
@@ -3402,22 +3402,22 @@ void write_kline_or_dline_to_conf_and_notice_opers(
   if(IsServer(sptr))
     {
       if((type==KLINE_TYPE) && rcptr)
-	ircsprintf(buffer, "#%s!%s@%s from %s K'd: %s@%s:%s\n",
-		   rcptr->name, rcptr->username, rcptr->host,
-		   sptr->name,
-		   user, host, reason);
+        ircsprintf(buffer, "#%s!%s@%s from %s K'd: %s@%s:%s\n",
+                   rcptr->name, rcptr->username, rcptr->host,
+                   sptr->name,
+                   user, host, reason);
     }
   else
 #endif
     {
       if(type==KLINE_TYPE)
-	ircsprintf(buffer, "#%s!%s@%s K'd: %s@%s:%s\n",
-		   sptr->name, sptr->username, sptr->host,
-		   user, host, reason);
+        ircsprintf(buffer, "#%s!%s@%s K'd: %s@%s:%s\n",
+                   sptr->name, sptr->username, sptr->host,
+                   user, host, reason);
       else
-	ircsprintf(buffer, "#%s!%s@%s D'd: %s:%s\n",
-		   sptr->name, sptr->username, sptr->host,
-		   host, reason);
+        ircsprintf(buffer, "#%s!%s@%s D'd: %s:%s\n",
+                   sptr->name, sptr->username, sptr->host,
+                   host, reason);
     }
   
   if (safe_write(sptr,filename,out,buffer))
@@ -3425,15 +3425,15 @@ void write_kline_or_dline_to_conf_and_notice_opers(
 
   if(type==KLINE_TYPE)
     ircsprintf(buffer, "K:%s:%s (%s):%s\n",
-	       host,
-	       reason,
-	       current_date,
-	       user);
+               host,
+               reason,
+               current_date,
+               user);
   else
     ircsprintf(buffer, "D:%s:%s (%s)\n",
-	       host,
-	       reason,
-	       current_date);
+               host,
+               reason,
+               current_date);
 
 
   if (safe_write(sptr,filename,out,buffer))
@@ -3444,15 +3444,15 @@ void write_kline_or_dline_to_conf_and_notice_opers(
 #ifdef USE_SYSLOG
   if(type==KLINE_TYPE)
     syslog(LOG_NOTICE, "%s added K-Line for [%s@%s] [%s]",
-	   sptr->name,
-	   user,
-	   host,
-	   reason);
+           sptr->name,
+           user,
+           host,
+           reason);
   else
     syslog(LOG_NOTICE, "%s added D-Line for [%s] [%s]",
-	   sptr->name,
-	   host,
-	   reason);
+           sptr->name,
+           host,
+           reason);
 #endif
 
   return;
@@ -3462,13 +3462,13 @@ void write_kline_or_dline_to_conf_and_notice_opers(
  * safe_write - write string to file, if an error occurs close the file
  * and notify opers
  *
- * inputs	- client pointer
- * 		- filename to write to
- *		- open fd to write on
- *		- buffer to write
- * output	- -1 if error on write, 0 if ok
- * side effects	- function tries to write buffer safely
- *		  i.e. checking for disk full errors etc.
+ * inputs       - client pointer
+ *              - filename to write to
+ *              - open fd to write on
+ *              - buffer to write
+ * output       - -1 if error on write, 0 if ok
+ * side effects - function tries to write buffer safely
+ *                i.e. checking for disk full errors etc.
  */
        
 int safe_write(aClient *sptr, const char *filename, int out, char *buffer)
@@ -3484,9 +3484,9 @@ int safe_write(aClient *sptr, const char *filename, int out, char *buffer)
 
 /* get_conf_name
  *
- * inputs	- type of conf file to return name of file for
- * output	- pointer to filename for type of conf
- * side effects	- none
+ * inputs       - type of conf file to return name of file for
+ * output       - pointer to filename for type of conf
+ * side effects - none
  */
 
 const char *
@@ -3511,7 +3511,7 @@ get_conf_name(KlineType type)
       return(filenamebuf);
 #else
       return(ConfigFileEntry.klinefile);
-#endif			
+#endif                  
     }
 
   return(ConfigFileEntry.dlinefile);
@@ -3523,8 +3523,8 @@ get_conf_name(KlineType type)
 static char *getfield(char *newline)
 {
   static char *line = (char *)NULL;
-  char	*end, *field;
-	
+  char  *end, *field;
+        
   if (newline)
     line = newline;
 
@@ -3536,7 +3536,7 @@ static char *getfield(char *newline)
     {
       line = (char *)NULL;
       if ((end = strchr(field,'\n')) == (char *)NULL)
-	end = field + strlen(field);
+        end = field + strlen(field);
     }
   else
     line = end + 1;

@@ -32,10 +32,10 @@
  * track of "pieces" of the domain hostname seen as its parsed.
  * i.e. "*.koruna.varner.com" is broken up into pieces of
  *
- * * 		- on stack
- * koruna	- on stack
- * varner	- on stack
- * com		- on stack
+ * *            - on stack
+ * koruna       - on stack
+ * varner       - on stack
+ * com          - on stack
  *
  * by the time the host string is parsed, its broken up into pieces
  * on the stack with the TLD on the top of the stack.
@@ -91,7 +91,7 @@ void add_to_ip_ilines(aConfItem *,unsigned long, unsigned long);
 
 /* internally used variables, these can all be static */
 
-int stack_pointer;		/* dns piece stack */
+int stack_pointer;              /* dns piece stack */
 static char *dns_stack[MAX_TLD_STACK];
 
 DOMAIN_LEVEL *trie_list=(DOMAIN_LEVEL *)NULL;
@@ -107,9 +107,9 @@ aConfItem *ip_i_lines=(aConfItem *)NULL;
 
 /* add_mtrie_conf_entry
  *
- * inputs	- 
- * output	- NONE
- * side effects	-
+ * inputs       - 
+ * output       - NONE
+ * side effects -
  */
 
 void add_mtrie_conf_entry(aConfItem *aconf,int flags)
@@ -156,49 +156,49 @@ void add_mtrie_conf_entry(aConfItem *aconf,int flags)
     case 1:
 
       if(aconf->status & CONF_CLIENT)
-	{
-	  if(unsortable_list_ilines)
-	    {
-	      aconf->next = unsortable_list_ilines;
-	      unsortable_list_ilines = aconf;
-	    }
-	  else
-	    unsortable_list_ilines = aconf;
-	}
+        {
+          if(unsortable_list_ilines)
+            {
+              aconf->next = unsortable_list_ilines;
+              unsortable_list_ilines = aconf;
+            }
+          else
+            unsortable_list_ilines = aconf;
+        }
       else
-	{
-	  if(unsortable_list_klines)
-	    {
-	      aconf->next = unsortable_list_klines;
-	      unsortable_list_klines = aconf;
-	    }
-	  else
-	    unsortable_list_klines = aconf;
-	}
+        {
+          if(unsortable_list_klines)
+            {
+              aconf->next = unsortable_list_klines;
+              unsortable_list_klines = aconf;
+            }
+          else
+            unsortable_list_klines = aconf;
+        }
       return;
       break;
 
     case -2:
       if(aconf->status & CONF_CLIENT)
-	{
-	  if(wild_card_ilines)
-	    {
-	      aconf->next = wild_card_ilines;
-	      wild_card_ilines = aconf;
-	    }
-	  else
-	    wild_card_ilines = aconf;
-	}
+        {
+          if(wild_card_ilines)
+            {
+              aconf->next = wild_card_ilines;
+              wild_card_ilines = aconf;
+            }
+          else
+            wild_card_ilines = aconf;
+        }
       else
-	{
-	  if(unsortable_list_klines)
-	    {
-	      aconf->next = unsortable_list_klines;
-	      unsortable_list_klines = aconf;
-	    }
-	  else
-	    unsortable_list_klines = aconf;
-	}
+        {
+          if(unsortable_list_klines)
+            {
+              aconf->next = unsortable_list_klines;
+              unsortable_list_klines = aconf;
+            }
+          else
+            unsortable_list_klines = aconf;
+        }
       return;
       break;
 
@@ -220,19 +220,19 @@ void add_mtrie_conf_entry(aConfItem *aconf,int flags)
 /*
  * create_sub_mtrie
  *
- * inputs	- DOMAIN_LEVEL pointer
- *		- flags as integer
- *		- full hostname
- *		- username
- *		- reason (if kline)
+ * inputs       - DOMAIN_LEVEL pointer
+ *              - flags as integer
+ *              - full hostname
+ *              - username
+ *              - reason (if kline)
  *
  * create a sub mtrie tree entry
  */
 
 static void create_sub_mtrie(DOMAIN_LEVEL *cur_level,
-			     aConfItem *aconf,
-			     int flags,
-			     char *host)
+                             aConfItem *aconf,
+                             int flags,
+                             char *host)
 {
   char *cur_dns_piece;
   DOMAIN_PIECE *last_piece;
@@ -263,16 +263,16 @@ static void create_sub_mtrie(DOMAIN_LEVEL *cur_level,
 
 /* find_or_add_host_piece
  *
- * inputs	- pointer to current level 
- *		- piece of domain name being looked for
- *		- username
- * output	- pointer to next DOMAIN_PIECE to use
+ * inputs       - pointer to current level 
+ *              - piece of domain name being looked for
+ *              - username
+ * output       - pointer to next DOMAIN_PIECE to use
  * side effects -
  *
  */
 
 static DOMAIN_PIECE *find_or_add_host_piece(DOMAIN_LEVEL *level_ptr,
-				     int flags,char *host_piece)
+                                     int flags,char *host_piece)
 {
   DOMAIN_PIECE *piece_ptr;
   DOMAIN_PIECE *cur_piece;
@@ -299,10 +299,10 @@ static DOMAIN_PIECE *find_or_add_host_piece(DOMAIN_LEVEL *level_ptr,
   for(ptr=piece_ptr; ptr; ptr = ptr->next_piece)
     {
       if(!irccmp(ptr->host_piece,host_piece))
-	{
-	  ptr->flags |= flags;
-	  return(ptr);
-	}
+        {
+          ptr->flags |= flags;
+          return(ptr);
+        }
       last_ptr = ptr;
     }
 
@@ -326,19 +326,19 @@ static DOMAIN_PIECE *find_or_add_host_piece(DOMAIN_LEVEL *level_ptr,
 
 /* find_or_add_user_piece
  *
- * inputs	- pointer to current level 
- *		- piece of domain name being looked for
- *		- flags
- *		- aconf pointer to an aConfItem 
- * output	- pointer to next DOMAIN_LEVEL to use
+ * inputs       - pointer to current level 
+ *              - piece of domain name being looked for
+ *              - flags
+ *              - aconf pointer to an aConfItem 
+ * output       - pointer to next DOMAIN_LEVEL to use
  * side effects -
  *
  */
 
 static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
-				   aConfItem *aconf,
-				   int flags,
-				   char *host_piece)
+                                   aConfItem *aconf,
+                                   int flags,
+                                   char *host_piece)
 {
   DOMAIN_PIECE *ptr;
   DOMAIN_PIECE *new_ptr;
@@ -355,60 +355,60 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
   /* This is the case of *@*.some.host.tld */
 
       if(!(piece_ptr->wild_conf_ptr))
-	 {
+         {
       /* its empty, so add the given aconf, and return. done */
 
-	   aconf->status |= flags;
-	   piece_ptr->wild_conf_ptr = aconf;
-	   piece_ptr->flags |= flags;
-	   return;
-	 }
-      else	/* not empty.... */
-	{
-	  found_aconf = piece_ptr->wild_conf_ptr;
+           aconf->status |= flags;
+           piece_ptr->wild_conf_ptr = aconf;
+           piece_ptr->flags |= flags;
+           return;
+         }
+      else      /* not empty.... */
+        {
+          found_aconf = piece_ptr->wild_conf_ptr;
 
-	  if(found_aconf->flags & CONF_FLAGS_E_LINED)
-	    {
-	      /* if requested kline aconf =exactly=
-	       * matches an already present aconf
-	       * discard the requested K line
-	       * it should also be NOTICE'd back to the 
-	       * oper who did the K-line, if I'm not 
-	       * reading the conf file.
-	       */
+          if(found_aconf->flags & CONF_FLAGS_E_LINED)
+            {
+              /* if requested kline aconf =exactly=
+               * matches an already present aconf
+               * discard the requested K line
+               * it should also be NOTICE'd back to the 
+               * oper who did the K-line, if I'm not 
+               * reading the conf file.
+               */
 
-	      report_dup('K',aconf);
-	      free_conf(aconf);	/* toss it in the garbage */
+              report_dup('K',aconf);
+              free_conf(aconf); /* toss it in the garbage */
 
-	      found_aconf->status |= flags;
-	      found_aconf->status &= ~CONF_KILL;
-	      piece_ptr->flags |= flags;
-	      piece_ptr->flags &= ~CONF_KILL;
-	      return;
-	    }
-	  else if(flags & CONF_KILL)
-	    {
-	      report_dup('K',found_aconf);
-	      if(found_aconf->clients)
-		found_aconf->status |= CONF_ILLEGAL;
-	      else
-		free_conf(found_aconf);
-	      piece_ptr->wild_conf_ptr = aconf;
-	      piece_ptr->flags |= flags;
-	      return;
-	    }
-	  else if(flags & CONF_CLIENT)	/* I line replacement */
-	    {
-	      /* another I line/CONF_CLIENT exactly matching this
-	       * toss the new one into the garbage
-	       */
-	      report_dup('I',aconf);
-	      free_conf(aconf);	
-	      found_aconf->status |= flags;
-	      piece_ptr->flags |= flags;
-	      return;
-	    }
-	}
+              found_aconf->status |= flags;
+              found_aconf->status &= ~CONF_KILL;
+              piece_ptr->flags |= flags;
+              piece_ptr->flags &= ~CONF_KILL;
+              return;
+            }
+          else if(flags & CONF_KILL)
+            {
+              report_dup('K',found_aconf);
+              if(found_aconf->clients)
+                found_aconf->status |= CONF_ILLEGAL;
+              else
+                free_conf(found_aconf);
+              piece_ptr->wild_conf_ptr = aconf;
+              piece_ptr->flags |= flags;
+              return;
+            }
+          else if(flags & CONF_CLIENT)  /* I line replacement */
+            {
+              /* another I line/CONF_CLIENT exactly matching this
+               * toss the new one into the garbage
+               */
+              report_dup('I',aconf);
+              free_conf(aconf); 
+              found_aconf->status |= flags;
+              piece_ptr->flags |= flags;
+              return;
+            }
+        }
     }
 
   /*
@@ -423,48 +423,48 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
   for( ptr = piece_ptr; ptr; ptr = ptr->next_piece)
     {
       if(!ptr->conf_ptr)
-	{
-	  aconf->status |= flags;	/* redundant -db */
-	  piece_ptr->flags |= flags;	/* redundant -db */
-	  ptr->conf_ptr = aconf;
-	  return;
-	}
+        {
+          aconf->status |= flags;       /* redundant -db */
+          piece_ptr->flags |= flags;    /* redundant -db */
+          ptr->conf_ptr = aconf;
+          return;
+        }
 
       found_aconf=ptr->conf_ptr;
 
       if( (match(ptr->host_piece,host_piece)) &&
-	  (!irccmp(found_aconf->user,user)) )
-	{
-	  found_aconf->status |= flags;
-	  piece_ptr->flags |= flags;
+          (!irccmp(found_aconf->user,user)) )
+        {
+          found_aconf->status |= flags;
+          piece_ptr->flags |= flags;
 
-	  if(found_aconf->flags & CONF_FLAGS_E_LINED)
-	    {
-	      free_conf(aconf);		/* toss it in the garbage */
-	      found_aconf->status &= ~CONF_KILL;
-	      piece_ptr->flags &= ~CONF_KILL;
-	    }
-	  else if(found_aconf->status & CONF_CLIENT)
-	    {
-	      if(flags & CONF_CLIENT)
-		{
-		  report_dup('I',aconf);
-		  free_conf(aconf);	/* toss new I line into the garbage */
-		}
-	      else
-		{
-		  /* Its a K line */
-		  report_dup('K',aconf);
+          if(found_aconf->flags & CONF_FLAGS_E_LINED)
+            {
+              free_conf(aconf);         /* toss it in the garbage */
+              found_aconf->status &= ~CONF_KILL;
+              piece_ptr->flags &= ~CONF_KILL;
+            }
+          else if(found_aconf->status & CONF_CLIENT)
+            {
+              if(flags & CONF_CLIENT)
+                {
+                  report_dup('I',aconf);
+                  free_conf(aconf);     /* toss new I line into the garbage */
+                }
+              else
+                {
+                  /* Its a K line */
+                  report_dup('K',aconf);
 
-		  if(found_aconf->clients)
-		    found_aconf->status |= CONF_ILLEGAL;
-		  else
-		    free_conf(found_aconf);
-		  ptr->conf_ptr = aconf;
-		}
-	    }
-	  return;
-	}
+                  if(found_aconf->clients)
+                    found_aconf->status |= CONF_ILLEGAL;
+                  else
+                    free_conf(found_aconf);
+                  ptr->conf_ptr = aconf;
+                }
+            }
+          return;
+        }
       last_ptr = ptr;
    }
 
@@ -488,17 +488,17 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
 
 /* find_user_piece
  *
- * inputs	- pointer to current level 
- *		- int flags
- *		- piece of domain name being looked for
- *		- username
- * output	- pointer to next DOMAIN_LEVEL to use
+ * inputs       - pointer to current level 
+ *              - int flags
+ *              - piece of domain name being looked for
+ *              - username
+ * output       - pointer to next DOMAIN_LEVEL to use
  * side effects -
  *
  */
 
 static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr, int flags,
-		     char *host_piece, const char* user)
+                     char *host_piece, const char* user)
 {
   DOMAIN_PIECE *ptr;
   aConfItem *aconf=NULL;
@@ -510,19 +510,19 @@ static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr, int flags,
   for(ptr=piece_ptr; ptr; ptr=ptr->next_piece)
     {
       if((aconf=ptr->conf_ptr))
-	{
-	  if( (match(ptr->host_piece,host_piece)) &&
-	      (aconf->status & flags) )
-	    {
-	      if(match(aconf->user,user))
-		{
-		  first_aconf = aconf;
-		  if(first_aconf->status & CONF_ELINE)
-		    break;
-		}
+        {
+          if( (match(ptr->host_piece,host_piece)) &&
+              (aconf->status & flags) )
+            {
+              if(match(aconf->user,user))
+                {
+                  first_aconf = aconf;
+                  if(first_aconf->status & CONF_ELINE)
+                    break;
+                }
 
-	    }
-	}
+            }
+        }
     }
 
   /* Propogate a kill "downwards" from *@*.host.tld if found,
@@ -531,24 +531,24 @@ static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr, int flags,
   if(wild_aconf)
     {
       if (wild_aconf->status & CONF_KILL)
-	{
-	  if(first_aconf && (first_aconf->status & CONF_ELINE))
-	    {
-	      return(first_aconf);
-	    }
-	}
+        {
+          if(first_aconf && (first_aconf->status & CONF_ELINE))
+            {
+              return(first_aconf);
+            }
+        }
       /* Ditto with E line.
        * Propogate an E line "downwards" from *@*.host.tld if found.
        */
       else if(wild_aconf->status & CONF_ELINE)
-	{
-	  if(first_aconf && (first_aconf->status & CONF_KILL))
-	    {
-	      first_aconf->status &= ~CONF_KILL;
-	      first_aconf->status |= CONF_ELINE;
-	      return(first_aconf);
-	    }
-	}
+        {
+          if(first_aconf && (first_aconf->status & CONF_KILL))
+            {
+              first_aconf->status &= ~CONF_KILL;
+              first_aconf->status |= CONF_ELINE;
+              return(first_aconf);
+            }
+        }
       return(wild_aconf);
     }
   /* its up to first_aconf, since wild_aconf is NULL */
@@ -557,16 +557,16 @@ static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr, int flags,
 
 /* find_host_piece
  *
- * inputs	- pointer to current level 
- *		- piece of domain name being looked for
- *		- usename
- * output	- pointer to next DOMAIN_LEVEL to use
+ * inputs       - pointer to current level 
+ *              - piece of domain name being looked for
+ *              - usename
+ * output       - pointer to next DOMAIN_LEVEL to use
  * side effects -
  *
  */
 
 static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
-				     char *host_piece, const char* user)
+                                     char *host_piece, const char* user)
 {
   DOMAIN_PIECE *ptr;
   DOMAIN_PIECE *piece_ptr;
@@ -578,9 +578,9 @@ static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
   for(ptr=piece_ptr;ptr;ptr=ptr->next_piece)
     {
       if(!irccmp(ptr->host_piece,host_piece) && (ptr->flags & flags))
-	{
-	  return(ptr);
-	}
+        {
+          return(ptr);
+        }
     }
 
   return((DOMAIN_PIECE *)NULL);
@@ -588,10 +588,10 @@ static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 
 /* find_wild_host_piece
  *
- * inputs	- pointer to current level 
- *		- piece of domain name being looked for
- *		- usename
- * output	- aConfItem or NULL
+ * inputs       - pointer to current level 
+ *              - piece of domain name being looked for
+ *              - usename
+ * output       - aConfItem or NULL
  * side effects -
  * 
  * Eventually the mtrie code could be extended to deal with
@@ -603,7 +603,7 @@ static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
  *
  */
 static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
-				     char *host_piece, const char* user)
+                                     char *host_piece, const char* user)
 {
   aConfItem *first_aconf=NULL;
   aConfItem *wild_aconf=NULL;
@@ -619,28 +619,28 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
   for(ptr=piece_ptr;ptr;ptr=ptr->next_piece)
     {
       if(match(ptr->host_piece,host_piece) && (ptr->flags & flags))
-	{
-	  first_aconf = (aConfItem *)NULL;
-	  wild_aconf = (aConfItem *)NULL;
+        {
+          first_aconf = (aConfItem *)NULL;
+          wild_aconf = (aConfItem *)NULL;
 
-	  for(pptr = ptr; pptr; pptr=pptr->next_piece)
-	    {
-	      if(pptr->conf_ptr)
-		{
-		  aconf= pptr->conf_ptr;
-		  if( (match(pptr->host_piece,host_piece)) &&
-		      (aconf->status & flags) )
-		    {
-		      if(match(aconf->user,user))
-			first_aconf = aconf;
-		    }
-		}
+          for(pptr = ptr; pptr; pptr=pptr->next_piece)
+            {
+              if(pptr->conf_ptr)
+                {
+                  aconf= pptr->conf_ptr;
+                  if( (match(pptr->host_piece,host_piece)) &&
+                      (aconf->status & flags) )
+                    {
+                      if(match(aconf->user,user))
+                        first_aconf = aconf;
+                    }
+                }
 
-	      if(pptr->wild_conf_ptr &&
-		 (pptr->wild_conf_ptr->status & flags))
-		wild_aconf = pptr->wild_conf_ptr;
-	    }
-	}
+              if(pptr->wild_conf_ptr &&
+                 (pptr->wild_conf_ptr->status & flags))
+                wild_aconf = pptr->wild_conf_ptr;
+            }
+        }
     }
   
   /* Propogate a kill "downwards" from *@*.host.tld if found,
@@ -649,24 +649,24 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
   if(wild_aconf)
     {
       if (wild_aconf->status & CONF_KILL)
-	{
-	  if(first_aconf && (first_aconf->status & CONF_ELINE))
-	    {
-	      return(first_aconf);
-	    }
-	}
+        {
+          if(first_aconf && (first_aconf->status & CONF_ELINE))
+            {
+              return(first_aconf);
+            }
+        }
       /* Ditto with E line.
        * Propogate an E line "downwards" from *@*.host.tld if found.
        */
       else if(wild_aconf->status & CONF_ELINE)
-	{
-	  if(first_aconf)
-	    {
-	      first_aconf->status &= ~CONF_KILL;
-	      first_aconf->status |= CONF_ELINE;
-	      return(first_aconf);
-	    }
-	}
+        {
+          if(first_aconf)
+            {
+              first_aconf->status &= ~CONF_KILL;
+              first_aconf->status |= CONF_ELINE;
+              return(first_aconf);
+            }
+        }
       return(wild_aconf);
     }
   /* its up to first_aconf since wild_aconf is NULL */
@@ -677,16 +677,16 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 
 /* find_matching_mtrie_conf
  *
- * inputs	- host name
- *		- user name
- * output	- pointer to aConfItem that corresponds to user/host pair
- *		  or NULL if not found
- * side effects	- NONE
+ * inputs       - host name
+ *              - user name
+ * output       - pointer to aConfItem that corresponds to user/host pair
+ *                or NULL if not found
+ * side effects - NONE
 
  */
 
 aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
-				    unsigned long ip)
+                                    unsigned long ip)
 {
   aConfItem *iline_aconf_unsortable = NULL;
 #ifdef USE_IP_I_LINE_FIRST
@@ -745,7 +745,7 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
       iline_aconf = find_sub_mtrie(trie_list, host, user, CONF_CLIENT);
 
       if(!iline_aconf)
-	iline_aconf = last_found_iline_aconf;
+        iline_aconf = last_found_iline_aconf;
 
       /* If either an E line or K line is found, there is no need
        * to go any further. If there wasn't an I line found,
@@ -761,7 +761,7 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
        */
 
       if(!iline_aconf)
-	iline_aconf= find_wild_card_iline(user);
+        iline_aconf= find_wild_card_iline(user);
 
       /* If its an E line, found from either the mtrie or the top level
        * domain "*" return it. If its a K line found from the mtrie
@@ -769,8 +769,8 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
        */
 
       if(iline_aconf && ((iline_aconf->status & CONF_KILL) ||
-			 (iline_aconf->flags & CONF_FLAGS_E_LINED)))
-	return(iline_aconf);
+                         (iline_aconf->flags & CONF_FLAGS_E_LINED)))
+        return(iline_aconf);
     }
   else
     {
@@ -782,8 +782,8 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
        */
 
       if(iline_aconf && ((iline_aconf->status & CONF_KILL) ||
-			 (iline_aconf->flags & CONF_FLAGS_E_LINED)))
-	return(iline_aconf);
+                         (iline_aconf->flags & CONF_FLAGS_E_LINED)))
+        return(iline_aconf);
     }
 
   /* always default to an I line found in the unsortable list */
@@ -841,16 +841,16 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
   if(trie_list)
     {
       if(first_kline_trie_list)
-	{
-	  stack_pointer = saved_stack_pointer;
-	  kline_aconf = find_sub_mtrie(first_kline_trie_list,host,user,
-				       CONF_KILL);
-	}
+        {
+          stack_pointer = saved_stack_pointer;
+          kline_aconf = find_sub_mtrie(first_kline_trie_list,host,user,
+                                       CONF_KILL);
+        }
       else
-	{
-	  stack_pointer = top_of_stack;
-	  kline_aconf = find_sub_mtrie(trie_list,host,user,CONF_KILL);
-	}
+        {
+          stack_pointer = top_of_stack;
+          kline_aconf = find_sub_mtrie(trie_list,host,user,CONF_KILL);
+        }
     }
   else
     kline_aconf = (aConfItem *)NULL;
@@ -875,18 +875,18 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
 
 /*
  * find_sub_mtrie 
- * inputs	- pointer to current domain level 
- * 		- hostname piece
- *		- username
- *		- flags flags to match for
- * output	- pointer to aConfItem or NULL
- * side effects	-
+ * inputs       - pointer to current domain level 
+ *              - hostname piece
+ *              - username
+ *              - flags flags to match for
+ * output       - pointer to aConfItem or NULL
+ * side effects -
  */
 
 
 
 static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
-				 const char* host, const char* user,int flags)
+                                 const char* host, const char* user,int flags)
 {
   DOMAIN_PIECE *cur_piece;
   char *cur_dns_piece;
@@ -905,24 +905,24 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
 
       aconf = find_wild_host_piece(cur_level,flags,cur_dns_piece,user);
       if(aconf && aconf->status & CONF_KILL)
-	return(aconf);
+        return(aconf);
 
       /* no k-line yet, so descend deeper yet if possible */
       cur_piece = find_host_piece(cur_level,flags,cur_dns_piece,user);
       if(!cur_piece)
-	return((aConfItem *)NULL);
+        return((aConfItem *)NULL);
     }
   else
     {
       aconf = find_wild_host_piece(cur_level,flags,cur_dns_piece,user);
       if(aconf)
-	last_found_iline_aconf = aconf;
+        last_found_iline_aconf = aconf;
 
       /* looking for CONF_CLIENT, so descend deeper */
       cur_piece = find_host_piece(cur_level,flags,cur_dns_piece,user);
 
       if(!cur_piece)
-	return((aConfItem *)NULL);
+        return((aConfItem *)NULL);
     }
 
   if((cur_piece->flags & CONF_KILL) && (!first_kline_trie_list))
@@ -944,9 +944,9 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
   else
     {
       if((aconf = find_user_piece(cur_piece,flags,cur_dns_piece,user)))
-	return(aconf);
+        return(aconf);
       if((aconf = find_wild_host_piece(cur_level,flags,cur_dns_piece,user)))
-	return(aconf);
+        return(aconf);
       return(last_found_iline_aconf);
     }
 
@@ -961,7 +961,7 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
  * an ordered list yields 0 (yes, a piece of Soleil)
  *
  * a little bit rewritten, and yes. I tested it. it is faster.
- * 	- Dianora
+ *      - Dianora
  *
  * modified for use with mtrie_conf.c
  */
@@ -970,91 +970,91 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
 static int sortable(char *tokenized,char *p)
 {
   int  state=0;
-  char *d;		/* destination */
+  char *d;              /* destination */
 
   if (!p)
-    return(0);			/* NULL patterns aren't allowed in ordered
-				 * lists (will have to use linear functions)
-				 * -Sol
-				 *
-				 * uh, if its NULL then nothing can be done
-				 * with it -Dianora
-				 */
+    return(0);                  /* NULL patterns aren't allowed in ordered
+                                 * lists (will have to use linear functions)
+                                 * -Sol
+                                 *
+                                 * uh, if its NULL then nothing can be done
+                                 * with it -Dianora
+                                 */
 
   if (strchr(p, '?'))
-    return(0);			/* reject strings with '?' as non-sortable
-				 *  whoever uses '?' patterns anyway ? -Sol
-				 */
+    return(0);                  /* reject strings with '?' as non-sortable
+                                 *  whoever uses '?' patterns anyway ? -Sol
+                                 */
 
   d = tokenized;
 
-  if((*p == '*') && (*(p+1) == '\0'))	/* special case a single'*' */
-    return(-2);	
+  if((*p == '*') && (*(p+1) == '\0'))   /* special case a single'*' */
+    return(-2); 
 
 
   FOREVER
     {
       switch(state)
-	{
-	case 0:
-	  if(*p == '*')
-	    {
-	      *d = *p;
-	      state = 1;	/* Go into state 1 if first char is '*' */
-	    }
-	  else
-	    {
-	      *d = *p;		/* Go into state 2 if first char is not '*' */
-	      state = 2;
-	    }
-	  break;
+        {
+        case 0:
+          if(*p == '*')
+            {
+              *d = *p;
+              state = 1;        /* Go into state 1 if first char is '*' */
+            }
+          else
+            {
+              *d = *p;          /* Go into state 2 if first char is not '*' */
+              state = 2;
+            }
+          break;
 
-	case 1:			/* state 1, sit here until '\0' or '*' seen */
-	  if(*p == '\0')	
-	    {
-	      *d = '\0';
-	      dns_stack[stack_pointer++] = tokenized;
-	      return(-1);	/* followed by null terminator is sortable */
-	    }
-	  else if(*p == '*')	/* '*' followed by another '*' is unsortable */
-	    return(0);
-	  else if(*p == '.')	/* this is a "*.foo" type kline */
-	    {
-	      *d = '\0';
-	      dns_stack[stack_pointer++] = tokenized;
-	      tokenized = d+1;
-	    }
-	  else
-	    *d = *p;		/* just keep copying, building this token */
-	  break;
-	 
-	case 2:			/* state 2, sit here if no '*' seen and */
-	  if(*p == '\0')	
-	    {
-	      *d = '\0';	/* if null terminator seen, its sortable */
-	      dns_stack[stack_pointer++] = tokenized;
-	      return(-1);	
-	    }
-	  else if(*p == '*')	/* its "blah*blah" or "blah*"
-				   which is not sortable */
-	    {
+        case 1:                 /* state 1, sit here until '\0' or '*' seen */
+          if(*p == '\0')        
+            {
+              *d = '\0';
+              dns_stack[stack_pointer++] = tokenized;
+              return(-1);       /* followed by null terminator is sortable */
+            }
+          else if(*p == '*')    /* '*' followed by another '*' is unsortable */
+            return(0);
+          else if(*p == '.')    /* this is a "*.foo" type kline */
+            {
+              *d = '\0';
+              dns_stack[stack_pointer++] = tokenized;
+              tokenized = d+1;
+            }
+          else
+            *d = *p;            /* just keep copying, building this token */
+          break;
+         
+        case 2:                 /* state 2, sit here if no '*' seen and */
+          if(*p == '\0')        
+            {
+              *d = '\0';        /* if null terminator seen, its sortable */
+              dns_stack[stack_pointer++] = tokenized;
+              return(-1);       
+            }
+          else if(*p == '*')    /* its "blah*blah" or "blah*"
+                                   which is not sortable */
+            {
 
-	      return(0);
-	    }
-	  else if(*p == '.')	/* push another piece on stack */
-	    {
-	      *d = '\0';
-	      dns_stack[stack_pointer++] = tokenized;
-	      tokenized = d+1;
-	    }
-	  else
-	    *d = *p;		/* just keep copying, building this token */
-	  break;
-	 
-	default:
-	  return(0);
-	  break;
-	}
+              return(0);
+            }
+          else if(*p == '.')    /* push another piece on stack */
+            {
+              *d = '\0';
+              dns_stack[stack_pointer++] = tokenized;
+              tokenized = d+1;
+            }
+          else
+            *d = *p;            /* just keep copying, building this token */
+          break;
+         
+        default:
+          return(0);
+          break;
+        }
       d++;
       p++;
     }
@@ -1063,9 +1063,9 @@ static int sortable(char *tokenized,char *p)
 /*
  * tokenize_and_stack
  *
- * inputs	- pointer to tokenized output
- * output	- none
- * side effects	-
+ * inputs       - pointer to tokenized output
+ * output       - none
+ * side effects -
  * This function tokenizes the input, reversing it onto
  * a dns stack. Basically what sortable() does, but without
  * scanning for sortability.
@@ -1084,13 +1084,13 @@ static void tokenize_and_stack(char* tokenized, const char* p)
   while (*p)
     {
       if(*p == '.')
-	{
-	  *d = '\0';
-	  dns_stack[stack_pointer++] = tokenized;
-	  tokenized = d+1;
-	}
+        {
+          *d = '\0';
+          dns_stack[stack_pointer++] = tokenized;
+          tokenized = d+1;
+        }
       else
-	*d = *p;
+        *d = *p;
 
       d++;
       p++;
@@ -1102,9 +1102,9 @@ static void tokenize_and_stack(char* tokenized, const char* p)
 /*
  * look_in_unsortable_ilines()
  *
- * inputs	- host name
- * 		- username
- * output	- aConfItem pointer or NULL
+ * inputs       - host name
+ *              - username
+ * output       - aConfItem pointer or NULL
  * side effects -
  *
  * scan the link list of unsortable patterns
@@ -1117,10 +1117,10 @@ static aConfItem *look_in_unsortable_ilines(const char* host, const char* user)
   for(found_conf=unsortable_list_ilines;found_conf;found_conf=found_conf->next)
     {
       if(match(found_conf->host,host) &&
-	 match(found_conf->user,user))
-	{
-	    return(found_conf);
-	}
+         match(found_conf->user,user))
+        {
+            return(found_conf);
+        }
     }
   return((aConfItem *)NULL);
 }
@@ -1128,9 +1128,9 @@ static aConfItem *look_in_unsortable_ilines(const char* host, const char* user)
 /*
  * look_in_unsortable_klines()
  *
- * inputs	- host name
- * 		- username
- * output	- aConfItem pointer or NULL
+ * inputs       - host name
+ *              - username
+ * output       - aConfItem pointer or NULL
  * side effects -
  *
  * scan the link list of unsortable patterns
@@ -1143,8 +1143,8 @@ static aConfItem *look_in_unsortable_klines(const char* host, const char* user)
   for(found_conf=unsortable_list_klines;found_conf;found_conf=found_conf->next)
     {
       if(match(found_conf->host,host) &&
-	 match(found_conf->user,user))
-	return(found_conf);
+         match(found_conf->user,user))
+        return(found_conf);
     }
   return((aConfItem *)NULL);
 }
@@ -1152,8 +1152,8 @@ static aConfItem *look_in_unsortable_klines(const char* host, const char* user)
 /*
  * find_wild_card_iline()
  *
- * inputs	- username
- * output	- aConfItem pointer or NULL
+ * inputs       - username
+ * output       - aConfItem pointer or NULL
  * side effects -
  *
  * scan the link list of top level domain *
@@ -1166,7 +1166,7 @@ static aConfItem* find_wild_card_iline(const char* user)
   for(found_conf=wild_card_ilines;found_conf;found_conf=found_conf->next)
     {
       if(match(found_conf->user,user))
-	return(found_conf);
+        return(found_conf);
     }
   return((aConfItem *)NULL);
 }
@@ -1174,10 +1174,10 @@ static aConfItem* find_wild_card_iline(const char* user)
 /*
  * report_matching_host_klines
  *
- * inputs	- pointer to aClient to send reply to
- *		- hostname to match
- * output	- NONE
- * side effects	-
+ * inputs       - pointer to aClient to send reply to
+ *              - hostname to match
+ * output       - NONE
+ * side effects -
  * all klines in the same domain as hostname given are listed.
  *
  * two_letter_tld is for future use.
@@ -1211,7 +1211,7 @@ void report_matching_host_klines(aClient *sptr,char *host)
 
   while(*p)
     p++;
-  p -= 4;	
+  p -= 4;       
   if(p[3] == '\0')
     two_letter_tld = YES;
 
@@ -1258,10 +1258,10 @@ void report_matching_host_klines(aClient *sptr,char *host)
 /*
  * report_unsortable_klines()
  *
- * inputs	- pointer to client pointer to report to
- *		- pointer to host name needed
- * output	- NONE
- * side effects	- report the klines in the unsortable list
+ * inputs       - pointer to client pointer to report to
+ *              - pointer to host name needed
+ * output       - NONE
+ * side effects - report the klines in the unsortable list
  */
 
 static void report_unsortable_klines(aClient *sptr,char *need_host)
@@ -1278,20 +1278,20 @@ static void report_unsortable_klines(aClient *sptr,char *need_host)
 
       /* Hide any comment following a '|' seen in the password field */
       if(match(host,need_host))
-	{
-	  p = (char *)NULL;
-	  if(!IsAnOper(sptr))
-	    {
-	      p = strchr(pass,'|');
-	      if(p)
-		*p = '\0';
-	    }
-	  sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
-		     sptr->name, 'K', host,
-		     name, pass);
-	  if(p)
-	    *p = '|';
-	}
+        {
+          p = (char *)NULL;
+          if(!IsAnOper(sptr))
+            {
+              p = strchr(pass,'|');
+              if(p)
+                *p = '\0';
+            }
+          sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
+                     sptr->name, 'K', host,
+                     name, pass);
+          if(p)
+            *p = '|';
+        }
     }
 }
 
@@ -1299,10 +1299,10 @@ static void report_unsortable_klines(aClient *sptr,char *need_host)
 /*
  * report_mtrie_conf_links()
  *
- * inputs	- aClient pointer
- *		- flags type either CONF_KILL or CONF_CLIENT
- * output	- none
- * side effects	- report I lines/K lines found in the mtrie
+ * inputs       - aClient pointer
+ *              - flags type either CONF_KILL or CONF_CLIENT
+ * output       - none
+ * side effects - report I lines/K lines found in the mtrie
  */
 
 void report_mtrie_conf_links(aClient *sptr, int flags)
@@ -1310,7 +1310,7 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
   aConfItem *found_conf;
   char *name, *host, *pass, *user, *p;
   int  port;
-  char c;		/* conf char used for CONF_CLIENT only */
+  char c;               /* conf char used for CONF_CLIENT only */
 
   if(trie_list)
     report_sub_mtrie(sptr,flags,trie_list);
@@ -1319,110 +1319,110 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
   if(flags & CONF_CLIENT)
     {
       for(found_conf = unsortable_list_ilines;
-	  found_conf;found_conf=found_conf->next)
-	{
-	  /* Non local opers do not need to know about
-	   * I lines that do spoofing 
-	   */
-	  if(!(MyConnect(sptr) && IsAnOper(sptr)) &&
-	     IsConfDoSpoofIp(found_conf))
-	    continue;
+          found_conf;found_conf=found_conf->next)
+        {
+          /* Non local opers do not need to know about
+           * I lines that do spoofing 
+           */
+          if(!(MyConnect(sptr) && IsAnOper(sptr)) &&
+             IsConfDoSpoofIp(found_conf))
+            continue;
 
-	  GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port );
+          GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port );
 
-	  c = 'I';
+          c = 'I';
 #ifdef LITTLE_I_LINES
-	  if(IsConfLittleI(found_conf))
-	    c = 'i';
+          if(IsConfLittleI(found_conf))
+            c = 'i';
 #endif
-	  sendto_one(sptr, form_str(RPL_STATSILINE), me.name,
-		     sptr->name,
-		     c,
-		     name,
-		     show_iline_prefix(sptr,found_conf,user),
-		     host,
-		     port,
-		     get_conf_class(found_conf));
-	}
+          sendto_one(sptr, form_str(RPL_STATSILINE), me.name,
+                     sptr->name,
+                     c,
+                     name,
+                     show_iline_prefix(sptr,found_conf,user),
+                     host,
+                     port,
+                     get_conf_class(found_conf));
+        }
 
       for(found_conf = wild_card_ilines;
-	  found_conf;found_conf=found_conf->next)
-	{
-	  GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port);
+          found_conf;found_conf=found_conf->next)
+        {
+          GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port);
 
-	  c = 'I';
+          c = 'I';
 #ifdef LITTLE_I_LINES
-	  if(IsConfLittleI(found_conf))
-	    c = 'i';
+          if(IsConfLittleI(found_conf))
+            c = 'i';
 #endif
-	  sendto_one(sptr, form_str(RPL_STATSILINE), me.name,
-		     sptr->name,
-		     c,
-		     name,
-		     show_iline_prefix(sptr,found_conf,user),
-		     host,
-		     port,
-		     get_conf_class(found_conf));
-	}
+          sendto_one(sptr, form_str(RPL_STATSILINE), me.name,
+                     sptr->name,
+                     c,
+                     name,
+                     show_iline_prefix(sptr,found_conf,user),
+                     host,
+                     port,
+                     get_conf_class(found_conf));
+        }
 
       for(found_conf = ip_i_lines;
-	  found_conf;found_conf=found_conf->next)
-	{
-	  GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port );
+          found_conf;found_conf=found_conf->next)
+        {
+          GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port );
 
-	  if(!(found_conf->status&CONF_CLIENT))
-	    continue;
+          if(!(found_conf->status&CONF_CLIENT))
+            continue;
 
-	  c = 'I';
+          c = 'I';
 #ifdef LITTLE_I_LINES
-	  if(IsConfLittleI(found_conf))
-	    c = 'i';
+          if(IsConfLittleI(found_conf))
+            c = 'i';
 #endif
-	  sendto_one(sptr, form_str(RPL_STATSILINE), me.name,
-		     sptr->name,
-		     c,
-		     name,
-		     show_iline_prefix(sptr,found_conf,name),
-		     host,
-		     port,
-		     get_conf_class(found_conf));
-	}
+          sendto_one(sptr, form_str(RPL_STATSILINE), me.name,
+                     sptr->name,
+                     c,
+                     name,
+                     show_iline_prefix(sptr,found_conf,name),
+                     host,
+                     port,
+                     get_conf_class(found_conf));
+        }
     }
   else
     {
       report_ip_Klines(sptr);
 
       for(found_conf = unsortable_list_klines;
-	  found_conf;found_conf=found_conf->next)
-	{
-	  GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port);
+          found_conf;found_conf=found_conf->next)
+        {
+          GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port);
 
-	  /* Hide any comment following a '|' seen in the password field */
-	  p = (char *)NULL;
-	  if(!IsAnOper(sptr))
-	    {
-	      p = strchr(pass,'|');
-	      if(p)
-		*p = '\0';
-	    }
+          /* Hide any comment following a '|' seen in the password field */
+          p = (char *)NULL;
+          if(!IsAnOper(sptr))
+            {
+              p = strchr(pass,'|');
+              if(p)
+                *p = '\0';
+            }
 
-	  sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
-		     sptr->name, 'K', host,
-		     name, pass);
-	  if(p)
-	    *p = '|';
-	}
+          sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
+                     sptr->name, 'K', host,
+                     name, pass);
+          if(p)
+            *p = '|';
+        }
     }
 }
 
 /*
  * show_iline_prefix()
  *
- * inputs	- pointer to aClient requesting output
- *		- pointer to aConfItem 
- *		- name to which iline prefix will be prefixed to
- * output	- pointer to static string with prefixes listed in ascii form
- * side effects	- NONE
+ * inputs       - pointer to aClient requesting output
+ *              - pointer to aConfItem 
+ *              - name to which iline prefix will be prefixed to
+ * output       - pointer to static string with prefixes listed in ascii form
+ * side effects - NONE
  */
 
 /* urgh. now used also in dline_conf.c */
@@ -1479,9 +1479,9 @@ char *show_iline_prefix(aClient *sptr,aConfItem *aconf,char *name)
 
 /*
  * report_sub_mtrie()
- * inputs	- pointer to DOMAIN_LEVEL (mtrie subtree)
- * output	- none
- * side effects	-
+ * inputs       - pointer to DOMAIN_LEVEL (mtrie subtree)
+ * output       - none
+ * side effects -
  * report sub mtrie entries recursively
  */
 
@@ -1500,130 +1500,130 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
   for(i=0; i < MAX_PIECE_LIST; i++)
     {
       for(dp_ptr=dl_ptr->piece_list[i];dp_ptr; dp_ptr = dp_ptr->next_piece)
-	{
-	  report_sub_mtrie(sptr,flags,dp_ptr->next_level);
-	  if(dp_ptr->conf_ptr)
-	    {
-	      /* Only show desired I/K lines */
-	      aconf = dp_ptr->conf_ptr;
+        {
+          report_sub_mtrie(sptr,flags,dp_ptr->next_level);
+          if(dp_ptr->conf_ptr)
+            {
+              /* Only show desired I/K lines */
+              aconf = dp_ptr->conf_ptr;
 
-	      if(aconf->status & flags)
-		{
-		  GetPrintableaConfItem(aconf, &name, &host, &pass, &user,
-					&port);
+              if(aconf->status & flags)
+                {
+                  GetPrintableaConfItem(aconf, &name, &host, &pass, &user,
+                                        &port);
 
-		  if (aconf->status == CONF_KILL)
-		    {
-		      /* Hide any comment following a '|' seen in the
-		       * password field
-		       */
-		      p = (char *)NULL;
-		      if(!IsAnOper(sptr))
-			{
-			  p = strchr(pass,'|');
-			  if(p)
-			    *p = '\0';
-			}
-		      sendto_one(sptr, form_str(RPL_STATSKLINE),
-				 me.name,
-				 sptr->name,
-				 'K',
-				 host,
-				 user,
-				 pass);
-		      if(p)
-			*p = '|';
-		    }
-		  else
-		    {
-		      /* Non local opers do not need to know about
-		       * I lines that do spoofing
-		       */
-		      if(!(MyConnect(sptr) && IsAnOper(sptr))
-			 && IsConfDoSpoofIp(aconf))
-			continue;
+                  if (aconf->status == CONF_KILL)
+                    {
+                      /* Hide any comment following a '|' seen in the
+                       * password field
+                       */
+                      p = (char *)NULL;
+                      if(!IsAnOper(sptr))
+                        {
+                          p = strchr(pass,'|');
+                          if(p)
+                            *p = '\0';
+                        }
+                      sendto_one(sptr, form_str(RPL_STATSKLINE),
+                                 me.name,
+                                 sptr->name,
+                                 'K',
+                                 host,
+                                 user,
+                                 pass);
+                      if(p)
+                        *p = '|';
+                    }
+                  else
+                    {
+                      /* Non local opers do not need to know about
+                       * I lines that do spoofing
+                       */
+                      if(!(MyConnect(sptr) && IsAnOper(sptr))
+                         && IsConfDoSpoofIp(aconf))
+                        continue;
 
-		      c = 'I';
+                      c = 'I';
 #ifdef LITTLE_I_LINES
-		      if(IsConfLittleI(aconf))
-			c = 'i';
+                      if(IsConfLittleI(aconf))
+                        c = 'i';
 #endif
-		      sendto_one(sptr, form_str(RPL_STATSILINE),
-				 me.name,
-				 sptr->name,
-				 c,
-				 name,
-				 show_iline_prefix(sptr,aconf,user),
-				 host,
-				 port,
-				 get_conf_class(aconf));
-		    }
-		}
-	    }
+                      sendto_one(sptr, form_str(RPL_STATSILINE),
+                                 me.name,
+                                 sptr->name,
+                                 c,
+                                 name,
+                                 show_iline_prefix(sptr,aconf,user),
+                                 host,
+                                 port,
+                                 get_conf_class(aconf));
+                    }
+                }
+            }
 
-	  if(dp_ptr->wild_conf_ptr)
-	    {
-	      aconf = dp_ptr->wild_conf_ptr;
+          if(dp_ptr->wild_conf_ptr)
+            {
+              aconf = dp_ptr->wild_conf_ptr;
 
-	      if(aconf->status & flags)
-		{
-		  GetPrintableaConfItem(aconf, &name, &host, &pass,
-					&user, &port);
+              if(aconf->status & flags)
+                {
+                  GetPrintableaConfItem(aconf, &name, &host, &pass,
+                                        &user, &port);
 
-		  if (aconf->status == CONF_KILL)
-		    {
-		      p = (char *)NULL;
-		      if(!IsAnOper(sptr))
-			{
-			  p = strchr(pass,'|');
-			  if(p)
-			    *p = '\0';
-			}
-		      sendto_one(sptr, form_str(RPL_STATSKLINE),
-				 me.name,
-				 sptr->name,
-				 'K',
-				 host,
-				 user,
-				 pass);
-		      if(p)
-			*p = '|';
-		    }
-		  else
-		    {
-		      /* Non local opers do not need to know about
-		       * I lines that do spoofing
-		       */
-		      if(!(MyConnect(sptr) && IsAnOper(sptr))
-			 && IsConfDoSpoofIp(aconf))
-			continue;
-		      c = 'I';
+                  if (aconf->status == CONF_KILL)
+                    {
+                      p = (char *)NULL;
+                      if(!IsAnOper(sptr))
+                        {
+                          p = strchr(pass,'|');
+                          if(p)
+                            *p = '\0';
+                        }
+                      sendto_one(sptr, form_str(RPL_STATSKLINE),
+                                 me.name,
+                                 sptr->name,
+                                 'K',
+                                 host,
+                                 user,
+                                 pass);
+                      if(p)
+                        *p = '|';
+                    }
+                  else
+                    {
+                      /* Non local opers do not need to know about
+                       * I lines that do spoofing
+                       */
+                      if(!(MyConnect(sptr) && IsAnOper(sptr))
+                         && IsConfDoSpoofIp(aconf))
+                        continue;
+                      c = 'I';
 #ifdef LITTLE_I_LINES
-		      if(IsConfLittleI(aconf))
-			c = 'i';
+                      if(IsConfLittleI(aconf))
+                        c = 'i';
 #endif
-		      sendto_one(sptr, form_str(RPL_STATSILINE),
-				 me.name,
-				 sptr->name,
-				 c,
-				 name,
-				 show_iline_prefix(sptr,aconf,user),
-				 host,
-				 port,
-				 get_conf_class(aconf));
-		    }
-		}
-	    }
-	}
+                      sendto_one(sptr, form_str(RPL_STATSILINE),
+                                 me.name,
+                                 sptr->name,
+                                 c,
+                                 name,
+                                 show_iline_prefix(sptr,aconf,user),
+                                 host,
+                                 port,
+                                 get_conf_class(aconf));
+                    }
+                }
+            }
+        }
     }
 }
 
 /*
  * clear_mtrie_conf_links()
  *
- * inputs	- NONE
- * output	- NONE
- * side effects	-
+ * inputs       - NONE
+ * output       - NONE
+ * side effects -
  * Clear out the mtrie list and the unsortable list (recursively)
  */
 
@@ -1646,9 +1646,9 @@ void clear_mtrie_conf_links()
       /* this is an I line list */
 
       if(found_conf->clients)
-	found_conf->status |= CONF_ILLEGAL;
+        found_conf->status |= CONF_ILLEGAL;
       else
-	free_conf(found_conf);
+        free_conf(found_conf);
     }
   unsortable_list_ilines = (aConfItem *)NULL;
 
@@ -1665,9 +1665,9 @@ void clear_mtrie_conf_links()
     {
       found_conf_next = found_conf->next;
       if (found_conf->clients)
-	found_conf->status |= CONF_ILLEGAL;
+        found_conf->status |= CONF_ILLEGAL;
       else
-	free_conf(found_conf);
+        free_conf(found_conf);
     }
   wild_card_ilines = (aConfItem *)NULL;
 
@@ -1680,9 +1680,9 @@ void clear_mtrie_conf_links()
        * have already been cleared out of the mtrie tree above.
        */
       if(found_conf->clients)
-	found_conf->status |= CONF_ILLEGAL;
+        found_conf->status |= CONF_ILLEGAL;
       else
-	free_conf(found_conf);
+        free_conf(found_conf);
     }
   ip_i_lines = (aConfItem *)NULL;
 }
@@ -1690,9 +1690,9 @@ void clear_mtrie_conf_links()
 /*
  * clear_sub_mtrie
  *
- * inputs	- DOMAIN_LEVEL pointer
- * output	- none
- * side effects	- this portion of the mtrie is cleared
+ * inputs       - DOMAIN_LEVEL pointer
+ * output       - none
+ * side effects - this portion of the mtrie is cleared
  */
 
 static void clear_sub_mtrie(DOMAIN_LEVEL *dl_ptr)
@@ -1711,30 +1711,30 @@ static void clear_sub_mtrie(DOMAIN_LEVEL *dl_ptr)
       dl_ptr->piece_list[i] = NULL;
 
       for(;dp_ptr; dp_ptr = next_dp_ptr)
-	{
-	  clear_sub_mtrie(dp_ptr->next_level);
+        {
+          clear_sub_mtrie(dp_ptr->next_level);
 
-	  if(dp_ptr->wild_conf_ptr)
-	    {
-	      conf_ptr = dp_ptr->wild_conf_ptr;
-	      if( (conf_ptr->status & CONF_CLIENT) && conf_ptr->clients)
-		conf_ptr->status |= CONF_ILLEGAL;
-	      else
-		free_conf(conf_ptr);
-	    }
+          if(dp_ptr->wild_conf_ptr)
+            {
+              conf_ptr = dp_ptr->wild_conf_ptr;
+              if( (conf_ptr->status & CONF_CLIENT) && conf_ptr->clients)
+                conf_ptr->status |= CONF_ILLEGAL;
+              else
+                free_conf(conf_ptr);
+            }
 
-	  if(dp_ptr->conf_ptr)
-	    {
-	      conf_ptr = dp_ptr->conf_ptr;
-	      if( (conf_ptr->status & CONF_CLIENT) && conf_ptr->clients)
-		conf_ptr->status |= CONF_ILLEGAL;
-	      else
-		free_conf(conf_ptr);
-	    }
-	    
-	  next_dp_ptr = dp_ptr->next_piece;
-	  MyFree(dp_ptr);
-	}
+          if(dp_ptr->conf_ptr)
+            {
+              conf_ptr = dp_ptr->conf_ptr;
+              if( (conf_ptr->status & CONF_CLIENT) && conf_ptr->clients)
+                conf_ptr->status |= CONF_ILLEGAL;
+              else
+                free_conf(conf_ptr);
+            }
+            
+          next_dp_ptr = dp_ptr->next_piece;
+          MyFree(dp_ptr);
+        }
     }
   MyFree(dl_ptr);
 }
@@ -1742,9 +1742,9 @@ static void clear_sub_mtrie(DOMAIN_LEVEL *dl_ptr)
 /*
  * find_matching_ip_i_line()
  * 
- * inputs	- unsigned long IP in host order
- * output	- aConfItem pointer if found, NULL if not
- * side effects	-
+ * inputs       - unsigned long IP in host order
+ * output       - aConfItem pointer if found, NULL if not
+ * side effects -
  * search the ip_i_line link list
  * looking for a match, return aConfItem pointer if found 
  */
@@ -1756,7 +1756,7 @@ static aConfItem *find_matching_ip_i_line(unsigned long host_ip)
   for( aconf = ip_i_lines; aconf; aconf = aconf->next)
     {
       if((host_ip & aconf->ip_mask) == aconf->ip)
-	return(aconf);
+        return(aconf);
     }
   return((aConfItem *)NULL);
 }
@@ -1764,9 +1764,9 @@ static aConfItem *find_matching_ip_i_line(unsigned long host_ip)
 /*
  * report_dup()
  *
- * input	- char type
- *		- pointer to aConfItem
- * output	- NONE
+ * input        - char type
+ *              - pointer to aConfItem
+ * output       - NONE
  * side effects -
  * report a duplicate conf item found in the mtrie
  *
@@ -1780,5 +1780,5 @@ static void report_dup(char type,aConfItem *aconf)
   GetPrintableaConfItem(aconf, &name, &host, &pass, &user, &port);
 
   sendto_realops("DUP: %c: (%s@%s) pass %s name %s port %d",
-		 type,user,host,pass,name,port);
+                 type,user,host,pass,name,port);
 }

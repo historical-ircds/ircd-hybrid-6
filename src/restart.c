@@ -10,8 +10,8 @@
 /* function definition */
 
 /* external var */
-extern char 	**myargv;
-extern int 	dorehash;
+extern char     **myargv;
+extern int      dorehash;
 extern void     *edata;
 
 void restart(char *mesg)
@@ -24,14 +24,14 @@ void restart(char *mesg)
     abort();
   was_here = YES;
 
-#ifdef	USE_SYSLOG
+#ifdef  USE_SYSLOG
   syslog(LOG_WARNING, "Restarting Server because: %s, memory data limit: %ld",
          mesg, edata );
 #endif
   if (bootopt & BOOT_STDERR)
     {
       fprintf(stderr, "Restarting Server because: %s, memory: %ld\n",
-	      mesg, (unsigned long)edata);
+              mesg, (unsigned long)edata);
     }
   server_reboot();
 }
@@ -40,7 +40,7 @@ void s_restart(void)
 {
   static int restarting = 0;
 
-#ifdef	USE_SYSLOG
+#ifdef  USE_SYSLOG
   syslog(LOG_WARNING, "Server Restarting on SIGINT");
 #endif
   if (restarting == 0)
@@ -57,7 +57,7 @@ void server_reboot(void)
   int i;
   
   sendto_ops("Aieeeee!!!  Restarting server... memory: %d",
-	     edata );
+             edata );
 
   Debug((DEBUG_NOTICE,"Restarting server..."));
   flush_connections(me.fd);
@@ -102,17 +102,17 @@ void s_rehash()
 }
 
 /* not sure about where this should be */
-void	 setup_signals()
+void     setup_signals()
 {
-#ifdef	POSIX_SIGNALS
-  struct	sigaction act;
+#ifdef  POSIX_SIGNALS
+  struct        sigaction act;
 
   act.sa_handler = SIG_IGN;
   act.sa_flags = 0;
   sigemptyset(&act.sa_mask);
   sigaddset(&act.sa_mask, SIGPIPE);
   sigaddset(&act.sa_mask, SIGALRM);
-# ifdef	SIGWINCH
+# ifdef SIGWINCH
   sigaddset(&act.sa_mask, SIGWINCH);
   sigaction(SIGWINCH, &act, NULL);
 # endif
@@ -131,13 +131,13 @@ void	 setup_signals()
   sigaction(SIGTERM, &act, NULL);
 
 #else
-# ifndef	HAVE_RELIABLE_SIGNALS
+# ifndef        HAVE_RELIABLE_SIGNALS
   signal(SIGPIPE, dummy);
-#  ifdef	SIGWINCH
+#  ifdef        SIGWINCH
   signal(SIGWINCH, dummy);
 #  endif
 # else
-#  ifdef	SIGWINCH
+#  ifdef        SIGWINCH
   signal(SIGWINCH, SIG_IGN);
 #  endif
   signal(SIGPIPE, SIG_IGN);

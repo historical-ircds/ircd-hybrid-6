@@ -62,7 +62,7 @@
 
 #define USERS_PREALLOCATE 1024
 
-void	outofmemory();
+void    outofmemory();
 
 /* for Wohali's block allocator */
 BlockHeap *free_Links;
@@ -80,7 +80,7 @@ void initlists()
   /* anUser structs are used by both local aClients, and remote aClients */
 
   free_anUsers = BlockHeapCreate(sizeof(anUser),
-				 USERS_PREALLOCATE + MAXCONNECTIONS);
+                                 USERS_PREALLOCATE + MAXCONNECTIONS);
 
 #ifdef FLUD
   /* fludbot structs are used to track CTCP Flooders */
@@ -91,15 +91,15 @@ void initlists()
 /*
  * outofmemory()
  *
- * input	- NONE
- * output	- NONE
- * side effects	- simply try to report there is a problem
- *	  	  I free all the memory in the kline lists
- *		  hoping to free enough memory so that a proper
- *		  report can be made. If I was already here (was_here)
- *	  	  then I got called twice, and more drastic measures
- *		  are in order. I'll try to just abort() at least.
- *		  -Dianora
+ * input        - NONE
+ * output       - NONE
+ * side effects - simply try to report there is a problem
+ *                I free all the memory in the kline lists
+ *                hoping to free enough memory so that a proper
+ *                report can be made. If I was already here (was_here)
+ *                then I got called twice, and more drastic measures
+ *                are in order. I'll try to just abort() at least.
+ *                -Dianora
  */
 void outofmemory()
 {
@@ -115,23 +115,23 @@ void outofmemory()
   restart("Out of Memory");
 }
 
-	
+        
 /*
 ** 'make_user' add's an User information block to a client
 ** if it was not previously allocated.
 */
 anUser* make_user(aClient *cptr)
 {
-  anUser	*user;
+  anUser        *user;
 
   user = cptr->user;
   if (!user)
     {
       user = BlockHeapALLOC(free_anUsers,anUser);
       if( user == (anUser *)NULL)
-	outofmemory();
+        outofmemory();
       user->away = NULL;
-      user->server = (char *)NULL;	/* scache server name */
+      user->server = (char *)NULL;      /* scache server name */
       user->refcnt = 1;
       user->joined = 0;
       user->channel = NULL;
@@ -168,34 +168,34 @@ aServer *make_server(aClient *cptr)
 
 /*
 ** free_user
-**	Decrease user reference count by one and release block,
-**	if count reaches 0
+**      Decrease user reference count by one and release block,
+**      if count reaches 0
 */
 void _free_user(anUser* user, aClient* cptr)
 {
   if (--user->refcnt <= 0)
     {
       if (user->away)
-	MyFree((char *)user->away);
+        MyFree((char *)user->away);
       /*
        * sanity check
        */
       if (user->joined || user->refcnt < 0 ||
-	  user->invited || user->channel)
+          user->invited || user->channel)
       sendto_ops("* %#x user (%s!%s@%s) %#x %#x %#x %d %d *",
-		 cptr, cptr ? cptr->name : "<noname>",
-		 cptr->username, cptr->host, user,
-		 user->invited, user->channel, user->joined,
-		 user->refcnt);
+                 cptr, cptr ? cptr->name : "<noname>",
+                 cptr->username, cptr->host, user,
+                 user->invited, user->channel, user->joined,
+                 user->refcnt);
 
       if(BlockHeapFree(free_anUsers,user))
-	{
-	  sendto_ops("list.c couldn't BlockHeapFree(free_anUsers,user) user = %lX", user );
-	  sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
+        {
+          sendto_ops("list.c couldn't BlockHeapFree(free_anUsers,user) user = %lX", user );
+          sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
 #if defined(USE_SYSLOG) && defined(SYSLOG_BLOCK_ALLOCATOR)
-	  syslog(LOG_DEBUG,"list.c couldn't BlockHeapFree(free_anUsers,user) user = %lX", (long unsigned int) user);
+          syslog(LOG_DEBUG,"list.c couldn't BlockHeapFree(free_anUsers,user) user = %lX", (long unsigned int) user);
 #endif
-	}
+        }
 
 
     }
@@ -209,9 +209,9 @@ Link *find_user_link(Link *lp, aClient *ptr)
   if (ptr)
     while (lp)
       {
-	if (lp->value.cptr == ptr)
-	  return (lp);
-	lp = lp->next;
+        if (lp->value.cptr == ptr)
+          return (lp);
+        lp = lp->next;
       }
   return ((Link *)NULL);
 }
@@ -221,19 +221,19 @@ Link *find_channel_link(Link *lp, aChannel *chptr)
   if (chptr)
     for(;lp;lp=lp->next)
       if (lp->value.chptr == chptr)
-	return lp;
+        return lp;
   return ((Link *)NULL);
 }
 
 Link *make_link()
 {
-  Link	*lp;
+  Link  *lp;
 
   lp = BlockHeapALLOC(free_Links,Link);
   if( lp == (Link *)NULL)
     outofmemory();
 
-  lp->next = (Link *)NULL;		/* just to be paranoid... */
+  lp->next = (Link *)NULL;              /* just to be paranoid... */
 
   return lp;
 }
@@ -249,7 +249,7 @@ void _free_link(Link *lp)
 
 aClass *make_class()
 {
-  aClass	*tmp;
+  aClass        *tmp;
 
   tmp = (aClass *)MyMalloc(sizeof(aClass));
   return tmp;
@@ -265,9 +265,9 @@ Attempt to free up some block memory
 
 list_garbage_collect
 
-inputs		- NONE
-output		- NONE
-side effects	- memory is possibly freed up
+inputs          - NONE
+output          - NONE
+side effects    - memory is possibly freed up
 */
 
 void block_garbage_collect()
@@ -283,32 +283,32 @@ void block_garbage_collect()
 /*
  */
 void count_user_memory(int *user_memory_used,
-		       int *user_memory_allocated )
+                       int *user_memory_allocated )
 {
   BlockHeapCountMemory( free_anUsers,
-			user_memory_used,
-			user_memory_allocated);
+                        user_memory_used,
+                        user_memory_allocated);
 }
 
 /*
  */
 void count_links_memory(int *links_memory_used,
-		       int *links_memory_allocated )
+                       int *links_memory_allocated )
 {
   BlockHeapCountMemory( free_Links,
-			links_memory_used,
-			links_memory_allocated);
+                        links_memory_used,
+                        links_memory_allocated);
 }
 
 #ifdef FLUD
 /*
  */
 void count_flud_memory(int *flud_memory_used,
-		       int *flud_memory_allocated )
+                       int *flud_memory_allocated )
 {
   BlockHeapCountMemory( free_fludbots,
-			flud_memory_used,
-			flud_memory_allocated);
+                        flud_memory_used,
+                        flud_memory_allocated);
 }
 #endif
 

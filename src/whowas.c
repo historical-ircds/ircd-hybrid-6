@@ -73,7 +73,7 @@ void add_history(aClient* cptr, int online)
   if (who->hashv != -1)
     {
       if (who->online)
-	del_whowas_from_clist(&(who->online->whowas),who);
+        del_whowas_from_clist(&(who->online->whowas),who);
       del_whowas_from_list(&WHOWASHASH[who->hashv], who);
     }
   who->hashv = hash_whowas_name(cptr->name);
@@ -130,16 +130,16 @@ aClient *get_history(char *nick,time_t timelimit)
   for(;temp;temp=temp->next)
     {
       if (irccmp(nick, temp->name))
-	continue;
+        continue;
       if (temp->logoff < timelimit)
-	continue;
+        continue;
       return temp->online;
     }
   return NULL;
 }
 
 void    count_whowas_memory(int *wwu,
-			    u_long *wwum)
+                            u_long *wwum)
 {
   aWhowas *tmp;
   int i;
@@ -152,8 +152,8 @@ void    count_whowas_memory(int *wwu,
   for (i = 0, tmp = &WHOWAS[0]; i < NICKNAMEHISTORYLENGTH; i++, tmp++)
     if (tmp->hashv != -1)
       {
-	u++;
-	um += sizeof(aWhowas);
+        u++;
+        um += sizeof(aWhowas);
       }
   *wwu = u;
   *wwum = um;
@@ -165,9 +165,9 @@ void    count_whowas_memory(int *wwu,
 **      parv[1] = nickname queried
 */
 int     m_whowas(aClient *cptr,
-		 aClient *sptr,
-		 int parc,
-		 char *parv[])
+                 aClient *sptr,
+                 int parc,
+                 char *parv[])
 {
   aWhowas *temp;
   int cur = 0;
@@ -179,7 +179,7 @@ int     m_whowas(aClient *cptr,
   if (parc < 2)
     {
       sendto_one(sptr, form_str(ERR_NONICKNAMEGIVEN),
-		 me.name, parv[0]);
+                 me.name, parv[0]);
       return 0;
     }
   if (parc > 2)
@@ -213,24 +213,24 @@ int     m_whowas(aClient *cptr,
   for(;temp;temp=temp->next)
     {
       if (!irccmp(nick, temp->name))
-	{
-	  sendto_one(sptr, form_str(RPL_WHOWASUSER),
-		     me.name, parv[0], temp->name,
-		     temp->username,
-		     temp->hostname,
-		     temp->realname);
-	  sendto_one(sptr, form_str(RPL_WHOISSERVER),
-		     me.name, parv[0], temp->name,
-		     temp->servername, myctime(temp->logoff));
-	  cur++;
-	  found++;
-	}
+        {
+          sendto_one(sptr, form_str(RPL_WHOWASUSER),
+                     me.name, parv[0], temp->name,
+                     temp->username,
+                     temp->hostname,
+                     temp->realname);
+          sendto_one(sptr, form_str(RPL_WHOISSERVER),
+                     me.name, parv[0], temp->name,
+                     temp->servername, myctime(temp->logoff));
+          cur++;
+          found++;
+        }
       if (max > 0 && cur >= max)
-	break;
+        break;
     }
   if (!found)
     sendto_one(sptr, form_str(ERR_WASNOSUCHNICK),
-	       me.name, parv[0], nick);
+               me.name, parv[0], nick);
 
   sendto_one(sptr, form_str(RPL_ENDOFWHOWAS), me.name, parv[0], parv[1]);
   return 0;

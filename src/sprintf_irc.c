@@ -266,202 +266,202 @@ vsprintf_irc(register char *str, register const char *format,
              register va_list args)
 
 {
-	register char c;
-	register int bytes = 0;
+        register char c;
+        register int bytes = 0;
 
-	while ((c = *format++))
-	{
-		if (c == '%')
-		{
-			c = *format++; /* May never be '\0' ! */
+        while ((c = *format++))
+        {
+                if (c == '%')
+                {
+                        c = *format++; /* May never be '\0' ! */
 
-			if (c == 's')
-			{
-				register const char *p1 = va_arg(args, const char *);
-				if ((*str = *p1))
-				{
-					++bytes;
-					while ((*++str = *++p1))
-						++bytes;
-				}
+                        if (c == 's')
+                        {
+                                register const char *p1 = va_arg(args, const char *);
+                                if ((*str = *p1))
+                                {
+                                        ++bytes;
+                                        while ((*++str = *++p1))
+                                                ++bytes;
+                                }
 
-				continue;
-			}
+                                continue;
+                        }
 
-			if (c == 'c')
-			{
-				*str++ = (char) va_arg(args, int);
-				++bytes;
+                        if (c == 'c')
+                        {
+                                *str++ = (char) va_arg(args, int);
+                                ++bytes;
 
-				continue;
-			}
+                                continue;
+                        }
 
-			/*
-			 * Prints time_t value in interval
-			 * [ 100000000 , 4294967295 ]
-			 * Actually prints like "%09lu"
-			 */
-			if (c == 'l' && *format == 'u')
-			{
-				register unsigned long v1, v2;
-				register const char *ap;
+                        /*
+                         * Prints time_t value in interval
+                         * [ 100000000 , 4294967295 ]
+                         * Actually prints like "%09lu"
+                         */
+                        if (c == 'l' && *format == 'u')
+                        {
+                                register unsigned long v1, v2;
+                                register const char *ap;
 
-				++format;
-				v1 = va_arg(args, unsigned long);
-				if (v1 > 999999999L)
-				{
-					v2 = v1 / 1000000000;
-					v1 -= v2 * 1000000000;
-					*str++ = '0' + v2;
-					++bytes;
-				}
+                                ++format;
+                                v1 = va_arg(args, unsigned long);
+                                if (v1 > 999999999L)
+                                {
+                                        v2 = v1 / 1000000000;
+                                        v1 -= v2 * 1000000000;
+                                        *str++ = '0' + v2;
+                                        ++bytes;
+                                }
 
-				v2 = v1 / 1000000;
-				v1 -= v2 * 1000000;
-				ap = atoi_tab + (v2 << 2);
-				*str++ = *ap++;
-				*str++ = *ap++;
-				*str++ = *ap;
-				v2 = v1 / 1000;
-				v1 -= v2 * 1000;
-				ap = atoi_tab + (v2 << 2);
-				*str++ = *ap++;
-				*str++ = *ap++;
-				*str++ = *ap;
-				ap = atoi_tab + (v1 << 2);
-				*str++ = *ap++;
-				*str++ = *ap++;
-				*str++ = *ap;
+                                v2 = v1 / 1000000;
+                                v1 -= v2 * 1000000;
+                                ap = atoi_tab + (v2 << 2);
+                                *str++ = *ap++;
+                                *str++ = *ap++;
+                                *str++ = *ap;
+                                v2 = v1 / 1000;
+                                v1 -= v2 * 1000;
+                                ap = atoi_tab + (v2 << 2);
+                                *str++ = *ap++;
+                                *str++ = *ap++;
+                                *str++ = *ap;
+                                ap = atoi_tab + (v1 << 2);
+                                *str++ = *ap++;
+                                *str++ = *ap++;
+                                *str++ = *ap;
 
-				bytes += 9;
+                                bytes += 9;
 
-				continue;
-			}
-			if (c == 't')
-			  {
-			    register unsigned int v1;
+                                continue;
+                        }
+                        if (c == 't')
+                          {
+                            register unsigned int v1;
 
-			    v1 = va_arg(args,int);
-			    
-			    *str++ = (v1/10) + '0';
-			    *str++ = v1%10 + '0';
+                            v1 = va_arg(args,int);
+                            
+                            *str++ = (v1/10) + '0';
+                            *str++ = v1%10 + '0';
 
-			    bytes += 2;
+                            bytes += 2;
 
-			    continue;
-			  }
+                            continue;
+                          }
 
-			if (c == 'd')
-			{
-				register unsigned int v1, v2;
-				register const char *ap;
-				register char *s = &scratch_buffer[sizeof(scratch_buffer) - 2];
+                        if (c == 'd')
+                        {
+                                register unsigned int v1, v2;
+                                register const char *ap;
+                                register char *s = &scratch_buffer[sizeof(scratch_buffer) - 2];
 
-				v1 = va_arg(args, int);
-				if ((int)v1 <= 0)
-				{
-					if (v1 == 0)
-					{
-						*str++ = '0';
-						++bytes;
-						continue;
-					}
-					*str++ = '-';
-					++bytes;
-					v1 = -v1;
-				}
+                                v1 = va_arg(args, int);
+                                if ((int)v1 <= 0)
+                                {
+                                        if (v1 == 0)
+                                        {
+                                                *str++ = '0';
+                                                ++bytes;
+                                                continue;
+                                        }
+                                        *str++ = '-';
+                                        ++bytes;
+                                        v1 = -v1;
+                                }
 
-				do
-				{
-					v2 = v1 / 1000;
-					ap = atoi_tab + 2 + ((v1 - 1000 * v2) << 2);
-					*s-- = *ap--;
-					*s-- = *ap--;
-					*s-- = *ap;
-				}
-				while ((v1 = v2) > 0);
+                                do
+                                {
+                                        v2 = v1 / 1000;
+                                        ap = atoi_tab + 2 + ((v1 - 1000 * v2) << 2);
+                                        *s-- = *ap--;
+                                        *s-- = *ap--;
+                                        *s-- = *ap;
+                                }
+                                while ((v1 = v2) > 0);
 
-				while ('0' == *++s);
+                                while ('0' == *++s);
 
-				*str = *s;
-				++bytes;
+                                *str = *s;
+                                ++bytes;
 
-				while ((*++str = *++s))
-					++bytes;
+                                while ((*++str = *++s))
+                                        ++bytes;
 
-				continue;
-			}
+                                continue;
+                        }
 
-			if (c == 'u')
-			{
-				register unsigned int v1, v2;
-				register const char *ap;
-				register char *s = &scratch_buffer[sizeof(scratch_buffer) - 2];
+                        if (c == 'u')
+                        {
+                                register unsigned int v1, v2;
+                                register const char *ap;
+                                register char *s = &scratch_buffer[sizeof(scratch_buffer) - 2];
 
-				v1 = va_arg(args, unsigned int);
-				if (v1 == 0)
-				{
-					*str++ = '0';
-					++bytes;
-					continue;
-				}
+                                v1 = va_arg(args, unsigned int);
+                                if (v1 == 0)
+                                {
+                                        *str++ = '0';
+                                        ++bytes;
+                                        continue;
+                                }
 
-				do
-				{
-					v2 = v1 / 1000;
-					ap = atoi_tab + 2 + ((v1 - 1000 * v2) << 2);
-					*s-- = *ap--;
-					*s-- = *ap--;
-					*s-- = *ap;
-				}
-				while ((v1 = v2) > 0);
+                                do
+                                {
+                                        v2 = v1 / 1000;
+                                        ap = atoi_tab + 2 + ((v1 - 1000 * v2) << 2);
+                                        *s-- = *ap--;
+                                        *s-- = *ap--;
+                                        *s-- = *ap;
+                                }
+                                while ((v1 = v2) > 0);
 
-				while ('0' == *++s);
+                                while ('0' == *++s);
 
-				*str = *s;
-				++bytes;
+                                *str = *s;
+                                ++bytes;
 
-				while ((*++str = *++s))
-					++bytes;
+                                while ((*++str = *++s))
+                                        ++bytes;
 
-				continue;
-			}
+                                continue;
+                        }
 
-			if (c != '%')
-			{
-				register int ret;
+                        if (c != '%')
+                        {
+                                register int ret;
 
-				format -= 2;
-				ret = vsprintf(str, format, args);
-				str += ret;
-				bytes += ret;
+                                format -= 2;
+                                ret = vsprintf(str, format, args);
+                                str += ret;
+                                bytes += ret;
 
-				break;
-			}
-		}
+                                break;
+                        }
+                }
 
-		*str++ = c;
-		++bytes;
-	}
+                *str++ = c;
+                ++bytes;
+        }
 
-	*str = '\0';
+        *str = '\0';
 
-	return (bytes);
+        return (bytes);
 } /* vsprintf_irc() */
 
 int
 ircsprintf(register char *str, const char *format, ...)
 
 {
-	register va_list args;
-	register int bytes;
+        register va_list args;
+        register int bytes;
 
-	va_start(args, format);
+        va_start(args, format);
 
-	bytes = vsprintf_irc(str, format, args);
+        bytes = vsprintf_irc(str, format, args);
 
-	va_end(args);
+        va_end(args);
 
-	return (bytes);
+        return (bytes);
 } /* ircsprintf() */
 

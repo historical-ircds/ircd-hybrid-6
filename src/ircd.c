@@ -65,14 +65,14 @@ extern time_t server_split_time;
 extern int    server_was_split;
 #endif
 
-int cold_start = YES;	/* set if the server has just fired up */
+int cold_start = YES;   /* set if the server has just fired up */
 
 /* fdlist's */
 fdlist serv_fdlist;
 fdlist oper_fdlist;
 
 #ifndef NO_PRIORITY
-fdlist busycli_fdlist;	/* high-priority clients */
+fdlist busycli_fdlist;  /* high-priority clients */
 #endif
 
 fdlist default_fdlist;
@@ -83,12 +83,12 @@ struct SetOptions GlobalSetOptions;
 /* config.h config file paths etc */
 ConfigFileEntryType ConfigFileEntry; 
 
-struct	Counter	Count;
+struct  Counter Count;
 
-time_t	NOW;
-aClient me;			/* That's me */
+time_t  NOW;
+aClient me;                     /* That's me */
 
-aClient* GlobalClientList = 0;	/* Pointer to beginning of Client list */
+aClient* GlobalClientList = 0;  /* Pointer to beginning of Client list */
 /* client pointer lists -Dianora */ 
 aClient *local_cptr_list = NULL;
 aClient *oper_cptr_list  = NULL;
@@ -102,22 +102,22 @@ static void initialize_message_files(void);
 static time_t io_loop(time_t);
 
 char**  myargv;
-int	dorehash = 0;
-int	debuglevel = -1;	/* Server debug level */
-int	bootopt = 0;		/* Server boot option flags */
-char*   debugmode = "";		/*  -"-    -"-   -"-  */
+int     dorehash = 0;
+int     debuglevel = -1;        /* Server debug level */
+int     bootopt = 0;            /* Server boot option flags */
+char*   debugmode = "";         /*  -"-    -"-   -"-  */
 
 extern void* edata;
 
 
 int     rehashed = YES;
-int     dline_in_progress = NO;	/* killing off matching D lines ? */
-time_t	nextconnect = 1;	/* time for next try_connections call */
-time_t	nextping = 1;		/* same as above for check_pings() */
-int	autoconn = 1;		/* allow auto conns or not */
+int     dline_in_progress = NO; /* killing off matching D lines ? */
+time_t  nextconnect = 1;        /* time for next try_connections call */
+time_t  nextping = 1;           /* same as above for check_pings() */
+int     autoconn = 1;           /* allow auto conns or not */
 
-#ifdef	PROFIL
-extern	etext();
+#ifdef  PROFIL
+extern  etext();
 
 void s_monitor()
 {
@@ -134,30 +134,30 @@ void s_monitor()
 /*
  * try_connections
  *
- *	Scan through configuration and try new connections.
- *	Returns the calendar time when the next call to this
- *	function should be made latest. (No harm done if this
- *	is called earlier or later...)
+ *      Scan through configuration and try new connections.
+ *      Returns the calendar time when the next call to this
+ *      function should be made latest. (No harm done if this
+ *      is called earlier or later...)
  */
-static	time_t	try_connections(time_t currenttime)
+static  time_t  try_connections(time_t currenttime)
 {
-  aConfItem	*aconf;
-  aClient	*cptr;
-  aConfItem	**pconf;
-  int		connecting, confrq;
-  time_t	next = 0;
-  aClass	*cltmp;
-  aConfItem 	*con_conf = (aConfItem *)NULL;
-  int		con_class = 0;
+  aConfItem     *aconf;
+  aClient       *cptr;
+  aConfItem     **pconf;
+  int           connecting, confrq;
+  time_t        next = 0;
+  aClass        *cltmp;
+  aConfItem     *con_conf = (aConfItem *)NULL;
+  int           con_class = 0;
 
   connecting = FALSE;
   Debug((DEBUG_NOTICE,"Connection check at   : %s",
-	 myctime(currenttime)));
+         myctime(currenttime)));
   for (aconf = ConfigItemList; aconf; aconf = aconf->next )
     {
       /* Also when already connecting! (update holdtimes) --SRB */
       if (!(aconf->status & CONF_CONNECT_SERVER) || aconf->port <= 0)
-	continue;
+        continue;
       cltmp = ClassPtr(aconf);
       /*
       ** Skip this entry if the use of it is still on hold until
@@ -168,14 +168,14 @@ static	time_t	try_connections(time_t currenttime)
       */
 
       if ((aconf->hold > currenttime))
-	{
-	  if ((next > aconf->hold) || (next == 0))
-	    next = aconf->hold;
-	  continue;
-	}
+        {
+          if ((next > aconf->hold) || (next == 0))
+            next = aconf->hold;
+          continue;
+        }
 
       if( (confrq = get_con_freq(cltmp)) < MIN_CONN_FREQ )
-	confrq = MIN_CONN_FREQ;
+        confrq = MIN_CONN_FREQ;
 
       aconf->hold = currenttime + confrq;
       /*
@@ -185,22 +185,22 @@ static	time_t	try_connections(time_t currenttime)
       cptr = find_name(aconf->name, (aClient *)NULL);
       
       if (!cptr && (Links(cltmp) < MaxLinks(cltmp)) &&
-	  (!connecting || (ClassType(cltmp) > con_class)))
-	{
-	  con_class = ClassType(cltmp);
-	  con_conf = aconf;
-	  /* We connect only one at time... */
-	  connecting = TRUE;
-	}
+          (!connecting || (ClassType(cltmp) > con_class)))
+        {
+          con_class = ClassType(cltmp);
+          con_conf = aconf;
+          /* We connect only one at time... */
+          connecting = TRUE;
+        }
       if ((next > aconf->hold) || (next == 0))
-	next = aconf->hold;
+        next = aconf->hold;
     }
 
   if(autoconn == 0)
     {
       if(connecting)
-	sendto_ops("Connection to %s[%s] activated.",
-		 con_conf->name, con_conf->host);
+        sendto_ops("Connection to %s[%s] activated.",
+                 con_conf->name, con_conf->host);
       sendto_ops("WARNING AUTOCONN is 0, autoconns are disabled");
       Debug((DEBUG_NOTICE,"Next connection check : %s", myctime(next)));
       return (next);
@@ -209,30 +209,30 @@ static	time_t	try_connections(time_t currenttime)
   if (connecting)
     {
       if (con_conf->next)  /* are we already last? */
-	{
-	  for (pconf = &ConfigItemList; (aconf = *pconf);
-	       pconf = &(aconf->next))
-	    /* put the current one at the end and
-	     * make sure we try all connections
-	     */
-	    if (aconf == con_conf)
-	      *pconf = aconf->next;
-	  (*pconf = con_conf)->next = 0;
-	}
+        {
+          for (pconf = &ConfigItemList; (aconf = *pconf);
+               pconf = &(aconf->next))
+            /* put the current one at the end and
+             * make sure we try all connections
+             */
+            if (aconf == con_conf)
+              *pconf = aconf->next;
+          (*pconf = con_conf)->next = 0;
+        }
 
       if(!(con_conf->flags & CONF_FLAGS_ALLOW_AUTO_CONN))
-	{
-	  sendto_ops("Connection to %s[%s] activated but autoconn is off.",
-		     con_conf->name, con_conf->host);
-	  sendto_ops("WARNING AUTOCONN on %s[%s] is disabled",
-		     con_conf->name, con_conf->host);
-	}
+        {
+          sendto_ops("Connection to %s[%s] activated but autoconn is off.",
+                     con_conf->name, con_conf->host);
+          sendto_ops("WARNING AUTOCONN on %s[%s] is disabled",
+                     con_conf->name, con_conf->host);
+        }
       else
-	{
-	  if (connect_server(con_conf, 0, 0))
-	    sendto_ops("Connection to %s[%s] activated.",
-		       con_conf->name, con_conf->host);
-	}
+        {
+          if (connect_server(con_conf, 0, 0))
+            sendto_ops("Connection to %s[%s] activated.",
+                       con_conf->name, con_conf->host);
+        }
     }
   Debug((DEBUG_NOTICE,"Next connection check : %s", myctime(next)));
   return (next);
@@ -243,10 +243,10 @@ static	time_t	try_connections(time_t currenttime)
  * I re-wrote check_pings a tad
  *
  * check_pings()
- * inputs	- current time
- * output	- next time_t when check_pings() should be called again
+ * inputs       - current time
+ * output       - next time_t when check_pings() should be called again
  *
- * side effects	- 
+ * side effects - 
  *
  * Clients can be k-lined/d-lined/g-lined/r-lined and exit_client
  * called for each of these.
@@ -265,27 +265,27 @@ static	time_t	try_connections(time_t currenttime)
  * -Dianora
  */
 
-aClient *dying_clients[MAXCONNECTIONS];	/* list of dying clients */
+aClient *dying_clients[MAXCONNECTIONS]; /* list of dying clients */
 char *dying_clients_reason[MAXCONNECTIONS];
 
-static	time_t	check_pings(time_t currenttime)
-{		
-  register	aClient	*cptr;		/* current local cptr being examined */
-  aConfItem 	*aconf = (aConfItem *)NULL;
-  int		ping = 0;		/* ping time value from client */
-  int		i;			/* used to index through fd/cptr's */
-  time_t	oldest = 0;		/* next ping time */
-  time_t	timeout;		/* found necessary ping time */
-  char		*reason;		/* pointer to reason string */
-  int		die_index=0;		/* index into list */
-  char		ping_time_out_buffer[64];   /* blech that should be a define */
+static  time_t  check_pings(time_t currenttime)
+{               
+  register      aClient *cptr;          /* current local cptr being examined */
+  aConfItem     *aconf = (aConfItem *)NULL;
+  int           ping = 0;               /* ping time value from client */
+  int           i;                      /* used to index through fd/cptr's */
+  time_t        oldest = 0;             /* next ping time */
+  time_t        timeout;                /* found necessary ping time */
+  char          *reason;                /* pointer to reason string */
+  int           die_index=0;            /* index into list */
+  char          ping_time_out_buffer[64];   /* blech that should be a define */
 
 #if defined(IDLE_CHECK) && defined(SEND_FAKE_KILL_TO_CLIENT)
-  int		fakekill=0;
+  int           fakekill=0;
 #endif /* IDLE_CHECK && SEND_FAKE_KILL_TO_CLIENT */
 
-					/* of dying clients */
-  dying_clients[0] = (aClient *)NULL;	/* mark first one empty */
+                                        /* of dying clients */
+  dying_clients[0] = (aClient *)NULL;   /* mark first one empty */
 
   /*
    * I re-wrote the way klines are handled. Instead of rescanning
@@ -302,285 +302,285 @@ static	time_t	check_pings(time_t currenttime)
    for (i = 0; i <= highest_fd; i++)
     {
       if (!(cptr = local[i]) || IsMe(cptr))
-	continue;		/* and go examine next fd/cptr */
+        continue;               /* and go examine next fd/cptr */
       /*
       ** Note: No need to notify opers here. It's
       ** already done when "FLAGS_DEADSOCKET" is set.
       */
       if (cptr->flags & FLAGS_DEADSOCKET)
-	{
-	  /* N.B. EVERY single time dying_clients[] is set
-	   * it must be followed by an immediate continue,
-	   * to prevent this cptr from being marked again for exit.
-	   * If you don't, you could cause exit_client() to be called twice
-	   * for the same cptr. i.e. bad news
-	   * -Dianora
-	   */
+        {
+          /* N.B. EVERY single time dying_clients[] is set
+           * it must be followed by an immediate continue,
+           * to prevent this cptr from being marked again for exit.
+           * If you don't, you could cause exit_client() to be called twice
+           * for the same cptr. i.e. bad news
+           * -Dianora
+           */
 
-	  dying_clients[die_index] = cptr;
-	  dying_clients_reason[die_index++] =
-	    ((cptr->flags & FLAGS_SENDQEX) ?
-	     "SendQ exceeded" : "Dead socket");
-	  dying_clients[die_index] = (aClient *)NULL;
-	  continue;		/* and go examine next fd/cptr */
-	}
+          dying_clients[die_index] = cptr;
+          dying_clients_reason[die_index++] =
+            ((cptr->flags & FLAGS_SENDQEX) ?
+             "SendQ exceeded" : "Dead socket");
+          dying_clients[die_index] = (aClient *)NULL;
+          continue;             /* and go examine next fd/cptr */
+        }
 
       if (rehashed)
-	{
-	  if(dline_in_progress)
-	    {
-	      if(IsPerson(cptr))
-		{
-		  if( (aconf = match_Dline(ntohl(cptr->ip.s_addr))) )
+        {
+          if(dline_in_progress)
+            {
+              if(IsPerson(cptr))
+                {
+                  if( (aconf = match_Dline(ntohl(cptr->ip.s_addr))) )
 
-		      /* if there is a returned 
-		       * aConfItem then kill it
-		       */
-		    {
-		      if(IsConfElined(aconf))
-			{
-			  sendto_realops("D-line over-ruled for %s client is E-lined",
-				     get_client_name(cptr,FALSE));
-				     continue;
-			  continue;
-			}
+                      /* if there is a returned 
+                       * aConfItem then kill it
+                       */
+                    {
+                      if(IsConfElined(aconf))
+                        {
+                          sendto_realops("D-line over-ruled for %s client is E-lined",
+                                     get_client_name(cptr,FALSE));
+                                     continue;
+                          continue;
+                        }
 
-		      sendto_realops("D-line active for %s",
-				 get_client_name(cptr, FALSE));
+                      sendto_realops("D-line active for %s",
+                                 get_client_name(cptr, FALSE));
 
-		      dying_clients[die_index] = cptr;
+                      dying_clients[die_index] = cptr;
 /* Wintrhawk */
 #ifdef KLINE_WITH_CONNECTION_CLOSED
-		      /*
-		       * We use a generic non-descript message here on 
-		       * purpose so as to prevent other users seeing the
-		       * client disconnect from harassing the IRCops
-		       */
-		      reason = "Connection closed";
+                      /*
+                       * We use a generic non-descript message here on 
+                       * purpose so as to prevent other users seeing the
+                       * client disconnect from harassing the IRCops
+                       */
+                      reason = "Connection closed";
 #else
 #ifdef KLINE_WITH_REASON
-		      reason = aconf->passwd ? aconf->passwd : "D-lined";
+                      reason = aconf->passwd ? aconf->passwd : "D-lined";
 #else
-		      reason = "D-lined";
+                      reason = "D-lined";
 #endif /* KLINE_WITH_REASON */
 #endif /* KLINE_WITH_CONNECTION_CLOSED */
 
-		      dying_clients_reason[die_index++] = reason;
-		      dying_clients[die_index] = (aClient *)NULL;
-		      sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
-				 me.name, cptr->name, reason);
-		      continue;		/* and go examine next fd/cptr */
-		    }
-		}
-	    }
-	  else
-	    {
-	      if(IsPerson(cptr))
-		{
+                      dying_clients_reason[die_index++] = reason;
+                      dying_clients[die_index] = (aClient *)NULL;
+                      sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
+                                 me.name, cptr->name, reason);
+                      continue;         /* and go examine next fd/cptr */
+                    }
+                }
+            }
+          else
+            {
+              if(IsPerson(cptr))
+                {
 #ifdef GLINES
-		  if( (aconf = find_gkill(cptr)) )
-		    {
-		      if(IsElined(cptr))
-			{
-			  sendto_realops("G-line over-ruled for %s client is E-lined",
-				     get_client_name(cptr,FALSE));
-				     continue;
-			}
+                  if( (aconf = find_gkill(cptr)) )
+                    {
+                      if(IsElined(cptr))
+                        {
+                          sendto_realops("G-line over-ruled for %s client is E-lined",
+                                     get_client_name(cptr,FALSE));
+                                     continue;
+                        }
 
-		      sendto_realops("G-line active for %s",
-				 get_client_name(cptr, FALSE));
+                      sendto_realops("G-line active for %s",
+                                 get_client_name(cptr, FALSE));
 
-		      dying_clients[die_index] = cptr;
+                      dying_clients[die_index] = cptr;
 /* Wintrhawk */
 #ifdef KLINE_WITH_CONNECTION_CLOSED
-		      /*
-		       * We use a generic non-descript message here on 
-		       * purpose so as to prevent other users seeing the
-		       * client disconnect from harassing the IRCops
-		       */
-		      reason = "Connection closed";
+                      /*
+                       * We use a generic non-descript message here on 
+                       * purpose so as to prevent other users seeing the
+                       * client disconnect from harassing the IRCops
+                       */
+                      reason = "Connection closed";
 #else
 #ifdef KLINE_WITH_REASON
-		      reason = aconf->passwd ? aconf->passwd : "G-lined";
+                      reason = aconf->passwd ? aconf->passwd : "G-lined";
 #else
-		      reason = "G-lined";
+                      reason = "G-lined";
 #endif /* KLINE_WITH_REASON */
 #endif /* KLINE_WITH_CONNECTION_CLOSED */
 
-		      dying_clients_reason[die_index++] = reason;
-		      dying_clients[die_index] = (aClient *)NULL;
-		      sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
-				 me.name, cptr->name, reason);
-		      continue;		/* and go examine next fd/cptr */
-		    }
-		  else
+                      dying_clients_reason[die_index++] = reason;
+                      dying_clients[die_index] = (aClient *)NULL;
+                      sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
+                                 me.name, cptr->name, reason);
+                      continue;         /* and go examine next fd/cptr */
+                    }
+                  else
 #endif
-		  if((aconf = find_kill(cptr)))	/* if there is a returned
-						   aConfItem.. then kill it */
-		    {
-		      if(aconf->status & CONF_ELINE)
-			{
-			  sendto_realops("K-line over-ruled for %s client is E-lined",
-				     get_client_name(cptr,FALSE));
-				     continue;
-			}
+                  if((aconf = find_kill(cptr))) /* if there is a returned
+                                                   aConfItem.. then kill it */
+                    {
+                      if(aconf->status & CONF_ELINE)
+                        {
+                          sendto_realops("K-line over-ruled for %s client is E-lined",
+                                     get_client_name(cptr,FALSE));
+                                     continue;
+                        }
 
-		      sendto_realops("K-line active for %s",
-				 get_client_name(cptr, FALSE));
-		      dying_clients[die_index] = cptr;
+                      sendto_realops("K-line active for %s",
+                                 get_client_name(cptr, FALSE));
+                      dying_clients[die_index] = cptr;
 
 /* Wintrhawk */
 #ifdef KLINE_WITH_CONNECTION_CLOSED
-		      /*
-		       * We use a generic non-descript message here on 
-		       * purpose so as to prevent other users seeing the
-		       * client disconnect from harassing the IRCops
-		       */
-		      reason = "Connection closed";
+                      /*
+                       * We use a generic non-descript message here on 
+                       * purpose so as to prevent other users seeing the
+                       * client disconnect from harassing the IRCops
+                       */
+                      reason = "Connection closed";
 #else
 #ifdef KLINE_WITH_REASON
-		      reason = aconf->passwd ? aconf->passwd : "K-lined";
+                      reason = aconf->passwd ? aconf->passwd : "K-lined";
 #else
-		      reason = "K-lined";
+                      reason = "K-lined";
 #endif /* KLINE_WITH_REASON */
 #endif /* KLINE_WITH_CONNECTION_CLOSED */
 
-		      dying_clients_reason[die_index++] = reason;
-		      dying_clients[die_index] = (aClient *)NULL;
-		      sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
-				 me.name, cptr->name, reason);
-		      continue;		/* and go examine next fd/cptr */
-		    }
-		}
-	    }
-	}
+                      dying_clients_reason[die_index++] = reason;
+                      dying_clients[die_index] = (aClient *)NULL;
+                      sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
+                                 me.name, cptr->name, reason);
+                      continue;         /* and go examine next fd/cptr */
+                    }
+                }
+            }
+        }
 
 #ifdef IDLE_CHECK
       if (IsPerson(cptr))
-	{
-	  if( !IsElined(cptr) &&
-	      IDLETIME && 
+        {
+          if( !IsElined(cptr) &&
+              IDLETIME && 
 #ifdef OPER_IDLE
-	      !IsAnOper(cptr) &&
+              !IsAnOper(cptr) &&
 #endif /* OPER_IDLE */
-	      !IsIdlelined(cptr) &&
-	      ((timeofday - cptr->user->last) > IDLETIME))
-	    {
-	      aConfItem *aconf;
+              !IsIdlelined(cptr) &&
+              ((timeofday - cptr->user->last) > IDLETIME))
+            {
+              aConfItem *aconf;
 
-	      dying_clients[die_index] = cptr;
-	      dying_clients_reason[die_index++] = "Idle time limit exceeded";
+              dying_clients[die_index] = cptr;
+              dying_clients_reason[die_index++] = "Idle time limit exceeded";
 #if defined(SEND_FAKE_KILL_TO_CLIENT) && defined(IDLE_CHECK)
-	      fakekill = 1;
+              fakekill = 1;
 #endif /* SEND_FAKE_KILL_TO_CLIENT && IDLE_CHECK */
-	      dying_clients[die_index] = (aClient *)NULL;
+              dying_clients[die_index] = (aClient *)NULL;
 
-	      aconf = make_conf();
-	      aconf->status = CONF_KILL;
-	      DupString(aconf->host, cptr->user->host);
-	      DupString(aconf->passwd, "idle exceeder" );
-	      DupString(aconf->name, cptr->user->username);
-	      aconf->port = 0;
-	      aconf->hold = timeofday + 60;
-	      add_temp_kline(aconf);
-	      sendto_realops("Idle time limit exceeded for %s - temp k-lining",
-			 get_client_name(cptr,FALSE));
-	      continue;		/* and go examine next fd/cptr */
-	    }
-	}
+              aconf = make_conf();
+              aconf->status = CONF_KILL;
+              DupString(aconf->host, cptr->user->host);
+              DupString(aconf->passwd, "idle exceeder" );
+              DupString(aconf->name, cptr->user->username);
+              aconf->port = 0;
+              aconf->hold = timeofday + 60;
+              add_temp_kline(aconf);
+              sendto_realops("Idle time limit exceeded for %s - temp k-lining",
+                         get_client_name(cptr,FALSE));
+              continue;         /* and go examine next fd/cptr */
+            }
+        }
 #endif
 
 #ifdef REJECT_HOLD
       if (IsRejectHeld(cptr))
-	{
-	  if( timeofday > (cptr->firsttime + REJECT_HOLD_TIME) )
-	    {
-	      if( reject_held_fds )
-		reject_held_fds--;
+        {
+          if( timeofday > (cptr->firsttime + REJECT_HOLD_TIME) )
+            {
+              if( reject_held_fds )
+                reject_held_fds--;
 
-	      dying_clients[die_index] = cptr;
-	      dying_clients_reason[die_index++] = "reject held client";
-	      dying_clients[die_index] = (aClient *)NULL;
-	      continue;		/* and go examine next fd/cptr */
-	    }
-	}
+              dying_clients[die_index] = cptr;
+              dying_clients_reason[die_index++] = "reject held client";
+              dying_clients[die_index] = (aClient *)NULL;
+              continue;         /* and go examine next fd/cptr */
+            }
+        }
 #endif
 
       if (!IsRegistered(cptr))
-	ping = CONNECTTIMEOUT;
+        ping = CONNECTTIMEOUT;
       else
-	ping = get_client_ping(cptr);
+        ping = get_client_ping(cptr);
 
       /*
        * Ok, so goto's are ugly and can be avoided here but this code
        * is already indented enough so I think its justified. -avalon
        */
        /*  if (!rflag &&
-	       (ping >= currenttime - cptr->lasttime))
-	      goto ping_timeout; */
+               (ping >= currenttime - cptr->lasttime))
+              goto ping_timeout; */
 
       /*
        * *sigh* I think not -Dianora
        */
 
       if (ping < (currenttime - cptr->lasttime))
-	{
+        {
 
-	  /*
-	   * If the server hasnt talked to us in 2*ping seconds
-	   * and it has a ping time, then close its connection.
-	   * If the client is a user and a KILL line was found
-	   * to be active, close this connection too.
-	   */
-	  if (((currenttime - cptr->lasttime) >= (2 * ping) &&
-	       (cptr->flags & FLAGS_PINGSENT)))
-	    {
-	      if (IsServer(cptr) || IsConnecting(cptr) ||
-		  IsHandshake(cptr))
-		{
-		  sendto_ops("No response from %s, closing link",
-			     get_client_name(cptr, FALSE));
-		}
-	      /*
-	       * this is used for KILL lines with time restrictions
-	       * on them - send a messgae to the user being killed
-	       * first.
-	       * *** Moved up above  -taner ***
-	       */
-	      cptr->flags2 |= FLAGS2_PING_TIMEOUT;
-	      dying_clients[die_index++] = cptr;
-	      /* the reason is taken care of at exit time */
+          /*
+           * If the server hasnt talked to us in 2*ping seconds
+           * and it has a ping time, then close its connection.
+           * If the client is a user and a KILL line was found
+           * to be active, close this connection too.
+           */
+          if (((currenttime - cptr->lasttime) >= (2 * ping) &&
+               (cptr->flags & FLAGS_PINGSENT)))
+            {
+              if (IsServer(cptr) || IsConnecting(cptr) ||
+                  IsHandshake(cptr))
+                {
+                  sendto_ops("No response from %s, closing link",
+                             get_client_name(cptr, FALSE));
+                }
+              /*
+               * this is used for KILL lines with time restrictions
+               * on them - send a messgae to the user being killed
+               * first.
+               * *** Moved up above  -taner ***
+               */
+              cptr->flags2 |= FLAGS2_PING_TIMEOUT;
+              dying_clients[die_index++] = cptr;
+              /* the reason is taken care of at exit time */
       /*      dying_clients_reason[die_index++] = "Ping timeout"; */
-	      dying_clients[die_index] = (aClient *)NULL;
-	      
-	      /*
-	       * need to start loop over because the close can
-	       * affect the ordering of the local[] array.- avalon
-	       *
-	       ** Not if you do it right - Dianora
-	       */
+              dying_clients[die_index] = (aClient *)NULL;
+              
+              /*
+               * need to start loop over because the close can
+               * affect the ordering of the local[] array.- avalon
+               *
+               ** Not if you do it right - Dianora
+               */
 
-	      continue;
-	    }
-	  else if ((cptr->flags & FLAGS_PINGSENT) == 0)
-	    {
-	      /*
-	       * if we havent PINGed the connection and we havent
-	       * heard from it in a while, PING it to make sure
-	       * it is still alive.
-	       */
-	      cptr->flags |= FLAGS_PINGSENT;
-	      /* not nice but does the job */
-	      cptr->lasttime = currenttime - ping;
-	      sendto_one(cptr, "PING :%s", me.name);
-	    }
-	}
+              continue;
+            }
+          else if ((cptr->flags & FLAGS_PINGSENT) == 0)
+            {
+              /*
+               * if we havent PINGed the connection and we havent
+               * heard from it in a while, PING it to make sure
+               * it is still alive.
+               */
+              cptr->flags |= FLAGS_PINGSENT;
+              /* not nice but does the job */
+              cptr->lasttime = currenttime - ping;
+              sendto_one(cptr, "PING :%s", me.name);
+            }
+        }
       /* ping_timeout: */
       timeout = cptr->lasttime + ping;
       while (timeout <= currenttime)
-	timeout += ping;
+        timeout += ping;
       if (timeout < oldest || !oldest)
-	oldest = timeout;
+        oldest = timeout;
 
       /*
        * Check UNKNOWN connections - if they have been in this state
@@ -588,15 +588,15 @@ static	time_t	check_pings(time_t currenttime)
        */
 
       if (IsUnknown(cptr))
-	{
-	  if (cptr->firsttime ? ((timeofday - cptr->firsttime) > 100) : 0)
-	    {
-	      dying_clients[die_index] = cptr;
-	      dying_clients_reason[die_index++] = "Connection Timed Out";
-	      dying_clients[die_index] = (aClient *)NULL;
-	      continue;
-	    }
-	}
+        {
+          if (cptr->firsttime ? ((timeofday - cptr->firsttime) > 100) : 0)
+            {
+              dying_clients[die_index] = cptr;
+              dying_clients_reason[die_index++] = "Connection Timed Out";
+              dying_clients[die_index] = (aClient *)NULL;
+              continue;
+            }
+        }
     }
 
   /* Now exit clients marked for exit above.
@@ -608,59 +608,59 @@ static	time_t	check_pings(time_t currenttime)
   for(die_index = 0; (cptr = dying_clients[die_index]); die_index++)
     {
       if(cptr->flags2 & FLAGS2_PING_TIMEOUT)
-	{
-	  (void)ircsprintf(ping_time_out_buffer,
-			    "Ping timeout: %d seconds",
-			    currenttime - cptr->lasttime);
+        {
+          (void)ircsprintf(ping_time_out_buffer,
+                            "Ping timeout: %d seconds",
+                            currenttime - cptr->lasttime);
 
-	  /* ugh. this is horrible.
-	   * but I can get away with this hack because of the
-	   * block allocator, and right now,I want to find out
-	   * just exactly why occasional already bit cleared errors
-	   * are still happening
-	   */
-	  if(cptr->flags2 & FLAGS2_ALREADY_EXITED)
-	    {
-	      sendto_realops("Client already exited doing ping timeout %X",cptr);
-	    }
-	  else
-	    (void)exit_client(cptr, cptr, &me, ping_time_out_buffer );
-	  cptr->flags2 |= FLAGS2_ALREADY_EXITED;
-	}
+          /* ugh. this is horrible.
+           * but I can get away with this hack because of the
+           * block allocator, and right now,I want to find out
+           * just exactly why occasional already bit cleared errors
+           * are still happening
+           */
+          if(cptr->flags2 & FLAGS2_ALREADY_EXITED)
+            {
+              sendto_realops("Client already exited doing ping timeout %X",cptr);
+            }
+          else
+            (void)exit_client(cptr, cptr, &me, ping_time_out_buffer );
+          cptr->flags2 |= FLAGS2_ALREADY_EXITED;
+        }
       else
 #if defined(SEND_FAKE_KILL_TO_CLIENT) && defined(IDLE_CHECK)
-	{
-	  if (fakekill)
-	    sendto_prefix_one(cptr, cptr, ":AutoKILL KILL %s :(%s)",
-	    cptr->name, dying_clients_reason[die_index]);
-	  /* ugh. this is horrible.
-	   * but I can get away with this hack because of the
-	   * block allocator, and right now,I want to find out
-	   * just exactly why occasional already bit cleared errors
-	   * are still happening
-	   */
-	  if(cptr->flags2 & FLAGS2_ALREADY_EXITED)
-	    {
-	      sendto_realops("Client already exited %X",cptr);
-	    }
-	  else
-	    (void)exit_client(cptr, cptr, &me, dying_clients_reason[die_index]);
-	  cptr->flags2 |= FLAGS2_ALREADY_EXITED;
+        {
+          if (fakekill)
+            sendto_prefix_one(cptr, cptr, ":AutoKILL KILL %s :(%s)",
+            cptr->name, dying_clients_reason[die_index]);
+          /* ugh. this is horrible.
+           * but I can get away with this hack because of the
+           * block allocator, and right now,I want to find out
+           * just exactly why occasional already bit cleared errors
+           * are still happening
+           */
+          if(cptr->flags2 & FLAGS2_ALREADY_EXITED)
+            {
+              sendto_realops("Client already exited %X",cptr);
+            }
+          else
+            (void)exit_client(cptr, cptr, &me, dying_clients_reason[die_index]);
+          cptr->flags2 |= FLAGS2_ALREADY_EXITED;
         }
 #else 
-	  /* ugh. this is horrible.
-	   * but I can get away with this hack because of the
-	   * block allocator, and right now,I want to find out
-	   * just exactly why occasional already bit cleared errors
-	   * are still happening
-	   */
-	  if(cptr->flags2 & FLAGS2_ALREADY_EXITED)
-	    {
-	      sendto_realops("Client already exited %X",cptr);
-	    }
-	  else
-	    (void)exit_client(cptr, cptr, &me, dying_clients_reason[die_index]);
-	  cptr->flags2 |= FLAGS2_ALREADY_EXITED;	  
+          /* ugh. this is horrible.
+           * but I can get away with this hack because of the
+           * block allocator, and right now,I want to find out
+           * just exactly why occasional already bit cleared errors
+           * are still happening
+           */
+          if(cptr->flags2 & FLAGS2_ALREADY_EXITED)
+            {
+              sendto_realops("Client already exited %X",cptr);
+            }
+          else
+            (void)exit_client(cptr, cptr, &me, dying_clients_reason[die_index]);
+          cptr->flags2 |= FLAGS2_ALREADY_EXITED;          
 #endif /* SEND_FAKE_KILL_TO_CLIENT && IDLE_CHECK */
     }
 
@@ -670,15 +670,15 @@ static	time_t	check_pings(time_t currenttime)
   if (!oldest || oldest < currenttime)
     oldest = currenttime + PINGFREQUENCY;
   Debug((DEBUG_NOTICE,"Next check_ping() call at: %s, %d %d %d",
-	 myctime(oldest), ping, oldest, currenttime));
+         myctime(oldest), ping, oldest, currenttime));
   
   return (oldest);
 }
 
 /*
  * bad_command
- *	This is called when the commandline is not acceptable.
- *	Give error message and exit without starting anything.
+ *      This is called when the commandline is not acceptable.
+ *      Give error message and exit without starting anything.
  */
 static int bad_command()
 {
@@ -694,8 +694,8 @@ static int bad_command()
    and scheduling ping checks */
 /* Changed by Taner Halicioglu (taner@CERF.NET) */
 
-#define LOADCFREQ 5	/* every 5s */
-#define LOADRECV 40	/* 40k/s */
+#define LOADCFREQ 5     /* every 5s */
+#define LOADRECV 40     /* 40k/s */
 
 int LRV = LOADRECV;
 time_t LCF = LOADCFREQ;
@@ -703,14 +703,14 @@ float currlife = 0.0;
 
 int main(int argc, char *argv[])
 {
-  uid_t	      uid;
+  uid_t       uid;
   uid_t       euid;
   time_t      delay = 0;
   aConfItem*  aconf;
 
   memset(&me, 0, sizeof(me));
   GlobalClientList = &me;       /* Pointer to beginning of Client list */
-  cold_start = YES;		/* set when server first starts up */
+  cold_start = YES;             /* set when server first starts up */
 
   if((timeofday = time(NULL)) == -1)
     {
@@ -719,7 +719,7 @@ int main(int argc, char *argv[])
     }
   
   memset(&Count, 0, sizeof(Count));
-  Count.server = 1;	/* us */
+  Count.server = 1;     /* us */
 
   initialize_global_set_options();
 
@@ -742,7 +742,7 @@ int main(int argc, char *argv[])
   uid = getuid();
   euid = geteuid();
 
-#ifdef	PROFIL
+#ifdef  PROFIL
   monstartup(0, etext);
   moncontrol(1);
   signal(SIGUSR1, s_monitor);
@@ -750,7 +750,7 @@ int main(int argc, char *argv[])
 
   ConfigFileEntry.dpath = DPATH;
 
-  ConfigFileEntry.configfile = CPATH;	/* Server configuration file */
+  ConfigFileEntry.configfile = CPATH;   /* Server configuration file */
 
 #ifdef KPATH
   ConfigFileEntry.klinefile = KPATH;         /* Server kline file */
@@ -768,7 +768,7 @@ int main(int argc, char *argv[])
   ConfigFileEntry.glinefile = GLINEFILE;
 #endif
 
-#ifdef	CHROOTDIR
+#ifdef  CHROOTDIR
   if (chdir(DPATH))
     {
       perror("chdir " DPATH );
@@ -817,77 +817,77 @@ int main(int argc, char *argv[])
 
       if (flag == '\0' || *p == '\0')
        {
-	if (argc > 1 && argv[1][0] != '-')
-	  {
-	    p = *++argv;
-	    argc -= 1;
-	  }
-	else
-	  {
-	    p = "";
-	  }
+        if (argc > 1 && argv[1][0] != '-')
+          {
+            p = *++argv;
+            argc -= 1;
+          }
+        else
+          {
+            p = "";
+          }
        }
       switch (flag)
-	{
-	case 'c':
-	  bootopt |= BOOT_CONSOLE;
-	  break;
-	case 'd' :
-	  setuid((uid_t) uid);
-	  ConfigFileEntry.dpath = p;
-	  break;
+        {
+        case 'c':
+          bootopt |= BOOT_CONSOLE;
+          break;
+        case 'd' :
+          setuid((uid_t) uid);
+          ConfigFileEntry.dpath = p;
+          break;
 #ifdef CMDLINE_CONFIG
-	case 'f':
-	  setuid((uid_t) uid);
-	  ConfigFileEntry.configfile = p;
-	  break;
+        case 'f':
+          setuid((uid_t) uid);
+          ConfigFileEntry.configfile = p;
+          break;
 
 #ifdef KPATH
-	case 'k':
-	  setuid((uid_t) uid);
-	  ConfigFileEntry.klinefile = p;
-	  break;
+        case 'k':
+          setuid((uid_t) uid);
+          ConfigFileEntry.klinefile = p;
+          break;
 #endif
 
 #endif
-	case 'h':
-	  strncpy_irc(me.name, p, HOSTLEN);
-	  break;
-	case 's':
-	  bootopt |= BOOT_STDERR;
-	  break;
-	case 't':
-	  setuid((uid_t) uid);
-	  bootopt |= BOOT_TTY;
-	  break;
-	case 'v':
-	  printf("ircd %s\n\tzlib %s\n\tircd_dir: %s\n", version,
+        case 'h':
+          strncpy_irc(me.name, p, HOSTLEN);
+          break;
+        case 's':
+          bootopt |= BOOT_STDERR;
+          break;
+        case 't':
+          setuid((uid_t) uid);
+          bootopt |= BOOT_TTY;
+          break;
+        case 'v':
+          printf("ircd %s\n\tzlib %s\n\tircd_dir: %s\n", version,
 #ifndef ZIP_LINKS
-		       "not used",
+                       "not used",
 #else
-		       zlib_version,
+                       zlib_version,
 #endif
-		       ConfigFileEntry.dpath);
-	  exit(0);
-	case 'x':
-#ifdef	DEBUGMODE
-	  setuid((uid_t) uid);
-	  debuglevel = atoi(p);
-	  debugmode = *p ? p : "0";
-	  bootopt |= BOOT_DEBUG;
-	  break;
+                       ConfigFileEntry.dpath);
+          exit(0);
+        case 'x':
+#ifdef  DEBUGMODE
+          setuid((uid_t) uid);
+          debuglevel = atoi(p);
+          debugmode = *p ? p : "0";
+          bootopt |= BOOT_DEBUG;
+          break;
 #else
-	  fprintf(stderr, "%s: DEBUGMODE must be defined for -x y\n",
+          fprintf(stderr, "%s: DEBUGMODE must be defined for -x y\n",
                   myargv[0]);
-	  exit(0);
+          exit(0);
 #endif
-	default:
-	  bad_command();
-	  break;
-	}
+        default:
+          bad_command();
+          break;
+        }
     }
 
-#ifndef	CHROOT
+#ifndef CHROOT
   if (chdir(ConfigFileEntry.dpath))
     {
       perror("chdir");
@@ -921,16 +921,16 @@ int main(int argc, char *argv[])
        */
 
       if(setgid(IRC_GID) < 0)
-	{
-	  fprintf(stderr,"ERROR: can't setgid(%d)\n", IRC_GID);
-	  exit(-1);
-	}
+        {
+          fprintf(stderr,"ERROR: can't setgid(%d)\n", IRC_GID);
+          exit(-1);
+        }
 
       if(setuid(IRC_UID) < 0)
-	{
-	  fprintf(stderr,"ERROR: can't setuid(%d)\n", IRC_UID);
-	  exit(-1);
-	}
+        {
+          fprintf(stderr,"ERROR: can't setuid(%d)\n", IRC_UID);
+          exit(-1);
+        }
 
 #else
       /* check for setuid root as usual */
@@ -938,8 +938,8 @@ int main(int argc, char *argv[])
               "ERROR: do not run ircd setuid root. " \
               "Make it setuid a normal user.\n");
       exit(-1);
-# endif	
-	    } 
+# endif 
+            } 
 #endif /*CHROOTDIR/UID/GID*/
 
   if (argc > 0)
@@ -949,14 +949,14 @@ int main(int argc, char *argv[])
 
   clear_client_hash_table();
   clear_channel_hash_table();
-  clear_scache_hash_table();	/* server cache name table */
-  clear_ip_hash_table();	/* client host ip hash table */
-  clear_Dline_table();		/* d line tree */
+  clear_scache_hash_table();    /* server cache name table */
+  clear_ip_hash_table();        /* client host ip hash table */
+  clear_Dline_table();          /* d line tree */
   initlists();
   initclass();
   initwhowas();
   initstats();
-  init_tree_parse(msgtab);	/* tree parse code (orabidoo) */
+  init_tree_parse(msgtab);      /* tree parse code (orabidoo) */
   NOW = time(NULL);
 
   init_fdlist(&serv_fdlist);
@@ -984,7 +984,7 @@ int main(int argc, char *argv[])
   openlog("ircd", LOG_PID | LOG_NDELAY, LOG_FACILITY);
 #endif
 
-  read_conf_files(YES);		/* cold start init conf files */
+  read_conf_files(YES);         /* cold start init conf files */
 
   aconf = find_me();
   strncpy_irc(me.name, aconf->host, HOSTLEN);
@@ -1034,7 +1034,7 @@ time_t io_loop(time_t delay)
   static char   to_send[200];
   static time_t lasttime  = 0;
   static long   lastrecvK = 0;
-  static int	lrv       = 0;
+  static int    lrv       = 0;
   time_t        lasttimeofday;
 
   lasttimeofday = timeofday;
@@ -1049,7 +1049,7 @@ time_t io_loop(time_t delay)
   if (timeofday < lasttimeofday)
     {
       ircsprintf(to_send, "System clock is running backwards - (%d < %d)",
-	         timeofday, lasttimeofday);
+                 timeofday, lasttimeofday);
       report_error(to_send, me.name, 0);
     }
   else if((lasttimeofday + 60) < timeofday)
@@ -1079,45 +1079,45 @@ time_t io_loop(time_t delay)
       lasttime = timeofday;
       currlife = (float)((long)me.receiveK - lastrecvK)/(float)LCF;
       if (((long)me.receiveK - lrv) > lastrecvK )
-	{
-	  if (!LIFESUX)
-	    {
-	      LIFESUX = 1;
+        {
+          if (!LIFESUX)
+            {
+              LIFESUX = 1;
 
-	      if(NOISYHTM)
-		{
-		  (void)sprintf(to_send, 
-			"Entering high-traffic mode - (%.1fk/s > %dk/s)",
-				(float)currlife, LRV);
-		  sendto_ops(to_send);
-		}
-	    }
-	  else
-	    {
-	      LIFESUX++;		/* Ok, life really sucks! */
-	      LCF += 2;			/* Wait even longer */
-              if(NOISYHTM) 
-		{
-		  (void)sprintf(to_send,
-			"Still high-traffic mode %d%s (%d delay): %.1fk/s",
-				LIFESUX,
-				(LIFESUX & 0x04) ?
-				" (TURBO)" : "",
-				(int)LCF, (float)currlife);
-		  sendto_ops(to_send);
-		}
-	    }
-	}
-      else
-	{
-	  LCF = LOADCFREQ;
-	  if (LIFESUX)
-	    {
-	      LIFESUX = 0;
               if(NOISYHTM)
-	        sendto_ops("Resuming standard operation . . . .");
-	    }
-	}
+                {
+                  (void)sprintf(to_send, 
+                        "Entering high-traffic mode - (%.1fk/s > %dk/s)",
+                                (float)currlife, LRV);
+                  sendto_ops(to_send);
+                }
+            }
+          else
+            {
+              LIFESUX++;                /* Ok, life really sucks! */
+              LCF += 2;                 /* Wait even longer */
+              if(NOISYHTM) 
+                {
+                  (void)sprintf(to_send,
+                        "Still high-traffic mode %d%s (%d delay): %.1fk/s",
+                                LIFESUX,
+                                (LIFESUX & 0x04) ?
+                                " (TURBO)" : "",
+                                (int)LCF, (float)currlife);
+                  sendto_ops(to_send);
+                }
+            }
+        }
+      else
+        {
+          LCF = LOADCFREQ;
+          if (LIFESUX)
+            {
+              LIFESUX = 0;
+              if(NOISYHTM)
+                sendto_ops("Resuming standard operation . . . .");
+            }
+        }
       lastrecvK = (long)me.receiveK;
     }
 
@@ -1159,7 +1159,7 @@ time_t io_loop(time_t delay)
    * as "busy" clients (which again, includes servers.
    * If "lifesux", then we read servers AGAIN, and then
    * flush any data to servers.
-   *	-Taner
+   *    -Taner
    */
 
 #ifndef NO_PRIORITY
@@ -1169,10 +1169,10 @@ time_t io_loop(time_t delay)
     {
       read_message(1, &serv_fdlist);
       if (LIFESUX & 0x4)
-	{	/* life really sucks */
-	  read_message(1, &busycli_fdlist);
-	  read_message(1, &serv_fdlist);
-	}
+        {       /* life really sucks */
+          read_message(1, &busycli_fdlist);
+          read_message(1, &serv_fdlist);
+        }
       flush_server_connections();
     }
   if((timeofday = time(NULL)) == -1)
@@ -1185,26 +1185,26 @@ time_t io_loop(time_t delay)
 
   /*
    * CLIENT_SERVER = TRUE:
-   * 	If we're in normal mode, or if "lifesux" and a few
-   *	seconds have passed, then read everything.
+   *    If we're in normal mode, or if "lifesux" and a few
+   *    seconds have passed, then read everything.
    * CLIENT_SERVER = FALSE:
-   *	If it's been more than lifesux*2 seconds (that is, 
-   *	at most 1 second, or at least 2s when lifesux is
-   *	!= 0) check everything.
-   *	-Taner
+   *    If it's been more than lifesux*2 seconds (that is, 
+   *    at most 1 second, or at least 2s when lifesux is
+   *    != 0) check everything.
+   *    -Taner
    */
   {
     static time_t lasttime=0;
 #ifdef CLIENT_SERVER
     if (!LIFESUX || (lasttime + LIFESUX)
-	< timeofday)
+        < timeofday)
       {
 #else
     if ((lasttime + (LIFESUX + 1)) < timeofday)
       {
 #endif
-	read_message(delay, NULL); /*  check everything! */
-	lasttime = timeofday;
+        read_message(delay, NULL); /*  check everything! */
+        lasttime = timeofday;
       }
    }
 #else
@@ -1254,31 +1254,31 @@ time_t io_loop(time_t delay)
  */
 static void open_debugfile()
 {
-#ifdef	DEBUGMODE
-  int	fd;
+#ifdef  DEBUGMODE
+  int   fd;
   const char* name = LOGFILE;
 
   if (debuglevel >= 0)
     {
       printf("isatty = %d ttyname = %#x\n", isatty(2), ttyname(2));
       if (!(bootopt & BOOT_TTY)) /* leave debugging output on fd 2 */
-	{
-	  truncate(name, 0);
-	  if ((fd = open(name, O_WRONLY | O_CREAT, 0600)) < 0) 
-	    if ((fd = open("/dev/null", O_WRONLY)) < 0)
-	      exit(-1);
-	  if (fd != 2)
-	    {
-	      dup2(fd, 2);
-	      close(fd); 
-	    }
-	}
+        {
+          truncate(name, 0);
+          if ((fd = open(name, O_WRONLY | O_CREAT, 0600)) < 0) 
+            if ((fd = open("/dev/null", O_WRONLY)) < 0)
+              exit(-1);
+          if (fd != 2)
+            {
+              dup2(fd, 2);
+              close(fd); 
+            }
+        }
       else if (isatty(2) && ttyname(2))
-	name = ttyname(2);
+        name = ttyname(2);
       else
         name = "FD2-Pipe";
       Debug((DEBUG_FATAL, "Debug: File <%s> Level: %d at %s",
-	     name, debuglevel, myctime(time(NULL))));
+             name, debuglevel, myctime(time(NULL))));
     }
 #endif
 }
@@ -1293,9 +1293,9 @@ time_t check_fdlists(now)
 time_t now;
 {
 #ifdef CLIENT_SERVER
-#define BUSY_CLIENT(x)	(((x)->priority < 55) || (!LIFESUX && ((x)->priority < 75)))
+#define BUSY_CLIENT(x)  (((x)->priority < 55) || (!LIFESUX && ((x)->priority < 75)))
 #else
-#define BUSY_CLIENT(x)	(((x)->priority < 40) || (!LIFESUX && ((x)->priority < 60)))
+#define BUSY_CLIENT(x)  (((x)->priority < 40) || (!LIFESUX && ((x)->priority < 60)))
 #endif
 #define FDLISTCHKFREQ  2
 
@@ -1308,34 +1308,34 @@ time_t now;
 
       if (!(cptr=local[i])) continue;
       if (IsServer(cptr) || IsAnOper(cptr))
-	{
-	  busycli_fdlist.entry[i] = 1;
-	  continue;
-	}
+        {
+          busycli_fdlist.entry[i] = 1;
+          continue;
+        }
       if (cptr->receiveM == cptr->lastrecvM)
-	{
-	  cptr->priority += 2;	/* lower a bit */
-	  if (cptr->priority > 90) cptr->priority = 90;
-	  else if (BUSY_CLIENT(cptr))
-	    {
-	      busycli_fdlist.entry[i] = 1;
-	    }
-	  continue;
-	}
+        {
+          cptr->priority += 2;  /* lower a bit */
+          if (cptr->priority > 90) cptr->priority = 90;
+          else if (BUSY_CLIENT(cptr))
+            {
+              busycli_fdlist.entry[i] = 1;
+            }
+          continue;
+        }
       else
-	{
-	  cptr->lastrecvM = cptr->receiveM;
-	  cptr->priority -= 30;	/* active client */
-	  if (cptr->priority < 0)
-	    {
-	      cptr->priority = 0;
-	      busycli_fdlist.entry[i] = 1;
-	    }
-	  else if (BUSY_CLIENT(cptr))
-	    {
-	      busycli_fdlist.entry[i] = 1;
-	    }
-	}
+        {
+          cptr->lastrecvM = cptr->receiveM;
+          cptr->priority -= 30; /* active client */
+          if (cptr->priority < 0)
+            {
+              cptr->priority = 0;
+              busycli_fdlist.entry[i] = 1;
+            }
+          else if (BUSY_CLIENT(cptr))
+            {
+              busycli_fdlist.entry[i] = 1;
+            }
+        }
     }
   return (now + FDLISTCHKFREQ + (LIFESUX + 1));
 }
@@ -1360,9 +1360,9 @@ void report_error_on_tty(const char *error_message)
 /*
  * initalialize_global_set_options
  *
- * inputs	- none
- * output	- none
- * side effects	- This sets all global set options needed 
+ * inputs       - none
+ * output       - none
+ * side effects - This sets all global set options needed 
  */
 
 static void initialize_global_set_options(void)
@@ -1407,8 +1407,8 @@ static void initialize_global_set_options(void)
 /*
  * initalialize_message_files
  *
- * inputs	- none
- * output	- none
+ * inputs       - none
+ * output       - none
  * side effects - Set up all message files needed, motd etc.
  */
 
@@ -1426,9 +1426,9 @@ static void initialize_message_files(void)
 /*
  * write_pidfile
  *
- * inputs	- none
- * output	- none
- * side effects	- write the pid of the ircd to PPATH
+ * inputs       - none
+ * output       - none
+ * side effects - write the pid of the ircd to PPATH
  */
 
 static void write_pidfile(void)

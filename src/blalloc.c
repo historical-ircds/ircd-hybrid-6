@@ -21,7 +21,7 @@ int         BH_CurrentLine = 0;   /* GLOBAL used for BlockHeap debugging */
 
 static int newblock(BlockHeap *bh);
 
-extern void outofmemory();	/* defined in list.c */
+extern void outofmemory();      /* defined in list.c */
 
 /* ************************************************************************ */
 /* FUNCTION DOCUMENTATION:                                                  */
@@ -102,7 +102,7 @@ BlockHeap * BlockHeapCreate (size_t elemsize,
    /* Catch idiotic requests up front */
    if ((elemsize <= 0) || (elemsperblock <= 0))
      {
-       outofmemory();	/* die.. out of memory */
+       outofmemory();   /* die.. out of memory */
      }
 
    /* Allocate our new BlockHeap */
@@ -160,7 +160,7 @@ void *BlockHeapAlloc (BlockHeap *bh)
      return((void *)NULL);
 
    if (bh->freeElems == 0)
-     {		/* Allocate new block and assign */
+     {          /* Allocate new block and assign */
 
        /* newblock returns 1 if unsuccessful, 0 if not */
 
@@ -172,59 +172,59 @@ void *BlockHeapAlloc (BlockHeap *bh)
            walker->allocMap[0] = 0x1L;
            walker->freeElems--;  bh->freeElems--;
            if(bh->base->elems == NULL)
-	     return((void *)NULL);
+             return((void *)NULL);
          }
 
-       return ((bh->base)->elems);	/* ...and take the first elem. */
+       return ((bh->base)->elems);      /* ...and take the first elem. */
      }
 
    for (walker = bh->base; walker != NULL; walker = walker->next)
      {
        if (walker->freeElems > 0)
-	 {
-	   mask = 0x1L; ctr = 0; unit = 0;
-	   while (unit < bh->numlongs)
-	     {
-	       if ((mask == 0x1L) && (walker->allocMap[unit] == ~0))
-		 {
-		   /* Entire subunit is used, skip to next one. */
-		   unit++; 
-		   ctr = 0;
-		   continue;
-		 }
-	       /* Check the current element, if free allocate block */
-	       if (!(mask & walker->allocMap[unit]))
-		 {
-		   walker->allocMap[unit] |= mask; /* Mark block as used */
-		   walker->freeElems--;  bh->freeElems--;
-		                                   /* And return the pointer */
+         {
+           mask = 0x1L; ctr = 0; unit = 0;
+           while (unit < bh->numlongs)
+             {
+               if ((mask == 0x1L) && (walker->allocMap[unit] == ~0))
+                 {
+                   /* Entire subunit is used, skip to next one. */
+                   unit++; 
+                   ctr = 0;
+                   continue;
+                 }
+               /* Check the current element, if free allocate block */
+               if (!(mask & walker->allocMap[unit]))
+                 {
+                   walker->allocMap[unit] |= mask; /* Mark block as used */
+                   walker->freeElems--;  bh->freeElems--;
+                                                   /* And return the pointer */
 
-		   /* Address arithemtic is always ca-ca 
-		    * have to make sure the the bit pattern for the
-		    * base address is converted into the same number of
-		    * bits in an integer type, that has at least
-		    * sizeof(unsigned long) at least == sizeof(void *)
-		    * -Dianora 
-		    */
+                   /* Address arithemtic is always ca-ca 
+                    * have to make sure the the bit pattern for the
+                    * base address is converted into the same number of
+                    * bits in an integer type, that has at least
+                    * sizeof(unsigned long) at least == sizeof(void *)
+                    * -Dianora 
+                    */
 
-		   return ( (void *) (
-			    (unsigned long)walker->elems + 
-			    ( (unit * sizeof(unsigned long) * 8 + ctr)
-			      * (unsigned long )bh->elemSize))
-			    );
+                   return ( (void *) (
+                            (unsigned long)walker->elems + 
+                            ( (unit * sizeof(unsigned long) * 8 + ctr)
+                              * (unsigned long )bh->elemSize))
+                            );
 
-		 }
-	       /* Step up to the next unit */
-	       mask <<= 1;
-	       ctr++;
-	       if (!mask)
-		 {
-		   mask = 0x1L;
-		   unit++;
-		   ctr = 0;
-		 }
-	     }  /* while */
-	 }     /* if */
+                 }
+               /* Step up to the next unit */
+               mask <<= 1;
+               ctr++;
+               if (!mask)
+                 {
+                   mask = 0x1L;
+                   unit++;
+                   ctr = 0;
+                 }
+             }  /* while */
+         }     /* if */
      }        /* for */
 
     return((void *) NULL);   /* If you get here, something bad happened ! */
@@ -259,39 +259,39 @@ int BlockHeapFree(BlockHeap *bh, void *ptr)
    for (walker = bh->base; walker != NULL; walker = walker->next)
      {
       if ((ptr >= walker->elems) && (ptr <= walker->endElem))
-	{
-	  ctr = ((unsigned long) ptr - 
-		 (unsigned long) (walker->elems))
-	    / (unsigned long )bh->elemSize;
+        {
+          ctr = ((unsigned long) ptr - 
+                 (unsigned long) (walker->elems))
+            / (unsigned long )bh->elemSize;
 
-	  bitmask = 1L << (ctr % (sizeof(long) * 8));
-	  ctr = ctr / (sizeof(long) * 8);
-	  /* Flip the right allocation bit */
-	  /* Complain if the bit is already clear, something is wrong
-	   * (typically, someone freed the same block twice)
-	   */
+          bitmask = 1L << (ctr % (sizeof(long) * 8));
+          ctr = ctr / (sizeof(long) * 8);
+          /* Flip the right allocation bit */
+          /* Complain if the bit is already clear, something is wrong
+           * (typically, someone freed the same block twice)
+           */
 
-	  if( (walker->allocMap[ctr] & bitmask) == 0 )
-	    {
+          if( (walker->allocMap[ctr] & bitmask) == 0 )
+            {
 #ifdef DEBUG_BLOCK_ALLOCATOR
 #if defined(USE_SYSLOG) && defined(SYSLOG_BLOCK_ALLOCATOR)
       syslog(LOG_DEBUG,"blalloc.c bit already clear in map caller %s %d",
-		     BH_CurrentFile, BH_CurrentLine);
+                     BH_CurrentFile, BH_CurrentLine);
 #endif
       sendto_ops("blalloc.c bit already clear in map elemSize %d caller %s %d",
-			 bh->elemSize,
-			 BH_CurrentFile,
-			 BH_CurrentLine);
-	      sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
+                         bh->elemSize,
+                         BH_CurrentFile,
+                         BH_CurrentLine);
+              sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
 #endif /* DEBUG_BLOCK_ALLOCATOR */
-	    }
-	  else
-	    {
-	      walker->allocMap[ctr] = walker->allocMap[ctr] & ~bitmask;
-	      walker->freeElems++;  bh->freeElems++;
-	    }
-	  return 0;
-	}
+            }
+          else
+            {
+              walker->allocMap[ctr] = walker->allocMap[ctr] & ~bitmask;
+              walker->freeElems++;  bh->freeElems++;
+            }
+          return 0;
+        }
      }
    return 1;
 }
@@ -329,36 +329,36 @@ int BlockHeapGarbageCollect(BlockHeap *bh)
      {
        int i;
        for (i = 0; i < bh->numlongs; i++)
-	 {
-	   if (walker->allocMap[i])
-	     break;
-	 }
+         {
+           if (walker->allocMap[i])
+             break;
+         }
       if (i == bh->numlongs)
-	{
-	  /* This entire block is free.  Remove it. */
-	  free(walker->elems);
-	  free(walker->allocMap);
+        {
+          /* This entire block is free.  Remove it. */
+          free(walker->elems);
+          free(walker->allocMap);
 
-	  if (last)
-	    {
-	      last->next = walker->next;
-	      free(walker);
-	      walker = last->next;
-	    }
-	  else
-	    {
-	      bh->base = walker->next;
-	      free(walker);
-	      walker = bh->base;
-	    }
-	  bh->blocksAllocated--;
-	  bh->freeElems -= bh->elemsPerBlock;
-	}
+          if (last)
+            {
+              last->next = walker->next;
+              free(walker);
+              walker = last->next;
+            }
+          else
+            {
+              bh->base = walker->next;
+              free(walker);
+              walker = bh->base;
+            }
+          bh->blocksAllocated--;
+          bh->freeElems -= bh->elemsPerBlock;
+        }
       else
-	{
-	  last = walker;
-	  walker = walker->next;
-	}
+        {
+          last = walker;
+          walker = walker->next;
+        }
      }
    return 0;
 }
@@ -428,6 +428,6 @@ void BlockHeapCountMemory(BlockHeap *bh,int *TotalUsed,int *TotalAllocated)
 
       *TotalAllocated = sizeof(Block);      
       *TotalAllocated = ((bh->elemsPerBlock - walker->freeElems)
-			 * bh->elemSize);
+                         * bh->elemSize);
     }
 }

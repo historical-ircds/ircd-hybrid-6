@@ -107,12 +107,12 @@ void clean_client_heap(void)
 /*
  * make_client - create a new Client struct and set it to initial state.
  *
- *	from == NULL,	create local client (a client connected
- *			to a socket).
+ *      from == NULL,   create local client (a client connected
+ *                      to a socket).
  *
- *	from,	create remote client (behind a socket
- *			associated with the client defined by
- *			'from'). ('from' is a local client!!).
+ *      from,   create remote client (behind a socket
+ *                      associated with the client defined by
+ *                      'from'). ('from' is a local client!!).
  */
 struct Client* make_client(struct Client* from)
 {
@@ -122,7 +122,7 @@ struct Client* make_client(struct Client* from)
     {
       cptr = BlockHeapALLOC(localClientFreeList, aClient);
       if (cptr == NULL)
-	outofmemory();
+        outofmemory();
       assert(0 != cptr);
 
       memset(cptr, 0, CLIENT_LOCAL_SIZE);
@@ -148,7 +148,7 @@ struct Client* make_client(struct Client* from)
     { /* from is not NULL */
       cptr = BlockHeapALLOC(remoteClientFreeList, aClient);
       if(cptr == NULL)
-	outofmemory();
+        outofmemory();
       assert(0 != cptr);
 
       memset(cptr, 0, CLIENT_REMOTE_SIZE);
@@ -198,7 +198,7 @@ void _free_client(struct Client* cptr)
   assert(0 == cptr->prev);
   assert(0 == cptr->next);
 
-  if (cptr->local_flag)	{
+  if (cptr->local_flag) {
     if (-1 < cptr->fd)
       close(cptr->fd);
 
@@ -240,14 +240,14 @@ static void update_client_exit_stats(struct Client* cptr)
        * is deactivated with server_split_recovery_time == 0
        */
       if(SPLITDELAY && (Count.server < SPLITNUM))
-	{
-	  if (!server_was_split)
-	    {
-	      sendto_ops("Netsplit detected, split-mode activated");
-	      server_was_split = YES;
-	    }
-	  server_split_time = NOW;
-	}
+        {
+          if (!server_was_split)
+            {
+              sendto_ops("Netsplit detected, split-mode activated");
+              server_was_split = YES;
+            }
+          server_split_time = NOW;
+        }
 #endif
     }
 
@@ -272,7 +272,7 @@ static void release_client_state(struct Client* cptr)
   if (cptr->serv)
     {
       if (cptr->serv->user)
-	free_user(cptr->serv->user, cptr);
+        free_user(cptr->serv->user, cptr);
       MyFree((char*) cptr->serv);
     }
 
@@ -450,7 +450,7 @@ const char* get_client_name(struct Client* client, int showip)
   if (MyConnect(client))
     {
       if (!irccmp(client->name, client->host))
-	return client->name;
+        return client->name;
 
       t_user[0]='\0';
       t_host[0]='\0';
@@ -459,7 +459,7 @@ const char* get_client_name(struct Client* client, int showip)
       /* Check for ident */
 
       if(client->flags & FLAGS_GOTID)
-	strcpy(t_id, "(+)");
+        strcpy(t_id, "(+)");
 
       strcpy(t_user, client->username);
       strcat(t_user, "@");
@@ -869,14 +869,14 @@ const char* comment        /* Reason for the exit */
       if (IsPerson(sptr))
         {
           sendto_realops_flags(FLAGS_CCONN,
-			       "Client exiting: %s (%s@%s) [%s] [%s]",
-			       sptr->name, sptr->username, sptr->host,
+                               "Client exiting: %s (%s@%s) [%s] [%s]",
+                               sptr->name, sptr->username, sptr->host,
 #ifdef WINTRHAWK
-			       comment,
+                               comment,
 #else
                (sptr->flags & FLAGS_NORMALEX) ?  "Client Quit" : comment,
 #endif /* WINTRHAWK */
-			       sptr->sockhost);
+                               sptr->sockhost);
         }
 #ifdef FNAME_USERLOG
           on_for = timeofday - sptr->firsttime;
@@ -1021,20 +1021,20 @@ const char* comment        /* Reason for the exit */
  * Count up local client memory
  */
 void count_local_client_memory(int *local_client_memory_used,
-			       int *local_client_memory_allocated )
+                               int *local_client_memory_allocated )
 {
   BlockHeapCountMemory( localClientFreeList,
-			local_client_memory_used,
-			local_client_memory_allocated);
+                        local_client_memory_used,
+                        local_client_memory_allocated);
 }
 
 /*
  * Count up remote client memory
  */
 void count_remote_client_memory(int *remote_client_memory_used,
-			       int *remote_client_memory_allocated )
+                               int *remote_client_memory_allocated )
 {
   BlockHeapCountMemory( remoteClientFreeList,
-			remote_client_memory_used,
-			remote_client_memory_allocated);
+                        remote_client_memory_used,
+                        remote_client_memory_allocated);
 }

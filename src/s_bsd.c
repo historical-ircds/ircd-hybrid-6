@@ -307,13 +307,13 @@ void init_sys()
     {
 
       if (limit.rlim_max < MAXCONNECTIONS)
-	{
-	  fprintf(stderr,"ircd fd table too big\n");
-	  fprintf(stderr,"Hard Limit: %ld IRC max: %d\n",
-			(long) limit.rlim_max, MAXCONNECTIONS);
-	  fprintf(stderr,"Fix MAXCONNECTIONS\n");
-	  exit(-1);
-	}
+        {
+          fprintf(stderr,"ircd fd table too big\n");
+          fprintf(stderr,"Hard Limit: %ld IRC max: %d\n",
+                        (long) limit.rlim_max, MAXCONNECTIONS);
+          fprintf(stderr,"Fix MAXCONNECTIONS\n");
+          exit(-1);
+        }
 
       limit.rlim_cur = limit.rlim_max; /* make soft limit the max */
       if (setrlimit(RLIMIT_FD_MAX, &limit) == -1)
@@ -470,8 +470,7 @@ int check_client(aClient *cptr,char *username,char **reason)
       return i;
     }
 
-  Debug((DEBUG_DNS, "ch_cl: access ok: %s[%s]",
-         cptr->name, sockname));
+  Debug((DEBUG_DNS, "ch_cl: access ok: %s[%s]", cptr->name, sockname));
 
   return 0;
 }
@@ -502,16 +501,16 @@ static int check_server(aClient* cptr, struct DNSReply* dns_reply,
        */
       for (i = 0; hp->h_addr_list[i]; i++)
         {
-	  if (0 == memcmp(hp->h_addr_list[i], (char*)&cptr->ip,
-		          sizeof(struct in_addr)))
-	    break;
+          if (0 == memcmp(hp->h_addr_list[i], (char*)&cptr->ip,
+                          sizeof(struct in_addr)))
+            break;
         }
       if (!hp->h_addr_list[i])
         {
           sendto_realops_flags(FLAGS_DEBUG,
-			       "Server IP# Mismatch: %s != %s[%08x]",
-			       inetntoa((char *)&cptr->ip), hp->h_name,
-			       *((unsigned long *)hp->h_addr));
+                               "Server IP# Mismatch: %s != %s[%08x]",
+                               inetntoa((char *)&cptr->ip), hp->h_name,
+                               *((unsigned long *)hp->h_addr));
           hp = NULL;
         }
     }
@@ -566,14 +565,14 @@ static int check_server(aClient* cptr, struct DNSReply* dns_reply,
   else
     {
       for (i = 0; hp->h_addr_list[i]; i++)
-	{
-	  if (!c_conf)
-	    c_conf = find_conf_ip(lp, hp->h_addr_list[i],
-				  cptr->username, CONF_CONNECT_SERVER);
-	  if (!n_conf)
-	    n_conf = find_conf_ip(lp, hp->h_addr_list[i],
-				  cptr->username, CONF_NOCONNECT_SERVER);
-	}
+        {
+          if (!c_conf)
+            c_conf = find_conf_ip(lp, hp->h_addr_list[i],
+                                  cptr->username, CONF_CONNECT_SERVER);
+          if (!n_conf)
+            n_conf = find_conf_ip(lp, hp->h_addr_list[i],
+                                  cptr->username, CONF_NOCONNECT_SERVER);
+        }
     }
   /*
    * detach all conf lines that got attached by attach_confs()
@@ -964,20 +963,20 @@ void close_connection(aClient *cptr)
        * a 'quick' reconnect, else reset the next-connect cycle.
        */
       if ((aconf = find_conf_exact(cptr->name, cptr->username,
-				   cptr->host, CONF_CONNECT_SERVER)))
-	{
-	  /*
-	   * Reschedule a faster reconnect, if this was a automatically
-	   * connected configuration entry. (Note that if we have had
-	   * a rehash in between, the status has been changed to
-	   * CONF_ILLEGAL). But only do this if it was a "good" link.
-	   */
-	  aconf->hold = time(NULL);
-	  aconf->hold += (aconf->hold - cptr->since > HANGONGOODLINK) ?
-	    HANGONRETRYDELAY : ConfConFreq(aconf);
-	  if (nextconnect > aconf->hold)
-	    nextconnect = aconf->hold;
-	}
+                                   cptr->host, CONF_CONNECT_SERVER)))
+        {
+          /*
+           * Reschedule a faster reconnect, if this was a automatically
+           * connected configuration entry. (Note that if we have had
+           * a rehash in between, the status has been changed to
+           * CONF_ILLEGAL). But only do this if it was a "good" link.
+           */
+          aconf->hold = time(NULL);
+          aconf->hold += (aconf->hold - cptr->since > HANGONGOODLINK) ?
+            HANGONRETRYDELAY : ConfConFreq(aconf);
+          if (nextconnect > aconf->hold)
+            nextconnect = aconf->hold;
+        }
 
     }
   else if (IsClient(cptr))
@@ -1401,19 +1400,19 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
       ** ...room for writing, empty some queue then...
       */
       if (IsConnecting(cptr))
-	write_err = completed_connection(cptr);
+        write_err = completed_connection(cptr);
       if (!write_err)
-	send_queued(cptr);
+        send_queued(cptr);
 
       if (IsDead(cptr) || write_err) {
-	if (FD_ISSET(i, read_set)) {
-	  nfds--;
-	  FD_CLR(i, read_set);
-	}
-	exit_client(cptr, cptr, &me, 
+        if (FD_ISSET(i, read_set)) {
+          nfds--;
+          FD_CLR(i, read_set);
+        }
+        exit_client(cptr, cptr, &me, 
                     (cptr->flags & FLAGS_SENDQEX) ? 
-		    "SendQ Exceeded" : strerror(get_sockerr(cptr->fd)));
-	continue;
+                    "SendQ Exceeded" : strerror(get_sockerr(cptr->fd)));
+        continue;
       }
     }
     length = 1;        /* for fall through case */
@@ -1424,12 +1423,12 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
 
     if ((length != FLUSH_BUFFER) && IsDead(cptr)) {
       if (FD_ISSET(i, read_set)) {
-	nfds--;
-	FD_CLR(i, read_set);
+        nfds--;
+        FD_CLR(i, read_set);
       }
       exit_client(cptr, cptr, &me,
-		  (cptr->flags & FLAGS_SENDQEX) ? "SendQ Exceeded" :
-		  strerror(get_sockerr(cptr->fd)));
+                  (cptr->flags & FLAGS_SENDQEX) ? "SendQ Exceeded" :
+                  strerror(get_sockerr(cptr->fd)));
       continue;
     }
     if (!FD_ISSET(i, read_set) && length > 0)
@@ -1450,18 +1449,18 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
     current_error = get_sockerr(cptr->fd);
 
     Debug((DEBUG_ERROR, "READ ERROR: fd = %d %d %d",
-	   i, current_error, length));
+           i, current_error, length));
   
     /*
     ** NOTE: if length == -2 then cptr has already been freed!
     */
     if (length != -2 && (IsServer(cptr) || IsHandshake(cptr))) {
       if (length == 0)
-	sendto_ops("Server %s closed the connection",
-		   get_client_name(cptr, FALSE));
+        sendto_ops("Server %s closed the connection",
+                   get_client_name(cptr, FALSE));
       else
-	report_error("Lost connection to %s:%s",
-		     get_client_name(cptr, TRUE), current_error);
+        report_error("Lost connection to %s:%s",
+                     get_client_name(cptr, TRUE), current_error);
     }
     if (length != FLUSH_BUFFER) {
       char errmsg[255];
@@ -1616,30 +1615,30 @@ int read_message(time_t delay, fdlist *listp)
      */
     for (i = 0; i <= highest_fd; ++i) {
       if (!listp->entry[i])
-	continue;
+        continue;
 
       if (!(cptr = local[i]))
-	continue;
+        continue;
 
       if (!IsMe(cptr)) {
-	if (DBufLength(&cptr->recvQ) && delay2 > 2)
-	  delay2 = 1;
-	if (DBufLength(&cptr->recvQ) < 4088)
-	  PFD_SETR(i);
+        if (DBufLength(&cptr->recvQ) && delay2 > 2)
+          delay2 = 1;
+        if (DBufLength(&cptr->recvQ) < 4088)
+          PFD_SETR(i);
       }
       
       if (DBufLength(&cptr->sendQ) || IsConnecting(cptr)
 #ifdef ZIP_LINKS
-	  || ((cptr->flags2 & FLAGS2_ZIP) && (cptr->zip->outcount > 0))
+          || ((cptr->flags2 & FLAGS2_ZIP) && (cptr->zip->outcount > 0))
 #endif
-	  )
-	PFD_SETW(i);
+          )
+        PFD_SETW(i);
     }
 
     wait.tv_sec = IRCD_MIN(delay2, delay);
     wait.tv_usec = usec;
     nfds = poll(poll_fdarray, nbr_pfds,
-		wait.tv_sec * 1000 + wait.tv_usec / 1000);
+                wait.tv_sec * 1000 + wait.tv_usec / 1000);
     if (nfds == -1 && ((errno == EINTR) || (errno == EAGAIN)))
       return -1;
     else if (nfds >= 0)

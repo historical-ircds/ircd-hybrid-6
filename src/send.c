@@ -1,7 +1,7 @@
 /************************************************************************
  *   IRC - Internet Relay Chat, src/send.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
- *		      University of Oulu, Computing Center
+ *                    University of Oulu, Computing Center
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -37,10 +37,10 @@ extern aClient *local_cptr_list;
 extern aClient *oper_cptr_list;
 extern aClient *serv_cptr_list;
 
-#define	NEWLINE	"\r\n"
+#define NEWLINE "\r\n"
 
-static	char	sendbuf[2048];
-static	int	send_message (aClient *, char *, int);
+static  char    sendbuf[2048];
+static  int     send_message (aClient *, char *, int);
 
 /*
  * vsprintf_irc - defined in sprintf_irc.c
@@ -51,23 +51,23 @@ static  void vsendto_prefix_one(register aClient *, register aClient *, const ch
 static  void vsendto_one(aClient *, const char *, va_list);
 static  void vsendto_realops(const char *, va_list);
 
-static	unsigned long sentalong[MAXCONNECTIONS];
+static  unsigned long sentalong[MAXCONNECTIONS];
 static unsigned long current_serial=0L;
 
 /*
 ** dead_link
-**	An error has been detected. The link *must* be closed,
-**	but *cannot* call ExitClient (m_bye) from here.
-**	Instead, mark it with FLAGS_DEADSOCKET. This should
-**	generate ExitClient from the main loop.
+**      An error has been detected. The link *must* be closed,
+**      but *cannot* call ExitClient (m_bye) from here.
+**      Instead, mark it with FLAGS_DEADSOCKET. This should
+**      generate ExitClient from the main loop.
 **
-**	If 'notice' is not NULL, it is assumed to be a format
-**	for a message to local opers. I can contain only one
-**	'%s', which will be replaced by the sockhost field of
-**	the failing link.
+**      If 'notice' is not NULL, it is assumed to be a format
+**      for a message to local opers. I can contain only one
+**      '%s', which will be replaced by the sockhost field of
+**      the failing link.
 **
-**	Also, the notice is skipped for "uninteresting" cases,
-**	like Persons and yet unknown connections...
+**      Also, the notice is skipped for "uninteresting" cases,
+**      like Persons and yet unknown connections...
 */
 
 static int
@@ -92,12 +92,12 @@ dead_link(aClient *to, char *notice)
 
 /*
 ** flush_connections
-**	Used to empty all output buffers for all connections. Should only
-**	be called once per scan of connections. There should be a select in
-**	here perhaps but that means either forcing a timeout or doing a poll.
-**	When flushing, all we do is empty the obuffer array for each local
-**	client and try to send it. if we cant send it, it goes into the sendQ
-**	-avalon
+**      Used to empty all output buffers for all connections. Should only
+**      be called once per scan of connections. There should be a select in
+**      here perhaps but that means either forcing a timeout or doing a poll.
+**      When flushing, all we do is empty the obuffer array for each local
+**      client and try to send it. if we cant send it, it goes into the sendQ
+**      -avalon
 */
 
 void
@@ -105,17 +105,17 @@ flush_connections(int fd)
 
 {
 #ifdef SENDQ_ALWAYS
-	int i;
-	aClient *cptr;
+        int i;
+        aClient *cptr;
 
-	if (fd == me.fd)
-	{
-		for (i = highest_fd; i >= 0; i--)
-			if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
-				(void)send_queued(cptr);
-	}
-	else if (fd >= 0 && (cptr = local[fd]) && DBufLength(&cptr->sendQ) > 0)
-		(void)send_queued(cptr);
+        if (fd == me.fd)
+        {
+                for (i = highest_fd; i >= 0; i--)
+                        if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
+                                (void)send_queued(cptr);
+        }
+        else if (fd >= 0 && (cptr = local[fd]) && DBufLength(&cptr->sendQ) > 0)
+                (void)send_queued(cptr);
 
 #endif /* SENDQ_ALWAYS */
 } /* flush_connections() */
@@ -123,14 +123,14 @@ flush_connections(int fd)
 
 /*
 ** send_message
-**	Internal utility which delivers one message buffer to the
-**	socket. Takes care of the error handling and buffering, if
-**	needed.
+**      Internal utility which delivers one message buffer to the
+**      socket. Takes care of the error handling and buffering, if
+**      needed.
 **      if SENDQ_ALWAYS is defined, the message will be queued.
-**	if ZIP_LINKS is defined, the message will eventually be compressed,
-**	anything stored in the sendQ is compressed.
+**      if ZIP_LINKS is defined, the message will eventually be compressed,
+**      anything stored in the sendQ is compressed.
 **
-**	if msg is a null pointer, we are flushing connection
+**      if msg is a null pointer, we are flushing connection
 */
 static int
 send_message(aClient *to, char *msg, int len)
@@ -138,265 +138,265 @@ send_message(aClient *to, char *msg, int len)
 #ifdef SENDQ_ALWAYS
 
 {
-	static int SQinK;
+        static int SQinK;
 
-	if (to->from)
-		to = to->from; /* shouldn't be necessary */
+        if (to->from)
+                to = to->from; /* shouldn't be necessary */
 
-	if (IsMe(to))
-	{
-		sendto_realops("Trying to send to myself! [%s]", msg);
-		return 0;
-	}
+        if (IsMe(to))
+        {
+                sendto_realops("Trying to send to myself! [%s]", msg);
+                return 0;
+        }
 
-	if (IsDead(to))
-		return 0; /* This socket has already been marked as dead */
+        if (IsDead(to))
+                return 0; /* This socket has already been marked as dead */
 
-	if (DBufLength(&to->sendQ) > get_sendq(to))
-	{
-		if (IsServer(to))
-			sendto_ops("Max SendQ limit exceeded for %s: %d > %d",
-				get_client_name(to, FALSE),
-				DBufLength(&to->sendQ), get_sendq(to));
+        if (DBufLength(&to->sendQ) > get_sendq(to))
+        {
+                if (IsServer(to))
+                        sendto_ops("Max SendQ limit exceeded for %s: %d > %d",
+                                get_client_name(to, FALSE),
+                                DBufLength(&to->sendQ), get_sendq(to));
 
-		if (IsClient(to))
-			to->flags |= FLAGS_SENDQEX;
+                if (IsClient(to))
+                        to->flags |= FLAGS_SENDQEX;
 
-		if (IsDoingList(to))
-			return dead_link(to, "Local kill by /list (so many channels!)");
-		else
-			return dead_link(to, "Max Sendq exceeded");
-	}
-	else
-	{
-	#ifdef ZIP_LINKS
+                if (IsDoingList(to))
+                        return dead_link(to, "Local kill by /list (so many channels!)");
+                else
+                        return dead_link(to, "Max Sendq exceeded");
+        }
+        else
+        {
+        #ifdef ZIP_LINKS
 
-		/*
-		** data is first stored in to->zip->outbuf until
-		** it's big enough to be compressed and stored in the sendq.
-		** send_queued is then responsible to never let the sendQ
-		** be empty and to->zip->outbuf not empty.
-		*/
-		if (to->flags2 & FLAGS2_ZIP)
-			msg = zip_buffer(to, msg, &len, 0);
+                /*
+                ** data is first stored in to->zip->outbuf until
+                ** it's big enough to be compressed and stored in the sendq.
+                ** send_queued is then responsible to never let the sendQ
+                ** be empty and to->zip->outbuf not empty.
+                */
+                if (to->flags2 & FLAGS2_ZIP)
+                        msg = zip_buffer(to, msg, &len, 0);
 
-		if (len && dbuf_put(&to->sendQ, msg, len) < 0)
+                if (len && dbuf_put(&to->sendQ, msg, len) < 0)
 
-	#else /* ZIP_LINKS */
+        #else /* ZIP_LINKS */
 
-		if (dbuf_put(&to->sendQ, msg, len) < 0)
+                if (dbuf_put(&to->sendQ, msg, len) < 0)
 
-	#endif /* ZIP_LINKS */
+        #endif /* ZIP_LINKS */
 
-			return dead_link(to, "Buffer allocation error for %s");
-	}
+                        return dead_link(to, "Buffer allocation error for %s");
+        }
 
-	/*
-	** Update statistics. The following is slightly incorrect
-	** because it counts messages even if queued, but bytes
-	** only really sent. Queued bytes get updated in SendQueued.
-	*/
-	to->sendM += 1;
-	me.sendM += 1;
+        /*
+        ** Update statistics. The following is slightly incorrect
+        ** because it counts messages even if queued, but bytes
+        ** only really sent. Queued bytes get updated in SendQueued.
+        */
+        to->sendM += 1;
+        me.sendM += 1;
 
-	/*
-	** This little bit is to stop the sendQ from growing too large when
-	** there is no need for it to. Thus we call send_queued() every time
-	** 2k has been added to the queue since the last non-fatal write.
-	** Also stops us from deliberately building a large sendQ and then
-	** trying to flood that link with data (possible during the net
-	** relinking done by servers with a large load).
-	*/
-	/*
-	 * Well, let's try every 4k for clients, and immediately for servers
-	 *  -Taner
-	 */
-	SQinK = DBufLength(&to->sendQ)/1024;
-	if (IsServer(to))
-	{
-		if (SQinK > to->lastsq)
-			send_queued(to);
-	}
-	else
-	{
-		if (SQinK > (to->lastsq + 4))
-			send_queued(to);
-	}
-	return 0;
+        /*
+        ** This little bit is to stop the sendQ from growing too large when
+        ** there is no need for it to. Thus we call send_queued() every time
+        ** 2k has been added to the queue since the last non-fatal write.
+        ** Also stops us from deliberately building a large sendQ and then
+        ** trying to flood that link with data (possible during the net
+        ** relinking done by servers with a large load).
+        */
+        /*
+         * Well, let's try every 4k for clients, and immediately for servers
+         *  -Taner
+         */
+        SQinK = DBufLength(&to->sendQ)/1024;
+        if (IsServer(to))
+        {
+                if (SQinK > to->lastsq)
+                        send_queued(to);
+        }
+        else
+        {
+                if (SQinK > (to->lastsq + 4))
+                        send_queued(to);
+        }
+        return 0;
 } /* send_message() */
 
 #else /* SENDQ_ALWAYS */
 
 {
-	int rlen = 0;
+        int rlen = 0;
 
-	if (to->from)
-		to = to->from;
+        if (to->from)
+                to = to->from;
 
-	if (IsMe(to))
-	{
-		sendto_ops("Trying to send to myself! [%s]", msg);
-		return 0;
-	}
+        if (IsMe(to))
+        {
+                sendto_ops("Trying to send to myself! [%s]", msg);
+                return 0;
+        }
 
-	if (IsDead(to))
-		return 0; /* This socket has already been marked as dead */
+        if (IsDead(to))
+                return 0; /* This socket has already been marked as dead */
 
-	/*
-	** DeliverIt can be called only if SendQ is empty...
-	*/
-	if ((DBufLength(&to->sendQ) == 0) &&
-			(rlen = deliver_it(to, msg, len)) < 0)
-		return dead_link(to,"Write error to %s, closing link");
-	else if (rlen < len)
-	{
-		/*
-		** Was unable to transfer all of the requested data. Queue
-		** up the remainder for some later time...
-		*/
-		if (DBufLength(&to->sendQ) > get_sendq(to))
-		{
-			sendto_ops_butone(to,
-				"Max SendQ limit exceeded for %s : %d > %d",
-				get_client_name(to, FALSE),
-				DBufLength(&to->sendQ), get_sendq(to));
+        /*
+        ** DeliverIt can be called only if SendQ is empty...
+        */
+        if ((DBufLength(&to->sendQ) == 0) &&
+                        (rlen = deliver_it(to, msg, len)) < 0)
+                return dead_link(to,"Write error to %s, closing link");
+        else if (rlen < len)
+        {
+                /*
+                ** Was unable to transfer all of the requested data. Queue
+                ** up the remainder for some later time...
+                */
+                if (DBufLength(&to->sendQ) > get_sendq(to))
+                {
+                        sendto_ops_butone(to,
+                                "Max SendQ limit exceeded for %s : %d > %d",
+                                get_client_name(to, FALSE),
+                                DBufLength(&to->sendQ), get_sendq(to));
 
-			if (IsDoingList(to))
-				return dead_link(to, "Local kill by /list (so many channels!)");
-			else
-				return dead_link(to, "Max Sendq exceeded");
-		}
-		else
-		{
-		#ifdef ZIP_LINKS
+                        if (IsDoingList(to))
+                                return dead_link(to, "Local kill by /list (so many channels!)");
+                        else
+                                return dead_link(to, "Max Sendq exceeded");
+                }
+                else
+                {
+                #ifdef ZIP_LINKS
 
-			/*
-			** data is first stored in to->zip->outbuf until
-			** it's big enough to be compressed and stored in the sendq.
-			** send_queued is then responsible to never let the sendQ
-			** be empty and to->zip->outbuf not empty.
-			*/
-			if (to->flags2 & FLAGS2_ZIP)
-				msg = zip_buffer(to, msg, &len, 0);
+                        /*
+                        ** data is first stored in to->zip->outbuf until
+                        ** it's big enough to be compressed and stored in the sendq.
+                        ** send_queued is then responsible to never let the sendQ
+                        ** be empty and to->zip->outbuf not empty.
+                        */
+                        if (to->flags2 & FLAGS2_ZIP)
+                                msg = zip_buffer(to, msg, &len, 0);
 
-			if (len && dbuf_put(&to->sendQ,msg+rlen,len-rlen) < 0)
+                        if (len && dbuf_put(&to->sendQ,msg+rlen,len-rlen) < 0)
 
-		#else /* ZIP_LINKS */
+                #else /* ZIP_LINKS */
 
-			if (dbuf_put(&to->sendQ,msg+rlen,len-rlen) < 0)
+                        if (dbuf_put(&to->sendQ,msg+rlen,len-rlen) < 0)
 
-		#endif /* ZIP_LINKS */
+                #endif /* ZIP_LINKS */
 
-				return dead_link(to,"Buffer allocation error for %s");
-		}
-	} /* else if (rlen < len) */
+                                return dead_link(to,"Buffer allocation error for %s");
+                }
+        } /* else if (rlen < len) */
 
-	/*
-	** Update statistics. The following is slightly incorrect
-	** because it counts messages even if queued, but bytes
-	** only really sent. Queued bytes get updated in SendQueued.
-	*/
-	to->sendM += 1;
-	me.sendM += 1;
+        /*
+        ** Update statistics. The following is slightly incorrect
+        ** because it counts messages even if queued, but bytes
+        ** only really sent. Queued bytes get updated in SendQueued.
+        */
+        to->sendM += 1;
+        me.sendM += 1;
 
-	return 0;
+        return 0;
 } /* send_message() */
 
 #endif /* SENDQ_ALWAYS */
 
 /*
 ** send_queued
-**	This function is called from the main select-loop (or whatever)
-**	when there is a chance the some output would be possible. This
-**	attempts to empty the send queue as far as possible...
+**      This function is called from the main select-loop (or whatever)
+**      when there is a chance the some output would be possible. This
+**      attempts to empty the send queue as far as possible...
 */
 int
 send_queued(aClient *to)
 
 {
-	char *msg;
-	int len, rlen;
+        char *msg;
+        int len, rlen;
 #ifdef ZIP_LINKS
-	int more = NO;
+        int more = NO;
 #endif
 
-	/*
-	** Once socket is marked dead, we cannot start writing to it,
-	** even if the error is removed...
-	*/
-	if (IsDead(to))
-	{
-		/*
-		** Actually, we should *NEVER* get here--something is
-		** not working correct if send_queued is called for a
-		** dead socket... --msa
-		*/
-	#ifndef SENDQ_ALWAYS
-		return dead_link(to, "send_queued called for a DEADSOCKET:%s");
-	#else
-		return -1;
-	#endif
-	} /* if (IsDead(to)) */
+        /*
+        ** Once socket is marked dead, we cannot start writing to it,
+        ** even if the error is removed...
+        */
+        if (IsDead(to))
+        {
+                /*
+                ** Actually, we should *NEVER* get here--something is
+                ** not working correct if send_queued is called for a
+                ** dead socket... --msa
+                */
+        #ifndef SENDQ_ALWAYS
+                return dead_link(to, "send_queued called for a DEADSOCKET:%s");
+        #else
+                return -1;
+        #endif
+        } /* if (IsDead(to)) */
 
 #ifdef ZIP_LINKS
-	/*
-	** Here, we must make sure than nothing will be left in to->zip->outbuf
-	** This buffer needs to be compressed and sent if all the sendQ is sent
-	*/
-	if ((to->flags2 & FLAGS2_ZIP) && to->zip->outcount)
-	{
-		if (DBufLength(&to->sendQ) > 0)
-			more = 1;
-		else
-		{
-			msg = zip_buffer(to, NULL, &len, 1);
+        /*
+        ** Here, we must make sure than nothing will be left in to->zip->outbuf
+        ** This buffer needs to be compressed and sent if all the sendQ is sent
+        */
+        if ((to->flags2 & FLAGS2_ZIP) && to->zip->outcount)
+        {
+                if (DBufLength(&to->sendQ) > 0)
+                        more = 1;
+                else
+                {
+                        msg = zip_buffer(to, NULL, &len, 1);
 
-			if (len == -1)
-				return dead_link(to, "fatal error in zip_buffer()");
+                        if (len == -1)
+                                return dead_link(to, "fatal error in zip_buffer()");
 
-			if (dbuf_put(&to->sendQ, msg, len) < 0)
-				return dead_link(to, "Buffer allocation error for %s");
-		}
-	} /* if ((to->flags2 & FLAGS2_ZIP) && to->zip->outcount) */
+                        if (dbuf_put(&to->sendQ, msg, len) < 0)
+                                return dead_link(to, "Buffer allocation error for %s");
+                }
+        } /* if ((to->flags2 & FLAGS2_ZIP) && to->zip->outcount) */
 #endif /* ZIP_LINKS */
 
-	while (DBufLength(&to->sendQ) > 0)
-	{
-		msg = dbuf_map(&to->sendQ, &len);
+        while (DBufLength(&to->sendQ) > 0)
+        {
+                msg = dbuf_map(&to->sendQ, &len);
 
-		/* Returns always len > 0 */
-		if ((rlen = deliver_it(to, msg, len)) < 0)
-			return dead_link(to,"Write error to %s, closing link");
+                /* Returns always len > 0 */
+                if ((rlen = deliver_it(to, msg, len)) < 0)
+                        return dead_link(to,"Write error to %s, closing link");
 
-		(void)dbuf_delete(&to->sendQ, rlen);
-		to->lastsq = DBufLength(&to->sendQ)/1024;
-		if (rlen < len)
-		{
-			/* ..or should I continue until rlen==0? */
-			/* no... rlen==0 means the send returned EWOULDBLOCK... */
-			break;
-		}
+                (void)dbuf_delete(&to->sendQ, rlen);
+                to->lastsq = DBufLength(&to->sendQ)/1024;
+                if (rlen < len)
+                {
+                        /* ..or should I continue until rlen==0? */
+                        /* no... rlen==0 means the send returned EWOULDBLOCK... */
+                        break;
+                }
 
-	#ifdef ZIP_LINKS
-		if (DBufLength(&to->sendQ) == 0 && more)
-		{
-			/*
-			** The sendQ is now empty, compress what's left
-			** uncompressed and try to send it too
-			*/
-			more = 0;
-			msg = zip_buffer(to, NULL, &len, 1);
+        #ifdef ZIP_LINKS
+                if (DBufLength(&to->sendQ) == 0 && more)
+                {
+                        /*
+                        ** The sendQ is now empty, compress what's left
+                        ** uncompressed and try to send it too
+                        */
+                        more = 0;
+                        msg = zip_buffer(to, NULL, &len, 1);
 
-			if (len == -1)
-				return dead_link(to, "fatal error in zip_buffer()");
+                        if (len == -1)
+                                return dead_link(to, "fatal error in zip_buffer()");
 
-			if (dbuf_put(&to->sendQ, msg, len) < 0)
-				return dead_link(to, "Buffer allocation error for %s");
-		} /* if (DBufLength(&to->sendQ) == 0 && more) */
-	#endif /* ZIP_LINKS */      
-	} /* while (DBufLength(&to->sendQ) > 0) */
+                        if (dbuf_put(&to->sendQ, msg, len) < 0)
+                                return dead_link(to, "Buffer allocation error for %s");
+                } /* if (DBufLength(&to->sendQ) == 0 && more) */
+        #endif /* ZIP_LINKS */      
+        } /* while (DBufLength(&to->sendQ) > 0) */
 
-	return (IsDead(to)) ? -1 : 0;
+        return (IsDead(to)) ? -1 : 0;
 } /* send_queued() */
 
 /*
@@ -407,7 +407,7 @@ void
 sendto_one(aClient *to, const char *pattern, ...)
 
 {
-  va_list	args;
+  va_list       args;
 
   va_start(args, pattern);
 
@@ -435,8 +435,8 @@ vsendto_one(aClient *to, const char *pattern, va_list args)
   if (to->fd < 0)
     {
       Debug((DEBUG_ERROR,
-	     "Local socket %s with negative fd... AARGH!",
-	     to->name));
+             "Local socket %s with negative fd... AARGH!",
+             to->name));
     }
   else if (IsMe(to))
     {
@@ -472,23 +472,23 @@ vsendto_one(aClient *to, const char *pattern, va_list args)
    * of an overflow.
    * -wnder
    */
-	if (len > 510)
-	{
-		sendbuf[510] = '\r';
-		sendbuf[511] = '\n';
-		sendbuf[512] = '\0';
-		len = 512;
-	}
-	else
-	{
-		sendbuf[len++] = '\r';
-		sendbuf[len++] = '\n';
-		sendbuf[len] = '\0';
-	}
+        if (len > 510)
+        {
+                sendbuf[510] = '\r';
+                sendbuf[511] = '\n';
+                sendbuf[512] = '\0';
+                len = 512;
+        }
+        else
+        {
+                sendbuf[len++] = '\r';
+                sendbuf[len++] = '\n';
+                sendbuf[len] = '\0';
+        }
 
-	Debug((DEBUG_SEND,"Sending [%s] to %s",sendbuf,to->name));
+        Debug((DEBUG_SEND,"Sending [%s] to %s",sendbuf,to->name));
 
-	(void)send_message(to, sendbuf, len);
+        (void)send_message(to, sendbuf, len);
 } /* vsendto_one() */
 
 void
@@ -496,7 +496,7 @@ sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
                       const char *pattern, ...)
 
 {
-  va_list	args;
+  va_list       args;
   register Link *lp;
   register aClient *acptr;
   register int index; /* index of sentalong[] to flag client as having received message */
@@ -510,29 +510,29 @@ sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
       acptr = lp->value.cptr;
       
       if (acptr->from == one)
-	continue;	/* ...was the one I should skip */
+        continue;       /* ...was the one I should skip */
       
       index = acptr->from->fd;
       if (MyConnect(acptr) && IsRegisteredUser(acptr))
-	{
-	  vsendto_prefix_one(acptr, from, pattern, args);
-	  sentalong[index] = current_serial;
-	}
+        {
+          vsendto_prefix_one(acptr, from, pattern, args);
+          sentalong[index] = current_serial;
+        }
       else
-	{
-	  /*
-	   * Now check whether a message has been sent to this
-	   * remote link already
-	   */
-	  if(sentalong[index] != current_serial)
-	    {
-	      vsendto_prefix_one(acptr, from, pattern, args);
-	      sentalong[index] = current_serial;
-	    }
-	}
+        {
+          /*
+           * Now check whether a message has been sent to this
+           * remote link already
+           */
+          if(sentalong[index] != current_serial)
+            {
+              vsendto_prefix_one(acptr, from, pattern, args);
+              sentalong[index] = current_serial;
+            }
+        }
     }
 
-	va_end(args);
+        va_end(args);
 } /* sendto_channel_butone() */
 
 void
@@ -540,7 +540,7 @@ sendto_channel_type(aClient *one, aClient *from, aChannel *chptr,
                     int type, const char *pattern, ...)
 
 {
-  va_list	args;
+  va_list       args;
   register Link *lp;
   register aClient *acptr;
   register int i;
@@ -552,67 +552,67 @@ sendto_channel_type(aClient *one, aClient *from, aChannel *chptr,
   for (lp = chptr->members; lp; lp = lp->next)
     {
       if (!(lp->flags & type))
-	continue;
+        continue;
 
       acptr = lp->value.cptr;
       if (acptr->from == one)
-	continue;
+        continue;
 
       i = acptr->from->fd;
       if (MyConnect(acptr) && IsRegisteredUser(acptr))
-	{
-	  vsendto_prefix_one(acptr, from, pattern, args);
-	  sentalong[i] = current_serial;
-	}
+        {
+          vsendto_prefix_one(acptr, from, pattern, args);
+          sentalong[i] = current_serial;
+        }
       else
-	{
+        {
 #if 0
-	  /*
-	   * We have to remove this kludge since it is not
-	   * compatible with stdarg.h - if we call va_arg()
-	   * several times to grab the p1 and p4, it will work
-	   * short-term, but the next time we hit a local
-	   * client and call vsendto_prefix_one(), 'args'
-	   * will be basically null, causing a core dump.
-	   * -wnder
-	   *
-	   */
+          /*
+           * We have to remove this kludge since it is not
+           * compatible with stdarg.h - if we call va_arg()
+           * several times to grab the p1 and p4, it will work
+           * short-term, but the next time we hit a local
+           * client and call vsendto_prefix_one(), 'args'
+           * will be basically null, causing a core dump.
+           * -wnder
+           *
+           */
 
-	  /*
-	   * If the target's server can do CAP_CHW, only
-	   * one send is needed, otherwise, I do a bunch of
-	   * send's to each target on that server. (kludge)
-	   *
-	   * The USE_VARARGS is broken, we'll have to fix that later
-	   * -Dianora
-	   */
-	  if(!IsCapable(acptr->from,CAP_CHW))
-	    {
-	      /* kludge in a built in chan wall for older servers */
-	      
-	      sendto_prefix_one(acptr, from,
-				":%s NOTICE %s :%s",
-				p1,
-				/* ignore p2, replace with NOTICE */
-				/* ignore p3, replace with username */
-				lp->value.cptr->name,
-				/* p4 is message "payload" */
-				p4);
-	    }
-	  else
-	    {
+          /*
+           * If the target's server can do CAP_CHW, only
+           * one send is needed, otherwise, I do a bunch of
+           * send's to each target on that server. (kludge)
+           *
+           * The USE_VARARGS is broken, we'll have to fix that later
+           * -Dianora
+           */
+          if(!IsCapable(acptr->from,CAP_CHW))
+            {
+              /* kludge in a built in chan wall for older servers */
+              
+              sendto_prefix_one(acptr, from,
+                                ":%s NOTICE %s :%s",
+                                p1,
+                                /* ignore p2, replace with NOTICE */
+                                /* ignore p3, replace with username */
+                                lp->value.cptr->name,
+                                /* p4 is message "payload" */
+                                p4);
+            }
+          else
+            {
 #endif /* 0 */
 
-	      /* Now check whether a message has been sent to this
-	       * remote link already
-	       */
-	      if (sentalong[i] != current_serial)
-		{
-		  vsendto_prefix_one(acptr, from, pattern, args);
-		  sentalong[i] = current_serial;
-		}
-	    }
-	} /* for (lp = chptr->members; lp; lp = lp->next) */
+              /* Now check whether a message has been sent to this
+               * remote link already
+               */
+              if (sentalong[i] != current_serial)
+                {
+                  vsendto_prefix_one(acptr, from, pattern, args);
+                  sentalong[i] = current_serial;
+                }
+            }
+        } /* for (lp = chptr->members; lp; lp = lp->next) */
 
       va_end(args);
 } /* sendto_channel_type() */
@@ -629,25 +629,25 @@ void
 sendto_channel_type_notice(aClient *from, aChannel *chptr, int type, char *message)
 
 {
-	register Link *lp;
-	register aClient *acptr;
-	register int i;
+        register Link *lp;
+        register aClient *acptr;
+        register int i;
 
-	for (lp = chptr->members; lp; lp = lp->next)
-	{
-		if (!(lp->flags & type))
-			continue;
+        for (lp = chptr->members; lp; lp = lp->next)
+        {
+                if (!(lp->flags & type))
+                        continue;
 
-		acptr = lp->value.cptr;
+                acptr = lp->value.cptr;
 
-		i = acptr->from->fd;
-		if (IsRegisteredUser(acptr))
-		{
-			sendto_prefix_one(acptr, from, ":%s NOTICE %s :%s",
-				from->name, 
-				acptr->name, message);
-		}
-	}
+                i = acptr->from->fd;
+                if (IsRegisteredUser(acptr))
+                {
+                        sendto_prefix_one(acptr, from, ":%s NOTICE %s :%s",
+                                from->name, 
+                                acptr->name, message);
+                }
+        }
 } /* sendto_channel_type_notice() */
 
 
@@ -676,7 +676,7 @@ sendto_serv_butone(aClient *one, const char *pattern, ...)
   for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
     {
       if (one && (cptr == one->from))
-	continue;
+        continue;
       
       vsendto_one(cptr, pattern, args);
     }
@@ -709,16 +709,16 @@ sendto_common_channels(aClient *user, const char *pattern, ...)
   if (user->user)
     {
       for (channels = user->user->channel; channels; channels = channels->next)
-	for(users = channels->value.chptr->members; users; users = users->next)
-	  {
-	    cptr = users->value.cptr;
-	    if (!MyConnect(cptr) || (sentalong[cptr->fd] == current_serial))
-	      continue;
-	    
-	    sentalong[cptr->fd] = current_serial;
-	    
-	    vsendto_prefix_one(cptr, user, pattern, args);
-	  }
+        for(users = channels->value.chptr->members; users; users = users->next)
+          {
+            cptr = users->value.cptr;
+            if (!MyConnect(cptr) || (sentalong[cptr->fd] == current_serial))
+              continue;
+            
+            sentalong[cptr->fd] = current_serial;
+            
+            vsendto_prefix_one(cptr, user, pattern, args);
+          }
     }
 
   if (MyConnect(user))
@@ -788,13 +788,13 @@ sendto_match_servs(aChannel *chptr, aClient *from, const char *pattern, ...)
   if (chptr)
     {
       if (*chptr->chname == '&')
-	return;
+        return;
     }
 
   for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
     {
       if (cptr == from)
-	continue;
+        continue;
       
       vsendto_one(cptr, pattern, args);
     }
@@ -822,16 +822,16 @@ sendto_match_cap_servs(aChannel *chptr, aClient *from, int cap,
   if (chptr)
     {
       if (*chptr->chname == '&')
-	return;
+        return;
     }
 
   for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
     {
       if (cptr == from)
-	continue;
+        continue;
       
       if(!IsCapable(cptr, cap))
-	continue;
+        continue;
       
       vsendto_one(cptr, pattern, args);
     }
@@ -859,18 +859,18 @@ sendto_match_butone(aClient *one, aClient *from, char *mask,
   /* scan the local clients */
   for(cptr = local_cptr_list; cptr; cptr = cptr->next_local_client)
     {
-      if (cptr == one)	/* must skip the origin !! */
-	continue;
+      if (cptr == one)  /* must skip the origin !! */
+        continue;
       
       if (match_it(cptr, mask, what))
-	vsendto_prefix_one(cptr, from, pattern, args);
+        vsendto_prefix_one(cptr, from, pattern, args);
     }
 
   /* Now scan servers */
   for (cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
     {
       if (cptr == one) /* must skip the origin !! */
-	continue;
+        continue;
 
       /*
        * The old code looped through every client on the
@@ -879,9 +879,9 @@ sendto_match_butone(aClient *one, aClient *from, char *mask,
        * the mask, using something like:
        *
        * for (acptr = GlobalClientList; acptr; acptr = acptr->next)
-       *	if (IsRegisteredUser(acptr) &&
-       *			match_it(acptr, mask, what) &&
-       *			(acptr->from == cptr))
+       *        if (IsRegisteredUser(acptr) &&
+       *                        match_it(acptr, mask, what) &&
+       *                        (acptr->from == cptr))
        *   vsendto_prefix_one(cptr, from, pattern, args);
        *
        * That way, we wouldn't send the message to
@@ -922,17 +922,17 @@ sendto_ops_flags(int flags, const char *pattern, ...)
   if( flags & FLAGS_SKILL)
     {
       for(cptr = local_cptr_list; cptr; cptr = cptr->next_local_client)
-	{
-	  if(cptr->umodes & FLAGS_SKILL)
-	    {
-	      (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
-			       me.name, cptr->name);
+        {
+          if(cptr->umodes & FLAGS_SKILL)
+            {
+              (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
+                               me.name, cptr->name);
       
-	      (void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
+              (void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
       
-	      vsendto_one(cptr, nbuf, args);
-	    }
-	} /* for(cptr = local_cptr_list; cptr; cptr = cptr->next_local_client) */
+              vsendto_one(cptr, nbuf, args);
+            }
+        } /* for(cptr = local_cptr_list; cptr; cptr = cptr->next_local_client) */
     }
 
 
@@ -941,17 +941,17 @@ sendto_ops_flags(int flags, const char *pattern, ...)
   if(flags)
     {
       for(cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client)
-	{
-	  if(cptr->umodes & flags)
-	    {
-	      (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
-			       me.name, cptr->name);
-	      
-	      (void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
-	      
-	      vsendto_one(cptr, nbuf, args);
-	    }
-	} /* for(cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client) */
+        {
+          if(cptr->umodes & flags)
+            {
+              (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
+                               me.name, cptr->name);
+              
+              (void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
+              
+              vsendto_one(cptr, nbuf, args);
+            }
+        } /* for(cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client) */
     }
   va_end(args);
 }  /* sendto_ops_flags */
@@ -959,7 +959,7 @@ sendto_ops_flags(int flags, const char *pattern, ...)
 /*
  * sendto_ops
  *
- *	Send to *local* ops only.
+ *      Send to *local* ops only.
  */
 
 void
@@ -975,13 +975,13 @@ sendto_ops(const char *pattern, ...)
   for (cptr = local_cptr_list; cptr; cptr = cptr->next_local_client)
     {
       if (SendServNotice(cptr))
-	{
-	  (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
-			   me.name, cptr->name);
-	  (void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
-	  
-	  vsendto_one(cptr, nbuf, args);
-	}
+        {
+          (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
+                           me.name, cptr->name);
+          (void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
+          
+          vsendto_one(cptr, nbuf, args);
+        }
     }
 
   va_end(args);
@@ -990,7 +990,7 @@ sendto_ops(const char *pattern, ...)
 
 /*
 ** sendto_ops_butone
-**	Send message to all operators.
+**      Send message to all operators.
 ** one - client not to send message to
 ** from- client which message is from *NEVER* NULL!!
 */
@@ -1010,7 +1010,7 @@ sendto_ops_butone(aClient *one, aClient *from, const char *pattern, ...)
   for (cptr = GlobalClientList; cptr; cptr = cptr->next)
     {
       if (!SendWallops(cptr))
-	continue;
+        continue;
 
 /* we want wallops
    if (MyClient(cptr) && !(IsServer(from) || IsMe(from)))
@@ -1020,10 +1020,10 @@ sendto_ops_butone(aClient *one, aClient *from, const char *pattern, ...)
       index = cptr->from->fd; /* find connection oper is on */
 
       if (sentalong[index] == current_serial)
-	continue;
+        continue;
       
       if (cptr->from == one)
-	continue;	/* ...was the one I should skip */
+        continue;       /* ...was the one I should skip */
       
       sentalong[index] = current_serial;
       
@@ -1055,31 +1055,31 @@ sendto_wallops_butone(aClient *one, aClient *from, const char *pattern, ...)
   for (cptr = GlobalClientList; cptr; cptr = cptr->next)
     {
       if (!SendWallops(cptr))
-	continue;
+        continue;
       
       if (!(IsServer(from) || IsMe(from)) &&
-	  MyClient(cptr) && !IsOper(cptr))
-	continue;
+          MyClient(cptr) && !IsOper(cptr))
+        continue;
 
       if (MyClient(cptr) && !IsAnOper(cptr) &&
-	  !(IsServer(from) || IsMe(from)))
-	continue;
+          !(IsServer(from) || IsMe(from)))
+        continue;
 
       /* find connection oper is on */
       index = cptr->from->fd;
 
       if (sentalong[index] == current_serial)
-	continue;
+        continue;
 
       if (cptr->from == one)
-	continue; /* ...was the one I should skip */
+        continue; /* ...was the one I should skip */
 
       sentalong[index] = current_serial;
       
       vsendto_prefix_one(cptr->from, from, pattern, args);
     }
 
-	va_end(args);
+        va_end(args);
 } /* sendto_wallops_butone() */
 
 /*
@@ -1119,7 +1119,7 @@ send_operwall(aClient *from, char *type_message, char *message)
   for (acptr = oper_cptr_list; acptr; acptr = acptr->next_oper_client)
     {
       if (!SendOperwall(acptr))
-	continue; /* has to be oper if in this linklist */
+        continue; /* has to be oper if in this linklist */
 
       sendto_one(acptr, ":%s WALLOPS :%s - %s", sender, type_message, message);
     }
@@ -1175,57 +1175,57 @@ vsendto_prefix_one(register aClient *to, register aClient *from,
   if (to && from)
     {
       if (!MyClient(from) && IsPerson(to) && (to->from == from->from))
-	{
-	  if (IsServer(from))
-	    {
-	      (void)ircsprintf(temp, pattern, par, args);
-	      va_end(args);
-	      
-	      sendto_ops(
-			 "Send message (%s) to %s[%s] dropped from %s(Fake Dir)",
-			 temp, to->name, to->from->name, from->name);
-	      return;
-	    }
+        {
+          if (IsServer(from))
+            {
+              (void)ircsprintf(temp, pattern, par, args);
+              va_end(args);
+              
+              sendto_ops(
+                         "Send message (%s) to %s[%s] dropped from %s(Fake Dir)",
+                         temp, to->name, to->from->name, from->name);
+              return;
+            }
 
-	  sendto_ops("Ghosted: %s[%s@%s] from %s[%s@%s] (%s)",
-		     to->name, to->username, to->host,
-		     from->name, from->username, from->host,
-		     to->from->name);
-	  
-	  sendto_serv_butone(NULL, ":%s KILL %s :%s (%s[%s@%s] Ghosted %s)",
-			     me.name, to->name, me.name, to->name,
-			     to->username, to->host, to->from->name);
+          sendto_ops("Ghosted: %s[%s@%s] from %s[%s@%s] (%s)",
+                     to->name, to->username, to->host,
+                     from->name, from->username, from->host,
+                     to->from->name);
+          
+          sendto_serv_butone(NULL, ":%s KILL %s :%s (%s[%s@%s] Ghosted %s)",
+                             me.name, to->name, me.name, to->name,
+                             to->username, to->host, to->from->name);
 
-	  to->flags |= FLAGS_KILLED;
+          to->flags |= FLAGS_KILLED;
 
-	  (void)exit_client(NULL, to, &me, "Ghosted client");
+          (void)exit_client(NULL, to, &me, "Ghosted client");
 
-	  if (IsPerson(from))
-	    sendto_one(from, form_str(ERR_GHOSTEDCLIENT),
-		       me.name, from->name, to->name, to->username,
-		       to->host, to->from);
-	  
-	  return;
-	} /* if (!MyClient(from) && IsPerson(to) && (to->from == from->from)) */
+          if (IsPerson(from))
+            sendto_one(from, form_str(ERR_GHOSTEDCLIENT),
+                       me.name, from->name, to->name, to->username,
+                       to->host, to->from);
+          
+          return;
+        } /* if (!MyClient(from) && IsPerson(to) && (to->from == from->from)) */
       
       if (MyClient(to) && IsPerson(from) && !irccmp(par, from->name))
-	{
-	  strcpy(sender, from->name);
-	  
-	  if (*from->username)
-	    {
-	      strcat(sender, "!");
-	      strcat(sender, from->username);
-	    }
+        {
+          strcpy(sender, from->name);
+          
+          if (*from->username)
+            {
+              strcat(sender, "!");
+              strcat(sender, from->username);
+            }
 
-	  if (*from->host)
-	    {
-	      strcat(sender, "@");
-	      strcat(sender, from->host);
-	    }
-	  
-	  par = sender;
-	} /* if (user) */
+          if (*from->host)
+            {
+              strcat(sender, "@");
+              strcat(sender, from->host);
+            }
+          
+          par = sender;
+        } /* if (user) */
     } /* if (from && to) */
 
   /*
@@ -1278,13 +1278,13 @@ vsendto_realops(const char *pattern, va_list args)
   for (cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client)
     {
       if (SendServNotice(cptr))
-	{
-	  (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
-			   me.name, cptr->name);
-	  (void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
-	  
-	  vsendto_one(cptr, nbuf, args);
-	}
+        {
+          (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
+                           me.name, cptr->name);
+          (void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
+          
+          vsendto_one(cptr, nbuf, args);
+        }
     }
 } /* vsendto_realops() */
 
@@ -1307,13 +1307,13 @@ sendto_realops_flags(int flags, const char *pattern, ...)
   for (cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client)
     {
       if(cptr->umodes & flags)
-	{
-	  (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
-			   me.name, cptr->name);
-	  (void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
-	  
-	  vsendto_one(cptr, nbuf, args);
-	}
+        {
+          (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
+                           me.name, cptr->name);
+          (void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
+          
+          vsendto_one(cptr, nbuf, args);
+        }
     } /* for (cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client) */
 
   va_end(args);
@@ -1350,7 +1350,7 @@ ts_warn(const char *pattern, ...)
   if (now - last < 5)
     {
       if (++warnings > 5)
-	return;
+        return;
     }
   else
     {
@@ -1387,35 +1387,35 @@ sendto_slaves(aClient *one, char *message, char *nick, int parc, char *parv[])
   for(acptr = serv_cptr_list; acptr; acptr = acptr->next_server_client)
     {
       if (one == acptr)
-	continue;
+        continue;
       
       for (aconf = u_conf; aconf; aconf = aconf->next)
-	{
-	  if (match(acptr->name,aconf->name))
-	    { 
-	      if(parc > 3)
-		sendto_one(acptr,":%s %s %s %s %s :%s",
-			   me.name,
-			   message,
-			   nick,
-			   parv[1],
-			   parv[2],
-			   parv[3]);
-	      else if(parc > 2)
-		sendto_one(acptr,":%s %s %s %s :%s",
-			   me.name,
-			   message,
-			   nick,
-			   parv[1],
-			   parv[2]);
-	      else if(parc > 1)
-		sendto_one(acptr,":%s %s %s :%s",
-			   me.name,
-			   message,
-			   nick,
-			   parv[1]);
-	    } /* if (match(acptr->name,aconf->name)) */
-	} /* for (aconf = u_conf; aconf; aconf = aconf->next) */
+        {
+          if (match(acptr->name,aconf->name))
+            { 
+              if(parc > 3)
+                sendto_one(acptr,":%s %s %s %s %s :%s",
+                           me.name,
+                           message,
+                           nick,
+                           parv[1],
+                           parv[2],
+                           parv[3]);
+              else if(parc > 2)
+                sendto_one(acptr,":%s %s %s %s :%s",
+                           me.name,
+                           message,
+                           nick,
+                           parv[1],
+                           parv[2]);
+              else if(parc > 1)
+                sendto_one(acptr,":%s %s %s :%s",
+                           me.name,
+                           message,
+                           nick,
+                           parv[1]);
+            } /* if (match(acptr->name,aconf->name)) */
+        } /* for (aconf = u_conf; aconf; aconf = aconf->next) */
     } /* for(acptr = serv_cptr_list; acptr; acptr = acptr->next_server_client) */
 
   return 0;

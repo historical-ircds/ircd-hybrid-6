@@ -33,8 +33,8 @@
 **  mask (which can contain wild cards: '*' - match any
 **  number of chars, '?' - match any single character.
 **
-**	return	1, if match
-**		0, if no match
+**      return  1, if match
+**              0, if no match
 */
 /*
 ** match()
@@ -55,8 +55,8 @@
  * if a line matches a mask, true (1) is returned, otherwise false (0)
  * is returned.
  */
-#define	MATCH_MAX_CALLS	512  /* ACK! This dies when it's less that this
-				and we have long lines to parse */
+#define MATCH_MAX_CALLS 512  /* ACK! This dies when it's less that this
+                                and we have long lines to parse */
 int match(const char *mask, const char *name)
 {
   const unsigned char* m = (const unsigned char*)  mask;
@@ -147,13 +147,13 @@ char* collapse(char *pattern)
   if (s) {
     for (; *s; s++) {
       if ('*' == *s) {
-	t = s1 = s + 1;
-	while ('*' == *t)
-	  ++t;
-	if (s1 != t) {
-	  while ((*s1++ = *t++))
-	    ;
-	}
+        t = s1 = s + 1;
+        while ('*' == *t)
+          ++t;
+        if (s1 != t) {
+          while ((*s1++ = *t++))
+            ;
+        }
       }
     }
   }
@@ -163,15 +163,15 @@ char* collapse(char *pattern)
 /*
  * irccmp - case insensitive comparison of two NULL terminated strings.
  *
- *	returns	 0, if s1 equal to s2
- *		<0, if s1 lexicographically less than s2
- *		>0, if s1 lexicographically greater than s2
+ *      returns  0, if s1 equal to s2
+ *              <0, if s1 lexicographically less than s2
+ *              >0, if s1 lexicographically greater than s2
  */
 int irccmp(const char *s1, const char *s2)
 {
   const unsigned char* str1 = (const unsigned char*) s1;
   const unsigned char* str2 = (const unsigned char*) s2;
-  int	res;
+  int   res;
   assert(0 != s1);
   assert(0 != s2);
 

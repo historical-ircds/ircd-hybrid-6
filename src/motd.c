@@ -45,8 +45,8 @@ extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 
 /*
 ** m_motd
-**	parv[0] = sender prefix
-**	parv[1] = servername
+**      parv[0] = sender prefix
+**      parv[1] = servername
 */
 int m_motd(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
@@ -55,22 +55,22 @@ int m_motd(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   if(!IsAnOper(sptr))
     {
       if((last_used + PACE_WAIT) > NOW)
-	{
-	  /* safe enough to give this on a local connect only */
-	  if(MyClient(sptr))
-	    sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,sptr->name);
-	  return 0;
-	}
+        {
+          /* safe enough to give this on a local connect only */
+          if(MyClient(sptr))
+            sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,sptr->name);
+          return 0;
+        }
       else
-	last_used = NOW;
+        last_used = NOW;
     }
 
   if (hunt_server(cptr, sptr, ":%s MOTD :%s", 1,parc,parv)!=HUNTED_ISME)
     return 0;
 
   sendto_realops_flags(FLAGS_SPY, "motd requested by %s (%s@%s) [%s]",
-		     sptr->name, sptr->username, sptr->host,
-		     sptr->user->server);
+                     sptr->name, sptr->username, sptr->host,
+                     sptr->user->server);
 
   return(SendMessageFile(sptr,&ConfigFileEntry.motd));
 }
@@ -111,20 +111,20 @@ int SendMessageFile(struct Client *sptr, MessageFile *motdToPrint)
     case USER_MOTD:
 
       if (motdToPrint->contentsOfFile == (MessageFileLine *)NULL)
-	{
-	  sendto_one(sptr, form_str(ERR_NOMOTD), me.name, sptr->name);
-	  return 0;
-	}
+        {
+          sendto_one(sptr, form_str(ERR_NOMOTD), me.name, sptr->name);
+          return 0;
+        }
 
       sendto_one(sptr, form_str(RPL_MOTDSTART), me.name, sptr->name, me.name);
 
       for(linePointer = motdToPrint->contentsOfFile;linePointer;
-	  linePointer = linePointer->next)
-	{
-	  sendto_one(sptr,
-		     form_str(RPL_MOTD),
-		     me.name, sptr->name, linePointer->line);
-	}
+          linePointer = linePointer->next)
+        {
+          sendto_one(sptr,
+                     form_str(RPL_MOTD),
+                     me.name, sptr->name, linePointer->line);
+        }
       sendto_one(sptr, form_str(RPL_ENDOFMOTD), me.name, sptr->name);
       return 0;
       /* NOT REACHED */
@@ -132,10 +132,10 @@ int SendMessageFile(struct Client *sptr, MessageFile *motdToPrint)
 
     case OPER_MOTD:
       if (motdToPrint == (MessageFile *)NULL)
-	{
-	  sendto_one(sptr, ":%s NOTICE %s :No OPER MOTD", me.name, sptr->name);
-	  return 0;
-	}
+        {
+          sendto_one(sptr, ":%s NOTICE %s :No OPER MOTD", me.name, sptr->name);
+          return 0;
+        }
       sendto_one(sptr,":%s NOTICE %s :Start of OPER MOTD",me.name,sptr->name);
       break;
 
@@ -148,15 +148,15 @@ int SendMessageFile(struct Client *sptr, MessageFile *motdToPrint)
     }
 
   sendto_one(sptr,":%s NOTICE %s :%s",me.name,sptr->name,
-	     motdToPrint->lastChangedDate);
+             motdToPrint->lastChangedDate);
 
 
   for(linePointer = motdToPrint->contentsOfFile;linePointer;
       linePointer = linePointer->next)
     {
       sendto_one(sptr,
-		 ":%s NOTICE %s :%s",
-		 me.name, sptr->name, linePointer->line);
+                 ":%s NOTICE %s :%s",
+                 me.name, sptr->name, linePointer->line);
     }
   sendto_one(sptr, ":%s NOTICE %s :End", me.name, sptr->name);
   return 0;
@@ -194,12 +194,12 @@ int ReadMessageFile(MessageFile *MessageFileptr)
 
   if (local_tm)
     ircsprintf(MessageFileptr->lastChangedDate,
-	       "%d/%d/%d %t:%t",
-	       local_tm->tm_mday,
-	       local_tm->tm_mon + 1,
-	       1900 + local_tm->tm_year,
-	       local_tm->tm_hour,
-	       local_tm->tm_min);
+               "%d/%d/%d %t:%t",
+               local_tm->tm_mday,
+               local_tm->tm_mon + 1,
+               1900 + local_tm->tm_year,
+               local_tm->tm_hour,
+               local_tm->tm_min);
 
   /*
    * Clear out the old MOTD
@@ -218,7 +218,7 @@ int ReadMessageFile(MessageFile *MessageFileptr)
   while (fbgets(buffer, MESSAGELINELEN, file))
     {
       if ((p = strchr(buffer, '\n')))
-	*p = '\0';
+        *p = '\0';
       newMessageLine = (MessageFileLine*) MyMalloc(sizeof(MessageFileLine));
 
       strncpy_irc(newMessageLine->line, buffer, MESSAGELINELEN);
@@ -226,16 +226,16 @@ int ReadMessageFile(MessageFile *MessageFileptr)
       newMessageLine->next = (MessageFileLine *)NULL;
 
       if (MessageFileptr->contentsOfFile)
-	{
+        {
           if (currentMessageLine)
-	    currentMessageLine->next = newMessageLine;
-	  currentMessageLine = newMessageLine;
-	}
+            currentMessageLine->next = newMessageLine;
+          currentMessageLine = newMessageLine;
+        }
       else
-	{
-	  MessageFileptr->contentsOfFile = newMessageLine;
-	  currentMessageLine = newMessageLine;
-	}
+        {
+          MessageFileptr->contentsOfFile = newMessageLine;
+          currentMessageLine = newMessageLine;
+        }
     }
 
   fbclose(file);

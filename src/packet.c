@@ -28,10 +28,10 @@
  
 /*
 ** dopacket
-**	cptr - pointer to client structure for which the buffer data
-**	       applies.
-**	buffer - pointr to the buffer containing the newly read data
-**	length - number of valid bytes of data in the buffer
+**      cptr - pointer to client structure for which the buffer data
+**             applies.
+**      buffer - pointr to the buffer containing the newly read data
+**      length - number of valid bytes of data in the buffer
 **
 **      The buffer might be partially or totally zipped.
 **      At the beginning of the compressed flow, it is possible that
@@ -40,14 +40,14 @@
 **      to compressed mode.
 **
 ** Note:
-**	It is implicitly assumed that dopacket is called only
-**	with cptr of "local" variation, which contains all the
-**	necessary fields (buffer etc..)
+**      It is implicitly assumed that dopacket is called only
+**      with cptr of "local" variation, which contains all the
+**      necessary fields (buffer etc..)
 */
-int	dopacket(aClient *cptr, char *buffer, int length)
+int     dopacket(aClient *cptr, char *buffer, int length)
 {
-  char	*ch1;
-  char	*ch2;
+  char  *ch1;
+  char  *ch2;
   register char *cptrbuf;
 #ifdef ZIP_LINKS
   int  zipped = NO;
@@ -61,7 +61,7 @@ int	dopacket(aClient *cptr, char *buffer, int length)
   if (cptr->receiveB > 1023)
     {
       cptr->receiveK += (cptr->receiveB >> 10);
-      cptr->receiveB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
+      cptr->receiveB &= 0x03ff; /* 2^10 = 1024, 3ff = 1023 */
     }
 
   else if (me.receiveB > 1023)
@@ -76,10 +76,10 @@ int	dopacket(aClient *cptr, char *buffer, int length)
   if (cptr->flags2 & FLAGS2_ZIPFIRST)
     {
       if (*ch2 == '\n' || *ch2 == '\r')
-	{
-	  ch2++;
-	  length--;
-	}
+        {
+          ch2++;
+          length--;
+        }
       cptr->flags2 &= ~FLAGS2_ZIPFIRST;
     }
   else
@@ -95,8 +95,8 @@ int	dopacket(aClient *cptr, char *buffer, int length)
       length = zipped;
       zipped = 1;
       if (length == -1)
-	return exit_client(cptr, cptr, &me,
-			   "fatal error in unzip_packet(1)");
+        return exit_client(cptr, cptr, &me,
+                           "fatal error in unzip_packet(1)");
     }
 #endif /* ZIP_LINKS */
 
@@ -112,107 +112,107 @@ int	dopacket(aClient *cptr, char *buffer, int length)
        * loop around parsing it. -Dianora
        */
       while (--length >= 0 && ch2)
-	{
-	  register char g;
-	  g = (*ch1 = *ch2++);
-	  /*
-	   * Yuck.  Stuck.  To make sure we stay backward compatible,
-	   * we must assume that either CR or LF terminates the message
-	   * and not CR-LF.  By allowing CR or LF (alone) into the body
-	   * of messages, backward compatibility is lost and major
-	   * problems will arise. - Avalon
-	   */
+        {
+          register char g;
+          g = (*ch1 = *ch2++);
+          /*
+           * Yuck.  Stuck.  To make sure we stay backward compatible,
+           * we must assume that either CR or LF terminates the message
+           * and not CR-LF.  By allowing CR or LF (alone) into the body
+           * of messages, backward compatibility is lost and major
+           * problems will arise. - Avalon
+           */
 
-	  /* The previous code is just silly, you do at least one test
-	   * to see if g is less than 16, then at least one more, total of two
-	   * its gotta be a '\r' or a '\n' before anything happens, so why
-	   * not just check for either '\n' or '\r' ?
-	   * -Dianora
-	   */
-	  /*      if ( g < '\16' && (g== '\n' || g == '\r')) */
+          /* The previous code is just silly, you do at least one test
+           * to see if g is less than 16, then at least one more, total of two
+           * its gotta be a '\r' or a '\n' before anything happens, so why
+           * not just check for either '\n' or '\r' ?
+           * -Dianora
+           */
+          /*      if ( g < '\16' && (g== '\n' || g == '\r')) */
 
-	  if ( g == '\n' || g == '\r' )
-	    {
-	      if (ch1 == cptrbuf)
-		continue; /* Skip extra LF/CR's */
-	      *ch1 = '\0';
-	      me.receiveM += 1; /* Update messages received */
-	      cptr->receiveM += 1;
-	      cptr->count = 0; /* ...just in case parse returns with
-			       ** FLUSH_BUFFER without removing the
-			       ** structure pointed by cptr... --msa
-			       */
-	      if (parse(cptr, cptr->buffer, ch1) == FLUSH_BUFFER)
-		/*
-		** FLUSH_BUFFER means actually that cptr
-		** structure *does* not exist anymore!!! --msa
-		*/
-		return FLUSH_BUFFER;
-	      /*
-	      ** Socket is dead so exit (which always returns with
-	      ** FLUSH_BUFFER here).  - avalon
-	      */
-	      if (cptr->flags & FLAGS_DEADSOCKET)
-		return exit_client(cptr, cptr, &me, (cptr->flags & FLAGS_SENDQEX) ?
-				   ((IsDoingList(cptr)) ?
-				    "Local kill by /list (so many channels!)" :
-				   "SendQ exceeded") : "Dead socket");
+          if ( g == '\n' || g == '\r' )
+            {
+              if (ch1 == cptrbuf)
+                continue; /* Skip extra LF/CR's */
+              *ch1 = '\0';
+              me.receiveM += 1; /* Update messages received */
+              cptr->receiveM += 1;
+              cptr->count = 0; /* ...just in case parse returns with
+                               ** FLUSH_BUFFER without removing the
+                               ** structure pointed by cptr... --msa
+                               */
+              if (parse(cptr, cptr->buffer, ch1) == FLUSH_BUFFER)
+                /*
+                ** FLUSH_BUFFER means actually that cptr
+                ** structure *does* not exist anymore!!! --msa
+                */
+                return FLUSH_BUFFER;
+              /*
+              ** Socket is dead so exit (which always returns with
+              ** FLUSH_BUFFER here).  - avalon
+              */
+              if (cptr->flags & FLAGS_DEADSOCKET)
+                return exit_client(cptr, cptr, &me, (cptr->flags & FLAGS_SENDQEX) ?
+                                   ((IsDoingList(cptr)) ?
+                                    "Local kill by /list (so many channels!)" :
+                                   "SendQ exceeded") : "Dead socket");
 
 #ifdef ZIP_LINKS
-	      if ((cptr->flags2 & FLAGS2_ZIP) && (zipped == 0) &&
-		  (length > 0))
-		{
-		  /*
-		  ** beginning of server connection, the buffer
-		  ** contained PASS/CAPAB/SERVER and is now 
-		  ** zipped!
-		  ** Ignore the '\n' that should be here.
-		  */
-		  /* Checked RFC1950: \r or \n can't start a
-		  ** zlib stream  -orabidoo
-		  */
+              if ((cptr->flags2 & FLAGS2_ZIP) && (zipped == 0) &&
+                  (length > 0))
+                {
+                  /*
+                  ** beginning of server connection, the buffer
+                  ** contained PASS/CAPAB/SERVER and is now 
+                  ** zipped!
+                  ** Ignore the '\n' that should be here.
+                  */
+                  /* Checked RFC1950: \r or \n can't start a
+                  ** zlib stream  -orabidoo
+                  */
 
-		  zipped = length;
-		  if (zipped > 0 && (*ch2 == '\n' || *ch2 == '\r'))
-		    {
-		      ch2++;
-		      zipped--;
-		    }
-		  cptr->flags2 &= ~FLAGS2_ZIPFIRST;
-		  ch2 = unzip_packet(cptr, ch2, &zipped);
-		  length = zipped;
-		  zipped = 1;
-		  if (length == -1)
-		    return exit_client(cptr, cptr, &me,
-				       "fatal error in unzip_packet(2)");
-		}
+                  zipped = length;
+                  if (zipped > 0 && (*ch2 == '\n' || *ch2 == '\r'))
+                    {
+                      ch2++;
+                      zipped--;
+                    }
+                  cptr->flags2 &= ~FLAGS2_ZIPFIRST;
+                  ch2 = unzip_packet(cptr, ch2, &zipped);
+                  length = zipped;
+                  zipped = 1;
+                  if (length == -1)
+                    return exit_client(cptr, cptr, &me,
+                                       "fatal error in unzip_packet(2)");
+                }
 #endif /* ZIP_LINKS */
-	      ch1 = cptrbuf;
-	    }
-	  else if (ch1 < cptrbuf + (sizeof(cptr->buffer)-1))
-	    ch1++; /* There is always room for the null */
-	}
+              ch1 = cptrbuf;
+            }
+          else if (ch1 < cptrbuf + (sizeof(cptr->buffer)-1))
+            ch1++; /* There is always room for the null */
+        }
 #ifdef ZIP_LINKS
       /* Now see if anything is left uncompressed in the input
        * If so, uncompress it and continue to parse
        * -Dianora
        */
-	  if((cptr->flags2 & FLAGS2_ZIP) && cptr->zip->incount)
-	    {
-	      /* This call simply finishes unzipping whats left
-	       * second parameter is not used. -Dianora
-	       */
-	      ch2 = unzip_packet(cptr, (char *)NULL, &zipped);
-	      length = zipped;
-	      zipped = 1;
-	      if (length == -1)
-		return exit_client(cptr, cptr, &me,
-				   "fatal error in unzip_packet(1)");
-	      ch1 = ch2 + length;
-	      done_unzip = NO;
-	    }
-	  else
-	    done_unzip = YES;
+          if((cptr->flags2 & FLAGS2_ZIP) && cptr->zip->incount)
+            {
+              /* This call simply finishes unzipping whats left
+               * second parameter is not used. -Dianora
+               */
+              ch2 = unzip_packet(cptr, (char *)NULL, &zipped);
+              length = zipped;
+              zipped = 1;
+              if (length == -1)
+                return exit_client(cptr, cptr, &me,
+                                   "fatal error in unzip_packet(1)");
+              ch1 = ch2 + length;
+              done_unzip = NO;
+            }
+          else
+            done_unzip = YES;
 #endif
 
 #ifdef ZIP_LINKS

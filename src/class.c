@@ -26,49 +26,49 @@
 #include "s_conf.h"
 #include "send.h"
 
-#define BAD_CONF_CLASS		-1
-#define BAD_PING		-2
-#define BAD_CLIENT_CLASS	-3
+#define BAD_CONF_CLASS          -1
+#define BAD_PING                -2
+#define BAD_CLIENT_CLASS        -3
 
 aClass* ClassList;
 
-int	get_conf_class(aConfItem *aconf)
+int     get_conf_class(aConfItem *aconf)
 {
   if ((aconf) && ClassPtr(aconf))
     return (ConfClassType(aconf));
 
   Debug((DEBUG_DEBUG,"No Class For %s",
-	 (aconf) ? aconf->name : "*No Conf*"));
+         (aconf) ? aconf->name : "*No Conf*"));
 
   return (BAD_CONF_CLASS);
 
 }
 
-static	int	get_conf_ping(aConfItem *aconf)
+static  int     get_conf_ping(aConfItem *aconf)
 {
   if ((aconf) && ClassPtr(aconf))
     return (ConfPingFreq(aconf));
 
   Debug((DEBUG_DEBUG,"No Ping For %s",
-	 (aconf) ? aconf->name : "*No Conf*"));
+         (aconf) ? aconf->name : "*No Conf*"));
 
   return (BAD_PING);
 }
 
-int	get_client_class(aClient *acptr)
+int     get_client_class(aClient *acptr)
 {
-  Link	*tmp;
-  aClass	*cl;
-  int	retc = BAD_CLIENT_CLASS;
+  Link  *tmp;
+  aClass        *cl;
+  int   retc = BAD_CLIENT_CLASS;
 
   if (acptr && !IsMe(acptr)  && (acptr->confs))
     for (tmp = acptr->confs; tmp; tmp = tmp->next)
       {
-	if (!tmp->value.aconf ||
-	    !(cl = ClassPtr(tmp->value.aconf)))
-	  continue;
-	if (ClassType(cl) > retc)
-	  retc = ClassType(cl);
+        if (!tmp->value.aconf ||
+            !(cl = ClassPtr(tmp->value.aconf)))
+          continue;
+        if (ClassType(cl) > retc)
+          retc = ClassType(cl);
       }
 
   Debug((DEBUG_DEBUG,"Returning Class %d For %s",retc,acptr->name));
@@ -76,27 +76,27 @@ int	get_client_class(aClient *acptr)
   return (retc);
 }
 
-int	get_client_ping(aClient *acptr)
+int     get_client_ping(aClient *acptr)
 {
-  int	ping = 0, ping2;
-  aConfItem	*aconf;
-  Link	*link;
+  int   ping = 0, ping2;
+  aConfItem     *aconf;
+  Link  *link;
 
   link = acptr->confs;
 
   if (link)
     while (link)
       {
-	aconf = link->value.aconf;
-	if (aconf->status & (CONF_CLIENT|CONF_CONNECT_SERVER|
-			     CONF_NOCONNECT_SERVER))
-	  {
-	    ping2 = get_conf_ping(aconf);
-	    if ((ping2 != BAD_PING) && ((ping > ping2) ||
-					!ping))
-	      ping = ping2;
-	  }
-	link = link->next;
+        aconf = link->value.aconf;
+        if (aconf->status & (CONF_CLIENT|CONF_CONNECT_SERVER|
+                             CONF_NOCONNECT_SERVER))
+          {
+            ping2 = get_conf_ping(aconf);
+            if ((ping2 != BAD_PING) && ((ping > ping2) ||
+                                        !ping))
+              ping = ping2;
+          }
+        link = link->next;
       }
   else
     {
@@ -109,7 +109,7 @@ int	get_client_ping(aClient *acptr)
   return (ping);
 }
 
-int	get_con_freq(aClass *clptr)
+int     get_con_freq(aClass *clptr)
 {
   if (clptr)
     return (ConFreq(clptr));
@@ -124,11 +124,11 @@ int	get_con_freq(aClass *clptr)
  * if no present entry is found, then create a new one and add it in
  * immediately after the first one (class 0).
  */
-void	add_class(int class,
-		  int ping,
-		  int confreq,
-		  int maxli,
-		  long sendq)
+void    add_class(int class,
+                  int ping,
+                  int confreq,
+                  int maxli,
+                  long sendq)
 {
   aClass *t, *p;
 
@@ -142,8 +142,8 @@ void	add_class(int class,
   else
     p = t;
   Debug((DEBUG_DEBUG,
-	 "Add Class %d: p %x t %x - cf: %d pf: %d ml: %d sq: %l",
-	 class, p, t, confreq, ping, maxli, sendq));
+         "Add Class %d: p %x t %x - cf: %d pf: %d ml: %d sq: %l",
+         class, p, t, confreq, ping, maxli, sendq));
   ClassType(p) = class;
   ConFreq(p) = confreq;
   PingFreq(p) = ping;
@@ -153,7 +153,7 @@ void	add_class(int class,
     Links(p) = 0;
 }
 
-aClass	*find_class(int cclass)
+aClass  *find_class(int cclass)
 {
   aClass *cltmp;
   
@@ -163,7 +163,7 @@ aClass	*find_class(int cclass)
   return ClassList;
 }
 
-void	check_class()
+void    check_class()
 {
   aClass *cltmp, *cltmp2;
 
@@ -172,21 +172,21 @@ void	check_class()
   for (cltmp2 = cltmp = ClassList; cltmp; cltmp = cltmp2->next)
     {
       Debug((DEBUG_DEBUG,
-	     "Class %d : CF: %d PF: %d ML: %d LI: %d SQ: %ld",
-	     Class(cltmp), ConFreq(cltmp), PingFreq(cltmp),
-	     MaxLinks(cltmp), Links(cltmp), MaxSendq(cltmp)));
+             "Class %d : CF: %d PF: %d ML: %d LI: %d SQ: %ld",
+             Class(cltmp), ConFreq(cltmp), PingFreq(cltmp),
+             MaxLinks(cltmp), Links(cltmp), MaxSendq(cltmp)));
       if (MaxLinks(cltmp) < 0)
-	{
-	  cltmp2->next = cltmp->next;
-	  if (Links(cltmp) <= 0)
-	    free_class(cltmp);
-	}
+        {
+          cltmp2->next = cltmp->next;
+          if (Links(cltmp) <= 0)
+            free_class(cltmp);
+        }
       else
-	cltmp2 = cltmp;
+        cltmp2 = cltmp;
     }
 }
 
-void	initclass()
+void    initclass()
 {
   ClassList = (aClass *)make_class();
 
@@ -199,30 +199,30 @@ void	initclass()
   ClassList->next = NULL;
 }
 
-void	report_classes(aClient *sptr)
+void    report_classes(aClient *sptr)
 {
   aClass *cltmp;
 
   for (cltmp = ClassList; cltmp; cltmp = cltmp->next)
     sendto_one(sptr, form_str(RPL_STATSYLINE), me.name, sptr->name,
-	       'Y', ClassType(cltmp), PingFreq(cltmp), ConFreq(cltmp),
-	       MaxLinks(cltmp), MaxSendq(cltmp));
+               'Y', ClassType(cltmp), PingFreq(cltmp), ConFreq(cltmp),
+               MaxLinks(cltmp), MaxSendq(cltmp));
 }
 
-long	get_sendq(aClient *cptr)
+long    get_sendq(aClient *cptr)
 {
-  int	sendq = MAXSENDQLENGTH, retc = BAD_CLIENT_CLASS;
-  Link	*tmp;
-  aClass	*cl;
+  int   sendq = MAXSENDQLENGTH, retc = BAD_CLIENT_CLASS;
+  Link  *tmp;
+  aClass        *cl;
 
   if (cptr && !IsMe(cptr)  && (cptr->confs))
     for (tmp = cptr->confs; tmp; tmp = tmp->next)
       {
-	if (!tmp->value.aconf ||
-	    !(cl = ClassPtr(tmp->value.aconf)))
-	  continue;
-	if (ClassType(cl) > retc)
-	  sendq = MaxSendq(cl);
+        if (!tmp->value.aconf ||
+            !(cl = ClassPtr(tmp->value.aconf)))
+          continue;
+        if (ClassType(cl) > retc)
+          sendq = MaxSendq(cl);
       }
   return sendq;
 }

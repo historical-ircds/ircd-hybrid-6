@@ -2,7 +2,7 @@
  * IRC - Internet Relay Chat, ircd/fileio.c
  * Copyright (C) 1998 Thomas Helvey <tomh@inxpress.net>
  * Copyright (C) 1990 Jarkko Oikarinen and
- *		      University of Oulu, Co Center
+ *                    University of Oulu, Co Center
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -149,7 +149,7 @@ char* fbgets(char* buf, size_t len, FBFILE* fb)
     else if ('\r' == *p) {
       if (fb->ptr < fb->endp || fbfill(fb) > 0) {
         if ('\n' == *fb->ptr)
-	  ++fb->ptr;
+          ++fb->ptr;
       }
       *p++ = '\n';
       break;

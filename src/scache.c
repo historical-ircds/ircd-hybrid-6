@@ -71,7 +71,7 @@ const char* find_or_add(const char* name)
   for ( ; ptr; ptr = ptr->next) 
     {
       if (!irccmp(ptr->name, name))
-	return(ptr->name);
+        return(ptr->name);
     }
 
   ptr = (SCACHE*) MyMalloc(sizeof(SCACHE));
@@ -99,14 +99,14 @@ void count_scache(int *number_servers_cached,u_long *mem_servers_cached)
     {
       scache_ptr = scache_hash[i];
       while(scache_ptr)
-	{
-	  *number_servers_cached = *number_servers_cached + 1;
-	  *mem_servers_cached = *mem_servers_cached +
-	    (strlen(scache_ptr->name) +
-	     sizeof(SCACHE *));
+        {
+          *number_servers_cached = *number_servers_cached + 1;
+          *mem_servers_cached = *mem_servers_cached +
+            (strlen(scache_ptr->name) +
+             sizeof(SCACHE *));
 
-	  scache_ptr = scache_ptr->next;
-	}
+          scache_ptr = scache_ptr->next;
+        }
     }
 }
 
@@ -121,12 +121,12 @@ void list_scache(aClient *cptr,aClient *sptr,int parc,char *parv[])
     {
       ptr = scache_hash[hash_index];
       while(ptr)
-	{
-	  if(ptr->name)
-	    sendto_one(sptr,":%s NOTICE %s :%s",
-		       me.name, parv[0], ptr->name);
-	  ptr = ptr->next;
-	}
+        {
+          if(ptr->name)
+            sendto_one(sptr,":%s NOTICE %s :%s",
+                       me.name, parv[0], ptr->name);
+          ptr = ptr->next;
+        }
     }
 
 }

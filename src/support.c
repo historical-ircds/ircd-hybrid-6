@@ -28,9 +28,9 @@
 
 #if !defined( HAVE_STRTOKEN )
 /*
-** 	strtoken.c --  	walk through a string of tokens, using a set
-**			of separators
-**			argv 9/90
+**      strtoken.c --   walk through a string of tokens, using a set
+**                      of separators
+**                      argv 9/90
 **
 */
 
@@ -38,27 +38,27 @@ char *strtoken(save, str, fs)
 char **save;
 char *str, *fs;
 {
-    char *pos = *save;	/* keep last position across calls */
+    char *pos = *save;  /* keep last position across calls */
     char *tmp;
 
     if (str)
-	pos = str;		/* new string scan */
+        pos = str;              /* new string scan */
 
     while (pos && *pos && strchr(fs, *pos) != NULL)
-	pos++; 		 	/* skip leading separators */
+        pos++;                  /* skip leading separators */
 
     if (!pos || !*pos)
-	return (pos = *save = NULL); 	/* string contains only sep's */
+        return (pos = *save = NULL);    /* string contains only sep's */
 
-    tmp = pos; 			/* now, keep position of the token */
+    tmp = pos;                  /* now, keep position of the token */
 
     while (*pos && strchr(fs, *pos) == NULL)
-	pos++; 			/* skip content of the token */
+        pos++;                  /* skip content of the token */
 
     if (*pos)
-	*pos++ = '\0';		/* remove first sep after the token */
+        *pos++ = '\0';          /* remove first sep after the token */
     else
-	pos = NULL;		/* end of string */
+        pos = NULL;             /* end of string */
 
     *save = pos;
     return(tmp);
@@ -119,47 +119,47 @@ static const char *IpQuadTab[] =
 };
 
 /*
-**	inetntoa  --	changed name to remove collision possibility and
-**			so behaviour is guaranteed to take a pointer arg.
-**			-avalon 23/11/92
-**	inet_ntoa --	returned the dotted notation of a given
-**			internet number (some ULTRIX don't have this)
-**			argv 11/90).
-**	inet_ntoa --	its broken on some Ultrix/Dynix too. -avalon
+**      inetntoa  --    changed name to remove collision possibility and
+**                      so behaviour is guaranteed to take a pointer arg.
+**                      -avalon 23/11/92
+**      inet_ntoa --    returned the dotted notation of a given
+**                      internet number (some ULTRIX don't have this)
+**                      argv 11/90).
+**      inet_ntoa --    its broken on some Ultrix/Dynix too. -avalon
 */
 
-char	*inetntoa(in)
-char	*in;
+char    *inetntoa(in)
+char    *in;
 {
-	static char		buf[16];
-	register char		*bufptr = buf;
-	register u_char		*a = (u_char *)in;
-	register const char	*n;
+        static char             buf[16];
+        register char           *bufptr = buf;
+        register u_char         *a = (u_char *)in;
+        register const char     *n;
 
-	n = IpQuadTab[ *a++ ];
-	while (*n)
-		*bufptr++ = *n++;
-	*bufptr++ = '.';
-	n = IpQuadTab[ *a++ ];
-	while ( *n )
-		*bufptr++ = *n++;
-	*bufptr++ = '.';
-	n = IpQuadTab[ *a++ ];
-	while ( *n )
-		*bufptr++ = *n++;
-	*bufptr++ = '.';
-	n = IpQuadTab[ *a ];
-	while ( *n )
-		*bufptr++ = *n++;
-	*bufptr = '\0';
-	return buf;
+        n = IpQuadTab[ *a++ ];
+        while (*n)
+                *bufptr++ = *n++;
+        *bufptr++ = '.';
+        n = IpQuadTab[ *a++ ];
+        while ( *n )
+                *bufptr++ = *n++;
+        *bufptr++ = '.';
+        n = IpQuadTab[ *a++ ];
+        while ( *n )
+                *bufptr++ = *n++;
+        *bufptr++ = '.';
+        n = IpQuadTab[ *a ];
+        while ( *n )
+                *bufptr++ = *n++;
+        *bufptr = '\0';
+        return buf;
 }
 
 #if !defined( HAVE_INET_NETOF )
 /*
-**	inet_netof --	return the net portion of an internet number
-**			argv 11/90
-**	$Id$
+**      inet_netof --   return the net portion of an internet number
+**                      argv 11/90
+**      $Id$
 **
 */
 
@@ -169,10 +169,10 @@ struct in_addr in;
     int addr = in.s_net;
 
     if (addr & 0x80 == 0)
-	return ((int) in.s_net);
+        return ((int) in.s_net);
 
     if (addr & 0x40 == 0)
-	return ((int) in.s_net * 256 + in.s_host);
+        return ((int) in.s_net * 256 + in.s_host);
 
     return ((int) in.s_net * 256 + in.s_host * 256 + in.s_lh);
 }

@@ -30,75 +30,75 @@
 #include <stdarg.h>
 #include <errno.h>
 
-extern	void	count_whowas_memory(int *, u_long *);
-extern  void    count_ip_hash(int *,u_long *);	  /* defined in s_conf.c */
-extern  int	maxdbufblocks;			  /* defined in dbuf.c */
+extern  void    count_whowas_memory(int *, u_long *);
+extern  void    count_ip_hash(int *,u_long *);    /* defined in s_conf.c */
+extern  int     maxdbufblocks;                    /* defined in dbuf.c */
 
 extern  void   *edata;
 
 /*
  * Option string.  Must be before #ifdef DEBUGMODE.
  */
-char	serveropts[] = {
-#ifdef	SENDQ_ALWAYS
+char    serveropts[] = {
+#ifdef  SENDQ_ALWAYS
 'A',
 #endif
-#ifdef	CHROOTDIR
+#ifdef  CHROOTDIR
 'c',
 #endif
-#ifdef	CMDLINE_CONFIG
+#ifdef  CMDLINE_CONFIG
 'C',
 #endif
 #ifdef        DO_ID
 'd',
 #endif
-#ifdef	DEBUGMODE
+#ifdef  DEBUGMODE
 'D',
 #endif
-#ifdef	LOCOP_REHASH
+#ifdef  LOCOP_REHASH
 'e',
 #endif
-#ifdef	OPER_REHASH
+#ifdef  OPER_REHASH
 'E',
 #endif
-#ifdef	HUB
+#ifdef  HUB
 'H',
 #endif
-#ifdef	SHOW_INVISIBLE_LUSERS
+#ifdef  SHOW_INVISIBLE_LUSERS
 'i',
 #endif
-#ifndef	NO_DEFAULT_INVISIBLE
+#ifndef NO_DEFAULT_INVISIBLE
 'I',
 #endif
-#ifdef	OPER_KILL
+#ifdef  OPER_KILL
 # ifdef  LOCAL_KILL_ONLY
 'k',
 # else
 'K',
 # endif
 #endif
-#ifdef	IDLE_FROM_MSG
+#ifdef  IDLE_FROM_MSG
 'M',
 #endif
-#ifdef	CRYPT_OPER_PASSWORD
+#ifdef  CRYPT_OPER_PASSWORD
 'p',
 #endif
-#ifdef	CRYPT_LINK_PASSWORD
+#ifdef  CRYPT_LINK_PASSWORD
 'P',
 #endif
-#ifdef	LOCOP_RESTART
+#ifdef  LOCOP_RESTART
 'r',
 #endif
-#ifdef	OPER_RESTART
+#ifdef  OPER_RESTART
 'R',
 #endif
-#ifdef	OPER_REMOTE
+#ifdef  OPER_REMOTE
 't',
 #endif
-#ifdef	VALLOC
+#ifdef  VALLOC
 'V',
 #endif
-#ifdef	USE_SYSLOG
+#ifdef  USE_SYSLOG
 'Y',
 #endif
 #ifdef ZIP_LINKS
@@ -156,39 +156,39 @@ char	serveropts[] = {
 #define ssize_t unsigned int
 #endif
 
-static	char	debugbuf[1024];
+static  char    debugbuf[1024];
 
 void
 debug(int level, char *format, ...)
 
 {
-	va_list args;
-	int err = errno;
+        va_list args;
+        int err = errno;
 
-	va_start(args, format);
+        va_start(args, format);
 
-	(void) vsprintf(debugbuf, format, args);
+        (void) vsprintf(debugbuf, format, args);
 
 #ifdef USE_SYSLOG
-	if (level == DEBUG_ERROR)
-		syslog(LOG_ERR, debugbuf);
+        if (level == DEBUG_ERROR)
+                syslog(LOG_ERR, debugbuf);
 #endif
 
-	if ((debuglevel >= 0) && (level <= debuglevel))
-	{
-		if (local[2])
-		{
-			local[2]->sendM++;
-			local[2]->sendB += strlen(debugbuf);
-		}
+        if ((debuglevel >= 0) && (level <= debuglevel))
+        {
+                if (local[2])
+                {
+                        local[2]->sendM++;
+                        local[2]->sendB += strlen(debugbuf);
+                }
 
-		(void)fprintf(stderr, "%s", debugbuf);
-		(void)fputc('\n', stderr);
-	}
+                (void)fprintf(stderr, "%s", debugbuf);
+                (void)fputc('\n', stderr);
+        }
 
-	va_end(args);
+        va_end(args);
 
-	errno = err;
+        errno = err;
 } /* debug() */
 
 
@@ -200,17 +200,17 @@ debug(int level, char *format, ...)
  * different field names for "struct rusage".
  * -avalon
  */
-void	send_usage(aClient *cptr, char *nick)
+void    send_usage(aClient *cptr, char *nick)
 {
-  struct	rusage	rus;
-  time_t	secs, rup;
-#ifdef	hz
+  struct        rusage  rus;
+  time_t        secs, rup;
+#ifdef  hz
 # define hzz hz
 #else
 # ifdef HZ
 #  define hzz HZ
 # else
-  int	hzz = 1;
+  int   hzz = 1;
 #  ifdef HPUX
   hzz = (int)sysconf(_SC_CLK_TCK);
 #  endif
@@ -220,7 +220,7 @@ void	send_usage(aClient *cptr, char *nick)
   if (getrusage(RUSAGE_SELF, &rus) == -1)
     {
       sendto_one(cptr,":%s NOTICE %s :Getruseage error: %s.",
-		 me.name, nick, strerror(errno));
+                 me.name, nick, strerror(errno));
       return;
     }
   secs = rus.ru_utime.tv_sec + rus.ru_stime.tv_sec;
@@ -229,25 +229,25 @@ void	send_usage(aClient *cptr, char *nick)
     secs = 1;
 
   sendto_one(cptr,
-	     ":%s %d %s :CPU Secs %d:%d User %d:%d System %d:%d",
-	     me.name, RPL_STATSDEBUG, nick, secs/60, secs%60,
-	     rus.ru_utime.tv_sec/60, rus.ru_utime.tv_sec%60,
-	     rus.ru_stime.tv_sec/60, rus.ru_stime.tv_sec%60);
+             ":%s %d %s :CPU Secs %d:%d User %d:%d System %d:%d",
+             me.name, RPL_STATSDEBUG, nick, secs/60, secs%60,
+             rus.ru_utime.tv_sec/60, rus.ru_utime.tv_sec%60,
+             rus.ru_stime.tv_sec/60, rus.ru_stime.tv_sec%60);
   sendto_one(cptr, ":%s %d %s :RSS %d ShMem %d Data %d Stack %d",
-	     me.name, RPL_STATSDEBUG, nick, rus.ru_maxrss,
-	     rus.ru_ixrss / (rup * hzz), rus.ru_idrss / (rup * hzz),
-	     rus.ru_isrss / (rup * hzz));
+             me.name, RPL_STATSDEBUG, nick, rus.ru_maxrss,
+             rus.ru_ixrss / (rup * hzz), rus.ru_idrss / (rup * hzz),
+             rus.ru_isrss / (rup * hzz));
   sendto_one(cptr, ":%s %d %s :Swaps %d Reclaims %d Faults %d",
-	     me.name, RPL_STATSDEBUG, nick, rus.ru_nswap,
-	     rus.ru_minflt, rus.ru_majflt);
+             me.name, RPL_STATSDEBUG, nick, rus.ru_nswap,
+             rus.ru_minflt, rus.ru_majflt);
   sendto_one(cptr, ":%s %d %s :Block in %d out %d",
-	     me.name, RPL_STATSDEBUG, nick, rus.ru_inblock,
-	     rus.ru_oublock);
+             me.name, RPL_STATSDEBUG, nick, rus.ru_inblock,
+             rus.ru_oublock);
   sendto_one(cptr, ":%s %d %s :Msg Rcv %d Send %d",
-	     me.name, RPL_STATSDEBUG, nick, rus.ru_msgrcv, rus.ru_msgsnd);
+             me.name, RPL_STATSDEBUG, nick, rus.ru_msgrcv, rus.ru_msgsnd);
   sendto_one(cptr, ":%s %d %s :Signals %d Context Vol. %d Invol %d",
-	     me.name, RPL_STATSDEBUG, nick, rus.ru_nsignals,
-	     rus.ru_nvcsw, rus.ru_nivcsw);
+             me.name, RPL_STATSDEBUG, nick, rus.ru_nsignals,
+             rus.ru_nvcsw, rus.ru_nivcsw);
 
   /* The counters that were here have been removed, 
    * Bleep and I (Dianora) contend they weren't useful for
@@ -255,7 +255,7 @@ void	send_usage(aClient *cptr, char *nick)
    */
 
   sendto_one(cptr, ":%s %d %s :DBUF alloc %d blocks %d",
-	     me.name, RPL_STATSDEBUG, nick, dbufalloc, dbufblocks);
+             me.name, RPL_STATSDEBUG, nick, dbufalloc, dbufblocks);
   return;
 }
 
@@ -265,8 +265,8 @@ void count_memory(aClient *cptr,char *nick)
    * XXX - BAD idea... include the headers
    */
 #if 0
-  extern	aChannel* channel;
-  extern	aClass*   classes;
+  extern        aChannel* channel;
+  extern        aClass*   classes;
 #endif
   
   aClient *acptr;
@@ -275,34 +275,34 @@ void count_memory(aClient *cptr,char *nick)
   aConfItem *aconf;
   aClass *cltmp;
 
-  int lc = 0;		/* local clients */
-  int ch = 0;		/* channels */
-  int lcc = 0;		/* local client conf links */
-  int rc = 0;		/* remote clients */
-  int us = 0;		/* user structs */
-  int chu = 0;		/* channel users */
-  int chi = 0;		/* channel invites */
-  int chb = 0;		/* channel bans */
-  int wwu = 0;		/* whowas users */
-  int cl = 0;		/* classes */
-  int co = 0;		/* conf lines */
+  int lc = 0;           /* local clients */
+  int ch = 0;           /* channels */
+  int lcc = 0;          /* local client conf links */
+  int rc = 0;           /* remote clients */
+  int us = 0;           /* user structs */
+  int chu = 0;          /* channel users */
+  int chi = 0;          /* channel invites */
+  int chb = 0;          /* channel bans */
+  int wwu = 0;          /* whowas users */
+  int cl = 0;           /* classes */
+  int co = 0;           /* conf lines */
 
-  int usi = 0;		/* users invited */
-  int usc = 0;		/* users in channels */
-  int aw = 0;		/* aways set */
-  int number_ips_stored;	/* number of ip addresses hashed */
+  int usi = 0;          /* users invited */
+  int usc = 0;          /* users in channels */
+  int aw = 0;           /* aways set */
+  int number_ips_stored;        /* number of ip addresses hashed */
   int number_servers_cached; /* number of servers cached by scache */
 
-  u_long chm = 0;	/* memory used by channels */
-  u_long chbm = 0;	/* memory used by channel bans */
-  u_long lcm = 0;	/* memory used by local clients */
-  u_long rcm = 0;	/* memory used by remote clients */
-  u_long awm = 0;	/* memory used by aways */
-  u_long wwm = 0;	/* whowas array memory used */
-  u_long com = 0;	/* memory used by conf lines */
-  u_long db = 0;	/* memory used by dbufs */
-  u_long maxdb = 0;	/* max used by dbufs */
-  u_long rm = 0;	/* res memory used */
+  u_long chm = 0;       /* memory used by channels */
+  u_long chbm = 0;      /* memory used by channel bans */
+  u_long lcm = 0;       /* memory used by local clients */
+  u_long rcm = 0;       /* memory used by remote clients */
+  u_long awm = 0;       /* memory used by aways */
+  u_long wwm = 0;       /* whowas array memory used */
+  u_long com = 0;       /* memory used by conf lines */
+  u_long db = 0;        /* memory used by dbufs */
+  u_long maxdb = 0;     /* max used by dbufs */
+  u_long rm = 0;        /* res memory used */
   u_long mem_servers_cached; /* memory used by scache */
   u_long mem_ips_stored; /* memory used by ip address hash */
 
@@ -331,33 +331,33 @@ void count_memory(aClient *cptr,char *nick)
 
   u_long tot = 0;
 
-  count_whowas_memory(&wwu, &wwm);	/* no more away memory to count */
+  count_whowas_memory(&wwu, &wwm);      /* no more away memory to count */
 
   for (acptr = GlobalClientList; acptr; acptr = acptr->next)
     {
       if (MyConnect(acptr))
-	{
-	  lc++;
-	  for (link = acptr->confs; link; link = link->next)
-	    lcc++;
-	}
+        {
+          lc++;
+          for (link = acptr->confs; link; link = link->next)
+            lcc++;
+        }
       else
-	rc++;
+        rc++;
       if (acptr->user)
-	{
-	  us++;
-	  for (link = acptr->user->invited; link;
-	       link = link->next)
-	    usi++;
-	  for (link = acptr->user->channel; link;
-	       link = link->next)
-	    usc++;
-	  if (acptr->user->away)
-	    {
-	      aw++;
-	      awm += (strlen(acptr->user->away)+1);
-	    }
-	}
+        {
+          us++;
+          for (link = acptr->user->invited; link;
+               link = link->next)
+            usi++;
+          for (link = acptr->user->channel; link;
+               link = link->next)
+            usc++;
+          if (acptr->user->away)
+            {
+              aw++;
+              awm += (strlen(acptr->user->away)+1);
+            }
+        }
     }
   lcm = lc * CLIENT_LOCAL_SIZE;
   rcm = rc * CLIENT_REMOTE_SIZE;
@@ -367,14 +367,14 @@ void count_memory(aClient *cptr,char *nick)
       ch++;
       chm += (strlen(chptr->chname) + sizeof(aChannel));
       for (link = chptr->members; link; link = link->next)
-	chu++;
+        chu++;
       for (link = chptr->invites; link; link = link->next)
-	chi++;
+        chi++;
       for (link = chptr->banlist; link; link = link->next)
-	{
-	  chb++;
-	  chbm += (strlen(link->value.cp)+1+sizeof(Link));
-	}
+        {
+          chb++;
+          chbm += (strlen(link->value.cp)+1+sizeof(Link));
+        }
     }
 
   for (aconf = ConfigItemList; aconf; aconf = aconf->next)
@@ -390,38 +390,38 @@ void count_memory(aClient *cptr,char *nick)
     cl++;
 
   sendto_one(cptr, ":%s %d %s :Client Local %d(%d) Remote %d(%d)",
-	     me.name, RPL_STATSDEBUG, nick, lc, lcm, rc, rcm);
+             me.name, RPL_STATSDEBUG, nick, lc, lcm, rc, rcm);
   sendto_one(cptr, ":%s %d %s :Users %d(%d) Invites %d(%d)",
-	     me.name, RPL_STATSDEBUG, nick, us, us*sizeof(anUser), usi,
-	     usi * sizeof(Link));
+             me.name, RPL_STATSDEBUG, nick, us, us*sizeof(anUser), usi,
+             usi * sizeof(Link));
   sendto_one(cptr, ":%s %d %s :User channels %d(%d) Aways %d(%d)",
-	     me.name, RPL_STATSDEBUG, nick, usc, usc*sizeof(Link),
-	     aw, awm);
+             me.name, RPL_STATSDEBUG, nick, usc, usc*sizeof(Link),
+             aw, awm);
   sendto_one(cptr, ":%s %d %s :Attached confs %d(%d)",
-	     me.name, RPL_STATSDEBUG, nick, lcc, lcc*sizeof(Link));
+             me.name, RPL_STATSDEBUG, nick, lcc, lcc*sizeof(Link));
 
   totcl = lcm + rcm + us*sizeof(anUser) + usc*sizeof(Link) + awm;
   totcl += lcc*sizeof(Link) + usi*sizeof(Link);
 
   sendto_one(cptr, ":%s %d %s :Conflines %d(%d)",
-	     me.name, RPL_STATSDEBUG, nick, co, com);
+             me.name, RPL_STATSDEBUG, nick, co, com);
 
   sendto_one(cptr, ":%s %d %s :Classes %d(%d)",
-	     me.name, RPL_STATSDEBUG, nick, cl, cl*sizeof(aClass));
+             me.name, RPL_STATSDEBUG, nick, cl, cl*sizeof(aClass));
 
   sendto_one(cptr, ":%s %d %s :Channels %d(%d) Bans %d(%d)",
-	     me.name, RPL_STATSDEBUG, nick, ch, chm, chb, chbm);
+             me.name, RPL_STATSDEBUG, nick, ch, chm, chb, chbm);
   sendto_one(cptr, ":%s %d %s :Channel members %d(%d) invite %d(%d)",
-	     me.name, RPL_STATSDEBUG, nick, chu, chu*sizeof(Link),
-	     chi, chi*sizeof(Link));
+             me.name, RPL_STATSDEBUG, nick, chu, chu*sizeof(Link),
+             chi, chi*sizeof(Link));
 
   totch = chm + chbm + chu*sizeof(Link) + chi*sizeof(Link);
 
   sendto_one(cptr, ":%s %d %s :Whowas users %d(%d))",
-	     me.name, RPL_STATSDEBUG, nick, wwu, wwu*sizeof(anUser));
+             me.name, RPL_STATSDEBUG, nick, wwu, wwu*sizeof(anUser));
 
   sendto_one(cptr, ":%s %d %s :Whowas array %d(%d)",
-	     me.name, RPL_STATSDEBUG, nick, NICKNAMEHISTORYLENGTH, wwm);
+             me.name, RPL_STATSDEBUG, nick, NICKNAMEHISTORYLENGTH, wwm);
 
   totww = wwu * sizeof(anUser) + wwm;
 
@@ -429,30 +429,30 @@ void count_memory(aClient *cptr,char *nick)
   channel_hash_table_size = hash_get_channel_table_size();
 
   sendto_one(cptr, ":%s %d %s :Hash: client %d(%d) chan %d(%d)",
-	     me.name, RPL_STATSDEBUG, nick,
-	     U_MAX, client_hash_table_size,
-	     CH_MAX, channel_hash_table_size);
+             me.name, RPL_STATSDEBUG, nick,
+             U_MAX, client_hash_table_size,
+             CH_MAX, channel_hash_table_size);
 
   db = dbufblocks * sizeof(dbufbuf);
   maxdb = maxdbufblocks * sizeof(dbufbuf);
   sendto_one(cptr, ":%s %d %s :Dbuf blocks %d(%d), Max %d(%d)",
-	     me.name, RPL_STATSDEBUG, nick, dbufblocks, db,
-	     maxdbufblocks, maxdb);
+             me.name, RPL_STATSDEBUG, nick, dbufblocks, db,
+             maxdbufblocks, maxdb);
 
   rm = cres_mem(cptr);
 
   count_scache(&number_servers_cached,&mem_servers_cached);
 
   sendto_one(cptr, ":%s %d %s :scache %d(%d)",
-	     me.name, RPL_STATSDEBUG, nick,
-	     number_servers_cached,
-	     mem_servers_cached);
+             me.name, RPL_STATSDEBUG, nick,
+             number_servers_cached,
+             mem_servers_cached);
 
   count_ip_hash(&number_ips_stored,&mem_ips_stored);
   sendto_one(cptr, ":%s %d %s :iphash %d(%d)",
-	     me.name, RPL_STATSDEBUG, nick,
-	     number_ips_stored,
-	     mem_ips_stored);
+             me.name, RPL_STATSDEBUG, nick,
+             number_ips_stored,
+             mem_ips_stored);
 
   tot = totww + totch + totcl + com + cl*sizeof(aClass) + db + rm;
   tot += client_hash_table_size;
@@ -460,55 +460,55 @@ void count_memory(aClient *cptr,char *nick)
 
   tot += mem_servers_cached;
   sendto_one(cptr, ":%s %d %s :Total: ww %d ch %d cl %d co %d db %d",
-	     me.name, RPL_STATSDEBUG, nick, totww, totch, totcl, com, db);
+             me.name, RPL_STATSDEBUG, nick, totww, totch, totcl, com, db);
 
 
   count_local_client_memory((int *)&local_client_memory_used,
-			    (int *)&local_client_memory_allocated);
+                            (int *)&local_client_memory_allocated);
   tot += local_client_memory_allocated;
   sendto_one(cptr, ":%s %d %s :Local client Memory in use: %d Local client Memory allocated: %d",
-	     me.name, RPL_STATSDEBUG, nick,
-	     local_client_memory_used, local_client_memory_allocated);
+             me.name, RPL_STATSDEBUG, nick,
+             local_client_memory_used, local_client_memory_allocated);
 
 
   count_remote_client_memory( (int *)&remote_client_memory_used,
-			      (int *)&remote_client_memory_allocated);
+                              (int *)&remote_client_memory_allocated);
   tot += remote_client_memory_allocated;
   sendto_one(cptr, ":%s %d %s :Remote client Memory in use: %d Remote client Memory allocated: %d",
-	     me.name, RPL_STATSDEBUG, nick,
-	     remote_client_memory_used, remote_client_memory_allocated);
+             me.name, RPL_STATSDEBUG, nick,
+             remote_client_memory_used, remote_client_memory_allocated);
 
 
   count_user_memory( (int *)&user_memory_used,
-		    (int *)&user_memory_allocated);
+                    (int *)&user_memory_allocated);
   tot += user_memory_allocated;
   sendto_one(cptr, ":%s %d %s :anUser Memory in use: %d anUser Memory allocated: %d",
-	     me.name, RPL_STATSDEBUG, nick,
-	     user_memory_used,
-	     user_memory_allocated);
+             me.name, RPL_STATSDEBUG, nick,
+             user_memory_used,
+             user_memory_allocated);
 
 
   count_links_memory( (int *)&links_memory_used,
-		    (int *)&links_memory_allocated);
+                    (int *)&links_memory_allocated);
   sendto_one(cptr, ":%s %d %s :Links Memory in use: %d Links Memory allocated: %d",
-	     me.name, RPL_STATSDEBUG, nick,
-	     links_memory_used,
-	     links_memory_allocated);
+             me.name, RPL_STATSDEBUG, nick,
+             links_memory_used,
+             links_memory_allocated);
 
 #ifdef FLUD
   count_flud_memory( (int *)&flud_memory_used,
-		    (int *)&flud_memory_allocated);
+                    (int *)&flud_memory_allocated);
   sendto_one(cptr, ":%s %d %s :FLUD Memory in use: %d FLUD Memory allocated: %d",
-	     me.name, RPL_STATSDEBUG, nick,
-	     flud_memory_used,
-	     flud_memory_allocated);
+             me.name, RPL_STATSDEBUG, nick,
+             flud_memory_used,
+             flud_memory_allocated);
 
   tot += flud_memory_allocated;
 #endif
 
   sendto_one(cptr, ":%s %d %s :TOTAL: %d Available Memory: %u Current sbrk(0) %u",
-	     me.name, RPL_STATSDEBUG, nick, tot,
-	     (unsigned long)edata, sbrk(0) );
+             me.name, RPL_STATSDEBUG, nick, tot,
+             (unsigned long)edata, sbrk(0) );
 
   return;
 }

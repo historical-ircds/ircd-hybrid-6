@@ -43,14 +43,14 @@
 #include <errno.h>
 
 extern int rehashed;
-extern int dline_in_progress;	/* defined in ircd.c */
+extern int dline_in_progress;   /* defined in ircd.c */
 int bad_tld(char *);
-extern char *smalldate(time_t);		/* defined in s_misc.c */
+extern char *smalldate(time_t);         /* defined in s_misc.c */
 
 extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 
 /* Local function prototypes */
-static int isnumber(char *);	/* return 0 if not, else return number */
+static int isnumber(char *);    /* return 0 if not, else return number */
 static char *cluster(char *);
 
 /*
@@ -88,17 +88,17 @@ static aPendingLine *
 AddPending()
 
 {
-	aPendingLine *temp;
+        aPendingLine *temp;
 
-	temp = (aPendingLine *) MyMalloc(sizeof(aPendingLine));
+        temp = (aPendingLine *) MyMalloc(sizeof(aPendingLine));
 
-	/*
-	 * insert the new entry into our list
-	 */
-	temp->next = PendingLines;
-	PendingLines = temp;
+        /*
+         * insert the new entry into our list
+         */
+        temp->next = PendingLines;
+        PendingLines = temp;
 
-	return (temp);
+        return (temp);
 } /* AddPending() */
 
 /*
@@ -111,15 +111,15 @@ static void
 DelPending(aPendingLine *pendptr)
 
 {
-	if (!pendptr)
-		return;
+        if (!pendptr)
+                return;
 
-	if (pendptr->user)
-		MyFree(pendptr->user);
-	MyFree(pendptr->host);
-	MyFree(pendptr->reason);
-	MyFree(pendptr->when);
-	MyFree(pendptr);
+        if (pendptr->user)
+                MyFree(pendptr->user);
+        MyFree(pendptr->host);
+        MyFree(pendptr->reason);
+        MyFree(pendptr->when);
+        MyFree(pendptr);
 } /* DelPending() */
 
 /*
@@ -137,96 +137,96 @@ static int
 LockedFile(const char *filename)
 
 {
-	char lockpath[PATH_MAX + 1];
-	char buffer[1024];
-	FBFILE *fileptr;
-	int killret;
+        char lockpath[PATH_MAX + 1];
+        char buffer[1024];
+        FBFILE *fileptr;
+        int killret;
 
-	if (!filename)
-		return (0);
+        if (!filename)
+                return (0);
 
-	ircsprintf(lockpath, "%s.lock", filename);
+        ircsprintf(lockpath, "%s.lock", filename);
 
-	if ((fileptr = fbopen(lockpath, "r")) == (FBFILE *) NULL)
-	{
-		/*
-		 * lockfile does not exist
-		 */
-		return (0);
-	}
+        if ((fileptr = fbopen(lockpath, "r")) == (FBFILE *) NULL)
+        {
+                /*
+                 * lockfile does not exist
+                 */
+                return (0);
+        }
 
-	if (fbgets(buffer, sizeof(buffer) - 1, fileptr))
-	{
-		/*
-		 * If it is a valid lockfile, 'buffer' should now
-		 * contain the pid number of the editing process.
-		 * Send the pid a SIGCHLD to see if it is a valid
-		 * pid - it could be a remnant left over from a
-		 * crashed editor or system reboot etc.
-		 */
+        if (fbgets(buffer, sizeof(buffer) - 1, fileptr))
+        {
+                /*
+                 * If it is a valid lockfile, 'buffer' should now
+                 * contain the pid number of the editing process.
+                 * Send the pid a SIGCHLD to see if it is a valid
+                 * pid - it could be a remnant left over from a
+                 * crashed editor or system reboot etc.
+                 */
 
-		killret = kill(atoi(buffer), SIGCHLD);
-		if (killret == 0)
-		{
-			fbclose(fileptr);
-			return (1);
-		}
+                killret = kill(atoi(buffer), SIGCHLD);
+                if (killret == 0)
+                {
+                        fbclose(fileptr);
+                        return (1);
+                }
 
-		/*
-		 * killret must be -1, which indicates an error (most
-		 * likely ESRCH - No such process), so it is ok to
-		 * proceed writing klines.
-		 */
-	}
+                /*
+                 * killret must be -1, which indicates an error (most
+                 * likely ESRCH - No such process), so it is ok to
+                 * proceed writing klines.
+                 */
+        }
 
-	fbclose(fileptr);
+        fbclose(fileptr);
 
-	 /*
-	  * Delete the outdated lock file
-	  */
-	unlink(lockpath);
+         /*
+          * Delete the outdated lock file
+          */
+        unlink(lockpath);
 
-	return (0);
+        return (0);
 } /* LockedFile() */
 
 static void
 WritePendingLines(const char *filename)
 
 {
-	aPendingLine *ptmp;
+        aPendingLine *ptmp;
 
-	if (!filename)
-		return;
+        if (!filename)
+                return;
 
-	while (PendingLines)
-	{
-		if (PendingLines->type == KLINE_TYPE)
-		{
-			WriteKline(filename,
-				PendingLines->sptr,
-				PendingLines->rcptr,
-				PendingLines->user,
-				PendingLines->host,
-				PendingLines->reason,
-				PendingLines->when);
-		}
-		else
-		{
-			WriteDline(filename,
-				PendingLines->sptr,
-				PendingLines->host,
-				PendingLines->reason,
-				PendingLines->when);
-		}
+        while (PendingLines)
+        {
+                if (PendingLines->type == KLINE_TYPE)
+                {
+                        WriteKline(filename,
+                                PendingLines->sptr,
+                                PendingLines->rcptr,
+                                PendingLines->user,
+                                PendingLines->host,
+                                PendingLines->reason,
+                                PendingLines->when);
+                }
+                else
+                {
+                        WriteDline(filename,
+                                PendingLines->sptr,
+                                PendingLines->host,
+                                PendingLines->reason,
+                                PendingLines->when);
+                }
 
-		/*
-		 * Delete the K/D line from the list after we write
-		 * it out to the conf
-		 */
-		ptmp = PendingLines->next;
-		DelPending(PendingLines);
-		PendingLines = ptmp;
-	} /* while (PendingLines) */
+                /*
+                 * Delete the K/D line from the list after we write
+                 * it out to the conf
+                 */
+                ptmp = PendingLines->next;
+                DelPending(PendingLines);
+                PendingLines = ptmp;
+        } /* while (PendingLines) */
 } /* WritePendingLines() */
 
 /*
@@ -239,63 +239,63 @@ WriteKline(const char *filename, aClient *sptr, aClient *rcptr,
            char *user, char *host, char *reason, char *when)
 
 {
-	char buffer[1024];
-	int out;
+        char buffer[1024];
+        int out;
 
-	if (!filename)
-		return;
+        if (!filename)
+                return;
 
-	if ((out = open(filename, O_RDWR|O_APPEND|O_CREAT, 0644)) == (-1))
-	{
-		sendto_realops("Error opening %s: %s",
-			filename,
-			strerror(errno));
-		return;
-	}
+        if ((out = open(filename, O_RDWR|O_APPEND|O_CREAT, 0644)) == (-1))
+        {
+                sendto_realops("Error opening %s: %s",
+                        filename,
+                        strerror(errno));
+                return;
+        }
 
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-	fchmod(out, 0660);
+        fchmod(out, 0660);
 #endif
 
 #ifdef SLAVE_SERVERS
-	if (IsServer(sptr))
-	{
-		if (rcptr)
-			ircsprintf(buffer,
-				"#%s!%s@%s from %s K'd: %s@%s:%s\n",
-				rcptr->name,
-				rcptr->username,
-				rcptr->host,
-				sptr->name,
-				user,
-				host,
-				reason);
-	}
-	else
+        if (IsServer(sptr))
+        {
+                if (rcptr)
+                        ircsprintf(buffer,
+                                "#%s!%s@%s from %s K'd: %s@%s:%s\n",
+                                rcptr->name,
+                                rcptr->username,
+                                rcptr->host,
+                                sptr->name,
+                                user,
+                                host,
+                                reason);
+        }
+        else
 #endif /* SLAVE_SERVERS */
-	{
-		ircsprintf(buffer,
-			"#%s!%s@%s K'd: %s@%s:%s\n",
-			sptr->name,
-			sptr->username,
-			sptr->host,
-			user, host,
-			reason);
-	}
+        {
+                ircsprintf(buffer,
+                        "#%s!%s@%s K'd: %s@%s:%s\n",
+                        sptr->name,
+                        sptr->username,
+                        sptr->host,
+                        user, host,
+                        reason);
+        }
 
-	if (safe_write(sptr, filename, out, buffer) == (-1))
-		return;
+        if (safe_write(sptr, filename, out, buffer) == (-1))
+                return;
 
-	ircsprintf(buffer, "K:%s:%s (%s):%s\n",
-		host,
-		reason,
-		when,
-		user);
+        ircsprintf(buffer, "K:%s:%s (%s):%s\n",
+                host,
+                reason,
+                when,
+                user);
 
-	if (safe_write(sptr, filename, out, buffer) == (-1))
-		return;
+        if (safe_write(sptr, filename, out, buffer) == (-1))
+                return;
 
-	(void) close(out);
+        (void) close(out);
 } /* WriteKline() */
 
 /*
@@ -308,45 +308,45 @@ WriteDline(const char *filename, aClient *sptr,
            char *host, char *reason, char *when)
 
 {
-	char buffer[1024];
-	int out;
+        char buffer[1024];
+        int out;
 
-	if (!filename)
-		return;
+        if (!filename)
+                return;
 
-	if ((out = open(filename, O_RDWR|O_APPEND|O_CREAT, 0644)) == (-1))
-	{
-		sendto_realops("Error opening %s: %s",
-			filename,
-			strerror(errno));
-		return;
-	}
+        if ((out = open(filename, O_RDWR|O_APPEND|O_CREAT, 0644)) == (-1))
+        {
+                sendto_realops("Error opening %s: %s",
+                        filename,
+                        strerror(errno));
+                return;
+        }
 
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-	fchmod(out, 0660);
+        fchmod(out, 0660);
 #endif
 
-	ircsprintf(buffer,
-		"#%s!%s@%s D'd: %s:%s (%s)\n",
-		sptr->name,
-		sptr->username,
-		sptr->host,
-		host,
-		reason,
-		when);
+        ircsprintf(buffer,
+                "#%s!%s@%s D'd: %s:%s (%s)\n",
+                sptr->name,
+                sptr->username,
+                sptr->host,
+                host,
+                reason,
+                when);
 
-	if (safe_write(sptr, filename, out, buffer) == (-1))
-		return;
+        if (safe_write(sptr, filename, out, buffer) == (-1))
+                return;
 
-	ircsprintf(buffer, "D:%s:%s (%s)\n",
-		host,
-		reason,
-		when);
+        ircsprintf(buffer, "D:%s:%s (%s)\n",
+                host,
+                reason,
+                when);
 
-	if (safe_write(sptr, filename, out, buffer) == (-1))
-		return;
+        if (safe_write(sptr, filename, out, buffer) == (-1))
+                return;
 
-	(void) close(out);
+        (void) close(out);
 } /* WriteDline() */
 
 /*
@@ -359,9 +359,9 @@ WriteDline(const char *filename, aClient *sptr,
 
 int
 m_kline(aClient *cptr,
-		aClient *sptr,
-		int parc,
-		char *parv[])
+                aClient *sptr,
+                int parc,
+                char *parv[])
 {
   char buffer[512];
   char *p;
@@ -374,7 +374,7 @@ m_kline(aClient *cptr,
   char tempuser[USERLEN + 2];
   char temphost[HOSTLEN + 1];
   aConfItem *aconf;
-  int temporary_kline_time=0;	/* -Dianora */
+  int temporary_kline_time=0;   /* -Dianora */
   time_t temporary_kline_time_seconds=0;
   char *argv;
   unsigned long ip;
@@ -389,34 +389,34 @@ m_kline(aClient *cptr,
 
   if(IsServer(sptr))
     {
-      if(parc < 2)	/* pick up actual oper who placed kline */
-	return 0;
+      if(parc < 2)      /* pick up actual oper who placed kline */
+        return 0;
 
-      slave_oper = parv[1];	/* make it look like normal local kline */
+      slave_oper = parv[1];     /* make it look like normal local kline */
 
       parc--;
       parv++;
 
       if ( parc < 2 )
-	return 0;
+        return 0;
 
       if ((rcptr = hash_find_client(slave_oper,(aClient *)NULL)))
-	{
-	  if(!IsPerson(rcptr))
-	    return 0;
-	}
+        {
+          if(!IsPerson(rcptr))
+            return 0;
+        }
       else
-	return 0;
+        return 0;
 
       if(!find_special_conf(sptr->name,CONF_ULINE))
-	{
-	  sendto_realops("received Unauthorized kline from %s",sptr->name);
-	  return 0;
-	}
+        {
+          sendto_realops("received Unauthorized kline from %s",sptr->name);
+          return 0;
+        }
       else
-	{
-	  sendto_realops("received kline from %s", sptr->name);
-	}
+        {
+          sendto_realops("received kline from %s", sptr->name);
+        }
 
 #ifdef HUB
       sendto_slaves(sptr,"KLINE",slave_oper,parc,parv);
@@ -427,23 +427,23 @@ m_kline(aClient *cptr,
 #endif
     {
       if (!MyClient(sptr) || !IsAnOper(sptr))
-	{
-	  sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-	  return 0;
-	}
+        {
+          sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+          return 0;
+        }
 
       if(!IsSetOperK(sptr))
-	{
-	  sendto_one(sptr,":%s NOTICE %s :You have no K flag",me.name,parv[0]);
-	  return 0;
-	}
+        {
+          sendto_one(sptr,":%s NOTICE %s :You have no K flag",me.name,parv[0]);
+          return 0;
+        }
 
       if ( parc < 2 )
-	{
-	  sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
-		     me.name, parv[0], "KLINE");
-	  return 0;
-	}
+        {
+          sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
+                     me.name, parv[0], "KLINE");
+          return 0;
+        }
 
 #ifdef SLAVE_SERVERS
       sendto_slaves(NULL,"KLINE",sptr->name,parc,parv);
@@ -455,18 +455,18 @@ m_kline(aClient *cptr,
   if( (temporary_kline_time = isnumber(argv)) )
     {
       if(parc < 3)
-	{
+        {
 #ifdef SLAVE_SERVERS
-	  if(!IsServer(sptr))
-#endif	  
-	     sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
-			me.name, parv[0], "KLINE");
-	  return 0;
-	}
+          if(!IsServer(sptr))
+#endif    
+             sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
+                        me.name, parv[0], "KLINE");
+          return 0;
+        }
       if(temporary_kline_time > (24*60))
         temporary_kline_time = (24*60); /* Max it at 24 hours */
       temporary_kline_time_seconds = (time_t)temporary_kline_time * (time_t)60;
-	/* turn it into minutes */
+        /* turn it into minutes */
       argv = parv[2];
       parc--;
     }
@@ -475,19 +475,19 @@ m_kline(aClient *cptr,
     {
       /* Explicit user@host mask given */
 
-      if(host)			/* Found user@host */
-	{
-	  user = argv;	/* here is user part */
-	  *(host++) = '\0';	/* and now here is host */
-	}
+      if(host)                  /* Found user@host */
+        {
+          user = argv;  /* here is user part */
+          *(host++) = '\0';     /* and now here is host */
+        }
       else
-	{
-	  user = "*";		/* no @ found, assume its *@somehost */
-	  host = argv;
-	}
+        {
+          user = "*";           /* no @ found, assume its *@somehost */
+          host = argv;
+        }
 
-      if (!*host)		/* duh. no host found, assume its '*' host */
-	host = "*";
+      if (!*host)               /* duh. no host found, assume its '*' host */
+        host = "*";
       strncpy_irc(tempuser, user, USERLEN + 1); /* allow for '*' in front */
       tempuser[USERLEN + 1] = '\0';
       strncpy_irc(temphost, host, HOSTLEN);
@@ -500,41 +500,41 @@ m_kline(aClient *cptr,
       /* Try to find user@host mask from nick */
 
       if (!(acptr = find_chasing(sptr, argv, NULL)))
-	return 0;
+        return 0;
 
       if(!acptr->user)
-	return 0;
+        return 0;
 
       if (IsServer(acptr))
-	{
+        {
 #ifdef SLAVE_SERVERS
-	  if(!IsServer(sptr))
+          if(!IsServer(sptr))
 #endif
-	    sendto_one(sptr,
+            sendto_one(sptr,
               ":%s NOTICE %s :Can't KLINE a server, use @'s where appropriate",
-		       me.name, parv[0]);
-	  return 0;
-	}
+                       me.name, parv[0]);
+          return 0;
+        }
 
       if(IsElined(acptr))
-	{
+        {
 #ifdef SLAVE_SERVERS
-	  if(!IsServer(sptr))
+          if(!IsServer(sptr))
 #endif
-	    sendto_one(sptr,
-		       ":%s NOTICE %s :%s is E-lined",me.name,parv[0],
-		       acptr->name);
-	  return 0;
-	}
+            sendto_one(sptr,
+                       ":%s NOTICE %s :%s is E-lined",me.name,parv[0],
+                       acptr->name);
+          return 0;
+        }
 
       /* turn the "user" bit into "*user", blow away '~'
-	 if found in original user name (non-idented) */
+         if found in original user name (non-idented) */
 
       tempuser[0] = '*';
       if (*acptr->username == '~')
-	strcpy(tempuser+1, (char *)acptr->username+1);
+        strcpy(tempuser+1, (char *)acptr->username+1);
       else
-	strcpy(tempuser+1, acptr->username);
+        strcpy(tempuser+1, acptr->username);
       user = tempuser;
       host = cluster(acptr->host);
     }
@@ -544,34 +544,34 @@ m_kline(aClient *cptr,
   else
     argv = parv[2];
 
-  if (parc > 2)	
+  if (parc > 2) 
     {
       if(strchr(argv, ':'))
-	{
+        {
 #ifdef SLAVE_SERVERS
-	  if(!IsServer(sptr))
+          if(!IsServer(sptr))
 #endif
-	    sendto_one(sptr,
-		       ":%s NOTICE %s :Invalid character ':' in comment",
-		       me.name, parv[0]);
-	  return 0;
-	}
+            sendto_one(sptr,
+                       ":%s NOTICE %s :Invalid character ':' in comment",
+                       me.name, parv[0]);
+          return 0;
+        }
 
       if(strchr(argv, '#'))
         {
 #ifdef SLAVE_SERVERS
-	  if(!IsServer(sptr))
+          if(!IsServer(sptr))
 #endif
-	    sendto_one(sptr,
-		       ":%s NOTICE %s :Invalid character '#' in comment",
-		       me.name, parv[0]);
+            sendto_one(sptr,
+                       ":%s NOTICE %s :Invalid character '#' in comment",
+                       me.name, parv[0]);
           return 0;
         }
 
       if(*argv)
-	reason = argv;
+        reason = argv;
       else
-	reason = "No reason";
+        reason = "No reason";
     }
   else
     reason = "No reason";
@@ -592,7 +592,7 @@ m_kline(aClient *cptr,
   p = user;
   while ((tmpch = *p++))
   {
-  	fprintf(stderr, "char = [%c]\n", tmpch);
+        fprintf(stderr, "char = [%c]\n", tmpch);
     if (!IsKWildChar(tmpch))
     {
       /*
@@ -600,10 +600,10 @@ m_kline(aClient *cptr,
        * break - no point in searching further.
        */
       if (++nonwild >= NONWILDCHARS)
-      	break;
+        break;
     }
     else
-    	fprintf(stderr, "char is a WILD\n");
+        fprintf(stderr, "char is a WILD\n");
   }
 
   if (nonwild < NONWILDCHARS)
@@ -663,13 +663,13 @@ m_kline(aClient *cptr,
        cidr_form_host[32] = '\0';
        p = strchr(cidr_form_host,'*');
        if (p)
-	 {
-	   *p++ = '0';
-	   *p++ = '/';
-	   *p++ = '2';
-	   *p++ = '4';
-	   *p++ = '\0';
-	 }
+         {
+           *p++ = '0';
+           *p++ = '/';
+           *p++ = '2';
+           *p++ = '4';
+           *p++ = '\0';
+         }
        host = cidr_form_host;
     }
   else
@@ -683,19 +683,19 @@ m_kline(aClient *cptr,
        char *reason;
 
        if( aconf->status & CONF_KILL )
-	 {
-	   reason = aconf->passwd ? aconf->passwd : "<No Reason>";
+         {
+           reason = aconf->passwd ? aconf->passwd : "<No Reason>";
 #ifdef SLAVE_SERVERS
-	   if(!IsServer(sptr))
+           if(!IsServer(sptr))
 #endif
-	     sendto_one(sptr,
-			":%s NOTICE %s :[%s@%s] already K-lined by [%s@%s] - %s",
-			me.name,
-			parv[0],
-			user,host,
-			aconf->user,aconf->host,reason);
-	   return 0;
-	 }
+             sendto_one(sptr,
+                        ":%s NOTICE %s :[%s@%s] already K-lined by [%s@%s] - %s",
+                        me.name,
+                        parv[0],
+                        user,host,
+                        aconf->user,aconf->host,reason);
+           return 0;
+         }
      }
 #endif
 
@@ -711,8 +711,8 @@ m_kline(aClient *cptr,
   if(temporary_kline_time)
     {
       ircsprintf(buffer,
-		 "Temporary K-line %d min. - %s (%s)",
-		 temporary_kline_time,reason,current_date);
+                 "Temporary K-line %d min. - %s (%s)",
+                 temporary_kline_time,reason,current_date);
       DupString(aconf->passwd, buffer );
       aconf->hold = timeofday + temporary_kline_time_seconds;
       add_temp_kline(aconf);
@@ -739,80 +739,80 @@ m_kline(aClient *cptr,
   else
     add_mtrie_conf_entry(aconf,CONF_KILL);
 
-	sendto_realops("%s added K-Line for [%s@%s] [%s]",
-		sptr->name,
-		user,
-		host,
-		reason);
+        sendto_realops("%s added K-Line for [%s@%s] [%s]",
+                sptr->name,
+                user,
+                host,
+                reason);
 
 #ifdef USE_SYSLOG
 
-	syslog(LOG_NOTICE,
-		"%s added K-Line for [%s@%s] [%s]",
-		sptr->name,
-		user,
-		host,
-		reason);
+        syslog(LOG_NOTICE,
+                "%s added K-Line for [%s@%s] [%s]",
+                sptr->name,
+                user,
+                host,
+                reason);
 
 #endif /* USE_SYSLOG */
 
-	kconf = get_conf_name(KLINE_TYPE);
+        kconf = get_conf_name(KLINE_TYPE);
 
-	/*
-	 * Check if the conf file is locked - if so, add the kline
-	 * to our pending kline list, to be written later, if not,
-	 * allow this kline to be written, and write out all other
-	 * pending klines as well
-	 */
-	if (LockedFile(kconf))
-	{
-		aPendingLine *pptr;
+        /*
+         * Check if the conf file is locked - if so, add the kline
+         * to our pending kline list, to be written later, if not,
+         * allow this kline to be written, and write out all other
+         * pending klines as well
+         */
+        if (LockedFile(kconf))
+        {
+                aPendingLine *pptr;
 
-		pptr = AddPending();
+                pptr = AddPending();
 
-		/*
-		 * Now fill in the fields
-		 */
-		pptr->type = KLINE_TYPE;
-		pptr->sptr = sptr;
-		pptr->user = strdup(user);
-		pptr->host = strdup(host);
-		pptr->reason = strdup(reason);
-		pptr->when = strdup(current_date);
+                /*
+                 * Now fill in the fields
+                 */
+                pptr->type = KLINE_TYPE;
+                pptr->sptr = sptr;
+                pptr->user = strdup(user);
+                pptr->host = strdup(host);
+                pptr->reason = strdup(reason);
+                pptr->when = strdup(current_date);
 
-	#ifdef SLAVE_SERVERS
-		pptr->rcptr = rcptr;
-	#else
-		pptr->rcptr = (aClient *) NULL;
-	#endif
+        #ifdef SLAVE_SERVERS
+                pptr->rcptr = rcptr;
+        #else
+                pptr->rcptr = (aClient *) NULL;
+        #endif
 
-		sendto_one(sptr,
-			":%s NOTICE %s :Added K-Line [%s@%s] (config file write delayed)",
-			me.name,
-			sptr->name,
-			user,
-			host);
+                sendto_one(sptr,
+                        ":%s NOTICE %s :Added K-Line [%s@%s] (config file write delayed)",
+                        me.name,
+                        sptr->name,
+                        user,
+                        host);
 
-		return 0;
-	}
-	else if (PendingLines)
-		WritePendingLines(kconf);
+                return 0;
+        }
+        else if (PendingLines)
+                WritePendingLines(kconf);
 
-	sendto_one(sptr,
-		":%s NOTICE %s :Added K-Line [%s@%s] to %s",
-		me.name,
-		sptr->name,
-		user,
-		host,
-		kconf ? kconf : "configuration file");
+        sendto_one(sptr,
+                ":%s NOTICE %s :Added K-Line [%s@%s] to %s",
+                me.name,
+                sptr->name,
+                user,
+                host,
+                kconf ? kconf : "configuration file");
 
-	/*
-	 * Write kline to configuration file
-	 */
+        /*
+         * Write kline to configuration file
+         */
 #ifdef SLAVE_SERVERS
-	WriteKline(kconf, sptr, rcptr, user, host, reason, current_date);
+        WriteKline(kconf, sptr, rcptr, user, host, reason, current_date);
 #else
-	WriteKline(kconf, sptr, (aClient *) NULL, user, host, reason, current_date);
+        WriteKline(kconf, sptr, (aClient *) NULL, user, host, reason, current_date);
 #endif
 
   rehashed = YES;
@@ -824,9 +824,9 @@ m_kline(aClient *cptr,
 /*
  * isnumber()
  * 
- * inputs	- pointer to ascii string in
- * output	- 0 if not an integer number, else the number
- * side effects	- none
+ * inputs       - pointer to ascii string in
+ * output       - 0 if not an integer number, else the number
+ * side effects - none
 */
 
 static int isnumber(char *p)
@@ -857,27 +857,27 @@ static int isnumber(char *p)
 /*
  * cluster()
  *
- * input	- pointer to a hostname
- * output	- pointer to a static of the hostname masked
- *		  for use in a kline.
- * side effects	- NONE
+ * input        - pointer to a hostname
+ * output       - pointer to a static of the hostname masked
+ *                for use in a kline.
+ * side effects - NONE
  *
  * reworked a tad -Dianora
  */
 
 static char *cluster(char *hostname)
 {
-  static char result[HOSTLEN + 1];	/* result to return */
-  char        temphost[HOSTLEN + 1];	/* work place */
-  char	      *ipp;		/* used to find if host is ip # only */
-  char	      *host_mask;	/* used to find host mask portion to '*' */
-  char	      *zap_point = NULL; /* used to zap last nnn portion of an ip # */
-  char 	      *tld;		/* Top Level Domain */
-  int	      is_ip_number;	/* flag if its an ip # */	      
-  int	      number_of_dots;	/* count number of dots for both ip# and
-				   domain klines */
+  static char result[HOSTLEN + 1];      /* result to return */
+  char        temphost[HOSTLEN + 1];    /* work place */
+  char        *ipp;             /* used to find if host is ip # only */
+  char        *host_mask;       /* used to find host mask portion to '*' */
+  char        *zap_point = NULL; /* used to zap last nnn portion of an ip # */
+  char        *tld;             /* Top Level Domain */
+  int         is_ip_number;     /* flag if its an ip # */             
+  int         number_of_dots;   /* count number of dots for both ip# and
+                                   domain klines */
   if (!hostname)
-    return (char *) NULL;	/* EEK! */
+    return (char *) NULL;       /* EEK! */
 
   /* If a '@' is found in the hostname, this is bogus
    * and must have been introduced by server that doesn't
@@ -887,7 +887,7 @@ static char *cluster(char *hostname)
    * -Dianora
    */
 
-  if(strchr(hostname,'@'))	
+  if(strchr(hostname,'@'))      
     {
       strncpy_irc(result, hostname, HOSTLEN);      
       result[HOSTLEN] = '\0';
@@ -897,33 +897,33 @@ static char *cluster(char *hostname)
   strncpy_irc(temphost, hostname, HOSTLEN);
   temphost[HOSTLEN] = '\0';
 
-  is_ip_number = YES;	/* assume its an IP# */
+  is_ip_number = YES;   /* assume its an IP# */
   ipp = temphost;
   number_of_dots = 0;
 
   while (*ipp)
     {
       if( *ipp == '.' )
-	{
-	  number_of_dots++;
+        {
+          number_of_dots++;
 
-	  if(number_of_dots == 3)
-	    zap_point = ipp;
-	  ipp++;
-	}
+          if(number_of_dots == 3)
+            zap_point = ipp;
+          ipp++;
+        }
       else if(!IsDigit(*ipp))
-	{
-	  is_ip_number = NO;
-	  break;
-	}
+        {
+          is_ip_number = NO;
+          break;
+        }
       ipp++;
     }
 
   if(is_ip_number && (number_of_dots == 3))
     {
       zap_point++;
-      *zap_point++ = '*';		/* turn 111.222.333.444 into */
-      *zap_point = '\0';		/*      111.222.333.*	     */
+      *zap_point++ = '*';               /* turn 111.222.333.444 into */
+      *zap_point = '\0';                /*      111.222.333.*        */
       strncpy_irc(result, temphost, HOSTLEN);
       result[HOSTLEN] = '\0';
       return(result);
@@ -932,43 +932,43 @@ static char *cluster(char *hostname)
     {
       tld = strrchr(temphost, '.');
       if(tld)
-	{
-	  number_of_dots = 2;
-	  if(tld[3])			 /* its at least a 3 letter tld
-					    i.e. ".com" tld[3] = 'm' not 
-					    '\0' */
-				         /* 4 letter tld's are coming */
-	    number_of_dots = 1;
+        {
+          number_of_dots = 2;
+          if(tld[3])                     /* its at least a 3 letter tld
+                                            i.e. ".com" tld[3] = 'm' not 
+                                            '\0' */
+                                         /* 4 letter tld's are coming */
+            number_of_dots = 1;
 
-	  if(tld != temphost)		/* in these days of dns spoofers ...*/
-	    host_mask = tld - 1;	/* Look for host portion to '*' */
-	  else
-	    host_mask = tld;		/* degenerate case hostname is
-					   '.com' etc. */
+          if(tld != temphost)           /* in these days of dns spoofers ...*/
+            host_mask = tld - 1;        /* Look for host portion to '*' */
+          else
+            host_mask = tld;            /* degenerate case hostname is
+                                           '.com' etc. */
 
-	  while (host_mask != temphost)
-	    {
-	      if(*host_mask == '.')
-		number_of_dots--;
-	      if(number_of_dots == 0)
-		{
-		  result[0] = '*';
-		  strncpy_irc(result + 1, host_mask, HOSTLEN - 1);
+          while (host_mask != temphost)
+            {
+              if(*host_mask == '.')
+                number_of_dots--;
+              if(number_of_dots == 0)
+                {
+                  result[0] = '*';
+                  strncpy_irc(result + 1, host_mask, HOSTLEN - 1);
                   result[HOSTLEN] = '\0';
-		  return(result);
-		}
-	      host_mask--;
-	    }
-	  result[0] = '*';			/* foo.com => *foo.com */
-	  strncpy_irc(result + 1, temphost, HOSTLEN - 1);
+                  return(result);
+                }
+              host_mask--;
+            }
+          result[0] = '*';                      /* foo.com => *foo.com */
+          strncpy_irc(result + 1, temphost, HOSTLEN - 1);
           result[HOSTLEN] = '\0';
-	}
-      else	/* no tld found oops. just return it as is */
-	{
-	  strncpy_irc(result, temphost, HOSTLEN);
+        }
+      else      /* no tld found oops. just return it as is */
+        {
+          strncpy_irc(result, temphost, HOSTLEN);
           result[HOSTLEN] = '\0';
-	  return(result);
-	}
+          return(result);
+        }
     }
 
   return (result);
@@ -979,7 +979,7 @@ static char *cluster(char *hostname)
  * added Rodders dated KLINE code
  * -Dianora
  *
- * BUGS:	There is a concern here with LOCKFILE handling
+ * BUGS:        There is a concern here with LOCKFILE handling
  * the LOCKFILE code only knows how to talk to the kline file.
  * Having an extra define allowing D lines to go into ircd.conf or
  * the kline file complicates life. LOCKFILE code should still respect
@@ -1019,7 +1019,7 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
   if ( parc < 2 )
     {
       sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
-		 me.name, parv[0], "KLINE");
+                 me.name, parv[0], "KLINE");
       return 0;
     }
 
@@ -1040,34 +1040,34 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
   if(!is_address(host,&ip_host,&ip_mask))
     {
       if (!(acptr = find_chasing(sptr, parv[1], NULL)))
-	return 0;
+        return 0;
 
       if(!acptr->user)
-	return 0;
+        return 0;
 
       if (IsServer(acptr))
-	{
-	  sendto_one(sptr,
-		     ":%s NOTICE %s :Can't DLINE a server silly",
-		     me.name, parv[0]);
-	  return 0;
-	}
-	      
+        {
+          sendto_one(sptr,
+                     ":%s NOTICE %s :Can't DLINE a server silly",
+                     me.name, parv[0]);
+          return 0;
+        }
+              
       if(!MyConnect(acptr))
-	{
-	  sendto_one(sptr,
-		     ":%s NOTICE :%s :Can't DLINE nick on another server",
-		     me.name, parv[0]);
-	  return 0;
-	}
+        {
+          sendto_one(sptr,
+                     ":%s NOTICE :%s :Can't DLINE nick on another server",
+                     me.name, parv[0]);
+          return 0;
+        }
 
       if(IsElined(acptr))
-	{
-	  sendto_one(sptr,
-		     ":%s NOTICE %s :%s is E-lined",me.name,parv[0],
-		     acptr->name);
-	  return 0;
-	}
+        {
+          sendto_one(sptr,
+                     ":%s NOTICE %s :%s is E-lined",me.name,parv[0],
+                     acptr->name);
+          return 0;
+        }
 
       /*
        * XXX - this is always a fixed length output, we can get away
@@ -1080,19 +1080,19 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
       
       p = strchr(cidr_form_host,'.');
       if(!p)
-	return 0;
+        return 0;
       /* 192. <- p */
 
       p++;
       p = strchr(p,'.');
       if(!p)
-	return 0;
+        return 0;
       /* 192.168. <- p */
 
       p++;
       p = strchr(p,'.');
       if(!p)
-	return 0;
+        return 0;
       /* 192.168.0. <- p */
 
       p++;
@@ -1108,15 +1108,15 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
     }
 
 
-  if (parc > 2)	/* host :reason */
+  if (parc > 2) /* host :reason */
     {
       if(strchr(parv[2], ':'))
-	{
-	  sendto_one(sptr,
-		     ":%s NOTICE %s :Invalid character ':' in comment",
-		     me.name, parv[0]);
-	  return 0;
-	}
+        {
+          sendto_one(sptr,
+                     ":%s NOTICE %s :Invalid character ':' in comment",
+                     me.name, parv[0]);
+          return 0;
+        }
 
       if(strchr(parv[2], '#'))
         {
@@ -1127,9 +1127,9 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
         }
 
       if(*parv[2])
-	reason = parv[2];
+        reason = parv[2];
       else
-	reason = "No reason";
+        reason = "No reason";
     }
   else
     reason = "No reason";
@@ -1138,12 +1138,12 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
   if((ip_mask & 0xFFFFFF00) ^ 0xFFFFFF00)
     {
       if(ip_mask != 0xFFFFFFFF)
-	{
-	  sendto_one(sptr, ":%s NOTICE %s :Can't use a mask less than 24 with dline",
-		     me.name,
-		     parv[0]);
-	  return 0;
-	}
+        {
+          sendto_one(sptr, ":%s NOTICE %s :Can't use a mask less than 24 with dline",
+                     me.name,
+                     parv[0]);
+          return 0;
+        }
     }
 
 #ifdef NON_REDUNDANT_KLINES
@@ -1152,17 +1152,17 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
        char *reason;
        reason = aconf->passwd ? aconf->passwd : "<No Reason>";
        if(IsConfElined(aconf))
-	 sendto_one(sptr, ":%s NOTICE %s :[%s] is (E)d-lined by [%s] - %s",
-		    me.name,
-		    parv[0],
-		    host,
-		    aconf->host,reason);
-	 else
-	   sendto_one(sptr, ":%s NOTICE %s :[%s] already D-lined by [%s] - %s",
-		      me.name,
-		      parv[0],
-		      host,
-		      aconf->host,reason);
+         sendto_one(sptr, ":%s NOTICE %s :[%s] is (E)d-lined by [%s] - %s",
+                    me.name,
+                    parv[0],
+                    host,
+                    aconf->host,reason);
+         else
+           sendto_one(sptr, ":%s NOTICE %s :[%s] already D-lined by [%s] - %s",
+                      me.name,
+                      parv[0],
+                      host,
+                      aconf->host,reason);
       return 0;
        
      }
@@ -1182,72 +1182,72 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
   add_Dline(aconf);
 
-	sendto_realops("%s added D-Line for [%s] [%s]",
-		sptr->name,
-		host,
-		reason);
+        sendto_realops("%s added D-Line for [%s] [%s]",
+                sptr->name,
+                host,
+                reason);
 
 #ifdef USE_SYSLOG
 
-	syslog(LOG_NOTICE,
-		"%s added D-Line for [%s] [%s]",
-		sptr->name,
-		host,
-		reason);
+        syslog(LOG_NOTICE,
+                "%s added D-Line for [%s] [%s]",
+                sptr->name,
+                host,
+                reason);
 
 #endif /* USE_SYSLOG */
 
-	dconf = get_conf_name(DLINE_TYPE);
+        dconf = get_conf_name(DLINE_TYPE);
 
-	/*
-	 * Check if the conf file is locked - if so, add the dline
-	 * to our pending dline list, to be written later, if not,
-	 * allow this dline to be written, and write out all other
-	 * pending lines as well
-	 */
-	if (LockedFile(dconf))
-	{
-		aPendingLine *pptr;
+        /*
+         * Check if the conf file is locked - if so, add the dline
+         * to our pending dline list, to be written later, if not,
+         * allow this dline to be written, and write out all other
+         * pending lines as well
+         */
+        if (LockedFile(dconf))
+        {
+                aPendingLine *pptr;
 
-		pptr = AddPending();
+                pptr = AddPending();
 
-		/*
-		 * Now fill in the fields
-		 */
-		pptr->type = DLINE_TYPE;
-		pptr->sptr = sptr;
-		pptr->rcptr = (aClient *) NULL;
-		pptr->user = (char *) NULL;
-		pptr->host = strdup(host);
-		pptr->reason = strdup(reason);
-		pptr->when = strdup(current_date);
+                /*
+                 * Now fill in the fields
+                 */
+                pptr->type = DLINE_TYPE;
+                pptr->sptr = sptr;
+                pptr->rcptr = (aClient *) NULL;
+                pptr->user = (char *) NULL;
+                pptr->host = strdup(host);
+                pptr->reason = strdup(reason);
+                pptr->when = strdup(current_date);
 
-		sendto_one(sptr,
-			":%s NOTICE %s :Added D-Line [%s] (config file write delayed)",
-			me.name,
-			sptr->name,
-			host);
+                sendto_one(sptr,
+                        ":%s NOTICE %s :Added D-Line [%s] (config file write delayed)",
+                        me.name,
+                        sptr->name,
+                        host);
 
-		return 0;
-	}
-	else if (PendingLines)
-		WritePendingLines(dconf);
+                return 0;
+        }
+        else if (PendingLines)
+                WritePendingLines(dconf);
 
-	sendto_one(sptr,
-		":%s NOTICE %s :Added D-Line [%s] to %s",
-		me.name,
-		sptr->name,
-		host,
-		dconf ? dconf : "configuration file");
+        sendto_one(sptr,
+                ":%s NOTICE %s :Added D-Line [%s] to %s",
+                me.name,
+                sptr->name,
+                host,
+                dconf ? dconf : "configuration file");
 
-	/*
-	 * Write dline to configuration file
-	 */
-	WriteDline(dconf,
-		sptr,
-		host,
-		reason,
-		current_date);
+        /*
+         * Write dline to configuration file
+         */
+        WriteDline(dconf,
+                sptr,
+                host,
+                reason,
+                current_date);
 
   /*
   ** I moved the following 2 lines up here

@@ -49,10 +49,10 @@ extern char *show_iline_prefix(aClient *,aConfItem *,char *);
  * new_ip_subtree - just makes a new node 
  */
 struct ip_subtree *new_ip_subtree(unsigned long ip, 
-				  unsigned long mask,
-				  aConfItem *clist,
-				  struct ip_subtree *left,
-				  struct ip_subtree *right)
+                                  unsigned long mask,
+                                  aConfItem *clist,
+                                  struct ip_subtree *left,
+                                  struct ip_subtree *right)
 {
   struct ip_subtree *temp;
   temp=(struct ip_subtree*)MyMalloc(sizeof(struct ip_subtree));
@@ -73,7 +73,7 @@ void walk_the_ip_Klines(aClient *,struct ip_subtree *, char, int);
  * -good
  */
 struct ip_subtree *insert_ip_subtree(struct ip_subtree *head, 
-				     struct ip_subtree *node)
+                                     struct ip_subtree *node)
 {
   if (!head) return node;   /* null, insert here */
   if (head->ip > node->ip)
@@ -93,7 +93,7 @@ struct ip_subtree *insert_ip_subtree(struct ip_subtree *head,
  * -good
  */
 struct ip_subtree *find_ip_subtree(struct ip_subtree *head,
-				   unsigned long ip)
+                                   unsigned long ip)
 {
   unsigned long mask;
   struct ip_subtree *cur=head;
@@ -101,11 +101,11 @@ struct ip_subtree *find_ip_subtree(struct ip_subtree *head,
     {
       mask=cur->ip_mask;
       if (cur->ip == (ip & mask))
-	return cur;   /* found it */
+        return cur;   /* found it */
       if (cur->ip > (ip & mask))
-	cur=cur->left;
+        cur=cur->left;
       else
-	cur=cur->right;
+        cur=cur->right;
     }
   return ((struct ip_subtree *)NULL); /* not found */
 }
@@ -120,9 +120,9 @@ struct ip_subtree *find_ip_subtree(struct ip_subtree *head,
  * -good
  */
 struct ip_subtree *delete_ip_subtree(struct ip_subtree *head,
-				     unsigned long ip,
-				     unsigned long mask,
-				     aConfItem **clist)
+                                     unsigned long ip,
+                                     unsigned long mask,
+                                     aConfItem **clist)
 {
   aConfItem *cur;
   struct ip_subtree *temp, *prev;
@@ -137,50 +137,50 @@ struct ip_subtree *delete_ip_subtree(struct ip_subtree *head,
   if ((head->ip & mask)==ip)
     {  /* IP match */
       if ((head->ip_mask) < mask)
-	return head; /* but is less specific */
+        return head; /* but is less specific */
       /* inherit the conf list, weed through it later */
       cur=head->conf;
       while (cur->next)
-	cur=cur->next;   /* cur is the last item in the list */
+        cur=cur->next;   /* cur is the last item in the list */
       cur->next=*clist;
       (*clist)=head->conf;
     
       /* remove the matching node */
       if (head->left==NULL)
-	{ /* no left child */
-	  temp=head->right;
-	  MyFree(head); 
-	  return temp;
-	}
+        { /* no left child */
+          temp=head->right;
+          MyFree(head); 
+          return temp;
+        }
       if (head->right==NULL)
-	{ /* no right child */
-	  temp=head->left;
-	  MyFree(head);
-	  return temp;
-	}
+        { /* no right child */
+          temp=head->left;
+          MyFree(head);
+          return temp;
+        }
 
     /* flip a coin here to decide which node to replace this one with */
     if (rand() < (RAND_MAX>>1))
       {
-	/* replace head with inorder predecessor */
-	temp=head->left; prev=head;
-	while (temp->right) { prev=temp; temp=temp->right; }
-	/* temp is the inorder predecessor */
-	temp->right=head->right;
-	MyFree(head);
-	prev->right=NULL;  /* remember to remove it too :P */
-	return temp;
+        /* replace head with inorder predecessor */
+        temp=head->left; prev=head;
+        while (temp->right) { prev=temp; temp=temp->right; }
+        /* temp is the inorder predecessor */
+        temp->right=head->right;
+        MyFree(head);
+        prev->right=NULL;  /* remember to remove it too :P */
+        return temp;
       }
     else
       {
-	/* replace head with inorder successor */
-	temp=head->right; prev=head;
-	while (temp->left) { prev=temp; temp=temp->left; }
-	/* temp is the inorder predecessor */
-	temp->left=head->left;
-	MyFree(head);
-	prev->left=NULL;  /* remember to remove it too :P */
-	return temp;
+        /* replace head with inorder successor */
+        temp=head->right; prev=head;
+        while (temp->left) { prev=temp; temp=temp->left; }
+        /* temp is the inorder predecessor */
+        temp->left=head->left;
+        MyFree(head);
+        prev->left=NULL;  /* remember to remove it too :P */
+        return temp;
       }
     }
   return head;
@@ -437,10 +437,10 @@ aConfItem *match_Dline(unsigned long ip)
   for(scan=node->conf;scan;scan=scan->next)
     {
       if(!(scan->flags & CONF_FLAGS_E_LINED))
-	continue;
+        continue;
 
       if (scan->ip == (ip & scan->ip_mask))
-	return (scan);   /* exception found */
+        return (scan);   /* exception found */
     }
   return node->conf;  /* no exceptions, return the D-line */
 }
@@ -473,12 +473,12 @@ void add_ip_Kline(aConfItem *conf_ptr)
       /* now collect nodes with more specific ip masks */
       /* #if 0 */
       ip_Kline[host_ip>>24]=
-	delete_ip_subtree(ip_Kline[host_ip>>24], host_ip, host_mask, &clist);
+        delete_ip_subtree(ip_Kline[host_ip>>24], host_ip, host_mask, &clist);
       /* #endif */
 
       /* if this is a *@ Kline, then we can toast all the other Klines in the clist */
       if (!(strcmp(conf_ptr->user,"*")))
-	clist=trim_ip_Klines(clist,0);
+        clist=trim_ip_Klines(clist,0);
 
       conf_ptr->next=clist;
       clist=conf_ptr;
@@ -494,8 +494,8 @@ void add_ip_Kline(aConfItem *conf_ptr)
   for (scan=node->conf;scan;scan=scan->next)
     {
       if (((scan->status & CONF_KILL) || (scan->flags & CONF_FLAGS_E_LINED)) &&
-	  (!(strcmp(scan->user,"*"))) &&
-	  (scan->ip_mask<host_mask)) break;
+          (!(strcmp(scan->user,"*"))) &&
+          (scan->ip_mask<host_mask)) break;
     }
   if (scan) return; /* don't bother adding */
 
@@ -547,11 +547,11 @@ void add_ip_Eline(aConfItem *conf_ptr)
       /* now collect nodes with more specific ip masks */
 
       ip_Kline[host_ip>>24]=
-	delete_ip_subtree(ip_Kline[host_ip>>24], host_ip, host_mask, &clist);
+        delete_ip_subtree(ip_Kline[host_ip>>24], host_ip, host_mask, &clist);
 
       /* if this is a *@ Eline, then we can toast all the others in the clist */
       if (!(strcmp(conf_ptr->user,"*"))) 
-	clist=trim_ip_Elines(clist,0);
+        clist=trim_ip_Elines(clist,0);
 
       conf_ptr->next=clist;
       clist=conf_ptr;
@@ -567,8 +567,8 @@ void add_ip_Eline(aConfItem *conf_ptr)
   for (scan=node->conf;scan;scan=scan->next)
     {
       if ((scan->flags & CONF_FLAGS_E_LINED) &&
-	  (!(strcmp(scan->user,"*"))) &&
-	  (scan->ip_mask<host_mask)) break;
+          (!(strcmp(scan->user,"*"))) &&
+          (scan->ip_mask<host_mask)) break;
     }
   if (scan) return; /* don't bother adding */
 
@@ -618,7 +618,7 @@ void add_ip_Iline(aConfItem *conf_ptr)
       /* now collect nodes with more specific ip masks */
 
       ip_Kline[host_ip>>24]=
-	delete_ip_subtree(ip_Kline[host_ip>>24], host_ip, host_mask, &clist);
+        delete_ip_subtree(ip_Kline[host_ip>>24], host_ip, host_mask, &clist);
 
 
       /* insert the Iline */
@@ -676,27 +676,27 @@ aConfItem* match_ip_Kline(unsigned long ip, const char* name)
   for( scan=node->conf; scan; scan=scan->next)
     {
       if (scan->flags & CONF_FLAGS_E_LINED)  /* Eline */
-	if (match(scan->user,name)) return scan; /* instant win! */
+        if (match(scan->user,name)) return scan; /* instant win! */
 
       if (scan->status & CONF_KILL)  /* Kline */
-	if (match(scan->user,name))
-	  {
-	    winnertype='K'; winner=scan;
-	    continue;
-	  }
+        if (match(scan->user,name))
+          {
+            winnertype='K'; winner=scan;
+            continue;
+          }
 
       if (scan->status & CONF_CLIENT) /* Iline */
-	if (match(scan->user,name)) /* name jives */
-	  if (winnertype=='I') /* we might be able to beat the champ */
+        if (match(scan->user,name)) /* name jives */
+          if (winnertype=='I') /* we might be able to beat the champ */
             {
-	      if (winner && (scan->ip_mask <= winner->ip_mask))
-	        {
-		  continue;  /* more vague */
-	        }
-	      else
-	        {
-		  winner=scan;
-	        }
+              if (winner && (scan->ip_mask <= winner->ip_mask))
+                {
+                  continue;  /* more vague */
+                }
+              else
+                {
+                  winner=scan;
+                }
             }
     }
   return winner;
@@ -755,7 +755,7 @@ void walk_the_dlines(aClient *sptr, struct ip_subtree *tree)
   aConfItem *scan;
   char *name, *host, *pass, *user;
   int port;
-  char c;		/* D,d or K */
+  char c;               /* D,d or K */
 
   if (!tree) return;
   
@@ -766,17 +766,17 @@ void walk_the_dlines(aClient *sptr, struct ip_subtree *tree)
   for(scan=tree->conf;scan;scan=scan->next)
     {
       if(!(scan->status & CONF_DLINE))
-	continue;
+        continue;
 
       c = 'D';
       if(scan->flags & CONF_FLAGS_E_LINED)
-	c = 'd';
+        c = 'd';
       /* print Dline */
 
       GetPrintableaConfItem(scan, &name, &host, &pass, &user, &port);
 
       sendto_one(sptr, form_str(RPL_STATSDLINE), me.name,
-		 sptr->name, c, host, pass);
+                 sptr->name, c, host, pass);
     }
   walk_the_dlines(sptr, tree->right);
 }
@@ -793,7 +793,7 @@ void report_dlines(aClient *sptr)
  * -good
  */
 void walk_the_ip_Klines(aClient *sptr, struct ip_subtree *tree, 
-			char conftype, int MASK)
+                        char conftype, int MASK)
 {
   aConfItem *scan;
   char *name, *host, *pass, *user;
@@ -807,30 +807,30 @@ void walk_the_ip_Klines(aClient *sptr, struct ip_subtree *tree,
   for(scan=tree->conf;scan;scan=scan->next)
     {
       if(!(scan->status & MASK))
-	continue;
+        continue;
 
       GetPrintableaConfItem(scan, &name, &host, &pass, &user, &port);
 
       if(scan->status & CONF_KILL)
-	{
-	  /* print Kline */
-	  
-	  sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
-		     sptr->name, conftype, user, name, pass);
-	}
+        {
+          /* print Kline */
+          
+          sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
+                     sptr->name, conftype, user, name, pass);
+        }
       else if(scan->status & CONF_CLIENT)
-	{
-	  /* print IP I line */
+        {
+          /* print IP I line */
 
-	  sendto_one(sptr, form_str(RPL_STATSILINE), me.name,
-		     sptr->name,
-		     'I',
-		     name,
-		     show_iline_prefix(sptr,scan,user),
-		     host,
-		     port,
-		     get_conf_class(scan));
-	}
+          sendto_one(sptr, form_str(RPL_STATSILINE), me.name,
+                     sptr->name,
+                     'I',
+                     name,
+                     show_iline_prefix(sptr,scan,user),
+                     host,
+                     port,
+                     get_conf_class(scan));
+        }
     }
   walk_the_ip_Klines(sptr, tree->right, conftype, MASK);
 }

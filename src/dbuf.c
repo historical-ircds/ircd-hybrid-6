@@ -30,11 +30,11 @@
 #include "h.h"
 
 #if !defined(VALLOC) && !defined(valloc)
-#define	valloc malloc
+#define valloc malloc
 #endif
 
-int	dbufalloc = 0, dbufblocks = 0, maxdbufalloc = 0, maxdbufblocks = 0;
-static	dbufbuf	*freelist = NULL;
+int     dbufalloc = 0, dbufblocks = 0, maxdbufalloc = 0, maxdbufblocks = 0;
+static  dbufbuf *freelist = NULL;
 
 /* This is a dangerous define because a broken compiler will set DBUFSIZ
 ** to 4, which will work but will be very inefficient. However, there
@@ -96,7 +96,7 @@ static dbufbuf *dbuf_alloc()
 /*
 ** dbuf_free - return a dbufbuf structure to the freelist
 */
-static	void	dbuf_free(dbufbuf *ptr)
+static  void    dbuf_free(dbufbuf *ptr)
 {
   dbufalloc--;
   ptr->next = freelist;
@@ -124,11 +124,11 @@ static int dbuf_malloc_error(dbuf *dyn)
 }
 
 
-int	dbuf_put(dbuf *dyn,char *buf,int length)
+int     dbuf_put(dbuf *dyn,char *buf,int length)
 {
-  dbufbuf	**h, *d;
-  int	 off;
-  int	chunk;
+  dbufbuf       **h, *d;
+  int    off;
+  int   chunk;
 
   off = (dyn->offset + dyn->length) % DBUFSIZ;
   /*
@@ -142,9 +142,9 @@ int	dbuf_put(dbuf *dyn,char *buf,int length)
   else
     {
       if (off)
-	h = &(dyn->tail);
+        h = &(dyn->tail);
       else
-	h = &(dyn->tail->next);
+        h = &(dyn->tail->next);
     }
   /*
   ** Append users data to buffer, allocating buffers as needed
@@ -154,15 +154,15 @@ int	dbuf_put(dbuf *dyn,char *buf,int length)
   for ( ;length > 0; h = &(d->next))
     {
       if ((d = *h) == NULL)
-	{
-	  if ((d = (dbufbuf *)dbuf_alloc()) == NULL)
-	    return dbuf_malloc_error(dyn);
-	  dyn->tail = d;
-	  *h = d;
-	  d->next = NULL;
-	}
+        {
+          if ((d = (dbufbuf *)dbuf_alloc()) == NULL)
+            return dbuf_malloc_error(dyn);
+          dyn->tail = d;
+          *h = d;
+          d->next = NULL;
+        }
       if (chunk > length)
-	chunk = length;
+        chunk = length;
       memcpy(d->data + off, buf, chunk);
       length -= chunk;
       buf += chunk;
@@ -173,7 +173,7 @@ int	dbuf_put(dbuf *dyn,char *buf,int length)
 }
 
 
-char	*dbuf_map(dbuf *dyn,int *length)
+char    *dbuf_map(dbuf *dyn,int *length)
 {
   if (dyn->head == NULL)
     {
@@ -187,7 +187,7 @@ char	*dbuf_map(dbuf *dyn,int *length)
   return (dyn->head->data + dyn->offset);
 }
 
-int	dbuf_delete(dbuf *dyn,int length)
+int     dbuf_delete(dbuf *dyn,int length)
 {
   dbufbuf *d;
   int chunk;
@@ -198,17 +198,17 @@ int	dbuf_delete(dbuf *dyn,int length)
   while (length > 0)
     {
       if (chunk > length)
-	chunk = length;
+        chunk = length;
       length -= chunk;
       dyn->offset += chunk;
       dyn->length -= chunk;
       if (dyn->offset == DBUFSIZ || dyn->length == 0)
-	{
-	  d = dyn->head;
-	  dyn->head = d->next;
-	  dyn->offset = 0;
-	  dbuf_free(d);
-	}
+        {
+          d = dyn->head;
+          dyn->head = d->next;
+          dyn->offset = 0;
+          dbuf_free(d);
+        }
       chunk = DBUFSIZ;
     }
   if (dyn->head == (dbufbuf *)NULL)
@@ -219,16 +219,16 @@ int	dbuf_delete(dbuf *dyn,int length)
   return 0;
 }
 
-int	dbuf_get(dbuf *dyn,char *buf,int length)
+int     dbuf_get(dbuf *dyn,char *buf,int length)
 {
-  int	moved = 0;
-  int	chunk;
-  char	*b;
+  int   moved = 0;
+  int   chunk;
+  char  *b;
 
   while (length > 0 && (b = dbuf_map(dyn, &chunk)) != NULL)
     {
       if (chunk > length)
-	chunk = length;
+        chunk = length;
       memcpy(buf, b, (int)chunk);
       (void)dbuf_delete(dyn, chunk);
       buf += chunk;
@@ -245,13 +245,13 @@ int	dbuf_get(dbuf *dyn,char *buf,int length)
 ** either a \r or \n present.  If so, copy as much as possible (determined by
 ** length) into buf and return the amount copied - else return 0.
 */
-int	dbuf_getmsg(dbuf *dyn,char *buf,int length)
+int     dbuf_getmsg(dbuf *dyn,char *buf,int length)
 {
-  dbufbuf	*d;
-  register char	*s;
-  register int	dlen;
-  register int	i;
-  int	copy;
+  dbufbuf       *d;
+  register char *s;
+  register int  dlen;
+  register int  i;
+  int   copy;
   
 getmsg_init:
   d = dyn->head;
@@ -271,30 +271,30 @@ getmsg_init:
     {
       dlen--;
       if (*s == '\n' || *s == '\r')
-	{
-	  copy = dyn->length - dlen;
-	  /*
-	  ** Shortcut this case here to save time elsewhere.
-	  ** -avalon
-	  */
-	  if (copy == 1)
-	    {
-	      (void)dbuf_delete(dyn, 1);
-	      goto getmsg_init;
-	    }
-	  break;
-	}
+        {
+          copy = dyn->length - dlen;
+          /*
+          ** Shortcut this case here to save time elsewhere.
+          ** -avalon
+          */
+          if (copy == 1)
+            {
+              (void)dbuf_delete(dyn, 1);
+              goto getmsg_init;
+            }
+          break;
+        }
       length--;
       if (!--i)
-	{
-	  if ((d = d->next))
-	    {
-	      s = d->data;
-	      i = IRCD_MIN(DBUFSIZ, dlen);
-	    }
-	}
+        {
+          if ((d = d->next))
+            {
+              s = d->data;
+              i = IRCD_MIN(DBUFSIZ, dlen);
+            }
+        }
       else
-	s++;
+        s++;
     }
 
   if (copy <= 0)
@@ -310,7 +310,7 @@ getmsg_init:
   if (copy - i > 0)
     (void)dbuf_delete(dyn, copy - i);
   if (i >= 0)
-    *(buf+i) = '\0';	/* mark end of messsage */
+    *(buf+i) = '\0';    /* mark end of messsage */
   
   return i;
 }
