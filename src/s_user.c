@@ -877,7 +877,11 @@ static int register_user(aClient *cptr, aClient *sptr,
         }
     }
 
-  send_umode(NULL, sptr, 0, SEND_UMODES, ubuf);
+  if(MyClient(sptr))
+    send_umode(sptr, sptr, 0, SEND_UMODES, ubuf);
+  else
+    send_umode(NULL, sptr, 0, SEND_UMODES, ubuf);
+
   if (!*ubuf)
     {
       ubuf[0] = '+';
