@@ -1,3 +1,7 @@
+*** 20010806_1 by wcampbel
+Corrected typos (from dracus)
+
+
 *** 20010805_9 by db
 - make NON_REDUNDANT_KLINES always on, removed #define for it
 
