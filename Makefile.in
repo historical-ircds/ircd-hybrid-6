@@ -20,7 +20,7 @@
 RM=@RM@
 
 # Default CFLAGS
-CFLAGS = -g -O2
+CFLAGS = -g -O2 -NDEBUG
 
 #
 # For developers

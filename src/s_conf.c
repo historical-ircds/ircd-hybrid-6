@@ -2108,7 +2108,7 @@ static void initconf(FBFILE* file, int use_include)
             {
               if ((tmp = getfield(NULL)) == NULL)
                 break;
-              (int)aconf->hold = oper_flags_from_string(tmp);
+              aconf->hold = oper_flags_from_string(tmp);
             }
 
           break;
