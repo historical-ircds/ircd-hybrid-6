@@ -28,9 +28,6 @@
 
 #ifdef CRYPT_LINKS
 
-#ifndef HAVE_LIBCRYPTO
-#error You don`t have OpenSSL -lcrypto properly installed
-#endif
 #include <openssl/ssl.h>
 #include <openssl/crypto.h>
 #include <openssl/err.h>

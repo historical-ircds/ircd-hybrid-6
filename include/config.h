@@ -409,7 +409,7 @@
  * THIS.
  */
 #undef TRUE_NO_OPER_FLOOD
-#define CRYPT_LINKS             /* allow encrypted server-server links */
+#undef CRYPT_LINKS             /* allow encrypted server-server links */
 #define CRYPT_LINKS_CNPREFIX '@'
 #define CRYPT_LINKS_PRIVATEKEYFILE "private.key"
 
@@ -1073,5 +1073,11 @@ void    free_fludees();
 #endif
 
 #define CONFIG_H_LEVEL_6
+
+#ifdef CRYPT_LINKS
+#  ifndef HAVE_LIBCRYPTO
+#    error CRYPT_LINKS is defined, but you lack OpenSSL.  Try using --enable-openssl during configure, or #undef CRYPT_LINKS.
+#  endif
+#endif
 
 #endif /* INCLUDED_config_h */

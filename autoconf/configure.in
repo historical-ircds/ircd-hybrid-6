@@ -25,7 +25,6 @@ AC_CHECK_LIB(nsl, gethostbyname)
 AC_CHECK_FUNC(res_mkquery,, AC_CHECK_LIB(resolv, res_mkquery))
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_FUNC(crypt,, AC_CHECK_LIB(descrypt, crypt,,AC_CHECK_LIB(crypt, crypt,,)))
-AC_CHECK_LIB(crypto, RSA_free)
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -40,26 +39,92 @@ AC_PROG_GCC_TRADITIONAL
 dnl check for poll() call
 AC_CHECK_FUNC(poll, AC_DEFINE(USE_POLL),)
 
-dnl Check OpenSSL version
-AC_MSG_CHECKING(for required OpenSSL version)
-AC_TRY_RUN(
-[
-#include <openssl/opensslv.h>
+dnl OpenSSL support
+AC_MSG_CHECKING(for OpenSSL)
+AC_ARG_ENABLE(openssl,
+[  --enable-openssl[=DIR]       Enable OpenSSL support (DIR optional).
+  --disable-openssl            Disable OpenSSL support. ],
+[ cf_enable_openssl=$enableval ],
+[ cf_enable_openssl="auto" ])
+AC_MSG_RESULT($cf_enable_openssl)
+
+dnl If we want OpenSSL, get some information about it first.
+dnl jdc -- This is great: not.  There are too many combinations of
+dnl        possibilities for this argument.  Here ya go:
+dnl          <no argument>         (cf_enable_openssl='auto')
+dnl          --enable-openssl      (cf_enable_openssl='yes')
+dnl          --enable-openssl=DIR  (cf_enable_openssl='DIR')
+dnl          --disable-openssl     (cf_enable_openssl='no')
+if test "X$cf_enable_openssl" != "Xno"; then
+  AC_MSG_CHECKING(for OpenSSL include directory)
+  if test "X$cf_enable_openssl" != "Xauto" &&
+     test "X$cf_enable_openssl" != "Xyes"; then
+        CPPFLAGS="$CPPFLAGS -I${cf_enable_openssl}/include"
+        LIBS="$LIBS -L${cf_enable_openssl}/lib"
+        cf_openssl_incl="${cf_enable_openssl}/include"
+  else
+    dnl Do the automatic probe here.  Check some directories to see
+    dnl what exists.
+    for incdir in /usr/include/openssl \
+                  /usr/local/openssl/include \
+                  /usr/local/ssl/include ; do
+      if test -f "${incdir}/opensslv.h"; then
+        cf_openssl_incl="$incdir"
+        break
+      fi
+    done
+    unset incdir
+    dnl If no directories in the list were found to be valid, then we
+    dnl can't support OpenSSL.  Tough titty said the kitty.
+    if test "X$cf_openssl_incl" = "X"; then
+      AC_MSG_WARN(OpenSSL cannot be found.  Please specify it instead.)
+      cf_enable_openssl="no"
+    else
+      dnl Otherwise, set CPPFLAGS and move along happily.
+      CPPFLAGS="$CPPFLAGS -I$cf_openssl_incl"
+    fi
+  fi
+  AC_MSG_RESULT($cf_openssl_incl)
+fi
+
+if test "X$cf_enable_openssl" != "Xno"; then
+    dnl Check OpenSSL version (must be 0.9.6 or above!)
+    AC_MSG_CHECKING(for OpenSSL 0.9.6 or above)
+    AC_TRY_RUN(
+    [
+#include "opensslv.h"
 int main() {
   if (OPENSSL_VERSION_NUMBER < 0x00906000)
     exit(1);
-  exit(0);		
+  exit(0);
 }
-], AC_MSG_RESULT(ok), AC_MSG_ERROR(** OpenSSL version below 0.9.6 - ircd-hybrid will not compile **), 
-AC_MSG_ERROR(Unable to test))
+    ], cf_openssl_version_ok='yes',
+       cf_openssl_version_ok='no',
+       cf_openssl_version_ok='no')
 
-dnl Check for ciphers supported by OpenSSL crypto lib
-AC_CHECK_FUNCS(BF_cfb64_encrypt,,)
-AC_CHECK_FUNCS(idea_cfb64_encrypt,,)
-AC_CHECK_FUNCS(CAST_cfb64_encrypt,,)
-AC_CHECK_FUNCS(RC5_32_cfb64_encrypt,,)
-AC_CHECK_FUNCS(des_cfb64_encrypt,,)
-AC_CHECK_FUNCS(des_ede3_cfb64_encrypt,,)
+    if test "X$cf_openssl_version_ok" = "Xyes"; then
+        AC_MSG_RESULT(ok)
+        dnl Do all the HAVE_LIBCRYPTO magic -- and check for ciphers
+        AC_CHECK_LIB(crypto, RSA_free)
+        if test "X$ac_cv_lib_crypto_RSA_free" = "Xyes"; then
+            cf_openssl_ciphers=''
+            AC_CHECK_FUNCS(EVP_bf_cfb,
+                cf_openssl_ciphers="${cf_openssl_ciphers}BF/256 BF/128 ")
+            AC_CHECK_FUNCS(EVP_cast5_cfb,
+                cf_openssl_ciphers="${cf_openssl_ciphers}CAST/128 ")
+            AC_CHECK_FUNCS(EVP_idea_cfb,
+                cf_openssl_ciphers="${cf_openssl_ciphers}IDEA/128 ")
+            AC_CHECK_FUNCS(EVP_rc5_32_12_16_cfb,
+                cf_openssl_ciphers="${cf_openssl_ciphers}RC5.16/128 RC5.12/128 RC5.8/128 ")
+            AC_CHECK_FUNCS(EVP_des_ede3_cfb,
+                cf_openssl_ciphers="${cf_openssl_ciphers}3DES/168 ")
+            AC_CHECK_FUNCS(EVP_des_cfb,
+                cf_openssl_ciphers="${cf_openssl_ciphers}DES/56 ")
+        fi
+    else
+        AC_MSG_RESULT(OpenSSL version below 0.9.6 - OpenSSL support disabled)
+    fi
+fi
 
 dnl taken from ircd's Config script
 AC_MSG_CHECKING(for non-blocking socket implementation)
@@ -207,4 +272,12 @@ esac
 
 AC_OUTPUT(Makefile src/Makefile tools/Makefile zlib/Makefile)
 
+
+if test "X${cf_openssl_ciphers}" != "X"; then
+  echo 
+  echo "Available cryptlinks ciphers:"
+  echo
+  echo "${cf_openssl_ciphers}"
+  echo
+fi
 

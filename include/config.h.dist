@@ -1049,4 +1049,10 @@ void    free_fludees();
 
 #define CONFIG_H_LEVEL_6
 
+#ifdef CRYPT_LINKS
+#  ifndef HAVE_LIBCRYPTO
+#    error CRYPT_LINKS is defined, but you lack OpenSSL.  Try using --enable-openssl during configure, or #undef CRYPT_LINKS.
+#  endif
+#endif
+
 #endif /* INCLUDED_config_h */

@@ -40,6 +40,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef CRYPT_LINKS
+
 /*
  * m_functions execute protocol messages on this server:
  *
@@ -380,3 +382,4 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
 }
 
 
+#endif /* CRYPT_LINKS */

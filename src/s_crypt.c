@@ -9,6 +9,9 @@
 #include "s_log.h"
 #include "s_bsd.h"
 
+
+#ifdef CRYPT_LINKS
+
 #ifdef HAVE_CRYPT_BLOWFISH
 typedef struct {
   BF_KEY key;
@@ -613,11 +616,5 @@ int crypt_init() {
   return CRYPT_OK;
 }
 
-
-
-
-
-
-
-
+#endif /* CRYPT_LINKS */
 
