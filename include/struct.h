@@ -812,7 +812,6 @@ struct SLink
 struct Channel
 {
   struct	Channel *nextch, *prevch, *hnextch;
-  int	hashv;		/* raw hash value */
   Mode	mode;
   char	topic[TOPICLEN+1];
 #ifdef TOPIC_INFO
