@@ -1,3 +1,20 @@
+wcampbel    2001/12/16 00:49:20 EST	(20011216_0)
+
+  Modified files:
+    doc                  server-version-info 
+    src                  s_debug.c 
+  Log:
+  Add 'r' to the server version flags to mean a server was compiled with
+  LITTLE_I_LINES.  This is intended so that EFnet admins can more easily
+  see how servers are configured, and to help prevent admins from enabling
+  this non-approved feature.  Commit approved by Diane.
+  
+  Revision  Changes    Path
+  1.9       +1 -0      ircd-hybrid-6/doc/server-version-info
+  1.59      +4 -1      ircd-hybrid-6/src/s_debug.c
+
+
+
 leeh        2001/12/15 11:24:12 EST	(20011215_1)
 
   Modified files:
