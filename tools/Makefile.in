@@ -49,6 +49,8 @@ distclean: clean
 install: build
 	@echo "Please do a make install from the top level directory"
 
+depend:
+
 # DO NOT DELETE
 
 mkpasswd.o: ../include/setup.h ../zlib/zlib.h

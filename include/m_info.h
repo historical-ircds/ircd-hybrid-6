@@ -132,7 +132,10 @@ Info MyInformation[] = {
 #endif /* CRYPT_LINKS */
 
 #ifdef CRYPT_LINKS
+#if 0
+  /* CRYPT_LINKS_CNPREFIX is a char, not a char *, it'll core */
   { "CRYPT_LINKS_CNPREFIX", CRYPT_LINKS_CNPREFIX, 0, "Prefix in C/N Lines For a Public Key Filename" },
+#endif
   { "CRYPT_LINKS_PRIVATEKEYFILE", CRYPT_LINKS_PRIVATEKEYFILE, 0, "Path to the Private Key File" },
 #endif /* CRYPT_LINKS */
 

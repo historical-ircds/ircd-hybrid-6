@@ -3902,7 +3902,7 @@ int     m_sjoin(struct Client *cptr,
       sendto_realops("*** Bogus TS %lu on %s ignored from %s",
 		     (unsigned long) newts,
 		     chptr->chname,
-		     client_p->name);
+		     cptr->name);
     }
 #endif
 
