@@ -1,3 +1,16 @@
+*** 20010630_1 by greg
+Well well well.  Take a look at this one.
+
+I know why asymetric ciphers didn't work, someone was decrypt()'ing the blocks
+we get from the foreign user using the cipher we're supposed to send outbound.
+
+*cough* Fortunately einride's code doesn't report decryption errors! So,
+we either let the connection ping timeout, or we invariably cored trying to 
+decrypt a block with the wrong cipher.
+
+How could this have eluded us for so long? :)
+
+
 *** 20010626_1 by db
 - removed +d/-d channel mode, somehow this crept back in.
 - re-formatted code
