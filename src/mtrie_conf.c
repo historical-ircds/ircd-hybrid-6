@@ -743,10 +743,27 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
   if(!IsConfDoIdentd(iline_aconf) && (*user == '~'))
     user++;
 
-  if(trie_list && first_kline_trie_list)
+  /* ok, if there is a trie to use...
+   * and if a possible branch was found the first time
+   * I'll have a first_kline_trie_list saved.
+   * its possible there won't be a branch of possible klines
+   * in which case, I will have to start from the top of the tree again.
+   * - Dianora
+   */
+
+  if(trie_list)
     {
-      stack_pointer = saved_stack_pointer;
-      kline_aconf = find_sub_mtrie(first_kline_trie_list,host,user,CONF_KILL);
+      if(first_kline_trie_list)
+	{
+	  stack_pointer = saved_stack_pointer;
+	  kline_aconf = find_sub_mtrie(first_kline_trie_list,host,user,
+				       CONF_KILL);
+	}
+      else
+	{
+	  stack_pointer = top_of_stack;
+	  kline_aconf = find_sub_mtrie(trie_list,host,user,CONF_KILL);
+	}
     }
   else
     kline_aconf = (aConfItem *)NULL;
@@ -787,6 +804,10 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
   aConfItem *aconf;
 
   cur_dns_piece = dns_stack[--stack_pointer];
+
+  /* Can never ever be too careful -Dianora */
+  if(!cur_dns_piece)
+    return((aConfItem *)NULL);
 
   if(flags & CONF_KILL)
     {
