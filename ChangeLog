@@ -1,3 +1,51 @@
+*** 20010617_2 by greg
+This morning on my way to coburg and with and archived copy of CVS source for
+hybrid 6 taken last night at about midnight, I did the following. If I remember,
+I'll check for updates to any files which I have audited for server IP leakage
+when I get back, if not I'm not responsible for any changes made to the files
+which I commit after last night. (I'll check again before we go release)
+
+I did the following:
+- s_misc.c	appears already audited, verified all get_client_name calls
+- s_bsd.c	same as above, also corrected a few spacing errors to make our
+		server messages a little cleaner
+- s_auth.c	some report_error calls will leak ips, but if we do call this
+		there should be a large enough amount of other ips which we're
+		reporting an error for that the server one will go unnoticed,
+		and there would be nothing to say this was a server, anyways.
+- send.c	already audited
+- m_trace.c	already audited
+		also made it so that if we don't define SPOOF_NOTICE, ips are
+		truly spoofed -- even for opers doing the request
+- m_stats.c	already audited
+- m_trace.c	already audited, fixed SPOOF_NOTICE stuff as well
+- m_ltrace.c	already audited, fixed sPOOF_NOTICE stuff as well
+- m_rehash.c	added perm. check for tklines and glines, cleaned up ugly code
+- m_svinfo.c	already audited, we won't leak ip's for ts delta .. unlike what
+		i thought
+- m_squit.c	already audited
+- m_server.c	.. _HIDE_SERVERS_IPS -> HIDE_SERVERS_IPS
+		- some weird condition where a user sends a SERVER command was
+		calling get_client_name twice in the same call .. mmm staticy
+		goodness
+- m_restart.c	no leakage .. i'm going to go modify the restart process to
+		send the "Aieee!!!" message again, we changed it so that that
+		doesn't get sent anymore, which is bad for people who wonder
+		where their server went
+- m_kline.c	some typos
+- m_cryptauth.c	whee, another get_client_name twice in one call .. god bless
+		those statics.
+- m_cryptserv.c	same thing as above .. watch those statics
+- client.c/channel.c
+		modified some words and typos and such
+
+It looks like a lot, but it really isn't that much.
+
+Pending any really huge bugs which haven't yet been found, and pending a
+review of the HIDE_SERVERS_IPS bit and the rest of the modifications I made,
+I think we're about ready to roll out a release?
+
+
 *** 20010617_1 by kreator
 - fix those mmap() tests and use ones that autoconf provides
 
