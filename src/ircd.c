@@ -331,7 +331,7 @@ static void parse_command_line(int argc, char* argv[])
 #ifndef ZIP_LINKS
              "not used",
 #else
-              zlib_version,
+              zlibVersion(),
 #endif
               ConfigFileEntry.dpath);
       exit(0);
@@ -767,20 +767,27 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef  ZIP_LINKS
-  if (zlib_version[0] == '0')
+  {
+    const char *z_ver_str = zlibVersion();
+    unsigned long z_ver_major = atoi(z_ver_str+0);
+    unsigned long z_ver_minor = atoi(z_ver_str+2);
+    unsigned long z_ver_tiny  = atoi(z_ver_str+4);
+
+    /* zlib library must be version 1.0.2 or above. */
+    if ( (z_ver_major <= 1) && (z_ver_minor == 0) && (z_ver_tiny < 2) )
     {
-      fprintf(stderr, "zlib version 1.0 or higher required\n");
+      fprintf(stderr, "ERROR: zlib version 1.0.2 or higher required.\n");
       exit(1);
     }
-  if (zlib_version[0] != ZLIB_VERSION[0])
+    /* Make sure the include files match the library version number. */
+    if (strcmp(z_ver_str, ZLIB_VERSION) != 0)
     {
-      fprintf(stderr, "incompatible zlib version\n");
-      exit(1);
+      fprintf(stderr, "WARNING: zlib include files differ from library.\n");
+      fprintf(stderr, "WARNING: ziplinks may fail!\n");
+      fprintf(stderr, "WARNING: library %s, include files %s\n",
+              z_ver_str, ZLIB_VERSION);
     }
-  if (strcmp(zlib_version, ZLIB_VERSION) != 0)
-    {
-      fprintf(stderr, "warning: different zlib version\n");
-    }
+  }
 #endif
 
   myargv = argv;
