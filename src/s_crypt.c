@@ -14,7 +14,8 @@
 #ifdef CRYPT_LINKS
 
 #ifdef HAVE_CRYPT_BLOWFISH
-typedef struct {
+typedef struct
+{
   BF_KEY key;
   unsigned char ivec[8];
   int ivecnum;
@@ -240,21 +241,24 @@ int unbase64_block(char **output, char *data, int len)
 
 
 #ifdef HAVE_CRYPT_BLOWFISH
-int do_bf128_init(void * StateData, unsigned char * keydata) {
+int do_bf128_init(void * StateData, unsigned char * keydata)
+{
   BFState * State = (BFState *) StateData;
   memset(State, sizeof(BFState), 0);
   BF_set_key(&State->key, 16, keydata);
   return CRYPT_OK;
 }
 
-int do_bf256_init(void * StateData, unsigned char * keydata) {
+int do_bf256_init(void * StateData, unsigned char * keydata)
+{
   BFState * State = (BFState *) StateData;
   memset(State, sizeof(BFState), 0);
   BF_set_key(&State->key, 32, keydata);
   return CRYPT_OK;
 }
 
-int do_bf_encrypt(struct Client * cptr, char * Data, int Length) {
+int do_bf_encrypt(struct Client * cptr, char * Data, int Length)
+{
   BFState * State = (BFState *) cptr->crypt->OutState;
   char * work = malloc(Length);
   BF_cfb64_encrypt(Data, work, Length, &State->key, State->ivec, &State->ivecnum, BF_ENCRYPT);
@@ -263,7 +267,8 @@ int do_bf_encrypt(struct Client * cptr, char * Data, int Length) {
   return CRYPT_ENCRYPTED;
 }
 
-int do_bf_decrypt(struct Client * cptr, char * Data, int Length) {
+int do_bf_decrypt(struct Client * cptr, char * Data, int Length)
+{
   BFState * State = (BFState *) cptr->crypt->InState;
   char * work = malloc(Length);
   BF_cfb64_encrypt(Data, work, Length, &State->key, State->ivec, &State->ivecnum, BF_DECRYPT);
@@ -274,13 +279,15 @@ int do_bf_decrypt(struct Client * cptr, char * Data, int Length) {
 #endif /* HAVE_CRYPT_BLOWFISH */
 
 #ifdef HAVE_CRYPT_CAST
-int do_cast_init(void * State, unsigned char * keydata) {
+int do_cast_init(void * State, unsigned char * keydata)
+{
   CASTState * S = (CASTState *) State;
   CAST_set_key(&S->key, 16, keydata);
   return CRYPT_OK;
 }
 
-int do_cast_encrypt(struct Client * cptr, char * Data, int Length) {
+int do_cast_encrypt(struct Client * cptr, char * Data, int Length)
+{
   CASTState * S = (CASTState *) cptr->crypt->OutState;
   char * work = (char *) malloc(Length);
   CAST_cfb64_encrypt(Data, work, Length, &S->key, S->ivec, &S->ivecnum, CAST_ENCRYPT);
@@ -288,7 +295,8 @@ int do_cast_encrypt(struct Client * cptr, char * Data, int Length) {
   return CRYPT_ENCRYPTED;
 }
 
-int do_cast_decrypt(struct Client * cptr, char * Data, int Length) {
+int do_cast_decrypt(struct Client * cptr, char * Data, int Length)
+{
   CASTState * S = (CASTState *) cptr->crypt->InState;
   char * work = (char *) malloc(Length);
   CAST_cfb64_encrypt(Data, work, Length, &S->key, S->ivec, &S->ivecnum, CAST_DECRYPT);
@@ -298,14 +306,16 @@ int do_cast_decrypt(struct Client * cptr, char * Data, int Length) {
 #endif /* HAVE_CRYPT_CAST */
 
 #ifdef HAVE_CRYPT_IDEA
-int do_idea_init(void * State, unsigned char * keydata) {
+int do_idea_init(void * State, unsigned char * keydata)
+{
   IDEAState * S = (IDEAState *) State;
   idea_set_encrypt_key(keydata, &S->key);
-  //  idea_set_decrypt_key(&S->ekey, &S->dkey);
+  /*   idea_set_decrypt_key(&S->ekey, &S->dkey); */
   return CRYPT_OK;
 }
 
-int do_idea_encrypt(struct Client * cptr, char * Data, int Length) {
+int do_idea_encrypt(struct Client * cptr, char * Data, int Length)
+{
   IDEAState * S = (IDEAState *) cptr->crypt->OutState;
   char * work = (char *) malloc(Length);
   idea_cfb64_encrypt(Data, work, Length, &S->key, S->ivec, &S->ivecnum, IDEA_ENCRYPT);
@@ -313,7 +323,8 @@ int do_idea_encrypt(struct Client * cptr, char * Data, int Length) {
   return CRYPT_ENCRYPTED;
 }
 
-int do_idea_decrypt(struct Client * cptr, char * Data, int Length) {
+int do_idea_decrypt(struct Client * cptr, char * Data, int Length)
+{
   IDEAState * S = (IDEAState *) cptr->crypt->InState;
   char * work = (char *) malloc(Length);
   idea_cfb64_encrypt(Data, work, Length, &S->key, S->ivec, &S->ivecnum, IDEA_DECRYPT);
@@ -323,7 +334,8 @@ int do_idea_decrypt(struct Client * cptr, char * Data, int Length) {
 #endif /* HAVE_CRYPT_IDEA */
 
 #ifdef HAVE_CRYPT_DES
-int do_des_init(void * State, unsigned char * keydata) {
+int do_des_init(void * State, unsigned char * keydata) 
+{
   DESState * S = (DESState *) State;
   des_cblock c;
   memcpy(&c, keydata, sizeof(c));
@@ -333,7 +345,8 @@ int do_des_init(void * State, unsigned char * keydata) {
   return CRYPT_OK;
 }
 
-int do_des_encrypt(struct Client * cptr, char * Data, int Length) {
+int do_des_encrypt(struct Client * cptr, char * Data, int Length)
+{
   DESState * S = (DESState *) cptr->crypt->OutState;
   char * work = (char *) malloc(Length);
   des_cfb64_encrypt(Data, work, Length, S->key, &S->ivec, &S->ivecnum, DES_ENCRYPT);
@@ -341,7 +354,8 @@ int do_des_encrypt(struct Client * cptr, char * Data, int Length) {
   return CRYPT_ENCRYPTED;
 }
 
-int do_des_decrypt(struct Client * cptr, char * Data, int Length) {
+int do_des_decrypt(struct Client * cptr, char * Data, int Length)
+{
   DESState * S = (DESState *) cptr->crypt->InState;
   char * work = (char *) malloc(Length);
   des_cfb64_encrypt(Data, work, Length, S->key, &S->ivec, &S->ivecnum, DES_DECRYPT);
@@ -351,7 +365,8 @@ int do_des_decrypt(struct Client * cptr, char * Data, int Length) {
 #endif /* HAVE_CRYPT_DES */
 
 #ifdef HAVE_CRYPT_3DES
-int do_tdes_init(void * State, unsigned char * keydata) {
+int do_tdes_init(void * State, unsigned char * keydata)
+{
   TDESState * S = (TDESState *) State;
   des_cblock c1, c2, c3;
   memcpy(&c1, keydata, sizeof(c1));
@@ -370,7 +385,8 @@ int do_tdes_init(void * State, unsigned char * keydata) {
   return CRYPT_OK;
 }
 
-int do_tdes_encrypt(struct Client * cptr, char * Data, int Length) {
+int do_tdes_encrypt(struct Client * cptr, char * Data, int Length)
+{
   TDESState * S = (TDESState *) cptr->crypt->OutState;
   char * work = (char *) malloc(Length);
   des_ede3_cfb64_encrypt(Data, work, Length, S->key1, S->key2, S->key3, &S->ivec, &S->ivecnum, DES_ENCRYPT);
@@ -378,7 +394,8 @@ int do_tdes_encrypt(struct Client * cptr, char * Data, int Length) {
   return CRYPT_ENCRYPTED;
 }
 
-int do_tdes_decrypt(struct Client * cptr, char * Data, int Length) {
+int do_tdes_decrypt(struct Client * cptr, char * Data, int Length)
+{
   TDESState * S = (TDESState *) cptr->crypt->InState;
   char * work = (char *) malloc(Length);
   des_ede3_cfb64_encrypt(Data, work, Length, S->key1, S->key2, S->key3, &S->ivec, &S->ivecnum, DES_DECRYPT);
@@ -388,25 +405,29 @@ int do_tdes_decrypt(struct Client * cptr, char * Data, int Length) {
 #endif /* HAVE_CRYPT_3DES */
 
 #ifdef HAVE_CRYPT_RC5
-int do_rc5_8_init(void * State, unsigned char * keydata) {
+int do_rc5_8_init(void * State, unsigned char * keydata)
+{
   RC5State * S = (RC5State *) State;
   RC5_32_set_key(&S->key, 16, keydata, 8);
   return CRYPT_OK;
 }
 
-int do_rc5_12_init(void * State, unsigned char * keydata) {
+int do_rc5_12_init(void * State, unsigned char * keydata)
+{
   RC5State * S = (RC5State *) State;
   RC5_32_set_key(&S->key, 16, keydata, 12);
   return CRYPT_OK;
 }
 
-int do_rc5_16_init(void * State, unsigned char * keydata) {
+int do_rc5_16_init(void * State, unsigned char * keydata)
+{
   RC5State * S = (RC5State *) State;
   RC5_32_set_key(&S->key, 16, keydata, 16);
   return CRYPT_OK;
 }
 
-int do_rc5_encrypt(struct Client * cptr, char * Data, int Length) {
+int do_rc5_encrypt(struct Client * cptr, char * Data, int Length)
+{
   RC5State * S = (RC5State *) cptr->crypt->OutState;
   char * work = (char *) malloc(Length);
   RC5_32_cfb64_encrypt(Data, work, Length, &S->key, S->ivec, &S->ivecnum, RC5_ENCRYPT);
@@ -414,7 +435,8 @@ int do_rc5_encrypt(struct Client * cptr, char * Data, int Length) {
   return CRYPT_ENCRYPTED;
 }
 
-int do_rc5_decrypt(struct Client * cptr, char * Data, int Length) {
+int do_rc5_decrypt(struct Client * cptr, char * Data, int Length)
+{
   RC5State * S = (RC5State *) cptr->crypt->InState;
   char * work = (char *) malloc(Length);
   RC5_32_cfb64_encrypt(Data, work, Length, &S->key, S->ivec, &S->ivecnum, RC5_DECRYPT);
@@ -444,14 +466,18 @@ struct CipherDef *crypt_selectcipher(char *ciphername)
   return(NULL);
 }
 
-int crypt_rsa_decode(char * base64text, unsigned char * data, int * length) {
+int crypt_rsa_decode(char * base64text, unsigned char * data, int * length)
+{
   unsigned char *ciphertext=0;
-  if (unbase64_block( (char **) &ciphertext, base64text, strlen(base64text)) != CRYPT_RSASIZE) {
-    if (ciphertext)
-      free(ciphertext);
-    return CRYPT_ERROR;
-  }
-  *length = RSA_private_decrypt(CRYPT_RSASIZE, ciphertext, data, me.crypt->RSAKey, RSA_PKCS1_PADDING);
+  if (unbase64_block( (char **) &ciphertext, base64text, strlen(base64text))
+      != CRYPT_RSASIZE)
+    {
+      if (ciphertext)
+	free(ciphertext);
+      return CRYPT_ERROR;
+    }
+  *length = RSA_private_decrypt(CRYPT_RSASIZE, ciphertext,
+				data, me.crypt->RSAKey, RSA_PKCS1_PADDING);
   free(ciphertext);
 
   if (*length == (-1))
@@ -460,12 +486,15 @@ int crypt_rsa_decode(char * base64text, unsigned char * data, int * length) {
   return CRYPT_DECRYPTED;
 }
 
-int crypt_rsa_encode(RSA * rsakey, unsigned char * data, char * base64text, int length) {
+int crypt_rsa_encode(RSA * rsakey, unsigned char * data,
+		     char * base64text, int length)
+{
   int cipherlen;
   unsigned char ciphertext[CRYPT_RSASIZE+1];
   char * tmp = 0;
 
-  cipherlen = RSA_public_encrypt(length, data, ciphertext, rsakey, RSA_PKCS1_PADDING);
+  cipherlen = RSA_public_encrypt(length, data, ciphertext, rsakey,
+				 RSA_PKCS1_PADDING);
   if (cipherlen == (-1)) 
     return CRYPT_ERROR;
 
@@ -477,19 +506,21 @@ int crypt_rsa_encode(RSA * rsakey, unsigned char * data, char * base64text, int 
   return CRYPT_ENCRYPTED;
 }
 
-void crypt_free(struct Client * cptr) {
-  if (cptr->crypt) {
-    if (cptr->crypt->OutState)
-      free(cptr->crypt->OutState);
-    if (cptr->crypt->InState)
-      free(cptr->crypt->InState);
-    if (cptr->crypt->RSAKey)
-      RSA_free(cptr->crypt->RSAKey);
-    free(cptr->crypt);
-    cptr->crypt = 0;
-  }
+void crypt_free(struct Client * cptr)
+{
+  if (cptr->crypt)
+    {
+      if (cptr->crypt->OutState)
+	free(cptr->crypt->OutState);
+      if (cptr->crypt->InState)
+	free(cptr->crypt->InState);
+      if (cptr->crypt->RSAKey)
+	RSA_free(cptr->crypt->RSAKey);
+      free(cptr->crypt);
+      cptr->crypt = 0;
+    }
   cptr->cipher = NULL;
-};
+}
 
 int crypt_initserver(struct Client * cptr,
                      struct ConfItem * cline,
@@ -571,7 +602,8 @@ int crypt_initserver(struct Client * cptr,
 
 
 
-int crypt_encrypt(struct Client * cptr, const char * Data, int Length) {
+int crypt_encrypt(struct Client * cptr, const char * Data, int Length)
+{
   if (!cptr || !Data)
     return CRYPT_BADPARAM;
   if (!cptr->crypt)
@@ -583,22 +615,30 @@ int crypt_encrypt(struct Client * cptr, const char * Data, int Length) {
       cptr->crypt->OutCipher && cptr->crypt->OutState ? "" : "not ");
 #endif
 
-  if (cptr->crypt->flags & CRYPTFLAG_ENCRYPT) {
-    if (Length) {
-      return cptr->crypt->OutCipher->encrypt(cptr, (char *) Data, Length);
-    } else {
-      return CRYPT_ENCRYPTED;
+  if (cptr->crypt->flags & CRYPTFLAG_ENCRYPT)
+    {
+      if (Length)
+	{
+	  return cptr->crypt->OutCipher->encrypt(cptr, (char *) Data, Length);
+	}
+      else
+	{
+	  return CRYPT_ENCRYPTED;
+	}
     }
-  } else {
-    return CRYPT_NOT_ENCRYPTED;
-  }
+  else
+    {
+      return CRYPT_NOT_ENCRYPTED;
+    }
 }
 
 
 
-int crypt_decrypt(struct Client * cptr, const char * Data, int Length) {
+int crypt_decrypt(struct Client * cptr, const char * Data, int Length)
+{
   if (!cptr || !Data)
     return CRYPT_BADPARAM;
+
   if (!cptr->crypt)
     return CRYPT_NOT_DECRYPTED;
 
@@ -608,31 +648,40 @@ int crypt_decrypt(struct Client * cptr, const char * Data, int Length) {
       cptr->crypt->InCipher && cptr->crypt->InState ? "" : "not ");
 #endif
 
-  if (cptr->crypt->flags & CRYPTFLAG_DECRYPT) {
-    if (Length) {
-      return cptr->crypt->InCipher->decrypt(cptr, (char *) Data, Length);
-    } else {
-      return CRYPT_DECRYPTED;
+  if (cptr->crypt->flags & CRYPTFLAG_DECRYPT)
+    {
+      if (Length)
+	{
+	  return cptr->crypt->InCipher->decrypt(cptr, (char *) Data, Length);
+	}
+      else
+	{
+	  return CRYPT_DECRYPTED;
+	}
     }
-  } else {
-    return CRYPT_NOT_DECRYPTED;
-  }
+  else
+    {
+      return CRYPT_NOT_DECRYPTED;
+    }
 }
 
-int crypt_init() {
+int crypt_init()
+{
   RSA * rsakey = 0;
   FILE * keyfile;
   keyfile = fopen(CRYPT_LINKS_PRIVATEKEYFILE, "r");
-  if (!keyfile) {
-    log(L_CRIT, "Failed to open private key file %s", CRYPT_LINKS_PRIVATEKEYFILE);
-    return CRYPT_ERROR;
-  }
+  if (!keyfile)
+    {
+      log(L_CRIT, "Failed to open private key file %s", CRYPT_LINKS_PRIVATEKEYFILE);
+      return CRYPT_ERROR;
+    }
   rsakey = PEM_read_RSAPrivateKey(keyfile, &rsakey, 0, 0);
   fclose(keyfile);
-  if (!rsakey) {
-    log(L_CRIT, "Failed to load private key file %s", CRYPT_LINKS_PRIVATEKEYFILE);
-    return CRYPT_ERROR;
-  }
+  if (!rsakey)
+    {
+      log(L_CRIT, "Failed to load private key file %s", CRYPT_LINKS_PRIVATEKEYFILE);
+      return CRYPT_ERROR;
+    }
   crypt_free(&me);
   me.crypt = (struct CryptData *) malloc(sizeof(struct CryptData));
   memset(me.crypt, 0, sizeof(struct CryptData));
