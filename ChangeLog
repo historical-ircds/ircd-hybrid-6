@@ -2,7 +2,9 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
-version hybrid-6-b51   3-Mar-1999
+version hybrid-6-b51   10-Mar-1999
+* added WHOIS_WAIT to info output 
+-Rodder
 * was using idented username instead of ~ name for unidented clients
   for tklines caused weird bug
 * had BUFSIZ instead of BUFSIZE in strncpy() in s_serv.c broke m_unkline
