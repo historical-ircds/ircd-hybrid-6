@@ -90,11 +90,11 @@
  *
  */
 
-#define DPATH   "/home/wnder/ircd-hybrid-6/"
-#define SPATH   "/home/wnder/ircd-hybrid-6/ircd"
+#define DPATH   "/usr/local/ircd/"
+#define SPATH   "/usr/local/ircd/ircd"
 #define	CPATH	"ircd.conf"
 #define KPATH   "kline.conf"
-#define DLPATH "kline.conf"
+#define DLPATH  "kline.conf"
 #define	MPATH	"ircd.motd"
 #define	LPATH	"ircd.log"
 #define	PPATH	"ircd.pid"
@@ -369,7 +369,7 @@
  * to a leaf which just has 1 server (typically the uplink). Define this
  * correctly for performance reasons.
  */
-#define	HUB
+#undef	HUB
 
 /* CMDLINE_CONFIG - allow conf-file to be specified on command line
  * NOTE: defining CMDLINE_CONFIG and installing ircd SUID or SGID is a MAJOR

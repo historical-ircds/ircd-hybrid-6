@@ -68,7 +68,6 @@ static GLINE_PENDING *pending_glines;
 
 /* external functions */
 extern int bad_tld(char *);	/* defined in m_kline.c */
-extern int safe_write(aClient *,char *,int,char *); /* in s_conf.c */
 extern char *small_file_date(time_t);  /* defined in s_misc.c */
 extern char *smalldate(time_t);		/* defined in s_misc.c */
 
