@@ -366,7 +366,7 @@ static  int     add_denyid(aClient *cptr, aChannel *chptr, char *banid)
   if (!IsServer(cptr)) {
     regfree(&my_regex);
     if (regcomp(&my_regex, banid,
-                REG_EXTENDED|REG_NOSUB|REG_NEWLINE))
+                REG_EXTENDED|REG_ICASE|REG_NOSUB|REG_NEWLINE))
       return -1;
  
     /* dont allow local users to overflow the ban list */
@@ -381,7 +381,7 @@ static  int     add_denyid(aClient *cptr, aChannel *chptr, char *banid)
   }
   
   for (ban = chptr->denylist; ban; ban = ban->next)
-    if (strcmp(BANSTR(ban), banid)==0) 
+    if (strcasecmp(BANSTR(ban), banid)==0) 
       return -1;
   
   ban = make_link();
@@ -501,7 +501,6 @@ static  int     del_exceptid(aChannel *chptr, char *eid)
  * "del_denyid - delete an id belonging to cptr
  * if banid is null, deleteall banids belonging to cptr."
  *
- * use strcmp since this is case sensitive.
  * -sean
  */
 static  int     del_denyid(aChannel *chptr, char *banid)
@@ -631,27 +630,6 @@ static  int is_banned(aClient *cptr,aChannel *chptr)
         match(BANSTR(tmp), s2))
       break;
 
-  if (!tmp) {  /* +b match, lets check +d list */
-    for (tmp = chptr->denylist; tmp; tmp = tmp->next)
-      {
-        regfree(&my_regex);
-        /* not too sure which flags we want to use here.. may need tweaking */
-        if (regcomp(&my_regex, BANSTR(tmp), 
-                    REG_EXTENDED|REG_NOSUB|REG_NEWLINE)) 
-          {
-            /* we shouldnt have any errors compiling the regex, since
-               when they are set by users, we check validity.. 
-               could happen though... should we notify the ops perhaps? */
-            sendto_ops("WARNING - Invalid mode on %s :+d %s", chptr->chname,
-                       BANSTR(tmp));
-            continue;
-          }
-        /* only match against s, not s2 (why match numbers against a regex?) */
-        if (regexec(&my_regex, s, 0, NULL, 0)==0)
-          break;
-      }
-  }
-
   if (tmp)
     {
       for (t2 = chptr->exceptlist; t2; t2 = t2->next)
@@ -670,6 +648,28 @@ static  int is_banned(aClient *cptr,aChannel *chptr)
             return CHFL_EXCEPTION;
           }
     }
+
+
+  if (!tmp) {  /* +b match, lets check +d list */
+    for (tmp = chptr->denylist; tmp; tmp = tmp->next)
+      {
+        regfree(&my_regex);
+        /* not too sure which flags we want to use here.. may need tweaking */
+        if (regcomp(&my_regex, BANSTR(tmp), 
+                    REG_EXTENDED|REG_ICASE|REG_NOSUB|REG_NEWLINE)) 
+          {
+            /* we shouldnt have any errors compiling the regex, since
+               when they are set by users, we check validity.. 
+               could happen though... should we notify the ops perhaps? */
+            sendto_ops("WARNING - Invalid mode on %s :+d %s", chptr->chname,
+                       BANSTR(tmp));
+            continue;
+          }
+        /* only match against s, not s2 (why match numbers against a regex?) */
+        if (regexec(&my_regex, s, 0, NULL, 0)==0)
+          break;
+      }
+  }
 
   /* return CHFL_BAN for +b or +d match, we really dont need to be more
      specific */
