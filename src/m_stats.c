@@ -25,6 +25,7 @@
 #include "m_commands.h"  /* m_pass prototype */
 #include "class.h"       /* report_classes */
 #include "client.h"      /* Client */
+#include "channel.h"
 #include "common.h"      /* TRUE/FALSE */
 #include "dline_conf.h"  /* report_dlines */
 #include "irc_string.h"  /* strncpy_irc */
@@ -37,6 +38,7 @@
 #include "scache.h"      /* list_scache */
 #include "send.h"        /* sendto_one */
 #include "s_bsd.h"       /* highest_fd */
+#include "struct.h"
 #include "s_conf.h"      /* ConfItem, report_configured_links */
 #include "s_debug.h"     /* send_usage */
 #include "s_misc.h"      /* serv_info */
@@ -125,6 +127,7 @@
  *            it--not reversed as in ircd.conf!
  */
 static const char* Lformat = ":%s %d %s %s %u %u %u %u %u :%u %u %s";
+static int report_channel_stats(struct Client *sptr);
 
 int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
@@ -286,6 +289,17 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       valid_stats++;
       break;
 
+    case 'F': case 'f':
+      if(!IsAnOper(sptr))
+      {
+        sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+	break;
+      }
+
+      report_channel_stats(sptr);
+      valid_stats++;
+      break;
+      
     case 'G': case 'g' :
       if (!IsAnOper(sptr))
         {
@@ -572,4 +586,39 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 }
 
 
+static int report_channel_stats(struct Client *sptr)
+{
+  struct Channel *chptr;
+  int total_opless = 0;
+  int total = 0;
+  int opped;
 
+  for(chptr = channel; chptr; chptr = chptr->nextch)
+  {
+    struct SLink *m;
+    opped = 0;
+    
+    for (m = chptr->members; m; m = m->next)
+    {
+      if(m->flags & CHFL_CHANOP)
+      {
+        opped++;
+	break;
+      }
+    }
+
+    if(!opped)
+      total_opless++;
+
+    total++;
+  }
+
+  sendto_one(sptr, ":%s NOTICE %s :Total channels: %d.  Opless channels: %d. Hacked: %d.  Ignored: %d",
+             me.name, sptr->name, total, total_opless, total_hackops,
+	     total_ignoreops);
+
+  return 1;
+}
+
+    
+  

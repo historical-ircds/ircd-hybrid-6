@@ -247,7 +247,7 @@ static  char *  replies[] = {
 /* 221 RPL_UMODEIS, */          ":%s 221 %s %s",
 /* 222 */       (char *)NULL,
 /* 223 */       (char *)NULL,
-/* 224 */       (char *)NULL,
+/* 224 RPL_STATSJLINE */        ":%s 224 %s J %s",
 /* 225 RPL_STATSDLINE*/         ":%s 225 %s %c %s :%s",
 /* 226 */       (char *)NULL,
 /* 227 */       (char *)NULL,

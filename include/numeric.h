@@ -173,7 +173,7 @@ extern const char* form_str(int);
 
 #define RPL_UMODEIS          221
 
-#define RPL_STATSFLINE       224
+#define RPL_STATSJLINE       224
 #define RPL_STATSDLINE       225
 
 #define RPL_SERVLIST         234

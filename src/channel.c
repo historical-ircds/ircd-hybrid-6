@@ -44,13 +44,14 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef NEED_SPLITCODE
+int total_hackops = 0;
+int total_ignoreops = 0;
 
+#ifdef NEED_SPLITCODE
 static void check_still_split();
 int server_was_split=YES;
 int got_server_pong;
 time_t server_split_time;
-
 #endif
 
 struct Channel *channel = NullChn;
@@ -3658,10 +3659,13 @@ int     m_sjoin(struct Client *cptr,
     if(doesop)
       keep_our_modes = NO;
     if(haveops && !doesop)
+    {
       tstosend = oldts;
+      total_ignoreops++;
+    }
     else
       chptr->channelts = tstosend = newts;
-#endif      
+#endif /* TS5 */
 
   }
   else
@@ -3684,7 +3688,10 @@ int     m_sjoin(struct Client *cptr,
       if(haveops)
         keep_new_modes = NO;
       if (doesop && !haveops)
+      {
+	total_hackops++;
         chptr->channelts = tstosend = newts;
+      }
       else
         tstosend = oldts;
 #endif /* TS5 */	
@@ -4083,3 +4090,43 @@ int     m_sjoin(struct Client *cptr,
 }
 
 
+#ifdef JUPE_CHANNEL
+
+/*
+ * report_juped_channels
+ *
+ * inputs	- pointer to client to report to
+ * output	- none
+ * side effects	- walks hash tables directly, reporting all juped channels
+ */
+
+/* I used a random available numeric for this stats... Any servers 
+ * using a specific one? If so, tell me and I'll make a proper
+ * RPL_STATSJLINE def.
+ * --einride
+ * done - Dianora
+ */
+void report_juped_channels(struct Client *sptr)
+{
+  struct Channel * chptr;
+  int i;
+
+  if (sptr->user == NULL)
+    return;
+
+  for (i=0;i<CH_MAX;i++)
+  {
+    for (chptr = (struct Channel *) (hash_get_channel_block(i).list);
+	 chptr != NULL; chptr = chptr->hnextch)
+    {
+      if (chptr->juped)
+      {
+	sendto_one(sptr, form_str(RPL_STATSJLINE),
+		   me.name,
+		   sptr->name,
+		   chptr->chname);
+      }
+    }
+  }
+}
+#endif

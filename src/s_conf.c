@@ -2331,12 +2331,12 @@ static void initconf(FBFILE* file, int use_include)
           unsigned long ip_lmask;
           dontadd = 1;
           
-          if(!aconf->host)
+          if(aconf->host == NULL)
             DupString(aconf->host,"*");
           else
             (void)collapse(aconf->host);
 
-          if(!aconf->user)
+          if(aconf->user == NULL)
             DupString(aconf->user,"*");
           else
             (void)collapse(aconf->user);
@@ -2381,7 +2381,7 @@ static void initconf(FBFILE* file, int use_include)
 		* in the aconf->name field.
 		*/
 
-	       if( ( p = strchr(aconf->user,'@')) )
+	       if( (p = strchr(aconf->user,'@')) )
 		 {
 		   aconf->flags |= CONF_FLAGS_DO_IDENTD;
 		   *p = '\0';
@@ -2476,8 +2476,7 @@ static void initconf(FBFILE* file, int use_include)
                    * NOTE: strcpy ok since we already know the length
                    */
                   strcpy(chptr->chname, aconf->name);
-/*                chptr->juped;   what the hell was that there for?*/
-                  chptr->juped = 1;  /* maybe this ? */
+                  chptr->juped = 1;
                   if (channel)
                     channel->prevch = chptr;
                   chptr->prevch = NULL;

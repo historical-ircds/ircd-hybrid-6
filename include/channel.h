@@ -114,12 +114,16 @@ extern void    set_channel_mode(struct Client *, struct Client *,
 extern void report_juped_channels(struct Client *);
 #endif
 
+extern int total_hackops;
+extern int total_ignoreops;
+
 /* this should eliminate a lot of ifdef's in the main code... -orabidoo */
 #ifdef BAN_INFO
 #  define BANSTR(l)  ((l)->value.banptr->banstr)
 #else
 #  define BANSTR(l)  ((l)->value.cp)
 #endif
+
 
 /*
 ** Channel Related macros follow
