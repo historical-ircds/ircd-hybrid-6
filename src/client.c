@@ -1098,7 +1098,7 @@ const char* get_client_name(struct Client* client, int showip)
         return client->name;
 
 #ifdef HIDE_SERVERS_IPS
-      if(IsServer(client))
+      if(IsServer(client) || IsHandshake(client) || IsConnecting(client))
       {
         ircsprintf(nbuf, "%s[%s@255.255.255.255]", client->name,
 	           client->username);
