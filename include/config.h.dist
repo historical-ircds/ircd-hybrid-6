@@ -348,7 +348,16 @@
  * being KLINED very little difference, but you have been forewarned
  *
  */
-#define KLINE_WITH_REASON
+#undef KLINE_WITH_REASON
+
+/*
+ * If KLINE_WITH_CONNECTION_CLOSED is defined and KLINE_WITH_REASON
+ * above is undefined then the signoff reason will be "Connection
+ * closed". This prevents other users seeing the client disconnect
+ * from harassing the IRCops.
+ * However, the client will still see the real reason upon connect attempts.
+ */
+#define KLINE_WITH_CONNECTION_CLOSED
 
 /* TIMED_KLINES - bad bad evil
  * PLEASE don't define this unless you are nuts or absolutely need
@@ -393,10 +402,15 @@
 #define F_LINES_OPER_ONLY
 
 /* STATS_NOTICE - See a notice when a user does a /stats
+ * Some people find this invasive and with the STAT command on PACE throttle
+ * the server shouldn't suffer but lusers stat for different reasons and many
+ * times it's been a prelude to some other form of attack. -Wintrhawk
+ *
  * Bah. You don't need this its extra noise, the users can't
  * flood a server anyway, and its an invasion of privacy. -Dianora
+ * YOUR CHOICE ;-)
  */
-#undef STATS_NOTICE
+#define_this_or_undef_this STATS_NOTICE
 
 /* LINKS_NOTICE - See a notice when a user does a /links
  * its always defined now
@@ -732,15 +746,60 @@
  * /quote set idletime
  *
  * -Dianora
+ *
+ * IDLE_IGNORE will prevent the server from idle'ing clients connected from
+ * the listed IP#s.  This should probably be moved into a .conf file entry
+ * at some point in the future. 
+ * It has been. add '<' to I line prefix
+ *
+ * OPER_IDLE allows operators to remain idle when they idle
+ * beyond the idle limit
  */
-#undef IDLE_CHECK
-#define IDLE_TIME 30
+#undef  IDLE_CHECK
+#define IDLE_TIME 60
+#define OPER_IDLE
 
 /* If defined USE_IP_I_LINE_FIRST will search IP I lines first
  * and use that in preference over the mtrie. (hi jimmie)
  * -Dianora
  */
 #undef USE_IP_I_LINE_FIRST
+
+/* SEND_FAKE_KILL_TO_CLIENT - make the client think it's being /KILL'ed
+ * 
+ * This was originally intended to prevent clients from reconnecting to the
+ * server after being dropped for idleness.  It can probably be used for
+ * other events too.
+ *
+ * This really only works if the
+ * client was compiled with QUIT_ON_OPERATOR_KILL which was mandatory policy
+ * on UMich.Edu hosts.
+ */
+#define SEND_FAKE_KILL_TO_CLIENT
+ 
+/*
+ * Limited Trace - Reports only link and oper traces even when O:line is
+ * active.
+ *
+ * Displays only Oper, Serv, Link, and Class reports even if the O-line is
+ * active.  Useful for just showing pertinent info of a specific server. 
+ * Note however that if the target server is not running this option then
+ * you will still receive a normal trace output.  Defining this will remove
+ * "STATS p" funtionality since the two are basically redundant.
+ */
+#define LTRACE
+
+/*
+ * LWALLOPS - Like wallops but only local.
+ *
+ * This is actually a compatibility command which really calls m_locops().
+ */
+#define LWALLOPS
+
+/*
+ * Define this to enable WintrHawk "styling"
+ */
+#define WINTRHAWK
 
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 

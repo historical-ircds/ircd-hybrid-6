@@ -1455,19 +1455,24 @@ int	m_info(aClient *cptr,
 #undef OUT3
 #undef OUT4
 
-#ifdef KLINE_WITH_REASON
-#define OUT1 "KLINE_WITH_REASON=1"
+#ifdef KLINE_WITH_CONNECTION_CLOSED
+#define OUT1 "KLINE_WITH_CONNECTION_CLOSED=1"
 #else
-#define OUT1 "KLINE_WITH_REASON=0"
+#define OUT1 "KLINE_WITH_CONNECTION_CLOSED=0"
+#endif
+#ifdef KLINE_WITH_REASON
+#define OUT2 " KLINE_WITH_REASON=1"
+#else
+#define OUT2 " KLINE_WITH_REASON=0"
 #endif
 #ifdef KPATH
-#define OUT2 " KPATH=1"
+#define OUT3 " KPATH=1"
 #else
-#define OUT2 " KPATH=0"
+#define OUT3 " KPATH=0"
 #endif
 
         sendto_one(sptr, rpl_str(RPL_INFO),
-                me.name, parv[0], OUT1 OUT2);
+                me.name, parv[0], OUT1 OUT2 OUT3);
 
 #undef OUT1
 #undef OUT2
@@ -1617,23 +1622,28 @@ int	m_info(aClient *cptr,
 #undef OUT3
 #undef OUT4
 
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-#define OUT1 "SEPARATE_QUOTE_KLINES_BY_DATE=1"
+#ifdef SEND_FAKE_KILL_TO_CLIENT
+#define OUT1 "SEND_FAKE_KILL_TO_CLIENT=1"
 #else
-#define OUT1 "SEPARATE_QUOTE_KLINES_BY_DATE=0"
+#define OUT1 "SEND_FAKE_KILL_TO_CLIENT=0"
+#endif
+#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
+#define OUT2 " SEPARATE_QUOTE_KLINES_BY_DATE=1"
+#else
+#define OUT2 " SEPARATE_QUOTE_KLINES_BY_DATE=0"
 #endif
 #ifdef SHORT_MOTD
-#define OUT2 " SHORT_MOTD=1"
+#define OUT3 " SHORT_MOTD=1"
 #else
-#define OUT2 " SHORT_MOTD=0"
+#define OUT3 " SHORT_MOTD=0"
 #endif
 #ifdef SHOW_HEADERS
-#define OUT3 " SHOW_HEADERS=1"
+#define OUT4 " SHOW_HEADERS=1"
 #else
-#define OUT3 " SHOW_HEADERS=0"
+#define OUT4 " SHOW_HEADERS=0"
 #endif
         sendto_one(sptr, rpl_str(RPL_INFO),
-                me.name, parv[0], OUT1 OUT2 OUT3);
+                me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
 
 #undef OUT1
 #undef OUT2
@@ -1694,18 +1704,23 @@ int	m_info(aClient *cptr,
 #else
 #define OUT1 "USE_FAST_FD_ISSET=0"
 #endif
-#ifdef USE_SYSLOG
-#define OUT2 " USE_SYSLOG=1"
+#ifdef USE_IP_I_LINE_FIRST
+#define OUT2 "USE_IP_I_LINE_FIRST=1"
 #else
-#define OUT2 " USE_SYSLOG=0"
+#define OUT2 "USE_IP_I_LINE_FIRST=0"
+#endif
+#ifdef USE_SYSLOG
+#define OUT3 " USE_SYSLOG=1"
+#else
+#define OUT3 " USE_SYSLOG=0"
 #endif
 #ifdef USE_UH
-#define OUT3 " USE_UH=1"
+#define OUT4 " USE_UH=1"
 #else
-#define OUT3 " USE_UH=0"
+#define OUT4 " USE_UH=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3);
+		me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
 
 #undef OUT1
 #undef OUT2
@@ -1722,13 +1737,18 @@ int	m_info(aClient *cptr,
 #else
 #define OUT2 " WHOIS_NOTICE=0"
 #endif
-#ifdef ZIP_LINKS
-#define OUT3 " ZIP_LINKS=1"
+#ifdef WINTRHAWK
+#define OUT3 "WINTRHAWK=1"
 #else
-#define OUT3 " ZIP_LINKS=0"
+#define OUT3 "WINTRHAWK=0"
+#endif
+#ifdef ZIP_LINKS
+#define OUT4 " ZIP_LINKS=1"
+#else
+#define OUT4 " ZIP_LINKS=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3);
+		me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
 
 #undef OUT1
 #undef OUT2

@@ -1385,6 +1385,14 @@ char *show_iline_prefix(aClient *sptr,aConfItem *aconf,char *name)
 #endif
     if (IsConfFlined(aconf))
       *prefix_ptr++ = '>';
+
+#ifdef IDLE_CHECK  
+#ifdef E_LINES_OPER_ONLY
+  if(IsAnOper(sptr))
+#endif
+    if (IsConfIdlelined(aconf))
+      *prefix_ptr++ = '<';
+#endif
   *prefix_ptr = '\0';
 
   strncat(prefix_of_host,name,MAXPREFIX);

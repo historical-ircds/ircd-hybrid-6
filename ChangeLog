@@ -22,11 +22,21 @@ I started this file to keep track of changes made in hybrid-6,
 beginning with b37.  We are in VERY HIGH SPEED development mode,
 so it's important to keep track of this. =)
 
+version hybrid-6-b38	20-Jan-1999
 
+* bumped version up to b38
+* fixed bugs with "reason" code in ircd.c
+* duplicated config.h to config.h.dist	
+* fixed bug in ircd.c with SEND_FAKE_KILL_TO_CLIENT
+ 	if IDLE_CHECK not defined
+* Added new defines to m_info() in s_serv.c
+* Started adding code to deal with user@IP I lines to s_conf.c
+	
 ============================================================================
 |        Mon Jan 18 00:13:39 PST 1999	Jake Khuon <khuon@GCtr.Net>        |
 ============================================================================
 
+* b37mod1
 
 [1] Added the following options:
 

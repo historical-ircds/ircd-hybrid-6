@@ -1436,6 +1436,9 @@ static char *set_conf_flags(aConfItem *aconf,char *tmp)
 	case '>':	/* can exceed max connects */
 	  aconf->flags |= CONF_FLAGS_F_LINED;
 	  break;
+	case '<':	/* can idle */
+	  aconf->flags |= CONF_FLAGS_IDLE_LINED;
+	  break;
 	default:
 	  return tmp;
 	}
@@ -1884,22 +1887,55 @@ int 	initconf(int opt, int fd,int use_include)
 	  (void)collapse(aconf->host);
 	  (void)collapse(aconf->name);
 
-	  MyFree(aconf->mask);
+	  /* The idea here is, to separate a name@host part
+	   * into aconf->host part and aconf->name part
+	   * If the name@host part is found in the aconf->host field
+	   * from conf file, then it has to be an IP I line.
+	   */
+
+	  MyFree(aconf->mask);	/* aconf->mask =should= be already NULL here */
+
+	  /* Keep a copy of the original host part in "mask" */
 	  DupString(aconf->mask,aconf->host);
-	  p = strchr(aconf->name,'@');
+
+	  /* see if the name@host part is on the 'left side'
+	   * in the aconf->host field. If it is, then it should be
+	   * an IP I line only, but I won't enforce it here. 
+	   */
+
+	  p = strchr(aconf->host,'@');
 	  if(p)
 	    {
 	      aconf->flags |= CONF_FLAGS_DO_IDENTD;
 	      *p = '\0';
+	      MyFree(aconf->name);
+	      DupString(aconf->name,aconf->host);
 	      p++;
-	      MyFree(aconf->host);
-	      DupString(aconf->host,p);
+	      MyFree(aconf->mask);
+	      DupString(aconf->mask,p);
 	    }
 	  else
 	    {
-	      MyFree(aconf->host);
-	      aconf->host = aconf->name;
-	      DupString(aconf->name,"*");
+
+	    /* See if there is a name@host part on the 'right side'
+	     * in the aconf->name field.
+	     */
+
+	      p = strchr(aconf->name,'@');
+	      if(p)
+		{
+		  aconf->flags |= CONF_FLAGS_DO_IDENTD;
+		  *p = '\0';
+		  p++;
+		  MyFree(aconf->host);
+		  DupString(aconf->host,p);
+		}
+	      else
+		{
+		  MyFree(aconf->host);
+		  aconf->host = aconf->name;
+		  DupString(aconf->name,"*");
+		}
 	    }
 	  
 	  add_mtrie_conf_entry(aconf,CONF_CLIENT);

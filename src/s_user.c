@@ -705,7 +705,6 @@ static	int	register_user(aClient *cptr,
       /* If this user can run bots set it "B lined" */
       if(IsConfBlined(aconf))
 	{
-	  SetElined(sptr);
 	  SetBlined(sptr);
 	  sendto_one(sptr,
 	      ":%s NOTICE %s :*** You can run bots here. congrats.",
@@ -716,12 +715,20 @@ static	int	register_user(aClient *cptr,
       if(IsConfFlined(aconf))
 	{
 	  SetFlined(sptr);
-	  SetElined(sptr);
-	  SetBlined(sptr);
 	  sendto_one(sptr,
 	      ":%s NOTICE %s :*** You are exempt from user limits. congrats.",
 		     me.name,parv[0]);
 	}
+#ifdef IDLE_CHECK
+      /* If this user is exempt from idle time outs */
+      if(IsConfIdlelined(aconf))
+	{
+	  SetIdlelined(sptr);
+	  sendto_one(sptr,
+	      ":%s NOTICE %s :*** You are exempt from idle limits. congrats.",
+		     me.name,parv[0]);
+	}
+#endif
 
 #ifdef GLINES
       if ( (aconf=find_gkill(sptr)) )

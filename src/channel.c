@@ -2113,6 +2113,7 @@ static	void	sub1_from_channel(aChannel *chptr)
       if(server_was_split)
 	{
 	  chptr->mode.mode |= MODE_SPLIT;
+
 	  /*
 	   * Now, find all invite links from channel structure
 	   */

@@ -242,6 +242,9 @@ typedef struct	MessageFileItem aMessageFile;
 #define FLAGS2_CBURST	0x4000	/* connection burst being sent */
 
 #define FLAGS2_DOINGLIST 	0x8000  /* client is doing a list */
+#ifdef IDLE_CHECK
+#define FLAGS2_IDLE_LINED   0x10000
+#endif
 
 /* for sendto_ops_lev */
 #define CCONN_LEV	1
@@ -337,6 +340,11 @@ typedef struct	MessageFileItem aMessageFile;
 #define SetBlined(x)		((x)->flags2 |= FLAGS2_B_LINED)
 #define IsFlined(x)		((x)->flags2 & FLAGS2_F_LINED)
 #define SetFlined(x)		((x)->flags2 |= FLAGS2_F_LINED)
+
+#ifdef IDLE_CHECK
+#define SetIdlelined(x)		((x)->flags2 |= FLAGS2_IDLE_LINED)
+#define IsIdlelined(x)		((x)->flags2 & FLAGS2_IDLE_LINED)
+#endif
 
 #define SetOperGlobalKill(x)	((x)->flags2 |= FLAGS2_OPER_GLOBAL_KILL)
 #define IsOperGlobalKill(x)	((x)->flags2 & FLAGS2_OPER_GLOBAL_KILL)
@@ -469,10 +477,15 @@ struct	ConfItem
 #define CONF_FLAGS_E_LINED		0x0020
 #define CONF_FLAGS_B_LINED		0x0040
 #define CONF_FLAGS_F_LINED		0x0080
-#define CONF_FLAGS_DO_IDENTD		0x0100
-#define CONF_FLAGS_ALLOW_AUTO_CONN	0x0200
-#define CONF_FLAGS_ZIP_LINK		0x0400
-#define CONF_FLAGS_SPOOF_IP		0x0800
+
+#ifdef IDLE_CHECK
+#define CONF_FLAGS_IDLE_LINED		0x0100
+#endif
+
+#define CONF_FLAGS_DO_IDENTD		0x0200
+#define CONF_FLAGS_ALLOW_AUTO_CONN	0x0400
+#define CONF_FLAGS_ZIP_LINK		0x0800
+#define CONF_FLAGS_SPOOF_IP		0x1000
 
 #ifdef LITTLE_I_LINES
 #define CONF_FLAGS_LITTLE_I_LINE	0x8000
@@ -506,6 +519,11 @@ struct Zdata {
 #define IsConfElined(x)		((x)->flags & CONF_FLAGS_E_LINED)
 #define IsConfBlined(x)		((x)->flags & CONF_FLAGS_B_LINED)
 #define IsConfFlined(x)		((x)->flags & CONF_FLAGS_F_LINED)
+
+#ifdef IDLE_CHECK
+#define IsConfIdlelined(x)	((x)->flags & CONF_FLAGS_IDLE_LINED)
+#endif
+
 #define IsConfDoIdentd(x)	((x)->flags & CONF_FLAGS_DO_IDENTD)
 #define IsConfDoSpoofIp(x)	((x)->flags & CONF_FLAGS_SPOOF_IP)
 #ifdef LITTLE_I_LINES

@@ -357,11 +357,17 @@
  * processing slightly.. how much I can't say. For very few clients
  * being KLINED very little difference, but you have been forewarned
  *
- * If WINTRHAWK is also defined then the signoff reason will be "Connection
- * closed".  However, the client will still see the real reason upon connect
- * attempts.
  */
-#define KLINE_WITH_REASON
+#undef KLINE_WITH_REASON
+
+/*
+ * If KLINE_WITH_CONNECTION_CLOSED is defined and KLINE_WITH_REASON
+ * above is undefined then the signoff reason will be "Connection
+ * closed". This prevents other users seeing the client disconnect
+ * from harassing the IRCops.
+ * However, the client will still see the real reason upon connect attempts.
+ */
+#define KLINE_WITH_CONNECTION_CLOSED
 
 /* TIMED_KLINES - bad bad evil
  * PLEASE don't define this unless you are nuts or absolutely need
@@ -406,10 +412,15 @@
 #define F_LINES_OPER_ONLY
 
 /* STATS_NOTICE - See a notice when a user does a /stats
+ * Some people find this invasive and with the STAT command on PACE throttle
+ * the server shouldn't suffer but lusers stat for different reasons and many
+ * times it's been a prelude to some other form of attack. -Wintrhawk
+ *
  * Bah. You don't need this its extra noise, the users can't
  * flood a server anyway, and its an invasion of privacy. -Dianora
+ * YOUR CHOICE ;-)
  */
-#undef STATS_NOTICE
+#define_this_or_undef_this STATS_NOTICE
 
 /* LINKS_NOTICE - See a notice when a user does a /links
  * its always defined now
@@ -761,12 +772,12 @@
  * IDLE_IGNORE will prevent the server from idle'ing clients connected from
  * the listed IP#s.  This should probably be moved into a .conf file entry
  * at some point in the future.
+ * It has been. add '<' to I line prefix
  *
- * OPER_IDLE allows operators to remain idle when the idle
+ * OPER_IDLE allows operators to remain idle when they idle
  * beyond the idle limit
  */
-#define IDLE_CHECK
-#undef  IDLE_IGNORE "10.0.0.61"
+#undef  IDLE_CHECK
 #define IDLE_TIME 60
 #define OPER_IDLE
 
@@ -806,15 +817,6 @@
  * This is actually a compatibility command which really calls m_locops().
  */
 #define LWALLOPS
-
-/*
- * STATS_NOTICE - Notify opers on STATS request
- *
- * Some people find this invasive and with the STAT command on PACE throttle
- * the server shouldn't suffer but lusers stat for different reasons and many
- * times it's been a prelude to some other form of attack.
- */
-#define STATS_NOTICE
 
 /*
  * Define this to enable WintrHawk "styling"
