@@ -1,3 +1,7 @@
+*** 20011027_5 by bill
+- cosmetic fix changed [] to () in failed oper notice
+
+
 *** 20011027_4 by bill
 - will now compile.  we were missing two "*/"s in do_query_number()
 
