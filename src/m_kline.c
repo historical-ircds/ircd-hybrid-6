@@ -761,7 +761,8 @@ m_kline(struct Client *cptr,
 		 reason,
 		 current_date);
       DupString(aconf->passwd, buffer );
-      DupString(aconf->oper_reason, oper_reason);
+      if (oper_reason != NULL)
+	DupString(aconf->oper_reason, oper_reason);
 
       aconf->hold = CurrentTime + temporary_kline_time_seconds;
       if(ip_kline)
