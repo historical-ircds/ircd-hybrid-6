@@ -79,6 +79,40 @@ extern	char	*rindex (char *, char);
 
 #define MyFree(x)       if ((x) != NULL) free(x)
 
+#define DEBUG_BLOCK_ALLOCATOR
+#ifdef DEBUG_BLOCK_ALLOCATOR
+extern char *currentfile;
+extern int  currentline;
+
+#define free_client(x)  { currentfile = __FILE__; \
+                          currentline=__LINE__;\
+			  _free_client(x); }
+
+#define free_link(x)    { currentfile = __FILE__; \
+                          currentline=__LINE__;\
+			  _free_link(x); }
+
+#define free_user(x,y)  { currentfile = __FILE__; \
+                          currentline=__LINE__;\
+			  _free_user(x,y); }
+
+#ifdef FLUD
+#define free_fludbot(x) { currentfile = __FILE__;\
+                          currentline=__LINE__;\
+                          BlockHeapFree(free_fludbots,x); }
+#endif
+
+#else
+#define free_client(x) _free_client(x)
+#define free_link(x)   _free_link(x)
+#define free_user(x,y) _free_user(x,y)
+
+#ifdef FLUD
+#define free_fludbot(x) BlockHeapFree(free_fludbots,x)
+#endif
+
+#endif
+
 #ifdef NEXT
 #define VOIDSIG int	/* whether signal() returns int of void */
 #else

@@ -41,6 +41,9 @@ extern int server_split_recovery_time;
 extern int split_smallnet_size;
 #endif
 
+char *currentfile;
+int currentline;
+
 /* locally defined functions */
 
 
@@ -218,7 +221,7 @@ aClient	*make_client(aClient *from)
   return (cptr);
 }
 
-void free_client(aClient *cptr)
+void _free_client(aClient *cptr)
 {
   int retval = 0;
 
@@ -301,7 +304,7 @@ aServer *make_server(aClient *cptr)
 **	Decrease user reference count by one and release block,
 **	if count reaches 0
 */
-void free_user(anUser *user, aClient *cptr)
+void _free_user(anUser *user, aClient *cptr)
 {
   if (--user->refcnt <= 0)
     {
@@ -385,7 +388,7 @@ void remove_client_from_list(aClient *cptr)
       off_history(cptr);
     }
   if (cptr->user)
-    (void)free_user(cptr->user, cptr); /* try this here */
+    free_user(cptr->user, cptr); /* try this here */
   if (cptr->serv)
     {
       if (cptr->serv->user)
@@ -413,7 +416,7 @@ void remove_client_from_list(aClient *cptr)
   free_fludees(cptr);
 #endif
 
-  (void)free_client(cptr);
+  free_client(cptr);
 /* WTF is this?!#  -Taner */
   /* numclients--; */
   return;
@@ -475,7 +478,7 @@ Link *make_link()
   return lp;
 }
 
-void free_link(Link *lp)
+void _free_link(Link *lp)
 {
   if(BlockHeapFree(free_Links,lp))
     {
@@ -594,7 +597,4 @@ void del_client_from_llist(aClient **bucket, aClient *client)
     }
   client->lnext = client->lprev = (aClient *)NULL;
 }
-
-
-
 

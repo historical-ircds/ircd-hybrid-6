@@ -1,6 +1,9 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b81 12-Jun-1999
+* added more rudimentary block allocator debugging	
+-Dianora	
 version hybrid-6-b81
 * only show hacked ops if from this server to an opless channel
 * added PACE_WALLOPS wallops is not a substitute for a channel

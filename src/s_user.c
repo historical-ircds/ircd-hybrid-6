@@ -4368,7 +4368,7 @@ struct fludbot *remove_fluder_reference(struct fludbot **fluders,
 	else
 	  *fluders = next;
 	
-        BlockHeapFree(free_fludbots, current);
+	free_fludbot(current );
       }
     else
       prev = current;
@@ -4396,7 +4396,7 @@ Link *remove_fludee_reference(Link **fludees,void *fludee)
 	  else
 	    *fludees = next;
  
-          BlockHeapFree(free_Links, current);
+          free_link( current);
 	}
       else
 	prev = current;
@@ -4519,7 +4519,7 @@ int check_for_flud(aClient *fluder,	/* fluder, client being fluded */
 		  cptr->fluders = current->next;
 		else
 		  chptr->fluders = current->next;
-              BlockHeapFree(free_fludbots, current);
+              free_fludbot(current);
 	    }
 	  else
 	    prev = current;
@@ -4669,7 +4669,7 @@ void free_fluders(aClient *cptr, aChannel *chptr)
       else
 	remove_fludee_reference(&fluders->fluder->fludees, (void *)chptr);
       
-      BlockHeapFree(free_fludbots, fluders);
+      free_fludbot(fluders);
       fluders = next;
     }    
 }
@@ -4699,7 +4699,7 @@ void free_fludees(aClient *badguy)
 	    remove_fluder_reference(&fludees->value.cptr->fluders, badguy);
 	}
 
-      BlockHeapFree(free_Links, fludees);
+      free_link(fludees);
       fludees = next;
     }       
 }       
