@@ -145,7 +145,7 @@ static	int	send_message(aClient *to, char *msg, int len)
       if (IsClient(to))
 	to->flags |= FLAGS_SENDQEX;
 	if (IsDoingList(to))
-	      return dead_link(to, "Max Sendq exceeded while doing /list");
+	      return dead_link(to, "Local kill by /list (so many channels!)");
 	else
 	      return dead_link(to, "Max Sendq exceeded");
     }
