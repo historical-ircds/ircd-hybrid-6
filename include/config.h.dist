@@ -750,7 +750,7 @@
  * DEFAULT_SERVER_SPLIT_RECOVERY_TIME - determines how long to delay split
  * status after resyncing
  */
-#define DEFAULT_SERVER_SPLIT_RECOVERY_TIME 5
+#define DEFAULT_SERVER_SPLIT_RECOVERY_TIME 1
 
 /* LIMIT_UH
  * If this is defined, Y line limit is made against the actual

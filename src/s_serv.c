@@ -1309,38 +1309,49 @@ int	m_info(aClient *cptr,
 
       if (IsAnOper(sptr))
       {
+#define OUT1     "switches:"
 #ifdef ANTI_NICK_FLOOD
-	ircsprintf(outstr,
-		   "ANTI_NICK_FLOOD=1 MAX_NICK_TIME=%d MAX_NICK_CHANGES=%d",
-		   MAX_NICK_TIME,MAX_NICK_CHANGES);
-	sendto_one(sptr, rpl_str(RPL_INFO), me.name, parv[0], outstr);
+#define OUT2     " ANTI_NICK_FLOOD=1"
 #else
-	sendto_one(sptr, rpl_str(RPL_INFO), me.name, parv[0],
-		   "ANTI_NICK_FLOOD=0");
+#define OUT2     " ANTI_NICK_FLOOD=0"
 #endif
-
 #ifdef ANTI_SPAMBOT
-#define OUT1	"ANTI_SPAMBOT=1"
+#define OUT3    " ANTI_SPAMBOT=1"
 #else
-#define OUT1	"ANTI_SPAMBOT=0"
+#define OUT3    " ANTI_SPAMBOT=0"
 #endif
 #ifdef ANTI_SPAMBOT_EXTRA
-#define OUT2	" ANTI_SPAMBOT_EXTRA=1"
+#define OUT4    " ANTI_SPAMBOT_EXTRA=1"
 #else
-#define OUT2	" ANTI_SPAMBOT_EXTRA=0"
+#define OUT4    " ANTI_SPAMBOT_EXTRA=0"
 #endif
-#ifdef ANTI_SPAM_EXIT_MESSAGE
-#define OUT3	" ANTI_SPAM_EXIT_MESSAGE=1"
-#else
-#define OUT3	" ANTI_SPAM_EXIT_MESSAGE=0"
-#endif
-
-	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3 );
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], OUT1 OUT2 OUT3 OUT4 );
 #undef OUT1
 #undef OUT2
 #undef OUT3
 #undef OUT4
+
+#ifdef ANTI_SPAMBOT_WARN_ONLY
+#define OUT1	"ANTI_SPAMBOT_WARN_ONLY=1"
+#else
+#define OUT1	"ANTI_SPAMBOT_WARN_ONLY=0"
+#endif
+#ifdef ANTI_SPAM_EXIT_MESSAGE
+#define OUT2    " ANTI_SPAM_EXIT_MESSAGE=1"
+#else
+#define OUT2    " ANTI_SPAM_EXIT_MESSAGE=0"
+#endif
+#ifdef B_LINES_OPER_ONLY
+#define OUT3    " B_LINES_OPER_ONLY=1"
+#else
+#define OUT3    " B_LINES_OPER_ONLY=0"
+#endif
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
+#undef OUT1
+#undef OUT2
+#undef OUT3
 
 #ifdef BAN_INFO
 #define OUT1 "BAN_INFO=1"
@@ -1357,30 +1368,35 @@ int	m_info(aClient *cptr,
 #else
 #define OUT3 " BOT_GCOS_WARN=0"
 #endif
-#ifdef B_LINES_OPER_ONLY
-#define OUT4 " B_LINES_OPER_ONLY=1"
-#else
-#define OUT4 " B_LINES_OPER_ONLY=0"
-#endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3 );
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
 #undef OUT1
 #undef OUT2
 #undef OUT3
 #undef OUT4
 
-#ifdef CLIENT_COUNT
-#define OUT1 "CLIENT_COUNT=1"
+#ifdef CHROOTDIR
+#define OUT1 "CHROOTDIR=1"
 #else
-#define OUT1 "CLIENT_COUNT=0"
+#define OUT1 "CHROOTDIR=0"
+#endif
+#ifdef CLIENT_COUNT
+#define OUT2 " CLIENT_COUNT=1"
+#else
+#define OUT2 " CLIENT_COUNT=0"
 #endif
 #ifdef CLIENT_FLOOD
-#define OUT2 " CLIENT_FLOOD=1"
+#define OUT3 " CLIENT_FLOOD=1"
 #else
-#define OUT2 " CLIENT_FLOOD=0"
+#define OUT3 " CLIENT_FLOOD=0"
+#endif
+#ifdef CMDLINE_CONFIG
+#define OUT4 " CMDLINE_CONFIG=1"
+#else
+#define OUT4 " CMDLINE_CONFIG=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 );
+                   me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
 #undef OUT1
 #undef OUT2
 #undef OUT3
@@ -1407,12 +1423,12 @@ int	m_info(aClient *cptr,
 #define OUT4 " DNS_DEBUG=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
-
+                   me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
 #undef OUT1
 #undef OUT2
 #undef OUT3
 #undef OUT4
+
 #ifdef DO_IDENTD
 #define OUT1 "DO_IDENTD=1"
 #else
@@ -1429,8 +1445,7 @@ int	m_info(aClient *cptr,
 #define OUT3 " E_LINES_OPER_ONLY=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3);
-
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
 #undef OUT1
 #undef OUT2
 #undef OUT3
@@ -1446,9 +1461,13 @@ int	m_info(aClient *cptr,
 #else
 #define OUT2 " FLUD=0"
 #endif
+#ifdef FOLLOW_IDENT_RFC
+#define OUT3 " FOLLOW_IDENT_RFC=1"
+#else
+#define OUT3 " FOLLOW_IDENT_RFC=0"
+#endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 );
-
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
 #undef OUT1
 #undef OUT2
 #undef OUT3
@@ -1475,7 +1494,7 @@ int	m_info(aClient *cptr,
 #define OUT4 " HUB=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3 OUT4 );
+                   me.name, parv[0], OUT1 OUT2 OUT3 OUT4 );
 #undef OUT1
 #undef OUT2
 #undef OUT3
@@ -1502,8 +1521,7 @@ int	m_info(aClient *cptr,
 #define OUT4 " IGNORE_FIRST_CHAR=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
-
+                   me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
 #undef OUT1
 #undef OUT2
 #undef OUT3
@@ -1524,9 +1542,8 @@ int	m_info(aClient *cptr,
 #else
 #define OUT3 " KPATH=0"
 #endif
-
         sendto_one(sptr, rpl_str(RPL_INFO),
-                me.name, parv[0], OUT1 OUT2 OUT3);
+                   me.name, parv[0], OUT1 OUT2 OUT3);
 
 #undef OUT1
 #undef OUT2
@@ -1548,14 +1565,30 @@ int	m_info(aClient *cptr,
 #else
 #define OUT3 " LOCKFILE=0"
 #endif
-#ifdef MAXBUFFERS
-#define OUT4 " MAXBUFFERS=1"
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
+#undef OUT1
+#undef OUT2
+#undef OUT3
+#undef OUT4
+
+#ifdef LTRACE
+#define OUT1 "LTRACE=1"
 #else
-#define OUT4 " MAXBUFFERS=0"
+#define OUT1 "LTRACE=0"
+#endif
+#ifdef LWALLOPS
+#define OUT2 " LWALLOPS=1"
+#else
+#define OUT2 " LWALLOPS=0"
+#endif
+#ifdef MAXBUFFERS
+#define OUT3 " MAXBUFFERS=1"
+#else
+#define OUT3 " MAXBUFFERS=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3 OUT4 );
-
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
 #undef OUT1
 #undef OUT2
 #undef OUT3
@@ -1566,28 +1599,33 @@ int	m_info(aClient *cptr,
 #else
 #define OUT1 "NON_REDUNDANT_KLINES=0"
 #endif
-#ifdef NO_DEFAULT_INVISIBLE
-#define OUT2 " NO_DEFAULT_INVISIBLE=1"
+#ifdef NO_CHANOPS_WHEN_SPLIT
+#define OUT2 " NO_CHANOPS_WHEN_SPLIT=1"
 #else
-#define OUT2 " NO_DEFAULT_INVISIBLE=0"
+#define OUT2 " NO_CHANOPS_WHEN_SPLIT=0"
+#endif
+#ifdef NO_DEFAULT_INVISIBLE
+#define OUT3 " NO_DEFAULT_INVISIBLE=1"
+#else
+#define OUT3 " NO_DEFAULT_INVISIBLE=0"
 #endif
         sendto_one(sptr, rpl_str(RPL_INFO),
-                me.name, parv[0], OUT1 OUT2);
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
 
 #undef OUT1
 #undef OUT2
 #undef OUT3
 #undef OUT4
 
-#ifdef NO_LOCAL_KLINE
-#define OUT1 "NO_LOCAL_KLINE=1"
+#ifdef NO_JOIN_ON_SPLIT
+#define OUT1 "NO_JOIN_ON_SPLIT=1"
 #else
-#define OUT1 "NO_LOCAL_KLINE=0"
+#define OUT1 "NO_JOIN_ON_SPLIT=0"
 #endif
-#ifdef NO_DEFAULT_INVISIBLE
-#define OUT2 " NO_DEFAULT_INVISIBLE=1"
+#ifdef NO_LOCAL_KLINE
+#define OUT2 " NO_LOCAL_KLINE=1"
 #else
-#define OUT2 " NO_DEFAULT_INVISIBLE=0"
+#define OUT2 " NO_LOCAL_KLINE=0"
 #endif
 #ifdef NO_MIXED_CASE
 #define OUT3 " NO_MIXED_CASE=1"
@@ -1595,8 +1633,7 @@ int	m_info(aClient *cptr,
 #define OUT3 " NO_MIXED_CASE=0"
 #endif
         sendto_one(sptr, rpl_str(RPL_INFO),
-                me.name, parv[0], OUT1 OUT2 OUT3 );
-
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
 #undef OUT1
 #undef OUT2
 #undef OUT3
@@ -1607,33 +1644,56 @@ int	m_info(aClient *cptr,
 #else
 #define OUT1 "NO_OPER_FLOOD=0"
 #endif
-#ifdef NO_SPECIAL
-#define OUT2 " NO_SPECIAL=1"
-#else
-#define OUT2 " NO_SPECIAL=0"
-#endif
 #ifdef NO_PRIORITY
-#define OUT3 " NO_PRIORITY=1"
+#define OUT2 " NO_PRIORITY=1"
 #else
-#define OUT3 " NO_PRIORITY=0"
+#define OUT2 " NO_PRIORITY=0"
 #endif
-#ifdef OLD_Y_LIMIT
-#define OUT4 " OLD_Y_LIMIT=1"
+#ifdef NO_SPECIAL
+#define OUT3 " NO_SPECIAL=1"
 #else
-#define OUT4 " OLD_Y_LIMIT=0"
+#define OUT3 " NO_SPECIAL=0"
+#endif
+#ifdef NOISY_HTM
+#define OUT4 " NOISY_HTM=1"
+#else
+#define OUT4 " NOISY_HTM=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
+                   me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
 
 #undef OUT1
 #undef OUT2
 #undef OUT3
 #undef OUT4
 
-#ifdef REJECT_HOLD
-#define OUT1 "REJECT_HOLD=1 "
+#ifdef OLD_Y_LIMIT
+#define OUT1 "OLD_Y_LIMIT=1"
 #else
-#define OUT1 "REJECT_HOLD=0 "
+#define OUT1 "OLD_Y_LIMIT=0"
+#endif
+#ifdef PRESERVE_CHANNEL_ON_SPLIT
+#define OUT2 " PRESERVE_CHANNEL_ON_SPLIT=1"
+#else
+#define OUT2 " PRESERVE_CHANNEL_ON_SPLIT=0"
+#endif
+#ifdef REJECT_HOLD
+#define OUT3 " REJECT_HOLD=1"
+#else
+#define OUT3 " REJECT_HOLD=0"
+#endif
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
+
+#undef OUT1
+#undef OUT2
+#undef OUT3
+#undef OUT4
+
+#ifdef REPORT_DLINE_TO_USER
+#define OUT1 "REPORT_DLINE_TO_USER=1"
+#else
+#define OUT1 "REPORT_DLINE_TO_USER=1"
 #endif
 #ifdef RFC1035_ANAL
 #define OUT2 " RFC1035_ANAL=1"
@@ -1646,7 +1706,7 @@ int	m_info(aClient *cptr,
 #define OUT3 " RK_NOTICES=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3 );
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
 
 #undef OUT1
 #undef OUT2
@@ -1668,13 +1728,8 @@ int	m_info(aClient *cptr,
 #else
 #define OUT3 " R_LINES_REHASH=0"
 #endif
-#ifdef REPORT_DLINE_TO_USER
-#define OUT4 " REPORT_DLINE_TO_USER=1"
-#else
-#define OUT4 " REPORT_DLINE_TO_USER=0"
-#endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
 
 #undef OUT1
 #undef OUT2
@@ -1696,13 +1751,31 @@ int	m_info(aClient *cptr,
 #else
 #define OUT3 " SHORT_MOTD=0"
 #endif
-#ifdef SHOW_HEADERS
-#define OUT4 " SHOW_HEADERS=1"
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
+
+#undef OUT1
+#undef OUT2
+#undef OUT3
+#undef OUT4
+
+#ifdef SHOW_FAILED_OPER_ID
+#define OUT1 "SHOW_FAILED_OPER_ID=1"
 #else
-#define OUT4 " SHOW_HEADERS=0"
+#define OUT1 "SHOW_FAILED_OPER_ID=0"
+#endif
+#ifdef SHOW_FAILED_OPER_PASSWD
+#define OUT2 " SHOW_FAILED_OPER_PASSWD=1"
+#else
+#define OUT2 " SHOW_FAILED_OPER_PASSWD=0"
+#endif
+#ifdef SHOW_HEADERS
+#define OUT3 " SHOW_HEADERS=1"
+#else
+#define OUT3 " SHOW_HEADERS=0"
 #endif
         sendto_one(sptr, rpl_str(RPL_INFO),
-                me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
 
 #undef OUT1
 #undef OUT2
@@ -1714,39 +1787,47 @@ int	m_info(aClient *cptr,
 #else
 #define OUT1 "SHOW_INVISIBLE_LUSERS=0"
 #endif
+#ifdef SLAVE_SERVERS
+#define OUT2 " SLAVE_SERVERS=1"
+#else
+#define OUT2 " SLAVE_SERVERS=0"
+#endif
+#ifdef SPLIT_PONG
+#define OUT3 " SPLIT_PONG=1"
+#else
+#define OUT3 " SPLIT_PONG=0"
+#endif
+#ifdef STATS_NOTICE
+#define OUT4 " STATS_NOTICE=1"
+#else
+#define OUT4 " STATS_NOTICE=0"
+#endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1);
+                   me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
 
 #undef OUT1
 #undef OUT2
 #undef OUT3
 #undef OUT4
+
 
 #ifdef TIMED_KLINES
 #define OUT1 "TIMED_KLINES=1"
 #else
 #define OUT1 "TIMED_KLINES=0"
 #endif
-	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 );
-
-#undef OUT1
-#undef OUT2
-#undef OUT3
-#undef OUT4
-
 #ifdef TOPIC_INFO
-#define OUT1 "TOPIC_INFO=1"
+#define OUT2 " TOPIC_INFO=1"
 #else
-#define OUT1 "TOPIC_INFO=0"
+#define OUT2 " TOPIC_INFO=0"
 #endif
 #ifdef UNKLINE
-#define OUT2 " UNKLINE=1"
+#define OUT3 " UNKLINE=1"
 #else
-#define OUT2 " UNKLINE=0"
+#define OUT3 " UNKLINE=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 );
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
 
 #undef OUT1
 #undef OUT2
@@ -1758,18 +1839,23 @@ int	m_info(aClient *cptr,
 #else
 #define OUT1 "USE_IP_I_LINE_FIRST=0"
 #endif
-#ifdef USE_SYSLOG
-#define OUT2 " USE_SYSLOG=1"
+#ifdef USE_RCS
+#define OUT2 " USE_RCS=1"
 #else
-#define OUT2 " USE_SYSLOG=0"
+#define OUT2 " USE_RCS=0"
+#endif
+#ifdef USE_SYSLOG
+#define OUT3 " USE_SYSLOG=1"
+#else
+#define OUT3 " USE_SYSLOG=0"
 #endif
 #ifdef USE_UH
-#define OUT3 " USE_UH=1"
+#define OUT4 " USE_UH=1"
 #else
-#define OUT3 " USE_UH=0"
+#define OUT4 " USE_UH=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3 );
+                   me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
 
 #undef OUT1
 #undef OUT2
@@ -1797,69 +1883,145 @@ int	m_info(aClient *cptr,
 #define OUT4 " ZIP_LINKS=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
+                   me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
 
 #undef OUT1
 #undef OUT2
 #undef OUT3
 #undef OUT4
 
+#ifdef ANTI_SPAMBOT
+        ircsprintf(outstr,"values: ANTI_SPAM_EXIT_MESSAGE_TIME=%d BUFFERPOOL=%d",
+                   ANTI_SPAM_EXIT_MESSAGE_TIME, BUFFERPOOL);
+#else
+	ircsprintf(outstr,"values: BUFFERPOOL=%d",
+                   BUFFERPOOL);
+#endif
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], outstr);
+
+#ifdef LOCKFILE
+        ircsprintf(outstr,"CHECK_PENDING_KLINES=%d", CHECK_PENDING_KLINES);
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], outstr);
+#endif
+
+#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
+        defined(NO_JOIN_ON_SPLIT)
+	ircsprintf(outstr,"DEFAULT_SERVER_SPLIT_RECOVERY_TIME=%d",
+                  DEFAULT_SERVER_SPLIT_RECOVERY_TIME);
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], outstr);
+#endif
+
 #ifdef FLUD
 	ircsprintf(outstr,"FLUD_BLOCK=%d FLUD_NUM=%d FLUD_TIME=%d",
 	  FLUD_BLOCK,FLUD_NUM,FLUD_TIME);
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], outstr);
+                   me.name, parv[0], outstr);
 #endif
 #ifdef GLINES
 	ircsprintf(outstr,"GLINE_TIME=%d",GLINE_TIME);
 	sendto_one(sptr, rpl_str(RPL_INFO),
-                me.name, parv[0], outstr);
+                   me.name, parv[0], outstr);
 #endif
 #ifdef SOMAXCONN
-	ircsprintf(outstr,"HARD_FDLIMIT_=%d SOMAXCONN=%d",
+	ircsprintf(outstr,"HARD_FDLIMIT_=%d HYBRID_SOMAXCONN=SOMAXCONN=%d",
 		   HARD_FDLIMIT_,SOMAXCONN);
 #else
 	ircsprintf(outstr,"HARD_FDLIMIT_=%d HYBRID_SOMAXCONN=%d",
 		   HARD_FDLIMIT_,HYBRID_SOMAXCONN);
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], outstr);
-	ircsprintf(outstr,"PACE_WAIT=%d MAXIMUM_LINKS=%d",PACE_WAIT,MAXIMUM_LINKS);
+                   me.name, parv[0], outstr);
+
+#ifdef IDLE_CHECK
+        ircsprintf(outstr,"IDLE_TIME=%d INITIAL_DBUFS=%d INIT_MAXCLIENTS=%d",
+                   IDLE_TIME, INITIAL_DBUFS, INIT_MAXCLIENTS);
+#else
+        ircsprintf(outstr,"INITIAL_DBUFS=%d INIT_MAXCLIENTS=%d",
+                   INITIAL_DBUFS, INIT_MAXCLIENTS);
+#endif
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], outstr);
+
+#ifdef ANTI_SPAMBOT
+	ircsprintf(outstr,"JOIN_LEAVE_COUNT_EXPIRE_TIME=%d KILLCHASETIMELIMIT=%d KNOCK_DELAY=%d",
+                   JOIN_LEAVE_COUNT_EXPIRE_TIME,KILLCHASETIMELIMIT,KNOCK_DELAY);
+#else
+        ircsprintf(outstr,"KILLCHASETIMELIMIT=%d KNOCK_DELAY=%d",
+                   KILLCHASETIMELIMIT, KNOCK_DELAY);
+#endif
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], outstr);
+
+	ircsprintf(outstr,"MAXCHANNELSPERUSER=%d MAXIMUM_LINKS=%d MAX_BUFFER=%d",
+                   MAXCHANNELSPERUSER,MAXIMUM_LINKS,MAX_BUFFER);
 	sendto_one(sptr, rpl_str(RPL_INFO),
-                me.name, parv[0], outstr);
+                   me.name, parv[0], outstr);
+
+#ifdef ANTI_SPAMBOT
+        ircsprintf(outstr,"MAX_JOIN_LEAVE_COUNT=%d MIN_JOIN_LEAVE_TIME=%d",
+                  MAX_JOIN_LEAVE_COUNT,MIN_JOIN_LEAVE_TIME);
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], outstr);
+#endif
+
+#ifdef ANTI_NICK_FLOOD
 	ircsprintf(outstr,"MAX_NICK_CHANGES=%d MAX_NICK_TIME=%d",MAX_NICK_CHANGES,MAX_NICK_TIME);
         sendto_one(sptr, rpl_str(RPL_INFO),
-                me.name, parv[0], outstr);
-	ircsprintf(outstr,"NICKNAMEHISTORYLENGTH=%d NOISY_HTM=%d",NICKNAMEHISTORYLENGTH,NOISY_HTM);
-	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], outstr);
-        ircsprintf(outstr,"TS_MAX_DELTA=%d TS_WARN_DELTA=%d WHOIS_WAIT=%d",TS_MAX_DELTA,TS_WARN_DELTA,WHOIS_WAIT);
-	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], outstr);
-
-#ifdef NO_CHANOPS_WHEN_SPLIT
-#undef OUT
-#define OUT "NO_CHANOPS_WHEN_SPLIT"
+                   me.name, parv[0], outstr);
 #endif
 
-#ifdef NO_JOIN_ON_SPLIT
-#undef OUT
-#define OUT "NO_JOIN_ON_SPLIT"
+	ircsprintf(outstr,"NICKNAMEHISTORYLENGTH=%d NOISY_HTM=%d",
+                   NICKNAMEHISTORYLENGTH,NOISY_HTM);
+	sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], outstr);
+
+#ifdef ANTI_SPAMBOT
+        ircsprintf(outstr,"OPER_SPAM_COUNTDOWN=%d PACE_WAIT=%d",
+                  OPER_SPAM_COUNTDOWN,PACE_WAIT);
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], outstr);
+#else
+        ircsprintf(outstr,"PACE_WAIT=%d",PACE_WAIT);
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], outstr);
 #endif
 
-#ifdef PRESERVE_CHANNEL_ON_SPLIT
-#undef OUT
-#define OUT "PRESERVE_CHANNEL_ON_SPLIT"
+#ifdef ANTI_SPAMBOT_EXTRA
+        ircsprintf(outstr,"PRIVMSG_POSSIBLE_SPAMBOT_COUNT=%d",
+                   PRIVMSG_POSSIBLE_SPAMBOT_COUNT);
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], outstr); 
+#endif
+
+#ifdef REJECT_HOLD
+        ircsprintf(outstr,"REJECT_HOLD_TIME=%d",REJECT_HOLD_TIME);
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], outstr);
 #endif
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-	defined(NO_JOIN_ON_SPLIT)
+        defined(NO_JOIN_ON_SPLIT)
 
-        ircsprintf(outstr,"%s SPLIT_SMALLNET_SIZE %d",
-		   OUT, SPLIT_SMALLNET_SIZE) ;
-	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], outstr);
+        ircsprintf(outstr,"SPLIT_SMALLNET_SIZE=%d SPLIT_SMALLNET_USER_SIZE=%d",
+                   SPLIT_SMALLNET_SIZE,SPLIT_SMALLNET_USER_SIZE) ;
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], outstr);
 #endif
+
+        ircsprintf(outstr,"TS_MAX_DELTA=%d TS_WARN_DELTA=%d WHOIS_WAIT=%d",
+                   TS_MAX_DELTA,TS_WARN_DELTA,WHOIS_WAIT);
+	sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], outstr);
+
+#ifdef ZIP_LINKS
+        ircsprintf(outstr,"ZIP_LEVEL=%d",ZIP_LEVEL);
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], outstr); 
+#endif
+
       }
 
       sendto_one(sptr,
@@ -3430,6 +3592,9 @@ int   m_set(aClient *cptr,
 		  server_was_split = NO;
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 		  remove_empty_channels();
+#endif
+#if defined(SPLIT_PONG)
+                  got_server_pong = YES;
 #endif
 		}
               return 0;
