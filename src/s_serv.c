@@ -89,6 +89,7 @@ extern int server_split_recovery_time;	/* defined in channel.c */
 extern int split_smallnet_size;		/* defined in channel.c */
 #endif
 
+extern int cold_start;		/* defined in ircd.c */
 extern int lifesux;		/* defined in ircd.c */
 extern int rehashed;		/* defined in ircd.c */
 extern int dline_in_progress;	/* defined in ircd.c */
@@ -3343,6 +3344,11 @@ int   m_set(aClient *cptr,
               sendto_realops("%s has changed SPLITDELAY to %i",
 			     parv[0], newval);
 	      server_split_recovery_time = (newval*60);
+	      if(server_split_recovery_time == 0)
+		{
+		  cold_start = NO;
+		  server_was_split = NO;
+		}
               return 0;
             }
 	  else

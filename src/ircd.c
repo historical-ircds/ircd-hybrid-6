@@ -70,6 +70,8 @@ aMessageFile *helpfile=(aMessageFile *)NULL;
 extern time_t server_split_time;
 #endif
 
+int cold_start=YES;	/* set if the server has just fired up */
+
 #ifdef SETUID_ROOT
 #include <sys/lock.h>
 #include <sys/types.h>
@@ -809,6 +811,8 @@ int	main(int argc, char *argv[])
   uid_t	uid, euid;
   time_t	delay = 0;
   int fd;
+
+  cold_start = YES;		/* set when server first starts up */
 
   if((timeofday = time(NULL)) == -1)
     {

@@ -55,8 +55,11 @@ int server_was_split=YES;
 time_t server_split_time;
 int server_split_recovery_time = (DEFAULT_SERVER_SPLIT_RECOVERY_TIME * 60);
 int split_smallnet_size = SPLIT_SMALLNET_SIZE;
+static void check_still_split();
 #define USE_ALLOW_OP
 #endif
+
+extern int cold_start;	/* defined in ircd.c */
 
 aChannel *channel = NullChn;
 
@@ -1901,51 +1904,27 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key)
 {
   Reg	Link	*lp;
 
-#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
+  /*
+   * If a server split happens, and the channel isn't marked as in
+   * split mode, mark it as split.. if the split is over, and the 
+   * channel block is marked as split, remove the split mode bit
+   */
+
+#ifdef PRESERVE_CHANNEL_ON_SPLIT
   if(chptr->mode.mode & MODE_SPLIT)
     {
-      if((server_split_time + server_split_recovery_time) < NOW)
+      if(!server_was_split)
 	{
-	  if(Count.server > split_smallnet_size)
-	    {
-	      /* server hasn't been split for a while, but no one has
-	       * joined from elsewhere, lets expire the channel now.
-	       * The ideal thing to do now, would be to finalize removing
-	       * the channel block so this appears to be a fresh entry
-	       * on a brand new channel. With this code, the first can_join
-	       * will join the channel but still without ops, leaving/joining
-	       * will then fix it.
-	       * -Dianora
-	       */
-	      
-	      chptr->mode.mode &= ~MODE_SPLIT;
-	      server_was_split = NO;
-	      if(chptr->users == 0)
-		chptr->mode.mode = 0;
-	    }
-	  else
-	    {
-	      server_split_time = NOW; /* still split */
-#ifdef NO_JOIN_ON_SPLIT 
-	      return (ERR_NOJOINSPLIT);
-#endif
-	    }
+	  chptr->mode.mode &= ~MODE_SPLIT;
+	  if(chptr->users == 0)
+	    chptr->mode.mode = 0;
 	}
-#ifdef NO_JOIN_ON_SPLIT 
-      else
-	{
-	  return (ERR_NOJOINSPLIT);
-	}
-#endif
     }
   else
     {
       if(server_was_split)
 	{
 	  chptr->mode.mode |= MODE_SPLIT;
-#ifdef NO_JOIN_ON_SPLIT 
-	  return (ERR_NOJOINSPLIT);
-#endif
 	}
     }
 #endif
@@ -2328,6 +2307,54 @@ static void clear_bans_exceptions(aClient *sptr, aChannel *chptr)
 }
 
 
+#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
+	defined(NO_JOIN_ON_SPLIT)
+
+/*
+ * check_still_split()
+ *
+ * inputs	-NONE
+ * output	-NONE
+ * side effects -
+ * Check to see if the server split timer has expired, if so
+ * check to see if there are now a decent number of servers connected
+ * so I can consider this split over.
+ *
+ * I'm hoping that also including the network wide count of users
+ * will be unnecessary, (as the "smallnet patch" does) but if
+ * its demonstrated that its needed, this is where it should go.
+ *
+ * -Dianora
+ */
+
+static void check_still_split()
+{
+  if((server_split_time + server_split_recovery_time) < NOW)
+    {
+      /* If needed..., split_smallnet_users will also
+      * have to be defined */
+
+      /* if((Count.server > split_smallnet_size) &&
+	    (Count.total > split_smallnet_users))
+	    */
+
+      if(Count.server > split_smallnet_size)
+	{
+	  /* server hasn't been split for a while.
+	   * -Dianora
+	   */
+	  server_was_split = NO;
+	  cold_start = NO;
+	}
+      else
+	{
+	  server_split_time = NOW; /* still split */
+	  server_was_split = YES;
+	}
+    }
+}
+#endif
+
 /*
 ** m_join
 **	parv[0] = sender prefix
@@ -2365,6 +2392,20 @@ int	m_join(aClient *cptr,
       return 0;
     }
 
+
+#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
+	defined(NO_JOIN_ON_SPLIT)
+
+  /* Check to see if the timer has timed out, and if so, see if
+   * there are a decent number of servers now connected 
+   * to consider any possible split over.
+   * -Dianora
+   */
+
+  check_still_split();
+
+#endif
+
   *jbuf = '\0';
   /*
   ** Rebuild list of channels joined to be the actual result of the
@@ -2385,6 +2426,38 @@ int	m_join(aClient *cptr,
 		       me.name, parv[0], name);
 	  continue;
 	}
+
+#ifdef PRESERVE_CHANNEL_ON_SPLIT
+      /* If from a cold start, there were never any channels
+       * joined, hence all of them must be considered off limits
+       * until this server joins the network
+       */
+      if(cold_start && MyClient(sptr))
+	{
+#endif
+
+#ifdef PRESERVE_CHANNEL_ON_SPLIT
+	  if(server_was_split && (*name == '#') && !IsAnOper(sptr))
+	    {
+	      sendto_one(sptr, err_str(ERR_NOJOINSPLIT),
+			 me.name, parv[0], name);
+	      continue;
+	    }
+#endif
+#ifdef NO_JOIN_ON_SPLIT
+	  if(server_was_split && MyClient(sptr) &&
+	     (*name == '#') && !IsAnOper(sptr))
+	    {
+	      sendto_one(sptr, err_str(ERR_NOJOINSPLIT),
+			 me.name, parv[0], name);
+	      continue;
+	    }
+#endif
+
+#ifdef PRESERVE_CHANNEL_ON_SPLIT
+	}
+#endif
+
       if (*jbuf)
 	(void)strcat(jbuf, ",");
       (void)strncat(jbuf, name, sizeof(jbuf) - i - 1);
@@ -2474,31 +2547,21 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 	  flags = (ChannelExists(name)) ? 0 : CHFL_CHANOP;
 
 	/* if its not a local channel, or isn't an oper
-	     and server has been split */
+	 * and server has been split
+	 */
 
 #ifdef NO_CHANOPS_WHEN_SPLIT
-	  if((*name != '&') && !IsAnOper(sptr)
-	     && server_was_split && server_split_recovery_time)
+	  if((*name != '&') && !IsAnOper(sptr) && server_was_split)
 	    {
-	      if( (server_split_time + server_split_recovery_time) < NOW)
-		{
-		  if(Count.server > split_smallnet_size)
-		    server_was_split = NO;
-		  else
-		    {
-		      server_split_time = NO; /* still split */
-		      allow_op = NO;
-		    }
-		}
-	      else
+	      if(server_was_split)
 		{
 		  allow_op = NO;
-		}
 
-	      if(!IsRestricted(sptr) && (flags == CHFL_CHANOP))
+		  if(!IsRestricted(sptr) && (flags == CHFL_CHANOP))
 		sendto_one(sptr,":%s NOTICE %s :*** Notice -- Due to a network split, you can not obtain channel operator status in a new channel at this time.",
 			   me.name,
 			   sptr->name);
+		}
 	    }
 #endif
 
@@ -2579,6 +2642,7 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 	  sendto_one(sptr,
 		     ":%s %d %s %s :Sorry, cannot join channel.",
 		     me.name, i, parv[0], name);
+
 #ifdef ANTI_SPAMBOT
 	  if(successful_join_count > 0)
 	    successful_join_count--;

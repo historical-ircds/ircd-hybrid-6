@@ -322,9 +322,7 @@
 #define ERR_MODELESS	     477	/* ircu numeric -db */
 #define ERR_BANLISTFULL	     478	/* I stole the numeric from ircu -db */
 
-#ifdef NO_JOIN_ON_SPLIT
 #define ERR_NOJOINSPLIT	     479
-#endif
 
 #define ERR_NOPRIVILEGES     481
 #define ERR_CHANOPRIVSNEEDED 482

@@ -523,11 +523,7 @@ static	char *	replies[] = {
 /* 477 ERR_MODELESS, */		":%s 477 %s %s :Channel does not support modes",
 /* 478 ERR_BANLISTFULL, */	":%s 478 %s :Channel ban list is full",
 
-#ifdef NO_JOIN_ON_SPLIT
 /* 479 ERR_NOJOINSPLIT, */	":%s 479 %s %s :Cannot join channel on split",
-#else
-/* 479 */	(char *)NULL,
-#endif
 
 /* 480 */	(char *)NULL,
 /* 481 ERR_NOPRIVILEGES, */
