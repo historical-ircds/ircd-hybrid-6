@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.39  1999/07/27 00:51:53  tomh
+ * more connect cleanups
+ *
  * Revision 1.38  1999/07/26 05:46:35  tomh
  * new functions for s_conf cleaning up connect
  *
@@ -325,7 +328,8 @@ extern void             read_conf_files(int cold);
 
 extern struct DNSReply* conf_dns_lookup(struct ConfItem* aconf);
 extern int              attach_conf(struct Client*, struct ConfItem *);
-extern struct ConfItem* attach_confs(struct Client*, char *, int);
+extern int              attach_confs(struct Client* client, 
+                                     const char* name, int statmask);
 extern int              attach_cn_lines(struct Client* client, 
                                         const char* host);
 extern int              attach_Iline(struct Client* client, 
@@ -338,11 +342,14 @@ extern struct ConfItem* find_first_nline(struct SLink* lp);
 extern void             det_confs_butmask (struct Client *, int);
 extern int              detach_conf (struct Client *, struct ConfItem *);
 extern struct ConfItem* det_confs_butone (struct Client *, struct ConfItem *);
-extern struct ConfItem* find_conf (struct SLink *, char*, int);
 extern struct ConfItem* find_conf_exact(const char* name, const char* user, 
                                         const char* host, int statmask);
-extern struct ConfItem* find_conf_host (struct SLink *, char *, int);
-extern struct ConfItem* find_conf_ip (struct SLink *, char *, char *, int);
+extern struct ConfItem* find_conf_name(struct SLink* lp, const char* name, 
+                                       int statmask);
+extern struct ConfItem* find_conf_host(struct SLink* lp, const char* host, 
+                                       int statmask);
+extern struct ConfItem* find_conf_ip(struct SLink* lp, char* ip, char* name, 
+                                     int);
 extern struct ConfItem* find_conf_by_name(const char* name, int status);
 extern struct ConfItem* find_conf_by_host(const char* host, int status);
 extern struct ConfItem* find_kill (struct Client *);
