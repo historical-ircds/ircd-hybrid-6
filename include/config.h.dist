@@ -234,6 +234,11 @@
  */
 #define FAILED_OPER_NOTICE
 
+/* CLIENT_SERVER - Don't be so fascist about idle clients ;)
+ * changes behaviour of HTM code to make clients lag less.
+ */  
+#define CLIENT_SERVER
+
 /* SHOW_FAILED_OPER_ID - if FAILED_OPER_NOTICE is defined, also notify when
  * a client fails to oper because of a identity mismatch (wrong host or nick)
  */
