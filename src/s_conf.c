@@ -3104,6 +3104,12 @@ static int oper_flags_from_string(char *flags)
         int_flags |= FLAGS_DEBUG;
       else if(*flags == 'n')
         int_flags |= FLAGS_NCHANGE;
+      else if(*flags == 'b')
+        int_flags |= FLAGS_BOTS;
+      else if(*flags == 'x')
+        int_flags |= FLAGS_EXTERNAL;
+      else if(*flags == 'z')
+        int_flags |= FLAGS_OPERWALL;
       flags++;
     }
 
@@ -3147,6 +3153,12 @@ char *oper_flags_as_string(int flags)
     *flags_ptr++ = 'd';
   if(flags & FLAGS_NCHANGE)
     *flags_ptr++ = 'n';
+  if(flags & FLAGS_BOTS)
+    *flags_ptr++ = 'b';
+  if(flags & FLAGS_EXTERNAL)
+    *flags_ptr++ = 'x';
+  if(flags & FLAGS_OPERWALL)
+    *flags_ptr++ = 'z';
   *flags_ptr = '\0';
 
   return(flags_out);

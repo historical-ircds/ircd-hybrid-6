@@ -37,7 +37,7 @@
 #include <unistd.h>
 
 
-#define LOG_BUFSIZE 2048 
+#define LOG_BUFSIZE 2000 
 
 #ifdef USE_LOGFILE
 static int logFile = -1;
