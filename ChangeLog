@@ -1,3 +1,8 @@
+*** 20010219_1 by lusky
+- minor mode flag fixes (wc)
+- older syslog buffer fix
+
+
 *** 20010218_1 by lusky
 - revved patchlevel to 6.0.2
 - CLIENT_SERVER was missing from config.h
