@@ -100,16 +100,13 @@ static void initialize_global_set_options(void);
 static void initialize_message_files(void);
 static time_t io_loop(time_t);
 
-char    **myargv;
+char**  myargv;
 int	dorehash = 0;
+int	debuglevel = -1;	/* Server debug level */
+int	bootopt = 0;		/* Server boot option flags */
+char*   debugmode = "";		/*  -"-    -"-   -"-  */
 
-int	portnum = -1;	              /* Server port number, listening this */
-
-int	debuglevel = -1;		/* Server debug level */
-int	bootopt = 0;			/* Server boot option flags */
-char	*debugmode = "";		/*  -"-    -"-   -"-  */
-
-extern  void *edata;
+extern void* edata;
 
 
 int     rehashed = YES;

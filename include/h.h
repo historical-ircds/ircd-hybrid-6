@@ -68,13 +68,9 @@ extern	int	maxdbufalloc;
 extern  int     maxdbufblocks;
 extern	int	highest_fd;
 extern  int     debuglevel;
-extern  int     portnum;
 extern  int     debugtty;
 extern  int     maxusersperchannel;
 extern	char*   debugmode;
-extern char*    configfile;
-extern char*    sbrk0;
-
 
 extern void     outofmemory(void);               /* list.c */
 extern	time_t	check_fdlists (time_t);

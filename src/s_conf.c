@@ -55,7 +55,7 @@ extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 #endif
 
 struct sockaddr_in vserv;
-char        specific_virtual_host;
+int                specific_virtual_host = 0;
 
 int safe_write(aClient *,const char *, int, char *);
 
@@ -1678,7 +1678,6 @@ static void initconf(FBFILE* file, int use_include)
   int        i, dontadd;
   char        line[BUFSIZE];
   int        ccount = 0, ncount = 0;
-  u_long vaddr;
   aConfItem *aconf = NULL;
   aConfItem *include_conf = NULL;
   unsigned long ip;
@@ -2122,15 +2121,10 @@ static void initconf(FBFILE* file, int use_include)
             {
                 memset(&vserv,0, sizeof(vserv));
                 vserv.sin_family = AF_INET;
-                vaddr = inet_addr(aconf->passwd);
-                memcpy( (void *)&vserv.sin_addr,
-                        (void *) &vaddr, sizeof(struct in_addr));
+                vserv.sin_addr.s_addr = inet_addr(aconf->passwd);
                 specific_virtual_host = 1;
             }
           }
-
-          if (portnum < 0 && aconf->port >= 0)
-            portnum = aconf->port;
         }
       else if (aconf->host && (aconf->status & CONF_CLIENT))
         {

@@ -24,6 +24,13 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.23  1999/07/19 09:05:14  tomh
+ * Work on char attributes for nick names, changed isvalid macro
+ * Const correctness changes
+ * Fixed file close bug on successful read
+ * Header cleanups
+ * Checked all strncpy_irc usage added terminations where needed
+ *
  * Revision 1.22  1999/07/18 17:50:52  db
  * - more header cleanups
  *
@@ -207,8 +214,8 @@ struct ConfItem
 #define CONF_FLAGS_LITTLE_I_LINE        0x8000
 #endif
 
-extern struct ConfItem* ConfigItemList;   /* GLOBAL - conf list head */
-
+extern struct ConfItem* ConfigItemList;        /* GLOBAL - conf list head */
+extern int              specific_virtual_host; /* GLOBAL - used in s_bsd.c */
 
 extern struct ConfItem* make_conf(void);
 extern void             free_conf(struct ConfItem*);

@@ -98,6 +98,7 @@ extern const unsigned int CharAttrs[];
 #define CHANPFX_C 0x200
 
 #define IsChanPrefix(c) (CharAttrs[(unsigned char)(c)] & CHANPFX_C)
+#define	IsChanChar(c)   (CharAttrs[(unsigned char)(c)] & CHAN_C)
 #define IsKWildChar(c)  (CharAttrs[(unsigned char)(c)] & KWILD_C)
 #define	IsNickChar(c)   (CharAttrs[(unsigned char)(c)] & NICK_C)
 #define	IsCntrl(c)      (CharAttrs[(unsigned char)(c)] & CNTRL_C)

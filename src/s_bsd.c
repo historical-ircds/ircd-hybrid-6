@@ -53,11 +53,6 @@
 #include <sys/param.h>    /* NOFILE */
 #include <arpa/inet.h>
 
-#if defined(SOL20) 
-#include <sys/filio.h>
-#include <sys/select.h>
-#endif
-
 /*
  * Stuff for poll()
  */
@@ -95,7 +90,7 @@ extern fdlist busycli_fdlist;
 #endif
 extern fdlist default_fdlist;
 
-#if defined(MAXBUFFERS) && !defined(SEQUENT)
+#if defined(MAXBUFFERS)
 int rcvbufmax = 0;
 int sndbufmax = 0;
 #endif
@@ -103,11 +98,11 @@ int sndbufmax = 0;
 void        reset_sock_opts (int, int);
 #endif
 
-extern char specific_virtual_host;   /* defined in s_conf.c */
+// extern int                specific_virtual_host;   /* defined in s_conf.c */
 extern struct sockaddr_in vserv;     /* defined in s_conf.c */
-extern aClient *serv_cptr_list;      /* defined in ircd.c */
-extern aClient *local_cptr_list;     /* defined in ircd.c */
-extern aClient *oper_cptr_list;      /* defined in ircd.c */
+extern aClient*           serv_cptr_list;      /* defined in ircd.c */
+extern aClient*           local_cptr_list;     /* defined in ircd.c */
+extern aClient*           oper_cptr_list;      /* defined in ircd.c */
 
 const char* const NB_ERROR_MESSAGE = "set_non_blocking failed for %s:%s"; 
 
@@ -1931,9 +1926,9 @@ static struct sockaddr* connect_inet(aConfItem *aconf, aClient *cptr,
       memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
     }
   server.sin_addr.s_addr = aconf->ipnum.s_addr;
-  cptr->ip.s_addr = aconf->ipnum.s_addr;
-  server.sin_port = htons((aconf->port > 0) ? aconf->port : portnum);
-  *lenp = sizeof(server);
+  cptr->ip.s_addr        = aconf->ipnum.s_addr;
+  server.sin_port        = htons(aconf->port);
+  *lenp                  = sizeof(server);
   return (struct sockaddr*) &server;
 }
 

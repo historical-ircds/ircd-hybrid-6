@@ -45,6 +45,7 @@
 #include "hash.h"
 #include "whowas.h"
 
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 
