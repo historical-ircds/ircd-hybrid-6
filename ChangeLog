@@ -1,3 +1,16 @@
+db          2001/12/29 22:36:49 EST	(20011230_1)
+
+  Modified files:
+    src                  s_conf.c 
+  Log:
+  - redid temp kline expiry. It really should have been an event...
+    This resolves a bug freeing a tkline twice.
+  
+  Revision  Changes    Path
+  1.235     +99 -150   ircd-hybrid-6/src/s_conf.c
+
+
+
 lusky       2001/12/29 22:25:50 EST	(20011230_0)
 
   Modified files:
