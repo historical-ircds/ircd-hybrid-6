@@ -1,3 +1,16 @@
+androsyn    2002/02/04 11:25:04 EST	(20020204_1)
+
+  Modified files:
+    adns                 setup.c 
+  Log:
+  Here is that newline gcc was bitching about.  gcc can be quite the vile
+  mistress.
+  
+  Revision  Changes    Path
+  1.10      +2 -1      ircd-hybrid-6/adns/setup.c
+
+
+
 androsyn    2002/02/04 09:49:28 EST	(20020204_0)
 
   Modified files:
