@@ -1217,12 +1217,8 @@ aConfItem *find_special_conf(char *to_find, int mask)
   else
     return((aConfItem *)NULL);
 
-  for (aconf = this_conf, mask &= ~CONF_ILLEGAL; aconf; aconf = aconf->next)
+  for (aconf = this_conf; aconf; aconf = aconf->next)
     {
-      /* This shouldn't happen, since there are separate conf link lists
-       * for X lines and Q lines now. i.e. no mixed conf items on these
-       * lists.
-       */
       if (!(aconf->status & mask))
 	continue;
       

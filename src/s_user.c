@@ -2037,7 +2037,15 @@ static	int	m_message(aClient *cptr,
 		     cmd, nick, parv[2]);
 	  return 0;
 	}
+
       *server = '\0';
+
+      /* special case opers@server */
+      if(!strcasecmp(nick,"opers"))
+	{
+	  sendto_realops("To opers: From %s: %s",parv[0],parv[2]);
+	  return 0;
+	}
 	
       if ((host = (char *)strchr(nick, '%')))
 	*host++ = '\0';

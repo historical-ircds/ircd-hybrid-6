@@ -504,13 +504,8 @@ int	m_info(aClient *cptr,
 #else
 #define OUT2 " SHOW_FAILED_OPER_PASSWD=0"
 #endif
-#ifdef SHOW_HEADERS
-#define OUT3 " SHOW_HEADERS=1"
-#else
-#define OUT3 " SHOW_HEADERS=0"
-#endif
         sendto_one(sptr, rpl_str(RPL_INFO),
-                   me.name, parv[0], OUT1 OUT2 OUT3 );
+                   me.name, parv[0], OUT1 OUT2 );
 
 #undef OUT1
 #undef OUT2

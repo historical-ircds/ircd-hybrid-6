@@ -1533,7 +1533,7 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
       for (auth = AuthPollList; auth; auth = auth->next) {
         if (IsAuthConnect(auth))
           FD_SET(auth->fd, write_set);
-        else
+        else if(IsAuthPending(auth))
           FD_SET(auth->fd, read_set);
       }
       for (i = 0; i <= highest_fd; i++)
@@ -1640,7 +1640,7 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
       if (0 == --nfds)
         break;
     }
-    else if (FD_ISSET(auth->fd, read_set)) {
+    else if (IsAuthPending(auth) && FD_ISSET(auth->fd, read_set)) {
       read_auth_reply(auth);
       if (0 == --nfds)
         break;

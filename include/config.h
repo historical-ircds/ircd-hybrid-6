@@ -331,10 +331,6 @@
 #define PACE_WALLOPS
 #define WALLOPS_WAIT 10	
 
-/* SHOW_HEADERS - Shows messages like "looking up hostname" 
- */
-#define SHOW_HEADERS
-
 /* SHORT_MOTD
  * There are client ignoring the FORCE_MOTD MOTD numeric, there is
  * no point forcing MOTD on connecting clients IMO. Give them a short
