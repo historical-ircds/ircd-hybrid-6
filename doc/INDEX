@@ -1,0 +1,27 @@
+CIDR.txt              - A great description of CIDR notation for both new
+                        and experienced users.
+README.TSora          - Protocol specs for the TS3 protocol that Hybrid uses
+                        to manage user and channel timestamping.
+Tao-of-IRC.940110     - No comment.
+blalloc.txt           - An overview of Wohali's block allocator.
+cryptlink.txt         - Protocol specs for encrypted connections.
+encryption.txt        - An administrator's guide to configuring encrypted
+                        server connections.
+example.conf          - Hybrid's example configuration file.
+example.conf.trillian - Trillian's example configuration file, includes some
+                        things that the standard Hybrid conf does not, also
+                        lacks some.
+ircd.8                - ircd's manpage, installed with the daemon, read with
+                        'man -M . ircd' in the installed ircd directory.
+mtrie.txt             - A technical guide to the I/K line matching code
+old/                  - Historical and legacy documentation.
+operguide.txt         - Riedel's very good IRC Operator guide, geared mainly
+                        towards EFNet but still useful elsewhere.
+opermyth.txt          - Ray Power's e-mail post to dispel myths about what
+                        IRC Operators really can and cannot do.
+rfc1459.txt           - The old irc protocol standard.
+server-version-info   - Description of the VERSION flags and what they mean.
+simple.conf           - A very simple ircd.conf file that provides a way to
+                        easily and quickly create a basic conf file.
+yline.txt             - A reference guide to Y: lines, and common Y: line
+                        issues.
