@@ -734,10 +734,13 @@ void remove_client_from_list(struct Client* cptr)
 
   if (cptr->prev)
     cptr->prev->next = cptr->next;
+  else
+    {
+      GlobalClientList = cptr->next;
+      GlobalClientList->prev = NULL;
+    }
   if (cptr->next)
     cptr->next->prev = cptr->prev;
-  if (cptr == GlobalClientList)
-    GlobalClientList = cptr->next;
   cptr->next = cptr->prev = NULL;
 
   /*
@@ -1657,3 +1660,4 @@ void count_remote_client_memory(int *remote_client_memory_used,
                         remote_client_memory_used,
                         remote_client_memory_allocated);
 }
+
