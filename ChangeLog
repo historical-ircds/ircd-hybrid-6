@@ -1,3 +1,21 @@
+lusky       2002/04/15 19:13:04 EDT	(20020416_0)
+
+  Modified files:
+    .                    ChangeLog 
+    src                  ircd_signal.c m_lusers.c 
+  Log:
+  - changed lusers to be paced by HWOIS_WAIT
+  - SIGTRAP fix for attaching gdb on freebsd (hwy)
+  
+  Approved by:    jrl
+  
+  Revision  Changes    Path
+  1.606     +0 -12     ircd-hybrid-6/ChangeLog
+  1.5       +2 -0      ircd-hybrid-6/src/ircd_signal.c
+  1.2       +2 -2      ircd-hybrid-6/src/m_lusers.c
+
+
+
 lusky       2002/04/15 18:38:25 EDT	(20020415_0)
 
   Modified files:
