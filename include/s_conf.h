@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.5  1999/07/08 22:46:22  db
+ * - changes to centralize config.h ircd config files to one struct
+ *
  * Revision 1.4  1999/07/04 09:00:48  tomh
  * more cleanup, only call delete_resolver_queries when there are outstanding requests
  *
@@ -156,7 +159,7 @@ extern struct ConfItem* find_conf_ip (struct SLink *, char *, char *, int);
 extern struct ConfItem* find_conf_name (char *, int);
 extern struct ConfItem* find_kill (struct Client *);
 
-typedef struct
+typedef struct MessageFileItem
 {
   char	line[MESSAGELINELEN];
   struct MessageFileItem *next;
