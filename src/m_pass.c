@@ -122,7 +122,7 @@ int m_pass(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
        * safely assume if there is a ":TS" then its a TS server
        * -Dianora
        */
-      if ((0 == irccmp(parv[2], "TS") && (cptr->tsinfo == 0))
+      if ((0 == irccmp(parv[2], "TS")) && (cptr->tsinfo == 0))
         cptr->tsinfo = TS_DOESTS;
     }
   return 0;
