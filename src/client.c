@@ -1517,7 +1517,7 @@ const char* comment        /* Reason for the exit */
                 myctime(sptr->firsttime),
                 on_for / 3600, (on_for % 3600)/60,
                 on_for % 60, sptr->name,
-                sptr->user->username, sptr->user->host,
+                sptr->username, sptr->host,
                 sptr->sendK, sptr->receiveK);
 # else
           {

@@ -803,16 +803,9 @@ static int proc_answer(ResRQ* request, HEADER* header,
      */ 
     hp->h_addr_list = (char**)(request->he.buf + ALIAS_BLEN);
     /*
-     * copy the host address to the beginning of h_addr_list
+     * don't copy the host address to the beginning of h_addr_list
      */
-    if (request->addr.s_addr != INADDR_NONE) {
-      address = request->he.buf + ADDRS_OFFSET;
-      memcpy(address, &request->addr, sizeof(struct in_addr));
-      hp->h_addr_list[0] = address;
-      hp->h_addr_list[1] = NULL;
-    }
-    else
-      hp->h_addr_list[0] = NULL;
+    hp->h_addr_list[0] = NULL;
   }
   endp = request->he.buf + MAXGETHOSTLEN;
   /*
@@ -860,8 +853,19 @@ static int proc_answer(ResRQ* request, HEADER* header,
    * process each answer sent to us blech.
    */
   while (header->ancount-- > 0 && current < eob && name < endp) {
-    if ((n = dn_expand(buf, eob, current, hostbuf, sizeof(hostbuf))) <= 0)
+    n = dn_expand(buf, eob, current, hostbuf, sizeof(hostbuf));
+    if (n < 0) {
+      /*
+       * broken message
+       */
+      return 0;
+    }
+    else if (n == 0) {
+      /*
+       * no more answers left
+       */
       return answer_count;
+    }
     hostbuf[HOSTLEN] = '\0';
     /* 
      * With Address arithmetic you have to be very anal
@@ -918,8 +922,19 @@ static int proc_answer(ResRQ* request, HEADER* header,
       ++answer_count;
       break;
     case T_PTR:
-      if ((n = dn_expand(buf, eob, current, hostbuf, sizeof(hostbuf))) < 0)
+      n = dn_expand(buf, eob, current, hostbuf, sizeof(hostbuf));
+      if (n < 0) {
+        /*
+         * broken message
+         */
+        return 0;
+      }
+      else if (n == 0) {
+        /*
+         * no more answers left
+         */
         return answer_count;
+      }
       /*
        * This comment is based on analysis by Shadowfax, Wohali and johan, 
        * not me.  (Dianora) I am only commenting it.
@@ -1037,6 +1052,15 @@ void get_res(void)
   if (answer_count) {
     if (request->type == T_PTR) {
       struct DNSReply* reply = NULL;
+      if (0 == request->he.h.h_name) {
+        /*
+         * got a PTR response with no name, something bogus is happening
+         * don't bother trying again, the client address doesn't resolve
+         */
+        (*request->query.callback)(request->query.vptr, reply);
+        rem_request(request);
+        return;
+      }
       
       Debug((DEBUG_DNS, "relookup %s <-> %s",
              request->he.h.h_name, inetntoa((char*) &request->he.h.h_addr)));

@@ -350,10 +350,6 @@ int show_lusers(struct Client *cptr, struct Client *sptr,
   if ((m_client + m_server) > MaxConnectionCount)
     {
       MaxConnectionCount = m_client + m_server;
-      if (MaxConnectionCount % 10 == 0)
-        sendto_ops(
-                   "New highest connections: %d (%d clients)",
-                   MaxConnectionCount, MaxClientCount);
     }
 
   return 0;

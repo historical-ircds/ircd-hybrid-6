@@ -183,8 +183,8 @@ static void auth_dns_callback(void* vptr, struct DNSReply* reply)
      * the ip#(s) for the socket is listed for the host.
      */
     for (i = 0; hp->h_addr_list[i]; ++i) {
-      if (0 == memcmp(hp->h_addr_list[i], (char*) &auth->client->ip,
-                      sizeof(struct in_addr)))
+      if (memcmp(hp->h_addr_list[i], (char*) &auth->client->ip,
+                      sizeof(struct in_addr)) == 0)
          break;
     }
     if (!hp->h_addr_list[i])
