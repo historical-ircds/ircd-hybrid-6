@@ -208,6 +208,10 @@ struct pkl {
 time_t	pending_kline_time = 0;
 #endif
 
+#ifdef PACE_WALLOPS
+time_t last_used_wallops = 0L;
+#endif
+
 
 /*
 ** m_functions execute protocol messages on this server:
@@ -2404,6 +2408,17 @@ int     m_wallops(aClient *cptr,
 
   if(!IsServer(sptr))	/* If source of message is not a server, i.e. oper */
     {
+
+#ifdef PACE_WALLOPS
+      if( MyClient(sptr) && ((last_used_wallops + WALLOPS_WAIT) > NOW) )
+	{
+	  sendto_one(sptr, ":%s NOTICE %s :Oh, one of those annoying opers who doesn't know how to use a channel",
+		     me.name,parv[0]);
+	  return 0;
+	}
+      last_used_wallops = NOW;
+#endif
+
       send_operwall(sptr, "WALLOPS", message);
       sendto_serv_butone( IsServer(cptr) ? cptr : NULL,
 			  ":%s WALLOPS :%s", parv[0], message);
@@ -2486,6 +2501,7 @@ int     m_locops(aClient *cptr,
 
   if(MyConnect(sptr) && IsAnOper(sptr))
     {
+
 #ifdef SLAVE_SERVERS
       sendto_slaves(NULL,"LOCOPS",sptr->name,parc,parv);
 #endif
@@ -2528,6 +2544,17 @@ int     m_operwall(aClient *cptr,
   if (strlen(message) > TOPICLEN)
     message[TOPICLEN] = '\0';
     */
+
+#ifdef PACE_WALLOPS
+  if( MyClient(sptr) && ((last_used_wallops + WALLOPS_WAIT) > NOW) )
+    {
+      sendto_one(sptr, ":%s NOTICE %s :Oh, one of those annoying opers who doesn't know how to use a channel",
+		 me.name,parv[0]);
+      return 0;
+    }
+  last_used_wallops = NOW;
+#endif
+
   sendto_serv_butone(IsServer(cptr) ? cptr : NULL, ":%s OPERWALL :%s",
 		     parv[0], message);
   send_operwall(sptr, "OPERWALL", message);

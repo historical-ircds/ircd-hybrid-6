@@ -1813,7 +1813,7 @@ void read_clients()
 	      {
 		ircstp->is_ref++;
 		/* slow down the whining to opers bit */
-		if((last_full_to_opers_notice + 10) <= NOW)
+		if((last_full_to_opers_notice + 20) <= NOW)
 		  {
 		    sendto_realops("All connections in use. (%s)",
 				   get_client_name(cptr, TRUE));

@@ -416,6 +416,12 @@
  */
 #define KNOCK_DELAY 300
 
+/* If you are an admin that does not think operwall/wallops
+ * should be used instead of a channel, define this.
+ */
+#define PACE_WALLOPS
+#define WALLOPS_WAIT 10	
+
 /* EXTRA_BOT_NOTICES - Have the server send extra bot notices?
  */
 #define EXTRA_BOT_NOTICES

@@ -1,6 +1,11 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b81
+* only show hacked ops if from this server to an opless channel
+* added PACE_WALLOPS wallops is not a substitute for a channel
+-Dianora
+	
 version hybrid-6-b80
 * fixed "cannot join" numerics to display full error messages
 * fixed ERR_BANLISTFULL to include channel name and banid

@@ -4314,7 +4314,15 @@ int	m_sjoin(aClient *cptr,
       clear_bans_exceptions(sptr,chptr);
 
       if (haveops && !doesop)
-	tstosend = oldts;
+	{
+	  tstosend = oldts;
+	  /* Only warn of Hacked ops if the ops are hacked
+	   * on a channel from this side of the join
+	   */
+
+	  sendto_realops("Hacked ops locally on opless channel: %s",
+			 chptr->chname);
+	}
       else
 	chptr->channelts = tstosend = newts;
     }
@@ -4327,18 +4335,6 @@ int	m_sjoin(aClient *cptr,
       if (doesop && !haveops)
 	{
 	  chptr->channelts = tstosend = newts;
-
-	  /* Only warn of Hacked ops if the channel already
-	   * existed on this side.
-	   * This should drop the number of warnings down dramatically
-	   */
-
-	  if (MyConnect(sptr) && !isnew)
-	    {
-	      sendto_realops("Hacked ops from %s on opless channel: %s",
-			     sptr->name,
-			     chptr->chname);
-	    }
 	}
       else
 	tstosend = oldts;
