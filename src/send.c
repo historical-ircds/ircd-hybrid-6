@@ -1525,13 +1525,14 @@ register char f;
 	    rp = inp[++i];                  /* get the next parameter */
 	    break;
 	  case 'c':
-	    *wp++ = (char)(int)rp;
+	    *wp++ = (char)(long)rp;
 	    rp = inp[++i];
 	    break;
 	  case 'd':
 	    {
-	      register int myint,quotient;
-	      myint = (int)rp;
+	      register int quotient;
+              register long myint;
+	      myint = (long)rp;
 	      if (myint > 999 || myint < 0)
 		{
 		  /* don't call ircsprintf here... that's stupid.. */
@@ -1564,8 +1565,8 @@ register char f;
 	  break;
 	  case 'u':
 	    {
-	      register unsigned int myuint;
-	      myuint = (unsigned int)rp;
+	      register unsigned long myuint;
+	      myuint = (unsigned long)rp;
 
 	      if (myuint < 100 || myuint > 999)
 		{

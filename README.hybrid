@@ -1,5 +1,6 @@
 +hybrid-6 (11/25/1998)
-- non chanops cannot see +e
+- applied a pile of fixes for alphas made by jailbird, Dustin Marquess
+ (jailbird@alcatraz.fdf.net)- non chanops cannot see +e
 - removed ANTI_IP_SPOOF (Dianora)
 - redid semantics of LITTLE_I_LINES. Clients who are i lined
   can be opped, they can do everything a normal op can do,

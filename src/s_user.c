@@ -1147,7 +1147,7 @@ static	int	register_user(aClient *cptr,
       
       sendto_one(sptr,
 		 rpl_str(RPL_MOTD),
-		 nme.name, parv[0],
+		 me.name, parv[0],
 		 "*** This is the short motd ***"
 		 );
 

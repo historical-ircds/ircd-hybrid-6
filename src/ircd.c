@@ -41,7 +41,7 @@ static char *rcs_version="$Id$";
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#define RUSAGE_SELF 0
+#undef RUSAGE_SELF 0
 #undef RUSAGE_CHILDREN /* hack for old slackware */
 #define RUSAGE_CHILDREN -1
 
