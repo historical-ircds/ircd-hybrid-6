@@ -21,6 +21,7 @@ class.o: class.c ../include/class.h ../include/struct.h \
  ../include/send.h
 client.o: client.c ../include/client.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../include/dbuf.h \
+ ../include/s_conf.h ../include/fileio.h ../include/motd.h \
  ../include/struct.h ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h \
  ../include/blalloc.h ../include/res.h ../include/common.h \
  ../include/irc_string.h ../include/numeric.h ../include/h.h \
@@ -44,8 +45,9 @@ fdlist.o: fdlist.c ../include/struct.h ../include/config.h \
  ../include/common.h ../include/irc_string.h ../include/h.h \
  ../include/fdlist.h
 fileio.o: fileio.c ../include/fileio.h
-hash.o: hash.c ../include/hash.h ../include/struct.h \
- ../include/config.h ../include/setup.h ../include/ircd_defs.h \
+hash.o: hash.c ../include/s_conf.h ../include/config.h \
+ ../include/setup.h ../include/fileio.h ../include/ircd_defs.h \
+ ../include/motd.h ../include/hash.h ../include/struct.h \
  ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h ../include/client.h \
  ../include/dbuf.h ../include/common.h ../include/irc_string.h \
  ../include/numeric.h ../include/msg.h ../include/h.h \
@@ -199,11 +201,11 @@ s_serv.o: s_serv.c ../include/struct.h ../include/config.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \
  ../include/common.h ../include/irc_string.h ../include/numeric.h \
  ../include/msg.h ../include/channel.h ../include/h.h \
- ../include/fdlist.h ../include/s_bsd.h ../include/dline_conf.h \
- ../include/mtrie_conf.h ../include/fileio.h ../include/res.h \
- ../include/s_conf.h ../include/motd.h ../include/class.h \
- ../include/send.h ../include/hash.h ../include/s_debug.h \
- ../include/listener.h ../include/restart.h
+ ../include/fdlist.h ../include/s_zip.h ../include/s_bsd.h \
+ ../include/dline_conf.h ../include/mtrie_conf.h ../include/fileio.h \
+ ../include/res.h ../include/s_conf.h ../include/motd.h \
+ ../include/class.h ../include/send.h ../include/hash.h \
+ ../include/s_debug.h ../include/listener.h ../include/restart.h
 s_user.o: s_user.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../zlib/zlib.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \
@@ -216,8 +218,7 @@ s_user.o: s_user.c ../include/struct.h ../include/config.h \
 s_zip.o: s_zip.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../zlib/zlib.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \
- ../include/h.h ../include/fdlist.h ../include/send.h \
- ../include/irc_string.h
+ ../include/send.h ../include/irc_string.h ../include/s_bsd.h
 scache.o: scache.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../zlib/zlib.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \

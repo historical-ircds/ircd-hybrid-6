@@ -32,6 +32,7 @@
 #include "msg.h"
 #include "channel.h"
 #include "h.h"
+#include "s_zip.h"
 #include "s_bsd.h"
 #include "dline_conf.h"
 #include "mtrie_conf.h"
