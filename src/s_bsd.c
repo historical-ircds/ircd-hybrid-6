@@ -1427,8 +1427,8 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
       --nfds;
 
       /*
-      ** ...room for writing, empty some queue then...
-      */
+       * ...room for writing, empty some queue then...
+       */
       if (IsConnecting(cptr))
         write_err = completed_connection(cptr);
       if (!write_err)
@@ -1451,8 +1451,6 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
       length = parse_client_queued(cptr);
 
     if (length > 0 || length == FLUSH_BUFFER)
-      continue;
-    if (length == FLUSH_BUFFER)
       continue;
     if (IsDead(cptr)) {
        exit_client(cptr, cptr, &me,
@@ -1727,8 +1725,6 @@ int read_message(time_t delay, fdlist *listp)
         length = parse_client_queued(cptr);
 
       if (length > 0 || length == FLUSH_BUFFER)
-        continue;
-      if (length == FLUSH_BUFFER)
         continue;
       if (IsDead(cptr)) {
          exit_client(cptr, cptr, &me,
