@@ -1,3 +1,9 @@
+*** 19991222_1 by lusky
+changed BUFFERPOOL definition to try to fix mass disconnects during netsplits
+  on larger (over 8k local clients) servers
+revved patchlevel to b118
+
+
 *** 19991220_1 by lusky
 patch for core if there were no klines at all (db)
 revved patchlevel to b117
