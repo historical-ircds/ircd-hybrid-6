@@ -87,6 +87,8 @@ static FLAG_ITEM user_modes[] =
   {FLAGS_INVISIBLE, 'i'},
   {FLAGS_SKILL, 'k'},
   {FLAGS_NCHANGE, 'n'},
+  {FLAGS_OPER, 'o'},
+  {FLAGS_LOCOP, 'O'},
   {FLAGS_REJ, 'r'},
   {FLAGS_SERVNOTICE, 's'},
   {FLAGS_WALLOP, 'w'},
@@ -1582,6 +1584,7 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
 		{
 		  Count.oper++;
 		  SetOper(sptr);
+		  sptr->umodes |= FLAGS_OPER;
 		}
 	      flag = user_modes_from_c_to_bitmask[(int)(*m & 0x1F)];
 	      if( flag == FLAGS_INVISIBLE )
@@ -3233,11 +3236,13 @@ int	m_oper(aClient *cptr,
   if ((aconf->status & CONF_OPS) &&
       0 == strcmp(encr, aconf->passwd) && !attach_conf(sptr, aconf))
     {
-      int old = (sptr->flags & ALL_UMODES);
+      int old = (sptr->umodes & ALL_UMODES);
       
       if (aconf->status == CONF_LOCOP)
 	{
 	  SetLocOp(sptr);
+	  /* replicate oper mode here */
+	  sptr->umodes |= FLAGS_LOCOP;
 	  if((int)aconf->hold)
 	    {
 	      sptr->umodes |= ((int)aconf->hold & ALL_UMODES); 
@@ -3259,6 +3264,7 @@ int	m_oper(aClient *cptr,
       else
 	{
 	  SetOper(sptr);
+	  sptr->umodes |= FLAGS_OPER;
 	  if((int)aconf->hold)
 	    {
 	      sptr->umodes |= ((int)aconf->hold & ALL_UMODES); 
@@ -3670,7 +3676,15 @@ int	m_umode(aClient *cptr,
 	  if(what == MODE_ADD)
 	    {
 	      if(IsServer(cptr))
-		SetOper(sptr);
+		{
+		  SetOper(sptr);
+		  sptr->umodes |= FLAGS_OPER;
+		}
+	    }
+	  else
+	    {
+	      sptr->flags &= ~(FLAGS_OPER|FLAGS_LOCOP);
+	      sptr->umodes &= ~(FLAGS_OPER|FLAGS_LOCOP);
 	    }
 	  break;
 
@@ -3742,6 +3756,7 @@ void	send_umode(aClient *cptr,
    */
   m = umode_buf;
   *m = '\0';
+
   for (i = 0; user_modes[i].letter; i++ )
     {
       flag = user_modes[i].mode;

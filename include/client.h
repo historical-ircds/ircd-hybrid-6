@@ -315,6 +315,7 @@ struct Client
 #define	FLAGS_WALLOP       0x0100 /* send wallops to them */
 #define FLAGS_OPERWALL     0x0200 /* Operwalls */
 #define	FLAGS_INVISIBLE    0x0400 /* makes user invisible */
+/* 0x2000 and 0x4000 reserved, replicated from flags for umode *sigh* */
 
 /* *sigh* overflow flags */
 #define FLAGS2_RESTRICTED   0x0001      /* restricted client */
