@@ -988,6 +988,12 @@
  */
 #undef DEBUG_NO_FORK
 
+/*
+ * viconf option, if USE_RCS is defined, viconf will use rcs "ci"
+ * to keep the conf file  under RCS control.
+ */
+#define USE_RCS
+
 /* ----------------- not approved on EFnet section -------------------- */
 /* GLINES - global Kline-like bans
  * Define this if you want GLINE support
