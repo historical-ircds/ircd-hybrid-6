@@ -1,3 +1,8 @@
+*** 20011129_3 by db
+- fixed order of STATS Q line
+
+
+
 *** 20011129_2 by db
 - fixed numeric orders. Apparently someone had already fixed KLINE
 
