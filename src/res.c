@@ -571,7 +571,7 @@ static	int	proc_answer(ResRQ *rptr,
       if (n <= 0)
 	break;
 
-      /* With Address arithemetic you have to be very anal
+      /* With Address arithmetic you have to be very anal
        * this code was not working on alpha due to that
        * (spotted by rodder/jailbird/dianora)
        */

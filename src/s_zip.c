@@ -89,7 +89,7 @@ int	zip_init(aClient *cptr)
   cptr->zip->in->data_type = Z_ASCII;
   if (inflateInit(cptr->zip->in) != Z_OK)
     {
-      cptr->zip->out = NULL;
+      cptr->zip->out = (char *)NULL;
       return -1;
     }
 
@@ -132,7 +132,7 @@ void	zip_free(aClient *cptr)
 **	will return the uncompressed buffer, length will be updated.
 **	if a fatal error occurs, length will be set to -1
 */
-char *	unzip_packet(aClient *cptr, char *buffer, int *length)
+char *unzip_packet(aClient *cptr, char *buffer, int *length)
 {
   Reg	z_stream *zin = cptr->zip->in;
   int	r;
@@ -158,7 +158,11 @@ char *	unzip_packet(aClient *cptr, char *buffer, int *length)
        * the top of the uncompressed buffer, save it for next pass.
        * -Dianora
        */
-
+      if(!buffer)	/* Sanity test never hurts */
+	{
+	  *length = -1;
+	  return((char *)NULL);
+	}
       zin->next_in = buffer;
       zin->avail_in = *length;
       zin->next_out = unzipbuf;
@@ -181,9 +185,10 @@ char *	unzip_packet(aClient *cptr, char *buffer, int *length)
 	       */
 	      sendto_realops("Overflowed unzipbuf increase UNZIP_BUFFER_SIZE");
 	      /*
-	      *length = -1;
-	      return NULL;
-	      */
+	       * I used to just give up here....
+	       * length = -1;
+	       * return((char *)NULL);
+	       */
 	      /* Scan from the top of output, look for a complete
 	       * "chunk" N.B. there should be a check for p hitting
 	       * the bottom of the unzip buffer.
@@ -203,7 +208,7 @@ char *	unzip_packet(aClient *cptr, char *buffer, int *length)
 		  cptr->zip->incount = 0;
 		  cptr->zip->inbuf[0] = '\0';	/* only for debugger */
 		  *length = -1;
-		  return NULL;
+		  return((char *)NULL);
 		}
 	      /* Ok, stuff this "chunk" into inbuf for next call -Dianora */
 	      p++;
@@ -248,7 +253,7 @@ char *	unzip_packet(aClient *cptr, char *buffer, int *length)
       *length = -1; /* report error condition */
       break;
     }
-  return NULL;
+  return((char *)NULL);
 }
 
 /*
@@ -263,7 +268,7 @@ char *	unzip_packet(aClient *cptr, char *buffer, int *length)
 **	will return the uncompressed buffer, length will be updated.
 **	if a fatal error occurs, length will be set to -1
 */
-char *	zip_buffer(aClient *cptr, char *buffer, int *length, int flush)
+char *zip_buffer(aClient *cptr, char *buffer, int *length, int flush)
 {
   Reg	z_stream *zout = cptr->zip->out;
   int	r;
@@ -280,7 +285,7 @@ char *	zip_buffer(aClient *cptr, char *buffer, int *length, int flush)
   if (!flush && ((cptr->zip->outcount < ZIP_MINIMUM) ||
 		 ((cptr->zip->outcount < (ZIP_MAXIMUM - BUFSIZE)) &&
 		  CBurst(cptr))))
-    return NULL;
+    return((char *)NULL);
 
   zout->next_in = cptr->zip->outbuf;
   zout->avail_in = cptr->zip->outcount;
@@ -304,7 +309,7 @@ char *	zip_buffer(aClient *cptr, char *buffer, int *length, int flush)
       *length = -1;
       break;
     }
-  return NULL;
+  return((char *)NULL);
 }
 
 #endif	/* ZIP_LINKS */
