@@ -2935,7 +2935,6 @@ show_temp_klines(aClient *sptr, struct ConfItem * tklist)
   char *user;
   char *reason;
   char *oper_reason;
-  char *p;
 
   kill_list_ptr = last_list_ptr = tklist;
 
