@@ -101,11 +101,11 @@ extern char *small_file_date(time_t);	/* defined in s_misc.c */
 #endif
 
 extern void s_die(void);		/* defined in ircd.c as VOIDSIG */
-extern void show_opers(aClient *,char *);   /* defined in s_misc.c */
 extern void show_servers(aClient *,char *); /* defined in s_misc.c */
 extern void count_memory(aClient *,char *); /* defined in s_debug.c */
 
 /* Local function prototypes */
+static void show_opers(aClient *); 
 static void set_autoconn(aClient *,char *,char *,int);
 static void report_specials(aClient *,int,int);
 extern void report_qlines(aClient *);
@@ -1652,7 +1652,7 @@ int	m_stats(aClient *cptr,
       break;
 
     case 'p' : case 'P' :
-      show_opers(sptr, parv[0]);
+      show_opers(sptr);
       valid_stats++;
       break;
 
@@ -3854,3 +3854,44 @@ static void set_autoconn(aClient *sptr,char *parv0,char *name,int newval)
     }
 }
 
+
+/*
+ * show_opers
+ * inputs	- pointer to client to show opers to
+ * output	- none
+ * side effects - show who is opered on this server
+ */
+
+static void show_opers(aClient *cptr)
+{
+  register aClient        *cptr2;
+  register int j=0;
+
+  for(cptr2 = oper_cptr_list; cptr2; cptr2 = cptr2->next_oper_client)
+    {
+      j++;
+      if (MyClient(cptr) && IsAnOper(cptr))
+        {
+          sendto_one(cptr, ":%s %d %s :[%c][%s] %s (%s@%s) Idle: %d",
+                     me.name, RPL_STATSDEBUG, cptr->name,
+                     IsOper(cptr2) ? 'O' : 'o',
+                     oper_privs_as_string(cptr2,
+					  cptr2->confs->value.aconf->port),
+                     cptr2->name,
+                     cptr2->username, cptr2->host,
+                     timeofday - cptr2->user->last);
+        }
+      else
+        {
+          sendto_one(cptr, ":%s %d %s :[%c] %s (%s@%s) Idle: %d",
+                     me.name, RPL_STATSDEBUG, cptr->name,
+                     IsOper(cptr2) ? 'O' : 'o',
+                     cptr2->name,
+                     cptr2->username, cptr2->host,
+                     timeofday - cptr2->user->last);
+        }
+    }
+
+  sendto_one(cptr, ":%s %d %s :%d OPER%s", me.name, RPL_STATSDEBUG,
+             cptr->name, j, (j==1) ? "" : "s");
+}
