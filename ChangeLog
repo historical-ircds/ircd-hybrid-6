@@ -1,3 +1,9 @@
+*** 20000914_1 by lusky
+typo in channel jupe oper notice (db)
+changed 461 error to show * for empty field (tv)
+new config.h option ALLOW_DOT_IN_IDENT
+
+
 *** 20000910_1 by lusky
 backed out bill's patch for now
 
