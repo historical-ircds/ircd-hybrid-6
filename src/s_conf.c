@@ -1399,6 +1399,7 @@ int 	initconf(int opt, int fd)
   static	char	quotes[9][2] = {{'b', '\b'}, {'f', '\f'}, {'n', '\n'},
 					{'r', '\r'}, {'t', '\t'}, {'v', '\v'},
 					{'\\', '\\'}, { 0, 0}};
+
   Reg	char	*tmp, *s;
   int	i, j, dontadd;
   char	line[512];
@@ -1465,6 +1466,7 @@ int 	initconf(int opt, int fd)
       if (!*line || line[0] == '#' || line[0] == '\n' ||
 	  line[0] == ' ' || line[0] == '\t')
 	continue;
+
       /* Could we test if it's conf line at all?	-Vesa */
       if (line[1] != ':')
 	{

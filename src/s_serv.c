@@ -4737,10 +4737,7 @@ static int remove_tkline_match(char *host,char *user)
 	    last_kill_ptr->next = kill_list_ptr->next;
 	  else
 	    temporary_klines = kill_list_ptr->next;
-	  MyFree(kill_list_ptr->host);
-	  MyFree(kill_list_ptr->name);
-	  MyFree(kill_list_ptr->passwd);
-	  MyFree(kill_list_ptr);
+	  free_conf(kill_list_ptr);
 	  return YES;
 	}
       else
