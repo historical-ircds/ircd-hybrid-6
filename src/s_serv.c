@@ -5763,7 +5763,7 @@ int	m_trace(aClient *cptr,
   if(!IsAnOper(sptr))
     {
       /* pacing for /trace is problemmatical */
-#if 0
+#if PACE_TRACE
       if((last_used + PACE_WAIT) > NOW)
         {
 	  /* safe enough to give this on a local connect only */
@@ -5800,6 +5800,7 @@ int	m_trace(aClient *cptr,
                               /* lets also do this for opers tracing nicks */
     {
       char      *name;
+      char 	*ip;
       int       class;
 
       acptr = hash_find_client(tname,(aClient *)NULL);
@@ -5812,29 +5813,25 @@ int	m_trace(aClient *cptr,
           return 0;
         }
       name = get_client_name(acptr,FALSE);
+      ip = acptr->hostip;
+
       class = get_client_class(acptr);
 
       if (IsAnOper(acptr))
         {
           sendto_one(sptr, rpl_str(RPL_TRACEOPERATOR),
                      me.name, parv[0], class,
-#ifdef WINTRHAWK
-		     name, now - acptr->lasttime,
+		     name, 
+		     IsAnOper(sptr)?ip:"255.255.255.255",
+		     now - acptr->lasttime,
 		     (acptr->user)?(now - acptr->user->last):0);
-#else
-		     name);
-#endif /* WINTRHAWK */
         }
       else
         {
           sendto_one(sptr,rpl_str(RPL_TRACEUSER),
                      me.name, parv[0], class,
-#ifdef WINTRHAWK
-		     name, now - acptr->lasttime,
+		     name, ip, now - acptr->lasttime,
 		     (acptr->user)?(now - acptr->user->last):0);
-#else
-		     name);
-#endif /* WINTRHAWK */
         }
       sendto_one(sptr, rpl_str(RPL_ENDOFTRACE),me.name,
 		 parv[0], tname);
