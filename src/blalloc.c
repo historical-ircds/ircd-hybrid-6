@@ -11,10 +11,10 @@
 #include "ircd_defs.h"      /* DEBUG_BLOCK_ALLOCATOR */
 #include "irc_string.h"     /* MyMalloc */
 #include "s_log.h"
-
 #include <string.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <assert.h>
 #ifdef HAVE_MMAP
 #include <sys/mman.h>
 #endif
@@ -30,7 +30,6 @@ static void *get_block(size_t size);
 
 extern void outofmemory(void);      /* defined in list.c */
 
-
 #ifdef HAVE_MMAP
 #ifndef MAP_ANON
 int zero_fd = -1;
@@ -44,7 +43,13 @@ void initBlockHeap(void)
 }
 static void *get_block(size_t size)
 {
-    return (mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE, zero_fd, 0));
+    void *ptr;
+    assert(zero_fd >= 0);
+    assert(size > 0);
+    ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE, zero_fd, 0);
+    if(ptr == MAP_FAILED)
+    	ptr = NULL;
+    return(ptr); 
 }
 
 #else /* MAP_ANON */
@@ -55,8 +60,13 @@ void initBlockHeap(void)
 }
 static void *get_block(size_t size)
 {
-    return (mmap(NULL, size, PROT_READ | PROT_WRITE,
-                 MAP_PRIVATE | MAP_ANON, -1, 0) );
+    void *ptr; 
+    assert(size > 0);
+    ptr = mmap(NULL, size, PROT_READ | PROT_WRITE,
+              	MAP_PRIVATE | MAP_ANON, -1, 0);
+    if(ptr == MAP_FAILED)
+    	ptr = NULL;
+    return(ptr);
 }
 #endif /* MAP_ANON */
 
