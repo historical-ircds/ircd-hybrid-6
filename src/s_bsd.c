@@ -1399,45 +1399,55 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
 #else /* USE_POLL */
 
 #if defined(POLLMSG) && defined(POLLIN) && defined(POLLRDNORM)
-#define POLLREADFLAGS (POLLMSG|POLLIN|POLLRDNORM)
+#define POLLREADFLAGS (POLLMSG | POLLIN | POLLRDNORM)
 #else
+
 # if defined(POLLIN) && defined(POLLRDNORM)
-# define POLLREADFLAGS (POLLIN|POLLRDNORM)
+# define POLLREADFLAGS (POLLIN | POLLRDNORM)
 # else
+
 #  if defined(POLLIN)
 #  define POLLREADFLAGS POLLIN
 #  else
+
 #   if defined(POLLRDNORM)
-#   define POLLREADFLAGS POLLRDNORM
+#    define POLLREADFLAGS POLLRDNORM
 #   endif
+
 #  endif
+
 # endif
+
 #endif
 
 #if defined(POLLOUT) && defined(POLLWRNORM)
-#define POLLWRITEFLAGS (POLLOUT|POLLWRNORM)
+#define POLLWRITEFLAGS (POLLOUT | POLLWRNORM)
 #else
+
 # if defined(POLLOUT)
 # define POLLWRITEFLAGS POLLOUT
 # else
+
 #  if defined(POLLWRNORM)
 #  define POLLWRITEFLAGS POLLWRNORM
 #  endif
+
 # endif
+
 #endif
 
 #if defined(POLLERR) && defined(POLLHUP)
-#define POLLERRORS (POLLERR|POLLHUP)
+#define POLLERRORS (POLLERR | POLLHUP)
 #else
 #define POLLERRORS POLLERR
 #endif
 
-#define PFD_SETR( thisfd ){        CHECK_PFD( thisfd );\
-                                pfd->events |= POLLREADFLAGS;}
-#define PFD_SETW( thisfd ){        CHECK_PFD( thisfd );\
-                                pfd->events |= POLLWRITEFLAGS;}
-#define CHECK_PFD( thisfd )                     \
-        if ( pfd->fd != thisfd ) {              \
+#define PFD_SETR(thisfd) do { CHECK_PFD(thisfd) \
+                           pfd->events |= POLLREADFLAGS; } while (0)
+#define PFD_SETW(thisfd) do { CHECK_PFD(thisfd) \
+                           pfd->events |= POLLWRITEFLAGS; } while (0)
+#define CHECK_PFD(thisfd)                     \
+        if (pfd->fd != thisfd) {              \
                 pfd = &poll_fdarray[nbr_pfds++];\
                 pfd->fd     = thisfd;           \
                 pfd->events = 0;                \
@@ -1468,7 +1478,6 @@ int read_message(time_t delay, fdlist *listp)
   int                  rr;
   int                  rw;
   int                  i;
-  int                  j;
   char                 errmsg[255];
   int                  current_error = 0;
 
@@ -1513,7 +1522,7 @@ int read_message(time_t delay, fdlist *listp)
      /* 
       * It is VERY bad if someone tries to send a lot
       * of clones to the server though, as mbuf's can't
-      * be allocated quickly enough... - Comstud */
+      * be allocated quickly enough... - Comstud
       */
       listener->index = -1;
       if (timeofday > (listener->last_accept + 2)) {
@@ -1527,7 +1536,7 @@ int read_message(time_t delay, fdlist *listp)
     /*
      * set client descriptors
      */
-    for (i = 0; j <= highest_fd; i++) {
+    for (i = 0; i <= highest_fd; ++i) {
       if (!listp->entry[i])
 	continue;
 
@@ -1579,7 +1588,7 @@ int read_message(time_t delay, fdlist *listp)
     /*
      * check for any event, we only ask for one at a time
      */
-    if (pollfd_array[i].revents) { 
+    if (poll_fdarray[i].revents) { 
       if (IsAuthConnect(auth))
         send_auth_query(auth);
       else
@@ -1595,7 +1604,7 @@ int read_message(time_t delay, fdlist *listp)
     if (-1 == listener->index)
       continue;
     i = listener->index;
-    if (pollfd_array[i].revents) {
+    if (poll_fdarray[i].revents) {
       accept_connection(listener);
       if (0 == --nfds)
         break;
