@@ -63,6 +63,7 @@
 #endif
 
 struct Channel;
+struct Ban;
 
 typedef struct  ConfItem aConfItem;
 typedef struct  Client  aClient;
@@ -130,25 +131,6 @@ struct  stats {
 };
 
 
-#ifdef BAN_INFO
-/*
-  Move BAN_INFO information out of the SLink struct
-  its _only_ used for bans, no use wasting the memory for it
-  in any other type of link. Keep in mind, doing this that
-  it makes it slower as more Malloc's/Free's have to be done, 
-  on the plus side bans are a smaller percentage of SLink usage.
-  Over all, the th+hybrid coding team came to the conclusion
-  it was worth the effort.
-
-  - Dianora
-*/
-typedef struct Ban      /* also used for exceptions -orabidoo */
-{
-  char *banstr;
-  char *who;
-  time_t when;
-} aBan;
-#endif
 
 /* general link structure used for chains */
 
@@ -161,7 +143,7 @@ struct SLink
     struct Channel  *chptr;
     aConfItem *aconf;
 #ifdef BAN_INFO
-    aBan      *banptr;
+    struct Ban   *banptr;
 #endif
     char      *cp;
   } value;
