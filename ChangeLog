@@ -1,3 +1,15 @@
+lusky       2002/02/17 13:16:04 EST	(20020217_1)
+
+  Modified files:
+    src                  s_misc.c 
+  Log:
+  - Hwy's update for 005 to add MAXBANS and KNOCK
+  
+  Revision  Changes    Path
+  1.74      +4 -3      ircd-hybrid-6/src/s_misc.c
+
+
+
 lusky       2002/02/17 00:58:16 EST	(20020217_0)
 
   Modified files:
