@@ -615,7 +615,7 @@ int connect_server(struct ConfItem* aconf,
    * Attach config entries to client here rather than in
    * completed_connection. This to avoid null pointer references
    */
-  if (!attach_cn_lines(cptr, aconf->host))
+  if (!attach_cn_lines(cptr, aconf->name, aconf->host))
     {
       sendto_realops("Host %s is not enabled for connecting:no C/N-line",
                  aconf->host);

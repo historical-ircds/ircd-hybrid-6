@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.45  2000/12/01 06:28:47  lusky
+ * added Gline Exemption flag ('_') to Ilines
+ *
  * Revision 1.44  2000/08/22 05:03:55  lusky
  * added support for CIDR IP tklines, just like normal klines
  *
@@ -374,8 +377,9 @@ extern int              attach_conf(struct Client*, struct ConfItem *);
 extern int              attach_confs(struct Client* client, 
                                      const char* name, int statmask);
 extern int              attach_cn_lines(struct Client* client, 
-                                        const char* host);
-extern int              attach_Iline(struct Client* client, 
+                                        const char *name,
+					const char *host);
+extern int              attach_Iline(struct Client *client, 
                                      const char* username, char** reason);
 extern struct ConfItem* find_me(void);
 extern struct ConfItem* find_admin(void);

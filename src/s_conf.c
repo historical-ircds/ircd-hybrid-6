@@ -1123,7 +1123,7 @@ int attach_confs(aClient* cptr, const char* name, int statmask)
  * NOTE: this requires an exact match between the name on the C:line and
  * the name on the N:line
  */
-int attach_cn_lines(aClient *cptr, const char* host)
+int attach_cn_lines(aClient *cptr, const char *name, const char* host)
 {
   struct ConfItem* tmp;
   int              found_cline = 0;
@@ -1131,30 +1131,47 @@ int attach_cn_lines(aClient *cptr, const char* host)
   assert(0 != cptr);
   assert(0 != host);
 
-  for (tmp = ConfigItemList; tmp; tmp = tmp->next) {
-    if (!IsIllegal(tmp)) {
-      /*
-       * look for matching C:line
-       */
-      if (!found_cline && CONF_CONNECT_SERVER == tmp->status && 
-          tmp->host && 0 == irccmp(tmp->host, host)) {
-        attach_conf(cptr, tmp);
-        if (found_nline)
-          return 1;
-        found_cline = 1;
-      }
-      /*
-       * look for matching N:line
-       */
-      else if (!found_nline && CONF_NOCONNECT_SERVER == tmp->status &&
-               tmp->host && 0 == irccmp(tmp->host, host)) {
-        attach_conf(cptr, tmp);
-        if (found_cline)
-          return 1;
-        found_nline = 1;
-      }
+  for (tmp = ConfigItemList; tmp; tmp = tmp->next)
+    {
+      if (!IsIllegal(tmp))
+	{
+	  /*
+	   * look for matching C:line
+	   */
+	  if (!found_cline && CONF_CONNECT_SERVER == tmp->status
+	      && 
+	      tmp->host
+	      &&
+	      (irccmp(tmp->host, host) == 0)
+	      &&
+	      tmp->name
+	      &&
+	      match(tmp->name, name)
+	      )
+	    {
+	      attach_conf(cptr, tmp);
+	      if (found_nline)
+		return 1;
+	      found_cline = 1;
+	    }
+	  /*
+	   * look for matching N:line
+	   */
+	  else if (!found_nline && CONF_NOCONNECT_SERVER == tmp->status
+		   &&
+		   tmp->host
+		   &&
+		   (irccmp(tmp->host, host) == 0)
+		   &&
+		   match(tmp->name, name))
+	    {
+	      attach_conf(cptr, tmp);
+	      if (found_cline)
+		return 1;
+	      found_nline = 1;
+	    }
+	}
     }
-  }
   return 0;
 }
 
@@ -1281,7 +1298,7 @@ struct ConfItem* find_conf_by_name(const char* name, int status)
 }
 
 /*
- * find_conf_by_name - return a conf item that matches host and type
+ * find_conf_by_host - return a conf item that matches host and type
  */
 struct ConfItem* find_conf_by_host(const char* host, int status)
 {
