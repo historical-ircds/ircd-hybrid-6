@@ -1,3 +1,8 @@
+*** 20011027_1 by db
+- some res.c fixes
+
+
+
 *** 20011025_2 by db
 - fixed formatting in s_conf.c
 - removed obsfuscation in res.c
