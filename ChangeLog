@@ -1,3 +1,7 @@
+*** 20011204_20 by androsyn
+Make configure stop checking for -lnsl as it is no longer needed..
+
+
 *** 20011204_19 by db
 - oops. returned passwd instead of oper_reason for oper_reason
 
