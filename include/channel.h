@@ -32,5 +32,13 @@
 #define	MAXMODEPARAMS	4
 
 extern void sync_channels();
+extern	aChannel *find_channel (char *, aChannel *);
+extern	void	remove_user_from_channel (aClient *, aChannel *,int);
+extern	void	del_invite (aClient *, aChannel *);
+extern	void	send_user_joins (aClient *, aClient *);
+extern	int	can_send (aClient *, aChannel *);
+extern	int	is_chan_op (aClient *, aChannel *);
+extern	int	has_voice (aClient *, aChannel *);
+extern	int	count_channels (aClient *);
 
 #endif

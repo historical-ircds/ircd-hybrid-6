@@ -55,27 +55,14 @@ extern void     outofmemory(void);               /* list.c */
 extern	char*   canonize (char *);
 extern	time_t	check_fdlists (time_t);
 extern	void	flush_server_connections(void);
-extern	aChannel *find_channel (char *, aChannel *);
-extern	void	remove_user_from_channel (aClient *, aChannel *,int);
-extern	void	del_invite (aClient *, aChannel *);
-extern	void	send_user_joins (aClient *, aClient *);
-extern	int	can_send (aClient *, aChannel *);
-extern	int	is_chan_op (aClient *, aChannel *);
-extern	int	has_voice (aClient *, aChannel *);
-extern	int	count_channels (aClient *);
 
 extern  aClient *find_chasing (aClient *, char *, int *);
 extern aClient* find_client(const char* name, aClient* client);
 extern	aClient	*find_name (char *, aClient *);
 extern	aClient	*find_person (char *, aClient *);
 extern struct Client* find_server(const char* name, struct Client* dflt_client);
-extern	aClient	*find_service (char *, aClient *);
 extern	aClient	*find_userhost (char *, char *, aClient *, int *);
 
-#ifdef  GLINES
-extern aConfItem* find_gkill(aClient* client);
-extern aConfItem* find_is_glined(const char* host, const char* name);
-#endif
 extern aConfItem *find_is_klined(char*, char *,unsigned long);
 
 /* hash d lines */
@@ -87,13 +74,13 @@ extern  void	flush_temp_klines(void);
 extern  void    report_temp_klines(aClient *);
 
 #ifdef  GLINES
+extern aConfItem* find_gkill(aClient* client);
+extern aConfItem* find_is_glined(const char* host, const char* name);
 extern  void	flush_glines(void);		/* defined in m_gline.c */
 extern  void	report_glines(aClient *);	/* defined in m_gline.c */
 #endif
 
-extern	int	find_restrict (aClient *);
 extern	int	rehash (aClient *, aClient *, int);
-extern  int     lock_kline_file ();
 extern  void    report_error_on_tty(const char* message); /* ircd.c */
 
 extern void        clear_scache_hash_table(void);
@@ -103,11 +90,7 @@ extern void        list_scache(aClient *, aClient *,int, char **);
 
 extern void     dummy(int signo);
 extern	char	*debugmode, *configfile, *sbrk0;
-extern  char    *klinefile;
-extern  char	*dlinefile;
-#ifdef	GLINES
-extern	char	*glinefile;
-#endif
+
 extern	char*   getfield(char *);
 extern  char    *form_str (int);
 extern	int	dbufalloc, dbufblocks, debuglevel, errno, h_errno;
@@ -116,14 +99,8 @@ extern	int	highest_fd, debuglevel, portnum, debugtty, maxusersperchannel;
 extern	int	readcalls;
 extern	void	get_my_name (aClient *, char *, int);
 extern	int	setup_ping (void);
-extern	int	unixport (aClient *, char *, int);
-extern	int	utmp_open (void);
-extern	int	utmp_read (int, char *, char *, char *, int);
-extern	int	utmp_close (int);
 
-extern	void	restart (char *);
 extern	void	send_channel_modes (aClient *, aChannel *);
-extern	void	server_reboot (void);
 extern	void	terminate (void);
 
 extern	int	send_queued (aClient *);

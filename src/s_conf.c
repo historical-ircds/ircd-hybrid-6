@@ -31,6 +31,7 @@
 #include "h.h"
 #include "mtrie_conf.h"
 #include "s_bsd.h"
+#include "channel.h"
 #include "send.h"
 
 #include <string.h>

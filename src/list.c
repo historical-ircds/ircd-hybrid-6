@@ -30,6 +30,7 @@
 #include "class.h"
 #include "send.h"
 #include "list.h"
+#include "channel.h"
 #include <string.h>
 #include <stdlib.h>
 
