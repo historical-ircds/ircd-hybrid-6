@@ -1,3 +1,7 @@
+*** 20000824_3 by lusky
+- glines were not matched properly for unidented clients
+
+
 *** 20000824_2 by lusky
 - changed Q:line behaviour for NICKs to just return ERR_ERRONEUSNICKNAME
 
