@@ -144,6 +144,7 @@
 				 FLAGS2_OPER_GLINE | \
 				 FLAGS2_OPER_N | \
 				 FLAGS2_OPER_K | \
+				 FLAGS2_OPER_DIE | \
                                  FLAGS2_OPER_REHASH)
 /* ZIP_LINKS */
 

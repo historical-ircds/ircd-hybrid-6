@@ -602,7 +602,7 @@ static int register_user(aClient *cptr, aClient *sptr,
 	      sendto_realops_lev(CCONN_LEV,
 				 "Possible %s: %s (%s@%s) [B-lined]",
 				 type_of_bot[sptr->isbot],
-				 sptr->name, sptr->user, sptr->host);
+				 sptr->name, sptr->username, sptr->host);
 	    }
 	  else
 	    {
@@ -2620,10 +2620,6 @@ int m_user(aClient* cptr, aClient* sptr, int parc, char *parv[])
   char* host;
   char* server;
   char* realname;
-#ifdef BOTCHECK
-  int	      isbot;
-  char*       type_of_bot;
-#endif
  
   if (parc > 2 && (username = strchr(parv[1],'@')))
     *username = '\0'; 
@@ -2647,7 +2643,7 @@ int m_user(aClient* cptr, aClient* sptr, int parc, char *parv[])
   realname = (parc < 5 || BadPtr(parv[4])) ? "<bad-realname>" : parv[4];
   
 #ifdef BOTCHECK
-      isbot = bot_check(host);
+      cptr->isbot = bot_check(host);
 #endif
 
   return do_user(parv[0], cptr, sptr, username, host, server, realname);
@@ -3682,7 +3678,7 @@ int	m_umode(aClient *cptr,
 
 	  delfrom_fdlist(sptr->fd, &oper_fdlist);
 
-	  sptr->flags2 &= ~FLAGS2_OPER_FLAGS; /* struct.h */
+	  sptr->flags2 &= ~FLAGS2_OPER_FLAGS;
 
           while(cur_cptr)
             {
