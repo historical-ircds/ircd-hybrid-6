@@ -298,6 +298,7 @@ void count_links_memory(int *links_memory_used,
 			links_memory_allocated);
 }
 
+#ifdef FLUD
 /*
  */
 void count_flud_memory(int *flud_memory_used,
@@ -307,5 +308,5 @@ void count_flud_memory(int *flud_memory_used,
 			flud_memory_used,
 			flud_memory_allocated);
 }
-
+#endif
 

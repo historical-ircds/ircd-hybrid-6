@@ -326,6 +326,11 @@ void count_memory(aClient *cptr,char *nick)
   u_long links_memory_used = 0;
   u_long links_memory_allocated = 0;
 
+#ifdef FLUD
+  u_long flud_memory_used = 0;
+  u_long flud_memory_allocated = 0;
+#endif
+
   u_long tot = 0;
 
   count_whowas_memory(&wwu, &wwm);	/* no more away memory to count */
@@ -463,15 +468,14 @@ void count_memory(aClient *cptr,char *nick)
   count_local_client_memory((int *)&local_client_memory_used,
 			    (int *)&local_client_memory_allocated);
   tot += local_client_memory_allocated;
-
   sendto_one(cptr, ":%s %d %s :Local client Memory in use: %d Local client Memory allocated: %d",
 	     me.name, RPL_STATSDEBUG, nick,
 	     local_client_memory_used, local_client_memory_allocated);
 
+
   count_remote_client_memory( (int *)&remote_client_memory_used,
 			      (int *)&remote_client_memory_allocated);
   tot += remote_client_memory_allocated;
-
   sendto_one(cptr, ":%s %d %s :Remote client Memory in use: %d Remote client Memory allocated: %d",
 	     me.name, RPL_STATSDEBUG, nick,
 	     remote_client_memory_used, remote_client_memory_allocated);
@@ -480,11 +484,11 @@ void count_memory(aClient *cptr,char *nick)
   count_user_memory( (int *)&user_memory_used,
 		    (int *)&user_memory_allocated);
   tot += user_memory_allocated;
-
   sendto_one(cptr, ":%s %d %s :anUser Memory in use: %d anUser Memory allocated: %d",
 	     me.name, RPL_STATSDEBUG, nick,
 	     user_memory_used,
 	     user_memory_allocated);
+
 
   count_links_memory( (int *)&links_memory_used,
 		    (int *)&links_memory_allocated);
@@ -493,7 +497,16 @@ void count_memory(aClient *cptr,char *nick)
 	     links_memory_used,
 	     links_memory_allocated);
 
-  tot += links_memory_allocated;
+#ifdef FLUD
+  count_flud_memory( (int *)&flud_memory_used,
+		    (int *)&flud_memory_allocated);
+  sendto_one(cptr, ":%s %d %s :FLUD Memory in use: %d FLUD Memory allocated: %d",
+	     me.name, RPL_STATSDEBUG, nick,
+	     flud_memory_used,
+	     flud_memory_allocated);
+
+  tot += flud_memory_allocated;
+#endif
 
   sendto_one(cptr, ":%s %d %s :TOTAL: %d Available Memory: %u Current sbrk(0) %u",
 	     me.name, RPL_STATSDEBUG, nick, tot,
