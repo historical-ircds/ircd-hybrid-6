@@ -159,6 +159,11 @@ m_lusers.o: m_lusers.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
  ../include/s_serv.h ../include/s_user.h ../include/send.h
+m_message.o: m_message.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
+ ../include/s_serv.h ../include/send.h ../include/msg.h \
+ ../include/channel.h ../include/irc_string.h ../include/hash.h
 m_mode.o: m_mode.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/channel.h ../include/ircd_defs.h \
  ../include/client.h ../include/dbuf.h ../include/hash.h \
@@ -377,7 +382,7 @@ s_user.o: s_user.c ../include/s_user.h ../include/config.h \
  ../include/s_bsd.h ../include/s_conf.h ../include/fileio.h \
  ../include/s_serv.h ../include/s_stats.h ../include/scache.h \
  ../include/send.h ../include/struct.h ../include/client.h \
- ../include/dbuf.h ../include/whowas.h ../include/blalloc.h
+ ../include/dbuf.h ../include/whowas.h
 s_zip.o: s_zip.c ../include/s_zip.h ../include/config.h \
  ../include/setup.h ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h \
  ../include/irc_string.h ../include/packet.h ../include/s_bsd.h \

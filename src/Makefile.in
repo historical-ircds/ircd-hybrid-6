@@ -50,6 +50,7 @@ SRCS = \
 	m_locops.c \
 	m_ltrace.c \
 	m_lusers.c \
+	m_message.c \
 	m_mode.c \
 	m_operwall.c \
 	m_oper.c \
