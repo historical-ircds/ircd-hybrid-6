@@ -1,3 +1,6 @@
+*** 20010605_3 by davidt
+corrected e-mail addres for cryptlinks coder in ChangeLog
+
 *** 20010605_2 by db
 - moved mkkeypair from src into tools where it belongs
 
