@@ -2048,7 +2048,22 @@ static	int	m_message(aClient *cptr,
 	  type = MODE_CHANOP|MODE_VOICE;
 	}
 
-      if (IsPerson(sptr) && (chptr = find_channel(nick, NullChn)))
+      /* suggested by Mortiis */
+      if(!*nick)	/* if its a '\0' dump it, there is no recipient */
+	{
+	  sendto_one(sptr, err_str(ERR_NORECIPIENT),
+		     me.name, parv[0], cmd);
+	  return -1;
+	}
+
+      if (!IsPerson(sptr))	/* This means, servers can't send messages */
+	return -1;
+
+      /* At this point, nick should be a channel name i.e. #foo or &foo
+       * if the channel is found, fine, if not report an error
+       */
+
+      if (chptr = find_channel(nick, NullChn))
 	{
 #ifdef ANTI_SPAMBOT_EXTRA
 	  if(MyConnect(sptr) && !IsElined(sptr))
@@ -2067,6 +2082,7 @@ static	int	m_message(aClient *cptr,
 		  sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
 			     me.name, parv[0], nick);
 		}
+	      return -1;
 	    }
 	  else
 	    sendto_channel_type(cptr, sptr, chptr, type,
@@ -2074,14 +2090,6 @@ static	int	m_message(aClient *cptr,
 				parv[0], cmd,
 				nick,
 				parv[2]);
-	  /*
-	    sendto_channel_type(cptr, sptr, chptr, type,
-				":%s %s %c%s :%s",
-				parv[0], cmd,
-				(type==MODE_CHANOP)?'@':'+',
-				nick,
-				parv[2]);
-				*/
 #ifdef ANTI_SPAMBOT_EXTRA
 	  if( MyConnect(sptr) && spambot_privmsg_count &&
 	      ((sptr->person_privmsgs - sptr->channel_privmsgs)
@@ -2096,6 +2104,12 @@ static	int	m_message(aClient *cptr,
 	      sptr->person_privmsgs = 0;
 	      sptr->channel_privmsgs = 0;
 	    }
+	}
+      else
+	{
+	  sendto_one(sptr, err_str(ERR_NOSUCHNICK),
+		     me.name, parv[0], cmd);
+	  return -1;
 	}
 #endif
       return 0;
