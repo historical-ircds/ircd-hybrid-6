@@ -197,16 +197,7 @@ int	attach_Iline(aClient *cptr,
       /*      (void)strncpy(user, cptr->username,sizeof(user)-1); */
     }
 
-#ifdef DEBUG_MTRIE
-  sendto_realops("DEBUG: Looking for client name [%s] host [%s]",
-		 username,host);
-#endif
-
   aconf = find_matching_mtrie_conf(host,username,cptr->ip.s_addr);
-
-#ifdef DEBUG_MTRIE
-  sendto_realops("DEBUG: aconf = %lX", aconf);
-#endif
 
   if(aconf)
     {
@@ -214,19 +205,13 @@ int	attach_Iline(aClient *cptr,
 	{
 	  if(IsConfDoIdentd(aconf))
 	    SetDoId(cptr);
-#ifdef DEBUG_MTRIE
-	  sendto_realops("DEBUG: matching aconf->name [%s] aconf->host [%s]",
-			 aconf->name,aconf->host);
-#endif       
+
 	  strncpyzt(cptr->sockhost,host,sizeof(cptr->sockhost));
 
 	  return(attach_iline(cptr,aconf));
 	}
       else if(aconf->status & CONF_KILL)
 	{
-#ifdef DEBUG_MTRIE
-	  sendto_realops("DEBUG: CONF_KILL");
-#endif
 	  *preason = aconf->passwd;
 	  return(-5);
 	}
@@ -713,7 +698,7 @@ aConfItem	*count_cnlines(Link *lp)
       aconf = lp->value.aconf;
       if (!(aconf->status & CONF_SERVER_MASK))
 	continue;
-      if (aconf->status == CONF_CONNECT_SERVER && !cline)
+      if ((aconf->status == CONF_CONNECT_SERVER) && !cline)
 	cline = aconf;
       else if (aconf->status == CONF_NOCONNECT_SERVER && !nline)
 	nline = aconf;
@@ -744,18 +729,12 @@ int	detach_conf(aClient *cptr,aConfItem *aconf)
 	      if (ConfMaxLinks(aconf) == -1 &&
 		  ConfLinks(aconf) == 0)
 		{
-#ifdef DEBUG_MTRIE
-		  sendto_realops("DEBUG: freeing a class");
-#endif
 		  free_class(Class(aconf));
 		  Class(aconf) = NULL;
 		}
 	    }
 	  if (aconf && !--aconf->clients && IsIllegal(aconf))
 	    {
-#ifdef DEBUG_MTRIE
-	      sendto_realops("DEBUG: freeing an aconf %X", aconf);
-#endif
 	      free_conf(aconf);
 	    }
 	  tmp = *lp;
@@ -1508,10 +1487,16 @@ int 	initconf(int opt, int fd)
 	  break;
 
 	case 'C': /* Server where I should try to connect */
-	case 'c': /* in case of lp failures             */
+	  	  /* in case of lp failures             */
 	  ccount++;
 	  aconf->status = CONF_CONNECT_SERVER;
 	  aconf->flags = CONF_FLAGS_ALLOW_AUTO_CONN;
+	  break;
+
+	case 'c':
+	  ccount++;
+	  aconf->status = CONF_CONNECT_SERVER;
+	  aconf->flags = CONF_FLAGS_ALLOW_AUTO_CONN|CONF_FLAGS_ZIP_LINK;
 	  break;
 
 	case 'd':

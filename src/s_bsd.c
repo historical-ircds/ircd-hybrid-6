@@ -1,4 +1,3 @@
-
 /************************************************************************
  *   IRC - Internet Relay Chat, src/s_bsd.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
@@ -665,8 +664,6 @@ int	check_client(aClient *cptr,char *username,char **reason)
   return 0;
 }
 
-#define	CFLAG	CONF_CONNECT_SERVER
-#define	NFLAG	CONF_NOCONNECT_SERVER
 /*
  * check_server_init(), check_server()
  *	check access for a server given its name (passed in cptr struct).
@@ -689,7 +686,8 @@ int	check_server_init(aClient *cptr)
   Debug((DEBUG_DNS, "sv_cl: check access for %s[%s]",
 	 name, cptr->sockhost));
 
-  if (IsUnknown(cptr) && !attach_confs(cptr, name, CFLAG|NFLAG))
+  if (IsUnknown(cptr) && !attach_confs(cptr, name, CONF_CONNECT_SERVER |
+				       CONF_NOCONNECT_SERVER ))
     {
       Debug((DEBUG_DNS,"No C/N lines for %s", name));
       return -1;
@@ -702,8 +700,8 @@ int	check_server_init(aClient *cptr)
    */
   if (IsConnecting(cptr) || IsHandshake(cptr))
     {
-      c_conf = find_conf(lp, name, CFLAG);
-      n_conf = find_conf(lp, name, NFLAG);
+      c_conf = find_conf(lp, name, CONF_CONNECT_SERVER);
+      n_conf = find_conf(lp, name, CONF_NOCONNECT_SERVER);
       if (!c_conf || !n_conf)
 	{
 	  sendto_realops_lev(DEBUG_LEV, "Connecting Error: %s[%s]", name,
@@ -810,9 +808,9 @@ int	check_server(aClient *cptr,
 	(void)ircsprintf(abuff, "%s@%s",
 			 cptr->username, fullname);
 	if (!c_conf)
-	  c_conf = find_conf_host(lp, abuff, CFLAG);
+	  c_conf = find_conf_host(lp, abuff, CONF_CONNECT_SERVER);
 	if (!n_conf)
-	  n_conf = find_conf_host(lp, abuff, NFLAG);
+	  n_conf = find_conf_host(lp, abuff, CONF_NOCONNECT_SERVER);
 	if (c_conf && n_conf)
 	  {
 	    get_sockhost(cptr, fullname);
@@ -831,9 +829,9 @@ int	check_server(aClient *cptr,
     {
       (void)ircsprintf(abuff, "%s@%s", cptr->username, sockname);
       if (!c_conf)
-	c_conf = find_conf_host(lp, abuff, CFLAG);
+	c_conf = find_conf_host(lp, abuff, CONF_CONNECT_SERVER);
       if (!n_conf)
-	n_conf = find_conf_host(lp, abuff, NFLAG);
+	n_conf = find_conf_host(lp, abuff, CONF_NOCONNECT_SERVER);
     }
   /*
    * Attach by IP# only if all other checks have failed.
@@ -844,20 +842,20 @@ int	check_server(aClient *cptr,
     {
       if (!c_conf)
 	c_conf = find_conf_ip(lp, (char *)&cptr->ip,
-			      cptr->username, CFLAG);
+			      cptr->username, CONF_CONNECT_SERVER);
       if (!n_conf)
 	n_conf = find_conf_ip(lp, (char *)&cptr->ip,
-			      cptr->username, NFLAG);
+			      cptr->username, CONF_NOCONNECT_SERVER);
     }
   else
     for (i = 0; hp->h_addr_list[i]; i++)
       {
 	if (!c_conf)
 	  c_conf = find_conf_ip(lp, hp->h_addr_list[i],
-				cptr->username, CFLAG);
+				cptr->username, CONF_CONNECT_SERVER);
 	if (!n_conf)
 	  n_conf = find_conf_ip(lp, hp->h_addr_list[i],
-				cptr->username, NFLAG);
+				cptr->username, CONF_NOCONNECT_SERVER);
       }
   /*
    * detach all conf lines that got attached by attach_confs()
@@ -892,8 +890,6 @@ int	check_server(aClient *cptr,
     return m_server_estab(cptr);
   return 0;
 }
-#undef	CFLAG
-#undef	NFLAG
 
 /*
 ** completed_connection
@@ -905,44 +901,33 @@ int	check_server(aClient *cptr,
 */
 static	int completed_connection(aClient *cptr)
 {
-  aConfItem *aconf;
+  aConfItem *c_conf;
+  aConfItem *n_conf;
 
   SetHandshake(cptr);
 	
-  aconf = find_conf(cptr->confs, cptr->name, CONF_CONNECT_SERVER);
-  if (!aconf)
+  c_conf = find_conf(cptr->confs, cptr->name, CONF_CONNECT_SERVER);
+  if (!c_conf)
     {
       sendto_realops("Lost C-Line for %s", get_client_name(cptr,FALSE));
       return -1;
     }
-  if (!BadPtr(aconf->passwd))
-    sendto_one(cptr, "PASS %s :TS", aconf->passwd);
+  if (!BadPtr(c_conf->passwd))
+    sendto_one(cptr, "PASS %s :TS", c_conf->passwd);
   
-  aconf = find_conf(cptr->confs, cptr->name, CONF_NOCONNECT_SERVER);
-  if (!aconf)
+  n_conf = find_conf(cptr->confs, cptr->name, CONF_NOCONNECT_SERVER);
+  if (!n_conf)
     {
       sendto_realops("Lost N-Line for %s", get_client_name(cptr,FALSE));
       return -1;
     }
+  
+  send_capabilities(cptr, (c_conf->flags & CONF_FLAGS_ZIP_LINK));
   sendto_one(cptr, "SERVER %s 1 :%s",
-	     my_name_for_link(me.name, aconf), me.info);
+	     my_name_for_link(me.name, n_conf), me.info);
 
-#ifdef DO_IDENTD 
-
-/* Is this the right place to do this?  dunno... -Taner */
+  /* Is this the right place to do this?  dunno... -Taner */
   /* uh, identd on a server???? I know... its stupid -Dianora */
-#ifdef 0
-  if (!IsDead(cptr))
-    {
-      start_auth(cptr);
-
-      FD_SET(cptr->authfd, read_set);
-      if (IsWriteAuth(cptr))
-	FD_SET(cptr->authfd, write_set);
-    }
-#endif
-
-#endif
 
   return (IsDead(cptr)) ? -1 : 0;
 }
@@ -1011,7 +996,7 @@ void	close_connection(aClient *cptr)
 			       cptr->sockhost, CONF_CONNECT_SERVER)))
     {
       /*
-       * Reschedule a faster reconnect, if this was a automaticly
+       * Reschedule a faster reconnect, if this was a automatically
        * connected configuration entry. (Note that if we have had
        * a rehash in between, the status has been changed to
        * CONF_ILLEGAL). But only do this if it was a "good" link.
@@ -1894,8 +1879,17 @@ int read_packet(aClient *cptr, int msg_ready)
 	  if (find_dline(addr.sin_addr))
 	    {
 	      ircstp->is_ref++;
-	      /* Can't use orabidoo's sendheader here -Dianora */
+	      /* Can't use orabidoo's sendheader here
+	       * and if I'm sending a D line to a server,
+	       * well it can't connect anyway
+	       * -Dianora
+	       */
 #ifdef REPORT_DLINE_TO_USER
+	      /* Can't use orabidoo's sendheader here
+	       * and if I'm sending a D line to a server,
+	       * well it can't connect anyway
+	       * -Dianora
+	       */
 	      send(fd, REPORT_DLINED, strlen(REPORT_DLINED), 0);
 #endif
 
@@ -2462,7 +2456,10 @@ int	connect_server(aConfItem *aconf,
       lin.value.aconf = aconf;
       nextdnscheck = 1;
       s = (char *)index(aconf->host, '@');
-      s++; /* should NEVER be NULL */
+      if(s)
+	s++; /* should NEVER be NULL */
+      else
+	s = aconf->host;
       if ((aconf->ipnum.s_addr = inet_addr(s)) == -1)
 	{
 	  aconf->ipnum.s_addr = 0;
@@ -2523,7 +2520,7 @@ int	connect_server(aConfItem *aconf,
    * There must at least be one as we got here C line...  meLazy
    */
   (void)attach_confs_host(cptr, aconf->host,
-			  CONF_NOCONNECT_SERVER | CONF_CONNECT_SERVER);
+	  CONF_NOCONNECT_SERVER | CONF_CONNECT_SERVER );
 
   if (!find_conf_host(cptr->confs, aconf->host, CONF_NOCONNECT_SERVER) ||
       !find_conf_host(cptr->confs, aconf->host, CONF_CONNECT_SERVER))

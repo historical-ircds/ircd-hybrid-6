@@ -69,7 +69,8 @@
 #define	MSG_CLOSE    "CLOSE"	/* CLOS */
 #define	MSG_SVINFO   "SVINFO"	/* SVINFO */
 #define	MSG_SJOIN    "SJOIN"	/* SJOIN */
-#define	MSG_DIE	     "DIE"
+#define MSG_CAPAB    "CAPAB"	/* CAPAB */
+#define	MSG_DIE	     "DIE"      /* DIE */
 #define	MSG_HASH     "HASH"	/* HASH */
 #define	MSG_DNS      "DNS"	/* DNS  -> DNSS */
 #define MSG_OPERWALL "OPERWALL" /* OPERWALL */
@@ -90,6 +91,7 @@
 
 #define MAXPARA    15 
 
+extern int m_admin(aClient *,aClient *,int,char **);
 extern int m_kline(aClient *,aClient *,int,char **);
 extern int m_unkline(aClient *,aClient *,int,char **);
 extern int m_dline(aClient *,aClient *,int,char **);
@@ -115,15 +117,16 @@ extern int m_error(aClient *,aClient *,int,char **);
 extern int m_notice(aClient *,aClient *,int,char **);
 extern int m_invite(aClient *,aClient *,int,char **);
 extern int m_quit(aClient *,aClient *,int,char **);
-extern int m_kill(aClient *,aClient *,int,char **);
 
+extern int m_capab(aClient *,aClient *,int,char **);
+extern int m_info(aClient *,aClient *,int,char **);
+extern int m_kill(aClient *,aClient *,int,char **);
+extern int m_list(aClient *,aClient *,int, char **);
 extern int m_motd(aClient *,aClient *,int,char **);
 extern int m_who(aClient *,aClient *,int,char **);
 extern int m_whois(aClient *,aClient *,int,char **);
-extern int m_user(aClient *,aClient *,int, char **);
-extern int m_list(aClient *,aClient *,int, char **);
 extern int m_server(aClient *,aClient *,int,char **);
-extern int m_info(aClient *,aClient *,int,char **);
+extern int m_user(aClient *,aClient *,int, char **);
 extern int m_links(aClient *,aClient *,int,char **);
 extern int m_summon(aClient *,aClient *,int,char **);
 extern int m_stats(aClient *,aClient *,int,char **);
@@ -138,11 +141,11 @@ extern int m_pass(aClient *,aClient *,int,char **);
 extern int m_trace(aClient *,aClient *,int,char **);
 extern int m_time(aClient *,aClient *,int, char **);
 extern int m_names(aClient *,aClient *,int,char **);
-extern int m_admin(aClient *,aClient *,int,char **);
+
 extern int m_lusers(aClient *,aClient *,int, char **);
 extern int m_umode(aClient *,aClient *,int,char **);
 extern int m_close(aClient *,aClient *,int,char **);
-extern int m_motd(aClient *,aClient *,int,char **);
+
 extern int m_whowas(aClient *,aClient *,int,char **);
 extern int m_usrip(aClient *,aClient *,int,char **);
 extern int m_userhost(aClient *,aClient *,int,char **);
@@ -270,6 +273,7 @@ struct Message msgtab[] = {
   { MSG_MOTD,    m_motd,     0, MAXPARA, 1, 0, 0, 0L },
   { MSG_SVINFO,  m_svinfo,   0, MAXPARA, 1, 1, 0, 0L },
   { MSG_SJOIN,   m_sjoin,    0, MAXPARA, 1, 0, 0, 0L },
+  { MSG_CAPAB,   m_capab,    0, MAXPARA, 1, 1, 0, 0L },
   { MSG_OPERWALL, m_operwall,0, MAXPARA, 1, 0, 0, 0L },
   { MSG_CLOSE,   m_close,    0, MAXPARA, 1, 0, 0, 0L },
   { MSG_KLINE,   m_kline,    0, MAXPARA, 1, 0, 0, 0L },

@@ -1,5 +1,4 @@
-/************************************************************************
- *   IRC - Internet Relay Chat, include/struct.h
+/* - Internet Relay Chat, include/struct.h
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
  *
@@ -50,6 +49,8 @@
 #include <sys/time.h>
 #endif
 
+#include "zlib.h"
+
 #define REPORT_DO_DNS	"NOTICE AUTH :*** Looking up your hostname...\n"
 #define REPORT_FIN_DNS	"NOTICE AUTH :*** Found your hostname\n"
 #define REPORT_FIN_DNSC	"NOTICE AUTH :*** Found your hostname, cached\n"
@@ -61,16 +62,9 @@
 #define REPORT_DLINED   "NOTICE DLINE :*** You have been D-lined\n"
 
 /* sendheader from orabidoo TS4 */
-/* This needs rethinking.. problem is, client is not always unknown
- * by the time this macro is seen. I think we will need to set a
- * flag in flags2, something like "POTENTIAL_SERVER" and ignore sending
- * the headers if its a potential server. The only fool proof way I can
- * see for setting that flag is an entry in the "d-line" hash on the IP
- * so it can be rapidly looked up after the accept()
- * -Dianora
- */
 #define sendheader(cptr, msg, len) do \
-   { if (IsUnknown(cptr)) send((cptr)->fd, (msg), (len), 0); } while(0)
+   { if (IsUnknown(cptr)) \
+     send((cptr)->fd, (msg), (len), 0); } while(0)
 
 
 #include "hash.h"
@@ -83,6 +77,7 @@ typedef	struct	Server	aServer;
 typedef	struct	SLink	Link;
 typedef	struct	SMode	Mode;
 typedef	long	ts_val;
+typedef struct  Zdata   aZdata;
 
 typedef struct	MessageFileItem aMessageFile;
 
@@ -104,10 +99,12 @@ typedef struct	MessageFileItem aMessageFile;
 
 #define	USERLEN		10
 #define	REALLEN	 	50
-#define	TOPICLEN	90
+#define	TOPICLEN	120	/* old value 90, truncated on other servers */
 #define	CHANNELLEN	200
 #define	PASSWDLEN 	20
 #define	KEYLEN		23
+#define IDLEN		12	/* this is the maximum length, not the actual
+				   generated length; DO NOT CHANGE! */
 #define	BUFSIZE		512		/* WARNING: *DONT* CHANGE THIS!!!! */
 #define	MAXRECIPIENTS 	20
 #define	MAXBANS		25	/* bans + exceptions together */
@@ -118,6 +115,8 @@ typedef struct	MessageFileItem aMessageFile;
 #define MESSAGELINELEN	90
 
 #define	USERHOST_REPLYLEN	(NICKLEN+HOSTLEN+USERLEN+5)
+
+#define READBUF_SIZE    16384	/* used in s_bsd *AND* s_zip.c ! */
 
 /*
 ** 'offsetof' is defined in ANSI-C. The following definition
@@ -228,6 +227,10 @@ typedef struct	MessageFileItem aMessageFile;
 #define FLAGS2_OPER_N		0x0200	/* oper can umode n */
 #define FLAGS2_OPER_K		0x0400	/* oper can kill/kline */
 
+#define FLAGS2_ZIP	0x1000	/* (server) link is zipped */
+#define FLAGS2_ZIPFIRST	0x2000	/* start of zip (ignore any CR/LF) */
+#define FLAGS2_CBURST	0x4000	/* connection burst being sent */
+
 /* for sendto_ops_lev */
 #define CCONN_LEV	1
 #define REJ_LEV		2
@@ -329,6 +332,8 @@ typedef struct	MessageFileItem aMessageFile;
 #define SetOperK(x)		((x)->flags2 |= FLAGS2_OPER_K)
 #define IsSetOperK(x)		((x)->flags2 & FLAGS2_OPER_K)
 
+#define CBurst(x)		((x)->flags2 & FLAGS2_CBURST)
+
 /*
  * defined debugging levels
  */
@@ -343,12 +348,6 @@ typedef struct	MessageFileItem aMessageFile;
 #define	DEBUG_MALLOC 9	/* malloc/free calls */
 #define	DEBUG_LIST  10	/* debug list use */
 
-/*
- * defines for curses in client
- */
-#define	DUMMY_TERM	0
-#define	CURSES_TERM	1
-#define	TERMCAP_TERM	2
 
 struct	Counter	{
 	int	server;		/* servers */
@@ -422,19 +421,18 @@ struct	ConfItem
 #define	CONF_RESTRICT		0x0200
 #endif
 #define	CONF_CLASS		0x0400
-#define	CONF_SERVICE		0x0800
-#define	CONF_LEAF		0x1000
-#define	CONF_LISTEN_PORT	0x2000
-#define	CONF_HUB		0x4000
-#define CONF_ELINE		0x8000
-#define CONF_FLINE		0x10000
-#define	CONF_BLINE		0x20000
-#define	CONF_DLINE		0x40000
-#define CONF_XLINE		0x80000
+#define	CONF_LEAF		0x0800
+#define	CONF_LISTEN_PORT	0x1000
+#define	CONF_HUB		0x2000
+#define CONF_ELINE		0x4000
+#define CONF_FLINE		0x8000
+#define	CONF_BLINE		0x10000
+#define	CONF_DLINE		0x20000
+#define CONF_XLINE		0x40000
 
 #define	CONF_OPS		(CONF_OPERATOR | CONF_LOCOP)
 #define	CONF_SERVER_MASK	(CONF_CONNECT_SERVER | CONF_NOCONNECT_SERVER)
-#define	CONF_CLIENT_MASK	(CONF_CLIENT | CONF_SERVICE | CONF_OPS | \
+#define	CONF_CLIENT_MASK	(CONF_CLIENT | CONF_OPS | \
 				 CONF_SERVER_MASK)
 
 #define	IsIllegal(x)	((x)->status & CONF_ILLEGAL)
@@ -451,10 +449,29 @@ struct	ConfItem
 #define CONF_FLAGS_F_LINED		0x0080
 #define CONF_FLAGS_DO_IDENTD		0x0100
 #define CONF_FLAGS_ALLOW_AUTO_CONN	0x0200
+#define CONF_FLAGS_ZIP_LINK		0x0400
 
 #ifdef LITTLE_I_LINES
 #define CONF_FLAGS_LITTLE_I_LINE	0x8000
 #endif
+
+#ifdef ZIP_LINKS
+/* the minimum amount of data needed to trigger compression */
+#define ZIP_MINIMUM     4096
+
+/* the maximum amount of data to be compressed (can actually be a bit more) */
+#define ZIP_MAXIMUM     8192    /* WARNING: *DON'T* CHANGE THIS!!!! */
+
+struct Zdata {
+        z_stream        *in;            /* input zip stream data */
+        z_stream        *out;           /* output zip stream data */
+        char            inbuf[ZIP_MAXIMUM]; /* incoming zipped buffer */
+        char            outbuf[ZIP_MAXIMUM]; /* outgoing (unzipped) buffer */
+        int             incount;        /* size of inbuf content */
+        int             outcount;       /* size of outbuf content */
+};
+
+#endif /* ZIP_LINKS */
 
 /* Macros for aConfItem */
 
@@ -494,6 +511,7 @@ struct	User
   int	joined;		/* number of channels joined */
   char	username[USERLEN+1];
   char	host[HOSTLEN+1];
+  char	id[IDLEN+1];
   char	*server;	/* pointer to scached server name */
   /*
   ** In a perfect world the 'server' name
@@ -503,6 +521,9 @@ struct	User
   ** not yet be in links while USER is
   ** introduced... --msa
   */
+  /* with auto-removal of dependent links, this may no longer be the
+  ** case, but it's already fixed by the scache anyway  -orabidoo
+  */
 };
 
 struct	Server
@@ -511,11 +532,15 @@ struct	Server
   char	*up;		/* Pointer to scache name */
   char	by[NICKLEN+1];
   aConfItem *nline;	/* N-line pointer for this server */
+  aClient *servers;	/* Servers on this server */
+  aClient *users;	/* Users on this server */
 };
 
 struct Client
 {
-  struct	Client *next,*prev, *hnext;
+  struct	Client *next,*prev, *hnext, *idhnext;
+  struct	Client *lnext;	/* Used for Server->servers/users */
+  struct	Client *lprev;	/* Used for server->servers/users */
 
 /* LINKLIST */
 
@@ -525,6 +550,8 @@ struct Client
 
   anUser	*user;		/* ...defined, if this is a User */
   aServer	*serv;		/* ...defined, if this is a server */
+  struct Client *servptr;	/* Points to server this Client is on */
+
   aWhowas 	*whowas;	/* Pointers to whowas structs */
   time_t	lasttime;	/* ...should be only LOCAL clients? --msa */
   time_t	firsttime;	/* time client was created */
@@ -569,6 +596,9 @@ struct Client
   struct Client *last_client_messaged; /* who was privmsg'ed last time */
 #endif
   char	buffer[BUFSIZE]; /* Incoming message buffer */
+#ifdef ZIP_LINKS
+  aZdata *zip;		/* zip data */
+#endif
   short	lastsq;		/* # of 2k blocks when sendqueued called last*/
   dbuf	sendQ;		/* Outgoing message queue--if socket full */
   dbuf	recvQ;		/* Hold for data incoming yet to be parsed */
@@ -603,6 +633,7 @@ struct Client
 			     ** accepted.
 			     */
   char	passwd[PASSWDLEN+1];
+  int	caps;			/* capabilities bit-field */
 };
 
 #define	CLIENT_LOCAL_SIZE sizeof(aClient)
@@ -763,6 +794,47 @@ struct Channel
 #define	TS_DOESTS	0x20000000
 #define	DoesTS(x)	((x)->tsinfo == TS_DOESTS)
 
+#define CAP_QS          0x00000001	/* Can handle quit storm removal */
+#define CAP_ZIP         0x00000002	/* Can do server compresion */
+#define CAP_EX		0x00000004	/* Can do channel +e exemptions */
+
+#define DoesCAP(x)      ((x)->caps)
+
+struct  Capability
+{
+  char	*name;
+  int	cap;
+};
+
+/*
+ * Capability macros.
+ */
+#define IsCapable(x, cap)       ((x)->caps & (cap))
+#define SetCapable(x, cap)      ((x)->caps |= (cap))
+#define ClearCap(x, cap)        ((x)->caps &= ~(cap))
+
+/*
+** list of recognized server capabilities.  "TS" is not on the list
+** because all servers that we talk to already do TS, and the kludged
+** extra argument to "PASS" takes care of checking that.  -orabidoo
+*/
+
+#ifdef CAPTAB
+struct Capability captab[] = 
+{
+/*  name        cap     */  
+
+#ifdef ZIP_LINKS
+  { "ZIP",      CAP_ZIP },
+#endif
+  { "QS",       CAP_QS },
+  { "EX",       CAP_EX },
+  { (char*)0,   0 }
+};
+#else
+extern struct Capability captab[];
+#endif
+
 /*
 ** Channel Related macros follow
 */
@@ -878,6 +950,7 @@ extern	char	*generation, *creation;
 /* misc defines */
 
 #define	FLUSH_BUFFER	-2
+#define GO_ON		-3	/* for m_nick/m_client's benefit */
 #define	UTMP		"/etc/utmp"
 #define	COMMA		","
 

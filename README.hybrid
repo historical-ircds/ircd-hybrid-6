@@ -1,4 +1,6 @@
-+hybrid-6 (9/23/98)
++hybrid-6 (October 06,1998)
+- added CAPAB code, understands EX ZIP (QS to be added) (orabidoo/Dianora)
+- reworked set_mode() completely in chnannel.c (orabidoo/Dianora)
 - added +e, send it always instead of checking for TS4 (orabidoo)
 - Q lines are back, quarantine nick, X line reject gecos info (Dianora)
 - allow users who are invited to walk through any bans/limits (David-R)

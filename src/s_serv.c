@@ -30,7 +30,10 @@ static char *rcs_version = "$Id$";
 #endif
 
 
+#define CAPTAB
 #include "struct.h"
+#undef CAPTAB
+
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
@@ -124,6 +127,7 @@ static int isnumber(char *);	/* return 0 if not, else return number */
 static char *cluster(char *);
 static void set_autoconn(aClient *,char *,char *,int);
 static void report_specials(aClient *,int,int);
+static int bad_tld(char *);
 
 int send_motd(aClient *,aClient *,int, char **,aMessageFile *); 
 static int safe_write(aClient *,char *,char *,int,char *);
@@ -440,6 +444,78 @@ int	m_svinfo(aClient *cptr,
     }
 
   return 0;
+}
+
+/*
+** m_capab
+**	parv[0] = sender prefix
+**	parv[1] = space-separated list of capabilities
+*/
+int	m_capab(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+  register	struct Capability *cap;
+  char	*p;
+  Reg	char *s;
+  int   found = NO;
+
+  if ((!IsUnknown(cptr) && !IsHandshake(cptr)) || parc < 2)
+    return 0;
+
+  sendto_realops("CAPAB received %s",parv[1]);
+
+  for (s=strtoken(&p, parv[1], " "); s; s=strtoken(&p, NULL, " "))
+    {
+      for (cap=captab; cap->name; cap++)
+	{
+	  if (!strcmp(cap->name, s))
+	    {
+	      cptr->caps |= cap->cap;
+	      found = YES;
+	      break;
+	    }
+	 }
+
+      if(!found)
+	sendto_realops("CAPAB %s received from %s but not understood",
+		       s,get_client_name(cptr,FALSE));
+
+      found = NO;
+    }
+  
+  return 0;
+}
+
+/*
+** send the CAPAB line to a server  -orabidoo
+*
+* modified, always send all capabilities -Dianora
+*/
+void send_capabilities(aClient *cptr,int use_zip)
+{
+  register struct Capability *cap;
+  char	msgbuf[BUFSIZE];
+
+  msgbuf[0] = '\0';
+
+  for (cap = captab; cap->name; cap++)
+    {
+      /* kludge to rhyme with sludge */
+
+      if(use_zip)
+	{
+	  strcat(msgbuf, cap->name);
+	  strcat(msgbuf, " ");
+	}
+      else
+	{
+	  if(cap->cap != CAP_ZIP)
+	    {
+	      strcat(msgbuf, cap->name);
+	      strcat(msgbuf, " ");
+	    }
+	}
+    }
+  sendto_one(cptr, "CAPAB :%s", msgbuf);
 }
 
 /*
@@ -820,7 +896,7 @@ int	m_server_estab(aClient *cptr)
       sendto_ops("Access denied. No N line for server %s", inpath);
       return exit_client(cptr, cptr, cptr, "No N line for server");
     }
-  if (!(bconf = find_conf(cptr->confs, host, CONF_CONNECT_SERVER)))
+  if (!(bconf = find_conf(cptr->confs, host, CONF_CONNECT_SERVER )))
     {
       ircstp->is_ref++;
       sendto_one(cptr, "ERROR :Only N (no C) field for server %s",
@@ -876,6 +952,8 @@ int	m_server_estab(aClient *cptr)
       /*
       ** Pass my info to the new server
       */
+
+      send_capabilities(cptr,(bconf->flags & CONF_FLAGS_ZIP_LINK));
       sendto_one(cptr, "SERVER %s 1 :%s",
 		 my_name_for_link(me.name, aconf), 
 		 (me.info[0]) ? (me.info) : "IRCers United");
@@ -902,8 +980,24 @@ int	m_server_estab(aClient *cptr)
 	*s = '@';
     }
   
-  sendto_one(cptr, "SVINFO %d %d 0 :%ld", TS_CURRENT, TS_MIN,
-	     (ts_val)timeofday);
+
+#ifdef ZIP_LINKS
+  if (IsCapable(cptr, CAP_ZIP) && (bconf->flags & CONF_FLAGS_ZIP_LINK))
+    {
+      if (zip_init(cptr) == -1)
+	{
+	  zip_free(cptr);
+	  sendto_ops("Unable to setup compressed link for %s",
+		      get_client_name(cptr, TRUE));
+	  return exit_client(cptr, cptr, &me, "zip_init() failed");
+	}
+      cptr->flags2 |= (FLAGS2_ZIP|FLAGS2_ZIPFIRST);
+    }
+  else
+    ClearCap(cptr, CAP_ZIP);
+#endif /* ZIP_LINKS */
+
+  sendto_one(cptr,"SVINFO %d %d 0 :%ld", TS_CURRENT, TS_MIN,(ts_val)timeofday);
   
   det_confs_butmask(cptr, CONF_LEAF|CONF_HUB|CONF_NOCONNECT_SERVER);
   /*
@@ -937,8 +1031,9 @@ int	m_server_estab(aClient *cptr)
   serv_cptr_list = cptr;
  
   nextping = timeofday;
-  /* ircd-hybrid can only do TS links */
-  sendto_ops("Link with %s established: TS link", inpath);
+  /* ircd-hybrid-6 can do TS links, and  zipped links*/
+  sendto_ops("Link with %s established: (TS%s) link",
+	     inpath,(IsCapable(cptr, CAP_ZIP) ? ", zipped" : ""));
 
   (void)add_to_client_hash_table(cptr->name, cptr);
   /* doesnt duplicate cptr->serv if allocated this struct already */
@@ -948,6 +1043,8 @@ int	m_server_estab(aClient *cptr)
   (void)find_or_add(cptr->name);
   
   cptr->serv->nline = aconf;
+  cptr->flags2 |= FLAGS2_CBURST;
+
   /*
   ** Old sendto_serv_but_one() call removed because we now
   ** need to send different names to different servers
@@ -1059,6 +1156,21 @@ int	m_server_estab(aClient *cptr)
 	    sendnick_TS(cptr, acptr);
 	}
     }
+
+  cptr->flags2 &= ~FLAGS2_CBURST;
+
+#ifdef  ZIP_LINKS
+  /*
+  ** some stats about the connect burst,
+  ** they are slightly incorrect because of cptr->zip->outbuf.
+  */
+  if ((cptr->flags2 & FLAGS2_ZIP) && cptr->zip->out->total_in)
+    sendto_ops("Connect burst to %s: %lu, compressed: %lu (%3.1f%%)",
+		get_client_name(cptr, TRUE),
+		cptr->zip->out->total_in,cptr->zip->out->total_out,
+		(100.0*(float)cptr->zip->out->total_out) /
+		(float)cptr->zip->out->total_in);
+#endif /* ZIP_LINKS */
 
   return 0;
 }
@@ -1820,17 +1932,23 @@ static	void	report_configured_links(aClient *sptr,int mask)
 
 	if(mask & (CONF_CONNECT_SERVER|CONF_NOCONNECT_SERVER))
 	  {
+	    char c;
+
+	    c = p->conf_char;
+	    if(tmp->flags & CONF_FLAGS_ZIP_LINK)
+	      c = 'c';
+
 	    /* Don't allow non opers to see actual ips */
 	    if(IsAnOper(sptr))
 	      sendto_one(sptr, rpl_str(p->rpl_stats), me.name,
-			 sptr->name, p->conf_char,
+			 sptr->name, c,
 			 host,
 			 name,
 			 port,
 			 get_conf_class(tmp));
 	    else
 	      sendto_one(sptr, rpl_str(p->rpl_stats), me.name,
-			 sptr->name, p->conf_char,
+			 sptr->name, c,
 			 "*@127.0.0.1",
 			 name,
 			 port,
@@ -2032,8 +2150,7 @@ int	m_stats(aClient *cptr,
       valid_stats++;
       break;
     case 'C' : case 'c' :
-      report_configured_links(sptr, CONF_CONNECT_SERVER|
-			      CONF_NOCONNECT_SERVER);
+      report_configured_links(sptr, CONF_CONNECT_SERVER|CONF_NOCONNECT_SERVER);
       valid_stats++;
       break;
 
@@ -2604,21 +2721,36 @@ int	m_connect(aClient *cptr,
     }
 
   for (aconf = conf; aconf; aconf = aconf->next)
-    if (aconf->status == CONF_CONNECT_SERVER &&
+    if ((aconf->status == CONF_CONNECT_SERVER) &&
 	matches(parv[1], aconf->name) == 0)
       break;
   /* Checked first servernames, then try hostnames. */
+  /* *sigh* AVALON YOU DOLT! */
   if (!aconf)
-    for (aconf = conf; aconf; aconf = aconf->next)
-      if (aconf->status == CONF_CONNECT_SERVER &&
-	  (matches(parv[1], aconf->host) == 0 ||
-	   matches(parv[1], index(aconf->host, '@')+1) == 0))
-	break;
+    {
+      char *host_to_match;
+
+      for (aconf = conf; aconf; aconf = aconf->next)
+	{
+	  host_to_match = strchr(aconf->host, '@');
+	  if(host_to_match)
+	    host_to_match++;
+	  else
+	    host_to_match = aconf->host;
+
+	  if ((aconf->status == CONF_CONNECT_SERVER) &&
+	      (matches(parv[1], aconf->host) == 0 ||
+	       matches(parv[1], host_to_match) == 0))
+	    {
+	      break;
+	    }
+	}
+    }
 
   if (!aconf)
     {
       sendto_one(sptr,
-		 "NOTICE %s :Connect: Host %s not listed in irc.conf",
+		 "NOTICE %s :Connect: Host %s not listed in ircd.conf",
 		 parv[0], parv[1]);
       return 0;
     }
@@ -3466,8 +3598,6 @@ int     m_gline(aClient *cptr,
   char tempuser[USERLEN+2];
   char temphost[HOSTLEN+1];
   aConfItem *aconf;
-  char *tld;			/* Top level domain */
-  int bad_tld;			/* YES if bad tld, NO if good tld */
 
   if(!IsServer(sptr)) /* allow remote opers to apply g lines */
     {
@@ -3541,28 +3671,8 @@ int     m_gline(aClient *cptr,
 
 	  return 0;
 	}
-
-      bad_tld = NO;
-      tld = strrchr(host, '.');
-      if(tld)
-	{
-	  if(tld == host)
-	    bad_tld = YES;
-	  tld--;
-	  if(tld == host)
-	    if( (*tld == '.') || (*tld == '*'))
-	      bad_tld = YES;
-	  tld--;
-	  if(tld != host)
-	    {
-	      if((*tld == '*') || (*tld == '?'))
-		bad_tld = YES;
-	    }
-	}
-      else
-	bad_tld = YES;
-
-      if (bad_tld)
+      
+      if (bad_tld(host))
 	{
 	  if(MyClient(sptr))
 	    sendto_one(sptr, ":%s NOTICE %s :Can't G-Line *@%s",
@@ -3981,8 +4091,18 @@ int     m_kline(aClient *cptr,
   if (!matches(user, "akjhfkahfasfjd") &&
                 !matches(host, "ldksjfl.kss...kdjfd.jfklsjf"))
     {
-      sendto_one(sptr, ":%s NOTICE %s :Can't K-Line *@*", me.name,
+      sendto_one(sptr, ":%s NOTICE %s :Can't K-Line *@*",
+		 me.name,
 		 parv[0]);
+      return 0;
+    }
+      
+  if (bad_tld(host))
+    {
+      sendto_one(sptr, ":%s NOTICE %s :Can't K-Line *@%s",
+		 me.name,
+		 parv[0],
+		 host);
       return 0;
     }
 
@@ -5784,4 +5904,44 @@ static void set_autoconn(aClient *sptr,char *parv0,char *hostname,int newval)
 		 ":%s NOTICE %s :Can't find %s",
 		 me.name, parv0,hostname);
     }
+}
+
+
+/*
+ * bad_tld
+ *
+ * input	- hostname to k-line
+ * output	- YES if not valid
+ * side effects	- NONE
+ * checks to see if its a kline of the form blah@*.com,*.net,*.org,*.ca etc.
+ * if so, return YES
+ */
+
+static int bad_tld(char *host)
+{
+  char *tld;
+  int is_bad_tld;
+
+  is_bad_tld = NO;
+
+  tld = strrchr(host, '.');
+  if(tld)
+    {
+      if(tld == host)
+	is_bad_tld = YES;
+      tld--;
+      if(tld == host)
+	if( (*tld == '.') || (*tld == '*'))
+	  is_bad_tld = YES;
+      tld--;
+      if(tld != host)
+	{
+	  if((*tld == '*') || (*tld == '?'))
+	    is_bad_tld = YES;
+	}
+    }
+  else
+    is_bad_tld = YES;
+
+  return(is_bad_tld);
 }

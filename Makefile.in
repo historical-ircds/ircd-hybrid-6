@@ -21,6 +21,7 @@ RM=@RM@
 
 # Default CFLAGS
 CFLAGS= -g -O2 -D"FD_SETSIZE=1024"
+ZCFLAGS= -g -O3
 #
 # What I used on FreeBSD 2.1.7 with kernel compiled for 4096 descriptors
 # the -D"FD_SETSIZE=4096" is only needed if sys/types.h has not been updated
@@ -73,8 +74,10 @@ CFLAGS= -g -O2 -D"FD_SETSIZE=1024"
 
 SHELL=/bin/sh
 SUBDIRS=src tools
+ZSUBDIRS=zlib $(SUBDIRS)
 
 MAKE=make 'CFLAGS=${CFLAGS}' 'INSTALL=${INSTALL}' 'LDFLAGS=${LDFLAGS}'
+ZMAKE=make 'CFLAGS=${ZCFLAGS}' 'INSTALL=${INSTALL}' 'LDFLAGS=${LDFLAGS}'
 
 all:	build
 
@@ -84,6 +87,8 @@ build:
 		echo "Doing so now."; \
 		sh configure; \
 	fi
+	cd zlib; \
+	${ZMAKE} build; cd ..
 	@for i in $(SUBDIRS); do \
 		echo "Building $$i";\
 		cd $$i;\
@@ -92,7 +97,7 @@ build:
 
 clean:
 	${RM} -f *~ core
-	@for i in $(SUBDIRS); do \
+	@for i in $(ZSUBDIRS); do \
 		echo "Cleaning $$i";\
 		cd $$i;\
 		${MAKE} clean; cd ..;\
@@ -105,7 +110,7 @@ distclean:
 	${RM} -f Makefile *~ *.rej *.orig core ircd.core
 	${RM} -f config.status config.cache config.log
 	cd include; ${RM} -f setup.h *~ *.rej *.orig ; cd ..
-	@for i in $(SUBDIRS); do \
+	@for i in $(ZSUBDIRS); do \
 		echo "Cleaning $$i";\
 		cd $$i;\
 		${MAKE} distclean; cd ..;\

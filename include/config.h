@@ -442,12 +442,21 @@
  */
 #define	SHOW_INVISIBLE_LUSERS
 
+#define	ZIP_LINKS		/* compress server-to-server links */
+
 /* NO_DEFAULT_INVISIBLE - clients not +i by default
  * When defined, your users will not automatically be attributed with user
  * mode "i" (i == invisible). Invisibility means people dont showup in
  * WHO or NAMES unless they are on the same channel as you.
  */
 #define	NO_DEFAULT_INVISIBLE
+
+/*
+ * The compression level used for zipped links. (Suggested values: 1 to 5)
+ * Above 4 will only give a rather marginal increase in compression for a
+ * large increase in CPU usage.
+ */
+#define ZIP_LEVEL       2
 
 /* OPER_KILL OPER_REHASH OPER_RESTART OPER_DIE OPER_REMOTE -
  *      restrict what local global-Opers can do

@@ -637,13 +637,6 @@ static	time_t	check_pings(time_t currenttime)
 		      *cptr->buffer = '\0';
 		    }
 #ifdef SHOW_HEADERS
-		  /*
-		  if (DoingDNS(cptr))
-		    send(cptr->fd, REPORT_FAIL_DNS, R_fail_dns, 0);
-		  else
-		    send(cptr->fd, REPORT_FAIL_ID, R_fail_id, 0);
-		    */
-
 		  if (DoingDNS(cptr))
 		    sendheader(cptr, REPORT_FAIL_DNS, R_fail_dns);
 		  else

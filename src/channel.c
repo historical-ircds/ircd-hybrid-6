@@ -768,6 +768,9 @@ void	send_channel_modes(aClient *cptr, aChannel *chptr)
     sendto_one(cptr, ":%s MODE %s %s %s",
 	       me.name, chptr->chname, modebuf, parabuf);
 
+  if(!IsCapable(cptr,CAP_EX))
+    return;
+
   *parabuf = '\0';
   *modebuf = '+';
   modebuf[1] = '\0';
@@ -937,7 +940,6 @@ static  void     set_mode(aClient *cptr,
 
   char	*mbufw = modebuf, *mbuf2w = modebuf2;
   char	*pbufw = parabuf, *pbuf2w = parabuf2;
-  ts_val zapts;
   int	curr_type, fm_type = 0;  
 	  /* 0 = none,
 	   * 1 = other modes of different types that can mix 
@@ -1043,9 +1045,9 @@ static  void     set_mode(aClient *cptr,
 	  /* ignore server-generated MODE +-ovh */
 	  if (IsServer(sptr))
 	    {
-	      ts_warn( "MODE %c%c on %s from server %s (ignored)", 
+	      ts_warn( "MODE %c%c on %s for %s from server %s (ignored)", 
 		       (whatt == MODE_ADD ? '+' : '-'), c, chptr->chname, 
-		       sptr->name);
+		       who->name,sptr->name);
 	      break;
 	    }
 
@@ -1154,6 +1156,17 @@ static  void     set_mode(aClient *cptr,
 	    strncpyzt(chptr->mode.key, arg, KEYLEN+1);
 
 	  break;
+
+	  /* There is a nasty here... I'm supposed to have
+	   * CAP_EX before I can send exceptions to bans to a server.
+	   * But that would mean I'd have to keep two strings
+	   * one for local clients, and one for remote servers,
+	   * one with the 'e' strings, one without.
+	   * I'm not going to bother, the remote server will complain
+	   * but I won't worry about it. I will however, not
+	   * send the 'e' strings in the connect burst at least.
+	   * -Dianora
+	   */
 
 	case 'e':
 	  if (whatt == MODE_QUERY || parc-- <= 0)
@@ -1289,10 +1302,11 @@ static  void     set_mode(aClient *cptr,
 	    }
 
 
-	  /* Ignore colon at beginning of ban string
-	   * unfortunately,  I can't ignore all such strings
-	   * because otherwise the channel gets desynced.
-	   * but I can at least stop local clients from placing it
+	  /* Ignore colon at beginning of ban string.
+	   * Unfortunately,  I can't ignore all such strings,
+	   * because otherwise the channel could get desynced.
+	   * I can at least, stop local clients from placing a ban
+	   * with a leading colon.
 	   *
 	   * Roger uses check_string() combined with an earlier test
 	   * in his TS4 code. The problem is, this means on a mixed net
@@ -1681,7 +1695,7 @@ static  void     set_mode(aClient *cptr,
 			 sptr->name, chptr->chname,
 			 modebuf, parabuf);
   sendto_match_servs(chptr, cptr, ":%s MODE %s %s %s",
-		     cptr->name, chptr->chname,
+		     sptr->name, chptr->chname,
 		     modebuf, parabuf);
 		     
   return;

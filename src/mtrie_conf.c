@@ -346,11 +346,6 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
   aConfItem *found_aconf;
   char *user;
 
-#ifdef DEBUG_MTRIE
-  if(aconf->status & CONF_KILL)
-    sendto_realops("DEBUG: found kline");
-#endif
-
   last_ptr = (DOMAIN_PIECE *)NULL;
   user = aconf->name;
 
@@ -496,29 +491,15 @@ static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr,
 
   wild_aconf = piece_ptr->wild_conf_ptr;
 
-#ifdef DEBUG_MTRIE
-  sendto_realops("DEBUG: find_user_piece host_piece[%s] user [%s] piece_ptr %X",
-		 host_piece,user,piece_ptr);
-#endif
-
   for(ptr=piece_ptr; ptr; ptr=ptr->next_piece)
     {
       if(!ptr->conf_ptr)
 	continue;
       aconf=ptr->conf_ptr;
-#ifdef DEBUG_MTRIE
-      sendto_realops("DEBUG: host_piece [%s] ptr->host_piece [%s]",
-		     host_piece,ptr->host_piece);
-      sendto_realops("DEBUG: user [%s] aconf->name [%s]",
-		     user,aconf->name);
-#endif
+
       if( (!matches(ptr->host_piece,host_piece)) &&
 	  (!matches(aconf->name,user)))
 	{
-#ifdef DEBUG_MTRIE
-	  sendto_realops("DEBUG: found match aconf->name [%s] user [%s]",
-			 aconf->name, user);
-#endif
 	  match = YES;
 	  if(aconf->status & CONF_ELINE)
 	    {
@@ -529,15 +510,6 @@ static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr,
 
   if(!match)
     aconf = (aConfItem *)NULL;
-
-#ifdef DEBUG_MTRIE
-  sendto_realops("DEBUG: find_user_piece aconf = %X now looking for wild_aconf",aconf);
-  if(aconf)
-    sendto_realops("DEBUG: aconf->name [%s]",aconf->name);
-  sendto_realops("DEBUG: wild_aconf %X ",wild_aconf);
-  if(wild_aconf)
-    sendto_realops("DEBUG: wild_aconf->name [%s]",wild_aconf->name);
-#endif
 
   if(!aconf)
     return(wild_aconf);
@@ -560,9 +532,6 @@ static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr,
 
   if(wild_aconf)
     {
-#ifdef DEBUG_MTRIE
-      sendto_realops("DEBUG: wild_aconf found %X",wild_aconf);
-#endif
       if((wild_aconf->status & CONF_ELINE) && (aconf->status & CONF_KILL))
 	return(wild_aconf);
       else if((wild_aconf->status & CONF_KILL) && (aconf->status & CONF_ELINE))
@@ -647,10 +616,6 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
    * there is no point checking for a k-line
    */
 
-#ifdef DEBUG_MTRIE
-  sendto_realops("DEBUG: iline_aconf_unsortable %X",iline_aconf_unsortable);
-#endif
-
   if(iline_aconf_unsortable && (iline_aconf_unsortable->status & CONF_ELINE))
     return(iline_aconf_unsortable);
 
@@ -663,10 +628,6 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
   stack_pointer = 0;
   tokenize_and_stack(tokenized_host,host);
   top_of_stack = stack_pointer;
-
-#ifdef DEBUG_MTRIE
-  sendto_realops("DEBUG: top_of_stack %d trie_list %X",top_of_stack,trie_list);
-#endif
 
   if(trie_list)
     {
@@ -688,16 +649,8 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
        * try looking for a top level domain match
        */
 
-#ifdef DEBUG_MTRIE
-      sendto_realops("DEBUG: after mtrie search iline_aconf %X",iline_aconf);
-#endif
-
       if(!iline_aconf)
 	iline_aconf= find_wild_card_iline(user);
-
-#ifdef DEBUG_MTRIE
-      sendto_realops("DEBUG: after find_wild_card_iline search iline_aconf %X",iline_aconf);
-#endif
 
       /* If its an E line, found from either the mtrie or the top level
        * domain "*" return it. If its a K line found from the mtrie
@@ -710,10 +663,6 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
   else
     {
       iline_aconf= find_wild_card_iline(user);
-
-#ifdef DEBUG_MTRIE
-      sendto_realops("DEBUG: after find_wild_card_iline search iline_aconf %X",iline_aconf);
-#endif
 
       /* If its an E line, found from either the mtrie or the top level
        * domain "*" return it. If its a K line found from the mtrie
@@ -744,11 +693,6 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
    * is there? -Dianora
    */
 
-#ifdef DEBUG_MTRIE
-  sendto_realops("DEBUG: found iline %X for host [%s] user [%s]",
-		 iline_aconf,host,user);
-#endif
-
   if(!iline_aconf)
     return((aConfItem *)NULL);
 
@@ -765,16 +709,7 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
   if(trie_list && first_kline_trie_list)
     {
       stack_pointer = saved_stack_pointer;
-#ifdef DEBUG_MTRIE
-      sendto_realops("DEBUG: about to look for kline");
-#endif
       kline_aconf = find_sub_mtrie(first_kline_trie_list,host,user,CONF_KILL);
-#ifdef DEBUG_MTRIE
-      sendto_realops("DEBUG: found kline_aconf %X",kline_aconf);
-      if(kline_aconf)
-	sendto_realops("DEBUG: host [%s] user [%s]",
-		      kline_aconf->host,kline_aconf->name);
-#endif
     }
   else
     kline_aconf = (aConfItem *)NULL;
@@ -817,12 +752,6 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
 
   cur_dns_piece = dns_stack[--stack_pointer];
 
-#ifdef DEBUG_MTRIE
-  sendto_realops("DEBUG: find_sub_mtrie() host [%s] user [%s] flags %X",
-		 host,user,flags);
-  sendto_realops("DEBUG: cur_dns_piece = [%s]", cur_dns_piece);
-#endif
-
   if(flags & CONF_KILL)
     {
       /* looking for CONF_KILL, look first for a kline at this level */
@@ -850,10 +779,6 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
 
   if((cur_piece->flags & CONF_KILL) && (!first_kline_trie_list))
     {
-#ifdef DEBUG_MTRIE
-      sendto_realops("DEBUG: found kline stack_pointer %d [%s] mtrie %X",
-		     stack_pointer+1,cur_dns_piece,trie_list); 
-#endif
       first_kline_trie_list = cur_level;
       saved_stack_pointer = stack_pointer+1;
     }
@@ -1133,10 +1058,6 @@ void report_matching_host_klines(aClient *sptr,char *host)
   int two_letter_tld = 0;
   char tokenized_host[HOSTLEN+1];
 
-#ifdef DEBUG_MTRIE
-  sendto_realops("DEBUG: report_matching_klines host = [%s]", host);
-#endif
-
   if (strlen(host) > (size_t) HOSTLEN)
     return;
 
@@ -1156,11 +1077,6 @@ void report_matching_host_klines(aClient *sptr,char *host)
   p -= 4;	
   if(p[3] == '\0')
     two_letter_tld = YES;
-
-#ifdef DEBUG_MTRIE
-  sendto_realops("DEBUG: host [%s] p = [%s] two_letter_tld = %d",
-		 host,p,two_letter_tld);
-#endif
 
   cur_dns_piece = dns_stack[--stack_pointer];
   if(!cur_dns_piece)

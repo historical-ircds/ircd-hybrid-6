@@ -291,6 +291,11 @@ extern	time_t	timeout_query_list (time_t);
 extern	time_t	expire_cache (time_t);
 extern	void    del_queries (char *);
 
+extern  int     zip_init (aClient *);
+extern  void    zip_free (aClient *);
+extern  char    *unzip_packet (aClient *, char *, int *);
+extern  char    *zip_buffer (aClient *, char *, int *, int);
+
 extern	void	clear_channel_hash_table (void);
 extern	void	clear_client_hash_table (void);
 extern	int	add_to_client_hash_table (char *, aClient *);

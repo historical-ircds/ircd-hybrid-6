@@ -1985,6 +1985,12 @@ static	int	m_message(aClient *cptr,
   if(type)
     {
       nick++;
+      /* Strip if using DALnet chanop/voice prefix.  -- David-R */
+      if (*nick == '@' || *nick == '+')
+	{
+	  nick++;
+	  type = MODE_CHANOP|MODE_VOICE;
+	}
 
       if (IsPerson(sptr) && (chptr = find_channel(nick, NullChn)))
 	{
@@ -1993,6 +1999,7 @@ static	int	m_message(aClient *cptr,
 	    sptr->channel_privmsgs++;
 #endif
 #ifdef FLUD
+
 	  if(!notice)
 	    if(check_for_ctcp(parv[2]))
 	      check_for_flud(sptr, NULL, chptr, 1);

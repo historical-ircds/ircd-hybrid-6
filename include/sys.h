@@ -30,6 +30,9 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/param.h>
+
+#include "zlib.h"
+
 /*#include "cdefs.h"
 #include "bitypes.h"*/
 
