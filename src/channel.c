@@ -53,8 +53,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <regex.h>
-
 #ifdef NEED_SPLITCODE
 
 static void check_still_split();
@@ -109,9 +107,6 @@ static  char    *PartFmt = ":%s PART %s";
 static  char    buf[BUFSIZE];
 static  char    modebuf[MODEBUFLEN], modebuf2[MODEBUFLEN];
 static  char    parabuf[MODEBUFLEN], parabuf2[MODEBUFLEN];
-
-/* regular expression buffer */
-static regex_t my_regex;
 
 
 /* externally defined function */
@@ -348,38 +343,28 @@ static  int     add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
 
 /*
  * add_denyid - add an id to be denied to the channel  (belongs to cptr) 
- * +d modes are CASE SENSITIVE. 
- * we will attempt to compile the regular expression before we set the mode
- * since it's quite possible to come up with poorly formed regex's.
- * we also truncate these things to NICKLEN+USERLEN+HOSTLEN in size.
+ * works like an Xline, but for channels.
  * -sean
  */  
 static  int     add_denyid(aClient *cptr, aChannel *chptr, char *banid)
 {
   Link  *ban;
 
-  /* truncate stuff to some sort of reasonable length */
-  banid[NICKLEN+USERLEN+HOSTLEN]='\0';
+  /* truncate to REALLEN */
+  banid[REALLEN]='\0';
 
-  /* trust servers, otherwise */
-  /* check if its a valid regular expression */
-  if (!IsServer(cptr)) {
-    regfree(&my_regex);
-    if (regcomp(&my_regex, banid,
-                REG_EXTENDED|REG_ICASE|REG_NOSUB|REG_NEWLINE))
-      return -1;
- 
-    /* dont allow local users to overflow the ban list */
-    if (chptr->num_bed == MAXBANS)
-      if (MyClient(cptr))
-        {
-          sendto_one(cptr, form_str(ERR_BANLISTFULL),
-                     me.name, cptr->name,
-                     chptr->chname, banid);
-          return -1;
-        }
-  }
-  
+  if ((!IsServer(cptr)) && (chptr->num_bed == MAXBANS))
+    if (MyClient(cptr))
+      {
+        sendto_one(cptr, form_str(ERR_BANLISTFULL),
+                   me.name, cptr->name,
+                   chptr->chname, banid);
+        return -1;
+      }
+
+  if (MyClient(cptr))
+    (void)collapse(banid);
+
   for (ban = chptr->denylist; ban; ban = ban->next)
     if (strcasecmp(BANSTR(ban), banid)==0) 
       return -1;
@@ -512,9 +497,9 @@ static  int     del_denyid(aChannel *chptr, char *banid)
     return -1;
   for (ban = &(chptr->denylist); *ban; ban = &((*ban)->next))
 #ifdef BAN_INFO
-    if (strcmp(banid, (*ban)->value.banptr->banstr)==0) 
+    if (strcasecmp(banid, (*ban)->value.banptr->banstr)==0) 
 #else
-      if (strcmp(banid, (*ban)->value.cp)==0)
+      if (strcasecmp(banid, (*ban)->value.cp)==0)
 #endif
         {
           tmp = *ban;
@@ -650,23 +635,10 @@ static  int is_banned(aClient *cptr,aChannel *chptr)
     }
 
 
-  if (!tmp) {  /* +b match, lets check +d list */
+  if (!tmp) {  /* check +d list */
     for (tmp = chptr->denylist; tmp; tmp = tmp->next)
       {
-        regfree(&my_regex);
-        /* not too sure which flags we want to use here.. may need tweaking */
-        if (regcomp(&my_regex, BANSTR(tmp), 
-                    REG_EXTENDED|REG_ICASE|REG_NOSUB|REG_NEWLINE)) 
-          {
-            /* we shouldnt have any errors compiling the regex, since
-               when they are set by users, we check validity.. 
-               could happen though... should we notify the ops perhaps? */
-            sendto_ops("WARNING - Invalid mode on %s :+d %s", chptr->chname,
-                       BANSTR(tmp));
-            continue;
-          }
-        /* only match against s, not s2 (why match numbers against a regex?) */
-        if (regexec(&my_regex, s, 0, NULL, 0)==0)
+        if (match(BANSTR(tmp), cptr->info))
           break;
       }
   }
@@ -2766,12 +2738,8 @@ static void clear_bans_exceptions(aClient *sptr, aChannel *chptr)
 }
 
 /*
- * clear_bans_exceptions
+ * clear_denies_allows
  *
- * I could have re-written del_banid/del_exceptid to do this
- *
- * still need a bit of cleanup on the MODE -b stuff...
- * -Dianora
  */
 
 static void clear_denies_allows(aClient *sptr, aChannel *chptr)
