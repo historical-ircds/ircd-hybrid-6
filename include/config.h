@@ -175,6 +175,22 @@
 #define TS_MAX_DELTA 300        /* seconds */
 #define TS_WARN_DELTA 30        /* seconds */
 
+/* TS5
+ * This will mean the oldest version of a channel will always remain after a
+ * split, whereas TS3 behaviour was to allow any TS in an opless channel.
+ *
+ * This effectively will make splitting servers for ops useless, but could
+ * cause desync on a mixed TS3/TS5 network.
+ *
+ * See doc/ts5.txt for more details
+ */
+#define  TS5 
+
+/* TS5_ONLY
+ * This will disallow TS3 servers from linking
+ */
+#undef  TS5_ONLY
+
 /* SLAVE_SERVERS - Use this to send LOCOPS and KLINES to servers you define
  * uses U: lines in ircd.conf, each server defined in an U: line
  * is sent a copy of the locally placed K-line, and will also
@@ -703,27 +719,10 @@
  * you may want to undef some -- fl_
  */
 
-/* TS5
- * This will mean the oldest version of a channel will always remain after a
- * split, whereas TS3 behaviour was to allow any TS in an opless channel.
- *
- * This effectively will make splitting servers for ops useless, but could
- * cause desync on a mixed TS3/TS5 network.
- *
- * See doc/ts5.txt for more details
- */
-#undef  TS5 
-
-/* TS5_ONLY
- * This will disallow TS3 servers from linking
- */
-#undef  TS5_ONLY
-
 /* Ignore bogus timestamps from other servers. Yes this will desync
  * the network, but it will allow chanops to resync with a valid non TS 0
  */
 #undef  IGNORE_BOGUS_TS
-
 
 /* GLINES - global Kline-like bans
  * Define this if you want GLINE support
