@@ -115,8 +115,6 @@ unsigned long my_rand(void);	/* provided by orabidoo */
 
 /* externally defined functions */
 extern Link *find_channel_link(Link *,aChannel *);	/* defined in list.c */
-extern aConfItem *find_special_conf(char *,int); /* defined in s_conf.c */
-extern int find_q_line(char *,char *,char *); /* defined in s_conf.c */
 
 #ifdef FLUD
 extern BlockHeap *free_fludbots;
@@ -126,8 +124,7 @@ static void announce_fluder(aClient *,aClient *,aChannel *,int );
 struct fludbot *remove_fluder_reference(struct fludbot **,aClient *);
 Link *remove_fludee_reference(Link **,void *);
 static int check_for_ctcp(char *);
-int check_for_fludblock(aClient *,aClient *,aChannel *,int);
-int check_for_flud(aClient *,aClient *,aChannel *,int);
+static int check_for_flud(aClient *,aClient *,aChannel *,int);
 void free_fluders(aClient *,aChannel *);
 void free_fludees(aClient *);
 #endif
@@ -945,9 +942,14 @@ static int valid_username(const char* username)
 /* 
  * tell_user_off
  *
+ * inputs	- client pointer of user to tell off
+ *		- pointer to reason user is getting told off
+ * output	- drop connection now YES or NO (for reject hold)
+ * side effects	-
  */
 
-static int tell_user_off(aClient *cptr, char **preason )
+static int
+tell_user_off(aClient *cptr, char **preason )
 {
   char* p = 0;
 
@@ -1001,7 +1003,8 @@ static int tell_user_off(aClient *cptr, char **preason )
  * Report to user any special flags they are getting, and set them.
  */
 
-static void report_and_set_user_flags(aClient *sptr,aConfItem *aconf)
+static void 
+report_and_set_user_flags(aClient *sptr,aConfItem *aconf)
 {
   /* If this user is being spoofed, tell them so */
   if(IsConfDoSpoofIp(aconf))
@@ -1496,6 +1499,18 @@ int	m_nick(aClient *cptr,
   return(nickkilldone(cptr,sptr,parc,parv,newts,nick));
 }
 
+/*
+ * nickkilldone
+ *
+ * input	- pointer to physical aClient
+ * 		- pointer to source aClient
+ * 		- argument count
+ *		- arguments
+ *		- newts time
+ *		- nick
+ * output	-
+ * side effects	-
+ */
 
 int nickkilldone(aClient *cptr, aClient *sptr, int parc,
 		 char *parv[], time_t newts,char *nick)
@@ -1733,6 +1748,7 @@ static	int	m_message(aClient *cptr,
     }
 
   /*
+  ** channels are privmsg'd a lot more than other clients, moved up here
   ** plain old channel msg ?
   */
   if( ((*nick == '#') || (*nick == '&'))
@@ -3914,44 +3930,11 @@ static int check_for_ctcp(char *str)
   return 0;
 }
 
- 
-int check_for_fludblock(aClient *fluder, /* fluder being fluded */
-			aClient *cptr,	 /* client being fluded */
-			aChannel *chptr, /* channel being fluded */
-			int type)	 /* for future use */
-{
-  time_t now;
-  int blocking;
-
-  /* If it's disabled, we don't need to process all of this */
-  if(FLUDBLOCK == 0)     
-    return 0;
- 
-  /* It's either got to be a client or a channel being fluded */
-  if((cptr == NULL) && (chptr == NULL)) 
-    return 0;
-                
-  if(cptr && !MyFludConnect(cptr))
-    {
-      sendto_ops("check_for_fludblock() called for non-local client");
-      return 0;
-    }
- 
-  /* Are we blocking fluds at this moment? */
-  time(&now);
-  if(cptr)                
-    blocking = (cptr->fludblock > (now - FLUDBLOCK));
-  else
-    blocking = (chptr->fludblock > (now - FLUDBLOCK));
-  
-  return(blocking);
-}
-
-
-int check_for_flud(aClient *fluder,	/* fluder, client being fluded */
-		   aClient *cptr,	
-		   aChannel *chptr,	/* channel being fluded */
-		   int type)		/* for future use */
+static int
+check_for_flud(aClient *fluder,	/* fluder, client being fluded */
+	       aClient *cptr,	
+	       aChannel *chptr,	/* channel being fluded */
+	       int type)	/* for future use */
 
 {               
   time_t now;

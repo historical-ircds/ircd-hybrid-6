@@ -76,7 +76,6 @@ static  int     attach_iline(aClient *, aConfItem *,char *);
 static  int     attach_iline(aClient *, aConfItem *);
 #endif
 aConfItem *find_special_conf(char *, int );
-int       find_q_line(char *, char *,char *);
 
 static void add_q_line(aConfItem *);
 static void clear_q_lines(void);

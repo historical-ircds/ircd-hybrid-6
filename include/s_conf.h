@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.16  1999/07/16 09:57:54  db
+ * - even more cleanups. moved prototype from h.h to s_conf.h
+ *
  * Revision 1.15  1999/07/16 09:36:00  db
  * - rename some function names to make function clearer
  * - moved prototypes into headers
@@ -213,6 +216,8 @@ extern int conf_connect_allowed(struct in_addr addr);
 extern char *oper_flags_as_string(int);
 extern char *oper_privs_as_string(struct Client *, int);
 extern int rehash_dump(struct Client *);
+extern int find_q_line(char*, char*, char *);
+extern struct ConfItem* find_special_conf(char *,int );
 
 typedef enum {
   CONF_TYPE,
