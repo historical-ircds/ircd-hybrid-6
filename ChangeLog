@@ -1,3 +1,11 @@
+*** 20010616_4 by leeh
+- *ug*
+  I think this catches all of the remaining get_client_name()'s.. 
+  it still needs auditing though in case ive missed a few..
+
+  I hope there arent this many in the -7 tree too :(
+
+
 *** 20010616_3 by greg
 It's 3am, and I've been up so long my tummy is growling.
 
