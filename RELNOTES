@@ -42,8 +42,8 @@ o IP I: lines can include a username.  Consult example.conf for more
 
 o RESTART requires the server name, like DIE.
 
-o NO_CREATE_ON_SPLIT will allow users to join existing channel bu
-  but create new ones.
+o NO_CREATE_ON_SPLIT will allow users to join existing channel but
+  not create new ones.
 
 Oper level
 --======--
