@@ -158,7 +158,7 @@ int m_ison(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       end_of_current_nick = strchr(current_nick,' ');
     }
 
-  current_insert_point--;
+/*  current_insert_point--; Do NOT take out the trailing space, it breaks ircII --Rodder */
   *current_insert_point = '\0';
   sendto_one(sptr, "%s", buf);
   return 0;
