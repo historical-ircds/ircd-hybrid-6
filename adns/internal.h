@@ -59,7 +59,7 @@ typedef unsigned char byte;
 #define MAXSERVERS 5
 #define MAXSORTLIST 15
 #define UDPMAXRETRIES 15
-#define UDPRETRYMS 2000
+#define UDPRETRYMS 1500
 #define TCPWAITMS 30000
 #define TCPCONNMS 14000
 #define TCPIDLEMS 30000

@@ -471,14 +471,14 @@ static time_t io_loop(time_t delay)
 
 #ifndef NO_PRIORITY
   read_message(0, FDL_SERVER);
-  read_message(1, FDL_BUSY);
+  read_message(0, FDL_BUSY);
   if (LIFESUX)
     {
-      read_message(1, FDL_SERVER);
+      read_message(0, FDL_SERVER);
       if (LIFESUX & 0x4)
         {       /* life really sucks */
-          read_message(1, FDL_BUSY);
-          read_message(1, FDL_SERVER);
+          read_message(0, FDL_BUSY);
+          read_message(0, FDL_SERVER);
         }
       flush_server_connections();
     }
@@ -502,12 +502,12 @@ static time_t io_loop(time_t delay)
     if ((lslasttime + (LIFESUX + 1)) < CurrentTime)
       {
 #endif
-        read_message(delay, FDL_ALL); /*  check everything! */
+        read_message(0, FDL_ALL); /*  check everything! */
         lslasttime = CurrentTime;
       }
    }
 #else
-  read_message(delay, FDL_ALL); /*  check everything! */
+  read_message(0, FDL_ALL); /*  check everything! */
   flush_server_connections();
 #endif
 
@@ -523,7 +523,6 @@ static time_t io_loop(time_t delay)
   if (CurrentTime >= nextping) {
     nextping = check_pings(CurrentTime);
     timeout_auth_queries(CurrentTime);
-    timeout_adns();
   }
 
   if (dorehash && !LIFESUX)
@@ -847,8 +846,11 @@ int main(int argc, char *argv[])
 
   ServerRunning = 1;
   while (ServerRunning) {
+    usleep(100000);
+    do_adns_io();
     delay = io_loop(delay);
     do_adns_io();
+
   }
   return 0;
 }

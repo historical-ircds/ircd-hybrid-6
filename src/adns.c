@@ -162,6 +162,7 @@ void do_adns_io(void)
 #endif
 	adns_processany(dns_state);
 	dns_do_callbacks();
+	timeout_adns();
 }
 /* void adns_gethost(const char *name, struct DNSQuery *req);
  * Input: A name, an address family, a DNSQuery structure.

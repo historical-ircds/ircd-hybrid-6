@@ -1044,8 +1044,8 @@ int read_message(time_t delay, unsigned char mask)        /* mika */
           FD_SET(ResolverFileDescriptor, read_set);
         }
 */
-      wait.tv_sec = IRCD_MIN(delay2, delay);
-      wait.tv_usec = usec;
+      wait.tv_sec = 0;
+      wait.tv_usec = 250000;
 
       nfds = select(MAXCONNECTIONS, read_set, write_set, 0, &wait);
 
@@ -1302,8 +1302,7 @@ int read_message(time_t delay, unsigned char mask)
 
     wait.tv_sec = IRCD_MIN(delay2, delay);
     wait.tv_usec = usec;
-    nfds = poll(poll_fdarray, nbr_pfds,
-                wait.tv_sec * 1000 + wait.tv_usec / 1000);
+    nfds = poll(poll_fdarray, nbr_pfds, 250);
     if ((CurrentTime = time(0)) == -1)
       {
         log(L_CRIT, "Clock Failure");
