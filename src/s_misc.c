@@ -27,9 +27,14 @@
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
+#include "h.h"
+#include "fdlist.h"
+#include "s_bsd.h"
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <fcntl.h>
+#include <netdb.h>
+
 #if !defined(ULTRIX) && !defined(SGI) && !defined(sequent) && \
     !defined(__convex__)
 # include <sys/param.h>
@@ -44,9 +49,7 @@
 #include <sys/types.h>
 #include <time.h>
 #endif
-#include <netdb.h>
-#include "h.h"
-#include "fdlist.h"
+
 extern fdlist serv_fdlist;
 
 /* LINKLIST */

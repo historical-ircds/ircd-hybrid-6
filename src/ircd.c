@@ -27,6 +27,12 @@
 #include "msg.h"
 #include "res.h"
 #include "class.h"
+#include "s_auth.h"
+#include "h.h"
+#include "mtrie_conf.h"
+#include "s_conf.h"
+#include "s_bsd.h"
+
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -38,11 +44,6 @@
 #undef RUSAGE_SELF 0
 #undef RUSAGE_CHILDREN /* hack for old slackware */
 #define RUSAGE_CHILDREN -1
-
-#include "h.h"
-
-#include "mtrie_conf.h"
-#include "s_conf.h"
 
 #ifdef  REJECT_HOLD
 int reject_held_fds=0;
@@ -676,34 +677,8 @@ static	time_t	check_pings(time_t currenttime)
 	   * to be active, close this connection too.
 	   */
 	  if (((currenttime - cptr->lasttime) >= (2 * ping) &&
-	       (cptr->flags & FLAGS_PINGSENT)) ||
-	      ((!IsRegistered(cptr) && (currenttime - cptr->since) >= ping)))
+	       (cptr->flags & FLAGS_PINGSENT)))
 	    {
-	      if (!IsRegistered(cptr) &&
-		  (DoingDNS(cptr) || DoingAuth(cptr)))
-		{
-		  if (cptr->authfd >= 0)
-		    {
-		      (void)close(cptr->authfd);
-		      cptr->authfd = -1;
-		      cptr->count = 0;
-		      *cptr->buffer = '\0';
-		    }
-#ifdef SHOW_HEADERS
-		  if (DoingDNS(cptr))
-		    sendheader(cptr, REPORT_FAIL_DNS, R_fail_dns);
-		  else
-		    sendheader(cptr, REPORT_FAIL_ID, R_fail_id);
-#endif
-		  Debug((DEBUG_NOTICE,"DNS/AUTH timeout %s",
-			 get_client_name(cptr,TRUE)));
-		  delete_resolver_queries(cptr);
-		  ClearAuth(cptr);
-		  ClearDNS(cptr);
-		  SetAccess(cptr);
-		  cptr->since = currenttime;
-		  continue;
-		}
 	      if (IsServer(cptr) || IsConnecting(cptr) ||
 		  IsHandshake(cptr))
 		{
@@ -1284,7 +1259,6 @@ normal user.\n");
   strncpyzt(me.name, aconf->host, sizeof(me.name));
   strncpyzt(me.sockhost, aconf->host, sizeof(me.sockhost));
   me.hopcount = 0;
-  me.authfd = -1;
   me.confs = NULL;
   me.next = NULL;
   me.user = NULL;
@@ -1297,6 +1271,10 @@ normal user.\n");
   (void)add_to_client_hash_table(me.name, &me);
 
   check_class();
+#if 0
+  /*
+   * XXX - this is temporarily broken by the changes to the auth code
+   */
   if (bootopt & BOOT_OPER)
     {
       aClient *tmp = add_connection(&me, 0);
@@ -1306,6 +1284,7 @@ normal user.\n");
       SetMaster(tmp);
     }
   else
+#endif
     write_pidfile();
 
   Debug((DEBUG_NOTICE,"Server ready..."));
@@ -1549,8 +1528,10 @@ time_t io_loop(time_t delay)
   ** ping times) --msa
   */
 
-  if ((timeofday >= nextping))	/* && !LIFESUX ) */
+  if (timeofday >= nextping) {
     nextping = check_pings(timeofday);
+    timeout_auth_queries(timeofday);
+  }
 
   if (dorehash && !LIFESUX)
     {

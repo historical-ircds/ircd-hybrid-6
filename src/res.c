@@ -9,7 +9,7 @@
 #include "res.h"
 #include "sys.h"
 #include "numeric.h"
-
+#include "s_bsd.h"
 #include "struct.h"
 #include "h.h"
 #include "common.h"

@@ -15,9 +15,8 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-
-/*
+ *
+ *
  * "h.h". - Headers file.
  *
  * Most of the externs and prototypes thrown in here to 'cleanup' things.
@@ -26,6 +25,8 @@
  * $Id$
  *
  */
+#ifndef INCLUDED_h_h
+#define INCLUDED_h_h
 #include "mtrie_conf.h"
 #include "fdlist.h"
 
@@ -131,33 +132,12 @@ extern	int	dbufalloc, dbufblocks, debuglevel, errno, h_errno;
 extern	int	maxdbufalloc, maxdbufblocks;
 extern	int	highest_fd, debuglevel, portnum, debugtty, maxusersperchannel;
 extern	int	readcalls;
-extern	aClient	*add_connection (aClient *, int);
-extern	int	add_listener (aConfItem *);
-extern	int	check_client (aClient *,char *,char **);
-extern	int	check_server (aClient *, struct hostent *,
-				    aConfItem *, aConfItem *, int);
-extern	int	check_server_init (aClient *);
-extern	void	close_connection (aClient *);
-extern	void	close_listeners ();
-extern	int	connect_server (aConfItem *, aClient *, struct hostent *);
 extern	void	get_my_name (aClient *, char *, int);
-extern	int	get_sockerr (aClient *);
-extern	int	inetport (aClient *, int, u_long);
-extern	void	init_sys ();
-extern  void    remove_hostent_references(const struct hostent* hp);
-extern	int	read_message (time_t, fdlist *);
-extern	void	report_error (char *, aClient *);
-extern	void	set_non_blocking (int, aClient *);
 extern	int	setup_ping (void);
-extern	void	summon (aClient *, char *, char *, char *);
 extern	int	unixport (aClient *, char *, int);
 extern	int	utmp_open (void);
 extern	int	utmp_read (int, char *, char *, char *, int);
 extern	int	utmp_close (int);
-
-extern	void	start_auth (aClient *);
-extern	void	read_authports (aClient *);
-extern	void	send_authports (aClient *);
 
 extern	void	restart (char *);
 extern	void	send_channel_modes (aClient *, aChannel *);
@@ -330,3 +310,7 @@ void	free_fludees();
 #ifdef IDLE_CHECK
 #define MIN_IDLETIME 1800
 #endif
+
+
+#endif /* INCLUDED_h_h */
+

@@ -19,34 +19,38 @@
  *
  *  $Id$
  */
+#include "s_bsd.h"
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
 #include "res.h"
 #include "s_conf.h"
+#include "s_auth.h"
 #include "class.h"
 #include "numeric.h"
-#include "patchlevel.h"
+#include "h.h"
+#include "fdlist.h"
+#include <assert.h>
+#include <stdio.h>
+#include <signal.h>
+#include <fcntl.h>
+#include <netdb.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/file.h>
 #include <sys/ioctl.h>
+#include <sys/resource.h>
+#include <arpa/inet.h>
+
 #if defined(SOL20) 
 #include <sys/filio.h>
 #include <sys/select.h>
 #include <unistd.h>
 #endif
-#include <stdio.h>
-#include <signal.h>
-#include <fcntl.h>
 #ifndef __EMX__
 #include <utmp.h>
 #endif
-#include <sys/resource.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-
 /*
  * Stuff for poll()
  */
@@ -71,8 +75,6 @@ fd_set  readset,writeset;
 #ifdef        AIX
 # include <time.h>
 #endif
-#include "h.h"
-#include "fdlist.h"
 extern fdlist serv_fdlist;
 
 #ifndef NO_PRIORITY
@@ -207,32 +209,6 @@ void remove_hostent_references(const struct hostent* hp)
     if ((cptr = local[i]) && (cptr->hostp == hp))
       cptr->hostp = NULL;
   }
-}
-
-/*
- * client_dns_callback - called when resolver query finishes
- * if the query resulted in a successful search, hp will contain
- * a non-null pointer, otherwise hp will be null.
- * set the client on it's way to a connection completion, regardless
- * of success of failure
- */
-static void client_dns_callback(void* vptr, struct hostent* hp)
-{
-  aClient* cptr = (aClient*) vptr;
-  /* delete_resolver_queries(vptr); */
-
-  ClearDNS(cptr);
-  if (hp) {
-    cptr->hostp = hp;
-#ifdef SHOW_HEADERS
-    sendheader(cptr, REPORT_FIN_DNS, R_fin_dns);
-  }
-  else {
-    sendheader(cptr, REPORT_FAIL_DNS, R_fail_dns);
-#endif
-  }
-  if (!DoingAuth(cptr))
-    SetAccess(cptr);
 }
 
 /*
@@ -409,7 +385,7 @@ int        add_listener(aConfItem *aconf)
  * and in a state where they can accept connections.  Unix sockets have
  * the path to the socket unlinked for cleanliness.
  */
-void        close_listeners()
+void close_listeners()
 {
   aClient        *cptr;
   int        i;
@@ -651,7 +627,7 @@ static        int        check_init(aClient *cptr,char *sockn)
  * also updates reason if a K-line
  *
  */
-int        check_client(aClient *cptr,char *username,char **reason)
+int check_client(aClient *cptr,char *username,char **reason)
 {
   static        char        sockname[HOSTLEN+1];
   struct        hostent *hp = NULL;
@@ -770,11 +746,11 @@ int        check_server_init(aClient *cptr)
   return check_server(cptr, hp, c_conf, n_conf, 0);
 }
 
-int        check_server(aClient *cptr,
-                     struct hostent *hp,
-                     aConfItem *c_conf,
-                     aConfItem *n_conf,
-                     int estab)
+int check_server(aClient *cptr,
+                 struct hostent *hp,
+                 aConfItem *c_conf,
+                 aConfItem *n_conf,
+                 int estab)
 {
   char        *name;
   char        sockname[HOSTLEN+1];
@@ -912,7 +888,7 @@ int        check_server(aClient *cptr,
 **        Return        TRUE, if successfully completed
 **                FALSE, if failed and ClientExit
 */
-static        int completed_connection(aClient *cptr)
+static int completed_connection(aClient *cptr)
 {
   aConfItem *c_conf;
   aConfItem *n_conf;
@@ -994,13 +970,6 @@ void close_connection(aClient *cptr)
     ircstp->is_ni++;
   
   /*
-   * remove outstanding DNS queries.
-   */
-  if (DoingDNS(cptr)) {
-    delete_resolver_queries(cptr);
-    ClearDNS(cptr);
-  }
-  /*
    * If the connection has been up for a long amount of time, schedule
    * a 'quick' reconnect, else reset the next-connect cycle.
    */
@@ -1018,13 +987,6 @@ void close_connection(aClient *cptr)
         HANGONRETRYDELAY : ConfConFreq(aconf);
       if (nextconnect > aconf->hold)
         nextconnect = aconf->hold;
-    }
-  
-  if (cptr->authfd >= 0)
-    {
-      delfrom_fdlist(cptr->authfd,&default_fdlist);
-      (void)close(cptr->authfd);
-      cptr->authfd = -1;
     }
 
   if (cptr->fd >= 0)
@@ -1261,41 +1223,34 @@ void        set_non_blocking(int fd,aClient *cptr)
 }
 
 /*
- * Creates a client which has just connected to us on the given fd.
- * The sockhost field is initialized with the ip# of the host.
- * The client is added to the linked list of clients but isnt added to any
- * hash tables yet since it doesnt have a name.
+ * add_connection - creates a client which has just connected to us on 
+ * the given fd. The sockhost field is initialized with the ip# of the host.
+ * The client is sent to the auth module for verification, and not put in
+ * any client list yet.
  */
-aClient* add_connection(aClient *cptr, int fd)
+void add_connection(aClient* listener, int fd)
 {
   aConfItem*         aconf = NULL;
   aClient*           new_client;
-  struct DNSQuery    query;
   struct sockaddr_in addr;
   int                len = sizeof(struct sockaddr_in);
 
-  if (cptr != &me)
-    aconf = cptr->confs->value.aconf;
   /* Removed preliminary access check. Full check is performed in
    * m_server and m_user instead. Also connection time out help to
    * get rid of unwanted connections.
    */
-  if (getpeername(fd, (struct sockaddr*) &addr, &len) == -1)
-    {
-      report_error("Failed in connecting to %s :%s", cptr);
-      ircstp->is_ref++;
-      delfrom_fdlist(fd, &default_fdlist);
-      close(fd);
-      return NULL;
-    }
+  if (getpeername(fd, (struct sockaddr*) &addr, &len) == -1) {
+    report_error("Failed in connecting to %s :%s", listener);
+    ircstp->is_ref++;
+    close(fd);
+    return;
+  }
   /* don't want to add "Failed in connecting to" here.. */
-  if (aconf && IsIllegal(aconf))
-    {
-      ircstp->is_ref++;
-      delfrom_fdlist(fd, &default_fdlist);
-      close(fd);
-      return NULL;
-    }
+  if (aconf && IsIllegal(aconf)) {
+    ircstp->is_ref++;
+    close(fd);
+    return;
+  }
   new_client = make_client(NULL);
 
   /* Copy ascii address to 'sockhost' just in case. Then we
@@ -1303,46 +1258,18 @@ aClient* add_connection(aClient *cptr, int fd)
    */
   get_sockhost(new_client, (char*) inetntoa((char*) &addr.sin_addr));
   new_client->ip.s_addr = addr.sin_addr.s_addr;
-  new_client->port = ntohs(addr.sin_port);
+  new_client->port      = ntohs(addr.sin_port);
+  new_client->fd        = fd;
+  new_client->acpt      = listener;
 
-  if (aconf)
+  if (listener != &me) {
+    aconf = listener->confs->value.aconf;
     aconf->clients++;
-  new_client->fd = fd;
-  if (fd > highest_fd)
-    highest_fd = fd;
+  }
 
-  local[fd] = new_client;
-
-  new_client->acpt = cptr;
-  add_client_to_list(new_client);
   set_non_blocking(new_client->fd, new_client);
   set_sock_opts(new_client->fd, new_client);
-#ifdef SHOW_HEADERS
-  sendheader(new_client, REPORT_DO_DNS, R_do_dns);
-#if 0
-  if (IsUnknown(new_client))
-    send(fd, REPORT_DO_DNS, R_do_dns, 0);
-#endif
-#endif
-  query.vptr     = new_client;
-  query.callback = client_dns_callback;
-  Debug((DEBUG_DNS, "lookup %s",
-	 inetntoa((char *)&addr.sin_addr)));
-  new_client->hostp = gethost_byaddr((const char*)&new_client->ip, &query);
-  if (!new_client->hostp)
-    SetDNS(new_client);
-#ifdef SHOW_HEADERS
-  else
-    sendheader(new_client, REPORT_FIN_DNSC, R_fin_dnsc);
-#if 0
-    if(IsUnknown(new_client))
-      send(fd, REPORT_FIN_DNSC, R_fin_dnsc, 0);
-#endif
-#endif
-#ifdef DO_IDENTD
   start_auth(new_client);
-#endif
-  return new_client;
 }
 
 /*
@@ -1493,35 +1420,98 @@ int read_packet(aClient *cptr, int msg_ready)
       return 1;
 }
 
+void accept_connection(struct Client* listener)
+{
+  static time_t last_oper_notice = 0;
+  struct sockaddr_in addr;
+  int                addrlen = sizeof(struct sockaddr_in);
+  int                fd;
+  struct ConfItem*   conf;
+
+  assert(0 != listener);
+
+  listener->lasttime = timeofday;
+  /*
+  ** There may be many reasons for error return, but
+  ** in otherwise correctly working environment the
+  ** probable cause is running out of file descriptors
+  ** (EMFILE, ENFILE or others?). The man pages for
+  ** accept don't seem to list these as possible,
+  ** although it's obvious that it may happen here.
+  ** Thus no specific errors are tested at this
+  ** point, just assume that connections cannot
+  ** be accepted until some old is closed first.
+  */
+  if ((fd = accept(listener->fd, (struct sockaddr*) &addr, &addrlen)) < 0) {
+    report_error("Cannot accept connections %s:%s", listener);
+    return;
+  }
+
+  conf = match_Dline(ntohl((unsigned long)addr.sin_addr.s_addr));
+
+  if (conf && !IsConfElined(conf)) {
+    ircstp->is_ref++;
+#ifdef REPORT_DLINE_TO_USER
+    /* Can't use orabidoo's sendheader here
+     * and if I'm sending a D line to a server,
+     * well it can't connect anyway
+     * -Dianora
+     */
+     send(fd, REPORT_DLINED, sizeof(REPORT_DLINED) - 1, 0);
+#endif
+    close(fd);
+    return;
+  }
+
+  if (fd >= (HARD_FDLIMIT - 10)) {
+    ircstp->is_ref++;
+    /* 
+     * slow down the whining to opers bit 
+     */
+    if((last_oper_notice + 20) <= NOW) {
+      sendto_realops("All connections in use. (%s)",
+                     get_client_name(listener, TRUE));
+      last_oper_notice = NOW;
+    }
+    send(fd, "ERROR :All connections in use\r\n", 32, 0);
+    close(fd);
+    return;
+  }
+  ircstp->is_ac++;
+
+  add_connection(listener, fd);
+  nextping = timeofday;
+}
+
 /*
  * Check all connections for new connections and input data that is to be
  * processed. Also check for connections with data queued and whether we can
  * write it out.
  */
 #ifndef USE_POLL
-  int        read_message(time_t delay,
+int read_message(time_t delay, fdlist *listp)        /* mika */
 
-                     /* Don't ever use ZERO here, unless you mean to poll
-                        and then you have to have sleep/wait somewhere 
-                        else in the code.--msa
-                        */
-                     fdlist *listp)        /* mika */
+     /* Don't ever use ZERO here, unless you mean to poll
+        and then you have to have sleep/wait somewhere 
+        else in the code.--msa
+      */
 {
-  aClient        *cptr;
-  int        nfds;
-  struct        timeval        wait;
-#ifdef        pyr
-  struct        timeval        nowt;
-  u_long        us;
+  aClient*       cptr;
+  int            nfds;
+  struct timeval wait;
+#ifdef  pyr
+  struct timeval nowt;
+  u_long   us;
 #endif
-  time_t        delay2 = delay, now;
-  u_long        usec = 0;
-  int        res, length, fd;
-  int        auth = 0;
-  register int i;
-  int rr;
-  time_t        last_full_to_opers_notice = (time_t)0;
-  aConfItem     *found_conf;
+  time_t         delay2 = delay;
+  time_t         now;
+  u_long         usec = 0;
+  int            res;
+  int            length;
+  struct AuthRequest* auth = 0;
+  struct AuthRequest* auth_next = 0;
+  int            i;
+  int            rr;
 
 #ifdef        pyr
   (void) gettimeofday(&nowt, NULL);
@@ -1531,17 +1521,22 @@ int read_packet(aClient *cptr, int msg_ready)
 #endif
 
   /* if it is called with NULL we check all active fd's */
-  if(!listp)
-    {
-      listp = &default_fdlist;
-    }
+  if (!listp) {
+    listp = &default_fdlist;
+  }
 
   for (res = 0;;)
     {
       FD_ZERO(read_set);
       FD_ZERO(write_set);
 
-      for (i=0; i<=highest_fd; i++)
+      for (auth = AuthPollList; auth; auth = auth->next) {
+        if (IsAuthConnect(auth))
+          FD_SET(auth->fd, write_set);
+        else
+          FD_SET(auth->fd, read_set);
+      }
+      for (i = 0; i <= highest_fd; i++)
         {
           if(!listp->entry[i])
             continue;
@@ -1550,17 +1545,7 @@ int read_packet(aClient *cptr, int msg_ready)
             continue;
           if (IsLog(cptr))
             continue;
-          if (DoingAuth(cptr))
-            {
-              auth++;
-              Debug((DEBUG_NOTICE,"auth on %x %d", cptr, i));
-              FD_SET(cptr->authfd, read_set);
-              if (cptr->flags & FLAGS_WRAUTH)
-                FD_SET(cptr->authfd, write_set);
-            }
-          if (DoingDNS(cptr) || DoingAuth(cptr))
-            continue;
-          if (IsMe(cptr) && IsListening(cptr))
+          if (IsListening(cptr))
             {
               FD_SET(i, read_set);
             }
@@ -1612,8 +1597,7 @@ int read_packet(aClient *cptr, int msg_ready)
       nfds = select(FD_SETSIZE, (fd_set *)read_set, (fd_set *)write_set,
                     (fd_set *)0, &wait);
 #else
-      nfds = select(MAXCONNECTIONS, read_set, write_set,
-                    0, &wait);
+      nfds = select(MAXCONNECTIONS, read_set, write_set, 0, &wait);
 #endif
 
       if((timeofday = time(NULL)) == -1)
@@ -1641,211 +1625,131 @@ int read_packet(aClient *cptr, int msg_ready)
    * Check the name resolver
    */
 
-  if (ResolverFileDescriptor >= 0 && FD_ISSET(ResolverFileDescriptor, read_set))
-    {
-      do_dns_async();
-      nfds--;
-      FD_CLR(ResolverFileDescriptor, read_set);
+  if (-1 < ResolverFileDescriptor && 
+      FD_ISSET(ResolverFileDescriptor, read_set)) {
+    do_dns_async();
+    --nfds;
+  }
+  /*
+   * Check the auth fd's first...
+   */
+  for (auth = AuthPollList; auth; auth = auth_next) {
+    auth_next = auth->next;
+    if (IsAuthConnect(auth) && FD_ISSET(auth->fd, write_set)) {
+      send_auth_query(auth);
+      if (0 == --nfds)
+        break;
     }
+    else if (FD_ISSET(auth->fd, read_set)) {
+      read_auth_reply(auth);
+      if (0 == --nfds)
+        break;
+    }
+  }
 
-  for (i=0; i<=highest_fd; i++)
-    {
-      if(!listp->entry[i])
-        continue;
+  for (i = 0; i <= highest_fd; i++) {
+    if(!listp->entry[i])
+      continue;
 
-      if (!(cptr = local[i]))
-        continue;
+    if (!(cptr = local[i]))
+      continue;
+
+    if(IsLog(cptr))
+      continue;
   
-      if(IsLog(cptr))
-        continue;
-    
-      /*
-       * Check the auth fd's first...
-       */
-      if ((auth>0) && (cptr->authfd >= 0))
-        {
-          auth--;
-          if ((nfds > 0) && FD_ISSET(cptr->authfd, write_set))
-            {
-              nfds--;
-              send_authports(cptr);
-            }
-          else if ((nfds > 0) && FD_ISSET(cptr->authfd, read_set))
-            {
-              nfds--;
-              read_authports(cptr);
-            }
-        }
+    /*
+     * Now see if there's a connection pending...
+     */
 
-      /*
-       * Now see if there's a connection pending...
-       */
+    if (IsListening(cptr) && FD_ISSET(i, read_set)) {
+      FD_CLR(i, read_set);
+      nfds--;
+      accept_connection(cptr);
+    }
 
-      if (IsListening(cptr) && FD_ISSET(i, read_set))
-        {
-          static struct sockaddr_in        addr;
-          int addrlen = sizeof(struct sockaddr_in);
-          char host[HOSTLEN+2];
+    if (IsMe(cptr))
+      continue;
 
-          FD_CLR(i, read_set);
-          nfds--;
-          cptr->lasttime = timeofday;
-          /*
-          ** There may be many reasons for error return, but
-          ** in otherwise correctly working environment the
-          ** probable cause is running out of file descriptors
-          ** (EMFILE, ENFILE or others?). The man pages for
-          ** accept don't seem to list these as possible,
-          ** although it's obvious that it may happen here.
-          ** Thus no specific errors are tested at this
-          ** point, just assume that connections cannot
-          ** be accepted until some old is closed first.
-          */
-          if ((fd = accept(i, (struct sockaddr *)&addr, &addrlen)) < 0)
-            {
-              report_error("Cannot accept connections %s:%s",
-                           cptr);
-              break;
-            }
-          strncpyzt(host,
-                    (char *)inetntoa((char *)&addr.sin_addr),
-                    sizeof(host));
-
-          found_conf = match_Dline(ntohl((unsigned long)addr.sin_addr.s_addr));
-
-          if (found_conf && !IsConfElined(found_conf))
-            {
-              ircstp->is_ref++;
-#ifdef REPORT_DLINE_TO_USER
-              /* Can't use orabidoo's sendheader here
-               * and if I'm sending a D line to a server,
-               * well it can't connect anyway
-               * -Dianora
-               */
-              send(fd, REPORT_DLINED, sizeof(REPORT_DLINED)-1, 0);
-#endif
-
-              (void)close(fd);
-              continue;
-            }
-
-            if (fd >= (HARD_FDLIMIT - 10))
-              {
-                ircstp->is_ref++;
-                /* slow down the whining to opers bit */
-                if((last_full_to_opers_notice + 20) <= NOW)
-                  {
-                    sendto_realops("All connections in use. (%s)",
-                                   get_client_name(cptr, TRUE));
-                    last_full_to_opers_notice = NOW;
-                  }
-                (void)send(fd,
-                           "ERROR :All connections in use\r\n",
-                           32, 0);
-                (void)close(fd);
-                break;
-              }
-            ircstp->is_ac++;
-            /*
-             * Use of add_connection (which never fails :) meLazy
-             */
-            addto_fdlist(fd, &default_fdlist);
-            (void)add_connection(cptr, fd);
-            nextping = timeofday;
-            if (!cptr->acpt)
-              cptr->acpt = &me;
-          }
-
-      if (IsMe(cptr))
-        continue;
-
-      /*
-       * See if we can write...
-       */
-      if (FD_ISSET(i, write_set))
-        {
-          int        write_err = 0;
-          nfds--;
-
-          /*
-          ** ...room for writing, empty some queue then...
-          */
-          if (IsConnecting(cptr))
-            write_err = completed_connection(cptr);
-          if (!write_err)
-            (void)send_queued(cptr);
-          if (IsDead(cptr) || write_err)
-            {
-              if (FD_ISSET(i, read_set))
-                {
-                  nfds--;
-                  FD_CLR(i, read_set);
-                }
-              (void)exit_client(cptr, cptr, &me,
-                                (cptr->flags & FLAGS_SENDQEX) ? 
-                                "SendQ Exceeded" :
-                                strerror(get_sockerr(cptr)));
-              continue;
-            }
-        }
-      length = 1;        /* for fall through case */
-      rr = 0;
-      rr = FD_ISSET(i, read_set);
-      if (!NoNewLine(cptr) || rr)
-        length = read_packet(cptr, rr);
-#ifdef DEBUGMODE
-       readcalls++;
-#endif
-
-      if ((length != FLUSH_BUFFER) && IsDead(cptr))
-        {
-          if (FD_ISSET(i, read_set))
-            {
-              nfds--;
-              FD_CLR(i, read_set);
-            }
-          (void)exit_client(cptr, cptr, &me,
-                            (cptr->flags & FLAGS_SENDQEX) ? "SendQ Exceeded" :
-                            strerror(get_sockerr(cptr)));
-          continue;
-        }
-      if (!FD_ISSET(i, read_set) && length > 0)
-        continue;
+    /*
+     * See if we can write...
+     */
+    if (FD_ISSET(i, write_set)) {
+      int        write_err = 0;
       nfds--;
 
-      if (length > 0)
-        continue;
       /*
-      ** ...hmm, with non-blocking sockets we might get
-      ** here from quite valid reasons, although.. why
-      ** would select report "data available" when there
-      ** wasn't... so, this must be an error anyway...  --msa
-      ** actually, EOF occurs when read() returns 0 and
-      ** in due course, select() returns that fd as ready
-      ** for reading even though it ends up being an EOF. -avalon
+      ** ...room for writing, empty some queue then...
       */
-      Debug((DEBUG_ERROR, "READ ERROR: fd = %d %d %d",
-             i, errno, length));
-    
-      /*
-      ** NOTE: if length == -2 then cptr has already been freed!
-      */
-      if (length != -2 && (IsServer(cptr) || IsHandshake(cptr)))
-        {
-          if (length == 0)
-            sendto_ops("Server %s closed the connection",
-                       get_client_name(cptr,FALSE));
-          else
-            report_error("Lost connection to %s:%s",
-                         cptr);
-        }
-      if (length != FLUSH_BUFFER)
-        {
-          char errmsg[255];
-          (void)ircsprintf(errmsg,"Read error: %d (%s)",errno,strerror(errno));
-          (void)exit_client(cptr, cptr, &me, errmsg);
-        }
+      if (IsConnecting(cptr))
+	write_err = completed_connection(cptr);
+      if (!write_err)
+	send_queued(cptr);
+
+      if (IsDead(cptr) || write_err) {
+	if (FD_ISSET(i, read_set)) {
+	  nfds--;
+	  FD_CLR(i, read_set);
+	}
+	exit_client(cptr, cptr, &me, 
+                    (cptr->flags & FLAGS_SENDQEX) ? 
+		    "SendQ Exceeded" : strerror(get_sockerr(cptr)));
+	continue;
+      }
     }
+    length = 1;        /* for fall through case */
+    rr = 0;
+    rr = FD_ISSET(i, read_set);
+    if (!NoNewLine(cptr) || rr)
+      length = read_packet(cptr, rr);
+#ifdef DEBUGMODE
+    readcalls++;
+#endif
+
+    if ((length != FLUSH_BUFFER) && IsDead(cptr)) {
+      if (FD_ISSET(i, read_set)) {
+	nfds--;
+	FD_CLR(i, read_set);
+      }
+      exit_client(cptr, cptr, &me,
+		  (cptr->flags & FLAGS_SENDQEX) ? "SendQ Exceeded" :
+		  strerror(get_sockerr(cptr)));
+      continue;
+    }
+    if (!FD_ISSET(i, read_set) && length > 0)
+      continue;
+    nfds--;
+
+    if (length > 0)
+      continue;
+    /*
+    ** ...hmm, with non-blocking sockets we might get
+    ** here from quite valid reasons, although.. why
+    ** would select report "data available" when there
+    ** wasn't... so, this must be an error anyway...  --msa
+    ** actually, EOF occurs when read() returns 0 and
+    ** in due course, select() returns that fd as ready
+    ** for reading even though it ends up being an EOF. -avalon
+    */
+    Debug((DEBUG_ERROR, "READ ERROR: fd = %d %d %d",
+	   i, errno, length));
+  
+    /*
+    ** NOTE: if length == -2 then cptr has already been freed!
+    */
+    if (length != -2 && (IsServer(cptr) || IsHandshake(cptr))) {
+      if (length == 0)
+	sendto_ops("Server %s closed the connection",
+		   get_client_name(cptr,FALSE));
+      else
+	report_error("Lost connection to %s:%s",
+		     cptr);
+    }
+    if (length != FLUSH_BUFFER) {
+      char errmsg[255];
+      ircsprintf(errmsg,"Read error: %d (%s)", errno, strerror(errno));
+      exit_client(cptr, cptr, &me, errmsg);
+    }
+  }
   return 0;
 }
   
@@ -1900,127 +1804,142 @@ int read_packet(aClient *cptr, int msg_ready)
                 pfd->events = 0;                \
         }
 
-int        read_message(time_t delay, fdlist *listp)
+int read_message(time_t delay, fdlist *listp)
 {
-  aClient *cptr;
-  int     nfds;
-  struct        timeval wait;
+  aClient*             cptr;
+  int                  nfds;
+  struct timeval       wait;
 
-  static struct pollfd        poll_fdarray[MAXCONNECTIONS];
-  struct pollfd        *pfd     = poll_fdarray;
-  struct pollfd        *res_pfd = NULL;
-  int                nbr_pfds = 0;
-  time_t        delay2 = delay;
-  u_long        usec = 0;
-  int                res, length, fd, newfd;
-  int                auth, rr, rw;
-  register        int i,j;
-  static aClient        *authclnts[MAXCONNECTIONS];
-  char                errmsg[255];
-  aConfItem     *found_conf;
+  static struct pollfd poll_fdarray[MAXCONNECTIONS];
+  struct pollfd*       pfd = poll_fdarray;
+  struct pollfd*       res_pfd = NULL;
+  int                  nbr_pfds = 0;
+  time_t               delay2 = delay;
+  u_long               usec = 0;
+  int                  res = 0;
+  int                  length;
+  int                  fd;
+  struct AuthRequest*  auth;
+  struct AuthRequest*  auth_next;
+  int                  rr;
+  int                  rw;
+  int                  i;
+  int                  j;
+  char                 errmsg[255];
 
   /* if it is called with NULL we check all active fd's */
-  if (!listp)
-    {
-      listp = &default_fdlist;
+  if (!listp) {
+    listp = &default_fdlist;
+  }
+
+  for ( ; ; ) {
+    nbr_pfds = 0;
+    pfd      = poll_fdarray;
+    pfd->fd  = -1;
+    res_pfd  = NULL;
+    auth = 0;
+
+    if (ResolverFileDescriptor >= 0) {
+      PFD_SETR(ResolverFileDescriptor);
+      res_pfd = pfd;
+    }
+    for (auth = AuthPollList; auth; auth = auth->next) {
+      Debug((DEBUG_NOTICE,"auth on %x %d", auth, auth->fd));
+      auth->index = nbr_pfds;
+      if (IsAuthConnect(auth))
+        PFD_SETW(auth->fd);
+      else
+        PFD_SETR(auth->fd);
     }
 
-  for (res = 0;;)
-    {
-      nbr_pfds = 0;
-      pfd      = poll_fdarray;
-      pfd->fd  = -1;
-      res_pfd  = NULL;
-      auth = 0;
+    for (i = 0; j <= highest_fd; i++) {
+      if(!listp->entry[i])
+	continue;
 
-      for (i=0; j<=highest_fd;i++)
-        {
-          if(!listp->entry[i])
-            continue;
+      if (!(cptr = local[i]))
+	continue;
 
-          if (!(cptr = local[i]))
-            continue;
+      if (IsLog(cptr))
+	continue;
+      if (IsListening(cptr)) {
 
-          if (IsLog(cptr))
-            continue;
-          if (DoingAuth(cptr))
-            {
-              if (auth == 0)
-                memset( (void *)&authclnts, 0, sizeof(authclnts) );
-              auth++;
-              Debug((DEBUG_NOTICE,"auth on %x %d", cptr, i));
-              PFD_SETR(cptr->authfd);
-              if (IsWriteAuth(cptr))
-                PFD_SETW(cptr->authfd);
-              authclnts[cptr->authfd] = cptr;
-              continue;
-            }
-          if (DoingDNS(cptr) || DoingAuth(cptr))
-            continue;
-          if (IsMe(cptr) && IsListening(cptr))
-            {
 #if defined(SOL20) || defined(AIX)
 #define CONNECTFAST
 #endif
 
 #ifdef CONNECTFAST
-              /* next line was 2, changing to 1 */
-              /* if we dont have many clients just let em on */
-              /* This is VERY bad if someone tries to send a lot
-                 of clones to the server though, as mbuf's can't
-                 be allocated quickly enough... - Comstud */
-              if (1)
+	/* next line was 2, changing to 1 */
+	/* if we dont have many clients just let em on */
+	/* This is VERY bad if someone tries to send a lot
+	   of clones to the server though, as mbuf's can't
+	   be allocated quickly enough... - Comstud */
+	if (1)
 #else
-                if (timeofday > (cptr->lasttime + 2))
+	if (timeofday > (cptr->lasttime + 2))
 #endif
-                  {
-                    PFD_SETR(i);
-                  }
-                else if (delay2 > 2)
-                  delay2 = 2;
-            }
-          else if (!IsMe(cptr))
-            {
-              if (DBufLength(&cptr->recvQ) && delay2 > 2)
-                delay2 = 1;
-              if (DBufLength(&cptr->recvQ) < 4088)
-                PFD_SETR(i);
-            }
-          
-          if (DBufLength(&cptr->sendQ) || IsConnecting(cptr)
+	{
+	  PFD_SETR(i);
+	}
+	else if (delay2 > 2)
+	  delay2 = 2;
+      }
+      else if (!IsMe(cptr)) {
+	if (DBufLength(&cptr->recvQ) && delay2 > 2)
+	  delay2 = 1;
+	if (DBufLength(&cptr->recvQ) < 4088)
+	  PFD_SETR(i);
+      }
+      
+      if (DBufLength(&cptr->sendQ) || IsConnecting(cptr)
 #ifdef ZIP_LINKS
-              || ((cptr->flags2 & FLAGS2_ZIP) && (cptr->zip->outcount > 0))
+	  || ((cptr->flags2 & FLAGS2_ZIP) && (cptr->zip->outcount > 0))
 #endif
-              )
-            PFD_SETW(i);
-        }
+	  )
+	PFD_SETW(i);
+    }
 
-      if (ResolverFileDescriptor >= 0)
-        {
-          PFD_SETR(ResolverFileDescriptor);
-          res_pfd = pfd;
-        }
-      wait.tv_sec = MIN(delay2, delay);
-      wait.tv_usec = usec;
-      nfds = poll(poll_fdarray, nbr_pfds,
-                  wait.tv_sec*1000 + wait.tv_usec/1000);
-      if (nfds == -1 && ((errno == EINTR) || (errno == EAGAIN)))
-        return -1;
-      else if (nfds >= 0)
+    wait.tv_sec = MIN(delay2, delay);
+    wait.tv_usec = usec;
+    nfds = poll(poll_fdarray, nbr_pfds,
+		wait.tv_sec * 1000 + wait.tv_usec / 1000);
+    if (nfds == -1 && ((errno == EINTR) || (errno == EAGAIN)))
+      return -1;
+    else if (nfds >= 0)
+      break;
+    report_error("poll %s:%s", &me);
+    res++;
+    if (res > 5)
+      restart("too many poll errors");
+    sleep(10);
+  }
+
+  if (res_pfd && (res_pfd->revents & (POLLREADFLAGS|POLLERRORS))) {
+    do_dns_async();
+    --nfds;
+  }
+  for (auth = AuthPollList; auth; auth = auth_next) {
+    auth_next = auth->next;
+    i = auth->index;
+    /*
+     * check for any event, we only ask for one at a time
+     */
+    if (pollfd_array[i].revents) { 
+      if (IsAuthConnect(auth))
+        send_auth_query(auth);
+      else
+        read_auth_reply(auth);
+      if (0 == --nfds)
         break;
-      report_error("poll %s:%s", &me);
-      res++;
-      if (res > 5)
-        restart("too many poll errors");
-      sleep(10);
     }
-  if (res_pfd && (res_pfd->revents & (POLLREADFLAGS|POLLERRORS)))
-    {
-      do_dns_async();
-      nfds--;
-    }
-  for (pfd = poll_fdarray, i = 0; (nfds > 0) && (i < nbr_pfds);
-       i++, pfd++)
+  }
+  /*
+   * i contains the next non-auth index, since we put the resolver and
+   * auth file descriptors in poll_fdarray first, the very next one should
+   * be the start of the clients and listeners and such
+   */
+  pfd = &poll_fdarray[++i];
+    
+  for ( ; (nfds > 0) && (i < nbr_pfds); i++, pfd++)
     {
       if (!pfd->revents)
         continue;
@@ -2037,82 +1956,12 @@ int        read_message(time_t delay, fdlist *listp)
           if (pfd->events & POLLWRITEFLAGS)
             rw++;
         }
-      if ((auth>0) && ((cptr=authclnts[fd]) != NULL) &&
-          (cptr->authfd == fd))
-        {
-          auth--;
-          if (rr)
-            read_authports(cptr);
-          if (rw)
-            send_authports(cptr);
-          continue;
-        }
       if (!(cptr = local[fd]))
         continue;
       if (rr && IsListening(cptr))
         {
-          static struct sockaddr_in        addr;
-          int addrlen = sizeof(struct sockaddr_in);
-          char host[HOSTLEN+2];
-          
           rr = 0;
-          cptr->lasttime = timeofday;
-          /*
-          ** There may be many reasons for error return, but
-          ** in otherwise correctly working environment the
-          ** probable cause is running out of file descriptors
-          ** (EMFILE, ENFILE or others?). The man pages for
-          ** accept don't seem to list these as possible,
-          ** although it's obvious that it may happen here.
-          ** Thus no specific errors are tested at this
-          ** point, just assume that connections cannot
-          ** be accepted until some old is closed first.
-          */
-          if ((newfd = accept(fd, (struct sockaddr *)&addr, &addrlen)) < 0)
-            {
-#ifdef EPROTO
-              /* If a connection is closed before the accept(), it
-                 returns EPROTO on Solaris. */
-              if (errno != EPROTO)
-#endif
-                report_error("Cannot accept connections %s:%s", cptr);
-              break;
-            }
-          strncpyzt(host,
-                    (char *)inetntoa((char *)&addr.sin_addr),
-                    sizeof(host));
-
-          found_conf = match_Dline(ntohl((unsigned long)addr.sin_addr.s_addr));
-
-          if (found_conf && !IsConfElined(found_conf))
-            {
-              ircstp->is_ref++;
-#ifdef REPORT_DLINE_TO_USER
-              /* can't use orabidoo's sendheader here */
-              send(fd, REPORT_DLINED, strlen(REPORT_DLINED), 0);
-#endif
-              (void)close(newfd);
-              continue;
-            }
-
-          if (newfd >= HARD_FDLIMIT - 10)
-            {
-              ircstp->is_ref++;
-              sendto_ops("All connections in use. (%s)",
-                         get_client_name(cptr, TRUE));
-              (void)send(newfd, "ERROR :All connections in use\r\n", 32, 0);
-              (void)close(newfd);
-              break;
-            }
-          ircstp->is_ac++;
-          /*
-           * Use of add_connection (which never fails :) meLazy
-           */
-          (void)add_connection(cptr, newfd);
-          nextping = timeofday;
-          if (!cptr->acpt)
-            cptr->acpt = &me;
-          continue;
+          accept_connection(cptr);
         }
       if (IsMe(cptr))
         continue;
@@ -2188,9 +2037,7 @@ int        read_message(time_t delay, fdlist *listp)
 /*
  * connect_server
  */
-int        connect_server(aConfItem *aconf,
-                       aClient *by,
-                       struct hostent *hp)
+int connect_server(aConfItem *aconf, aClient *by, struct hostent *hp)
 {
   struct sockaddr *svp;
   aClient *cptr, *c2ptr;
@@ -2331,12 +2178,11 @@ int        connect_server(aConfItem *aconf,
   return 0;
 }
 
-static        struct        sockaddr *connect_inet(aConfItem *aconf,
-                                       aClient *cptr,
-                                       int *lenp)
+static struct sockaddr* connect_inet(aConfItem *aconf, aClient *cptr,
+                                     int *lenp)
 {
-  static  struct sockaddr_in        server;
-  struct        hostent        *hp;
+  static struct sockaddr_in server;
+  struct        hostent     *hp;
 
   /*
    * Might as well get sockhost from here, the connection is attempted
@@ -2411,10 +2257,8 @@ static        struct        sockaddr *connect_inet(aConfItem *aconf,
 }
 
 /*
- * do_dns_async
- *
- * Called when the fd returned from init_resolver() has been selected for
- * reading.
+ * do_dns_async - called when the fd returned from init_resolver() has 
+ * been selected for reading.
  */
 static void do_dns_async()
 {

@@ -198,14 +198,12 @@ typedef struct	MessageFileItem aMessageFile;
 #define	FLAGS_SERVNOTICE 0x0080 /* server notices such as kill */
 #define	FLAGS_BLOCKED    0x0100	/* socket is in a blocked condition */
 #define FLAGS_REJECT_HOLD 0x0200 /* client has been klined */
-/* #define FLAGS_UNIX	 0x0200  Not used anymore, free for other use */
-     				/* socket is in the unix domain, not inet */
 #define	FLAGS_CLOSING    0x0400	/* set when closing to suppress errors */
 #define	FLAGS_LISTEN     0x0800 /* used to mark clients which we listen() on */
 #define	FLAGS_CHKACCESS  0x1000 /* ok to check clients access if set */
-#define	FLAGS_DOINGDNS	 0x2000 /* client is waiting for a DNS response */
-#define	FLAGS_AUTH	 0x4000 /* client is waiting on rfc931 response */
-#define	FLAGS_WRAUTH	 0x8000	/* set if we havent writen to ident server */
+/* #define	FLAGS_DOINGDNS	 0x2000  client is waiting for a DNS response */
+/* #define	FLAGS_AUTH	 0x4000  client is waiting on rfc931 response */
+/* #define	FLAGS_WRAUTH	 0x8000	 set if we havent writen to ident server */
 #define	FLAGS_LOCAL	0x10000 /* set for local clients */
 #define	FLAGS_GOTID	0x20000	/* successful ident lookup achieved */
 #define	FLAGS_DOID	0x40000	/* I-lines say must use ident return */
@@ -300,8 +298,6 @@ typedef struct	MessageFileItem aMessageFile;
 #define SendSpyNotice(x)	((x)->flags & FLAGS_SPY)
 #define SendDebugNotice(x)	((x)->flags & FLAGS_DEBUG)
 #define SendNickChange(x)	((x)->flags & FLAGS_NCHANGE)
-     /* #define	IsUnixSocket(x)		((x)->flags & FLAGS_UNIX) */
-     /* No more FLAGS_UNIX */
 #define	IsListening(x)		((x)->flags & FLAGS_LISTEN)
 #define	DoAccess(x)		((x)->flags & FLAGS_CHKACCESS)
 #define	IsLocal(x)		((x)->flags & FLAGS_LOCAL)
@@ -310,22 +306,12 @@ typedef struct	MessageFileItem aMessageFile;
 #define	SetLocOp(x)    		((x)->flags |= FLAGS_LOCOP)
 #define	SetInvisible(x)		((x)->flags |= FLAGS_INVISIBLE)
 #define	SetWallops(x)  		((x)->flags |= FLAGS_WALLOP)
-/* #define	SetUnixSock(x)		((x)->flags |= FLAGS_UNIX) */
-#define	SetDNS(x)		((x)->flags |= FLAGS_DOINGDNS)
-#define SetStartAuth(x)		((x)->flags |= (FLAGS_WRAUTH|FLAGS_AUTH))
-#define ClearStartAuth(x)	((x)->flags &= ~(FLAGS_WRAUTH|FLAGS_AUTH))
-#define ClearWriteAuth(x)	((x)->flags &= ~FLAGS_WRAUTH)
-#define IsWriteAuth(x)		((x)->flags & FLAGS_WRAUTH)
-#define	DoingDNS(x)		((x)->flags & FLAGS_DOINGDNS)
 #define	SetAccess(x)		((x)->flags |= FLAGS_CHKACCESS)
-#define	DoingAuth(x)		((x)->flags & FLAGS_AUTH)
 #define	NoNewLine(x)		((x)->flags & FLAGS_NONL)
 #define	ClearOper(x)		((x)->flags &= ~FLAGS_OPER)
 #define ClearLocOp(x)		((x)->flags &= ~FLAGS_LOCOP)
 #define	ClearInvisible(x)	((x)->flags &= ~FLAGS_INVISIBLE)
 #define	ClearWallops(x)		((x)->flags &= ~FLAGS_WALLOP)
-#define	ClearDNS(x)		((x)->flags &= ~FLAGS_DOINGDNS)
-#define	ClearAuth(x)		((x)->flags &= ~FLAGS_AUTH)
 #define	ClearAccess(x)		((x)->flags &= ~FLAGS_CHKACCESS)
 #define SetGotId(x)		((x)->flags |= FLAGS_GOTID)
 
@@ -613,7 +599,6 @@ struct Client
   int		priority;
   aClient	*acpt;		/* listening client which we accepted from */
   Link		*confs;		/* Configuration record associated */
-  int		authfd;		/* fd for rfc931 authentication */
   struct	in_addr	ip;	/* keep real ip# too */
   unsigned short	port;	/* and the remote port# too :-) */
   struct	hostent	*hostp;

@@ -30,12 +30,10 @@
 #include "channel.h"
 #include "s_conf.h"
 #include "class.h"
-#include <sys/stat.h>
-#ifndef __EMX__
-#include <utmp.h>
-#endif /* __EMX__ */
-#include <fcntl.h>
+#include "s_bsd.h"
 #include "h.h"
+#include <sys/stat.h>
+#include <fcntl.h>
 #ifdef FLUD
 #include "blalloc.h"
 #endif /* FLUD */
@@ -43,6 +41,9 @@
 #include "dbuf.h"
 #endif
 
+#ifndef __EMX__
+#include <utmp.h>
+#endif /* __EMX__ */
 #if defined( HAVE_STRING_H)
 #include <string.h>
 #else
@@ -496,11 +497,10 @@ static	int	register_user(aClient *cptr,
 	  {
 	    if(sptr->user)
 	      {
-		if (sptr->flags & FLAGS_DOID &&
-		    !(sptr->flags & FLAGS_GOTID))
+		if (sptr->flags & FLAGS_DOID && !(sptr->flags & FLAGS_GOTID))
 		  {
 		    *user->username = '~';
-		    (void)strncpy(&user->username[1], username, USERLEN);
+		    strncpy(&user->username[1], username, USERLEN);
 		    user->username[USERLEN] = '\0';
 		  }
 		else

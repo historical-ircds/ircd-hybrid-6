@@ -191,13 +191,12 @@ aClient	*make_client(aClient *from)
       /* cptr->serv = NULL; */
       cptr->status = STAT_UNKNOWN;
       cptr->fd = -1;
-      (void)strcpy(cptr->username, "unknown");
+      strcpy(cptr->username, "unknown");
       cptr->since = cptr->lasttime = cptr->firsttime = timeofday;
       /* cptr->confs = NULL; */
       /* cptr->sockhost[0] = '\0'; */
       /* cptr->buffer[0] = '\0'; */
       /* cptr->username[0] = '\0'; */
-      cptr->authfd = -1;
     }
   else
     { /* from is not NULL */

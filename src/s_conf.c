@@ -28,6 +28,10 @@
 #include "dline_conf.h"
 #include "sys.h"
 #include "numeric.h"
+#include "h.h"
+#include "mtrie_conf.h"
+#include "s_bsd.h"
+
 #if defined(AIX) || defined(DYNIXPTX) || defined(SVR3)
 #include <time.h>
 #endif
@@ -36,9 +40,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <assert.h>
-#include "h.h"
 extern int rehashed;
-#include "mtrie_conf.h"
 
 #include "res.h"    /* gethost_byname, gethost_byaddr */
 

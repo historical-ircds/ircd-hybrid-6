@@ -39,14 +39,23 @@ static char *rcs_version = "$Id$";
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
+#include "h.h"
+#include "s_bsd.h"
+#include "dline_conf.h"
+#include "mtrie_conf.h"
+#include "fdlist.h"
+#include "fileio.h"
+#include "res.h"
+#include "s_conf.h"
+#include "class.h"
+
 #ifndef __EMX__
 #include <utmp.h> /* old slackware utmp.h defines BYTE_ORDER */
 #endif /* __EMX__ */
-
 #if defined(AIX) || defined(DYNIXPTX) || defined(SVR3)
 #include <time.h>
 #endif
-#include "h.h"
+
 #if defined( HAVE_STRING_H )
 #include <string.h>
 #else
@@ -55,13 +64,6 @@ static char *rcs_version = "$Id$";
 #undef strchr
 #define strchr index
 #endif
-#include "dline_conf.h"
-#include "mtrie_conf.h"
-#include "fdlist.h"
-#include "fileio.h"
-#include "res.h"
-#include "s_conf.h"
-#include "class.h"
 
 
 /* external variables */
