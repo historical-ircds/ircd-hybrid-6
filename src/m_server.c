@@ -406,9 +406,6 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   strncpy_irc(cptr->info, info[0] ? info : me.name, REALLEN);
   cptr->hopcount = hop;
 
-  if (IsHandshake(cptr))
-    return server_estab(cptr);
-
   if (check_server(cptr))
     return server_estab(cptr);
 
