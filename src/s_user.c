@@ -1786,170 +1786,6 @@ static	int	m_message(aClient *cptr,
       return -1;
     }
 
-#ifdef EXTRA_BOT_NOTICES
-  if (MyConnect(sptr)) /* don't check for remote bots */
-    {
-      /* ComBot */
-      if (strstr(nick, "blehdhfsddd"))
-	sendto_realops_lev(REJ_LEV,
-			   "ComBot alarm activated: %s [%s@%s] : [/msg %s]",
-			   parv[0], sptr->user->username, 
-			   sptr->user->host, nick);
-      
-      /* EggDrop finder by desynched */
-      if (match("h?4x0r?", nick))
-	sendto_realops_lev(REJ_LEV,
-			   "EggDrop alarm #2 activated: %s [%s@%s] : [/msg %s]",
-			   parv[0], sptr->user->username,
-			   sptr->user->host, nick);
-
-      /* HOFBot finder by desynched */
-      if (strstr(nick,"blahb1ah"))
-	sendto_realops_lev(REJ_LEV, "HOFBot alarm activated: %s [%s@%s] : [/msg %s]",
-			   parv[0], sptr->user->username, sptr->user->host, nick);
-
-      /* Stealth finder by desynched */
-      if (strstr(nick,"uthfgse"))
-	sendto_realops_lev(REJ_LEV, "Stealth Eggdrop alarm activated: %s [%s@%s] : [/msg %s]",
-			   parv[0], sptr->user->username, sptr->user->host, nick);
-    }
-#endif
-    
-  /*
-  ** nickname addressed?
-  */
-  if ((acptr = find_person(nick, NULL)))
-    {
-#ifdef	IDLE_CHECK
-      /* reset idle time for message only if target exists */
-      if(MyClient(sptr) && sptr->user)
-	sptr->user->last = timeofday;
-#endif
-#ifdef ANTI_SPAMBOT_EXTRA
-      if(MyConnect(sptr) && !IsElined(sptr) &&
-	 (acptr != sptr->last_client_messaged))
-	{
-	  sptr->person_privmsgs++;
-	  sptr->last_client_messaged = acptr;
-	}
-#endif
-#ifdef FLUD
-      if(!notice && MyFludConnect(acptr))
-	if(check_for_ctcp(parv[2]))
-	  if(check_for_flud(sptr, acptr, NULL, 1))
-	    return 0;
-#endif
-#ifdef ANTI_DRONE_FLOOD
-      if(MyConnect(acptr) && IsClient(sptr) && !IsAnOper(sptr) && drone_time)
-	{
-	  if((acptr->first_received_message_time+drone_time) < NOW)
-	    {
-	      acptr->received_number_of_privmsgs=1;
-	      acptr->first_received_message_time = NOW;
-	      acptr->drone_noticed = 0;
-	    }
-	  else
-	    {
-	      if(acptr->received_number_of_privmsgs > drone_count)
-		{
-		  if(acptr->drone_noticed == 0) /* tiny FSM */
-		    {
-		      sendto_ops_lev(REJ_LEV,
-			     "Possible Drone Flooder %s [%s@%s] on %s target: %s",
-				     sptr->name, sptr->user->username,
-				     sptr->user->host,
-				     sptr->user->server, acptr->name);
-		      acptr->drone_noticed = 1;
-		    }
-		  /* heuristic here, if target has been getting a lot
-		   * of privmsgs from clients, and sendq is above halfway up
-		   * its allowed sendq, then throw away the privmsg, otherwise
-		   * let it through. This adds some protection, yet doesn't
-		   * DOS the client.
-		   * -Dianora
-		   */
-		  if(DBufLength(&acptr->sendQ) > (get_sendq(acptr)/2L))
-		    {
-		      if(acptr->drone_noticed == 1) /* tiny FSM */
-			{
-			  sendto_ops_lev(REJ_LEV,
-			 "ANTI_DRONE_FLOOD SendQ protection activated for %s",
-					 acptr->name);
-
-			  sendto_one(acptr,     
- ":%s NOTICE %s :*** Notice -- Server drone flood protection activated for %s",
-				     me.name, acptr->name, acptr->name);
-			  acptr->drone_noticed = 2;
-			}
-		    }
-
-		  if(DBufLength(&acptr->sendQ) <= (get_sendq(acptr)/4L))
-		    {
-		      if(acptr->drone_noticed == 2)
-			{
-			  sendto_one(acptr,     
-				     ":%s NOTICE %s :*** Notice -- Server drone flood protection de-activated for %s",
-				     me.name, acptr->name, acptr->name);
-			  acptr->drone_noticed = 1;
-			}
-		    }
-		  if(acptr->drone_noticed > 1)
-		    return 0;
-		}
-	      else
-		acptr->received_number_of_privmsgs++;
-	    }
-	}
-#endif
-      if (!notice && MyConnect(sptr) &&
-	  acptr->user && acptr->user->away)
-	sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
-		   parv[0], acptr->name,
-		   acptr->user->away);
-      sendto_prefix_one(acptr, sptr, ":%s %s %s :%s",
-			parv[0], cmd, nick, parv[2]);
-
-#ifdef	IDLE_CHECK
-      /* reset idle time for message only if its not to self */
-      if (sptr != acptr)
-	{
-	  if(sptr->user)
-	    sptr->user->last = timeofday;
-	}
-#endif
-
-#ifdef        EXTRA_BOT_NOTICES
-      if (sptr == acptr)      /* msging self */
-	{
-	  if (strstr(parv[2], "\001AWAKE\001"))
-	    sendto_realops_lev(REJ_LEV, "EggDrop alarm activated: %s [%s@%s] : [/ctcp %s AWAKE]",
-			       parv[0], acptr->user->username, acptr->user->host, parv[0]);
-	  if (strstr(parv[2], "-=Ping Check=-"))
-	    sendto_realops_lev(REJ_LEV,"JohBot alarm activated: %s [%s@%s] : [/msg %s %s]",
-			       parv[0], acptr->user->username, acptr->user->host, parv[0], parv[2]);
-	  if (strstr(parv[2], "\001PRVMSG blah\001"))
-	    sendto_realops_lev(REJ_LEV, "vlad 2.1+tb alarm activated: %s [%s@%s] : [/msg %s %s]",
-			       parv[0], acptr->user->username, acptr->user->host, parv[0], parv[2]);
-	}
-#endif
-#ifdef ANTI_SPAMBOT_EXTRA
-      if( MyConnect(sptr) && spambot_privmsg_count &&
-	  ((sptr->person_privmsgs - sptr->channel_privmsgs)
-	   > spambot_privmsg_count) )
-	{
-	  sendto_realops_lev(REJ_LEV,
-"Possible spambot %s [%s@%s] : privmsgs to clients %d privmsgs to channels %d",
-			 sptr->name, sptr->user->username,
-			 sptr->user->host,
-			 sptr->person_privmsgs,sptr->channel_privmsgs);
-	  /* and report it if happens again */
-	  sptr->person_privmsgs = 0;
-	  sptr->channel_privmsgs = 0;
-	}
-#endif
-      return 0;
-    }
-
   /*
   ** @# type of channel msg?
   */
@@ -2070,6 +1906,127 @@ static	int	m_message(aClient *cptr,
       else if (!notice)
 	sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
 		   me.name, parv[0], nick);
+#ifdef ANTI_SPAMBOT_EXTRA
+      if( MyConnect(sptr) && spambot_privmsg_count &&
+	  ((sptr->person_privmsgs - sptr->channel_privmsgs)
+	   > spambot_privmsg_count) )
+	{
+	  sendto_realops_lev(REJ_LEV,
+"Possible spambot %s [%s@%s] : privmsgs to clients %d privmsgs to channels %d",
+			 sptr->name, sptr->user->username,
+			 sptr->user->host,
+			 sptr->person_privmsgs,sptr->channel_privmsgs);
+	  /* and report it if happens again */
+	  sptr->person_privmsgs = 0;
+	  sptr->channel_privmsgs = 0;
+	}
+#endif
+      return 0;
+    }
+
+  /*
+  ** nickname addressed?
+  */
+  if ((acptr = find_person(nick, NULL)))
+    {
+#ifdef	IDLE_CHECK
+      /* reset idle time for message only if target exists */
+      if(MyClient(sptr) && sptr->user)
+	sptr->user->last = timeofday;
+#endif
+#ifdef ANTI_SPAMBOT_EXTRA
+      if(MyConnect(sptr) && !IsElined(sptr) &&
+	 (acptr != sptr->last_client_messaged))
+	{
+	  sptr->person_privmsgs++;
+	  sptr->last_client_messaged = acptr;
+	}
+#endif
+#ifdef FLUD
+      if(!notice && MyFludConnect(acptr))
+	if(check_for_ctcp(parv[2]))
+	  if(check_for_flud(sptr, acptr, NULL, 1))
+	    return 0;
+#endif
+#ifdef ANTI_DRONE_FLOOD
+      if(MyConnect(acptr) && IsClient(sptr) && !IsAnOper(sptr) && drone_time)
+	{
+	  if((acptr->first_received_message_time+drone_time) < NOW)
+	    {
+	      acptr->received_number_of_privmsgs=1;
+	      acptr->first_received_message_time = NOW;
+	      acptr->drone_noticed = 0;
+	    }
+	  else
+	    {
+	      if(acptr->received_number_of_privmsgs > drone_count)
+		{
+		  if(acptr->drone_noticed == 0) /* tiny FSM */
+		    {
+		      sendto_ops_lev(REJ_LEV,
+			     "Possible Drone Flooder %s [%s@%s] on %s target: %s",
+				     sptr->name, sptr->user->username,
+				     sptr->user->host,
+				     sptr->user->server, acptr->name);
+		      acptr->drone_noticed = 1;
+		    }
+		  /* heuristic here, if target has been getting a lot
+		   * of privmsgs from clients, and sendq is above halfway up
+		   * its allowed sendq, then throw away the privmsg, otherwise
+		   * let it through. This adds some protection, yet doesn't
+		   * DOS the client.
+		   * -Dianora
+		   */
+		  if(DBufLength(&acptr->sendQ) > (get_sendq(acptr)/2L))
+		    {
+		      if(acptr->drone_noticed == 1) /* tiny FSM */
+			{
+			  sendto_ops_lev(REJ_LEV,
+			 "ANTI_DRONE_FLOOD SendQ protection activated for %s",
+					 acptr->name);
+
+			  sendto_one(acptr,     
+ ":%s NOTICE %s :*** Notice -- Server drone flood protection activated for %s",
+				     me.name, acptr->name, acptr->name);
+			  acptr->drone_noticed = 2;
+			}
+		    }
+
+		  if(DBufLength(&acptr->sendQ) <= (get_sendq(acptr)/4L))
+		    {
+		      if(acptr->drone_noticed == 2)
+			{
+			  sendto_one(acptr,     
+				     ":%s NOTICE %s :*** Notice -- Server drone flood protection de-activated for %s",
+				     me.name, acptr->name, acptr->name);
+			  acptr->drone_noticed = 1;
+			}
+		    }
+		  if(acptr->drone_noticed > 1)
+		    return 0;
+		}
+	      else
+		acptr->received_number_of_privmsgs++;
+	    }
+	}
+#endif
+      if (!notice && MyConnect(sptr) &&
+	  acptr->user && acptr->user->away)
+	sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
+		   parv[0], acptr->name,
+		   acptr->user->away);
+      sendto_prefix_one(acptr, sptr, ":%s %s %s :%s",
+			parv[0], cmd, nick, parv[2]);
+
+#ifdef	IDLE_CHECK
+      /* reset idle time for message only if its not to self */
+      if (sptr != acptr)
+	{
+	  if(sptr->user)
+	    sptr->user->last = timeofday;
+	}
+#endif
+
 #ifdef ANTI_SPAMBOT_EXTRA
       if( MyConnect(sptr) && spambot_privmsg_count &&
 	  ((sptr->person_privmsgs - sptr->channel_privmsgs)
@@ -3994,9 +3951,6 @@ void	send_umode_out(aClient *cptr,
  **/
 static int botreject(char *host,aClient *sptr,char *nick)
 {
-#ifdef EXTRA_BOT_NOTICES
-  char	botgecos[127];
-#endif
 
 /*
  * Eggdrop Bots:	"USER foo 1 1 :foo"
@@ -4008,21 +3962,6 @@ static int botreject(char *host,aClient *sptr,char *nick)
   if (!strcmp(host,"null")) return 2;
   if (!strcmp(host, "x")) return 3;
 
-#if defined(EXTRA_BOT_NOTICES) && defined(BOT_GCOS_WARN)
-  ircsprintf(botgecos, "/msg %s hello", nick);
-  if ((strcasecmp(sptr->info, botgecos)==0)
-      || (match("/msg * hello", sptr->info)))
-    {
-      return ( 1 );
-    }
-      
-  ircsprintf(botgecos, "/msg %s help", nick);
-  if ((strcasecmp(sptr->info, botgecos)==0) ||
-      (match("/msg * help", sptr->info)))
-    {
-      return ( 1 );
-    }
-#endif /* EXTRA_BOT_NOTICES && BOT_GCOS_WARN */
   return 0;
 }
 

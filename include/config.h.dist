@@ -121,6 +121,19 @@
 #undef DLINES_IN_KPATH
 #endif /* KPATH */
 
+/* LOCKFILE - Exclusive use of ircd.conf and kline.conf during writes
+ *
+ * This creates a lockfile prior to writes to ircd.conf or kline.conf, and
+ * can be used in conjunction with viconf (included in the tools directory).
+ * This prevents loss of data when klines are added while someone is manually
+ * editting the file.  File writes will be retried at the next KLINE, DLINE,
+ * REHASH, or after CHECK_PENDING_KLINES minutes have elapsed.
+ *
+ * If you do not wish to use this feature, leave LOCKFILE #undef 
+ */
+#define LOCKFILE "ircd.conf.lock"
+#define	CHECK_PENDING_KLINES	10	/* in minutes */
+
 /* TS_MAX_DELTA and TS_WARN_DELTA -  allowed delta for TS when another
  * server connects.
  *
@@ -144,19 +157,6 @@
  * This is useful for sites with more than one client server.
  */
 #undef SLAVE_SERVERS
-
-/* LOCKFILE - Exclusive use of ircd.conf and kline.conf during writes
- *
- * This creates a lockfile prior to writes to ircd.conf or kline.conf, and
- * can be used in conjunction with viconf (included in the tools directory).
- * This prevents loss of data when klines are added while someone is manually
- * editting the file.  File writes will be retried at the next KLINE, DLINE,
- * REHASH, or after CHECK_PENDING_KLINES minutes have elapsed.
- *
- * If you do not wish to use this feature, leave LOCKFILE #undef 
- */
-#define LOCKFILE "/usr/local/ircd/ircd.conf.lock"
-#define	CHECK_PENDING_KLINES	10	/* in minutes */
 
 /* SEPARATE_QUOTE_KLINES_BY_DATE
  * If you define this, then klines will be read and written
