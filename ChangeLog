@@ -1,3 +1,15 @@
+db          2002/01/14 08:35:31 EST	(20020114_2)
+
+  Modified files:
+    .                    RELNOTES 
+  Log:
+  - duplicate comment on usernames in IP I lines removed.
+  
+  Revision  Changes    Path
+  1.14      +0 -3      ircd-hybrid-6/RELNOTES
+
+
+
 lusky       2002/01/14 00:25:07 EST	(20020114_1)
 
   Modified files:
