@@ -1,3 +1,36 @@
+*** 20010606_1 by db
+patches from Walter Campbell
+
+1.  Added myself to the credits
+2.  Put MAX_BUFFER under __CYGWIN__ control, and upped the values to a
+    reasonable number
+3.  Set INIT_MAXCLIENTS to 180, as HARD_FDLIMIT_(256) - 10 - MAX_BUFFER(60)
+    is less than the original INIT_MAXCLIENTS(200).  180 is a better value
+    With the default values, the true max connections can be 186 (44 on
+    Cygwin).
+4.  Fixed the path on FNAME_*LOG, someone committed a config.h with an
+    inconsistant path
+5.  Cleaned up many documentation entries in config.h
+6.  With the addition of STATS_P_NOTICE, we now disable STATS_NOTICE by
+    default, it resolves a major privacy issue.
+7.  Some defines got flipped from previous versions, fixed
+8.  Fixed LINKS in SERVERHIDE mode to show everything connected to the
+    server you are connected to, as opposed to showing it connected to the
+    network description.  We do NOT want to break clients too much!
+9.  STATS v should be oper only, especially in SERVERHIDE
+10. STATS q should give a correct error message
+11. make clean in tools/ needs to remove encspeed
+12. Spell checked all the docs
+13. Synced up mkpasswd with my latest version (MD5 support, cleanly compiles
+    on Solaris)
+14. Backported the updated CIDR.txt, Riedel's operguide, and ejb's manpage
+15. Updated certain values in config.h as per ievil's recommendations
+16. Install the manpage into the DPATH directory, read with 'man -M . ircd'
+17. Added a Y: line reference guide
+18. Misc doc cleanup all around
+
+
+
 *** 20010605_3 by davidt
 corrected e-mail addres for cryptlinks coder in ChangeLog
 
