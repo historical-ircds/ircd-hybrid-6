@@ -305,6 +305,12 @@ vsprintf_irc(char *str, const char *format, va_list args)
 
                                 ++format;
                                 v1 = va_arg(args, unsigned long);
+                                if(v1 == 0)
+                                {
+                                  *str++ = '0';
+                                  ++bytes;
+                                  continue;
+                                }
                                 if (v1 > 999999999L)
                                 {
                                         v2 = v1 / 1000000000;
