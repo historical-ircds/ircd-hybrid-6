@@ -1377,9 +1377,10 @@ static	void	report_configured_links(aClient *sptr,int mask)
 	    else
 	      sendto_one(sptr, form_str(p->rpl_stats), me.name,
 			 sptr->name, p->conf_char,
-			 host, name,
+			 user, host, name,
 			 "0",
-			 get_conf_class(tmp), "");
+			 get_conf_class(tmp),
+			 "");
 	  }
 	else
 	  sendto_one(sptr, form_str(p->rpl_stats), me.name,
