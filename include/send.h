@@ -43,7 +43,7 @@ extern  int sendto_slaves(struct Client *, char *, char *, int, char **);
 
 #ifdef HAVE_STDARG_H
 
-extern  void sendto_one(struct Client *, char *, ...);
+extern  void sendto_one(struct Client *, const char *, ...);
 extern  void sendto_channel_butone(struct Client *, struct Client *, 
                                    struct Channel *, const char *, ...);
 extern  void sendto_channel_type(struct Client *, struct Client *, 
