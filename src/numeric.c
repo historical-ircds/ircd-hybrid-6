@@ -25,6 +25,8 @@
 #include "irc_string.h"
 #include "common.h"     /* NULL cripes */
 
+#include <assert.h>
+
 #ifdef CUSTOM_ERR            /* ZZZZ ick */
 #include "messages_cust.tab"
 #else
@@ -39,14 +41,22 @@
  * ok. ;-)
  */
 
+#if 0
 static char numbuff[512];  /* ZZZ There is no reason this has to
-                                * be so large
-                                */
+                            * be so large
+                            */
+#endif
 
 const char* form_str(int numeric)
 {
   char *nptr;
 
+  assert(-1 < numeric);
+  assert(numeric < ERR_LAST_ERR_MSG);
+  assert(0 != replies[numeric]);
+  
+  return replies[numeric];
+#if 0
   if ((numeric < 0) || (numeric > ERR_LAST_ERR_MSG))
     {
       ircsprintf(numbuff, ":%%s %d %%s :INTERNAL ERROR: BAD NUMERIC! %d",
@@ -62,6 +72,7 @@ const char* form_str(int numeric)
     }
   else
     return nptr;
+#endif
 }
 
 
