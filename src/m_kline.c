@@ -381,6 +381,8 @@ m_kline(aClient *cptr,
   unsigned long ip;
   unsigned long ip_mask;
   const char *kconf; /* kline conf file */
+  register char tmpch;
+  register int nonwild;
 
 #ifdef SLAVE_SERVERS
   char *slave_oper;
@@ -575,30 +577,68 @@ m_kline(aClient *cptr,
   else
     reason = "No reason";
 
-  wild_user = match(user, "akjhfkahfasfjd");
+  /*
+   * Now we must check the user and host to make sure there
+   * are at least NONWILDCHARS non-wildcard characters in
+   * them, otherwise assume they are attempting to kline
+   * *@* or some variant of that. This code will also catch
+   * people attempting to kline *@*.tld, as long as NONWILDCHARS
+   * is greater than 3. In that case, there are only 3 non-wild
+   * characters (tld), so if NONWILDCHARS is 4, the kline will
+   * be disallowed.
+   * -wnder
+   */
 
-  if (wild_user && match(host, "ldksjfl.kss...kdjfd.jfklsjf"))
+  nonwild = 0;
+  p = user;
+  while ((tmpch = *p++))
+  {
+  	fprintf(stderr, "char = [%c]\n", tmpch);
+    if (!IsKWildChar(tmpch))
     {
-#ifdef SLAVE_SERVERS
-      if(!IsServer(sptr))
-#endif
-	sendto_one(sptr, ":%s NOTICE %s :Can't K-Line *@*",
-		   me.name,
-		   parv[0]);
-      return 0;
+      /*
+       * If we find enough non-wild characters, we can
+       * break - no point in searching further.
+       */
+      if (++nonwild >= NONWILDCHARS)
+      	break;
     }
-      
-  if (wild_user && bad_tld(host))
+    else
+    	fprintf(stderr, "char is a WILD\n");
+  }
+
+  if (nonwild < NONWILDCHARS)
+  {
+    /*
+     * The user portion did not contain enough non-wild
+     * characters, try the host.
+     */
+    p = host;
+    while ((tmpch = *p++))
     {
-#ifdef SLAVE_SERVERS
-      if(!IsServer(sptr))
-#endif
-	sendto_one(sptr, ":%s NOTICE %s :Can't K-Line *@%s",
-		   me.name,
-		   parv[0],
-		   host);
-      return 0;
+      if (!IsKWildChar(tmpch))
+        if (++nonwild >= NONWILDCHARS)
+          break;
     }
+  }
+
+  if (nonwild < NONWILDCHARS)
+  {
+    /*
+     * Not enough non-wild characters were found, assume
+     * they are trying to kline *@*.
+     */
+  #ifdef SLAVE_SERVERS
+    if (!IsServer(sptr))
+  #endif
+      sendto_one(sptr,
+        ":%s NOTICE %s :Please include at least %d non-wildcard characters with the user@host",
+        me.name,
+        parv[0],
+        NONWILDCHARS);
+
+    return 0;
+  }
 
   /* 
   ** At this point, I know the user and the host to place the k-line on

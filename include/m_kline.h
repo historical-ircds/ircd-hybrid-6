@@ -29,3 +29,12 @@ typedef struct PKDlines
 	char *when; /* when the K/D line was set */
 	int type;
 } aPendingLine;
+
+/*
+ * This number represents the number of non-wildcard characters
+ * that must be in the kline string in order for it to be
+ * considered valid. "* ? ! @ ." are considered wildcard
+ * characters for the kline routine.
+ */
+
+#define NONWILDCHARS 4
