@@ -9,7 +9,7 @@
 #include "s_log.h"
 #include "s_bsd.h"
 
-#ifdef CRYPT_BLOWFISH
+#ifdef HAVE_CRYPT_BLOWFISH
 typedef struct {
   BF_KEY key;
   unsigned char ivec[8];
@@ -17,15 +17,11 @@ typedef struct {
 } BFState;
 int do_bf_encrypt(struct Client * cptr, char * Data, int Length);
 int do_bf_decrypt(struct Client * cptr, char * Data, int Length);
-#ifdef CRYPT_BLOWFISH128
 int do_bf128_init(void * State, unsigned char * keydata);
-#endif
-#ifdef CRYPT_BLOWFISH256
 int do_bf256_init(void * State, unsigned char * keydata);
 #endif
-#endif
 
-#ifdef CRYPT_CAST
+#ifdef HAVE_CRYPT_CAST
 typedef struct {
   CAST_KEY key;
   unsigned char ivec[8];
@@ -36,7 +32,7 @@ int do_cast_encrypt(struct Client * cptr, char * Data, int Length);
 int do_cast_decrypt(struct Client * cptr, char * Data, int Length);
 #endif
 
-#ifdef CRYPT_IDEA
+#ifdef HAVE_CRYPT_IDEA
 typedef struct {
   IDEA_KEY_SCHEDULE key;
   unsigned char ivec[8];
@@ -47,18 +43,20 @@ int do_idea_encrypt(struct Client * cptr, char * Data, int Length);
 int do_idea_decrypt(struct Client * cptr, char * Data, int Length);
 #endif
 
-#ifdef CRYPT_DES
+#ifdef HAVE_CRYPT_RC5
 typedef struct {
-  des_key_schedule key;
-  des_cblock ivec;
-  int ivecnum;
-} DESState;
-int do_des_init(void * State, unsigned char * keydata);
-int do_des_encrypt(struct Client * cptr, char * Data, int Length);
-int do_des_decrypt(struct Client * cptr, char * Data, int Length);
+  RC5_32_KEY key;
+  unsigned char ivec[8];
+  int ivecnum, rounds;
+} RC5State;
+int do_rc5_8_init(void * State, unsigned char * keydata);
+int do_rc5_12_init(void * State, unsigned char * keydata);
+int do_rc5_16_init(void * State, unsigned char * keydata);
+int do_rc5_encrypt(struct Client * cptr, char * Data, int Length);
+int do_rc5_decrypt(struct Client * cptr, char * Data, int Length);
 #endif
 
-#ifdef CRYPT_3DES
+#ifdef HAVE_CRYPT_3DES
 typedef struct {
   des_key_schedule key1, key2, key3;
   des_cblock ivec;
@@ -69,54 +67,42 @@ int do_tdes_encrypt(struct Client * cptr, char * Data, int Length);
 int do_tdes_decrypt(struct Client * cptr, char * Data, int Length);
 #endif
 
-#ifdef CRYPT_RC5
+#ifdef HAVE_CRYPT_DES
 typedef struct {
-  RC5_32_KEY key;
-  unsigned char ivec[8];
-  int ivecnum, rounds;
-} RC5State;
-#ifdef CRYPT_RC5_8
-int do_rc5_8_init(void * State, unsigned char * keydata);
-#endif
-#ifdef CRYPT_RC5_12
-int do_rc5_12_init(void * State, unsigned char * keydata);
-#endif
-#ifdef CRYPT_RC5_16
-int do_rc5_16_init(void * State, unsigned char * keydata);
-#endif
-int do_rc5_encrypt(struct Client * cptr, char * Data, int Length);
-int do_rc5_decrypt(struct Client * cptr, char * Data, int Length);
+  des_key_schedule key;
+  des_cblock ivec;
+  int ivecnum;
+} DESState;
+int do_des_init(void * State, unsigned char * keydata);
+int do_des_encrypt(struct Client * cptr, char * Data, int Length);
+int do_des_decrypt(struct Client * cptr, char * Data, int Length);
 #endif
 
+
+
 CipherDef Ciphers[] = {
-#ifdef CRYPT_BLOWFISH128
-  {"BF", 128, sizeof(BFState), CRYPT_BLOWFISH128, do_bf128_init, do_bf_encrypt, do_bf_decrypt},
+#ifdef HAVE_CRYPT_BLOWFISH
+  {"BF", 256, sizeof(BFState), do_bf256_init, do_bf_encrypt, do_bf_decrypt},
+  {"BF", 128, sizeof(BFState), do_bf128_init, do_bf_encrypt, do_bf_decrypt},
 #endif
-#ifdef CRYPT_BLOWFISH256
-  {"BF", 256, sizeof(BFState), CRYPT_BLOWFISH256, do_bf256_init, do_bf_encrypt, do_bf_decrypt},
+#ifdef HAVE_CRYPT_CAST
+  {"CAST", 128, sizeof(CASTState), do_cast_init, do_cast_encrypt, do_cast_decrypt},
 #endif
-#ifdef CRYPT_IDEA
-  {"IDEA", 128, sizeof(IDEAState), CRYPT_IDEA, do_idea_init, do_idea_encrypt, do_idea_decrypt},
+#ifdef HAVE_CRYPT_IDEA
+  {"IDEA", 128, sizeof(IDEAState), do_idea_init, do_idea_encrypt, do_idea_decrypt},
 #endif
-#ifdef CRYPT_DES
-  {"DES", 56, sizeof(DESState), CRYPT_DES, do_des_init, do_des_encrypt, do_des_decrypt},
+#ifdef HAVE_CRYPT_RC5
+  {"RC5.8", 128, sizeof(RC5State), do_rc5_8_init, do_rc5_encrypt, do_rc5_decrypt},
+  {"RC5.12", 128, sizeof(RC5State), do_rc5_12_init, do_rc5_encrypt, do_rc5_decrypt},
+  {"RC5.16", 128, sizeof(RC5State), do_rc5_16_init, do_rc5_encrypt, do_rc5_decrypt},
 #endif
-#ifdef CRYPT_3DES
-  {"3DES", 168, sizeof(TDESState), CRYPT_3DES, do_tdes_init, do_tdes_encrypt, do_tdes_decrypt},
+#ifdef HAVE_CRYPT_3DES
+  {"3DES", 168, sizeof(TDESState), do_tdes_init, do_tdes_encrypt, do_tdes_decrypt},
 #endif
-#ifdef CRYPT_CAST
-  {"CAST", 128, sizeof(CASTState), CRYPT_CAST, do_cast_init, do_cast_encrypt, do_cast_decrypt},
+#ifdef HAVE_CRYPT_DES
+  {"DES", 56, sizeof(DESState), do_des_init, do_des_encrypt, do_des_decrypt},
 #endif
-#ifdef CRYPT_RC5_8
-  {"RC5.8", 128, sizeof(RC5State), CRYPT_RC5_8, do_rc5_8_init, do_rc5_encrypt, do_rc5_decrypt},
-#endif
-#ifdef CRYPT_RC5_12
-  {"RC5.12", 128, sizeof(RC5State), CRYPT_RC5_12, do_rc5_12_init, do_rc5_encrypt, do_rc5_decrypt},
-#endif
-#ifdef CRYPT_RC5_16
-  {"RC5.16", 128, sizeof(RC5State), CRYPT_RC5_16, do_rc5_16_init, do_rc5_encrypt, do_rc5_decrypt},
-#endif
-  {"", 0, 0, 0, 0, 0, 0}
+  {"", 0, 0, 0, 0, 0}
 };
 
 
@@ -248,25 +234,21 @@ int unbase64_block(char **output, char *data, int len)
 
 
 
-#ifdef CRYPT_BLOWFISH128
+#ifdef HAVE_CRYPT_BLOWFISH
 int do_bf128_init(void * StateData, unsigned char * keydata) {
   BFState * State = (BFState *) StateData;
   memset(State, sizeof(BFState), 0);
   BF_set_key(&State->key, 16, keydata);
   return CRYPT_OK;
 }
-#endif
 
-#ifdef CRYPT_BLOWFISH256
 int do_bf256_init(void * StateData, unsigned char * keydata) {
   BFState * State = (BFState *) StateData;
   memset(State, sizeof(BFState), 0);
   BF_set_key(&State->key, 32, keydata);
   return CRYPT_OK;
 }
-#endif
 
-#ifdef CRYPT_BLOWFISH
 int do_bf_encrypt(struct Client * cptr, char * Data, int Length) {
   BFState * State = (BFState *) cptr->crypt->OutState;
   char * work = malloc(Length);
@@ -284,9 +266,9 @@ int do_bf_decrypt(struct Client * cptr, char * Data, int Length) {
   free(work);
   return CRYPT_DECRYPTED;
 }
-#endif
+#endif /* HAVE_CRYPT_BLOWFISH */
 
-#ifdef CRYPT_CAST
+#ifdef HAVE_CRYPT_CAST
 int do_cast_init(void * State, unsigned char * keydata) {
   CASTState * S = (CASTState *) State;
   CAST_set_key(&S->key, 16, keydata);
@@ -308,9 +290,9 @@ int do_cast_decrypt(struct Client * cptr, char * Data, int Length) {
   memcpy(Data, work, Length);
   return CRYPT_DECRYPTED;
 }
-#endif
+#endif /* HAVE_CRYPT_CAST */
 
-#ifdef CRYPT_IDEA
+#ifdef HAVE_CRYPT_IDEA
 int do_idea_init(void * State, unsigned char * keydata) {
   IDEAState * S = (IDEAState *) State;
   idea_set_encrypt_key(keydata, &S->key);
@@ -333,9 +315,9 @@ int do_idea_decrypt(struct Client * cptr, char * Data, int Length) {
   memcpy(Data, work, Length);
   return CRYPT_DECRYPTED;
 }
-#endif
+#endif /* HAVE_CRYPT_IDEA */
 
-#ifdef CRYPT_DES
+#ifdef HAVE_CRYPT_DES
 int do_des_init(void * State, unsigned char * keydata) {
   DESState * S = (DESState *) State;
   des_cblock c;
@@ -361,9 +343,9 @@ int do_des_decrypt(struct Client * cptr, char * Data, int Length) {
   memcpy(Data, work, Length);
   return CRYPT_DECRYPTED;
 }
-#endif
- 
-#ifdef CRYPT_3DES
+#endif /* HAVE_CRYPT_DES */
+
+#ifdef HAVE_CRYPT_3DES
 int do_tdes_init(void * State, unsigned char * keydata) {
   TDESState * S = (TDESState *) State;
   des_cblock c1, c2, c3;
@@ -398,30 +380,26 @@ int do_tdes_decrypt(struct Client * cptr, char * Data, int Length) {
   memcpy(Data, work, Length);
   return CRYPT_DECRYPTED;
 }
-#endif
+#endif /* HAVE_CRYPT_3DES */
 
-#ifdef CRYPT_RC5
-#ifdef CRYPT_RC5_8
+#ifdef HAVE_CRYPT_RC5
 int do_rc5_8_init(void * State, unsigned char * keydata) {
   RC5State * S = (RC5State *) State;
   RC5_32_set_key(&S->key, 16, keydata, 8);
   return CRYPT_OK;
 }
-#endif
-#ifdef CRYPT_RC5_12
+
 int do_rc5_12_init(void * State, unsigned char * keydata) {
   RC5State * S = (RC5State *) State;
   RC5_32_set_key(&S->key, 16, keydata, 12);
   return CRYPT_OK;
 }
-#endif
-#ifdef CRYPT_RC5_16
+
 int do_rc5_16_init(void * State, unsigned char * keydata) {
   RC5State * S = (RC5State *) State;
   RC5_32_set_key(&S->key, 16, keydata, 16);
   return CRYPT_OK;
 }
-#endif
 
 int do_rc5_encrypt(struct Client * cptr, char * Data, int Length) {
   RC5State * S = (RC5State *) cptr->crypt->OutState;
@@ -438,30 +416,40 @@ int do_rc5_decrypt(struct Client * cptr, char * Data, int Length) {
   memcpy(Data, work, Length);
   return CRYPT_DECRYPTED;
 }
-#endif
+#endif /* HAVE_CRYPT_RC5 */
 
-int crypt_selectcipher(char * ciphers) {
-  int bestIndex = (-1), bestPrio = 0x7FFFFFFF, cipherIndex;
+int crypt_selectcipher(char *ciphers) {
+  int bestIndex = (-1);
+  int cipherIndex;
   char *cipher, *nextcipher, *keysize;
-  
+
   nextcipher = ciphers;
-  while (nextcipher) {
+  while (nextcipher)
+  {
     cipher = nextcipher;
     nextcipher = strchr(cipher, ',');
     if (nextcipher)
+    {
       *nextcipher++ = 0;
+    }
     keysize = strchr(cipher, '/');
     if (!keysize)
+    {
       continue;
+    }
     *keysize++ = 0;
+
     if (!atoi(keysize))
+    {
       continue;
-    for (cipherIndex=0;Ciphers[cipherIndex].name[0];cipherIndex++) {
-      if (!strcmp(Ciphers[cipherIndex].name, cipher) && (Ciphers[cipherIndex].keysize == atoi(keysize))) {
-	if (Ciphers[cipherIndex].priority < bestPrio) {
-	  bestIndex = cipherIndex;
-	  bestPrio = Ciphers[cipherIndex].priority;
-	}
+    }
+
+    for (cipherIndex = 0; Ciphers[cipherIndex].name[0]; cipherIndex++)
+    {
+      if (!strcmp(Ciphers[cipherIndex].name, cipher) &&
+         (Ciphers[cipherIndex].keysize == atoi(keysize)))
+      {
+        bestIndex = cipherIndex;
       }
     }
   }

@@ -413,27 +413,6 @@
 #define CRYPT_LINKS_CNPREFIX '@'
 #define CRYPT_LINKS_PRIVATEKEYFILE "private.key"
 
-/* Cipher selection. Define the ciphers you want to support, at least one. 
- * The numeric value is the ciphers priority, the cipher selection will
- * be the lowest numbered cipher that is supported by both ends of a 
- * link. As a link may use differing ciphers each direction, these defines
- * can be changed at will. If there's no ciphers in common with the other
- * end, the link won't happen.
- * Use tools/encspeed to look at throughput of each cipher.
- * -einride.
-*/
-#define CRYPT_BLOWFISH256 1 /* Blowfish 256-bit */
-#define CRYPT_BLOWFISH128 2 /* Blowfish 128-bit */
-#define CRYPT_CAST        3 /* CAST 128-bit */
-#define CRYPT_IDEA        4 /* IDEA 128-bit */
-#define CRYPT_RC5_16      5 /* 16 round RC5 128-bit */
-#define CRYPT_RC5_12      6 /* 12 round RC5 128-bit */
-#define CRYPT_3DES        7 /* Triple DES 168-bit */
-#define CRYPT_RC5_8       8 /* 8 round RC5 128-bit */
-#define CRYPT_DES         9 /* Standard DES 56-bit */ 
-
-
-
 /* SHOW_INVISIBLE_LUSERS - show invisible clients in LUSERS
  * As defined this will show the correct invisible count for anyone who does
  * LUSERS on your server. On a large net this doesnt mean much, but on a

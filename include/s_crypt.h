@@ -39,50 +39,34 @@
 #include <openssl/rsa.h>
 #include <openssl/rand.h>
 
-#if defined(CRYPT_BLOWFISH128) || defined(CRYPT_BLOWFISH256)
-#define CRYPT_BLOWFISH
+
 #ifndef HAVE_BF_CFB64_ENCRYPT
-#error You enabled a Blowfish cipher but your crypto library do not support it
-#endif
+#define HAVE_CRYPT_BLOWFISH
 #include <openssl/blowfish.h>
 #endif
 
-#ifdef CRYPT_CAST
-#ifndef HAVE_CAST_CFB64_ENCRYPT
-#error You enabled the CAST cipher but your crypto library do not support it
-#endif
+#ifdef HAVE_CAST_CFB64_ENCRYPT
+#define HAVE_CRYPT_CAST
 #include <openssl/cast.h>
 #endif
 
-#ifdef CRYPT_IDEA
-#ifndef HAVE_IDEA_CFB64_ENCRYPT
-#error You enabled the IDEA cipher but your crypto library do not support it
-#endif
+#ifdef HAVE_IDEA_CFB64_ENCRYPT
+#define HAVE_CRYPT_IDEA
 #include <openssl/idea.h>
 #endif
 
-#ifdef CRYPT_DES
-#ifndef HAVE_DES_CFB64_ENCRYPT
-#error You enabled the DES cipher but your crypto library do not support it
-#endif
+#ifdef HAVE_DES_CFB64_ENCRYPT
+#define HAVE_CRYPT_DES
 #include <openssl/des.h>
 #endif
 
-#ifdef CRYPT_3DES
-#ifndef HAVE_DES_EDE3_CFB64_ENCRYPT
-#error You enabled the Triple DES cipher but your crypto library do not support it
-#endif
+#ifdef HAVE_DES_EDE3_CFB64_ENCRYPT
+#define HAVE_CRYPT_3DES
 #include <openssl/des.h>
-/* YES that is a double include... I'm lazy 
- * -einride
- */
 #endif
 
-#if defined(CRYPT_RC5_8) || defined(CRYPT_RC5_12) || defined(CRYPT_RC5_16)
-#define CRYPT_RC5
-#ifndef HAVE_RC5_32_CFB64_ENCRYPT
-#error You enabled the RC5 cipher but your crypto library do not support it
-#endif
+#ifdef HAVE_RC5_32_CFB64_ENCRYPT
+#define HAVE_CRYPT_RC5
 #include <openssl/rc5.h>
 #endif
 
@@ -114,7 +98,6 @@ typedef struct {
   char name[CRYPT_CIPHERNAMELENGTH];
   int keysize;
   int state_data_size;
-  int priority;
   cipher_initproc init;
   cipher_encryptproc encrypt;
   cipher_encryptproc decrypt;
@@ -144,14 +127,6 @@ int crypt_initserver(struct Client * cptr, struct ConfItem * cline, struct ConfI
 int crypt_encrypt(struct Client * cptr, const char * Data, int Length);
 int crypt_decrypt(struct Client * cptr, const char * Data, int Length);
 void crypt_free(struct Client * cptr);
-#endif
-#endif
-
-
-
-
-
-
-
-
+#endif /* CRYPT_LINKS */
+#endif /* INCLUDED_s_crypt_h */
 

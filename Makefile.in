@@ -29,7 +29,7 @@ CFLAGS = -g -O2 -DNDEBUG
 
 #
 # For developers
-# CFLAGS= -g -O2 -Wall
+# CFLAGS= -g -ggdb -Wall -Wunused -Wshadow -Wmissing-declarations
 #
 # You may need to define the FD_SETSIZE in order to overrule
 # the system one.
