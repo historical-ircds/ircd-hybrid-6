@@ -49,7 +49,6 @@ static char numbuff[512];  /* ZZZ There is no reason this has to
 
 const char* form_str(int numeric)
 {
-  char *nptr;
 
   assert(-1 < numeric);
   assert(numeric < ERR_LAST_ERR_MSG);
@@ -57,6 +56,7 @@ const char* form_str(int numeric)
   
   return replies[numeric];
 #if 0
+  char *nptr;
   if ((numeric < 0) || (numeric > ERR_LAST_ERR_MSG))
     {
       ircsprintf(numbuff, ":%%s %d %%s :INTERNAL ERROR: BAD NUMERIC! %d",
