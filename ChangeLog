@@ -17,7 +17,7 @@ version hybrid-6-b57   28-Mar-1999
   checks for PONG from a server before resetting server_was_split.
 * commented out malloc-2.6.1 in Makefile.in.  There is a doublefree
   somewhere, which most system mallocs can handle, but this one can't.
-* updated info stuff in s_debug.c to include all the new defines in config.h
+* updated m_info in s_serv.c to include all the new defines in config.h
 -Rodder
 * fixed mtrie_conf.c kline code
 -Dianora
