@@ -1,3 +1,16 @@
+db          2001/12/07 00:35:57 EST	(20011207_7)
+
+  Modified files:
+    src                  m_message.c match.c 
+  Log:
+  - removed unnecessary strchr
+  
+  Revision  Changes    Path
+  1.15      +1 -3      ircd-hybrid-6/src/m_message.c
+  1.27      +3 -3      ircd-hybrid-6/src/match.c
+
+
+
 db          2001/12/07 00:09:33 EST	(20011207_6)
 
   Modified files:
