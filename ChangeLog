@@ -1,3 +1,16 @@
+*** 20010701_3 by greg
+Barring any (more) hugeass bugs floating our way........
+
+We are slowly inching closer to a 6.1 release.
+
+- is -> larne in Hybrid-team;
+- patchlevel is now b3;
+- m_info is now a little less \n ridden for non-opers, and has a header
+  for the compile options section
+- tinkered in version.c.SH
+- made /info look prett(y/ier)
+
+
 *** 20010701_2 by greg
 Commiting the equivalent of what I backed out, without the static
 change that fucked up the entire tree.
