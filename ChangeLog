@@ -1,3 +1,15 @@
+lusky       2001/12/09 16:34:33 EST	(20011209_8)
+
+  Modified files:
+    .                    RELNOTES 
+  Log:
+  - typo in release notes for NO_CREATE_ON_SPLIT description
+  
+  Revision  Changes    Path
+  1.11      +2 -2      ircd-hybrid-6/RELNOTES
+
+
+
 lusky       2001/12/09 15:11:01 EST	(20011209_7)
 
   Modified files:
