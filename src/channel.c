@@ -21,18 +21,6 @@
  * a number of behaviours in set_mode() have been rewritten
  * These flags can be set in a define if you wish.
  *
- * OLD_P_S      - restore xor of p vs. s modes per channel
- *                currently p is rather unused, so using +p
- *                to disable "knock" seemed worth while.
- * OLD_MODE_K   - new mode k behaviour means user can set new key
- *                while old one is present, mode * -k of old key is done
- *                on behalf of user, with mode * +k of new key.
- *                /mode * -key results in the sending of a *, which
- *                can be used to resynchronize a channel.
- * OLD_NON_RED  - Current code allows /mode * -s etc. to be applied
- *                even if +s is not set. Old behaviour was not to allow
- *                mode * -p etc. if flag was clear
- *
  *
  * $Id$
  */
@@ -792,14 +780,8 @@ void channel_modes(struct Client *cptr, char *mbuf, char *pbuf, struct Channel *
   if (chptr->mode.mode & MODE_SECRET)
     *mbuf++ = 's';
 
-  /* bug found by "is" ejb@debian.org */
-#ifdef OLD_P_S
-  else if (chptr->mode.mode & MODE_PRIVATE)
-    *mbuf++ = 'p';
-#else
   if (chptr->mode.mode & MODE_PRIVATE)
     *mbuf++ = 'p';
-#endif
 
   if (chptr->mode.mode & MODE_MODERATED)
     *mbuf++ = 'm';
@@ -1110,11 +1092,7 @@ void set_channel_mode(struct Client *cptr,
   int   errors_sent = 0, opcnt = 0, len = 0, tmp, nusers;
   int   keychange = 0, limitset = 0;
   int   whatt = MODE_ADD, the_mode = 0;
-#ifdef OLD_P_S
-  int   done_s_or_p = NO;
-#else
   int   done_s = NO, done_p = NO;
-#endif
   int   done_i = NO, done_m = NO, done_n = NO, done_t = NO;
   struct Client *who;
   Link  *lp;
@@ -1373,14 +1351,6 @@ void set_channel_mode(struct Client *cptr,
               break;
             }
 
-#ifdef OLD_MODE_K
-          if ((whatt == MODE_ADD) && (*chptr->mode.key))
-            {
-              sendto_one(sptr, form_str(ERR_KEYSET), me.name, 
-                         sptr->name, chptr->chname);
-              break;
-            }
-#endif
           if ( (tmp = strlen(arg)) > KEYLEN)
             {
               arg[KEYLEN] = '\0';
@@ -1390,7 +1360,6 @@ void set_channel_mode(struct Client *cptr,
           if (len + tmp + 2 >= MODEBUFLEN)
             break;
 
-#ifndef OLD_MODE_K
           /* if there is already a key, and the client is adding one
            * remove the old one, then add the new one
            */
@@ -1410,7 +1379,7 @@ void set_channel_mode(struct Client *cptr,
                                  sptr->name, chptr->chname,
                                  chptr->mode.key);
             }
-#endif
+
           if (whatt == MODE_DEL)
             {
               if( (arg[0] == '*') && (arg[1] == '\0'))
@@ -1838,16 +1807,12 @@ void set_channel_mode(struct Client *cptr,
             {
               if (len + 2 >= MODEBUFLEN)
                 break;
-#ifdef OLD_NON_RED
-              if(!(chptr->mode.mode & MODE_INVITEONLY))
-#endif
-                {
-                  chptr->mode.mode |= MODE_INVITEONLY;
-                  *mbufw++ = '+';
-                  *mbufw++ = 'i';
-                  len += 2;
-                  /*              opcnt++; */
-                }
+
+	      chptr->mode.mode |= MODE_INVITEONLY;
+	      *mbufw++ = '+';
+	      *mbufw++ = 'i';
+	      len += 2;
+	      /*              opcnt++; */
             }
           else
             {
@@ -1857,16 +1822,11 @@ void set_channel_mode(struct Client *cptr,
               while ( (lp = chptr->invites) )
                 del_invite(lp->value.cptr, chptr);
 
-#ifdef OLD_NON_RED
-              if(chptr->mode.mode & MODE_INVITEONLY)
-#endif
-                {
-                  chptr->mode.mode &= ~MODE_INVITEONLY;
-                  *mbufw++ = '-';
-                  *mbufw++ = 'i';
-                  len += 2;
-                  /*              opcnt++; */
-                }
+	      chptr->mode.mode &= ~MODE_INVITEONLY;
+	      *mbufw++ = '-';
+	      *mbufw++ = 'i';
+	      len += 2;
+	      /*              opcnt++; */
             }
           break;
 
@@ -1917,31 +1877,21 @@ void set_channel_mode(struct Client *cptr,
             {
               if (len + 2 >= MODEBUFLEN)
                 break;
-#ifdef OLD_NON_RED
-              if(!(chptr->mode.mode & MODE_MODERATED))
-#endif
-                {
-                  chptr->mode.mode |= MODE_MODERATED;
-                  *mbufw++ = '+';
-                  *mbufw++ = 'm';
-                  len += 2;
-                  /*              opcnt++; */
-                }
+	      chptr->mode.mode |= MODE_MODERATED;
+	      *mbufw++ = '+';
+	      *mbufw++ = 'm';
+	      len += 2;
+	      /*              opcnt++; */
             }
           else
             {
               if (len + 2 >= MODEBUFLEN)
                 break;
-#ifdef OLD_NON_RED
-              if(chptr->mode.mode & MODE_MODERATED)
-#endif
-                {
-                  chptr->mode.mode &= ~MODE_MODERATED;
-                  *mbufw++ = '-';
-                  *mbufw++ = 'm';
-                  len += 2;
-                  /*              opcnt++; */
-                }
+	      chptr->mode.mode &= ~MODE_MODERATED;
+	      *mbufw++ = '-';
+	      *mbufw++ = 'm';
+	      len += 2;
+	      /*              opcnt++; */
             }
           break;
 
@@ -1969,31 +1919,21 @@ void set_channel_mode(struct Client *cptr,
             {
               if (len + 2 >= MODEBUFLEN)
                 break;
-#ifdef OLD_NON_RED
-              if(!(chptr->mode.mode & MODE_NOPRIVMSGS))
-#endif
-                {
-                  chptr->mode.mode |= MODE_NOPRIVMSGS;
-                  *mbufw++ = '+';
-                  *mbufw++ = 'n';
-                  len += 2;
-                  /*              opcnt++; */
-                }
+	      chptr->mode.mode |= MODE_NOPRIVMSGS;
+	      *mbufw++ = '+';
+	      *mbufw++ = 'n';
+	      len += 2;
+	      /*              opcnt++; */
             }
           else
             {
               if (len + 2 >= MODEBUFLEN)
                 break;
-#ifdef OLD_NON_RED
-              if(chptr->mode.mode & MODE_NOPRIVMSGS)
-#endif
-                {
-                  chptr->mode.mode &= ~MODE_NOPRIVMSGS;
-                  *mbufw++ = '-';
-                  *mbufw++ = 'n';
-                  len += 2;
-                  /*              opcnt++; */
-                }
+	      chptr->mode.mode &= ~MODE_NOPRIVMSGS;
+	      *mbufw++ = '-';
+	      *mbufw++ = 'n';
+	      len += 2;
+	      /*              opcnt++; */
             }
           break;
 
@@ -2008,17 +1948,10 @@ void set_channel_mode(struct Client *cptr,
 
           if(MyClient(sptr))
             {
-#ifdef OLD_P_S
-              if(done_s_or_p)
-                break;
-              else
-                done_s_or_p = YES;
-#else
               if(done_p)
                 break;
               else
                 done_p = YES;
-#endif
               /*              if ( opcnt >= MAXMODEPARAMS)
                 break; */
             }
@@ -2027,42 +1960,21 @@ void set_channel_mode(struct Client *cptr,
             {
               if (len + 2 >= MODEBUFLEN)
                 break;
-#ifdef OLD_P_S
-              if(chptr->mode.mode & MODE_SECRET)
-                {
-                  if (len + 2 >= MODEBUFLEN)
-                    break;
-                  *mbufw++ = '-';
-                  *mbufw++ = 's';
-                  len += 2;
-                  chptr->mode.mode &= ~MODE_SECRET;
-                }
-#endif
-#ifdef OLD_NON_RED
-              if(!(chptr->mode.mode & MODE_PRIVATE))
-#endif
-                {
-                  chptr->mode.mode |= MODE_PRIVATE;
-                  *mbufw++ = '+';
-                  *mbufw++ = 'p';
-                  len += 2;
-                  /*              opcnt++; */
-                }
+	      chptr->mode.mode |= MODE_PRIVATE;
+	      *mbufw++ = '+';
+	      *mbufw++ = 'p';
+	      len += 2;
+	      /*              opcnt++; */
             }
           else
             {
               if (len + 2 >= MODEBUFLEN)
                 break;
-#ifdef OLD_NON_RED
-              if(chptr->mode.mode & MODE_PRIVATE)
-#endif
-                {
-                  chptr->mode.mode &= ~MODE_PRIVATE;
-                  *mbufw++ = '-';
-                  *mbufw++ = 'p';
-                  len += 2;
-                  /*              opcnt++; */
-                }
+	      chptr->mode.mode &= ~MODE_PRIVATE;
+	      *mbufw++ = '-';
+	      *mbufw++ = 'p';
+	      len += 2;
+	      /*              opcnt++; */
             }
           break;
 
@@ -2079,17 +1991,10 @@ void set_channel_mode(struct Client *cptr,
 
           if(MyClient(sptr))
             {
-#ifdef OLD_P_S
-              if(done_s_or_p)
-                break;
-              else
-                done_s_or_p = YES;
-#else
               if(done_s)
                 break;
               else
                 done_s = YES;
-#endif
               /*              if ( opcnt >= MAXMODEPARAMS)
                               break; */
             }
@@ -2098,42 +2003,21 @@ void set_channel_mode(struct Client *cptr,
             {
               if (len + 2 >= MODEBUFLEN)
                 break;
-#ifdef OLD_P_S
-              if(chptr->mode.mode & MODE_PRIVATE)
-                {
-                  if (len + 2 >= MODEBUFLEN)
-                    break;
-                  *mbufw++ = '-';
-                  *mbufw++ = 'p';
-                  len += 2;
-                  chptr->mode.mode &= ~MODE_PRIVATE;
-                }
-#endif
-#ifdef OLD_NON_RED
-              if(!(chptr->mode.mode & MODE_SECRET))
-#endif
-                {
-                  chptr->mode.mode |= MODE_SECRET;
-                  *mbufw++ = '+';
-                  *mbufw++ = 's';
-                  len += 2;
-                  /*              opcnt++; */
-                }
+	      chptr->mode.mode |= MODE_SECRET;
+	      *mbufw++ = '+';
+	      *mbufw++ = 's';
+	      len += 2;
+	      /*              opcnt++; */
             }
           else
             {
               if (len + 2 >= MODEBUFLEN)
                 break;
-#ifdef OLD_NON_RED
-              if(chptr->mode.mode & MODE_SECRET)
-#endif
-                {
-                  chptr->mode.mode &= ~MODE_SECRET;
-                  *mbufw++ = '-';
-                  *mbufw++ = 's';
-                  len += 2;
-                  /*              opcnt++; */
-                }
+	      chptr->mode.mode &= ~MODE_SECRET;
+	      *mbufw++ = '-';
+	      *mbufw++ = 's';
+	      len += 2;
+	      /*              opcnt++; */
             }
           break;
 
@@ -2161,31 +2045,21 @@ void set_channel_mode(struct Client *cptr,
             {
               if (len + 2 >= MODEBUFLEN)
                 break;
-#ifdef OLD_NON_RED
-              if(!(chptr->mode.mode & MODE_TOPICLIMIT))
-#endif
-                {
-                  chptr->mode.mode |= MODE_TOPICLIMIT;
-                  *mbufw++ = '+';
-                  *mbufw++ = 't';
-                  len += 2;
-                  /*              opcnt++; */
-                }
+	      chptr->mode.mode |= MODE_TOPICLIMIT;
+	      *mbufw++ = '+';
+	      *mbufw++ = 't';
+	      len += 2;
+	      /*              opcnt++; */
             }
           else
             {
               if (len + 2 >= MODEBUFLEN)
                 break;
-#ifdef OLD_NON_RED
-              if(chptr->mode.mode & MODE_TOPICLIMIT)
-#endif
-                {
-                  chptr->mode.mode &= ~MODE_TOPICLIMIT;
-                  *mbufw++ = '-';
-                  *mbufw++ = 't';
-                  len += 2;
-                  /*              opcnt++; */
-                }
+	      chptr->mode.mode &= ~MODE_TOPICLIMIT;
+	      *mbufw++ = '-';
+	      *mbufw++ = 't';
+	      len += 2;
+	      /*              opcnt++; */
             }
           break;
 

@@ -181,11 +181,7 @@ int     m_whois(struct Client *cptr,
       ** We're no longer allowing remote users to generate
       ** requests with wildcards.
       */
-#ifdef NO_WHOIS_WILDCARDS
       if (wilds)
-#else
-      if (!MyConnect(sptr) && wilds)
-#endif
         {
           sendto_one(sptr, form_str(ERR_NOSUCHNICK),
                      me.name, parv[0], nick);
