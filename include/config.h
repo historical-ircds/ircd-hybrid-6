@@ -987,6 +987,10 @@
 #error CLIENT_FLOOD undefined.
 #endif
 
+#if !defined(HAVE_LIBZ) && defined(ZIP_LINKS)
+#error ZIP_LINKS defined put ZLIB not found.  Undef ZIP_LINKS or install ZLIB
+#endif
+
 #ifdef DEBUGMODE
 #  define Debug(x) debug x
 #  define LOGFILE LPATH

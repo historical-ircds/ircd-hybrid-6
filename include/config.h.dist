@@ -136,8 +136,8 @@
  * Define this to hide the ips of people spoofing from /trace etc, the +c
  * notice and from /stats I
  */
-#undef HIDE_SPOOF_IPS
-   
+#define HIDE_SPOOF_IPS
+
 /* HIDE_ERROR_MESSAGES
  * ERROR messages coming from servers can sometimes have IPs in them.
  * This will not show any error messages that are received, a
@@ -341,7 +341,7 @@
  * spoofed I: line
  *
  * This will no longer hide spoofed I: or the ips of spoofs, use
- * HIDE_SPOOF_IPS
+ * HIDE_SPOOF_IPS.
  */
 #define SPOOF_NOTICE
 
@@ -985,6 +985,10 @@
 
 #if !defined(CLIENT_FLOOD)
 #error CLIENT_FLOOD undefined.
+#endif
+
+#if !defined(HAVE_LIBZ) && defined(ZIP_LINKS)
+#error ZIP_LINKS defined put ZLIB not found.  Undef ZIP_LINKS or install ZLIB
 #endif
 
 #ifdef DEBUGMODE
