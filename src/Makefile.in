@@ -6,7 +6,7 @@ CC = @CC@
 RM = @RM@
 MKDEP = ${CC} -MM
 
-IRCDLIBS = @LIBS@ ../zlib/libz.a
+IRCDLIBS = @LIBS@ ../zlib/libz.a ../adns/libadns.a
 
 INCLUDES = -I../include -I../zlib
 CPPFLAGS = ${INCLUDES} @CPPFLAGS@
