@@ -49,10 +49,10 @@ COMMAND         - USAGE and DESCRIPTION
                   LETTER (* = Oper only.)
                   ------ (^ = Can be configured to be oper only.)
                     c - Shows C/N lines
-                  ^ b - Shows B lines (Obselete)
+                  ^ b - Shows B lines (Obsolete)
                   ^ d - Shows D lines
-                  ^ e - Shows E lines (Obselete)
-                  ^ f - Shows F lines (Obselete)
+                  ^ e - Shows E lines (Obsolete)
+                  ^ f - Shows F lines (Obsolete)
                     g - Shows G lines
                     h - Shows H/L lines
                   ^ i - Shows I lines
