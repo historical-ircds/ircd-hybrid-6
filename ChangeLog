@@ -1,3 +1,7 @@
+*** 19990829_1 by lusky
+fix for umode +O (jk)
+
+
 *** 19990826_1 by lusky
 turned on ANTI_DRONE_FLOOD by default
 sync'd config.h.dist
