@@ -2726,6 +2726,16 @@ static struct ConfItem* find_tkline(const char* host, const char* user, unsigned
                   tmp_list_ptr = last_list_ptr->next = kill_list_ptr->next;
                 }
 
+              /* Alert opers that a TKline expired - Hwy */
+              sendto_realops("Temporary K-line for [%s@%s] expired",
+                             (kill_list_ptr->user) ? kill_list_ptr->user : "*",
+                             (kill_list_ptr->host) ? kill_list_ptr->host : "*");
+
+              /* Alert opers that a TKline expired - Hwy */
+              sendto_realops("Temporary K-line for [%s@%s] expired",
+                             (kill_list_ptr->user) ? kill_list_ptr->user : "*",
+                             (kill_list_ptr->host) ? kill_list_ptr->host : "*");
+
               free_conf(kill_list_ptr);
               kill_list_ptr = tmp_list_ptr;
             }
@@ -2909,6 +2919,11 @@ void show_temp_klines(aClient *sptr, struct ConfItem * tklist)
               /* its in the middle of the list, so link around it */
               tmp_list_ptr = last_list_ptr->next = kill_list_ptr->next;
             }
+
+          /* Alert opers that a TKline expired - Hwy */
+          sendto_realops("Temporary K-line for [%s@%s] expired",
+                         (kill_list_ptr->user) ? kill_list_ptr->user : "*",
+                         (kill_list_ptr->host) ? kill_list_ptr->host : "*");
 
           free_conf(kill_list_ptr);
           kill_list_ptr = tmp_list_ptr;
