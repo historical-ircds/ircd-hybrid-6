@@ -1,3 +1,8 @@
+*** 20010610_1 by db
+- moved LITTLE_I_LINES into "not supported" section *sigh*
+
+
+
 *** 20010609_5 by db
 - #ifdef'ed out features not approved on EFNet KNOCK and +e *sigh*
 
