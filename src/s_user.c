@@ -483,8 +483,8 @@ static	int	register_user(aClient *cptr,
   parv[1] = parv[2] = NULL;
 
   /* pointed out by Mortiis, never be too careful */
-  if(strlen(username) > USERLEN-1)
-    username[USERLEN-1] = '\0';
+  if(strlen(username) > USERLEN)
+    username[USERLEN] = '\0';
 
   reason = (char *)NULL;
 
