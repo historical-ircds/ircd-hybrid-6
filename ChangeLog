@@ -1,3 +1,12 @@
+*** 20010705_2 by greg
+- config.h / ircd.c
+		made pid file stuffs more multi ircd in same directory
+		friendly, at the expense of multiple server with the same
+		name.. well.. that's another case entirely.
+		anyways, pidfile is now me.name.pid by default, unless
+		PPATH is defined.
+
+
 *** 20010705_1 by db
 - don't allow opers to join on split either.
 
