@@ -1,3 +1,15 @@
+davidt      2001/12/06 18:45:53 EST	(20011206_5)
+
+  Modified files:
+    .                    INSTALL 
+  Log:
+  test - this commit shouldnt work
+  
+  Revision  Changes    Path
+  1.10      +1 -1      ircd-hybrid-6/INSTALL
+
+
+
 *** 20011206_4 by leeh
 - add +e to stats z
 
