@@ -1,3 +1,7 @@
+*** 19990825_2 by lusky
+changed a strncpy to DupString in s_conf.c (db)
+
+
 *** 19990825_1 by lusky
 bumped patchlevel.h to b100
 more kill path fixes (db)
