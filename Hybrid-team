@@ -4,7 +4,7 @@ $Id$
 with the instability and all-out "dirtiness" of the EFnet ircd's
 available. "hybrid" is the name for the collective efforts of a group
 of people, all of us.
- 
+
 Anyone is welcome to contribute to this effort. We are serious about this.
  
   We have run the code through "purify", a commercial program designed
@@ -25,7 +25,8 @@ The core team as, of this release:
 AndroSyn      Aaron Sethman      <androsyn@ratbox.org>
 cosine        Patrick Alken      <wnder@uwns.underworld.net>
 Dianora       Diane Bruce        <db@db.net>
-einride,      Erik S. Johansen,  <einride@einride@org>
+einride       Erik S. Johansen   <einride@einride.org>
+Hwy101        W. Campbell        <wcampbel@botbay.net>
 larne         Edward Brocklesby  <ejb@leguin.org.uk>
 Neph|l|m      Adel Mezibra       <adel@cybercable.fr>
 billy-jon     Bill Jonus         <proggy@earthling.net>
@@ -46,7 +47,6 @@ David-T       David Taylor       <davidt@yadt.co.uk>
 echo          Adam J. Durana     <adam@caca.com>
 fl_           Lee Hardy          <leeh@shagged.org>
 FlashMan      Craig A. Huegen    <chuegen@quadrunner.com>
-Hwy101        W. Campbell        <wcampbel@botbay.net>
 jailbird      Dustin Marquess    <jailbird@alcatraz.fdf.net>
 johan         Johannes Erdfelt   <jerdfelt@eng.mindspring.net>
 koitsu/k9     Jeremy Chadwick    <jdc@best.net>

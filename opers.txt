@@ -237,8 +237,7 @@ COMMAND         - USAGE and DESCRIPTION
                      FLUDBLOCK - Sets the number of seconds to block 
                                  fluds to <value>
 
-                    -- The following is if compiled with NO_CHANOPS_ON_SPLIT
-                       or NO_JOIN_ON_SPLIT or PRESERVE_CHANNEL_ON_SPLIT
+                    -- The following is if compiled with NO_JOIN_ON_SPLIT
                      SPLITDELAY - Sets how long after the connect burst
                                   starts before ops can be hacked on new
                                   channels. 5(minutes) is usually plenty.

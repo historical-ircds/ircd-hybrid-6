@@ -1,6 +1,7 @@
 # Y: Line Reference Guide (In Constant Progress)
 # W. Campbell (hwy101@kabel.pp.ru)
 # This document is freely redistributable copyrighted material
+# $Id$
 # 
 # The structure of this document allows for pasting or including into an 
 # ircd.conf (or suitable .include'ed conf file) for easier reference.
@@ -16,7 +17,7 @@
 
 # for clients:
 # Y:class number:ping timing:clone:maximum users in this class:sendQ length
-# The "frequency field" determins how many users from the same IP are allowed
+# The "frequency field" determines how many users from the same IP are allowed
 # on the server, therefore limiting clones.  Leave it blank or set it to
 # 0 to disable this restriction
 # NOTE that on some ircd's, the match is on the user@host and not the IP
@@ -59,7 +60,7 @@ Y:5:180:4:20:200000
 # at once.
 Y:20:90:2:10:50000
 
-# This is an example of a "privilaged user" class, who is permitted to have
+# This is an example of a "privileged user" class, who is permitted to have
 # many more connections, more sendQ, and a longer ping timing
 Y:50:120:0:50:300000
 
@@ -73,20 +74,20 @@ Y:3:90:300:20:600000
 Y:4:90:300:1:600000
 
 # Thus we have class 1 for normal users, 2, 3 and 4 for servers, 100 for opers
-# 5 for "lagged users", 20 for "bad boys/girls", and 50 for privilaged users
+# 5 for "lagged users", 20 for "bad boys/girls", and 50 for privileged users
 
-# Note that we set the oper class to the highest number.  When you sucessfully
+# Note that we set the oper class to the highest number.  When you successfully
 # issue the OPER command, you will be placed into the oper class only if it is
 # a higher class number than the class the user is currently in.  We may also
 # wish to reorganize the numbers of the other user classes so that they are 
-# numbered in order from the lowest privilage to the highest.
+# numbered in order from the lowest privilege to the highest.
 
 # Also note that the IRCD type used has an influence on what limits you set.
 # Most IRCD's have the limit apply per I: line.  Hybrid and Bahamut with the
 # OLD_Y_LIMIT #undef'ed will set the limits in the Y line.  According to the
 # information available for those options, closed I: line servers will benefit
 # more from the old behavior, while more open servers benefit from the new
-# bahavior.  Consult your config.h for more details.  
+# behavior.  Consult your config.h for more details.  
 
 # A problem I have seen lately is when people set the class in the O: lines
 # to 0 or to an invalid class (which will default to 0).  The issue was that

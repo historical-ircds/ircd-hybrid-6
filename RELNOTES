@@ -45,7 +45,7 @@ for setting the value in real time. If you define USE_SYSLOG in your
 config ircd will log to both the ircd.log file and syslog.
 
 Authentication and DNS lookups are handled a bit differently now,
-clients are completely ignored until both auth and dns have completed.
+clients are completely ignored until both auth and DNS have completed.
 This is not significantly different than earlier behavior but you should
 notice slightly faster client connects.
 

@@ -11,7 +11,7 @@ follow when building and tuning the daemon:
     were changed.  Changes to ircd.conf are documented in doc/example.conf.
 
     If you are upgrading from Hybrid6.0 or earlier, you MUST read
-    README.HYBRID6.1-CHANGES
+    README.HYBRID6.2-CHANGES
 
 2.  Run the "configure" script.  It will create "include/setup.h" and the
     Makefiles to match your system:
@@ -21,7 +21,7 @@ follow when building and tuning the daemon:
 3.  Edit the "include/config.h" file.  This allows you to change
     various options of how the ircd will operate.  Please make note of
     the following variables in "include/config.h", as they are common
-    faultpoints for administrators who are learning how to tune their
+    fault points for administrators who are learning how to tune their
     daemon:
 
       HARD_FDLIMIT_
@@ -45,7 +45,7 @@ follow when building and tuning the daemon:
     number after the "open files" description.  Understand that this is
     the MAXIMUM number of descriptors (sockets AND open files) which
     that user can have.  If you believe your daemon is experiencing this
-    (high CPU usage is usually a sign), try using utilties like "ktrace"
+    (high CPU usage is usually a sign), try using utilities like "ktrace"
     or "truss" on the running ircd process to find out what troubles it
     might be having.
 
@@ -64,7 +64,7 @@ follow when building and tuning the daemon:
 
 HOW TO GET HELP:
 ----------------
-Send Check or Money Order to...  just kidding!  Commerical support for
+Send Check or Money Order to...  just kidding!  Commercial support for
 ircd-hybrid is not available at this time.
 
 However, all hope is not lost; the Hybrid Mailing List is available for
