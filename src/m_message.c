@@ -119,7 +119,6 @@ static  int     m_message(struct Client *cptr,
                           int notice)
 {
   struct Client       *acptr;
-  char  *s;
   struct Channel *chptr;
   char  *nick, *server, *cmd, *host;
   char *p;
