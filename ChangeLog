@@ -1,3 +1,8 @@
+*** 20010609_5 by db
+- #ifdef'ed out features not approved on EFNet KNOCK and +e *sigh*
+
+
+
 *** 20010609_4 by db
 submitted by Walter Campbell
 - igore of bogus TS should be in version string
