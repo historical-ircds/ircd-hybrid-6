@@ -76,19 +76,55 @@ extern int reject_held_fds;		/* defined in ircd.c */
 #endif
 
 static char buf[BUFSIZE], buf2[BUFSIZE];
-static int user_modes[]		= { 
-  FLAGS_INVISIBLE, 'i',
-  FLAGS_WALLOP, 'w',
-  FLAGS_SERVNOTICE, 's',
-  FLAGS_OPERWALL,'z',
-  FLAGS_CCONN, 'c',
-  FLAGS_REJ, 'r',
-  FLAGS_SKILL, 'k',
-  FLAGS_FULL, 'f',
-  FLAGS_SPY, 'y',
-  FLAGS_DEBUG, 'd',
-  FLAGS_NCHANGE, 'n',
-  0, 0
+
+/* table of ascii char letters to corresponding bitmask */
+
+static FLAG_ITEM user_modes[] =
+{ 
+  {FLAGS_CCONN,	'c'},
+  {FLAGS_DEBUG,	'd'},
+  {FLAGS_FULL,	'f'},
+  {FLAGS_INVISIBLE, 'i'},
+  {FLAGS_SKILL, 'k'},
+  {FLAGS_NCHANGE, 'n'},
+  {FLAGS_REJ, 'r'},
+  {FLAGS_SERVNOTICE, 's'},
+  {FLAGS_WALLOP, 'w'},
+  {FLAGS_SPY, 'y'},
+  {FLAGS_OPERWALL, 'z'},
+  {0, 0}
+};
+
+static int user_modes_from_c_to_bitmask[] =
+{ 
+  0,            /* @ */
+  0,		/* a */
+  0,		/* b */
+  FLAGS_CCONN,	/* c */
+  FLAGS_DEBUG,	/* d */
+  0,		/* e */
+  FLAGS_FULL,	/* f */
+  0,		/* g */
+  0,		/* h */
+  FLAGS_INVISIBLE, /* i */
+  0,		/* j */
+  FLAGS_SKILL,	/* k */
+  0,		/* l */
+  0, 		/* m */
+  FLAGS_NCHANGE, /* n */
+  0, 		/* o */
+  0,		/* p */
+  0,		/* q */
+  FLAGS_REJ,	/* r */
+  FLAGS_SERVNOTICE, /* s */
+  0,		/* t */
+  0,		/* u */
+  0,		/* v */
+  FLAGS_WALLOP,	/* w */
+  0,		/* x */
+  FLAGS_SPY, 	/* y */
+  FLAGS_OPERWALL, /* z */
+  0, 0, 0, 0, 0, 0	/* pad out to 0x1F */
 };
 
 /* internally defined functions */
@@ -1542,18 +1578,17 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
 	  m = &parv[4][1];
 	  while (*m)
 	    {
-	      for (s = user_modes; (flag = *s); s += 2)
-		if (*m == *(s+1))
-		  {
-		    if (flag == FLAGS_INVISIBLE)
-		      Count.invisi++;
-		    if ((flag == FLAGS_OPER) || (flag == FLAGS_LOCOP))
-		      {
-			Count.oper++;
-		      }
-		    sptr->flags |= flag&SEND_UMODES;
-		    break;
-		  }
+	      if (*m == 'O')	/* Can only be a remote oper */
+		{
+		  Count.oper++;
+		  SetOper(sptr);
+		}
+	      flag = user_modes_from_c_to_bitmask[(int)(*m & 0x1F)];
+	      if( flag == FLAGS_INVISIBLE )
+		{
+		  Count.invisi++;
+		}
+	      sptr->umodes |= flag & SEND_UMODES;
 	      m++;
 	    }
 	  
@@ -2695,7 +2730,15 @@ static int do_user(char* nick, aClient* cptr, aClient* sptr,
 #ifndef	NO_DEFAULT_INVISIBLE
       sptr->flags |= FLAGS_INVISIBLE;
 #endif
+
+#if 0
+      /* Undocumented lame extension to the protocol
+       * if user provides a number, the bits set are
+       * used to set the umode flags. arghhhhh -db
+       */
       sptr->flags |= (UFLAGS & atoi(host));
+#endif
+
       if (!(oflags & FLAGS_INVISIBLE) && IsInvisible(sptr))
 	Count.invisi++;
       /*
@@ -3557,7 +3600,7 @@ int	m_umode(aClient *cptr,
 		char *parv[])
 {
   int	flag;
-  int	*s;
+  int	i;
   char	**p, *m;
   aClient *acptr;
   int	what, setflags;
@@ -3597,20 +3640,17 @@ int	m_umode(aClient *cptr,
     {
       m = buf;
       *m++ = '+';
-      for (s = user_modes; (flag = *s) && (m - buf < BUFSIZE - 4);
-	   s += 2)
-	if (sptr->flags & flag)
-	  *m++ = (char)(*(s+1));
+
+      for (i = 0; user_modes[i].letter && (m - buf < BUFSIZE - 4);i++)
+	if (sptr->umodes & user_modes[i].mode)
+	  *m++ = user_modes[i].letter;
       *m = '\0';
       sendto_one(sptr, form_str(RPL_UMODEIS), me.name, parv[0], buf);
       return 0;
     }
 
   /* find flags already set for user */
-  setflags = 0;
-  for (s = user_modes; (flag = *s); s += 2)
-    if (sptr->umodes & flag)
-      setflags |= flag;
+  setflags = sptr->umodes;
   
   /*
    * parse mode change string(s)
@@ -3634,17 +3674,18 @@ int	m_umode(aClient *cptr,
 	case '\t' :
 	  break;
 	default :
-	  for (s = user_modes; (flag = *s); s += 2)
-	    if (*m == (char)(*(s+1)))
-	      {
-		if (what == MODE_ADD)
-		  sptr->umodes |= flag;
-		else
-		  sptr->umodes &= ~flag;	
-		break;
-	      }
-	  if (flag == 0 && MyConnect(sptr))
-	    badflag = YES;
+	  if((flag = user_modes_from_c_to_bitmask[(int)(*m & 0x1F)]))
+	    {
+	      if (what == MODE_ADD)
+		sptr->umodes |= flag;
+	      else
+		sptr->umodes &= ~flag;	
+	    }
+	  else
+	    {
+	      if ( MyConnect(sptr))
+		badflag = YES;
+	    }
 	  break;
 	}
 
@@ -3681,7 +3722,8 @@ void	send_umode(aClient *cptr,
 		   int sendmask,
 		   char *umode_buf)
 {
-  int	*s, flag;
+  int	i;
+  int flag;
   char	*m;
   int	what = MODE_NULL;
 
@@ -3691,30 +3733,32 @@ void	send_umode(aClient *cptr,
    */
   m = umode_buf;
   *m = '\0';
-  for (s = user_modes; (flag = *s); s += 2)
+  for (i = 0; user_modes[i].letter; i++ )
     {
+      flag = user_modes[i].mode;
+
       if (MyClient(sptr) && !(flag & sendmask))
 	continue;
       if ((flag & old) && !(sptr->umodes & flag))
 	{
 	  if (what == MODE_DEL)
-	    *m++ = *(s+1);
+	    *m++ = user_modes[i].letter;
 	  else
 	    {
 	      what = MODE_DEL;
 	      *m++ = '-';
-	      *m++ = *(s+1);
+	      *m++ = user_modes[i].letter;
 	    }
 	}
       else if (!(flag & old) && (sptr->umodes & flag))
 	{
 	  if (what == MODE_ADD)
-	    *m++ = *(s+1);
+	    *m++ = user_modes[i].letter;
 	  else
 	    {
 	      what = MODE_ADD;
 	      *m++ = '+';
-	      *m++ = *(s+1);
+	      *m++ = user_modes[i].letter;
 	    }
 	}
     }
