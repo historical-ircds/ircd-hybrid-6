@@ -28,26 +28,26 @@ CFLAGS = -DNDEBUG -g -O2
 #
 # You may need to define the FD_SETSIZE in order to overrule
 # the system one.
-#CFLAGS= -g -O2 -D"FD_SETSIZE=1024"
+#CFLAGS= -DNDEBUG -g -O2 -D"FD_SETSIZE=1024"
 #
 # NOTE: The rest of these definitions may or may not work, I haven't tested them --JRL
 #
 # use the following on MIPS:
-#CFLAGS= -systype bsd43 -DSYSTYPE_BSD43
+#CFLAGS= -DNDEBUG -systype bsd43 -DSYSTYPE_BSD43
 # For Irix 4.x (SGI), use the following:
-#CFLAGS= -g -cckr
+#CFLAGS= -DNDEBUG -g -cckr
 #
 # on NEXT use:
-#CFLAGS=-bsd
+#CFLAGS= -DNDEBUG -bsd
 #on NeXT other than 2.0:
-#IRCDLIBS=-lsys_s
+#IRCDLIBS= -lsys_s
 #
 # AIX 370 flags
-#CFLAGS=-D_BSD -Hxa
-#IRCDLIBS=-lbsd
+#CFLAGS= -DNDEBUG -D_BSD -Hxa
+#IRCDLIBS= -lbsd
 #
 # Dynix/ptx V2.0.x
-#CFLAGS= -O -Xo
+#CFLAGS= -DNDEBUG  -O -Xo
 #IRCDLIBS= -lsocket -linet -lnsl -lseq
 # 
 # Dynix/ptx V1.x.x
@@ -57,7 +57,7 @@ CFLAGS = -DNDEBUG -g -O2
 #IRCDLIBS=-lresolv
 #
 # ESIX
-#CFLAGS=-O -I/usr/ucbinclude
+#CFLAGS= -DNDEBUG -O -I/usr/ucbinclude
 #IRCDLIBS=-L/usr/ucblib -L/usr/lib -lsocket -lucb -lns -lnsl
 #
 # LDFLAGS - flags to send the loader (ld). SunOS users may want to add
@@ -67,7 +67,7 @@ CFLAGS = -DNDEBUG -g -O2
 #
 #Dell SVR4
 #CC=gcc
-#CFLAGS= -O2
+#CFLAGS= -DNDEBUG -O2
 #IRCDLIBS=-lsocket -lnsl -lucb
 #IRCLIBS=-lcurses -lresolv -lsocket -lnsl -lucb
 
