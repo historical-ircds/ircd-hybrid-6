@@ -1,3 +1,8 @@
+*** 20011129_7 by db
+- Applied stats j patch
+
+
+
 *** 20011129_6 by db
 - applied jvs m_pong.c patch
 - removed unnecessary clock failure test
