@@ -1,3 +1,8 @@
+*** 20010616_1 by db
+- missing a newts = oldts; in the bogus ts ignore code
+
+
+
 *** 20010613_5 by leeh
 - more fixes to HIDE_SERVERS_IPS
 
