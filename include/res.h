@@ -12,7 +12,7 @@
 #endif
 
 #ifndef INCLUDED_struct_h
-#include "struct.h"
+#include "struct.h"          /* aClient */
 #endif
 
 struct DNSQuery {
@@ -31,6 +31,7 @@ extern time_t	       timeout_query_list(time_t);
 extern time_t	       expire_cache(time_t);
 extern void            del_queries(const void* vptr);
 extern void            restart_resolver(void);
+extern unsigned long   cres_mem(aClient* cptr);
 
 /*
  * add_local_domain - append local domain suffix to hostnames that 

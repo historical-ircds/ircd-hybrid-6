@@ -21,8 +21,9 @@
  */
 #ifndef	INCLUDED_struct_h
 #define INCLUDED_struct_h
-
+#ifndef INCLUDED_config_h
 #include "config.h"
+#endif
 #if !defined(CONFIG_H_LEVEL_6)
 #  error Incorrect config.h for this revision of ircd.
 #endif
@@ -30,7 +31,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <netinet/in.h>
-/* #include <netdb.h> */
+
 #if defined( HAVE_STDDEF_H )
 # include <stddef.h>
 #endif
@@ -81,7 +82,7 @@
 
 #include "hash.h"
 
-typedef	struct	ConfItem aConfItem;
+typedef struct  ConfItem aConfItem;
 typedef	struct 	Client	aClient;
 typedef	struct	Channel	aChannel;
 typedef	struct	User	anUser;
@@ -432,80 +433,6 @@ typedef struct Whowas
   struct Whowas *cprev; /* for client struct linked list */
 }aWhowas;
 
-struct	ConfItem
-{
-  unsigned int	status;	/* If CONF_ILLEGAL, delete when no clients */
-  unsigned int flags;	
-  int	clients;	/* Number of *LOCAL* clients using this */
-  struct in_addr ipnum;	/* ip number of host field */
-  unsigned long ip;	/* only used for I D lines etc. */
-  unsigned long ip_mask;
-  char	*name;		/* IRC name, nick, server name, or original u@h */
-  char	*host;		/* host part of user@host */
-  char	*passwd;
-  char	*user;		/* user part of user@host */
-  int	port;
-  time_t hold;		/* Hold action until this time (calendar time) */
-  aClass *class;	  /* Class of connection */
-  struct ConfItem *next;
-};
-
-
-#define	CONF_ILLEGAL		0x80000000
-#define	CONF_MATCH		0x40000000
-#define CONF_QUARANTINED_NICK	0x0001
-#define	CONF_CLIENT		0x0002
-#define	CONF_CONNECT_SERVER	0x0004
-#define	CONF_NOCONNECT_SERVER	0x0008
-#define	CONF_LOCOP		0x0010
-#define	CONF_OPERATOR		0x0020
-#define	CONF_ME			0x0040
-#define	CONF_KILL		0x0080
-#define	CONF_ADMIN		0x0100
-#ifdef 	R_LINES
-#define	CONF_RESTRICT		0x0200
-#endif
-#define	CONF_CLASS		0x0400
-#define	CONF_LEAF		0x0800
-#define	CONF_LISTEN_PORT	0x1000
-#define	CONF_HUB		0x2000
-#define CONF_ELINE		0x4000
-#define CONF_FLINE		0x8000
-#define	CONF_BLINE		0x10000
-#define	CONF_DLINE		0x20000
-#define CONF_XLINE		0x40000
-#define CONF_ULINE		0x80000
-
-#define	CONF_OPS		(CONF_OPERATOR | CONF_LOCOP)
-#define	CONF_SERVER_MASK	(CONF_CONNECT_SERVER | CONF_NOCONNECT_SERVER)
-#define	CONF_CLIENT_MASK	(CONF_CLIENT | CONF_OPS | \
-				 CONF_SERVER_MASK)
-
-#define	IsIllegal(x)	((x)->status & CONF_ILLEGAL)
-
-/* aConfItem->flags */
-
-#define CONF_FLAGS_LIMIT_IP		0x0001
-#define CONF_FLAGS_NO_TILDE		0x0002
-#define CONF_FLAGS_NEED_IDENTD		0x0004
-#define CONF_FLAGS_PASS_IDENTD		0x0008
-#define CONF_FLAGS_NOMATCH_IP		0x0010
-#define CONF_FLAGS_E_LINED		0x0020
-#define CONF_FLAGS_B_LINED		0x0040
-#define CONF_FLAGS_F_LINED		0x0080
-
-#ifdef IDLE_CHECK
-#define CONF_FLAGS_IDLE_LINED		0x0100
-#endif
-
-#define CONF_FLAGS_DO_IDENTD		0x0200
-#define CONF_FLAGS_ALLOW_AUTO_CONN	0x0400
-#define CONF_FLAGS_ZIP_LINK		0x0800
-#define CONF_FLAGS_SPOOF_IP		0x1000
-
-#ifdef LITTLE_I_LINES
-#define CONF_FLAGS_LITTLE_I_LINE	0x8000
-#endif
 
 #ifdef ZIP_LINKS
 /* the minimum amount of data needed to trigger compression */

@@ -18,9 +18,8 @@
  *
  * $Id$
  */
-
-#ifndef	__config_include__
-#define	__config_include__
+#ifndef INCLUDED_config_h
+#define INCLUDED_config_h
 
 #include "setup.h"
 
@@ -1063,4 +1062,4 @@ error CLIENT_FLOOD undefined.
 
 #define CONFIG_H_LEVEL_6
 
-#endif /* __config_include__ */
+#endif /* INCLUDED_config_h */
