@@ -1922,7 +1922,7 @@ static	int	m_message(aClient *cptr,
 		{
 		  if(acptr->drone_noticed == 0) /* tiny FSM */
 		    {
-		      sendto_ops_flags(FLAGS_REJ,
+		      sendto_ops_flags(FLAGS_BOTS,
 			     "Possible Drone Flooder %s [%s@%s] on %s target: %s",
 				     sptr->name, sptr->username,
 				     sptr->host,
@@ -1940,7 +1940,7 @@ static	int	m_message(aClient *cptr,
 		    {
 		      if(acptr->drone_noticed == 1) /* tiny FSM */
 			{
-			  sendto_ops_flags(FLAGS_REJ,
+			  sendto_ops_flags(FLAGS_BOTS,
 			 "ANTI_DRONE_FLOOD SendQ protection activated for %s",
 					 acptr->name);
 
