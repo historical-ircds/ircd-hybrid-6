@@ -242,6 +242,8 @@ static int start_auth_query(struct AuthRequest* auth)
   int                fd;
 
   if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+    report_error("creating auth stream socket %s:%s", 
+                 get_client_name(auth->client, TRUE), errno);
 #ifdef USE_SYSLOG
     syslog(LOG_ERR, "Unable to create auth socket for %s:%m",
            get_client_name(auth->client,TRUE));
@@ -272,7 +274,8 @@ static int start_auth_query(struct AuthRequest* auth)
   localaddr.sin_port = htons(0);
 
   if (bind(fd, (struct sockaddr*) &localaddr, sizeof(localaddr))) {
-    report_error("binding auth stream socket %s:%s", auth->client);
+    report_error("binding auth stream socket %s:%s", 
+                 get_client_name(auth->client, TRUE), errno);
     close(fd);
     return 0;
   }

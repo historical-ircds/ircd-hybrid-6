@@ -20,6 +20,7 @@
  *  $Id$
  */
 #include "s_bsd.h"
+#include "listener.h"
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -144,64 +145,65 @@ static char     readbuf[READBUF_SIZE];
 #endif
 
 
-
 /*
-** Cannot use perror() within daemon. stderr is closed in
-** ircd and cannot be used. And, worse yet, it might have
-** been reassigned to a normal connection...
-** 
-** Actually stderr is still there IFF ircd was run with -s --Rodder
-*/
-
-/*
-** report_error
-**        This a replacement for perror(). Record error to log and
-**        also send a copy to all *LOCAL* opers online.
-**
-**        text        is a *format* string for outputing error. It must
-**                contain only two '%s', the first will be replaced
-**                by the sockhost from the cptr, and the latter will
-**                be taken from sys_errlist[errno].
-**
-**        cptr        if not NULL, is the *LOCAL* client associated with
-**                the error.
-*/
-void report_error(const char* text, aClient* cptr)
+ * get_sockerr - get the error value from the socket or the current errno
+ *
+ * Get the *real* error from the socket (well try to anyway..).
+ * This may only work when SO_DEBUG is enabled but its worth the
+ * gamble anyway.
+ */
+static int get_sockerr(int fd)
 {
-  register int         errtmp = errno; /* debug may change 'errno' */
-  register const char* host;
-  int                  err;
-  int                  len = sizeof(err);
-#if 0
-  /* include the frigging header */
-  extern char* strerror();
+  int errtmp = errno;
+#ifdef  SO_ERROR
+  int err = 0;
+  int len = sizeof(err);
+
+  if (-1 < fd && !getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*) &err, &len)) {
+    if (err)
+      errtmp = err;
+  }
+  errno = errtmp;
 #endif
+  return errtmp;
+}
 
-  host = (cptr) ? get_client_name(cptr, FALSE) : "";
+/*
+ * report_error - report an error from an errno. 
+ * Record error to log and also send a copy to all *LOCAL* opers online.
+ *
+ *        text        is a *format* string for outputing error. It must
+ *                contain only two '%s', the first will be replaced
+ *                by the sockhost from the cptr, and the latter will
+ *                be taken from sys_errlist[errno].
+ *
+ *        cptr        if not NULL, is the *LOCAL* client associated with
+ *                the error.
+ *
+ * Cannot use perror() within daemon. stderr is closed in
+ * ircd and cannot be used. And, worse yet, it might have
+ * been reassigned to a normal connection...
+ * 
+ * Actually stderr is still there IFF ircd was run with -s --Rodder
+ */
 
-  Debug((DEBUG_ERROR, text, host, strerror(errtmp)));
+void report_error(const char* text, const char* who, int error) 
+{
+  who = (who) ? who : "";
 
-  /*
-   * Get the *real* error from the socket (well try to anyway..).
-   * This may only work when SO_DEBUG is enabled but its worth the
-   * gamble anyway.
-   */
-#ifdef        SO_ERROR
-  if (!IsMe(cptr) && cptr->fd >= 0)
-    if (!getsockopt(cptr->fd, SOL_SOCKET, SO_ERROR, (char *)&err, &len))
-      if (err)
-        errtmp = err;
-#endif
-  sendto_realops_lev(DEBUG_LEV, text, host, strerror(errtmp));
+  sendto_realops_lev(DEBUG_LEV, text, who, strerror(error));
+
 #ifdef USE_SYSLOG
-  syslog(LOG_WARNING, text, host, strerror(errtmp));
+  syslog(LOG_WARNING, text, who, strerror(error));
 #endif
+
   if (bootopt & BOOT_STDERR)
     {
-        fprintf(stderr, text, host, strerror(errtmp));
+        fprintf(stderr, text, who, strerror(error));
         fprintf(stderr, "\n");
-        fflush(stderr);
+        /* fflush(stderr); XXX - stderr is unbuffered, pointless */
     }
+  Debug((DEBUG_ERROR, text, who, strerror(error)));
 }
 
 /*
@@ -256,7 +258,8 @@ int inetport(aClient* listener, int port, unsigned long bind_addr)
 	}
       else
 	{
-	  report_error("opening listener socket %s:%s", listener);
+	  report_error("opening listener socket %s:%s", 
+                       listener->name, errno);
 	  return 0;
 	}
     }
@@ -308,7 +311,8 @@ int inetport(aClient* listener, int port, unsigned long bind_addr)
        */
       if (bind(listener->fd, (struct sockaddr*) &server, sizeof(server)))
         {
-          report_error("binding listener socket %s:%s", listener);
+          report_error("binding listener socket %s:%s", 
+                        listener->name, errno);
           close(listener->fd);
           listener->fd = -1;
           return 0;
@@ -316,7 +320,8 @@ int inetport(aClient* listener, int port, unsigned long bind_addr)
     }
   if (getsockname(listener->fd, (struct sockaddr *)&server, &len))
     {
-      report_error("getsockname failed for listener %s:%s", listener);
+      report_error("getsockname failed for listener %s:%s", 
+                   listener->name, errno);
       close(listener->fd);
       listener->fd = -1;
       return 0;
@@ -326,7 +331,7 @@ int inetport(aClient* listener, int port, unsigned long bind_addr)
 
   if (listen(listener->fd, HYBRID_SOMAXCONN))
     {
-      report_error("listen failed for %s:%s", listener);
+      report_error("listen failed for %s:%s", listener->name, errno);
       close(listener->fd);
       listener->fd = -1;
       return 0;
@@ -498,6 +503,7 @@ void init_sys()
       local[fd] = NULL;
     }
   local[1] = NULL;
+  local[2] = NULL;
 
   if (bootopt & BOOT_TTY)        /* debugging is going to a tty */
     {
@@ -509,8 +515,7 @@ void init_sys()
     close(2);
 
 #ifndef __CYGWIN__
-  if (((bootopt & BOOT_CONSOLE) || isatty(0)) &&
-      !(bootopt & (BOOT_OPER | BOOT_STDERR)))
+  if (((bootopt & BOOT_CONSOLE) || isatty(0)) && !(bootopt & BOOT_STDERR))
     {
       int pid;
       if( (pid = fork()) < 0)
@@ -581,7 +586,8 @@ static int check_init(aClient* cptr, char* sockn)
 
   if (getpeername(cptr->fd, (struct sockaddr *)&sk, &len) == -1)
     {
-      report_error("connect failure: %s %s", cptr);
+      report_error("connect failure: %s %s", 
+                    get_client_name(cptr, TRUE), errno);
       return -1;
     }
   strcpy(sockn, inetntoa((char*)&sk.sin_addr));
@@ -1036,21 +1042,27 @@ static        void        set_sock_opts(int fd, aClient *cptr)
 #ifdef SO_REUSEADDR
   opt = 1;
   if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0)
-    report_error("setsockopt(SO_REUSEADDR) %s:%s", cptr);
+    report_error("setsockopt(SO_REUSEADDR) %s:%s", 
+                  get_client_name(cptr, TRUE), errno);
 #endif
+
 #if  defined(SO_DEBUG) && defined(DEBUGMODE) && 0
 /* Solaris with SO_DEBUG writes to syslog by default */
 #if !defined(SOL20) || defined(USE_SYSLOG)
   opt = 1;
   if (setsockopt(fd, SOL_SOCKET, SO_DEBUG, (char *)&opt, sizeof(opt)) < 0)
-    report_error("setsockopt(SO_DEBUG) %s:%s", cptr);
+    report_error("setsockopt(SO_DEBUG) %s:%s", 
+                 get_client_name(cptr, TRUE), errno);
 #endif /* SOL20 */
 #endif
+
 #if defined(SO_USELOOPBACK) && !defined(__CYGWIN__)
   opt = 1;
   if (setsockopt(fd, SOL_SOCKET, SO_USELOOPBACK, (char *)&opt, sizeof(opt)) < 0)
-    report_error("setsockopt(SO_USELOOPBACK) %s:%s", cptr);
+    report_error("setsockopt(SO_USELOOPBACK) %s:%s", 
+                 get_client_name(cptr, TRUE), errno);
 #endif
+
 #ifdef        SO_RCVBUF
 # if defined(MAXBUFFERS) && !defined(SEQUENT)
   if (rcvbufmax==0)
@@ -1080,8 +1092,9 @@ static        void        set_sock_opts(int fd, aClient *cptr)
 # else
     opt = 8192;
 # endif
-    if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&opt, sizeof(opt)) < 0)
-      report_error("setsockopt(SO_RCVBUF) %s:%s", cptr);
+    if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char*) &opt, sizeof(opt)) < 0)
+      report_error("setsockopt(SO_RCVBUF) %s:%s", 
+                   get_client_name(cptr, TRUE), errno);
 #endif
 #ifdef        SO_SNDBUF
 # ifdef        _SEQUENT_
@@ -1111,7 +1124,8 @@ static        void        set_sock_opts(int fd, aClient *cptr)
 #  endif
 # endif
       if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&opt, sizeof(opt)) < 0)
-        report_error("setsockopt(SO_SNDBUF) %s:%s", cptr);
+        report_error("setsockopt(SO_SNDBUF) %s:%s", 
+                     get_client_name(cptr, TRUE), errno);
 #endif
 #if defined(IP_OPTIONS) && defined(IPPROTO_IP)
         {
@@ -1123,7 +1137,8 @@ static        void        set_sock_opts(int fd, aClient *cptr)
           opt = sizeof(readbuf) / 8;
 # endif
           if (getsockopt(fd, IPPROTO_IP, IP_OPTIONS, t, &opt) < 0)
-            report_error("getsockopt(IP_OPTIONS) %s:%s", cptr);
+            report_error("getsockopt(IP_OPTIONS) %s:%s", 
+                         get_client_name(cptr, TRUE), errno);
           else if (opt > 0)
             {
               for (*readbuf = '\0'; opt > 0; opt--, s+= 3)
@@ -1133,61 +1148,51 @@ static        void        set_sock_opts(int fd, aClient *cptr)
                              get_client_name(cptr, TRUE), readbuf);
             }
           if (setsockopt(fd, IPPROTO_IP, IP_OPTIONS, (char *)NULL, 0) < 0)
-            report_error("setsockopt(IP_OPTIONS) %s:%s", cptr);
+            report_error("setsockopt(IP_OPTIONS) %s:%s", 
+                         get_client_name(cptr, TRUE), errno);
         }
 #endif
 }
 
 
-int        get_sockerr(aClient *cptr)
-{
-  int errtmp = errno, err = 0, len = sizeof(err);
-#ifdef        SO_ERROR
-  if (cptr->fd >= 0)
-    if (!getsockopt(cptr->fd, SOL_SOCKET, SO_ERROR, (char *)&err, &len))
-      if (err)
-        errtmp = err;
-#endif
-  return errtmp;
-}
 
 /*
-** set_non_blocking
-**        Set the client connection into non-blocking mode. If your
-**        system doesn't support this, you can make this a dummy
-**        function (and get all the old problems that plagued the
-**        blocking version of IRC--not a problem if you are a
-**        lightly loaded node...)
-*/
-void        set_non_blocking(int fd,aClient *cptr)
+ * set_non_blocking - Set the client connection into non-blocking mode. 
+ * If your system doesn't support this, you're screwed, ircd will run like
+ * molasis in January.
+ */
+void set_non_blocking(int fd,aClient *cptr)
 {
-  int        res, nonb = 0;
-
   /*
-  ** NOTE: consult ALL your relevant manual pages *BEFORE* changing
-  **         these ioctl's.  There are quite a few variations on them,
-  **         as can be seen by the PCS one.  They are *NOT* all the same.
-  **         Heed this well. - Avalon.
-  */
-#ifdef        NBLOCK_POSIX
+   * NOTE: consult ALL your relevant manual pages *BEFORE* changing
+   * these ioctl's.  There are quite a few variations on them,
+   * as can be seen by the PCS one.  They are *NOT* all the same.
+   * Heed this well. - Avalon.
+   */
+  /* This portion of code might also apply to NeXT.  -LynX */
+#ifdef NBLOCK_SYSV
+  int res = 1;
+
+  if (ioctl(fd, FIONBIO, &res) == -1)
+    report_error("set_non_blocking failed for %s:%s", 
+                 get_client_name(cptr, TRUE), errno);
+
+#else /* !NBLOCK_SYSV */
+  int nonb = 0;
+  int res;
+
+#ifdef NBLOCK_POSIX
   nonb |= O_NONBLOCK;
 #endif
-#ifdef        NBLOCK_BSD
+#ifdef NBLOCK_BSD
   nonb |= O_NDELAY;
 #endif
-#ifdef        NBLOCK_SYSV
-  /* This portion of code might also apply to NeXT.  -LynX */
-  res = 1;
 
-  if (ioctl (fd, FIONBIO, &res) < 0)
-    report_error("ioctl(fd,FIONBIO) failed for %s:%s", cptr);
-#else
-  if ((res = fcntl(fd, F_GETFL, 0)) == -1)
-    report_error("fcntl(fd, F_GETFL) failed for %s:%s",cptr);
-  else if (fcntl(fd, F_SETFL, res | nonb) == -1)
-    report_error("fcntl(fd, F_SETL, nonb) failed for %s:%s",cptr);
+  res = fcntl(fd, F_GETFL, 0);
+  if (-1 == res || fcntl(fd, F_SETFL, res | nonb) == -1)
+    report_error("set_non_blocking failed for %s:%s", 
+                 get_client_name(cptr, TRUE), errno);
 #endif
-  return;
 }
 
 /*
@@ -1208,7 +1213,8 @@ void add_connection(aClient* listener, int fd)
    * get rid of unwanted connections.
    */
   if (getpeername(fd, (struct sockaddr*) &addr, &len) == -1) {
-    report_error("Failed in connecting to %s :%s", listener);
+    report_error("Failed in adding connection %s :%s", 
+                 listener->name, errno);
     ircstp->is_ref++;
     close(fd);
     return;
@@ -1413,7 +1419,8 @@ void accept_connection(struct Client* listener)
   ** be accepted until some old is closed first.
   */
   if ((fd = accept(listener->fd, (struct sockaddr*) &addr, &addrlen)) < 0) {
-    report_error("Cannot accept connections %s:%s", listener);
+    report_error("Error accepting connection %s:%s", 
+                 listener->name, errno);
     return;
   }
 
@@ -1478,6 +1485,7 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
   struct AuthRequest* auth_next = 0;
   int            i;
   int            rr;
+  int            current_error = 0;
 
   now = timeofday;
 
@@ -1632,7 +1640,7 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
 	}
 	exit_client(cptr, cptr, &me, 
                     (cptr->flags & FLAGS_SENDQEX) ? 
-		    "SendQ Exceeded" : strerror(get_sockerr(cptr)));
+		    "SendQ Exceeded" : strerror(get_sockerr(cptr->fd)));
 	continue;
       }
     }
@@ -1652,7 +1660,7 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
       }
       exit_client(cptr, cptr, &me,
 		  (cptr->flags & FLAGS_SENDQEX) ? "SendQ Exceeded" :
-		  strerror(get_sockerr(cptr)));
+		  strerror(get_sockerr(cptr->fd)));
       continue;
     }
     if (!FD_ISSET(i, read_set) && length > 0)
@@ -1670,8 +1678,10 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
     ** in due course, select() returns that fd as ready
     ** for reading even though it ends up being an EOF. -avalon
     */
+    current_error = get_sockerr(cptr->fd);
+
     Debug((DEBUG_ERROR, "READ ERROR: fd = %d %d %d",
-	   i, errno, length));
+	   i, current_error, length));
   
     /*
     ** NOTE: if length == -2 then cptr has already been freed!
@@ -1679,16 +1689,18 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
     if (length != -2 && (IsServer(cptr) || IsHandshake(cptr))) {
       if (length == 0)
 	sendto_ops("Server %s closed the connection",
-		   get_client_name(cptr,FALSE));
+		   get_client_name(cptr, FALSE));
       else
 	report_error("Lost connection to %s:%s",
-		     cptr);
+		     get_client_name(cptr, TRUE), current_error);
     }
     if (length != FLUSH_BUFFER) {
       char errmsg[255];
-      ircsprintf(errmsg,"Read error: %d (%s)", errno, strerror(errno));
+      ircsprintf(errmsg,"Read error: %d (%s)", 
+                 current_error, strerror(current_error));
       exit_client(cptr, cptr, &me, errmsg);
     }
+    current_error = errno = 0;
   }
   return 0;
 }
@@ -1766,6 +1778,7 @@ int read_message(time_t delay, fdlist *listp)
   int                  i;
   int                  j;
   char                 errmsg[255];
+  int                  current_error = 0;
 
   /* if it is called with NULL we check all active fd's */
   if (!listp) {
@@ -1844,7 +1857,7 @@ int read_message(time_t delay, fdlist *listp)
       return -1;
     else if (nfds >= 0)
       break;
-    report_error("poll %s:%s", &me);
+    report_error("poll %s:%s", me.name, errno);
     res++;
     if (res > 5)
       restart("too many poll errors");
@@ -1915,8 +1928,8 @@ int read_message(time_t delay, fdlist *listp)
             (void)send_queued(cptr);
           if (IsDead(cptr) || write_err)
             {
-              (void)exit_client(cptr, cptr, &me,
-                                strerror(get_sockerr(cptr)));
+              exit_client(cptr, cptr, &me,
+                          strerror(get_sockerr(cptr->fd)));
               continue;
             }
         }
@@ -1930,42 +1943,45 @@ int read_message(time_t delay, fdlist *listp)
         continue;
       if (IsDead(cptr))
         {
-          (void)exit_client(cptr, cptr, &me,
-                            strerror(get_sockerr(cptr)));
+          exit_client(cptr, cptr, &me,
+                      strerror(get_sockerr(cptr->fd)));
           continue;
         }
       if (length > 0)
         continue;
 
       /*
-      ** ...hmm, with non-blocking sockets we might get
-      ** here from quite valid reasons, although.. why
-      ** would select report "data available" when there
-      ** wasn't... so, this must be an error anyway...  --msa
-      ** actually, EOF occurs when read() returns 0 and
-      ** in due course, select() returns that fd as ready
-      ** for reading even though it ends up being an EOF. -avalon
-      */
+       * ...hmm, with non-blocking sockets we might get
+       * here from quite valid reasons, although.. why
+       * would select report "data available" when there
+       * wasn't... so, this must be an error anyway...  --msa
+       * actually, EOF occurs when read() returns 0 and
+       * in due course, select() returns that fd as ready
+       * for reading even though it ends up being an EOF. -avalon
+       */
+      current_error = get_sockerr(cptr->fd);
       Debug((DEBUG_ERROR, "READ ERROR: fd = %d %d %d",
-             fd, errno, length));
+             fd, current_error, length));
       if (IsServer(cptr) || IsHandshake(cptr))
         {
           int connected = timeofday - cptr->firsttime;
           
           if (length == 0)
             sendto_ops("Server %s closed the connection",
-                       get_client_name(cptr,FALSE));
+                       get_client_name(cptr, FALSE));
           else
-            report_error("Lost connection to %s:%s", cptr);
+            report_error("Lost connection to %s:%s", 
+                         get_client_name(cptr, TRUE), current_error);
           sendto_ops("%s had been connected for %d day%s, %2d:%02d:%02d",
                      cptr->name, connected/86400,
                      (connected/86400 == 1) ? "" : "s",
                      (connected % 86400) / 3600, (connected % 3600) / 60,
                      connected % 60);
         }
-      (void)ircsprintf(errmsg, "Read error: %d (%s)", errno,
-                       strerror(errno));
-      (void)exit_client(cptr, cptr, &me, errmsg);
+      ircsprintf(errmsg, "Read error: %d (%s)", 
+                 current_error, strerror(current_error));
+      exit_client(cptr, cptr, &me, errmsg);
+      errno = current_error = 0;
     }
   return 0;
 }
@@ -2049,12 +2065,13 @@ int connect_server(aConfItem *aconf, aClient* by, struct DNSReply* reply)
   if (connect(cptr->fd, svp, len) < 0 && errno != EINPROGRESS)
     {
       errtmp = errno; /* other system calls may eat errno */
-      report_error("Connect to host %s failed: %s",cptr);
+      report_error("Connect to host %s failed: %s",
+                   get_client_name(cptr, TRUE), errno);
       if (by && IsPerson(by) && !MyClient(by))
         sendto_one(by,
                    ":%s NOTICE %s :Connect to host %s failed.",
                    me.name, by->name, cptr);
-      (void)close(cptr->fd);
+      close(cptr->fd);
       cptr->fd = -2;
       cptr->dns_reply = 0;
       free_client(cptr);
@@ -2142,7 +2159,8 @@ static struct sockaddr* connect_inet(aConfItem *aconf, aClient *cptr,
 
   if (cptr->fd == -1)
     {
-      report_error("opening stream socket to server %s:%s", cptr);
+      report_error("opening stream socket to server %s:%s", 
+                   cptr->name, errno);
       return NULL;
     }
 
@@ -2178,7 +2196,8 @@ static struct sockaddr* connect_inet(aConfItem *aconf, aClient *cptr,
       */        
       if (bind(cptr->fd, (struct sockaddr *)&mysk, sizeof(mysk)) == -1)
         {
-          report_error("error binding to local port for %s:%s", cptr);
+          report_error("error binding to local port for %s:%s", 
+                       cptr->name, errno);
           return NULL;
         }
     }

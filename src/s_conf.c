@@ -229,7 +229,7 @@ void free_conf(struct ConfItem* aconf)
   MyFree(aconf->passwd);
   MyFree(aconf->user);
   MyFree(aconf->name);
-  MyFree((char *)aconf);
+  MyFree((char*) aconf);
 }
 
 /*
@@ -1456,7 +1456,7 @@ void clear_special_conf(aConfItem **this_conf)
  * -Dianora
  */
 
-int        rehash_dump(aClient *sptr,char *parv0)
+int rehash_dump(aClient *sptr,char *parv0)
 {
   aConfItem *aconf;
   FBFILE* out;

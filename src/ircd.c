@@ -1203,17 +1203,16 @@ time_t io_loop(time_t delay)
 
   if (timeofday < lasttimeofday)
     {
-      (void)ircsprintf(to_send,
-		       "System clock is running backwards - (%d < %d)",
-		       timeofday, lasttimeofday);
-      report_error(to_send, &me);
+      ircsprintf(to_send, "System clock is running backwards - (%d < %d)",
+	         timeofday, lasttimeofday);
+      report_error(to_send, me.name, 0);
     }
   else if((lasttimeofday + 60) < timeofday)
     {
-      (void)ircsprintf(to_send,
-		       "System clock was reset into the future - (%d+60 > %d)",
-		       timeofday, lasttimeofday);
-      report_error(to_send, &me);
+      ircsprintf(to_send,
+                 "System clock was reset into the future - (%d+60 > %d)",
+                 timeofday, lasttimeofday);
+      report_error(to_send, me.name, 0);
       sync_channels(timeofday - lasttimeofday);
     }
 
@@ -1577,12 +1576,12 @@ time_t now;
  * - Dianora
  */
 
-void report_error_on_tty(char *error_message)
+void report_error_on_tty(const char *error_message)
 {
   int fd;
-  if((fd = open("/dev/tty", O_WRONLY)) >= 0 )
+  if ((fd = open("/dev/tty", O_WRONLY)) != -1)
     {
-      write(fd,error_message,strlen(error_message));
+      write(fd, error_message, strlen(error_message));
       close(fd);
     }
 }
