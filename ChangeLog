@@ -1,3 +1,17 @@
+*** 20010616_3 by greg
+It's 3am, and I've been up so long my tummy is growling.
+
+- audited s_user.c and s_serv.c for get_client_name() calls which could
+  give away a servers ip. if i saw one, i surrounded it with ifdefs for the
+  hide_server_ips code, and masked it. enjoy.
+
+to be done: s_{bsd,auth,misc,..} ok. on the other hand.
+
+to be done: a lot of files should be audited for this.
+            just doing a grep for get_client_name shows some calls on sptr's
+            with TRUE/FALSE instead of MASK_IP
+
+
 *** 20010616_2 by jdc
 * Updated INSTALL; better explanation, and mentions encrypted links
   via OpenSSL.
