@@ -1,3 +1,19 @@
+lusky       2002/04/15 18:38:25 EDT	(20020415_0)
+
+  Modified files:
+    src                  s_serv.c 
+  Log:
+  - fix a leak in hidden ips
+  
+  Submitted by:   bill
+  Reviewed by:    fl_
+  Approved by:    jrl
+  
+  Revision  Changes    Path
+  1.230     +4 -0      ircd-hybrid-6/src/s_serv.c
+
+
+
 db          2002/04/03 00:28:27 EST	(20020403_0)
 
   Modified files:
