@@ -667,7 +667,7 @@ static void check_pidfile(void)
     else
     {
       pidfromfile = atoi(buff);
-      if (!kill(pidfromfile, 0))
+      if (pidfromfile != (int)getpid() && !kill(pidfromfile, 0))
       {
         printf("ERROR: daemon is already running\n");
         exit(-1);
