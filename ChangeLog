@@ -1,3 +1,27 @@
+greg        2001/12/18 23:52:11 EST	(20011219_1)
+
+  Modified files:
+    src                  client.c m_trace.c s_user.c 
+  Log:
+  - hide spoofed users ip in client connect notice (s_user.c)
+  - hide spoofed users ip in the client disconnect notice (client.c)
+  - hide spoofed users ip in /trace (m_trace.c) (why is this deja-vu?)
+  
+  TODO:
+  
+  - someone needs to review this, and flog me if i screw up
+  - someone needs to make /stats L hide the right ips, and for the love of
+    all things holy, make m_stats.c for L/l less ugly.
+  Reviewed by:    to be reviewed
+  Approved by:    db
+  
+  Revision  Changes    Path
+  1.75      +3 -0      ircd-hybrid-6/src/client.c
+  1.11      +5 -1      ircd-hybrid-6/src/m_trace.c
+  1.244     +3 -0      ircd-hybrid-6/src/s_user.c
+
+
+
 androsyn    2001/12/18 22:25:53 EST	(20011219_0)
 
   Modified files:
