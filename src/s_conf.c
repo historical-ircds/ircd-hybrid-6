@@ -228,7 +228,6 @@ free_conf(struct ConfItem* aconf)
   if (aconf->passwd)
     memset(aconf->passwd, 0, strlen(aconf->passwd));
   MyFree(aconf->passwd);
-  MyFree(aconf->oper_reason);
   MyFree(aconf->user);
   MyFree(aconf->name);
   MyFree((char*) aconf);
@@ -2137,8 +2136,6 @@ static void initconf(FBFILE* file, int use_include)
 	  {
 	    *p = '\0';
 	    DupString(aconf->passwd, tmp);
-	    DupString(aconf->oper_reason, (p+1));
-	    *p = '|';
 	  }
 	  else
 	  {

@@ -55,7 +55,6 @@ struct ConfItem
   char*            name;     /* IRC name, nick, server name, or original u@h */
   char*            host;     /* host part of user@host */
   char*            passwd;   /* doubles as kline reason */
-  char*		   oper_reason; /* | portion of kline reason */
   char*            user;     /* user part of user@host */
   int              port;
   time_t           hold;     /* Hold action until this time (calendar time) */
