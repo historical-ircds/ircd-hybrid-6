@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(include/class.h)
-AC_CONFIG_HEADER(include/setup.h)
+AC_CONFIG_HEADER(include/setup.h zlib/setup.h)
 PACKAGE=ircd-hybrid
 VERSION=4.2
 AC_SUBST(PACKAGE)
@@ -25,7 +25,7 @@ AC_CHECK_FUNC(crypt,, AC_CHECK_LIB(descrypt, crypt,,AC_CHECK_LIB(crypt, crypt,,)
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(sys/param.h unistd.h string.h strings.h sys/syslog.h stdlib.h stddef.h) 
+AC_CHECK_HEADERS(sys/param.h unistd.h errno.h string.h strings.h sys/syslog.h stdlib.h stddef.h) 
 AC_CHECK_HEADER(malloc.h, AC_DEFINE(MALLOCH, <malloc.h>)) 
 AC_MSG_CHECKING(MIN and MAX definition)
 AC_EGREP_CPP(yes,
@@ -75,6 +75,17 @@ int main()
 	exit(1);
 }
 ], AC_DEFINE(NBLOCK_POSIX) AC_MSG_RESULT( O_NONBLOCK ),, AC_MSG_RESULT( cross compiling ))
+
+AC_MSG_CHECKING(for mmap support)
+AC_TRY_RUN(
+[
+#include <sys/types.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+int main() {
+  return mmap((caddr_t)0, (off_t)0, PROT_READ, MAP_SHARED, 0, (off_t)0); 
+}
+], AC_DEFINE(USE_MMAP) AC_MSG_RESULT(yes),AC_MSG_RESULT(no), AC_MSG_RESULT( unable to test ))
 
 AC_TRY_RUN(
 [
@@ -183,4 +194,6 @@ case "$target" in
 *) AC_MSG_RESULT(nothing special required) ;;
 esac
 
-AC_OUTPUT(Makefile src/Makefile tools/Makefile)
+AC_OUTPUT(Makefile src/Makefile tools/Makefile zlib/Makefile)
+
+
