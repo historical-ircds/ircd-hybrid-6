@@ -34,6 +34,8 @@ m_info(aClient *cptr, aClient *sptr, int parc, char *parv[])
   static time_t last_used=0L;
   Info *infoptr;
 
+  if(IsServer(sptr))
+    return 0;
   if (hunt_server(cptr,sptr,":%s INFO :%s",1,parc,parv) == HUNTED_ISME)
   {
     sendto_realops_flags(FLAGS_SPY, "info requested by %s (%s@%s) [%s]",
