@@ -1,3 +1,8 @@
+*** 20010703_2 by wcampbel
+Backported the vimotd functionality from Hyb7's viconf.c
+Install the links to viconf (vimotd viklines)
+
+
 *** 20010703_1 by wcampbel
 Added .cvsignore files over here as well
 
