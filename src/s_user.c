@@ -1748,7 +1748,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
       sendto_serv_butone(NULL, /* Kill new from incoming link */
 			 ":%s KILL %s :%s (%s <- %s(%s))",
 			 me.name, acptr->name, me.name, acptr->from->name,
-#ifndef HIDE_SERVERS_IP
+#ifndef HIDE_SERVERS_IPS
 			 get_client_name(cptr, FALSE), sptr->name);
 #else
 			 cptr->name, sptr->name);

@@ -1096,6 +1096,15 @@ const char* get_client_name(struct Client* client, int showip)
       if (!irccmp(client->name, client->host))
         return client->name;
 
+#ifdef HIDE_SERVERS_IPS
+      if(IsServer(client))
+      {
+        ircsprintf(nbuf, "%s[%s@255.255.255.255]", client->name,
+	           client->username);
+        return nbuf;
+      }
+#endif
+
       /* And finally, let's get the host information, ip or name */
       switch (showip)
         {
