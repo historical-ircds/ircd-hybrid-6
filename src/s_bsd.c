@@ -393,9 +393,9 @@ int	add_listener(aConfItem *aconf)
  */
 void	close_listeners()
 {
-  Reg	aClient	*cptr;
-  Reg	int	i;
-  Reg	aConfItem *aconf;
+  aClient	*cptr;
+  int	i;
+  aConfItem *aconf;
 
   /*
    * close all 'extra' listening ports we have and unlink the file
@@ -423,7 +423,7 @@ void	close_listeners()
  */
 void	init_sys()
 {
-  Reg	int	fd;
+  int	fd;
 
 #ifdef RLIMIT_FD_MAX
   struct rlimit limit;
@@ -636,8 +636,8 @@ static	int	check_init(aClient *cptr,char *sockn)
 int	check_client(aClient *cptr,char *username,char **reason)
 {
   static	char	sockname[HOSTLEN+1];
-  Reg	struct	hostent *hp = NULL;
-  Reg	int	i;
+  struct	hostent *hp = NULL;
+  int	i;
  
   ClearAccess(cptr);
   Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]",
@@ -692,8 +692,8 @@ int	check_client(aClient *cptr,char *username,char **reason)
  */
 int	check_server_init(aClient *cptr)
 {
-  Reg	char	*name;
-  Reg	aConfItem *c_conf = NULL, *n_conf = NULL;
+  char	*name;
+  aConfItem *c_conf = NULL, *n_conf = NULL;
   struct	hostent	*hp = NULL;
   Link	*lp;
 
@@ -732,12 +732,11 @@ int	check_server_init(aClient *cptr)
   */
   if (!cptr->hostp)
     {
-      Reg	aConfItem *aconf;
+      aConfItem *aconf;
 
       aconf = count_cnlines(lp);
       if (aconf)
 	{
-	  Reg	char	*s;
 	  Link	lin;
 	  
 	  /*
@@ -751,12 +750,8 @@ int	check_server_init(aClient *cptr)
 	  lin.value.aconf = aconf;
 	  lin.flags = ASYNC_CONF;
 	  nextdnscheck = 1;
-	  if ((s = strchr(aconf->host, '@')))
-	    s++;
-	  else
-	    s = aconf->host;
-	  Debug((DEBUG_DNS,"sv_ci:cache lookup (%s)",s));
-	  hp = gethost_byname(s, &lin);
+	  Debug((DEBUG_DNS,"sv_ci:cache lookup (%s)",aconf->host));
+	  hp = gethost_byname(aconf->host, &lin);
 	}
     }
   return check_server(cptr, hp, c_conf, n_conf, 0);
@@ -768,9 +763,8 @@ int	check_server(aClient *cptr,
 		     aConfItem *n_conf,
 		     int estab)
 {
-  Reg	char	*name;
-  char	abuff[HOSTLEN+USERLEN+2];
-  char	sockname[HOSTLEN+1], fullname[HOSTLEN+1];
+  char	*name;
+  char	sockname[HOSTLEN+1];
   Link	*lp = cptr->confs;
   int	i;
 
@@ -790,13 +784,6 @@ int	check_server(aClient *cptr,
 	  sendto_realops_lev(DEBUG_LEV, "Server IP# Mismatch: %s != %s[%08x]",
 			     inetntoa((char *)&cptr->ip), hp->h_name,
 			     *((unsigned long *)hp->h_addr));
-
-	  /* originally was ... */
-          /*
-	    sendto_realops_lev(DEBUG_LEV, "IP# Mismatch: %s != %s[%08x]",
-			     inetntoa((char *)&cptr->ip), hp->h_name,
-			     *((unsigned long *)hp->h_addr));
-          */
 	  hp = NULL;
 	}
     }
@@ -809,30 +796,6 @@ int	check_server(aClient *cptr,
 	  break;
     }
 
-  if (hp)
-    /*
-     * if we are missing a C or N line from above, search for
-     * it under all known hostnames we have for this ip#.
-     */
-    for (i=0,name = hp->h_name; name ; name = hp->h_aliases[i++])
-      {
-	strncpyzt(fullname, name, sizeof(fullname));
-	add_local_domain(fullname, HOSTLEN-strlen(fullname));
-	Debug((DEBUG_DNS, "sv_cl: gethostbyaddr: %s->%s",
-	       sockname, fullname));
-	(void)ircsprintf(abuff, "%s@%s",
-			 cptr->username, fullname);
-	if (!c_conf)
-	  c_conf = find_conf_host(lp, abuff, CONF_CONNECT_SERVER);
-	if (!n_conf)
-	  n_conf = find_conf_host(lp, abuff, CONF_NOCONNECT_SERVER);
-	if (c_conf && n_conf)
-	  {
-	    get_sockhost(cptr, fullname);
-	    break;
-	  }
-      }
-
   name = cptr->name;
 
   /*
@@ -842,11 +805,10 @@ int	check_server(aClient *cptr,
    */
   if (IsUnknown(cptr) && (!c_conf || !n_conf))
     {
-      (void)ircsprintf(abuff, "%s@%s", cptr->username, sockname);
       if (!c_conf)
-	c_conf = find_conf_host(lp, abuff, CONF_CONNECT_SERVER);
+	c_conf = find_conf_host(lp, sockname, CONF_CONNECT_SERVER);
       if (!n_conf)
-	n_conf = find_conf_host(lp, abuff, CONF_NOCONNECT_SERVER);
+	n_conf = find_conf_host(lp, sockname, CONF_NOCONNECT_SERVER);
     }
   /*
    * Attach by IP# only if all other checks have failed.
@@ -955,8 +917,8 @@ static	int completed_connection(aClient *cptr)
 */
 void	close_connection(aClient *cptr)
 {
-  Reg	aConfItem *aconf;
-  Reg	int	i,j;
+  aConfItem *aconf;
+  int	i,j;
   int	empty = cptr->fd;
 
   if (IsServer(cptr))
@@ -1326,7 +1288,6 @@ aClient	*add_connection(aClient *cptr, int fd)
    */
 
     {
-/*      Reg	char	*s, *t; */
       struct	sockaddr_in addr;
       int	len = sizeof(struct sockaddr_in);
 
@@ -1410,7 +1371,7 @@ aClient	*add_connection(aClient *cptr, int fd)
 
 int read_packet(aClient *cptr, int msg_ready)
 {
-  Reg	int	dolen = 0, length = 0, done;
+  int	dolen = 0, length = 0, done;
 
   if (  msg_ready &&
       !(IsPerson(cptr) && DBufLength(&cptr->recvQ) > 6090))
@@ -1592,8 +1553,8 @@ void read_clients()
 			*/
 		     fdlist *listp)	/* mika */
 {
-  Reg	aClient	*cptr;
-  Reg	int	nfds;
+  aClient	*cptr;
+  int	nfds;
   struct	timeval	wait;
 #ifdef	pyr
   struct	timeval	nowt;
@@ -1981,8 +1942,8 @@ void read_clients()
 
 int	read_message(time_t delay, fdlist *listp)
 {
-  Reg	aClient *cptr;
-  Reg	int     nfds;
+  aClient *cptr;
+  int     nfds;
   struct	timeval wait;
 
   static struct pollfd	poll_fdarray[MAXCONNECTIONS];
@@ -2269,13 +2230,12 @@ int	connect_server(aConfItem *aconf,
 		       aClient *by,
 		       struct hostent *hp)
 {
-  Reg	struct	sockaddr *svp;
-  Reg	aClient *cptr, *c2ptr;
-  Reg	char	*s;
+  struct sockaddr *svp;
+  aClient *cptr, *c2ptr;
   int	errtmp, len;
 
   Debug((DEBUG_NOTICE,"Connect to %s[%s] @%s",
-	 aconf->name, aconf->host, inetntoa((char *)&aconf->ipnum)));
+	 aconf->user, aconf->host, inetntoa((char *)&aconf->ipnum)));
 
   if ((c2ptr = find_server(aconf->name, NULL)))
     {
@@ -2290,7 +2250,7 @@ int	connect_server(aConfItem *aconf,
     }
 
   /*
-   * If we dont know the IP# for this host and itis a hostname and
+   * If we dont know the IP# for this host and it is a hostname and
    * not a ip# string, then try and find the appropriate host record.
    */
   if ( ( !aconf->ipnum.s_addr ) )
@@ -2300,17 +2260,12 @@ int	connect_server(aConfItem *aconf,
       lin.flags = ASYNC_CONNECT;
       lin.value.aconf = aconf;
       nextdnscheck = 1;
-      s = (char *)strchr(aconf->host, '@');
-      if(s)
-	s++; /* should NEVER be NULL */
-      else
-	s = aconf->host;
-      if ((aconf->ipnum.s_addr = inet_addr(s)) == -1)
+      if ((aconf->ipnum.s_addr = inet_addr(aconf->host)) == -1)
 	{
 	  aconf->ipnum.s_addr = 0;
-	  hp = gethost_byname(s, &lin);
+	  hp = gethost_byname(aconf->host, &lin);
 	  Debug((DEBUG_NOTICE, "co_sv: hp %x ac %x na %s ho %s",
-		 hp, aconf, aconf->name, s));
+		 hp, aconf, aconf->name, aconf->host));
 	  if (!hp)
 	    return 0;
 	  bcopy(hp->h_addr, (char *)&aconf->ipnum,
@@ -2417,7 +2372,7 @@ static	struct	sockaddr *connect_inet(aConfItem *aconf,
 				       int *lenp)
 {
   static  struct sockaddr_in	server;
-  Reg	struct	hostent	*hp;
+  struct	hostent	*hp;
 
   /*
    * Might as well get sockhost from here, the connection is attempted

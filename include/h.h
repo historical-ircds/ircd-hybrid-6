@@ -142,6 +142,7 @@ extern	char	*getfield (char *);
 extern	void	get_sockhost (aClient *, char *);
 extern	char	*rpl_str (int);
 extern  char 	*err_str (int);
+extern  char    *form_str (int);
 extern	char	*strerror (int);
 extern	int	dgets (int, char *, int);
 extern	char	*inetntoa (char *);
@@ -296,6 +297,8 @@ extern	int	get_con_freq (aClass *);
 extern	int	get_client_ping (aClient *);
 extern	int	get_client_class (aClient *);
 extern	int	get_conf_class (aConfItem *);
+extern  void    GetPrintableaConfItem(aConfItem *, char **, char **, char **,
+				      char **, int *);
 extern	void	report_classes (aClient *);
 
 extern	struct	hostent	*get_res (char *);

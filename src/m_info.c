@@ -601,11 +601,6 @@ int	m_info(aClient *cptr,
 #else
 #define OUT2 " TOPIC_INFO=0"
 #endif
-#ifdef UNKLINE
-#define OUT3 " UNKLINE=1"
-#else
-#define OUT3 " UNKLINE=0"
-#endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
                    me.name, parv[0], OUT1 OUT2 OUT3 );
 

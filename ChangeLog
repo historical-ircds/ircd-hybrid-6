@@ -1,6 +1,14 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b85 21-Jun-1999
+* Massive changes to conf formatting, preformatted user@host entries
+* fixed Q lines to allow multiple user@host separated by ,
+* removed obsolete resolver code
+* removed obsolete options in config.h
+* split s_serv.c into several smaller pieces
+-Dianora
+
 version hybrid-6-b84 14-Jun-1999
 * removed more dead code for now (R lines)
 * redid Q lines to allow user@host exceptions

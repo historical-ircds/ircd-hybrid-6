@@ -249,11 +249,11 @@ static	char *	replies[] = {
 /* 210 */	(char *)NULL,
 /* 211 RPL_STATSLINKINFO, */	(char *)NULL,
 /* 212 RPL_STATSCOMMANDS, */	":%s 212 %s %s %u %u",
-/* 213 RPL_STATSCLINE, */	":%s 213 %s %c %s * %s %d %d",
-/* 214 RPL_STATSNLINE, */	":%s 214 %s %c %s * %s %d %d",
-/* 215 RPL_STATSILINE, */	":%s 215 %s %c %s * %s@%s %d %d",
-/* 216 RPL_STATSKLINE, */	":%s 216 %s %c %s * %s %s",
-/* 217 RPL_STATSQLINE, */	":%s 217 %s %s %s %s %s 0 0",
+/* 213 RPL_STATSCLINE, */	":%s 213 %s %c %s %s %d %d",
+/* 214 RPL_STATSNLINE, */	":%s 214 %s %c %s %s %d %d",
+/* 215 RPL_STATSILINE, */	":%s 215 %s %c %s %s@%s %d %d",
+/* 216 RPL_STATSKLINE, */	":%s 216 %s %c %s %s %s",
+/* 217 RPL_STATSQLINE, */	":%s 217 %s %s %s %s@%s",
 /* 218 RPL_STATSYLINE, */	":%s 218 %s %c %d %d %d %d %ld",
 /* 219 RPL_ENDOFSTATS, */	":%s 219 %s %c :End of /STATS report",
 /* 220 */	 (char *)NULL,
@@ -279,7 +279,7 @@ static	char *	replies[] = {
 /* 240 */	(char *)NULL,
 /* 241 RPL_STATSLLINE, */	":%s 241 %s %c %s * %s %d %d",
 /* 242 RPL_STATSUPTIME,*/	":%s 242 %s :Server Up %d days, %d:%02d:%02d",
-/* 243 RPL_STATSOLINE, */	":%s 243 %s %c %s * %s %s %d %s",
+/* 243 RPL_STATSOLINE, */	":%s 243 %s %c %s@%s * %s %s %d %s",
 /* 244 RPL_STATSHLINE, */	":%s 244 %s %c %s * %s %d %d", 
 /* 245 RPL_STATSSLINE, */	":%s 245 %s %c %s * %s %d %d", 
 /* 246 */	(char *)NULL,
@@ -574,13 +574,15 @@ static	char *	replies[] = {
  * The observant will note that err_str and rpl_str
  * could be replaced by one function now. 
  * -Dianora
+ * ok. ;-)
  */
 
-char	*err_str(int numeric)
-{
-  register char *nptr;
 
-  if ( (numeric < 401) || (numeric > ERR_LAST_ERR_MSG))
+char	*form_str(int numeric)
+{
+  char *nptr;
+
+  if ( (numeric < 0) || (numeric > ERR_LAST_ERR_MSG))
     {
       (void)ircsprintf(numbuff,
 		       ":%%s %d %%s :INTERNAL ERROR: BAD NUMERIC! %d",
@@ -588,8 +590,7 @@ char	*err_str(int numeric)
       return(numbuff);
     }
 
-  nptr = replies[numeric];
-  if (!nptr)
+  if (!(nptr = replies[numeric]))
     {
       (void)ircsprintf(numbuff,
 		       ":%%s %d %%s :NO ERROR FOR NUMERIC ERROR %d",
@@ -601,28 +602,5 @@ char	*err_str(int numeric)
 }
 
 
-char	*rpl_str(int numeric)
-{
-  register char *nptr;
-  
-  if((numeric < 0) || (numeric >399))
-    {
-      (void)ircsprintf(numbuff,
-		       ":%%s %d %%s :INTERNAL REPLY ERROR: BAD NUMERIC! %d",
-		       numeric, numeric);
-      return(numbuff);
-    }
 
-  nptr = replies[numeric];
-  
-  if (!nptr)
-    {
-      (void)ircsprintf(numbuff,
-		       ":%%s %d %%s :NO REPLY FOR NUMERIC ERROR %d",
-		       numeric, numeric);
-      return(numbuff);
-    }
-  else
-    return(nptr);
-}
 

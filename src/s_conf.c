@@ -55,6 +55,7 @@ char	specific_virtual_host;
 /* internally defined functions */
 
 static	int	lookup_confhost (aConfItem *);
+
 #ifdef LIMIT_UH
 static  int     attach_iline(aClient *, aConfItem *,char *);
 #else
@@ -135,6 +136,8 @@ typedef struct QlineItem {
   aConfItem *confList;
   struct    QlineItem *next;
 }aQlineItem;
+
+static void makeQlineEntry(aQlineItem *, aConfItem *, char *);
 
 /* conf qline link list root */
 aQlineItem 	*q_conf = ((aQlineItem *)NULL);
@@ -250,8 +253,8 @@ int	attach_Iline(aClient *cptr,
 	      /* abuse it, lose it. */
 #ifdef SPOOF_FREEFORM
 	      sendto_realops("%s spoofing: %s as %s",
-			     cptr->name,host,aconf->mask);
-	      strncpyzt(cptr->sockhost,aconf->mask,sizeof(cptr->sockhost));
+			     cptr->name,host,aconf->name);
+	      strncpyzt(cptr->sockhost,aconf->name,sizeof(cptr->sockhost));
 #else
 	      /* default to oper.server.name.tld */
 	      sendto_realops("%s spoofing: %s(%s) as oper.%s",
@@ -980,9 +983,6 @@ aConfItem *find_conf_exact(char *name,
 			   int statmask)
 {
   Reg	aConfItem *tmp;
-  char	userhost[USERLEN+HOSTLEN+3];
-
-  (void)ircsprintf(userhost, "%s@%s", user, host);
 
   for (tmp = conf; tmp; tmp = tmp->next)
     {
@@ -990,11 +990,12 @@ aConfItem *find_conf_exact(char *name,
 	  irccmp(tmp->name, name))
 	continue;
       /*
-      ** Accept if the *real* hostname (usually sockecthost)
+      ** Accept if the *real* hostname (usually sockethost)
       ** socket host) matches *either* host or name field
       ** of the configuration.
       */
-      if (match(tmp->host, userhost))
+      if (match(tmp->host, host) || match(tmp->user,user)
+	  || strcasecmp(tmp->name,name) )
 	continue;
       if (tmp->status & (CONF_OPERATOR|CONF_LOCOP))
 	{
@@ -1013,7 +1014,7 @@ aConfItem *find_conf_exact(char *name,
  * find_conf_name()
  *
  *
- * Accept if the *real* hostname (usually sockecthost)
+ * Accept if the *real* hostname (usually sockethost)
  * matches *either* host or name field of the configuration.
  */
 
@@ -1081,7 +1082,6 @@ aConfItem *find_conf_host(Link *lp, char *host,int statmask)
 aConfItem *find_conf_ip(Link *lp,char *ip,char *user, int statmask)
 {
   Reg	aConfItem *tmp;
-  Reg	char	*s;
   
   for (; lp; lp = lp->next)
     {
@@ -1089,16 +1089,11 @@ aConfItem *find_conf_ip(Link *lp,char *ip,char *user, int statmask)
       if (!(tmp->status & statmask))
 	continue;
 
-      if(!(s = strchr(tmp->host, '@')))
-	continue;
-
-      *s = '\0';
       if (match(tmp->host, user))
 	{
-	  *s = '@';
 	  continue;
 	}
-      *s = '@';
+
       if (!bcmp((char *)&tmp->ipnum, ip, sizeof(struct in_addr)))
 	return tmp;
     }
@@ -1122,24 +1117,27 @@ aConfItem *find_conf_entry(aConfItem *aconf, int mask)
       if ((BadPtr(bconf->host) && !BadPtr(aconf->host)) ||
 	  (BadPtr(aconf->host) && !BadPtr(bconf->host)))
 	continue;
+
       if (!BadPtr(bconf->host) && irccmp(bconf->host, aconf->host))
 	continue;
 
       if ((BadPtr(bconf->passwd) && !BadPtr(aconf->passwd)) ||
 	  (BadPtr(aconf->passwd) && !BadPtr(bconf->passwd)))
 	continue;
+
       if (!BadPtr(bconf->passwd) &&
 	  irccmp(bconf->passwd, aconf->passwd))
       continue;
 
-	  if ((BadPtr(bconf->name) && !BadPtr(aconf->name)) ||
-	      (BadPtr(aconf->name) && !BadPtr(bconf->name)))
-	  continue;
-	  if (!BadPtr(bconf->name) && irccmp(bconf->name, aconf->name))
-	  continue;
-	  break;
-	  }
-      return bconf;
+      if ((BadPtr(bconf->user) && !BadPtr(aconf->user)) ||
+	  (BadPtr(aconf->user) && !BadPtr(bconf->user)))
+	continue;
+
+      if (!BadPtr(bconf->user) && irccmp(bconf->user, aconf->user))
+	continue;
+      break;
+    }
+  return bconf;
 }
 
 /*
@@ -1199,13 +1197,11 @@ int find_q_line(char *nickToFind,char *user,char *host)
 	    {
 	      for(aconf=qp->confList;aconf;aconf=aconf->next)
 		{
-		  if(!match(aconf->name,user) && !match(aconf->host,host))
+		  if(!match(aconf->user,user) && !match(aconf->host,host))
 		    return NO;
 		}
-	      return YES;
 	    }
-	  else
-	    return YES;
+	  return YES;
 	}
     }
   return NO;
@@ -1249,13 +1245,10 @@ void clear_q_lines()
 
 void report_qlines(aClient *sptr)
 {
-  static	char	null[] = "<NULL>";
   aQlineItem *qp;
   aConfItem *aconf;
-  char *host;
-  char *mask;
-  char *pass;
-  char *name;
+  char *host, *user, *pass, *name;
+  int port;
 
   for (qp = q_conf; qp; qp = qp->next)
     {
@@ -1266,17 +1259,14 @@ void report_qlines(aClient *sptr)
 
       for (aconf=qp->confList;aconf;aconf = aconf->next)
 	{
-	  name = BadPtr(aconf->name)   ? null : aconf->name;
-	  pass = BadPtr(aconf->passwd) ? null : aconf->passwd;
-	  host = BadPtr(aconf->host)   ? null : aconf->host;
-	  mask = BadPtr(aconf->mask)   ? null : aconf->mask;
-
+	  GetPrintableaConfItem(aconf, &name, &host, &pass, &user, &port);
+	  
 	  sendto_one(sptr, rpl_str(RPL_STATSQLINE),
 		     me.name,
 		     sptr->name,
-		     mask,
-		     pass,
 		     name,
+		     pass,
+		     user,
 		     host);
 	}
     }
@@ -1284,35 +1274,12 @@ void report_qlines(aClient *sptr)
 
 void add_q_line(aConfItem *aconf)
 {
-  char *p;
-  aQlineItem *qp;
-  aQlineItem *newqp;
+  char *pc;
+  aQlineItem *qp, *newqp;
+  char *uath;
 
-  aconf->next = (aConfItem *)NULL;
-  /* aconf->mask =should= be already NULL here */
-  MyFree(aconf->mask);
-  DupString(aconf->mask,aconf->host); /* keep nick in mask */
-
-  MyFree(aconf->host);	/* destroy original copy of nick */
-  if(aconf->name)
-    {
-      p = strchr(aconf->name,'@');
-      if(p)
-	{
-	  *p = '\0';
-	  p++;
-	  DupString(aconf->host,p);
-	}
-      else
-	{
-	  DupString(aconf->host,"@");
-	}
-    }
-  else
-    {
-      DupString(aconf->name,"@");
-      DupString(aconf->host,"@");
-    }
+  if(!aconf->user)
+    DupString(aconf->user, "-");
 
   for (qp = q_conf; qp; qp = qp->next)
     {
@@ -1321,22 +1288,86 @@ void add_q_line(aConfItem *aconf)
 	  continue;
 	}
 
-      if(!strcasecmp(aconf->mask,qp->name))
+      if(!strcasecmp(aconf->name,qp->name))
 	{
 	  if (qp->confList)
 	    {
-	      aconf->next = qp->confList;
+	      /* 
+	       * - Slowaris
+	       */
+	      
+	      uath = strtoken(&pc, aconf->user, ",");
+	      if(!uath)
+		{
+		  uath = aconf->user;
+		  makeQlineEntry(qp, aconf, uath);
+		}
+	      else
+		{
+		  for( ; uath; uath = strtoken(&pc,NULL,","))
+		    {
+		      makeQlineEntry(qp, aconf, uath);
+		    }
+		}
 	    }
-	  qp->confList = aconf;
+	  free_conf(aconf);
 	  return;
 	}
     }
 
   newqp = (aQlineItem *)MyMalloc(sizeof(aQlineItem));
-  DupString(newqp->name,aconf->mask);
-  newqp->confList = aconf;
+  newqp->confList = (aConfItem *)NULL;
+  DupString(newqp->name,aconf->name);
   newqp->next = q_conf;
   q_conf = newqp;
+
+  /* 
+   * - Slowaris
+   */
+
+  uath = strtoken(&pc, aconf->user, ",");
+  if(!uath)
+    {
+      uath = aconf->user;
+      makeQlineEntry(newqp, aconf, uath);
+    }
+  else
+    {
+      for ( ;uath; uath = strtoken(&pc,(char *)NULL,","))
+	{
+	  makeQlineEntry(newqp, aconf, uath);
+	}
+    }
+
+  free_conf(aconf);
+}
+
+static void makeQlineEntry(aQlineItem *qp, aConfItem *aconf, char *uath)
+{
+  char *p,*comu,*comh;
+  aConfItem *bconf;
+
+  p = strchr(uath, '@');
+  if(!p)
+    {
+      DupString(comu,"-");
+      DupString(comh,"-");
+    }
+  else
+    {
+      *p = '\0';
+      DupString(comu,uath);
+      p++;
+      DupString(comh,p);
+    }
+		  
+  bconf = make_conf();
+  DupString(bconf->name, aconf->name);
+  DupString(bconf->passwd,aconf->passwd);
+  bconf->user = comu;
+  bconf->host = comh;
+  bconf->next = qp->confList;
+  qp->confList = bconf;
 }
 
 /*
@@ -1357,6 +1388,7 @@ void clear_special_conf(aConfItem **this_conf)
   *this_conf = (aConfItem *)NULL;
   return;
 }
+
 
 /*
  * partially reconstruct an ircd.conf file (tsk tsk, you should have
@@ -1934,7 +1966,7 @@ int 	initconf(int opt, int fd,int use_include)
 
 	  if(aconf->status & CONF_CLIENT)
 	    tmp = set_conf_flags(aconf, tmp);
-	  DupString(aconf->name, tmp);
+	  DupString(aconf->user, tmp);
 
 	  if(aconf->status & CONF_OPERATOR)
 	    {
@@ -1998,8 +2030,8 @@ int 	initconf(int opt, int fd,int use_include)
 	  char *ps;	/* space finder */
 	  char *pt;	/* tab finder */
 
-	  ps = strchr(aconf->name,' ');
-	  pt = strchr(aconf->name,'\t');
+	  ps = strchr(aconf->user,' ');
+	  pt = strchr(aconf->user,'\t');
 
 	  if(ps || pt)
 	    {
@@ -2008,6 +2040,8 @@ int 	initconf(int opt, int fd,int use_include)
 	      if(ps)*ps = '\0';
 	      if(pt)*pt = '\0';
 	    }
+	  aconf->name = aconf->user;
+	  DupString(aconf->user, "*");
 	}
 
       /*
@@ -2018,7 +2052,7 @@ int 	initconf(int opt, int fd,int use_include)
       if (aconf->status & CONF_CLASS && atoi(aconf->host) > -1)
 	{
 	  add_class(atoi(aconf->host), atoi(aconf->passwd),
-		    atoi(aconf->name), aconf->port,
+		    atoi(aconf->user), aconf->port,
 		    sendq );
 	  continue;
 	}
@@ -2026,6 +2060,8 @@ int 	initconf(int opt, int fd,int use_include)
       ** associate each conf line with a class by using a pointer
       ** to the correct class record. -avalon
       */
+
+      /*  Unless its a Y line itself, associate this with a class */
       if (aconf->status & (CONF_CLIENT_MASK|CONF_LISTEN_PORT))
 	{
 	  if (Class(aconf) == 0)
@@ -2033,6 +2069,8 @@ int 	initconf(int opt, int fd,int use_include)
 	  if (MaxLinks(Class(aconf)) < 0)
 	    Class(aconf) = find_class(0);
 	}
+
+      /* P: line or I: line */
       if (aconf->status & (CONF_LISTEN_PORT|CONF_CLIENT))
 	{
 	  aConfItem *bconf;
@@ -2062,34 +2100,88 @@ int 	initconf(int opt, int fd,int use_include)
 		   aconf->status == CONF_LISTEN_PORT)
 	    (void)add_listener(aconf);
 	}
-      if (aconf->status & CONF_SERVER_MASK)
-	if (ncount > MAXCONFLINKS || ccount > MAXCONFLINKS ||
-	    !aconf->host || strchr(aconf->host, '*') ||
-	    strchr(aconf->host,'?') || !aconf->name)
-	  continue;
-      
-      if (aconf->status &
-	  (CONF_SERVER_MASK|CONF_LOCOP|CONF_OPERATOR))
-	if (!strchr(aconf->host, '@') && *aconf->host != '/')
-	  {
-	    char *newhost;
-	    int	len;		
-	    
-	    len = strlen(aconf->host) + 3; /* *@\0 = 3 */
-	    newhost = (char *)MyMalloc(len);
-	    newhost[0] = '*';
-	    newhost[1] = '@';
-	    strcpy(newhost+2,aconf->host);
-	    MyFree(aconf->host);
-	    aconf->host = newhost;
-	  }
+
       if (aconf->status & CONF_SERVER_MASK)
 	{
+	  char *p;
+
+	  if (ncount > MAXCONFLINKS || ccount > MAXCONFLINKS ||
+	      !aconf->host || !aconf->user)
+	    {
+	      sendto_realops("Bad C/N line");
+	      continue;
+	    }
+
 	  if (BadPtr(aconf->passwd))
-	    continue;
-	  else if (!(opt & BOOT_QUICK))
+	    {
+	      sendto_realops("Bad C/N line host %s", aconf->host);
+	      continue;
+	    }
+
+	  if ( (p = strchr(aconf->host, '@')) )
+	    {
+	      *p = '\0';
+	      p++;
+	      if(aconf->user)
+		{
+		  aconf->name = aconf->user;
+		  DupString(aconf->user, aconf->host);
+		  strcpy(aconf->host, p);
+		}
+	      else
+		{
+		  sendto_realops("Bad C/N line host %s", aconf->host);
+		  free_conf(aconf);
+		  aconf = NULL;
+		  continue;
+		}
+	    }
+	  else
+	    {
+	      if(aconf->user)
+		{
+		  aconf->name = aconf->user;
+		  DupString(aconf->user, "*");
+		}
+	      else
+		{
+		  sendto_realops("Bad C/N line host %s", aconf->host);
+		  free_conf(aconf);
+		  aconf = NULL;
+		  continue;
+		}
+	    }
+
+	  if (!(opt & BOOT_QUICK))
 	    (void)lookup_confhost(aconf);
 	}
+      
+      /* o: or O: line */
+
+      if (aconf->status & (CONF_LOCOP|CONF_OPERATOR))
+	{
+	  char *p;
+
+	  if ( (p = strchr(aconf->host, '@')) )
+	    {
+	      *p = '\0';
+	      p++;
+	      if(aconf->user)
+		{
+		  aconf->name = aconf->user;
+		  DupString(aconf->user, aconf->host);
+		  strcpy(aconf->host, p);
+		}
+	      else
+		{
+		  sendto_realops("Bad O/o line host %s", aconf->host);
+		  free_conf(aconf);
+		  aconf = NULL;
+		  continue;
+		}
+	    }
+	}
+
       /*
       ** Own port and name cannot be changed after the startup.
       ** (or could be allowed, but only if all links are closed
@@ -2101,7 +2193,7 @@ int 	initconf(int opt, int fd,int use_include)
       */
       if (aconf->status == CONF_ME)
 	{
-	  strncpyzt(me.info, aconf->name, sizeof(me.info));
+	  strncpyzt(me.info, aconf->user, sizeof(me.info));
 
 	  if (me.name[0] == '\0' && aconf->host[0])
           {
@@ -2127,20 +2219,20 @@ int 	initconf(int opt, int fd,int use_include)
 	  dontadd = 1;
 
 	  (void)collapse(aconf->host);
-	  (void)collapse(aconf->name);
+	  (void)collapse(aconf->user);
 
 	  /* The idea here is, to separate a name@host part
-	   * into aconf->host part and aconf->name part
-	   * If the name@host part is found in the aconf->host field
+	   * into aconf->host part and aconf->user part
+	   * If the user@host part is found in the aconf->host field
 	   * from conf file, then it has to be an IP I line.
 	   */
 
-	  MyFree(aconf->mask);	/* aconf->mask =should= be already NULL here */
+	  MyFree(aconf->name); /* should be already NULL here */
 
-	  /* Keep a copy of the original host part in "mask" */
-	  DupString(aconf->mask,aconf->host);
+	  /* Keep a copy of the original host part in "name" */
+	  DupString(aconf->name,aconf->host);
 
-	  /* see if the name@host part is on the 'left side'
+	  /* see if the user@host part is on the 'left side'
 	   * in the aconf->host field. If it is, then it should be
 	   * an IP I line only, but I won't enforce it here. 
 	   */
@@ -2149,11 +2241,11 @@ int 	initconf(int opt, int fd,int use_include)
 	    {
 	      aconf->flags |= CONF_FLAGS_DO_IDENTD;
 	      *p = '\0';
-	      MyFree(aconf->name);
-	      DupString(aconf->name,aconf->host);
+	      MyFree(aconf->user);
+	      DupString(aconf->user,aconf->host);
 	      p++;
-	      MyFree(aconf->mask);
-	      DupString(aconf->mask,p);
+	      MyFree(aconf->name);
+	      DupString(aconf->name,p);
 	    }
 	  else
 	    {
@@ -2162,7 +2254,7 @@ int 	initconf(int opt, int fd,int use_include)
 	     * in the aconf->name field.
 	     */
 
-	      if( ( p = strchr(aconf->name,'@')) )
+	      if( ( p = strchr(aconf->user,'@')) )
 		{
 		  aconf->flags |= CONF_FLAGS_DO_IDENTD;
 		  *p = '\0';
@@ -2173,8 +2265,8 @@ int 	initconf(int opt, int fd,int use_include)
 	      else
 		{
 		  MyFree(aconf->host);
-		  aconf->host = aconf->name;
-		  DupString(aconf->name,"*");
+		  aconf->host = aconf->user;
+		  DupString(aconf->user,"*");
 		}
 	    }
 	  
@@ -2193,14 +2285,14 @@ int 	initconf(int opt, int fd,int use_include)
 	  else
 	    {
 	      (void)collapse(aconf->host);
-	      (void)collapse(aconf->name);
+	      (void)collapse(aconf->user);
 	      add_mtrie_conf_entry(aconf,CONF_KILL);
 	    }
 	}
       else if (aconf->host && (aconf->status & CONF_DLINE))
 	{
 	  dontadd = 1;
-	  DupString(aconf->mask,aconf->host);
+	  DupString(aconf->user,aconf->host);
 	  (void)is_address(aconf->host,&ip,&ip_mask);
 	  ip &= ip_mask;
 	  aconf->ip = ip;
@@ -2214,8 +2306,8 @@ int 	initconf(int opt, int fd,int use_include)
       else if (aconf->status & CONF_XLINE)
 	{
 	  dontadd = 1;
-	  MyFree(aconf->name);
-	  aconf->name = aconf->host;
+	  MyFree(aconf->user);
+	  aconf->user = aconf->host;
 	  aconf->host = (char *)NULL;
 	  aconf->next = x_conf;
 	  x_conf = aconf;
@@ -2223,23 +2315,25 @@ int 	initconf(int opt, int fd,int use_include)
       else if (aconf->status & CONF_ULINE)
 	{
 	  dontadd = 1;
-	  MyFree(aconf->name);
-	  aconf->name = aconf->host;
+	  MyFree(aconf->user);
+	  aconf->user = aconf->host;
 	  aconf->host = (char *)NULL;
 	  aconf->next = u_conf;
 	  u_conf = aconf;
 	}
       else if (aconf->status & CONF_QUARANTINED_NICK)
 	{
-	  char *p;
 	  dontadd = 1;
+	  aconf->name = aconf->host;
+	  DupString(aconf->host, "*");
+
 #ifdef JUPE_CHANNEL
-	  if(aconf->host[0] == '#')
+	  if(aconf->name[0] == '#')
 	    {
 	      aChannel *chptr;
 	      int len;
 
-	      if( (chptr = find_channel(aconf->host, (aChannel *)NULL)) )
+	      if( (chptr = find_channel(aconf->name, (aChannel *)NULL)) )
 		chptr->mode.mode |= MODE_JUPED;
 	      else
 		{
@@ -2247,10 +2341,10 @@ int 	initconf(int opt, int fd,int use_include)
 		   * which just place holds the channel down.
 		   */
 
-		  len = strlen(aconf->host);
+		  len = strlen(aconf->name);
 		  chptr = (aChannel *)MyMalloc(sizeof(aChannel) + len);
 		  memset((void *)chptr, 0, sizeof(aChannel));
-		  strncpyzt(chptr->chname, aconf->host, len+1);
+		  strncpyzt(chptr->chname, aconf->name, len+1);
 		  chptr->mode.mode = MODE_JUPED;
 		  if (channel)
 		    channel->prevch = chptr;
@@ -2259,30 +2353,29 @@ int 	initconf(int opt, int fd,int use_include)
 		  channel = chptr;
 		  /* JIC */
 		  chptr->channelts = NOW;
-		  (void)add_to_channel_hash_table(aconf->host, chptr);
+		  (void)add_to_channel_hash_table(aconf->name, chptr);
 		  Count.chan++;
 		}
 
 	      if(aconf->passwd)
 		strncpyzt(chptr->topic, aconf->passwd, sizeof(chptr->topic));
-	      DupString(aconf->name,"*");
 	    }
 #endif
-	  
+
 	  /* host, password, name, port, class */
 	  /* nick, reason, user@host */
-
+	  
 	  add_q_line(aconf);
 	}
 
       if (!dontadd)
 	{
 	  (void)collapse(aconf->host);
-	  (void)collapse(aconf->name);
+	  (void)collapse(aconf->user);
 	  Debug((DEBUG_NOTICE,
 		 "Read Init: (%d) (%s) (%s) (%s) (%d) (%d)",
 		 aconf->status, aconf->host, aconf->passwd,
-		 aconf->name, aconf->port, Class(aconf)));
+		 aconf->user, aconf->port, Class(aconf)));
 	  aconf->next = conf;
 	  conf = aconf;
 	}
@@ -2345,13 +2438,13 @@ void do_include_conf()
  *   Do (start) DNS lookups of all hostnames in the conf line and convert
  * an IP addresses in a.b.c.d number for to IP#s.
  *
- * cleaned up Aug 3'97 - Dianora
  */
 static	int	lookup_confhost(aConfItem *aconf)
 {
-  Reg	char	*s;
-  Reg	struct	hostent *hp;
-  Link	ln;
+  struct hostent *hp;
+  Link ln;
+  unsigned long ip;
+  unsigned long mask;
 
   if (BadPtr(aconf->host) || BadPtr(aconf->name))
     {
@@ -2361,15 +2454,12 @@ static	int	lookup_confhost(aConfItem *aconf)
 	     aconf->host, aconf->name));
       return -1;
     }
-  if ((s = strchr(aconf->host, '@')))
-    s++;
-  else
-    s = aconf->host;
+
   /*
   ** Do name lookup now on hostnames given and store the
   ** ip numbers in conf structure.
   */
-  if (!isalpha(*s) && !isdigit(*s))
+  if (!is_address(aconf->host,&ip,&mask))
     {
       if (aconf->ipnum.s_addr == -1)
 	memset((void *)&aconf->ipnum, 0, sizeof(struct in_addr));
@@ -2385,15 +2475,12 @@ static	int	lookup_confhost(aConfItem *aconf)
   ln.value.aconf = aconf;
   ln.flags = ASYNC_CONF;
 
-  /* The "if (isdigit(*s)" isn't strictly correct here
-   * some ISP's are using hostnames that start with digits now
-   * *sigh* just note it for looking at later -db
-   */
-
-  if (isdigit(*s))
-    aconf->ipnum.s_addr = inet_addr(s);
-  else if ((hp = gethost_byname(s, &ln)))
-    bcopy(hp->h_addr, (char *)&(aconf->ipnum),
+  if (is_address(aconf->host,&ip,&mask))
+    {
+      aconf->ipnum.s_addr = htonl(ip);
+    }
+  else if ((hp = gethost_byname(aconf->host, &ln)))
+    memcpy(hp->h_addr, (char *)&(aconf->ipnum),
 	  sizeof(struct in_addr));
   
   if (aconf->ipnum.s_addr == -1)
@@ -3519,15 +3606,8 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
   aConfItem *aconf;
   unsigned long ip;
   unsigned long host_mask;
-  char *p;
-  char *host;
-  char *pass;
-  char *name;
-  char *given_host;
-  char *given_name;
+  char *host, *pass, *user, *name, *given_host, *given_name, *p;
   int port;
-  char *mask;
-  static	char	null[] = "<NULL>";
 
   if (!MyClient(sptr) || !IsAnOper(sptr))
     {
@@ -3555,11 +3635,7 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
       if(aconf)
 	{
-	  host = BadPtr(aconf->host) ? null : aconf->host;
-	  pass = BadPtr(aconf->passwd) ? null : aconf->passwd;
-	  name = BadPtr(aconf->name) ? null : aconf->name;
-	  mask = BadPtr(aconf->mask) ? null : aconf->mask;
-	  port = (int)aconf->port;
+	  GetPrintableaConfItem(aconf, &name, &host, &pass, &user, &port);
       
 	  if(aconf->status & CONF_KILL) 
 	    {
@@ -3575,9 +3651,9 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	      sendto_one(sptr,
 ":%s NOTICE %s :I-line mask [%s] prefix [%s] name [%s] host [%s] port [%d] class [%d]",
 			 me.name, parv[0], 
-			 mask,
-			 show_iline_prefix(sptr,aconf,name),
 			 name,
+			 show_iline_prefix(sptr,aconf,user),
+			 user,
 			 host,
 			 port,
 			 get_conf_class(aconf));
@@ -3604,3 +3680,32 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
   return 0;
 }
 
+
+/*
+ * GetPrintableaConfItem
+ *
+ * inputs	- aConfItem
+ *
+ * output	- name 
+ *		- host
+ * 		- pass
+ *		- user
+ *		- port
+ *
+ * side effects	-
+ * Examine the struct aConfItem, setting the values
+ * of name, host, pass, user to values either
+ * in aconf, or "<NULL>" port is set to aconf->port in all cases.
+ */
+
+void GetPrintableaConfItem(aConfItem *aconf, char **name, char **host,
+			   char **pass, char **user,int *port)
+{
+  static  char	null[] = "<NULL>";
+
+  *name = BadPtr(aconf->name) ? null : aconf->name;
+  *host = BadPtr(aconf->host) ? null : aconf->host;
+  *pass = BadPtr(aconf->passwd) ? null : aconf->passwd;
+  *user = BadPtr(aconf->user) ? null : aconf->user;
+  *port = (int)aconf->port;
+}

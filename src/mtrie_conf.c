@@ -1,3 +1,21 @@
+/************************************************************************
+ *   IRC - Internet Relay Chat, src/mtrie_conf.c
+ *   Copyright (C) 1999 Diane Bruce db@db.net
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 1, or (at your option)
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program; if not, write to the Free Software
+ *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 /*
  * mtrie_conf.c
  *
@@ -22,17 +40,6 @@
  * by the time the host string is parsed, its broken up into pieces
  * on the stack with the TLD on the top of the stack.
  *
- *
- * The interesting thing about this code is, its actually 
- * an LALR(1) parser, where the "sentences" are hostnames.
- * There are tokens, there is a stack, and there is a state machine.
- * cool huh?
- *
- * Copyright (c) Diane Bruce, db@db.net , September 5 1998
- * May be used for any non commercial purpose including ircd.
- * Please let me know if you are going to use it somewhere else. I'm just
- * curious. Do not use it in a commercial program without my permission.
- * Use it at your own risk.
  *
  * Diane Bruce -db (db@db.net)
  *
@@ -90,8 +97,6 @@ void add_to_ip_ilines(aConfItem *,unsigned long, unsigned long);
 
 int stack_pointer;		/* dns piece stack */
 static char *dns_stack[MAX_TLD_STACK];
-/* null *sigh* used all over the place in ircd. who am I to argue right now? */
-static  char	null[] = "<NULL>";
 
 DOMAIN_LEVEL *trie_list=(DOMAIN_LEVEL *)NULL;
 DOMAIN_LEVEL *first_kline_trie_list=(DOMAIN_LEVEL *)NULL;
@@ -102,16 +107,6 @@ aConfItem *last_found_iline_aconf=(aConfItem *)NULL;
 aConfItem *unsortable_list_ilines = (aConfItem *)NULL;
 aConfItem *unsortable_list_klines = (aConfItem *)NULL;
 aConfItem *wild_card_ilines = (aConfItem *)NULL;
-
-/*
- * There is some argument for including the integer ip and needed mask
- * inside aConfItem, instead of "wrapping" it. This would change
- * the code handling for D lines as well (s_conf.c)
- * 
- * I did this finally, added ip, and ip_mask to aConfItem
- * -db
- */
-
 aConfItem *ip_i_lines=(aConfItem *)NULL;
 
 /* add_mtrie_conf_entry
@@ -128,14 +123,14 @@ void add_mtrie_conf_entry(aConfItem *aconf,int flags)
   unsigned long ip_mask;
 
   /* Sanity tests are always good */
-  if(!aconf->host || !aconf->name)
+  if(!aconf->host || !aconf->user)
     {
       free_conf(aconf);
       return;
     }
 
-  if( (aconf->host[0] == 'x') && aconf->mask && 
-      is_address(aconf->mask,&ip_host,&ip_mask) )
+  if( (aconf->host[0] == 'x') && aconf->user && 
+      is_address(aconf->user,&ip_host,&ip_mask) )
     {
       aconf->ip = ip_host & ip_mask;
       aconf->ip_mask = ip_mask;
@@ -356,7 +351,7 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
   char *user;
 
   last_ptr = (DOMAIN_PIECE *)NULL;
-  user = aconf->name;
+  user = aconf->user;
 
   if((user[0] == '*') && (user[1] == '\0') &&
     (host_piece[0] != '*'))
@@ -442,7 +437,7 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
       found_aconf=ptr->conf_ptr;
 
       if( (!matches(ptr->host_piece,host_piece)) &&
-	  (!strcasecmp(found_aconf->name,user)) )
+	  (!strcasecmp(found_aconf->user,user)) )
 	{
 	  found_aconf->status |= flags;
 	  piece_ptr->flags |= flags;
@@ -523,7 +518,7 @@ static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr, int flags,
 	  if( (!matches(ptr->host_piece,host_piece)) &&
 	      (aconf->status & flags) )
 	    {
-	      if(!matches(aconf->name,user))
+	      if(!matches(aconf->user,user))
 		{
 		  first_aconf = aconf;
 		  if(first_aconf->status & CONF_ELINE)
@@ -640,7 +635,7 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 		  if( (!matches(pptr->host_piece,host_piece)) &&
 		      (aconf->status & flags) )
 		    {
-		      if(!matches(aconf->name,user))
+		      if(!matches(aconf->user,user))
 			first_aconf = aconf;
 		    }
 		}
@@ -1126,7 +1121,7 @@ static aConfItem *look_in_unsortable_ilines(char *host,char *user)
   for(found_conf=unsortable_list_ilines;found_conf;found_conf=found_conf->next)
     {
       if(!matches(found_conf->host,host) &&
-	 !matches(found_conf->name,user))
+	 !matches(found_conf->user,user))
 	{
 	    return(found_conf);
 	}
@@ -1152,7 +1147,7 @@ static aConfItem *look_in_unsortable_klines(char *host,char *user)
   for(found_conf=unsortable_list_klines;found_conf;found_conf=found_conf->next)
     {
       if(!matches(found_conf->host,host) &&
-	 !matches(found_conf->name,user))
+	 !matches(found_conf->user,user))
 	return(found_conf);
     }
   return((aConfItem *)NULL);
@@ -1174,10 +1169,7 @@ static aConfItem *find_wild_card_iline(char *user)
 
   for(found_conf=wild_card_ilines;found_conf;found_conf=found_conf->next)
     {
-      if(!(found_conf->status & CONF_CLIENT))	/* shouldn't happen */
-	continue;
-
-      if(!matches(found_conf->name,user))
+      if(!matches(found_conf->user,user))
 	return(found_conf);
     }
   return((aConfItem *)NULL);
@@ -1279,20 +1271,15 @@ void report_matching_host_klines(aClient *sptr,char *host)
 static void report_unsortable_klines(aClient *sptr,char *need_host)
 {
   aConfItem *found_conf;
-  char *host;
-  char *pass;
-  char *name;
+  char *host, *pass, *user, *name;
   char *p;
   int port;
 
   for(found_conf = unsortable_list_klines;
       found_conf;found_conf=found_conf->next)
     {
-      host = BadPtr(found_conf->host) ? null : found_conf->host;
-      pass = BadPtr(found_conf->passwd) ? null : found_conf->passwd;
-      name = BadPtr(found_conf->name) ? null : found_conf->name;
-      port = (int)found_conf->port;
-      
+      GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port );
+
       /* Hide any comment following a '|' seen in the password field */
       if(!match(host,need_host))
 	{
@@ -1325,11 +1312,7 @@ static void report_unsortable_klines(aClient *sptr,char *need_host)
 void report_mtrie_conf_links(aClient *sptr, int flags)
 {
   aConfItem *found_conf;
-  char *host;
-  char *pass;
-  char *name;
-  char *mask;
-  char *p;
+  char *name, *host, *pass, *user, *p;
   int  port;
   char c;		/* conf char used for CONF_CLIENT only */
 
@@ -1349,11 +1332,7 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
 	     IsConfDoSpoofIp(found_conf))
 	    continue;
 
-	  host = BadPtr(found_conf->host) ? null : found_conf->host;
-	  pass = BadPtr(found_conf->passwd) ? null : found_conf->passwd;
-	  name = BadPtr(found_conf->name) ? null : found_conf->name;
-	  mask = BadPtr(found_conf->mask) ? null : found_conf->mask;
-	  port = (int)found_conf->port;
+	  GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port );
 
 	  c = 'I';
 #ifdef LITTLE_I_LINES
@@ -1363,8 +1342,8 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
 	  sendto_one(sptr, rpl_str(RPL_STATSILINE), me.name,
 		     sptr->name,
 		     c,
-		     mask,
-		     show_iline_prefix(sptr,found_conf,name),
+		     name,
+		     show_iline_prefix(sptr,found_conf,user),
 		     host,
 		     port,
 		     get_conf_class(found_conf));
@@ -1373,14 +1352,7 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
       for(found_conf = wild_card_ilines;
 	  found_conf;found_conf=found_conf->next)
 	{
-	  host = BadPtr(found_conf->host) ? null : found_conf->host;
-	  pass = BadPtr(found_conf->passwd) ? null : found_conf->passwd;
-	  name = BadPtr(found_conf->name) ? null : found_conf->name;
-	  mask = BadPtr(found_conf->mask) ? null : found_conf->mask;
-	  port = (int)found_conf->port;
-
-	  if(!(found_conf->status&CONF_CLIENT))
-	    continue;
+	  GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port);
 
 	  c = 'I';
 #ifdef LITTLE_I_LINES
@@ -1390,8 +1362,8 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
 	  sendto_one(sptr, rpl_str(RPL_STATSILINE), me.name,
 		     sptr->name,
 		     c,
-		     mask,
-		     show_iline_prefix(sptr,found_conf,name),
+		     name,
+		     show_iline_prefix(sptr,found_conf,user),
 		     host,
 		     port,
 		     get_conf_class(found_conf));
@@ -1400,11 +1372,7 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
       for(found_conf = ip_i_lines;
 	  found_conf;found_conf=found_conf->next)
 	{
-	  host = BadPtr(found_conf->host) ? null : found_conf->host;
-	  pass = BadPtr(found_conf->passwd) ? null : found_conf->passwd;
-	  name = BadPtr(found_conf->name) ? null : found_conf->name;
-	  mask = BadPtr(found_conf->mask) ? null : found_conf->mask;
-	  port = (int)found_conf->port;
+	  GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port );
 
 	  if(!(found_conf->status&CONF_CLIENT))
 	    continue;
@@ -1417,7 +1385,7 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
 	  sendto_one(sptr, rpl_str(RPL_STATSILINE), me.name,
 		     sptr->name,
 		     c,
-		     mask,
+		     name,
 		     show_iline_prefix(sptr,found_conf,name),
 		     host,
 		     port,
@@ -1431,10 +1399,7 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
       for(found_conf = unsortable_list_klines;
 	  found_conf;found_conf=found_conf->next)
 	{
-	  host = BadPtr(found_conf->host) ? null : found_conf->host;
-	  pass = BadPtr(found_conf->passwd) ? null : found_conf->passwd;
-	  name = BadPtr(found_conf->name) ? null : found_conf->name;
-	  port = (int)found_conf->port;
+	  GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port);
 
 	  /* Hide any comment following a '|' seen in the password field */
 	  p = (char *)NULL;
@@ -1529,11 +1494,7 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
   DOMAIN_PIECE *dp_ptr;
   aConfItem *aconf;
   int i;
-  char *host;
-  char *pass;
-  char *name;
-  char *mask;
-  char *p;
+  char *name, *host, *pass, *user, *p;
   int  port;
   char c='\0';
 
@@ -1552,11 +1513,8 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 
 	      if(aconf->status & flags)
 		{
-		  host = BadPtr(aconf->host) ? null : aconf->host;
-		  pass = BadPtr(aconf->passwd) ? null : aconf->passwd;
-		  name = BadPtr(aconf->name) ? null : aconf->name;
-		  mask = BadPtr(aconf->mask) ? null : aconf->mask;
-		  port = (int)aconf->port;
+		  GetPrintableaConfItem(aconf, &name, &host, &pass, &user,
+					&port);
 
 		  if (aconf->status == CONF_KILL)
 		    {
@@ -1575,7 +1533,7 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 				 sptr->name,
 				 'K',
 				 host,
-				 name,
+				 user,
 				 pass);
 		      if(p)
 			*p = '|';
@@ -1598,8 +1556,8 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 				 me.name,
 				 sptr->name,
 				 c,
-				 mask,
-				 show_iline_prefix(sptr,aconf,name),
+				 name,
+				 show_iline_prefix(sptr,aconf,user),
 				 host,
 				 port,
 				 get_conf_class(aconf));
@@ -1613,11 +1571,8 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 
 	      if(aconf->status & flags)
 		{
-		  host = BadPtr(aconf->host) ? null : aconf->host;
-		  pass = BadPtr(aconf->passwd) ? null : aconf->passwd;
-		  name = BadPtr(aconf->name) ? null : aconf->name;
-		  mask = BadPtr(aconf->mask) ? null : aconf->mask;
-		  port = (int)aconf->port;
+		  GetPrintableaConfItem(aconf, &name, &host, &pass,
+					&user, &port);
 
 		  if (aconf->status == CONF_KILL)
 		    {
@@ -1633,7 +1588,7 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 				 sptr->name,
 				 'K',
 				 host,
-				 name,
+				 user,
 				 pass);
 		      if(p)
 			*p = '|';
@@ -1655,8 +1610,8 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 				 me.name,
 				 sptr->name,
 				 c,
-				 mask,
-				 show_iline_prefix(sptr,aconf,name),
+				 name,
+				 show_iline_prefix(sptr,aconf,user),
 				 host,
 				 port,
 				 get_conf_class(aconf));
@@ -1821,21 +1776,13 @@ static aConfItem *find_matching_ip_i_line(unsigned long host_ip)
  *
  */
 
-static void report_dup(char type,aConfItem *tmp)
+static void report_dup(char type,aConfItem *aconf)
 {
-  char *host;
-  char *pass;
-  char *name;
+  char *name, *host, *pass, *user;
   int port;
-  char *mask;
-  static	char	null[] = "<NULL>";
 
-  host = BadPtr(tmp->host) ? null : tmp->host;
-  pass = BadPtr(tmp->passwd) ? null : tmp->passwd;
-  name = BadPtr(tmp->name) ? null : tmp->name;
-  mask = BadPtr(tmp->mask) ? null : tmp->mask;
-  port = (int)tmp->port;
+  GetPrintableaConfItem(aconf, &name, &host, &pass, &user, &port);
 
-  sendto_realops("DUP: %c: (%s@%s) pass %s mask %s port %d",
-		 type,name,host,pass,mask,port);
+  sendto_realops("DUP: %c: (%s@%s) pass %s name %s port %d",
+		 type,user,host,pass,name,port);
 }

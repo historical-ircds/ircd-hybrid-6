@@ -136,23 +136,6 @@ extern char *show_capabilities(aClient *); /* defined in s_misc.c */
 extern char *small_file_date(time_t);	/* defined in s_misc.c */
 #endif
 
-#ifdef GLINES
-extern void add_gline(aConfItem *);		/* defined in s_conf.c */
-static void log_gline_request(
-			      char *,char *,char *,char *,
-			      char *,char *,char *);
-
-void log_gline(aClient *,char *,GLINE_PENDING *,
-		      char *,char *,char *,char *,char *,char *,char *);
-
-
-extern void expire_pending_glines();	/* defined in s_conf.c */
-
-extern int majority_gline(aClient *,
-			  char *,char *,
-			  char *,char *,
-			  char *,char *,char *); /* defined in s_conf.c */
-#endif
 
 extern char *oper_privs(aClient *,int);	/* defined in s_conf.c */
 extern char *oper_flags(int);		/* defined in s_conf.c */
@@ -164,15 +147,13 @@ extern void show_servers(aClient *,char *); /* defined in s_misc.c */
 extern void count_memory(aClient *,char *); /* defined in s_debug.c */
 
 /* Local function prototypes */
-static int isnumber(char *);	/* return 0 if not, else return number */
-static char *cluster(char *);
 static void set_autoconn(aClient *,char *,char *,int);
 static void report_specials(aClient *,int,int);
 extern void report_qlines(aClient *);
-static int bad_tld(char *);
+int bad_tld(char *);
 
 int send_motd(aClient *,aClient *,int, char **,aMessageFile *); 
-static int safe_write(aClient *,char *,char *,int,char *);
+int safe_write(aClient *,char *,char *,int,char *);
 
 void read_motd(void);
 #ifdef AMOTD
@@ -190,24 +171,6 @@ void read_oper_motd();
 extern aMessageFile *opermotd;
 #endif
 
-
-#ifdef UNKLINE
-static int flush_write(aClient *,int,char *,int,char *);
-static int remove_tkline_match(char *,char *);
-#endif
-
-#ifdef LOCKFILE
-/* Shadowfax's lockfile code */
-void do_pending_klines(void);
-
-struct pkl {
-        char *comment;          /* Kline Comment */
-        char *kline;            /* Actual Kline */
-        struct pkl *next;       /* Next Pending Kline */
-} *pending_klines = NULL;
-
-time_t	pending_kline_time = 0;
-#endif
 
 #ifdef PACE_WALLOPS
 time_t last_used_wallops = 0L;
@@ -283,22 +246,10 @@ int	m_version(aClient *cptr,
 {
   extern char serveropts[];
 
-#if 0 /* I don't see a point in pacing this */
-  static time_t last_used=0L;
-
-  if(!IsAnOper(sptr))
-    {
-      if((last_used + PACE_WAIT) > NOW)
-	return 0;
-      else
-	last_used = NOW;
-    }
-#endif /* 0 */
-
   if(IsAnOper(sptr))
      {
        if (hunt_server(cptr,sptr,":%s VERSION :%s",1,parc,parv)==HUNTED_ISME)
-	 sendto_one(sptr, rpl_str(RPL_VERSION), me.name,
+	 sendto_one(sptr, form_str(RPL_VERSION), me.name,
 		    parv[0], version, debugmode, me.name, serveropts);
      }
    else
@@ -326,7 +277,7 @@ int	m_squit(aClient *cptr,
 
   if (!IsPrivileged(sptr))
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
 
@@ -377,7 +328,7 @@ int	m_squit(aClient *cptr,
       */
       if(MyClient(sptr))
         {
-          sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+          sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
                me.name, parv[0], "SQUIT");
           return 0;
         }
@@ -418,13 +369,13 @@ int	m_squit(aClient *cptr,
   */
   if (!acptr)
     {
-      sendto_one(sptr, err_str(ERR_NOSUCHSERVER),
+      sendto_one(sptr, form_str(ERR_NOSUCHSERVER),
 		 me.name, parv[0], server);
       return 0;
     }
   if (IsLocOp(sptr) && !MyConnect(acptr))
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
 
@@ -633,7 +584,7 @@ int	m_server(aClient *cptr,
       ** A local link that has been identified as a USER
       ** tries something fishy... ;-)
       */
-      sendto_one(cptr, err_str(ERR_UNKNOWNCOMMAND),
+      sendto_one(cptr, form_str(ERR_UNKNOWNCOMMAND),
 		 me.name, parv[0], "SERVER");
       /*
 	Just ignore it for fripps sake... - Dianora
@@ -826,9 +777,6 @@ int	m_server(aClient *cptr,
 	  return exit_client(cptr, cptr, cptr,
 			     "Too many servers");
 	}
-/*
- * Q: line code removed. Q: lines are not a useful feature on a modern net.
- */
 
       acptr = make_client(cptr);
       (void)make_server(acptr);
@@ -938,7 +886,7 @@ int	m_server_estab(aClient *cptr)
   Reg	aChannel *chptr;
   Reg	aClient	*acptr;
   Reg	aConfItem	*aconf, *bconf;
-  char	*inpath, *host, *s, *encr;
+  char	*inpath, *host, *encr;
   int	split;
 
   inpath = get_client_name(cptr,TRUE); /* "refresh" inpath with host */
@@ -1018,24 +966,17 @@ int	m_server_estab(aClient *cptr)
     }
   else
     {
-      s = (char *)strchr(aconf->host, '@');
-      if(s)
-	*s = '\0'; /* should never be NULL -- wanna bet? -Dianora */
       Debug((DEBUG_INFO, "Check Usernames [%s]vs[%s]",
-	     aconf->host, cptr->username));
-      if (matches(aconf->host, cptr->username))
+	     aconf->user, cptr->username));
+      if (matches(aconf->user, cptr->username))
 	{
-	  if(s)
-	    *s = '@';
 	  ircstp->is_ref++;
 	  sendto_ops("Username mismatch [%s]v[%s] : %s",
-		     aconf->host, cptr->username,
+		     aconf->user, cptr->username,
 		     get_client_name(cptr, TRUE));
 	  sendto_one(cptr, "ERROR :No Username Match");
 	  return exit_client(cptr, cptr, cptr, "Bad User");
 	}
-      if(s)
-	*s = '@';
     }
   
 
@@ -1322,7 +1263,7 @@ int	m_links(aClient *cptr,
       if((last_used + PACE_WAIT) > NOW)
         {
 	  /* safe enough to give this on a local connect only */
-	  sendto_one(sptr,rpl_str(RPL_LOAD2HI),me.name,parv[0]);
+	  sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,parv[0]);
           return 0;
         }
       else
@@ -1380,7 +1321,7 @@ int	m_links(aClient *cptr,
       if (!BadPtr(mask) && matches(mask, acptr->name))
 	continue;
       if(IsAnOper(sptr))
-	 sendto_one(sptr, rpl_str(RPL_LINKS),
+	 sendto_one(sptr, form_str(RPL_LINKS),
 		    me.name, parv[0], acptr->name, acptr->serv->up,
 		    acptr->hopcount, (acptr->info[0] ? acptr->info :
 				      "(Unknown Location)"));
@@ -1400,14 +1341,14 @@ int	m_links(aClient *cptr,
 	  else
 	    p = "(Unknown Location)";
 
-	  sendto_one(sptr, rpl_str(RPL_LINKS),
+	  sendto_one(sptr, form_str(RPL_LINKS),
 		    me.name, parv[0], acptr->name, acptr->serv->up,
 		    acptr->hopcount, p);
 	}
 
     }
   
-  sendto_one(sptr, rpl_str(RPL_ENDOFLINKS), me.name, parv[0],
+  sendto_one(sptr, form_str(RPL_ENDOFLINKS), me.name, parv[0],
 	     BadPtr(mask) ? "*" : clean_mask);
   return 0;
 }
@@ -1437,11 +1378,10 @@ static REPORT_STRUCT report_array[] = {
 
 static	void	report_configured_links(aClient *sptr,int mask)
 {
-  static char null[] = "<NULL>";
   aConfItem *tmp;
   REPORT_STRUCT *p;
+  char	*host, *pass, *user, *name;
   int   port;
-  char	*host, *pass, *name;
 
   for (tmp = conf; tmp; tmp = tmp->next)
     if (tmp->status & mask)
@@ -1451,10 +1391,7 @@ static	void	report_configured_links(aClient *sptr,int mask)
 	    break;
 	if(p->conf_type == 0)return;
 
-	host = BadPtr(tmp->host) ? null : tmp->host;
-	pass = BadPtr(tmp->passwd) ? null : tmp->passwd;
-	name = BadPtr(tmp->name) ? null : tmp->name;
-	port = (int)tmp->port;
+	GetPrintableaConfItem(tmp, &name, &host, &pass, &user, &port);
 
 	if(mask & (CONF_CONNECT_SERVER|CONF_NOCONNECT_SERVER))
 	  {
@@ -1466,7 +1403,7 @@ static	void	report_configured_links(aClient *sptr,int mask)
 
 	    /* Don't allow non opers to see actual ips */
 	    if(IsAnOper(sptr))
-	      sendto_one(sptr, rpl_str(p->rpl_stats), me.name,
+	      sendto_one(sptr, form_str(p->rpl_stats), me.name,
 			 sptr->name, c,
 			 host,
 			 name,
@@ -1474,7 +1411,7 @@ static	void	report_configured_links(aClient *sptr,int mask)
 			 get_conf_class(tmp),
 			 oper_flags((int)tmp->hold));
 	    else
-	      sendto_one(sptr, rpl_str(p->rpl_stats), me.name,
+	      sendto_one(sptr, form_str(p->rpl_stats), me.name,
 			 sptr->name, c,
 			 "*@127.0.0.1",
 			 name,
@@ -1486,20 +1423,24 @@ static	void	report_configured_links(aClient *sptr,int mask)
 	  {
 	    /* Don't allow non opers to see oper privs */
 	    if(IsAnOper(sptr))
-	      sendto_one(sptr, rpl_str(p->rpl_stats), me.name,
-			 sptr->name, p->conf_char, host, name,
+	      sendto_one(sptr, form_str(p->rpl_stats), me.name,
+			 sptr->name,
+			 p->conf_char,
+			 user, host, name,
 			 oper_privs((aClient *)NULL,port),
 			 get_conf_class(tmp),
 			 oper_flags((int)tmp->hold));
 	    else
-	      sendto_one(sptr, rpl_str(p->rpl_stats), me.name,
-			 sptr->name, p->conf_char, host, name,
+	      sendto_one(sptr, form_str(p->rpl_stats), me.name,
+			 sptr->name, p->conf_char,
+			 user, host, name,
 			 "0",
 			 get_conf_class(tmp));
 	  }
 	else
-	  sendto_one(sptr, rpl_str(p->rpl_stats), me.name,
-		     sptr->name, p->conf_char, host, name, port,
+	  sendto_one(sptr, form_str(p->rpl_stats), me.name,
+		     sptr->name, p->conf_char,
+		     user, host, name, port,
 		     get_conf_class(tmp));
       }
   return;
@@ -1517,10 +1458,10 @@ static	void	report_configured_links(aClient *sptr,int mask)
 
 static	void	report_specials(aClient *sptr,int flags,int numeric)
 {
-  static	char	null[] = "<NULL>";
   aConfItem *this_conf;
   aConfItem *aconf;
-  char	*pass, *name, *host, *mask;
+  char	*name, *host, *pass, *user;
+  int port;
 
   if(flags & CONF_XLINE)
     this_conf = x_conf;
@@ -1531,13 +1472,12 @@ static	void	report_specials(aClient *sptr,int flags,int numeric)
   for (aconf = this_conf; aconf; aconf = aconf->next)
     if (aconf->status & flags)
       {
-	name = BadPtr(aconf->name)   ? null : aconf->name;
-	pass = BadPtr(aconf->passwd) ? null : aconf->passwd;
+	GetPrintableaConfItem(aconf, &name, &host, &pass, &user, &port);
 
-	sendto_one(sptr, rpl_str(numeric),
+	sendto_one(sptr, form_str(numeric),
 		   me.name,
 		   sptr->name,
-		   name,
+		   user,
 		   pass);
       }
 }
@@ -1584,7 +1524,7 @@ int	m_stats(aClient *cptr,
         {
 	  /* safe enough to give this on a local connect only */
 	  if(MyClient(sptr))
-	    sendto_one(sptr,rpl_str(RPL_LOAD2HI),me.name,parv[0]);
+	    sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,parv[0]);
 	  return 0;
         }
       else
@@ -1702,7 +1642,7 @@ int	m_stats(aClient *cptr,
     case 'D': case 'd':
       if (!IsAnOper(sptr))
 	{
-	  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+	  sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 	  break;
 	}
       report_dlines(sptr);
@@ -1743,7 +1683,7 @@ int	m_stats(aClient *cptr,
       break;
 
     case 'K' :
-/* sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]); */
+/* sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]); */
       if(parc > 3)
 	report_matching_host_klines(sptr,parv[3]);
       else
@@ -1759,7 +1699,7 @@ int	m_stats(aClient *cptr,
    been used. I'm going to always report the command instead -Dianora */
       for (mptr = msgtab; mptr->cmd; mptr++)
 /*	if (mptr->count) */
-	  sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
+	  sendto_one(sptr, form_str(RPL_STATSCOMMANDS),
 		     me.name, parv[0], mptr->cmd,
 		     mptr->count, mptr->bytes);
       valid_stats++;
@@ -1797,14 +1737,14 @@ int	m_stats(aClient *cptr,
       if (IsAnOper(sptr))
 	list_scache(cptr,sptr,parc,parv);
       else
-	sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+	sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       valid_stats++;
       break;
 
     case 'T' : case 't' :
       if (!IsAnOper(sptr))
 	{
-	  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+	  sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 	  break;
 	}
       tstats(sptr, parv[0]);
@@ -1821,10 +1761,10 @@ int	m_stats(aClient *cptr,
 	register time_t now;
 	
 	now = timeofday - me.since;
-	sendto_one(sptr, rpl_str(RPL_STATSUPTIME), me.name, parv[0],
+	sendto_one(sptr, form_str(RPL_STATSUPTIME), me.name, parv[0],
 		   now/86400, (now/3600)%24, (now/60)%60, now%60);
 #ifdef HIGHEST_CONNECTION
-	sendto_one(sptr, rpl_str(RPL_STATSCONN), me.name, parv[0],
+	sendto_one(sptr, form_str(RPL_STATSCONN), me.name, parv[0],
 		   max_connection_count, max_client_count);
 #endif
 	valid_stats++;
@@ -1855,7 +1795,7 @@ int	m_stats(aClient *cptr,
 	  count_memory(sptr, parv[0]);
 	}
       else
-	sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+	sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       valid_stats++;
       break;
 
@@ -1868,7 +1808,7 @@ int	m_stats(aClient *cptr,
       stat = '*';
       break;
     }
-  sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, parv[0], stat);
+  sendto_one(sptr, form_str(RPL_ENDOFSTATS), me.name, parv[0], stat);
 
   /* personally, I don't see why opers need to see stats requests
    * at all. They are just "noise" to an oper, and users can't do
@@ -1899,9 +1839,9 @@ int	m_users(aClient *cptr,
   if (hunt_server(cptr,sptr,":%s USERS :%s",1,parc,parv) == HUNTED_ISME)
     {
       /* No one uses this any more... so lets remap it..   -Taner */
-      sendto_one(sptr, rpl_str(RPL_LOCALUSERS), me.name, parv[0],
+      sendto_one(sptr, form_str(RPL_LOCALUSERS), me.name, parv[0],
 		 Count.local, Count.max_loc);
-      sendto_one(sptr, rpl_str(RPL_GLOBALUSERS), me.name, parv[0],
+      sendto_one(sptr, form_str(RPL_GLOBALUSERS), me.name, parv[0],
 		 Count.total, Count.max_tot);
     }
 #endif /* CLIENT_COUNT */
@@ -1963,7 +1903,7 @@ int	m_help(aClient *cptr,
       if((last_used + PACE_WAIT) > NOW)
         {
 	  /* safe enough to give this on a local connect only */
-	  sendto_one(sptr,rpl_str(RPL_LOAD2HI),me.name,parv[0]);
+	  sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,parv[0]);
 	  return 0;
         }
       else
@@ -2011,7 +1951,7 @@ int	 m_lusers(aClient *cptr,
         {
 	  /* safe enough to give this on a local connect only */
 	  if(MyClient(sptr))
-	    sendto_one(sptr,rpl_str(RPL_LOAD2HI),me.name,parv[0]);
+	    sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,parv[0]);
 	  return 0;
         }
       else
@@ -2175,7 +2115,7 @@ int show_lusers(aClient *cptr,
 #ifndef	SHOW_INVISIBLE_LUSERS
   if (IsAnOper(sptr) && i_count)
 #endif
-    sendto_one(sptr, rpl_str(RPL_LUSERCLIENT), me.name, parv[0],
+    sendto_one(sptr, form_str(RPL_LUSERCLIENT), me.name, parv[0],
 	       c_count, i_count, s_count);
 #ifndef	SHOW_INVISIBLE_LUSERS
   else
@@ -2185,25 +2125,25 @@ int show_lusers(aClient *cptr,
 	       s_count);
 #endif
   if (o_count)
-    sendto_one(sptr, rpl_str(RPL_LUSEROP),
+    sendto_one(sptr, form_str(RPL_LUSEROP),
 	       me.name, parv[0], o_count);
   if (u_count > 0)
-    sendto_one(sptr, rpl_str(RPL_LUSERUNKNOWN),
+    sendto_one(sptr, form_str(RPL_LUSERUNKNOWN),
 	       me.name, parv[0], u_count);
   /* This should be ok */
   if (Count.chan > 0)
-    sendto_one(sptr, rpl_str(RPL_LUSERCHANNELS),
+    sendto_one(sptr, form_str(RPL_LUSERCHANNELS),
 	       me.name, parv[0], Count.chan);
-  sendto_one(sptr, rpl_str(RPL_LUSERME),
+  sendto_one(sptr, form_str(RPL_LUSERME),
 	     me.name, parv[0], m_client, m_server);
 #ifdef CLIENT_COUNT
-  sendto_one(sptr, rpl_str(RPL_LOCALUSERS), me.name, parv[0],
+  sendto_one(sptr, form_str(RPL_LOCALUSERS), me.name, parv[0],
 	     Count.local, Count.max_loc);
-  sendto_one(sptr, rpl_str(RPL_GLOBALUSERS), me.name, parv[0],
+  sendto_one(sptr, form_str(RPL_GLOBALUSERS), me.name, parv[0],
 	     Count.total, Count.max_tot);
 #else
 #ifdef HIGHEST_CONNECTION
-  sendto_one(sptr, rpl_str(RPL_STATSCONN), me.name, parv[0],
+  sendto_one(sptr, form_str(RPL_STATSCONN), me.name, parv[0],
 	     max_connection_count, max_client_count);
   if (m_client > max_client_count)
     max_client_count = m_client;
@@ -2243,7 +2183,7 @@ int	m_connect(aClient *cptr,
 
   if (!IsPrivileged(sptr))
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return -1;
     }
 
@@ -2262,7 +2202,7 @@ int	m_connect(aClient *cptr,
 
   if (parc < 2 || *parv[1] == '\0')
     {
-      sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
 		 me.name, parv[0], "CONNECT");
       return -1;
     }
@@ -2279,23 +2219,14 @@ int	m_connect(aClient *cptr,
     if ((aconf->status == CONF_CONNECT_SERVER) &&
 	matches(parv[1], aconf->name) == 0)
       break;
+
   /* Checked first servernames, then try hostnames. */
-  /* *sigh* AVALON YOU DOLT! */
   if (!aconf)
     {
-      char *host_to_match;
-
       for (aconf = conf; aconf; aconf = aconf->next)
 	{
-	  host_to_match = strchr(aconf->host, '@');
-	  if(host_to_match)
-	    host_to_match++;
-	  else
-	    host_to_match = aconf->host;
-
 	  if ((aconf->status == CONF_CONNECT_SERVER) &&
-	      (matches(parv[1], aconf->host) == 0 ||
-	       matches(parv[1], host_to_match) == 0))
+	      (matches(parv[1], aconf->host) == 0 ))
 	    {
 	      break;
 	    }
@@ -2387,14 +2318,14 @@ int     m_wallops(aClient *cptr,
   
   if (BadPtr(message))
     {
-      sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
 		 me.name, parv[0], "WALLOPS");
       return 0;
     }
 
   if (!IsServer(sptr) && MyConnect(sptr) && !IsAnOper(sptr))
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return(0);
     }
 
@@ -2492,7 +2423,7 @@ int     m_locops(aClient *cptr,
 
   if (BadPtr(message))
     {
-      sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
                  me.name, parv[0], "LOCOPS");
       return 0;
     }
@@ -2507,7 +2438,7 @@ int     m_locops(aClient *cptr,
     }
   else
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return(0);
     }
 
@@ -2527,14 +2458,14 @@ int     m_operwall(aClient *cptr,
   if (!IsAnOper(sptr) || IsServer(sptr))
     {
       if (MyClient(sptr) && !IsServer(sptr))
-	sendto_one(sptr, err_str(ERR_NOPRIVILEGES),
+	sendto_one(sptr, form_str(ERR_NOPRIVILEGES),
 		   me.name, parv[0]);
       return 0;
     }
   if (BadPtr(message))
     {
       if (MyClient(sptr))
-	sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+	sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
 		   me.name, parv[0], "OPERWALL");
       return 0;
     }
@@ -2571,7 +2502,7 @@ int	m_time(aClient *cptr,
 	       char *parv[])
 {
   if (hunt_server(cptr,sptr,":%s TIME :%s",1,parc,parv) == HUNTED_ISME)
-    sendto_one(sptr, rpl_str(RPL_TIME), me.name,
+    sendto_one(sptr, form_str(RPL_TIME), me.name,
 	       parv[0], me.name, date((long)0));
   return 0;
 }
@@ -2595,7 +2526,7 @@ int	m_admin(aClient *cptr,
 	{
 	  /* safe enough to give this on a local connect only */
 	  if(MyClient(sptr))
-	    sendto_one(sptr,rpl_str(RPL_LOAD2HI),me.name,parv[0]);
+	    sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,parv[0]);
 	  return 0;
 	}
       else
@@ -2610,17 +2541,17 @@ int	m_admin(aClient *cptr,
 		       sptr->user->username, sptr->user->host, sptr->user->server);
   if ((aconf = find_admin()))
     {
-      sendto_one(sptr, rpl_str(RPL_ADMINME),
+      sendto_one(sptr, form_str(RPL_ADMINME),
 		 me.name, parv[0], me.name);
-      sendto_one(sptr, rpl_str(RPL_ADMINLOC1),
+      sendto_one(sptr, form_str(RPL_ADMINLOC1),
 		 me.name, parv[0], aconf->host);
-      sendto_one(sptr, rpl_str(RPL_ADMINLOC2),
+      sendto_one(sptr, form_str(RPL_ADMINLOC2),
 		 me.name, parv[0], aconf->passwd);
-      sendto_one(sptr, rpl_str(RPL_ADMINEMAIL),
+      sendto_one(sptr, form_str(RPL_ADMINEMAIL),
 		 me.name, parv[0], aconf->name);
     }
   else
-    sendto_one(sptr, err_str(ERR_NOADMININFO),
+    sendto_one(sptr, form_str(ERR_NOADMININFO),
 	       me.name, parv[0], me.name);
   return 0;
 }
@@ -2651,7 +2582,7 @@ int   m_set(aClient *cptr,
 
   if (!MyClient(sptr) || !IsAnOper(sptr))
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
 
@@ -3131,7 +3062,7 @@ int   m_htm(aClient *cptr,
   
   if (!MyClient(sptr) || !IsOper(sptr))
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
   sendto_one(sptr,
@@ -3200,1778 +3131,6 @@ int   m_htm(aClient *cptr,
   return 0;
 }
 
-/*
- * cluster()
- *
- * input	- pointer to a hostname
- * output	- pointer to a static of the hostname masked
- *		  for use in a kline.
- * side effects	- NONE
- *
- * reworked a tad -Dianora
- */
-
-static char *cluster(char *hostname)
-{
-  static char result[HOSTLEN+1];	/* result to return */
-  char        temphost[HOSTLEN+1];	/* work place */
-  char	      *ipp;		/* used to find if host is ip # only */
-  char	      *host_mask;	/* used to find host mask portion to '*' */
-  char	      *zap_point=(char *)NULL;	/* used to zap last nnn portion of an ip # */
-  char 	      *tld;		/* Top Level Domain */
-  int	      is_ip_number;	/* flag if its an ip # */	      
-  int	      number_of_dots;	/* count number of dots for both ip# and
-				   domain klines */
-  if (!hostname)
-    return (char *) NULL;	/* EEK! */
-
-  /* If a '@' is found in the hostname, this is bogus
-   * and must have been introduced by server that doesn't
-   * check for bogus domains (dns spoof) very well. *sigh* just return it...
-   * I could also legitimately return (char *)NULL as above.
-   *
-   * -Dianora
-   */
-
-  if(strchr(hostname,'@'))	
-    {
-      strncpyzt(result, hostname, HOSTLEN);      
-      return(result);
-    }
-
-  strncpyzt(temphost, hostname, HOSTLEN);
-
-  is_ip_number = YES;	/* assume its an IP# */
-  ipp = temphost;
-  number_of_dots = 0;
-
-  while (*ipp)
-    {
-      if( *ipp == '.' )
-	{
-	  number_of_dots++;
-
-	  if(number_of_dots == 3)
-	    zap_point = ipp;
-	  ipp++;
-	}
-      else if(!isdigit(*ipp))
-	{
-	  is_ip_number = NO;
-	  break;
-	}
-      ipp++;
-    }
-
-  if(is_ip_number && (number_of_dots == 3))
-    {
-      zap_point++;
-      *zap_point++ = '*';		/* turn 111.222.333.444 into */
-      *zap_point = '\0';		/*      111.222.333.*	     */
-      strncpy(result, temphost, HOSTLEN);
-      return(result);
-    }
-  else
-    {
-      tld = strrchr(temphost, '.');
-      if(tld)
-	{
-	  number_of_dots = 2;
-	  if(tld[3])			 /* its at least a 3 letter tld
-					    i.e. ".com" tld[3] = 'm' not 
-					    '\0' */
-				         /* 4 letter tld's are coming */
-	    number_of_dots = 1;
-
-	  if(tld != temphost)		/* in these days of dns spoofers ...*/
-	    host_mask = tld - 1;	/* Look for host portion to '*' */
-	  else
-	    host_mask = tld;		/* degenerate case hostname is
-					   '.com' etc. */
-
-	  while(host_mask != temphost)
-	    {
-	      if(*host_mask == '.')
-		number_of_dots--;
-	      if(number_of_dots == 0)
-		{
-		  result[0] = '*';
-		  strncpy(result+1,host_mask,HOSTLEN-1);
-		  return(result);
-		}
-	      host_mask--;
-	    }
-	  result[0] = '*';			/* foo.com => *foo.com */
-	  strncpy(result+1,temphost,HOSTLEN);
-	}
-      else	/* no tld found oops. just return it as is */
-	{
-	  strncpy(result, temphost, HOSTLEN);
-	  return(result);
-	}
-    }
-
-  return (result);
-}
-
-
-
-/*
- * m_gline()
- *
- * inputs	- The usual for a m_ function
- * output	-
- * side effects	-
- *
- * Place a G line if 3 opers agree on the identical user@host
- * 
- */
-
-/* Allow this server to pass along GLINE if received and
- * GLINES is not defined.
- */
-
-int     m_gline(aClient *cptr,
-		aClient *sptr,
-		int parc,
-		char *parv[])
-{
-  char *oper_name;		/* nick of oper requesting GLINE */
-  char *oper_username;		/* username of oper requesting GLINE */
-  char *oper_host;		/* hostname of oper requesting GLINE */
-  char *oper_server;		/* server of oper requesting GLINE */
-  char *user, *host;		/* user and host of GLINE "victim" */
-  char *reason;			/* reason for "victims" demise */
-#ifdef GLINES
-  char buffer[512];
-  char *current_date;
-  char tempuser[USERLEN+2];
-  char temphost[HOSTLEN+1];
-  aConfItem *aconf;
-#endif
-
-  if(!IsServer(sptr)) /* allow remote opers to apply g lines */
-    {
-#ifdef GLINES
-      /* Only globals can apply Glines */
-      if (!IsOper(sptr))
-	{
-	  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-	  return 0;
-	}
-
-      if (!IsSetOperGline(sptr))
-	{
-	  sendto_one(sptr,":%s NOTICE %s :You have no G flag",me.name,parv[0]);
-	  return 0;
-	}
-
-      if ( parc < 3 )
-	{
-	  sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		     me.name, parv[0], "GLINE");
-	  return 0;
-	}
-      
-      if ( (host = strchr(parv[1], '@')) || *parv[1] == '*' )
-	{
-	  /* Explicit user@host mask given */
-	  
-	  if(host)			/* Found user@host */
-	    {
-	      user = parv[1];	/* here is user part */
-	      *(host++) = '\0';	/* and now here is host */
-	    }
-	  else
-	    {
-	      user = "*";		/* no @ found, assume its *@somehost */
-	      host = parv[1];
-	    }
-
-	  if (!*host)		/* duh. no host found, assume its '*' host */
-	    host = "*";
-
-	  strncpyzt(tempuser, user, USERLEN+2);	/* allow for '*' */
-	  strncpyzt(temphost, host, HOSTLEN);
-	  user = tempuser;
-	  host = temphost;
-	}
-      else
-	{
-          sendto_one(sptr, ":%s NOTICE %s :Can't G-Line a nick use user@host",
-		     me.name,
-		     parv[0]);
-	  return 0;
-	}
-
-      if(strchr(parv[2], ':'))
-	{
-          sendto_one(sptr,
-		     ":%s NOTICE %s :Invalid character ':' in comment",
-		     me.name, parv[2]);
-	  return 0;
-	}
-
-      reason = parv[2];
-
-      if (!matches(user, "akjhfkahfasfjd") &&
-                !matches(host, "ldksjfl.kss...kdjfd.jfklsjf"))
-	{
-	  if(MyClient(sptr))
-	    sendto_one(sptr, ":%s NOTICE %s :Can't G-Line *@*", me.name,
-		       parv[0]);
-
-	  return 0;
-	}
-      
-      if (bad_tld(host))
-	{
-	  if(MyClient(sptr))
-	    sendto_one(sptr, ":%s NOTICE %s :Can't G-Line *@%s",
-		       me.name,
-		       parv[0],
-		       host);
-	  return 0;
-	}
-
-      if(sptr->name)
-	oper_name = sptr->name;
-      else 
-	return 0;
-      
-      if(sptr->user && sptr->user->username)
-	oper_username = sptr->user->username;
-      else
-	return 0;
-
-      if(sptr->user && sptr->user->host)
-	oper_host = sptr->user->host;
-      else
-	return 0;
-
-      if(sptr->user && sptr->user->server)
-	oper_server = sptr->user->server;
-      else
-	return 0;
-
-      sendto_serv_butone(NULL, ":%s GLINE %s %s %s %s %s %s :%s",
-			 me.name,
-			 oper_name,
-			 oper_username,
-			 oper_host,
-			 oper_server,
-			 user,
-			 host,
-			 reason);
-#else
-      sendto_one(sptr,":%s NOTICE %s :GLINE disabled",me.name,parv[0]);  
-#endif
-    }
-  else
-    {
-      if(!IsServer(sptr))
-        return(0);
-
-      /* Always good to be paranoid about arguments */
-      if(parc < 8)
-	return 0;
-
-      oper_name = parv[1];
-      oper_username = parv[2];
-      oper_host = parv[3];
-      oper_server = parv[4];
-      user = parv[5];
-      host = parv[6];
-      reason = parv[7];
-
-      sendto_serv_butone(sptr, ":%s GLINE %s %s %s %s %s %s :%s",
-                         sptr->name,
-			 oper_name,oper_username,oper_host,oper_server,
-                         user,
-                         host,
-                         reason);
-    }
-#ifdef GLINES
-   log_gline_request(oper_name,oper_username,oper_host,oper_server,
-		     user,host,reason);
-
-   sendto_realops("%s!%s@%s on %s is requesting gline for [%s@%s] [%s]",
-		  oper_name,
-		  oper_username,
-		  oper_host,
-		  oper_server,
-		  user,
-		  host,
-		  reason);
-
-  /* If at least 3 opers agree this user should be G lined then do it */
-  if(majority_gline(sptr,
-		    oper_name,
-		    oper_username,
-		    oper_host,
-		    oper_server,
-		    user,
-		    host,
-		    reason))
-    {
-      current_date = smalldate((time_t) 0);
-	  
-      aconf = make_conf();
-      aconf->status = CONF_KILL;
-      DupString(aconf->host, host);
-
-      (void)ircsprintf(buffer, "%s (%s)",reason,current_date);
-      
-      DupString(aconf->passwd, buffer);
-      DupString(aconf->name, user);
-      aconf->hold = timeofday + GLINE_TIME;
-      add_gline(aconf);
-      
-      sendto_realops("%s!%s@%s on %s has triggered gline for [%s@%s] [%s]",
-		     oper_name,
-		     oper_username,
-		     oper_host,
-		     oper_server,
-		     user,
-		     host,
-		     reason);
-      
-      rehashed = YES;
-      dline_in_progress = NO;
-      nextping = timeofday;
-
-      return 0;
-    }
-#endif  
-  return 0;
-}
-
-
-#ifdef GLINES
-/*
- * log_gline_request()
- *
- */
-static void log_gline_request(
-		      char *oper_nick,
-		      char *oper_user,
-		      char *oper_host,
-		      char *oper_server,
-		      char *user,
-		      char *host,
-		      char *reason)
-{
-  char buffer[512];
-  char filenamebuf[1024];
-  static  char    timebuffer[MAX_DATE_STRING];
-  struct tm *tmptr;
-  int out;
-
-  (void)sprintf(filenamebuf, "%s.%s", glinefile, small_file_date((time_t)0));
-  if ((out = open(filenamebuf, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
-    {
-      sendto_realops("*** Problem opening %s",filenamebuf);
-      return;
-    }
-
-  tmptr = localtime(&NOW);
-  strftime(timebuffer, MAX_DATE_STRING, "%Y/%m/%d %H:%M:%S", tmptr);
-
-  (void)ircsprintf(buffer,
-		   "#Gline for %s@%s [%s] requested by %s!%s@%s on %s at %s\n",
-		   user,host,reason,
-		   oper_nick,oper_user,oper_host,oper_server,
-		   timebuffer);
-
-  if (write(out,buffer,strlen(buffer)) <= 0)
-    {
-      sendto_realops("*** Problem writing to %s",filenamebuf);
-      (void)close(out);
-      return;
-    }
-  return;
-}
-
-/*
- * log_gline()
- *
- */
-void log_gline(
-		      aClient *sptr,
-		      char *parv0,
-		      GLINE_PENDING *gline_pending_ptr,
-		      char *oper_nick,
-		      char *oper_user,
-		      char *oper_host,
-		      char *oper_server,
-		      char *user,
-		      char *host,
-		      char *reason)
-{
-  char buffer[512];
-  char filenamebuf[1024];
-  static  char    timebuffer[MAX_DATE_STRING];
-  struct tm *tmptr;
-  int out;
-
-  (void)sprintf(filenamebuf, "%s.%s", glinefile, small_file_date((time_t) 0));
-  if ((out = open(filenamebuf, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
-    {
-      return;
-    }
-
-  tmptr = localtime(&NOW);
-  strftime(timebuffer, MAX_DATE_STRING, "%Y/%m/%d %H:%M:%S", tmptr);
-
-  (void)ircsprintf(buffer,"#Gline for %s@%s %s added by the following\n",
-		   user,host,timebuffer);
-
-  if (safe_write(sptr,parv0,filenamebuf,out,buffer))
-    return;
-
-  (void)ircsprintf(buffer, "#%s!%s@%s on %s [%s]\n",
-		   gline_pending_ptr->oper_nick1,
-		   gline_pending_ptr->oper_user1,
-		   gline_pending_ptr->oper_host1,
-		   gline_pending_ptr->oper_server1,
-		   (gline_pending_ptr->reason1)?
-		   (gline_pending_ptr->reason1):"No reason");
-
-  if (safe_write(sptr,parv0,filenamebuf,out,buffer))
-    return;
-
-  (void)ircsprintf(buffer, "#%s!%s@%s on %s [%s]\n",
-		   gline_pending_ptr->oper_nick2,
-		   gline_pending_ptr->oper_user2,
-		   gline_pending_ptr->oper_host2,
-		   gline_pending_ptr->oper_server2,
-		   (gline_pending_ptr->reason2)?
-		   (gline_pending_ptr->reason2):"No reason");
-
-  if (safe_write(sptr,parv0,filenamebuf,out,buffer))
-    return;
-
-  (void)ircsprintf(buffer, "#%s!%s@%s on %s [%s]\n",
-		   oper_nick,
-		   oper_user,
-		   oper_host,
-		   oper_server,
-		   (reason)?reason:"No reason");
-
-  if (safe_write(sptr,parv0,filenamebuf,out,buffer))
-    return;
-
-  (void)ircsprintf(buffer, "K:%s:%s:%s\n",
-	host,user,reason);
-  if (safe_write(sptr,parv0,filenamebuf,out,buffer))
-    return;
-
-  (void)close(out);
-}
-
-
-#endif /* GLINES */
-
-/*
- * m_kline()
- *
- * re-worked a tad ... -Dianora
- *
- * Added comstuds SEPARATE_QUOTE_KLINES_BY_DATE code
- * -Dianora
- */
-
-int     m_kline(aClient *cptr,
-		aClient *sptr,
-		int parc,
-		char *parv[])
-{
-#if defined (LOCKFILE) && !defined(SEPARATE_QUOTE_KLINES_BY_DATE)
-  struct pkl *k;
-#else
-  int out;
-#endif
-  char buffer[512];
-  char *p;
-  char cidr_form_host[64];
-
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-  char *timebuffer;
-  char filenamebuf[1024];
-#endif
-  char *filename;		/* filename to use for kline */
-
-  char *user, *host;
-  char *reason;
-  char *current_date;
-  int  ip_kline = NO;
-  aClient *acptr;
-  char tempuser[USERLEN+2];
-  char temphost[HOSTLEN+1];
-  aConfItem *aconf;
-  int temporary_kline_time=0;	/* -Dianora */
-  int wild_user;		/* does user part match everything? */
-  time_t temporary_kline_time_seconds=0;
-  char *argv;
-  unsigned long ip;
-  unsigned long ip_mask;
-#ifdef SLAVE_SERVERS
-  char *slave_oper;
-  aClient *rcptr=NULL;
-
-  if(IsServer(sptr))
-    {
-      if(parc < 2)	/* pick up actual oper who placed kline */
-	return 0;
-
-      slave_oper = parv[1];	/* make it look like normal local kline */
-
-      parc--;
-      parv++;
-
-      if ( parc < 2 )
-	return 0;
-
-      if ((rcptr = hash_find_client(slave_oper,(aClient *)NULL)))
-	{
-	  if(!IsPerson(rcptr))
-	    return 0;
-	}
-      else
-	return 0;
-
-      if(!find_special_conf(sptr->name,CONF_ULINE))
-	{
-	  sendto_realops("received Unauthorized kline from %s",sptr->name);
-	  return 0;
-	}
-      else
-	{
-	  sendto_realops("received kline from %s", sptr->name);
-	}
-
-#ifdef HUB
-      sendto_slaves(sptr,"KLINE",slave_oper,parc,parv);
-#endif
-
-    }
-  else
-#endif
-    {
-#ifdef NO_LOCAL_KLINE
-      if (!MyClient(sptr) || !IsOper(sptr))
-	{
-	  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-	  return 0;
-	}
-#else
-      if (!MyClient(sptr) || !IsAnOper(sptr))
-	{
-	  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-	  return 0;
-	}
-#endif
-
-      if(!IsSetOperK(sptr))
-	{
-	  sendto_one(sptr,":%s NOTICE %s :You have no K flag",me.name,parv[0]);
-	  return 0;
-	}
-
-      if ( parc < 2 )
-	{
-	  sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		     me.name, parv[0], "KLINE");
-	  return 0;
-	}
-
-#ifdef SLAVE_SERVERS
-      if(MyConnect(sptr) && IsAnOper(sptr))
-	{
-	  sendto_slaves(NULL,"KLINE",sptr->name,parc,parv);
-	}
-#endif
-    }
-
-  argv = parv[1];
-
-  if( (temporary_kline_time = isnumber(argv)) )
-    {
-      if(parc < 3)
-	{
-#ifdef SLAVE_SERVERS
-	  if(!IsServer(sptr))
-#endif	  
-	     sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-			me.name, parv[0], "KLINE");
-	  return 0;
-	}
-      if(temporary_kline_time > (24*60))
-        temporary_kline_time = (24*60); /* Max it at 24 hours */
-      temporary_kline_time_seconds = (time_t)temporary_kline_time * (time_t)60;
-	/* turn it into minutes */
-      argv = parv[2];
-      parc--;
-    }
-
-  if ( (host = strchr(argv, '@')) || *argv == '*' )
-    {
-      /* Explicit user@host mask given */
-
-      if(host)			/* Found user@host */
-	{
-	  user = argv;	/* here is user part */
-	  *(host++) = '\0';	/* and now here is host */
-	}
-      else
-	{
-	  user = "*";		/* no @ found, assume its *@somehost */
-	  host = argv;
-	}
-
-      if (!*host)		/* duh. no host found, assume its '*' host */
-	host = "*";
-      strncpyzt(tempuser, user, USERLEN+2); /* allow for '*' in front */
-      strncpyzt(temphost, host, HOSTLEN);
-      user = tempuser;
-      host = temphost;
-    }
-  else
-    {
-      /* Try to find user@host mask from nick */
-
-      if (!(acptr = find_chasing(sptr, argv, NULL)))
-	return 0;
-
-      if(!acptr->user)
-	return 0;
-
-      if (IsServer(acptr))
-	{
-#ifdef SLAVE_SERVERS
-	  if(!IsServer(sptr))
-#endif
-	    sendto_one(sptr,
-              ":%s NOTICE %s :Can't KLINE a server, use @'s where appropriate",
-		       me.name, parv[0]);
-	  return 0;
-	}
-
-      if(IsElined(acptr))
-	{
-#ifdef SLAVE_SERVERS
-	  if(!IsServer(sptr))
-#endif
-	    sendto_one(sptr,
-		       ":%s NOTICE %s :%s is E-lined",me.name,parv[0],
-		       acptr->name);
-	  return 0;
-	}
-
-      /* turn the "user" bit into "*user", blow away '~'
-	 if found in original user name (non-idented) */
-
-      tempuser[0] = '*';
-      if (*acptr->user->username == '~')
-	strcpy(tempuser+1, (char *)acptr->user->username+1);
-      else
-	strcpy(tempuser+1, acptr->user->username);
-      user = tempuser;
-      host = cluster(acptr->user->host);
-    }
-
-  if(temporary_kline_time)
-    argv = parv[3];
-  else
-    argv = parv[2];
-
-  if (parc > 2)	
-    {
-      if(strchr(argv, ':'))
-	{
-#ifdef SLAVE_SERVERS
-	  if(!IsServer(sptr))
-#endif
-	    sendto_one(sptr,
-		       ":%s NOTICE %s :Invalid character ':' in comment",
-		       me.name, parv[0]);
-	  return 0;
-	}
-
-      if(strchr(argv, '#'))
-        {
-#ifdef SLAVE_SERVERS
-	  if(!IsServer(sptr))
-#endif
-	    sendto_one(sptr,
-		       ":%s NOTICE %s :Invalid character '#' in comment",
-		       me.name, parv[0]);
-          return 0;
-        }
-
-      if(*argv)
-	reason = argv;
-      else
-	reason = "No reason";
-    }
-  else
-    reason = "No reason";
-
-  wild_user = !matches(user, "akjhfkahfasfjd");
-
-  if (wild_user && !matches(host, "ldksjfl.kss...kdjfd.jfklsjf"))
-    {
-#ifdef SLAVE_SERVERS
-      if(!IsServer(sptr))
-#endif
-	sendto_one(sptr, ":%s NOTICE %s :Can't K-Line *@*",
-		   me.name,
-		   parv[0]);
-      return 0;
-    }
-      
-  if (wild_user && bad_tld(host))
-    {
-#ifdef SLAVE_SERVERS
-      if(!IsServer(sptr))
-#endif
-	sendto_one(sptr, ":%s NOTICE %s :Can't K-Line *@%s",
-		   me.name,
-		   parv[0],
-		   host);
-      return 0;
-    }
-
-  /* 
-  ** At this point, I know the user and the host to place the k-line on
-  ** I also know whether its supposed to be a temporary kline or not
-  ** I also know the reason field is clean
-  ** Now what I want to do, is find out if its a kline of the form
-  **
-  ** /quote kline *@192.168.0.* i.e. it should be turned into a d-line instead
-  **
-  */
-
-  /*
-   * what to do if host is a legal ip, and its a temporary kline ?
-   * Don't do the CIDR conversion for now of course.
-   */
-
-  if(!temporary_kline_time && (ip_kline = is_address(host,&ip,&ip_mask)))
-     {
-       strncpy(cidr_form_host,host,32);
-       p = strchr(cidr_form_host,'*');
-       if(p)
-	 {
-	   *p++ = '0';
-	   *p++ = '/';
-	   *p++ = '2';
-	   *p++ = '4';
-	   *p++ = '\0';
-	 }
-       host = cidr_form_host;
-    }
-  else
-    {
-      ip = 0L;
-    }
-
-#ifdef NON_REDUNDANT_KLINES
-  if( (aconf = find_matching_mtrie_conf(host,user,(unsigned long)ip)) )
-     {
-       char *reason;
-
-       if( aconf->status & CONF_KILL )
-	 {
-	   reason = aconf->passwd ? aconf->passwd : "<No Reason>";
-#ifdef SLAVE_SERVERS
-	   if(!IsServer(sptr))
-#endif
-	     sendto_one(sptr,
-			":%s NOTICE %s :[%s@%s] already K-lined by [%s@%s] - %s",
-			me.name,
-			parv[0],
-			user,host,
-			aconf->name,aconf->host,reason);
-	   return 0;
-	 }
-     }
-#endif
-
-  current_date = smalldate((time_t) 0);
-
-  aconf = make_conf();
-  aconf->status = CONF_KILL;
-  DupString(aconf->host, host);
-
-  DupString(aconf->name, user);
-  aconf->port = 0;
-
-  if(temporary_kline_time)
-    {
-      (void)ircsprintf(buffer,
-		       "Temporary K-line %d min. - %s (%s)",
-		       temporary_kline_time,reason,current_date);
-      DupString(aconf->passwd, buffer );
-      aconf->hold = timeofday + temporary_kline_time_seconds;
-      add_temp_kline(aconf);
-      rehashed = YES;
-      dline_in_progress = NO;
-      nextping = timeofday;
-      sendto_realops("%s added temporary %d min. K-Line for [%s@%s] [%s]",
-                 parv[0], temporary_kline_time, user, host, reason);
-      return 0;
-    }
-  else
-    {
-      (void)ircsprintf(buffer, "%s (%s)",reason,current_date);
-      DupString(aconf->passwd, buffer );
-    }
-  Class(aconf) = find_class(0);
-
-/* when can aconf->host ever be a NULL pointer though?
- * or for that matter, when is aconf->status ever not going
- * to be CONF_KILL at this point? 
- * -Dianora
- */
-
-  if(ip_kline)
-    {
-      aconf->ip = ip;
-      aconf->ip_mask = ip_mask;
-      add_ip_Kline(aconf);
-    }
-  else
-    add_mtrie_conf_entry(aconf,CONF_KILL);
-
-/* comstud's SEPARATE_QUOTE_KLINES_BY_DATE code */
-/* Note, that if SEPARATE_QUOTE_KLINES_BY_DATE is defined,
- *  it doesn't make sense to have LOCKFILE on the kline file
- */
-
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-  timebuffer = small_file_date(NOW);
-
-  (void)sprintf(filenamebuf, "%s.%s", klinefile, timebuffer);
-  filename = filenamebuf;
-       
-#ifdef SLAVE_SERVERS
-  if(!IsServer(sptr))
-#endif
-    sendto_one(sptr, ":%s NOTICE %s :Added K-Line [%s@%s] to %s",
-	       me.name, parv[0], user, host, filenamebuf);
-#else
-  filename = klinefile;
-
-#ifdef KPATH
-#ifdef SLAVE_SERVERS
-  if(!IsServer(sptr))
-#endif
-    sendto_one(sptr, ":%s NOTICE %s :Added K-Line [%s@%s] to server klinefile",
-	       me.name, parv[0], user, host);
-#else
-#ifdef SLAVE_SERVERS
-  if(!IsServer(sptr))
-#endif
-    sendto_one(sptr, ":%s NOTICE %s :Added K-Line [%s@%s] to server configfile",
-	       me.name, parv[0], user, host);
-#endif
-#endif
-
-  rehashed = YES;
-  dline_in_progress = NO;
-  nextping = timeofday;
-  sendto_realops("%s added K-Line for [%s@%s] [%s]",
-		 parv[0], user, host, reason);
-
-#if defined(LOCKFILE) && !defined(SEPARATE_QUOTE_KLINES_BY_DATE)
-/* MDP - Careful, don't cut & paste that ^O */
-
-  if((k = (struct pkl *)malloc(sizeof(struct pkl))) == NULL)
-    {
-#ifdef SLAVE_SERVERS
-      if(!IsServer(sptr))
-#endif
-	sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		   me.name, parv[0]);
-      return(0);
-    }
-
-#ifdef SLAVE_SERVERS
-  if(IsServer(sptr))
-    {
-      (void)ircsprintf(buffer, "#%s!%s@%s from %s K'd: %s@%s:%s\n",
-		       rcptr->name, rcptr->user->username,
-		       rcptr->user->host, sptr->name,
-		       user, host,
-		       reason);
-    }
-  else
-#endif
-    {
-      (void)ircsprintf(buffer, "#%s!%s@%s K'd: %s@%s:%s\n",
-		       sptr->name, sptr->user->username,
-		       sptr->user->host, user, host,
-		       reason);
-    }
-  
-  if((k->comment = strdup(buffer)) == NULL)
-    {
-      free(k);
-#ifdef SLAVE_SERVERS
-      if(!IsServer(sptr))
-#endif
-	sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		   me.name, parv[0]);
-      return(0);
-    }
-
-  (void)ircsprintf(buffer, "K:%s:%s (%s):%s\n",
-		   host,
-		   reason,
-		   current_date,
-		   user);
-
-  if((k->kline = strdup(buffer)) == NULL)
-    {
-      free(k->comment);
-      free(k); 
-#ifdef SLAVE_SERVERS
-      if(!IsServer(sptr))
-#endif
-	sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		   me.name, parv[0]);
-      return(0);
-    }       
-  k->next = pending_klines;
-  pending_klines = k; 
- 
-  do_pending_klines();
-  return(0);
-
-#else /* LOCKFILE - MDP and not SEPARATE_KLINES_BY_DATE */
-
-  if ((out = open(filename, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
-    {
-#ifdef SLAVE_SERVERS
-      if(!IsServer(sptr))
-#endif
-	sendto_one(sptr, ":%s NOTICE %s :Problem opening %s ",
-		   me.name, parv[0], filename);
-      return 0;
-    }
-
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-  fchmod(out, 0660);
-#endif
-
-#ifdef SLAVE_SERVERS
-  if(IsServer(sptr))
-    {
-      (void)ircsprintf(buffer, "#%s!%s@%s from %s K'd: %s@%s:%s\n",
-		       rcptr->name, rcptr->user->username,
-		       rcptr->user->host, sptr->name, user, host,
-		       reason);
-    }
-  else
-#endif
-    {
-      (void)ircsprintf(buffer, "#%s!%s@%s K'd: %s@%s:%s\n",
-		       sptr->name, sptr->user->username,
-		       sptr->user->host, user, host,
-		       reason);
-    }
-
-  if (safe_write(sptr,parv[0],filename,out,buffer))
-    return 0;
-
-  if (safe_write(sptr,parv[0],filename,out,buffer))
-    return 0;
-
-  (void)ircsprintf(buffer, "K:%s:%s (%s):%s\n",
-		   host,
-		   reason,
-		   current_date,
-		   user);
-
-  if (safe_write(sptr,parv[0],filename,out,buffer))
-    return 0;
-
-  (void)close(out);
-
-#ifdef USE_SYSLOG
-  syslog(LOG_NOTICE, "%s added K-Line for [%s@%s] [%s]",
-	 parv[0],
-	 user,
-	 host,
-	 reason);
-#endif
-
-  return 0;
-#endif /* #ifdef LOCKFILE */
-}
-
-
-/*
- * isnumber()
- * 
- * inputs	- pointer to ascii string in
- * output	- 0 if not an integer number, else the number
- * side effects	- none
-*/
-
-static int isnumber(char *p)
-{
-  int result = 0;
-
-  while(*p)
-    {
-      if(isdigit(*p))
-        {
-          result *= 10;
-          result += ((*p) & 0xF);
-          p++;
-        }
-      else
-        return(0);
-    }
-  /* in the degenerate case where oper does a /quote kline 0 user@host :reason 
-     i.e. they specifically use 0, I am going to return 1 instead
-     as a return value of non-zero is used to flag it as a temporary kline
-  */
-
-  if(result == 0)
-    result = 1;
-  return(result);
-}
-
-#ifdef UNKLINE
-/*
-** m_unkline
-** Added Aug 31, 1997 
-** common (Keith Fralick) fralick@gate.net
-**
-**      parv[0] = sender
-**      parv[1] = address to remove
-*
-*
-* re-worked and cleanedup for use in hybrid-5 
-* -Dianora
-*
-* Added comstuds SEPARATE_QUOTE_KLINES_BY_DATE
-*
-*/
-int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
-{
-  int   in, out;
-  int	pairme = NO;
-  char	buf[BUFSIZE];
-  char  buff[BUFSIZE];	/* matches line definition in s_conf.c */
-  char	temppath[256];
-
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-  static  char    timebuffer[MAX_DATE_STRING];
-  char filenamebuf[1024];
-  struct tm *tmptr;
-#endif
-  char  *filename;		/* filename to use for unkline */
-
-  char	*user,*host;
-  char  *p;
-  int   nread;
-  int   error_on_write = NO;
-  struct stat oldfilestat;
-  mode_t oldumask;
-
-  ircsprintf(temppath, "%s.tmp", klinefile);
-  
-  if (check_registered(sptr))
-    {
-      return -1;
-    }
-
-#ifdef NO_LOCAL_KLINE
-  if(!IsOper(sptr))
-#else
-  if (!IsAnOper(sptr))  
-#endif
-    {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, 
-		 parv[0]);
-      return 0;
-    }
-
-  if (!IsSetOperUnkline(sptr))
-    {
-      sendto_one(sptr,":%s NOTICE %s :You have no U flag",me.name,parv[0]);
-      return 0;
-    }
-
-  if ( parc < 2 )
-    {
-      sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		 me.name, parv[0], "UNKLINE");
-      return 0;
-    }
-
-  if ( (host = strchr(parv[1], '@')) || *parv[1] == '*' )
-    {
-      /* Explicit user@host mask given */
-
-      if(host)			/* Found user@host */
-	{
-	  user = parv[1];	/* here is user part */
-	  *(host++) = '\0';	/* and now here is host */
-	}
-      else
-	{
-	  user = "*";		/* no @ found, assume its *@somehost */
-	  host = parv[1];
-	}
-    }
-  else
-    {
-      sendto_one(sptr, ":%s NOTICE %s :Invalid parameters",
-		 me.name, parv[0]);
-      return 0;
-    }
-
-  if( (user[0] == '*') && (user[1] == '\0')
-      && (host[0] == '*') && (host[1] == '\0') )
-    {
-      sendto_one(sptr, ":%s NOTICE %s :Cannot UNK-Line everyone",
-		 me.name, parv[0]);
-      return 0;
-    }
-
-  if(remove_tkline_match(host,user))
-    {
-      sendto_one(sptr, ":%s NOTICE %s :Un-klined [%s@%s] from temporary k-lines",
-		 me.name, parv[0],user, host);
-      sendto_ops("%s has removed the temporary K-Line for: [%s@%s]",
-		 parv[0], user, host );
-
-#ifdef USE_SYSLOG
-      syslog(LOG_NOTICE, "%s removed temporary K-Line for [%s@%s]",
-	     parv[0],
-	     user,
-	     host);
-#endif
-      return 0;
-    }
-
-#if defined(LOCKFILE) && !defined(SEPARATE_QUOTE_KLINES_BY_DATE)
-  if(lock_kline_file() < 0 )
-    {
-      sendto_one(sptr,":%s NOTICE %s :%s is locked try again in a few minutes",
-	me.name,parv[0],klinefile);
-      return -1;
-    }
-#endif
-
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-  tmptr = localtime(&NOW);
-  strftime(timebuffer, MAX_DATE_STRING, "%Y%m%d", tmptr);
-  (void)sprintf(filenamebuf, "%s.%s", klinefile, timebuffer);
-  filename = filenamebuf;
-#else
-  filename = klinefile;
-#endif			
-
-  if( (in = open(filename, O_RDONLY)) == -1)
-    {
-      sendto_one(sptr, ":%s NOTICE %s :Cannot open %s",
-	me.name,parv[0],filename);
-#if defined(LOCKFILE) && !defined(SEPARATE_QUOTE_KLINES_BY_DATE)
-      (void)unlink(LOCKFILE);
-#endif
-      return 0;
-    }
-  if(fstat(in, &oldfilestat) < 0)	/* Save the old file mode */
-    oldfilestat.st_mode = 0644;
-
-  oldumask = umask(0);			/* ircd is normally too paranoid */
-  if( (out = open(temppath, O_WRONLY|O_CREAT, oldfilestat.st_mode)) == -1)
-    {
-      sendto_one(sptr, ":%s NOTICE %s :Cannot open %s",
-        me.name,parv[0],temppath);
-      (void)close(in);
-#if defined (LOCKFILE) && !defined(SEPARATE_QUOTE_KLINES_BY_DATE)
-      (void)unlink(LOCKFILE);
-#endif
-      umask(oldumask);			/* Restore the old umask */
-      return 0;
-    }
-    umask(oldumask);			/* Restore the old umask */
-
-/*
-#Dianora!db@ts2-11.ottawa.net K'd: foo@bar:No reason
-K:bar:No reason (1997/08/30 14.56):foo
-*/
-
-  while((nread = dgets(in, buf, sizeof(buf)) ) > 0) 
-    {
-      buf[nread] = '\0';
-
-      if((buf[1] == ':') && ((buf[0] == 'k') || (buf[0] == 'K')))
-	{
-	  /* its a K: line */
-	  char *found_host;
-	  char *found_user;
-	  char *found_comment;
-
-	  strncpy(buff,buf,BUFSIZE);	/* extra paranoia */
-
-	  p = strchr(buff,'\n');
-	  if(p)
-	    *p = '\0';
-	  p = strchr(buff,'\r');
-	  if(p)
-	    *p = '\0';
-
-	  found_host = buff + 2;	/* point past the K: */
-	  p = strchr(found_host,':');
-	  if(p == (char *)NULL)
-	    {
-	      sendto_one(sptr, ":%s NOTICE %s :K-Line file corrupted",
-			 me.name, parv[0]);
-	      sendto_one(sptr, ":%s NOTICE %s :Couldn't find host",
-			 me.name, parv[0]);
-              if(!error_on_write)
-                error_on_write = flush_write(sptr,
-		  out,buf,strlen(buf),temppath);
-	      continue;		/* This K line is corrupted ignore */
-	    }
-	  *p = '\0';
-	  p++;
- 
-	  found_comment = p;
-	  p = strchr(found_comment,':');
-	  if(p == (char *)NULL)
-	    {
-	      sendto_one(sptr, ":%s NOTICE %s :K-Line file corrupted",
-			 me.name, parv[0]);
-	      sendto_one(sptr, ":%s NOTICE %s :Couldn't find comment",
-			 me.name, parv[0]);
-              if(!error_on_write)
-                error_on_write = flush_write(sptr,
-		  out,buf,strlen(buf),temppath);
-	      continue;		/* This K line is corrupted ignore */
-	    }
-          *p = '\0';
-          p++;
-	  found_user = p;
-
-/*
- * Ok, if its not an exact match on either the user or the host
- * then, write the K: line out, and I add it back to the K line
- * tree
- */
-	  if(strcasecmp(host,found_host) || strcasecmp(user,found_user))
-            {
-              if(!error_on_write)
-                error_on_write = flush_write(sptr,
-		  out,buf,strlen(buf),temppath);
-            }
-          else
-	    pairme++;
-
-	}				
-      else if(buf[0] == '#')
-	{
-	  char *userathost;
-	  char *found_user;
-	  char *found_host;
-
-	  strncpy(buff,buf,BUFSIZE);
-/*
-#Dianora!db@ts2-11.ottawa.net K'd: foo@bar:No reason
-K:bar:No reason (1997/08/30 14.56):foo
-
-If its a comment coment line, i.e.
-#ignore this line
-Then just ignore the line
-*/
-	  p = strchr(buff,':');
-	  if(p == (char *)NULL)
-	    {
-              if(!error_on_write)
-                error_on_write = flush_write(sptr,
-		  out,buf,strlen(buf),temppath);
-	      continue;
-	    }
-	  *p = '\0';
-	  p++;
-
-	  userathost = p;
-	  p = strchr(userathost,':');
-
-	  if(p == (char *)NULL)
-	    {
-              if(!error_on_write)
-                error_on_write = flush_write(sptr,
-		  out,buf,strlen(buf),temppath);
-	      continue;
-	    }
-          *p = '\0';
-
-	  while(*userathost == ' ')
-	    userathost++;
-
-	  found_user = userathost;
-	  p = strchr(found_user,'@');
-	  if(p == (char *)NULL)
-	    {
-              if(!error_on_write)
-                error_on_write = flush_write(sptr,
-		  out,buf,strlen(buf),temppath);
-	      continue;
-	    }
-	  *p = '\0';
-	  found_host = p;
-	  found_host++;
-
-	  if( (strcasecmp(found_host,host)) || (strcasecmp(found_user,user)) )
-	    {
-              if(!error_on_write)
-                error_on_write = flush_write(sptr,
-		  out,buf,strlen(buf),temppath);
-            }
-	}
-      else	/* its the ircd.conf file, and not a K line or comment */
-        {
-	  if(!error_on_write)
-            error_on_write = flush_write(sptr,
-              out,buf,strlen(buf),temppath);
-        }
-    }
-
-  (void)close(in);
-
-/* The result of the rename should be checked too... oh well */
-/* If there was an error on a write above, then its been reported
- * and I am not going to trash the original kline /conf file
- * -Dianora
- */
-  if( (!error_on_write) && (close(out) >= 0) )
-    {
-      (void)rename(temppath, filename);
-      rehash(cptr,sptr,0);
-    }
-  else
-    {
-      sendto_one(sptr,":%s NOTICE %s :Couldn't write temp kline file, aborted",
-        me.name,parv[0]);
-#if defined (LOCKFILE) && !defined(SEPARATE_QUOTE_KLINES_BY_DATE)
-      (void)unlink(LOCKFILE);
-#endif
-      return -1;
-    }
-
-#if defined (LOCKFILE) && !defined(SEPARATE_QUOTE_KLINES_BY_DATE)
-  (void)unlink(LOCKFILE);
-#endif
-	
-  if(!pairme)
-    {
-      sendto_one(sptr, ":%s NOTICE %s :No K-Line for %s@%s",
-		 me.name, parv[0],user,host);
-      return 0;
-    }
-  sendto_one(sptr, ":%s NOTICE %s :K-Line for [%s@%s] is removed", 
-	     me.name, parv[0], user,host);
-  sendto_ops("%s has removed the K-Line for: [%s@%s]",
-	     parv[0], user, host);
-
-#ifdef USE_SYSLOG
-      syslog(LOG_NOTICE, "%s removed K-Line for [%s@%s]",
-	     parv[0],
-	     user,
-	     host);
-#endif
-  return 0; 
-}
-
-/*
- * flush_write()
- *
- * inputs	- pointer to client structure of oper requesting unkline
- *              - out is the file descriptor
- *		- buf is the buffer to write
- *		- ntowrite is the expected number of character to be written
- *		- temppath is the temporary file name to be written
- * output	- YES for error on write
- *		- NO for success
- * side effects	- if successful, the buf is written to output file
- *                if a write failure happesn, and the file pointed to
- *		  by temppath, if its non NULL, is removed.
- *
- * The idea here is, to be as robust as possible when writing to the 
- * kline file.
- *
- * -Dianora
- */
-
-static int flush_write(aClient *sptr,
-  int out,char *buf,int ntowrite,char *temppath)
-{
-  int nwritten;
-  int error_on_write = NO;
-
-  nwritten = write(out,buf,ntowrite);
-  if(nwritten != ntowrite)
-    {
-      sendto_one(sptr,":%s NOTICE %s :Unable to write to %s",
-        me.name, sptr->name, temppath );
-      error_on_write = YES;
-      (void)close(out);
-      if(temppath != (char *)NULL)
-        (void)unlink(temppath);
-    }
-  return(error_on_write);
-}
-
-/*
-** remove_tkline_match()
-*
-* un-kline a temporary k-line. 
-*
-*/
-static int remove_tkline_match(char *host,char *user)
-{
-  aConfItem *kill_list_ptr;
-  aConfItem *last_kill_ptr=(aConfItem *)NULL;
-
-  if(!temporary_klines)
-    return NO;
-
-  kill_list_ptr = temporary_klines;
-
-  while(kill_list_ptr)
-    {
-      if( !strcasecmp(kill_list_ptr->host,host)
-	  && !strcasecmp(kill_list_ptr->name,user))	/* match */
-	{
-	  if(last_kill_ptr)
-	    last_kill_ptr->next = kill_list_ptr->next;
-	  else
-	    temporary_klines = kill_list_ptr->next;
-	  free_conf(kill_list_ptr);
-	  return YES;
-	}
-      else
-	{
-	  last_kill_ptr = kill_list_ptr;
-	  kill_list_ptr = kill_list_ptr->next;
-	}
-    }
-  return NO;
-}
-#endif
-
-/*
- * re-worked a tad
- * added Rodders dated KLINE code
- * -Dianora
- *
- * BUGS:	There is a concern here with LOCKFILE handling
- * the LOCKFILE code only knows how to talk to the kline file.
- * Having an extra define allowing D lines to go into ircd.conf or
- * the kline file complicates life. LOCKFILE code should still respect
- * any lock placed.. The fix I believe is that we are going to have
- * to also pass along in the struct pkl struct, which file the entry
- * is to go into... or.. just remove the DLINES_IN_KPATH option.
- * -Dianora
- */
-
-int     m_dline(aClient *cptr,
-		aClient *sptr,
-		int parc,
-		char *parv[])
-{
-  char *host, *reason;
-  char *p;
-  aClient *acptr;
-  char cidr_form_host[64];
-  unsigned long ip_host;
-  unsigned long ip_mask;
-  aConfItem *aconf;
-#if defined(LOCKFILE) && defined(DLINES_IN_KPATH)
-  struct pkl *k;
-#else
-  int out;
-#endif
-  char buffer[1024];
-  char *current_date;
-
-#ifdef NO_LOCAL_KLINE
-  if (!MyClient(sptr) || !IsOper(sptr))
-#else
-  if (!MyClient(sptr) || !IsAnOper(sptr))
-#endif
-    {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-      return 0;
-    }
-
-  if(!IsSetOperK(sptr))
-    {
-      sendto_one(sptr,":%s NOTICE %s :You have no K flag",me.name,parv[0]);
-      return 0;
-    }
-
-  if ( parc < 2 )
-    {
-      sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		 me.name, parv[0], "KLINE");
-      return 0;
-    }
-
-  host = parv[1];
-  strncpy(cidr_form_host,host,32);
-
-  if((p = strchr(cidr_form_host,'*')))
-    {
-      *p++ = '0';
-      *p++ = '/';
-      *p++ = '2';
-      *p++ = '4';
-      *p++ = '\0';
-      host = cidr_form_host;
-    }
-
-  if(!is_address(host,&ip_host,&ip_mask))
-    {
-      if (!(acptr = find_chasing(sptr, parv[1], NULL)))
-	return 0;
-
-      if(!acptr->user)
-	return 0;
-
-      if (IsServer(acptr))
-	{
-	  sendto_one(sptr,
-		     ":%s NOTICE %s :Can't DLINE a server silly",
-		     me.name, parv[0]);
-	  return 0;
-	}
-	      
-      if(!MyConnect(acptr))
-	{
-	  sendto_one(sptr,
-		     ":%s NOTICE :%s :Can't DLINE nick on another server",
-		     me.name, parv[0]);
-	  return 0;
-	}
-
-      if(IsElined(acptr))
-	{
-	  sendto_one(sptr,
-		     ":%s NOTICE %s :%s is E-lined",me.name,parv[0],
-		     acptr->name);
-	  return 0;
-	}
-
-      strncpy(cidr_form_host,inetntoa((char *)&acptr->ip),32);
-      
-      p = strchr(cidr_form_host,'.');
-      if(!p)
-	return 0;
-      /* 192. <- p */
-
-      p++;
-      p = strchr(p,'.');
-      if(!p)
-	return 0;
-      /* 192.168. <- p */
-
-      p++;
-      p = strchr(p,'.');
-      if(!p)
-	return 0;
-      /* 192.168.0. <- p */
-
-      p++;
-      *p++ = '0';
-      *p++ = '/';
-      *p++ = '2';
-      *p++ = '4';
-      *p++ = '\0';
-      host = cidr_form_host;
-
-      ip_mask = 0xFFFFFF00L;
-      ip_host = ntohl(acptr->ip.s_addr);
-    }
-
-
-  if (parc > 2)	/* host :reason */
-    {
-      if(strchr(parv[2], ':'))
-	{
-	  sendto_one(sptr,
-		     ":%s NOTICE %s :Invalid character ':' in comment",
-		     me.name, parv[0]);
-	  return 0;
-	}
-
-      if(strchr(parv[2], '#'))
-        {
-          sendto_one(sptr,
-                     ":%s NOTICE %s :Invalid character '#' in comment",
-                     me.name, parv[0]);
-          return 0;
-        }
-
-      if(*parv[2])
-	reason = parv[2];
-      else
-	reason = "No reason";
-    }
-  else
-    reason = "No reason";
-
-
-  if((ip_mask & 0xFFFFFF00) ^ 0xFFFFFF00)
-    {
-      if(ip_mask != 0xFFFFFFFF)
-	{
-	  sendto_one(sptr, ":%s NOTICE %s :Can't use a mask less than 24 with dline",
-		     me.name,
-		     parv[0]);
-	  return 0;
-	}
-    }
-
-#ifdef NON_REDUNDANT_KLINES
-  if( (aconf = match_Dline(ip_host)) )
-     {
-       char *reason;
-       reason = aconf->passwd ? aconf->passwd : "<No Reason>";
-       if(IsConfElined(aconf))
-	 sendto_one(sptr, ":%s NOTICE %s :[%s] is (E)d-lined by [%s] - %s",
-		    me.name,
-		    parv[0],
-		    host,
-		    aconf->host,reason);
-	 else
-	   sendto_one(sptr, ":%s NOTICE %s :[%s] already D-lined by [%s] - %s",
-		      me.name,
-		      parv[0],
-		      host,
-		      aconf->host,reason);
-      return 0;
-       
-     }
-#endif
-
-  current_date = smalldate((time_t) 0);
-
-  (void)ircsprintf(buffer, "%s (%s)",reason,current_date);
-
-  aconf = make_conf();
-  aconf->status = CONF_DLINE;
-  DupString(aconf->host,host);
-  DupString(aconf->passwd,buffer);
-
-  aconf->ip = ip_host;
-  aconf->ip_mask &= ip_mask;
-
-  add_Dline(aconf);
-  sendto_realops("%s added D-Line for [%s] [%s]",
-		 parv[0], host, reason);
-
-#ifdef DLINES_IN_KPATH
-  sendto_one(sptr, ":%s NOTICE %s :Added D-Line [%s] to server klinefile",
-	     me.name, parv[0], host);
-#else
-  sendto_one(sptr, ":%s NOTICE %s :Added D-Line [%s] to server configfile",
-          me.name, parv[0], host);
-#endif
-
-  /*
-  ** I moved the following 2 lines up here
-  ** because we still want the server to
-  ** hunt for 'targetted' clients even if
-  ** there are problems adding the D-line
-  ** to the appropriate file. -ThemBones
-  */
-  rehashed = YES;
-  dline_in_progress = YES;
-  nextping = timeofday;
-
-/* MDP - Careful, don't cut & paste that ^O */
-#if defined(LOCKFILE) && defined(DLINES_IN_KPATH)
-
-  if((k = (struct pkl *)MyMalloc(sizeof(struct pkl))) == NULL)
-    {
-      sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		 me.name, parv[0]);
-      return(0);
-    }
-
-  (void)ircsprintf(buffer, "#%s!%s@%s D'd: %s:%s (%s)\n",
-		   sptr->name, sptr->user->username,
-		   sptr->user->host, host,
-		   reason, current_date);
-
-  if((k->comment = strdup(buffer)) == NULL)
-    {
-      free(k);
-      sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		 me.name, parv[0]);
-      return(0);
-    }
-
-  (void)ircsprintf(buffer, "D:%s:%s (%s)\n",
-		   host,
-		   reason,
-		   current_date);
-
-  if((k->kline = strdup(buffer)) == NULL)
-    {
-      free(k->comment);
-      free(k); 
-      sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		 me.name, parv[0]);
-      return(0);
-    }       
-  k->next = pending_klines;
-  pending_klines = k; 
- 
-  do_pending_klines();
-  return(0);
-
-#else /* LOCKFILE - MDP */
-
-  if ((out = open(dlinefile, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
-    {
-      sendto_one(sptr, ":%s NOTICE %s :Problem opening %s ",
-		 me.name, parv[0], dlinefile);
-      return 0;
-    }
-
-  (void)ircsprintf(buffer, "#%s!%s@%s D'd: %s:%s (%s)\n",
-		   sptr->name, sptr->user->username,
-		   sptr->user->host, host,
-		   reason, current_date);
-
-  if (safe_write(sptr,parv[0],dlinefile,out,buffer))
-    return 0;
-
-  (void)ircsprintf(buffer, "D:%s:%s (%s)\n",
-		   host,
-		   reason,
-		   current_date);
-
-  if (safe_write(sptr,parv[0],dlinefile,out,buffer))
-    return 0;
-
-  (void)close(out);
-  return 0;
-#endif
-}
-
-
 #if defined(OPER_REHASH) || defined(LOCOP_REHASH)
 /*
 ** m_rehash
@@ -4995,7 +3154,7 @@ int	m_rehash(aClient *cptr,
 # endif
 #endif
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
 
@@ -5003,7 +3162,7 @@ int	m_rehash(aClient *cptr,
     {
       if(irccmp(parv[1],"DNS") == 0)
 	{
-	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], "DNS");
+	  sendto_one(sptr, form_str(RPL_REHASHING), me.name, parv[0], "DNS");
 #ifdef CUSTOM_ERR
           sendto_ops("%s is rehashing DNS while whistling innocently",
 #else
@@ -5026,7 +3185,7 @@ int	m_rehash(aClient *cptr,
 	}
       else if(irccmp(parv[1],"TKLINES") == 0)
 	{
-	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], "temp klines");
+	  sendto_one(sptr, form_str(RPL_REHASHING), me.name, parv[0], "temp klines");
 	  flush_temp_klines();
 #ifdef CUSTOM_ERR
 	  sendto_ops("%s is clearing temp klines while whistling innocently",
@@ -5039,7 +3198,7 @@ int	m_rehash(aClient *cptr,
 #ifdef GLINES
       else if(irccmp(parv[1],"GLINES") == 0)
 	{
-	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], "g-lines");
+	  sendto_one(sptr, form_str(RPL_REHASHING), me.name, parv[0], "g-lines");
 	  flush_glines();
 #ifdef CUSTOM_ERR
 	  sendto_ops("%s is clearing G-lines while whistling innocently",
@@ -5052,7 +3211,7 @@ int	m_rehash(aClient *cptr,
 #endif
       else if(irccmp(parv[1],"GC") == 0)
 	{
-	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], "garbage collecting");
+	  sendto_one(sptr, form_str(RPL_REHASHING), me.name, parv[0], "garbage collecting");
 	  block_garbage_collect();
 #ifdef CUSTOM_ERR
 	  sendto_ops("%s is garbage collecting while whistling innocently",
@@ -5093,7 +3252,7 @@ int	m_rehash(aClient *cptr,
 	}
       else if(irccmp(parv[1],"dlines") == 0)
 	{
-	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
+	  sendto_one(sptr, form_str(RPL_REHASHING), me.name, parv[0], configfile);
           /* this does a full rehash right now, so report it as such */
 #ifdef CUSTOM_ERR
 	  sendto_ops("%s is rehashing dlines from server config file while whistling innocently",
@@ -5131,7 +3290,7 @@ int	m_rehash(aClient *cptr,
     }
   else
     {
-      sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
+      sendto_one(sptr, form_str(RPL_REHASHING), me.name, parv[0], configfile);
 #ifdef CUSTOM_ERR
       sendto_ops("%s is rehashing server config file while whistling innocently",
 #else
@@ -5167,7 +3326,7 @@ int	m_restart(aClient *cptr,
 # endif
 #endif
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
 #ifdef USE_SYSLOG
@@ -5223,10 +3382,10 @@ int	m_trace(aClient *cptr,
 	
 	ac2ptr = next_client_double(client, tname);
 	if (ac2ptr)
-	  sendto_one(sptr, rpl_str(RPL_TRACELINK), me.name, parv[0],
+	  sendto_one(sptr, form_str(RPL_TRACELINK), me.name, parv[0],
 		     version, debugmode, tname, ac2ptr->from->name);
 	else
-	  sendto_one(sptr, rpl_str(RPL_TRACELINK), me.name, parv[0],
+	  sendto_one(sptr, form_str(RPL_TRACELINK), me.name, parv[0],
 		     version, debugmode, tname, "ac2ptr_is_NULL!!");
 	return 0;
       }
@@ -5244,7 +3403,7 @@ int	m_trace(aClient *cptr,
         {
 	  /* safe enough to give this on a local connect only */
 	  if(MyClient(sptr))
-	    sendto_one(sptr,rpl_str(RPL_LOAD2HI),me.name,parv[0]);
+	    sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,parv[0]);
           return 0;
         }
       else
@@ -5256,7 +3415,7 @@ int	m_trace(aClient *cptr,
       if (parv[1] && !index(parv[1],'.') && (index(parv[1], '*')
           || index(parv[1], '?'))) /* bzzzt, no wildcard nicks for nonopers */
         {
-          sendto_one(sptr, rpl_str(RPL_ENDOFTRACE),me.name,
+          sendto_one(sptr, form_str(RPL_ENDOFTRACE),me.name,
                      parv[0], parv[1]);
           return 0;
         }
@@ -5284,7 +3443,7 @@ int	m_trace(aClient *cptr,
         {
 	  /* this should only be reached if the matching
 	     target is this server */
-	  sendto_one(sptr, rpl_str(RPL_ENDOFTRACE),me.name,
+	  sendto_one(sptr, form_str(RPL_ENDOFTRACE),me.name,
 		     parv[0], tname);
           return 0;
         }
@@ -5295,7 +3454,7 @@ int	m_trace(aClient *cptr,
 
       if (IsAnOper(acptr))
         {
-          sendto_one(sptr, rpl_str(RPL_TRACEOPERATOR),
+          sendto_one(sptr, form_str(RPL_TRACEOPERATOR),
                      me.name, parv[0], class,
 		     name, 
 		     IsAnOper(sptr)?ip:"127.0.0.1",
@@ -5304,21 +3463,21 @@ int	m_trace(aClient *cptr,
         }
       else
         {
-          sendto_one(sptr,rpl_str(RPL_TRACEUSER),
+          sendto_one(sptr,form_str(RPL_TRACEUSER),
                      me.name, parv[0], class,
 		     name, 
 		     IsIPHidden(acptr)?"127.0.0.1":ip,
 		     now - acptr->lasttime,
 		     (acptr->user)?(now - acptr->user->last):0);
         }
-      sendto_one(sptr, rpl_str(RPL_ENDOFTRACE),me.name,
+      sendto_one(sptr, form_str(RPL_ENDOFTRACE),me.name,
 		 parv[0], tname);
       return 0;
     }
 
   if (dow && lifesux && !IsOper(sptr))
     {
-      sendto_one(sptr,rpl_str(RPL_LOAD2HI),me.name,parv[0]);
+      sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,parv[0]);
       return 0;
     }
 
@@ -5375,12 +3534,12 @@ int	m_trace(aClient *cptr,
       switch(acptr->status)
 	{
 	case STAT_CONNECTING:
-	  sendto_one(sptr, rpl_str(RPL_TRACECONNECTING), me.name,
+	  sendto_one(sptr, form_str(RPL_TRACECONNECTING), me.name,
 		     parv[0], class, name);
 	  cnt++;
 	  break;
 	case STAT_HANDSHAKE:
-	  sendto_one(sptr, rpl_str(RPL_TRACEHANDSHAKE), me.name,
+	  sendto_one(sptr, form_str(RPL_TRACEHANDSHAKE), me.name,
 		     parv[0], class, name);
 	  cnt++;
 	  break;
@@ -5388,7 +3547,7 @@ int	m_trace(aClient *cptr,
 	  break;
 	case STAT_UNKNOWN:
 /* added time -Taner */
-	  sendto_one(sptr, rpl_str(RPL_TRACEUNKNOWN),
+	  sendto_one(sptr, form_str(RPL_TRACEUNKNOWN),
 		     me.name, parv[0], class, name, ip,
 		     acptr->firsttime ? timeofday - acptr->firsttime : -1);
 	  cnt++;
@@ -5403,14 +3562,14 @@ int	m_trace(aClient *cptr,
 	    {
 	      if (IsAnOper(acptr))
 		sendto_one(sptr,
-			   rpl_str(RPL_TRACEOPERATOR),
+			   form_str(RPL_TRACEOPERATOR),
 			   me.name,
 			   parv[0], class,
 			   name, IsAnOper(sptr)?ip:"127.0.0.1",
 			   now - acptr->lasttime,
 			   (acptr->user)?(now - acptr->user->last):0);
 	      else
-		sendto_one(sptr,rpl_str(RPL_TRACEUSER),
+		sendto_one(sptr,form_str(RPL_TRACEUSER),
 			   me.name, parv[0], class,
 			   name,
 			   IsIPHidden(acptr)?"127.0.0.1":ip,
@@ -5421,13 +3580,13 @@ int	m_trace(aClient *cptr,
 	  break;
 	case STAT_SERVER:
 	  if (acptr->serv->user)
-	    sendto_one(sptr, rpl_str(RPL_TRACESERVER),
+	    sendto_one(sptr, form_str(RPL_TRACESERVER),
 		       me.name, parv[0], class, link_s[i],
 		       link_u[i], name, acptr->serv->by,
 		       acptr->serv->user->username,
 		       acptr->serv->user->host, now - acptr->lasttime);
 	  else
-	    sendto_one(sptr, rpl_str(RPL_TRACESERVER),
+	    sendto_one(sptr, form_str(RPL_TRACESERVER),
 		       me.name, parv[0], class, link_s[i],
 		       link_u[i], name, *(acptr->serv->by) ?
 		       acptr->serv->by : "*", "*",
@@ -5435,12 +3594,12 @@ int	m_trace(aClient *cptr,
 	  cnt++;
 	  break;
 	case STAT_LOG:
-	  sendto_one(sptr, rpl_str(RPL_TRACELOG), me.name,
+	  sendto_one(sptr, form_str(RPL_TRACELOG), me.name,
 		     parv[0], LOGFILE, acptr->port);
 	  cnt++;
 	  break;
 	default: /* ...we actually shouldn't come here... --msa */
-	  sendto_one(sptr, rpl_str(RPL_TRACENEWTYPE), me.name,
+	  sendto_one(sptr, form_str(RPL_TRACENEWTYPE), me.name,
 		     parv[0], name);
 	  cnt++;
 	  break;
@@ -5454,25 +3613,25 @@ int	m_trace(aClient *cptr,
     {
       if (cnt)
 	{
-	  sendto_one(sptr, rpl_str(RPL_ENDOFTRACE),me.name,
+	  sendto_one(sptr, form_str(RPL_ENDOFTRACE),me.name,
 		     parv[0],tname);
 	  return 0;
 	}
       /* let the user have some idea that its at the end of the
        * trace
        */
-      sendto_one(sptr, rpl_str(RPL_TRACESERVER),
+      sendto_one(sptr, form_str(RPL_TRACESERVER),
 		 me.name, parv[0], 0, link_s[me.fd],
 		 link_u[me.fd], me.name, "*", "*", me.name);
-      sendto_one(sptr, rpl_str(RPL_ENDOFTRACE),me.name,
+      sendto_one(sptr, form_str(RPL_ENDOFTRACE),me.name,
 		 parv[0],tname);
       return 0;
     }
   for (cltmp = FirstClass(); doall && cltmp; cltmp = NextClass(cltmp))
     if (Links(cltmp) > 0)
-      sendto_one(sptr, rpl_str(RPL_TRACECLASS), me.name,
+      sendto_one(sptr, form_str(RPL_TRACECLASS), me.name,
 		 parv[0], Class(cltmp), Links(cltmp));
-  sendto_one(sptr, rpl_str(RPL_ENDOFTRACE),me.name, parv[0],tname);
+  sendto_one(sptr, form_str(RPL_ENDOFTRACE),me.name, parv[0],tname);
   return 0;
 }
 
@@ -5515,10 +3674,10 @@ int	m_ltrace(aClient *cptr,
 	
 	ac2ptr = next_client(client, tname);
 	if (ac2ptr)
-	  sendto_one(sptr, rpl_str(RPL_TRACELINK), me.name, parv[0],
+	  sendto_one(sptr, form_str(RPL_TRACELINK), me.name, parv[0],
 		     version, debugmode, tname, ac2ptr->from->name);
         else
-	  sendto_one(sptr, rpl_str(RPL_TRACELINK), me.name, parv[0],
+	  sendto_one(sptr, form_str(RPL_TRACELINK), me.name, parv[0],
 		     version, debugmode, tname, "ac2ptr_is_NULL!!");
 	return 0;
       }
@@ -5544,7 +3703,7 @@ int	m_ltrace(aClient *cptr,
                         
   if (dow && lifesux && !IsOper(sptr))
     {
-      sendto_one(sptr,rpl_str(RPL_LOAD2HI),me.name,parv[0]);
+      sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,parv[0]);
       return 0;
     }
 
@@ -5581,7 +3740,7 @@ int	m_ltrace(aClient *cptr,
       switch(acptr->status)
 	{
 	case STAT_HANDSHAKE:
-	  sendto_one(sptr, rpl_str(RPL_TRACEHANDSHAKE), me.name,
+	  sendto_one(sptr, form_str(RPL_TRACEHANDSHAKE), me.name,
 		     parv[0], class, name);
 	  cnt++;
 	  break;
@@ -5595,7 +3754,7 @@ int	m_ltrace(aClient *cptr,
 	    {
 	      if (IsAnOper(acptr))
 		sendto_one(sptr,
-			   rpl_str(RPL_TRACEOPERATOR),
+			   form_str(RPL_TRACEOPERATOR),
 			   me.name, parv[0], class,
 			   name, 
 			   IsAnOper(sptr)?ip:"127.0.0.1", 
@@ -5606,13 +3765,13 @@ int	m_ltrace(aClient *cptr,
 	  break;
 	case STAT_SERVER:
 	  if (acptr->serv->user)
-	    sendto_one(sptr, rpl_str(RPL_TRACESERVER),
+	    sendto_one(sptr, form_str(RPL_TRACESERVER),
 		       me.name, parv[0], class, link_s[i],
 		       link_u[i], name, acptr->serv->by,
 		       acptr->serv->user->username,
 		       acptr->serv->user->host, now - acptr->lasttime);
 	  else
-	    sendto_one(sptr, rpl_str(RPL_TRACESERVER),
+	    sendto_one(sptr, form_str(RPL_TRACESERVER),
 		       me.name, parv[0], class, link_s[i],
 		       link_u[i], name, *(acptr->serv->by) ?
 		       acptr->serv->by : "*", "*",
@@ -5620,12 +3779,12 @@ int	m_ltrace(aClient *cptr,
 	  cnt++;
 	  break;
 	case STAT_LOG:
-	  sendto_one(sptr, rpl_str(RPL_TRACELOG), me.name,
+	  sendto_one(sptr, form_str(RPL_TRACELOG), me.name,
 		     parv[0], LOGFILE, acptr->port);
 	  cnt++;
 	  break;
 	default: /* ...we actually shouldn't come here... --msa */
-	  sendto_one(sptr, rpl_str(RPL_TRACENEWTYPE), me.name,
+	  sendto_one(sptr, form_str(RPL_TRACENEWTYPE), me.name,
 		     parv[0], name);
 	  cnt++;
 	  break;
@@ -5642,7 +3801,7 @@ int	m_ltrace(aClient *cptr,
       /* let the user have some idea that its at the end of the
        * trace
        */
-      sendto_one(sptr, rpl_str(RPL_TRACESERVER),
+      sendto_one(sptr, form_str(RPL_TRACESERVER),
 		 me.name, parv[0], 0, link_s[me.fd],
 		 link_u[me.fd], me.name, "*", "*", me.name);
       return 0;
@@ -5670,7 +3829,7 @@ int	m_motd(aClient *cptr,
 	{
 	  /* safe enough to give this on a local connect only */
 	  if(MyClient(sptr))
-	    sendto_one(sptr,rpl_str(RPL_LOAD2HI),me.name,parv[0]);
+	    sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,parv[0]);
 	  return 0;
 	}
       else
@@ -5716,10 +3875,10 @@ int send_motd(aClient *cptr,
 
   if (motd == (aMessageFile *)NULL)
     {
-      sendto_one(sptr, err_str(ERR_NOMOTD), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOMOTD), me.name, parv[0]);
       return 0;
     }
-  sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.name, parv[0], me.name);
+  sendto_one(sptr, form_str(RPL_MOTDSTART), me.name, parv[0], me.name);
 
   sendto_one(sptr,":%s NOTICE %s :%s",me.name,parv[0],motd_last_changed_date);
 
@@ -5727,11 +3886,11 @@ int send_motd(aClient *cptr,
   while(temp)
     {
       sendto_one(sptr,
-		 rpl_str(RPL_MOTD),
+		 form_str(RPL_MOTD),
 		 me.name, parv[0], temp->line);
       temp = temp->next;
     }
-  sendto_one(sptr, rpl_str(RPL_ENDOFMOTD), me.name, parv[0]);
+  sendto_one(sptr, form_str(RPL_ENDOFMOTD), me.name, parv[0]);
   return 0;
 }
 
@@ -5925,7 +4084,7 @@ int	m_close(aClient *cptr,
 
   if (!MyOper(sptr))
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
 
@@ -5936,12 +4095,12 @@ int	m_close(aClient *cptr,
       if (!IsUnknown(acptr) && !IsConnecting(acptr) &&
 	  !IsHandshake(acptr))
 	continue;
-      sendto_one(sptr, rpl_str(RPL_CLOSING), me.name, parv[0],
+      sendto_one(sptr, form_str(RPL_CLOSING), me.name, parv[0],
 		 get_client_name(acptr, TRUE), acptr->status);
       (void)exit_client(acptr, acptr, acptr, "Oper Closing");
       closed++;
     }
-  sendto_one(sptr, rpl_str(RPL_CLOSEEND), me.name, parv[0], closed);
+  sendto_one(sptr, form_str(RPL_CLOSEEND), me.name, parv[0], closed);
   return 0;
 }
 
@@ -5964,7 +4123,7 @@ int	m_die(aClient *cptr,
 # endif
 #endif
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
 
@@ -6010,87 +4169,6 @@ int	m_die(aClient *cptr,
 }
 #endif
 
-/* Shadowfax's LOCKFILE code */
-#ifdef LOCKFILE
-
-int lock_kline_file()
-{
-  int fd;
-
-  /* Create Lockfile */
-  if((fd = open(LOCKFILE, O_WRONLY|O_CREAT|O_EXCL, 0644)) < 0)
-    {
-      sendto_realops("%s is locked, klines pending",klinefile);
-      pending_kline_time = time(NULL);
-      return(-1);
-    }
-  (void)close(fd);
-  return(1);
-}
-
-void do_pending_klines()
-{
-  int fd;
-  char s[20];
-  struct pkl *k, *ok;
-
-  if(!pending_klines)
-    return;
-                        
-  /* Create Lockfile */
-  if((fd = open(LOCKFILE, O_WRONLY|O_CREAT|O_EXCL, 0644)) < 0)
-    {
-      sendto_realops("%s is locked, klines pending",klinefile);
-      pending_kline_time = time(NULL);
-      return;
-    }
-  (void)ircsprintf(s, "%d\n", getpid());
-  (void)write(fd, s, strlen(s));
-  close(fd);
-  
-  /* Open klinefile */   
-  if ((fd = open(klinefile, O_WRONLY|O_APPEND|O_CREAT,0644))==-1)
-    {
-      sendto_realops("Pending klines cannot be written, cannot open %s",
-                 klinefile);
-      unlink(LOCKFILE);
-      return; 
-    }
-
-  /* Add the Pending Klines */
-  k = pending_klines;
-  while(k)
-    {
-      write(fd, k->comment, strlen(k->comment));
-      write(fd, k->kline, strlen(k->kline));
-      free(k->comment);
-      free(k->kline);
-      ok = k;
-      k = k->next;
-      free(ok);
-    }
-  pending_klines = NULL;
-  pending_kline_time = 0;
-        
-  close(fd);
-
-  /* Delete the Lockfile */
-  unlink(LOCKFILE);
-}
-#endif             
-
-static int safe_write(aClient *sptr,
-		      char *parv0,char *filename, int out,char *buffer)
-{
-  if (write(out,buffer,strlen(buffer)) <= 0)
-    {
-      sendto_realops("*** Problem writing to %s",filename);
-      (void)close(out);
-      return (-1);
-    }
-  return(0);
-}
-
 
 /*
  * set_autoconn
@@ -6101,11 +4179,11 @@ static int safe_write(aClient *sptr,
  * side effects	-
  */
 
-static void set_autoconn(aClient *sptr,char *parv0,char *hostname,int newval)
+static void set_autoconn(aClient *sptr,char *parv0,char *name,int newval)
 {
   aConfItem *aconf;
 
-  if((aconf= find_conf_name(hostname,CONF_CONNECT_SERVER)))
+  if((aconf= find_conf_name(name,CONF_CONNECT_SERVER)))
     {
       if(newval)
 	aconf->flags |= CONF_FLAGS_ALLOW_AUTO_CONN;
@@ -6114,55 +4192,16 @@ static void set_autoconn(aClient *sptr,char *parv0,char *hostname,int newval)
 
       sendto_ops(
 		 "%s has changed AUTOCONN for %s to %i",
-		 parv0, hostname, newval);
+		 parv0, name, newval);
       sendto_one(sptr,
 		 ":%s NOTICE %s :AUTOCONN for %s is now set to %i",
-		 me.name, parv0, hostname, newval);
+		 me.name, parv0, name, newval);
     }
   else
     {
       sendto_one(sptr,
 		 ":%s NOTICE %s :Can't find %s",
-		 me.name, parv0,hostname);
+		 me.name, parv0, name);
     }
 }
 
-
-/*
- * bad_tld
- *
- * input	- hostname to k-line
- * output	- YES if not valid
- * side effects	- NONE
- * checks to see if its a kline of the form blah@*.com,*.net,*.org,*.ca etc.
- * if so, return YES
- */
-
-static int bad_tld(char *host)
-{
-  char *tld;
-  int is_bad_tld;
-
-  is_bad_tld = NO;
-
-  tld = strrchr(host, '.');
-  if(tld)
-    {
-      if(tld == host)
-	is_bad_tld = YES;
-      tld--;
-      if(tld == host)
-	if( (*tld == '.') || (*tld == '*'))
-	  is_bad_tld = YES;
-      tld--;
-      if(tld != host)
-	{
-	  if((*tld == '*') || (*tld == '?'))
-	    is_bad_tld = YES;
-	}
-    }
-  else
-    is_bad_tld = YES;
-
-  return(is_bad_tld);
-}

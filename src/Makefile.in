@@ -7,8 +7,8 @@ SRC_1 = bsd.c channel.c class.c dbuf.c mtrie_conf.c
 SRC_2 = hash.c inet_addr.c ircd.c ircsprintf.c dline_conf.c
 SRC_3 = list.c match.c packet.c parse.c res.c s_zip.c fdlist.c
 SRC_4 = s_auth.c s_bsd.c s_conf.c s_debug.c s_err.c s_misc.c s_numeric.c
-SRC_5 = s_serv.c m_info.c s_user.c send.c support.c whowas.c scache.c blalloc.c
-RES_SRC =
+SRC_5 = s_serv.c m_info.c m_kline.c m_gline.c m_unkline.c
+SRC_6 = s_user.c send.c support.c whowas.c scache.c blalloc.c
 
 # Do it this way for Ultrix, and its portable at least
 # just make sure OBJ's match SRC's (pointed out by Ian)
@@ -17,15 +17,12 @@ OBJ_1 = bsd.o channel.o class.o dbuf.o mtrie_conf.o
 OBJ_2 = hash.o inet_addr.o ircd.o ircsprintf.o dline_conf.o
 OBJ_3 = list.o match.o packet.o parse.o res.o s_zip.o fdlist.o
 OBJ_4 = s_auth.o s_bsd.o s_conf.o s_debug.o s_err.o s_misc.o s_numeric.o
-OBJ_5 = s_serv.o m_info.o s_user.o send.o support.o whowas.o scache.o blalloc.o
+OBJ_5 = s_serv.o m_info.o m_kline.o m_gline.o m_unkline.o
+OBJ_6 = s_user.o send.o support.o whowas.o scache.o blalloc.o
 
-#This is only for very old systems that NEED this
-#RES_SRC = res_mkquery.c res_init.c res_comp.c
-#RES_OBJ = res_mkquery.o res_init.o res_comp.o
-
-SOURCES = $(SRC_1) $(SRC_2) $(SRC_3) $(SRC_4) $(SRC_5) $(RES_SRC)
+SOURCES = $(SRC_1) $(SRC_2) $(SRC_3) $(SRC_4) $(SRC_5) $(SRC_6)
 #OBJECTS = $(SOURCES:.c=.o) version.o
-OBJECTS = $(OBJ_1) $(OBJ_2) $(OBJ_3) $(OBJ_4) $(OBJ_5) $(RES_OBJ) version.o
+OBJECTS = $(OBJ_1) $(OBJ_2) $(OBJ_3) $(OBJ_4) $(OBJ_5) $(OBJ_6) version.o
 
 all: ircd
 
@@ -140,13 +137,6 @@ res.o: ../include/class.h ../include/dbuf.h ../include/common.h
 res.o: ../include/sys.h ../include/res.h ../include/numeric.h ../include/h.h
 res.o: ../include/mtrie_conf.h ../include/fdlist.h ../include/nameser.h
 res.o: ../include/resolv.h ../include/inet.h
-res_comp.o: ../include/nameser.h
-res_init.o: ../include/config.h ../include/setup.h ../include/defs.h
-res_init.o: ../include/sys.h ../zlib/zlib.h ../zlib/zconf.h
-res_init.o: ../include/nameser.h ../include/resolv.h
-res_mkquery.o: ../include/config.h ../include/setup.h ../include/defs.h
-res_mkquery.o: ../include/sys.h ../zlib/zlib.h ../zlib/zconf.h
-res_mkquery.o: ../include/nameser.h ../include/resolv.h
 s_auth.o: ../include/struct.h ../include/config.h ../include/setup.h
 s_auth.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
 s_auth.o: ../include/class.h ../include/dbuf.h ../include/common.h

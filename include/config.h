@@ -36,12 +36,6 @@
  * I personally hope you agree with me, and leave these undef'ed
  * but at least you have been warned.
  *
- * I have also #undef'd LOCAL_KILL_ONLY, as you can now limit
- * the ability of an oper to do global kills using oper flags in
- * ircd.conf. Until client id code is introduced, global kill is still
- * necessary to get rid of a ghost.
- *
- * -Dianora
  */
 
 /***************** MAKE SURE THIS IS CORRECT!!!!!!!!! **************/
@@ -158,12 +152,6 @@
  * makes no sense
  */
 #undef SEPARATE_QUOTE_KLINES_BY_DATE
-
-/* UNKLINE - /quote unkline - remove klines on the fly
- * if you choose to support this, an oper can do a /quote UNKLINE
- * of an exact matching KLINE to remove the kline
- */
-#define UNKLINE
 
 /* FNAME_USERLOG and FNAME_OPERLOG - logs of local USERS and OPERS
  * Define this filename to maintain a list of persons who log
@@ -480,25 +468,17 @@
  */
 #define ZIP_LEVEL       2
 
-/* OPER_KILL OPER_REHASH OPER_RESTART OPER_DIE OPER_REMOTE -
+/* OPER_REHASH OPER_RESTART OPER_DIE 
  *      restrict what local global-Opers can do
  *
- * If you dont believe operators should be allowed to use the /KILL command
- * or believe it is uncessary for them to use it, then leave OPER_KILL
- * undefined. This will not affect other operators or servers issuing KILL
- * commands however.  OPER_REHASH and OPER_RESTART allow operators to
+ * OPER_REHASH and OPER_RESTART allow operators to
  * issue the REHASH and RESTART commands when connected to your server.
  * Left undefined they increase the security of your server from wayward
- * operators and accidents.  Defining OPER_REMOTE removes the restriction
- * that O-lines only become fully effective for people on the 'same network'
- * as the server.  Undefined, it increases the secrity of the server by
- * placing restrictions on where people can use operator powers from.
+ * operators and accidents. 
  */
-#define	OPER_KILL
 #define	OPER_REHASH
 #define	OPER_RESTART
 #define	OPER_DIE
-#define	OPER_REMOTE
 
 /* LOCOP_REHASH LOCOP_RESTART LOCOP_DIE - restrict local opers
  * The 'LOCOP_' #defines are for making the respective commands available
@@ -844,18 +824,6 @@
 #define MAXBUFFERS
 
 #ifdef	OPER_KILL
-/* LOCAL_KILL_ONLY - restricts KILLs to local clients
- * To be used, OPER_KILL must be defined. LOCAL_KILL_ONLY restricts KILLs
- * to clients which are connected to the server the Operator is connected
- * to (ie lets them deal with local problem users or 'ghost' clients)
- *
- * NOTE: #define'ing this on an IRC net with servers which have a version
- *	 earlier than 2.7 is prohibited.  Such an action and subsequent use
- *	 of KILL for non-local clients should be punished by removal of the
- *	 server's links (if only for ignoring this warning!).
- */
-#undef	LOCAL_KILL_ONLY
-#endif
 
 /* PORTNUM - default port where ircd resides
  * Port where ircd resides. NOTE: This *MUST* be greater than 1024 if you

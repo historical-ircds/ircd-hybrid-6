@@ -539,8 +539,8 @@ void free_conf(aConfItem *aconf)
   if (aconf->passwd)
     memset((void *)aconf->passwd, 0, strlen(aconf->passwd));
   MyFree(aconf->passwd);
+  MyFree(aconf->user);
   MyFree(aconf->name);
-  MyFree(aconf->mask);
   MyFree((char *)aconf);
   return;
 }

@@ -205,7 +205,7 @@ void	report_classes(aClient *sptr)
   Reg aClass *cltmp;
 
   for (cltmp = FirstClass(); cltmp; cltmp = NextClass(cltmp))
-    sendto_one(sptr, rpl_str(RPL_STATSYLINE), me.name, sptr->name,
+    sendto_one(sptr, form_str(RPL_STATSYLINE), me.name, sptr->name,
 	       'Y', Class(cltmp), PingFreq(cltmp), ConFreq(cltmp),
 	       MaxLinks(cltmp), MaxSendq(cltmp));
 }

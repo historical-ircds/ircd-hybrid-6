@@ -3201,36 +3201,21 @@ int	m_kill(aClient *cptr,
   user = parv[1];
   path = parv[2]; /* Either defined or NULL (parc >= 2!!) */
 
-#ifdef	OPER_KILL
   if (!IsPrivileged(cptr))
     {
       sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
-#else
-  if (!IsServer(cptr))
+
+  if (MyClient(sptr) && IsAnOper(sptr) && !IsSetOperK(sptr))
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr,":%s NOTICE %s :You have no K flag",me.name,parv[0]);
       return 0;
-    }
-#endif
-  if (IsAnOper(sptr))
-    {
-      if(MyClient(sptr) && !IsSetOperK(sptr))
-	{
-	  sendto_one(sptr,":%s NOTICE %s :You have no K flag",me.name,parv[0]);
-	  return 0;
-	}
     }
 
   if (IsAnOper(cptr))
     {
       if (!BadPtr(path))
-	/*  {
-	    sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-	    me.name, parv[0], "KILL");
-	    return 0;
-	    fix this damn kill parameter nonsense... Mika   }*/
 	if (strlen(path) > (size_t) KILLLEN)
 	  path[KILLLEN] = '\0';
     }
@@ -3264,21 +3249,13 @@ int	m_kill(aClient *cptr,
       return 0;
     }
 
-#ifdef	LOCAL_KILL_ONLY
-  if (MyOper(sptr) && !MyConnect(acptr))
-    {
-      sendto_one(sptr, ":%s NOTICE %s :Nick %s isnt on your server",
-		 me.name, parv[0], acptr->name);
-      return 0;
-    }
-#else
   if (MyOper(sptr) && !MyConnect(acptr) && (!IsOperGlobalKill(sptr)))
     {
       sendto_one(sptr, ":%s NOTICE %s :Nick %s isnt on your server",
 		 me.name, parv[0], acptr->name);
       return 0;
     }
-#endif
+
   if (!IsServer(cptr))
     {
       /*
@@ -3645,55 +3622,41 @@ int	m_oper(aClient *cptr,
       StrEq(encr, aconf->passwd) && !attach_conf(sptr, aconf))
     {
       int old = (sptr->flags & ALL_UMODES);
-      char *s;
       
-      s = strchr(aconf->host, '@');
-      if(s == (char *)NULL)
-        {
-          sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
-          sendto_realops("corrupt aconf->host = [%s]",aconf->host);
-          return 0;
-        }
-      *s++ = '\0';
-#ifdef	OPER_REMOTE
       if (aconf->status == CONF_LOCOP)
-#else
-	if ((matches(s,me.name) && !IsLocal(sptr)) ||
-	    aconf->status == CONF_LOCOP)
-#endif
-	  {
-	    SetLocOp(sptr);
-	    if((int)aconf->hold)
-	      {
-		sptr->flags |= ((int)aconf->hold & ALL_UMODES); 
-		sendto_one(sptr, ":%s NOTICE %s:*** Oper flags set from conf",
-			   me.name,parv[0]);
-	      }
-	    else
-	      {
-		sptr->flags |= (LOCOP_UMODES);
-	      }
-	  }
-	else
-	  {
-	    SetOper(sptr);
-	    if((int)aconf->hold)
-	      {
-		sptr->flags |= ((int)aconf->hold & ALL_UMODES); 
-		if( !IsSetOperN(sptr) )
-		  sptr->flags &= ~FLAGS_NCHANGE;
-
-		sendto_one(sptr, ":%s NOTICE %s:*** Oper flags set from conf",
-			   me.name,parv[0]);
-	      }
-	    else
-	      {
-		sptr->flags |= (OPER_UMODES);
-	      }
-	  }
+	{
+	  SetLocOp(sptr);
+	  if((int)aconf->hold)
+	    {
+	      sptr->flags |= ((int)aconf->hold & ALL_UMODES); 
+	      sendto_one(sptr, ":%s NOTICE %s:*** Oper flags set from conf",
+			 me.name,parv[0]);
+	    }
+	  else
+	    {
+	      sptr->flags |= (LOCOP_UMODES);
+	    }
+	}
+      else
+	{
+	  SetOper(sptr);
+	  if((int)aconf->hold)
+	    {
+	      sptr->flags |= ((int)aconf->hold & ALL_UMODES); 
+	      if( !IsSetOperN(sptr) )
+		sptr->flags &= ~FLAGS_NCHANGE;
+	      
+	      sendto_one(sptr, ":%s NOTICE %s:*** Oper flags set from conf",
+			 me.name,parv[0]);
+	    }
+	  else
+	    {
+	      sptr->flags |= (OPER_UMODES);
+	    }
+	}
       SetIPHidden(sptr);
       Count.oper++;
-      *--s =  '@';
+
       SetElined(cptr);
       
       /* LINKLIST */  
@@ -3745,16 +3708,7 @@ int	m_oper(aClient *cptr,
 	   * it's been created - thus logging can be turned off by
 	   * removing the file.
 	   *
-	   * stop NFS hangs...most systems should be able to open a
-	   * file in 3 seconds. -avalon (curtesy of wumpus)
 	   */
-	  /* You are =nuts= if you run NFS at all on a modern EFnet server
-	   * ewwwwwwwww so I am commenting it out for now
-	   * it should all be deleted, but ya. there is history here :-)
-	   * pjg,wumpus,avalon. avalon cannot spell "courtesy" either.
-	   * -Dianora
-	   */
-	  /*	  (void)alarm(3); */
 
 	  if (IsPerson(sptr) &&
 	      (logfile = open(FNAME_OPERLOG, O_WRONLY|O_APPEND)) != -1)
@@ -3764,13 +3718,9 @@ int	m_oper(aClient *cptr,
 			       myctime(timeofday), name, encr,
 			       parv[0], sptr->user->username,
 			       sptr->sockhost);
-	      /* (void)alarm(3); */
 	      (void)write(logfile, buf, strlen(buf));
-	      /* (void)alarm(0); */
 	      (void)close(logfile);
 	    }
-	  /* (void)alarm(0); */
-	  /* Modification by pjg */
 	}
 #endif
     }

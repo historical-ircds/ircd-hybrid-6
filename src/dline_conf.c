@@ -326,7 +326,6 @@ void add_dline(aConfItem *conf_ptr)
   node=find_ip_subtree(Dline[host_ip>>24], host_ip);
   if (!node)
     {   /* no parent found, so add this to the leftovers list */
-      printf("no parent!\n");
       conf_ptr->next = leftover;
       leftover=conf_ptr;
       return;
@@ -481,7 +480,7 @@ void add_ip_Kline(aConfItem *conf_ptr)
       /* #endif */
 
       /* if this is a *@ Kline, then we can toast all the other Klines in the clist */
-      if (!(strcmp(conf_ptr->name,"*")))
+      if (!(strcmp(conf_ptr->user,"*")))
 	clist=trim_ip_Klines(clist,0);
 
       conf_ptr->next=clist;
@@ -498,7 +497,7 @@ void add_ip_Kline(aConfItem *conf_ptr)
   for (scan=node->conf;scan;scan=scan->next)
     {
       if (((scan->status & CONF_KILL) || (scan->flags & CONF_FLAGS_E_LINED)) &&
-	  (!(strcmp(scan->name,"*"))) &&
+	  (!(strcmp(scan->user,"*"))) &&
 	  (scan->ip_mask<host_mask)) break;
     }
   if (scan) return; /* don't bother adding */
@@ -506,7 +505,7 @@ void add_ip_Kline(aConfItem *conf_ptr)
   /* update oracle */
   ike_oracle[host_ip>>24] |= ((0xffffffff-host_mask)+host_ip);
 
-  if (strcmp(conf_ptr->name,"*")) 
+  if (strcmp(conf_ptr->user,"*")) 
     {  /* not adding a *@ Kline, just slap it in */
       conf_ptr->next=node->conf;
       node->conf=conf_ptr;
@@ -554,7 +553,7 @@ void add_ip_Eline(aConfItem *conf_ptr)
 	delete_ip_subtree(ip_Kline[host_ip>>24], host_ip, host_mask, &clist);
 
       /* if this is a *@ Eline, then we can toast all the others in the clist */
-      if (!(strcmp(conf_ptr->name,"*"))) 
+      if (!(strcmp(conf_ptr->user,"*"))) 
 	clist=trim_ip_Elines(clist,0);
 
       conf_ptr->next=clist;
@@ -571,7 +570,7 @@ void add_ip_Eline(aConfItem *conf_ptr)
   for (scan=node->conf;scan;scan=scan->next)
     {
       if ((scan->flags & CONF_FLAGS_E_LINED) &&
-	  (!(strcmp(scan->name,"*"))) &&
+	  (!(strcmp(scan->user,"*"))) &&
 	  (scan->ip_mask<host_mask)) break;
     }
   if (scan) return; /* don't bother adding */
@@ -579,7 +578,7 @@ void add_ip_Eline(aConfItem *conf_ptr)
   /* update oracle */
   ike_oracle[host_ip>>24] |= ((0xffffffff-host_mask)+host_ip);
 
-  if (strcmp(conf_ptr->name,"*")) 
+  if (strcmp(conf_ptr->user,"*")) 
     {  /* not adding a *@ Eline, just slap it in */
       conf_ptr->next=node->conf;
       node->conf=conf_ptr;
@@ -677,17 +676,17 @@ aConfItem *match_ip_Kline(unsigned long ip,char *name)
   for( scan=node->conf; scan; scan=scan->next)
     {
       if (scan->flags & CONF_FLAGS_E_LINED)  /* Eline */
-	if (!matches(scan->name,name)) return scan; /* instant win! */
+	if (!matches(scan->user,name)) return scan; /* instant win! */
 
       if (scan->status & CONF_KILL)  /* Kline */
-	if (!matches(scan->name,name))
+	if (!matches(scan->user,name))
 	  {
 	    winnertype='K'; winner=scan;
 	    continue;
 	  }
 
       if (scan->status & CONF_CLIENT) /* Iline */
-	if (!matches(scan->name,name)) /* name jives */
+	if (!matches(scan->user,name)) /* name jives */
 	  if (winnertype=='I') /* we might be able to beat the champ */
             {
 	      if (winner && (scan->ip_mask <= winner->ip_mask))
@@ -754,8 +753,7 @@ void zap_Dlines()
 void walk_the_dlines(aClient *sptr, struct ip_subtree *tree)
 {
   aConfItem *scan;
-  char *mask;
-  char *pass;
+  char *name, *pass;
   char c;		/* D,d or K */
   static  char	null[] = "<NULL>";
 
@@ -774,11 +772,11 @@ void walk_the_dlines(aClient *sptr, struct ip_subtree *tree)
       if(scan->flags & CONF_FLAGS_E_LINED)
 	c = 'd';
       /* print Dline */
-      mask = BadPtr(scan->mask) ? null : scan->mask;
+      name = BadPtr(scan->user) ? null : scan->user;
       pass = BadPtr(scan->passwd) ? null : scan->passwd;
       
       sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name,
-		 sptr->name, c, mask, pass);
+		 sptr->name, c, name, pass);
     }
   walk_the_dlines(sptr, tree->right);
 }
@@ -798,12 +796,8 @@ void walk_the_ip_Klines(aClient *sptr, struct ip_subtree *tree,
 			char conftype, int MASK)
 {
   aConfItem *scan;
-  char *host;
-  char *mask = NULL;
-  char *pass;
-  char *name;
+  char *name, *host, *pass, *user;
   int port;
-  static  char	null[] = "<NULL>";
 
   if (!tree) return;
   
@@ -815,29 +809,24 @@ void walk_the_ip_Klines(aClient *sptr, struct ip_subtree *tree,
       if(!(scan->status & MASK))
 	continue;
 
+      GetPrintableaConfItem(scan, name, host, pass, user, &port);
+
       if(scan->status & CONF_KILL)
 	{
 	  /* print Kline */
-	  host = BadPtr(scan->host) ? null : scan->host;
-	  pass = BadPtr(scan->passwd) ? null : scan->passwd;
-	  name = BadPtr(scan->name) ? null : scan->name;
 	  
 	  sendto_one(sptr, rpl_str(RPL_STATSKLINE), me.name,
-		     sptr->name, conftype, host, name, pass);
+		     sptr->name, conftype, user, name, pass);
 	}
       else if(scan->status & CONF_CLIENT)
 	{
 	  /* print IP I line */
-	  host = BadPtr(scan->host) ? null : scan->host;
-	  pass = BadPtr(scan->passwd) ? null : scan->passwd;
-	  name = BadPtr(scan->name) ? null : scan->name;
-	  port = scan->port;
 
 	  sendto_one(sptr, rpl_str(RPL_STATSILINE), me.name,
 		     sptr->name,
 		     'I',
-		     mask,
-		     show_iline_prefix(sptr,scan,name),
+		     name,
+		     show_iline_prefix(sptr,scan,user),
 		     host,
 		     port,
 		     get_conf_class(scan));

@@ -79,6 +79,9 @@ extern	char	*rindex (char *, char);
 
 #define MyFree(x)       if ((x) != NULL) free(x)
 
+#define err_str(x) form_str(x)
+#define rpl_str(x) form_str(x)
+
 #define DEBUG_BLOCK_ALLOCATOR
 #ifdef DEBUG_BLOCK_ALLOCATOR
 extern char *currentfile;
