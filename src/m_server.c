@@ -156,21 +156,22 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   if (strlen(host) > HOSTLEN)
     host[HOSTLEN] = '\0';
 
-  if (IsPerson(cptr))
+  if (IsPerson(sptr))
     {
       /*
-       * A local link that has been identified as a USER
-       * tries something fishy... ;-)
+       * a USER tries something fishy... ;-)
        */
-      sendto_one(cptr, form_str(ERR_UNKNOWNCOMMAND),
-                 me.name, parv[0], "SERVER");
-#if 0              
-      /*
-       *   Just ignore it for fripps sake... - Dianora
-       */
-      sendto_ops("User %s trying to become a server %s",
-      get_client_name(cptr, TRUE), host);
-#endif            
+      if (IsServer(cptr))
+        {
+          sendto_realops("SERVER command from remote user %s -- %s is a hacked server",
+                          get_client_name(sptr,SHOW_IP),
+                          get_client_name(cptr,SHOW_IP));
+        }
+      else
+        {
+          sendto_one(sptr, form_str(ERR_UNKNOWNCOMMAND),
+                     me.name, parv[0], "SERVER");
+        }
       return 0;
     }
   else
@@ -235,7 +236,7 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
   if (MyConnect(cptr) && (GlobalSetOptions.autoconn == 0))
     {
-      sendto_ops("WARNING AUTOCONN is 0, Closing %s",
+      sendto_realops("WARNING AUTOCONN is 0, Closing %s",
                  get_client_name(cptr, TRUE));
       return exit_client(cptr, cptr, cptr, "AUTOCONNS off");
     }
@@ -256,7 +257,7 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       sendto_one(bcptr,"ERROR :Server %s already exists", host);
       if (bcptr == cptr)
       {
-        sendto_ops("Link %s cancelled, server %s already exists",
+        sendto_realops("Link %s cancelled, server %s already exists",
                    get_client_name(bcptr, TRUE), host);
         return exit_client(bcptr, bcptr, &me, "Server Exists");
       }
@@ -271,7 +272,7 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
        *  - comstud
        */
       strcpy(nbuf, get_client_name(bcptr, TRUE));
-      sendto_ops("Link %s cancelled, server %s reintroduced by %s",
+      sendto_realops("Link %s cancelled, server %s reintroduced by %s",
                 nbuf, host, get_client_name(cptr, TRUE));
       exit_client(bcptr, bcptr, &me, "Server Exists");
     }
@@ -318,7 +319,7 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       if ((aconf = find_conf_host(cptr->confs, host, CONF_LEAF)) &&
           (!aconf->port || (hop > aconf->port)))
         {
-          sendto_ops("Leaf-only link %s->%s - Closing",
+          sendto_realops("Leaf-only link %s->%s - Closing",
                      get_client_name(cptr,  TRUE),
                      aconf->host ? aconf->host : "*");
           sendto_one(cptr, "ERROR :Leaf-only link, sorry.");
@@ -328,7 +329,7 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       if (!(aconf = find_conf_host(cptr->confs, host, CONF_HUB)) ||
           (aconf->port && (hop > aconf->port)) )
         {
-          sendto_ops("Non-Hub link %s introduced %s(%s).",
+          sendto_realops("Non-Hub link %s introduced %s(%s).",
                      get_client_name(cptr,  TRUE), host,
                      aconf ? (aconf->host ? aconf->host : "*") : "!");
           sendto_one(cptr, "ERROR :%s has no H: line for %s.",
@@ -363,7 +364,7 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
             continue;
           if (!(aconf = bcptr->serv->nline))
             {
-              sendto_ops("Lost N-line for %s on %s. Closing",
+              sendto_realops("Lost N-line for %s on %s. Closing",
                          get_client_name(cptr, TRUE), host);
               return exit_client(cptr, cptr, cptr, "Lost N line");
             }
@@ -393,7 +394,7 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
    */
   if (!DoesTS(cptr))
     {
-      sendto_ops("Link %s dropped, non-TS server",
+      sendto_realops("Link %s dropped, non-TS server",
                  get_client_name(cptr, TRUE));
       return exit_client(cptr, cptr, cptr, "Non-TS server");
     }

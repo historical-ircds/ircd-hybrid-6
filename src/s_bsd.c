@@ -502,7 +502,7 @@ int connect_server(struct ConfItem* aconf,
    */
   if ((cptr = find_server(aconf->name)))
     {
-      sendto_ops("Server %s already present from %s",
+      sendto_realops("Server %s already present from %s",
                  aconf->name, get_client_name(cptr, TRUE));
       if (by && IsPerson(by) && !MyClient(by))
         sendto_one(by, ":%s NOTICE %s :Server %s already present from %s",

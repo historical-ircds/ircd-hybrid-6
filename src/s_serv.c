@@ -605,7 +605,7 @@ int server_estab(struct Client *cptr)
       if (!match(n_conf->user, cptr->username))
         {
           ServerStats->is_ref++;
-          sendto_ops("Username mismatch [%s]v[%s] : %s",
+          sendto_realops("Username mismatch [%s]v[%s] : %s",
                      n_conf->user, cptr->username,
                      get_client_name(cptr, TRUE));
           sendto_one(cptr, "ERROR :No Username Match");
@@ -620,7 +620,7 @@ int server_estab(struct Client *cptr)
       if (zip_init(cptr) == -1)
         {
           zip_free(cptr);
-          sendto_ops("Unable to setup compressed link for %s",
+          sendto_realops("Unable to setup compressed link for %s",
                       get_client_name(cptr, TRUE));
           return exit_client(cptr, cptr, &me, "zip_init() failed");
         }
@@ -831,7 +831,7 @@ int server_estab(struct Client *cptr)
   ** they are slightly incorrect because of cptr->zip->outbuf.
   */
   if ((cptr->flags2 & FLAGS2_ZIP) && cptr->zip->out->total_in)
-    sendto_ops("Connect burst to %s: %lu, compressed: %lu (%3.1f%%)",
+    sendto_realops("Connect burst to %s: %lu, compressed: %lu (%3.1f%%)",
                 get_client_name(cptr, TRUE),
                 cptr->zip->out->total_in,cptr->zip->out->total_out,
                 (100.0*(float)cptr->zip->out->total_out) /
