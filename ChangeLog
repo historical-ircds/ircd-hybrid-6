@@ -1,3 +1,15 @@
+db          2001/12/07 21:33:55 EST	(20011208_3)
+
+  Modified files:
+    src                  mtrie_conf.c 
+  Log:
+  - accidentally introduce a typo *duh*
+  
+  Revision  Changes    Path
+  1.85      +1 -1      ircd-hybrid-6/src/mtrie_conf.c
+
+
+
 db          2001/12/07 21:27:57 EST	(20011208_2)
 
   Modified files:
