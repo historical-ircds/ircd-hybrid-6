@@ -1,3 +1,18 @@
+*** 20010604_3 by db
+Patch from Walter Campbell
+
+Not sure if you want this or not...I personally want this in the stock
+Hybrid 6 tree...
+
+1.  Remove the useless STATS b, e, and f requests
+2.  Add STATS_P_NOTICE, so that admins do not have to #define
+    STATS_NOTICE just to see STATS p requests.  I believe that this
+    preserves user's privacy, while still giving opers the ability to
+    respond to user's queries for help.
+
+
+
+
 *** 20010604_2 by db
 - argh I did miss one!
 
