@@ -167,6 +167,10 @@ COMMAND         - USAGE and DESCRIPTION
                   The banned client will receive a message saying he/she
                   is banned with reason [reason]
 
+                  The reason can contain a '|' character.  Anything before
+                  the '|' will be shown to the victim, anything after is
+                  not.
+
                   KLINE user@ip.ip.ip.ip :[reason]
                   will kline the user at the unresolved ip.
                   ip.ip.ip.ip can be in CIDR form i.e. 192.168.0.0/24
