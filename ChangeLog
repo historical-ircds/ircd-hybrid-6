@@ -1,3 +1,7 @@
+*** 19990804_2 by lusky
+bumped patchlevel to b92 for new beta snapshot
+
+
 *** 19990804_1 by lusky
 fix for IP Klines in stats from Diane
 fix for broken m_unkline.c from Diane it would unkline everything
