@@ -19,27 +19,30 @@ typedef enum {
   USER_MOTD,
   OPER_MOTD,
   HELP_MOTD
-}MotdType;
+} MotdType;
 
-typedef struct MessageFileLineStruct
+struct MessageFileLine
 {
-  char  line[MESSAGELINELEN + 1];
-  struct MessageFileLineStruct *next;
-}MessageFileLine;
+  char                    line[MESSAGELINELEN + 1];
+  struct MessageFileLine* next;
+};
 
-typedef struct
+typedef struct MessageFileLine MessageFileLine;
+
+struct MessageFile
 {
-  char fileName[PATH_MAX + 1];
-  MotdType motdType;
-  MessageFileLine *contentsOfFile;
-  char lastChangedDate[MAX_DATE_STRING + 1];
-}MessageFile;
+  char             fileName[PATH_MAX + 1];
+  MotdType         motdType;
+  MessageFileLine* contentsOfFile;
+  char             lastChangedDate[MAX_DATE_STRING + 1];
+};
 
+typedef struct MessageFile MessageFile;
 
 struct Client;
 
-void InitMessageFile(MotdType, char *, MessageFile *);
-int SendMessageFile(struct Client *, MessageFile *);
+void InitMessageFile(MotdType, char *, struct MessageFile *);
+int SendMessageFile(struct Client *, struct MessageFile *);
 int ReadMessageFile(MessageFile *);
 
 #endif /* INCLUDED_motd_h */

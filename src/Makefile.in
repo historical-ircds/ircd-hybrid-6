@@ -37,7 +37,9 @@ SRCS = \
 	m_info.c \
 	m_kline.c \
 	m_pass.c \
+	m_server.c \
 	m_unkline.c \
+	m_version.c \
 	match.c \
 	motd.c \
 	mtrie_conf.c \
@@ -84,7 +86,9 @@ SRCS = \
 #	m_info.o \
 #	m_kline.o \
 #	m_pass.o \
+#	m_server.o \
 #	m_unkline.o \
+#	m_version.o \
 #	match.o \
 #	motd.o \
 #	mtrie_conf.o \

@@ -97,6 +97,7 @@ extern struct Capability captab[];
 extern void send_capabilities(struct Client* client, int use_zip);
 extern int  hunt_server(struct Client* cptr, struct Client* sptr,
                         char* command, int server, int parc, char** parv);
+extern int  server_estab(struct Client* cptr);
 
 #endif /* INCLUDED_s_serv_h */
 

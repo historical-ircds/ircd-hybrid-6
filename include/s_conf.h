@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.36  1999/07/25 17:27:40  db
+ * - moved aConfItem defs from struct.h to s_conf.h
+ *
  * Revision 1.35  1999/07/24 02:55:45  wnder
  * removed #ifdef for obsolete R_LINES (CONF_RESTRICT as well).
  *
@@ -169,7 +172,7 @@
 #include "ircd_defs.h"
 #endif
 #ifndef INCLUDED_motd_h
-#include "motd.h"
+#include "motd.h"               /* MessageFile */
 #endif
 
 struct Client;
@@ -348,6 +351,7 @@ extern  char    *show_iline_prefix(struct Client *,struct ConfItem *,char *);
 extern void   GetPrintableaConfItem(struct ConfItem *,
                                     char **, char **, char **,
                                     char **, int *);
+extern void report_qlines(struct Client* cptr);
 
 typedef enum {
   CONF_TYPE,
@@ -388,7 +392,7 @@ typedef struct
   MessageFile helpfile;
   MessageFile motd;
   MessageFile opermotd;
-}ConfigFileEntryType;
+} ConfigFileEntryType;
 
 /* aConfItems */
 /* conf uline link list root */

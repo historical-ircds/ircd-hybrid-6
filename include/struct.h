@@ -190,8 +190,10 @@ struct SLink
 
 /* misc variable externs */
 
-extern  char    *version, *serno, *infotext[];
-extern  char    *generation, *creation;
+/* misc defines */
+
+#define UTMP            "/etc/utmp"
+#define COMMA           ","
 
 #ifdef ORATIMING
 /* Timing stuff (for performance measurements): compile with -DORATIMING

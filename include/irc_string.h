@@ -65,6 +65,11 @@ extern const char* inetntoa(const char* in_addr);
  * strncpy_irc - optimized strncpy
  */
 extern char* strncpy_irc(char* s1, const char* s2, size_t n);
+/*
+ * clean_string - cleanup control and high ascii characters
+ * -Dianora
+ */
+extern char* clean_string(char* dest, const char* src, size_t len);
 
 extern const char* myctime(time_t);
 extern char* strtoken(char** save, char* str, char* fs);
@@ -108,6 +113,7 @@ extern const unsigned int CharAttrs[];
 #define USER_C    0x400
 #define HOST_C    0x800
 #define NONEOS_C 0x1000
+#define SERV_C   0x2000
 
 #define IsHostChar(c)   (CharAttrs[(unsigned char)(c)] & HOST_C)
 #define IsUserChar(c)   (CharAttrs[(unsigned char)(c)] & USER_C)
@@ -115,6 +121,7 @@ extern const unsigned int CharAttrs[];
 #define IsChanChar(c)   (CharAttrs[(unsigned char)(c)] & CHAN_C)
 #define IsKWildChar(c)  (CharAttrs[(unsigned char)(c)] & KWILD_C)
 #define IsNickChar(c)   (CharAttrs[(unsigned char)(c)] & NICK_C)
+#define IsServChar(c)   (CharAttrs[(unsigned char)(c)] & (NICK_C | SERV_C))
 #define IsCntrl(c)      (CharAttrs[(unsigned char)(c)] & CNTRL_C)
 #define IsAlpha(c)      (CharAttrs[(unsigned char)(c)] & ALPHA_C)
 #define IsSpace(c)      (CharAttrs[(unsigned char)(c)] & SPACE_C)

@@ -71,12 +71,12 @@ struct SetOptions
 extern struct SetOptions GlobalSetOptions;  /* defined in ircd.c */
 
 extern void     report_error_on_tty(const char* message);
-extern  int     debuglevel;
-extern  int     debugtty;
-extern  char*   debugmode;
+extern  int           debuglevel;
+extern  int           debugtty;
+extern  char*         debugmode;
 extern struct Counter Count;
-extern time_t nextconnect;
-extern time_t nextping;
+extern time_t         nextconnect;
+extern time_t         nextping;
 extern time_t         CurrentTime;
 extern size_t         InitialVMTop;
 extern struct Client* GlobalClientList;
@@ -85,6 +85,12 @@ extern struct Client* local[];
 extern int            bootopt;
 extern int            cold_start;
 extern int            dorehash;
+extern char*          version;
+extern char*          serno;
+extern char*          infotext[];
+extern char*          generation;
+extern char*          creation;
+extern const char     serveropts[];
 
 
 extern struct Client* serv_cptr_list;

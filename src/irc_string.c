@@ -88,6 +88,38 @@ void* MyRealloc(void* x, size_t y)
   return ret;
 }
 
+/*
+ * clean_string - clean up a string possibly containing garbage
+ *
+ * *sigh* Before the kiddies find this new and exciting way of 
+ * annoying opers, lets clean up what is sent to all opers
+ * -Dianora
+ */
+char* clean_string(char* dest, const char* src, size_t len)
+{
+  char* d    = dest; 
+  char* endp = dest + len - 1;
+  assert(0 != dest);
+  assert(0 != src);
+
+  while (d < endp && *src)
+    {
+      if (*src < ' ')             /* Is it a control character? */
+        {
+          *d++ = '^';
+          if (d < endp)
+            *d++ = 0x40 + *src;   /* turn it into a printable */
+        }
+      else if (*src > '~')
+        *d++ = '.';
+      else
+        *d++ = *src;
+      ++src;
+    }
+  *d = '\0';
+  return dest;
+}
+
 #if !defined( HAVE_STRTOKEN )
 /*
  * strtoken - walk through a string of tokens, using a set of separators
