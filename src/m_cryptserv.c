@@ -35,6 +35,7 @@
 #include "send.h"        /* sendto_one */
 #include "struct.h"      /* bleah */
 #include "s_bsd.h"
+#include "s_log.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -121,15 +122,20 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
   info[0] = '\0';
 
   /* We should only get this from local clients */
-  if (cptr != sptr)
+  if (cptr != sptr) 
     {
       sendto_one(sptr, form_str(ERR_UNKNOWNCOMMAND), me.name, parv[0], "CRYPTSERV");
-
+#ifdef HIDE_SERVERS_IPS
       sendto_realops("CRYPTSERV command from %s -- %s is a hacked server",
-		     get_client_name(sptr,SHOW_IP),
+                     get_client_name(sptr, MASK_IP),
+    		     get_client_name(sptr, MASK_IP));
+#else		   
+      sendto_realops("CRYPTSERV command from %s -- %s is a hacked server",
+	  	     get_client_name(sptr,SHOW_IP),
 		     get_client_name(cptr,SHOW_IP));
+#endif		   
       return exit_client(cptr, cptr, cptr, "Hacked server");
-    }
+  }
 
   /* Never from users */
   if (IsPerson(cptr))
@@ -139,12 +145,17 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
     }
   
   /* And never from known servers */
-  if (IsServer(cptr))
+  if (IsServer(cptr)) 
     {
+#ifdef HIDE_SERVERS_IPS
+      sendto_realops("CRYPTSERV from server %s -- it's hacked",
+                     get_client_name(cptr, MASK_IP));
+#else		   
       sendto_realops("CRYPTSERV from server %s -- it's hacked",
 		     get_client_name(cptr, SHOW_IP));
+#endif		   
       return exit_client(cptr, cptr, cptr, "Hacked server");
-    }
+  }
 
   if (parc < 2 || *parv[1] == '\0')
     {
@@ -191,12 +202,17 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
     }
   
 
-  if (MyConnect(cptr) && (GlobalSetOptions.autoconn == 0))
+  if (MyConnect(cptr) && (GlobalSetOptions.autoconn == 0)) 
     {
+#ifdef HIDE_SERVERS_IPS 
       sendto_realops("WARNING AUTOCONN is 0, Closing %s",
-		     get_client_name(cptr, TRUE));
+		     get_client_name(cptr, MASK_IP));
+#else
+      sendto_realops("WARNING AUTOCONN is 0, Closing %s",
+                     get_client_name(cptr, TRUE));
+#endif		       
       return exit_client(cptr, cptr, cptr, "AUTOCONNS off");
-    }
+  }
 
   /* The following if statement would be nice to remove
    * since user nicks never have '.' in them and servers
@@ -214,8 +230,13 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
        * for a while and servers to send stuff to the wrong place.
        */
       sendto_one(cptr,"ERROR :Nickname %s already exists!", host);
+#ifdef HIDE_SERVERS_IPS
+      sendto_ops("Link %s cancelled: Server/nick collision on %s",
+                       /* inpath */ get_client_name(cptr,MASK_IP), host);
+#else		       
       sendto_ops("Link %s cancelled: Server/nick collision on %s",
                  /* inpath */ get_client_name(cptr,FALSE), host);
+#endif		 
       return exit_client(cptr, cptr, cptr, "Nick as Server");
     }
 
@@ -235,8 +256,13 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
       sendto_one(bcptr,"ERROR :Server %s already exists", host);
       if (bcptr == cptr)
       {
+#ifdef HIDE_SERVERS_IPS
+        sendto_realops("Link %s cancelled, server %s already exists",
+	                   get_client_name(bcptr, MASK_IP), host);
+#else			   
         sendto_realops("Link %s cancelled, server %s already exists",
                    get_client_name(bcptr, TRUE), host);
+#endif		   
         return exit_client(bcptr, bcptr, &me, "Server Exists");
       }
       /*
@@ -249,9 +275,15 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
        * 2 times in same sendto_ops(), so we have to strcpy one =(
        *  - comstud
        */
+#ifdef HIDE_SERVERS_IPS
+      strcpy(nbuf, get_client_name(bcptr, MASK_IP));
+      sendto_realops("Link %s cancelled, server %s reintroduced by %s",
+	                    nbuf, host, get_client_name(cptr, MASK_IP));
+#else			    
       strcpy(nbuf, get_client_name(bcptr, TRUE));
       sendto_realops("Link %s cancelled, server %s reintroduced by %s",
                 nbuf, host, get_client_name(cptr, TRUE));
+#endif		
       exit_client(bcptr, bcptr, &me, "Server Exists");
     }
 
@@ -266,7 +298,13 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
 
   if (!nline || !cline) {
 #ifdef WARN_NO_NLINE
+#ifdef HIDE_SERVERS_IPS
+    sendto_realops("No N/C line for %s - dropping link", get_client_name(cptr, MASK_IP));
+    log(L_NOTICE, "Access denied. No N line for server %s",
+        get_client_name(cptr, TRUE));
+#else    
     sendto_realops("No N/C line for %s - dropping link", get_client_name(cptr, TRUE));
+#endif    
 #endif
     return exit_client(cptr, cptr, cptr, "Missing C/N-line");
   }
@@ -285,11 +323,17 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
       sendto_one(cptr, "CRYPTSERV %s %s :%s", my_name_for_link(me.name, nline), tmp, me.info);
     }
 
-  if (!cptr->ciphers)
+  if (!cptr->ciphers) 
     {
-      sendto_realops("%s wanted an encrypted link without supplying cipher list", get_client_name(cptr, TRUE));
+#ifdef HIDE_SERVERS_IPS  
+      sendto_realops("%s wanted an encrypted link without supplying cipher list", 
+                     get_client_name(cptr, MASK_IP));
+#else
+      sendto_realops("%s wanted an encrypted link without supplying cipher list", 
+                     get_client_name(cptr, TRUE));
+#endif    
       return exit_client(cptr, cptr, cptr, "Need supported cipher list");
-    }
+  }
 
   cipherIndex = crypt_selectcipher(cptr->ciphers);
   if (cipherIndex < 0)
@@ -298,11 +342,17 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
       return exit_client(cptr, cptr, cptr, "No common ciphers");
     }
 
-  if (crypt_rsa_decode(parv[2], key, &keylen) != CRYPT_DECRYPTED)
+  if (crypt_rsa_decode(parv[2], key, &keylen) != CRYPT_DECRYPTED) 
     {
-      sendto_realops("Failed decrypting session key received from %s", get_client_name(cptr, TRUE));
+#ifdef HIDE_SERVERS_IPS
+      sendto_realops("Failed decrypting session key received from %s", 
+                     get_client_name(cptr, MASK_IP));
+#else    
+      sendto_realops("Failed decrypting session key received from %s", 
+                     get_client_name(cptr, TRUE));
+#endif    
       return exit_client(cptr, cptr, cptr, "Invalid session key data");
-    }
+  }
 
   authlen = Ciphers[cipherIndex].keysize / 8;
   authlen = ((authlen + 7) / 8) * 8;
