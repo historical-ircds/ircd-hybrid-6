@@ -244,7 +244,9 @@ struct Message msgtab[] = {
   { MSG_GLINE,   m_gline,    0, MAXPARA, 1, 0, 0, 0L },
   { MSG_UNGLINE, m_ungline,  0, MAXPARA, 1, 0, 0, 0L },
   { MSG_HASH,    m_hash,     0, MAXPARA, 1, 0, 0, 0L },
-//  { MSG_DNS,     m_dns,      0, MAXPARA, 1, 0, 0, 0L },
+#if notyet
+  { MSG_DNS,     m_dns,      0, MAXPARA, 1, 0, 0, 0L },
+#endif
   { MSG_REHASH,  m_rehash,   0, MAXPARA, 1, 0, 0, 0L },
   { MSG_RESTART, m_restart,  0, MAXPARA, 1, 0, 0, 0L },
   { MSG_DIE, m_die,          0, MAXPARA, 1, 0, 0, 0L },

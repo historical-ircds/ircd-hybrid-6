@@ -1059,10 +1059,13 @@ int check_registered(struct Client* client)
 void release_client_dns_reply(struct Client* client)
 {
   assert(0 != client);
-//  if (client->dns_reply) {
-//    --client->dns_reply->ref_count;
-//    client->dns_reply = 0;
-//  }
+#if 0
+  if (client->dns_reply)
+    {
+      --client->dns_reply->ref_count;
+      client->dns_reply = 0;
+    }
+#endif
 }
 
 /*
