@@ -2434,30 +2434,23 @@ int	m_join(aClient *cptr,
        */
       if(cold_start && MyClient(sptr))
 	{
-#endif
-
-#ifdef PRESERVE_CHANNEL_ON_SPLIT
 	  if(server_was_split && (*name == '#') && !IsAnOper(sptr))
 	    {
 	      sendto_one(sptr, err_str(ERR_NOJOINSPLIT),
 			 me.name, parv[0], name);
 	      continue;
 	    }
-#endif
-#ifdef NO_JOIN_ON_SPLIT
-	  if(server_was_split && MyClient(sptr) &&
-	     (*name == '#') && !IsAnOper(sptr))
-	    {
-	      sendto_one(sptr, err_str(ERR_NOJOINSPLIT),
-			 me.name, parv[0], name);
-	      continue;
-	    }
-#endif
-
-#ifdef PRESERVE_CHANNEL_ON_SPLIT
 	}
 #endif
-
+#ifdef NO_JOIN_ON_SPLIT
+      if(server_was_split && MyClient(sptr) &&
+	 (*name == '#') && !IsAnOper(sptr))
+	{
+	  sendto_one(sptr, err_str(ERR_NOJOINSPLIT),
+		     me.name, parv[0], name);
+	  continue;
+	}
+#endif
       if (*jbuf)
 	(void)strcat(jbuf, ",");
       (void)strncat(jbuf, name, sizeof(jbuf) - i - 1);
