@@ -1,5 +1,6 @@
 This file outlines the features that ircd-hybrid has for IRC Operators.
 - 09/27/97 - ThemBones (kraemer@u.washington.edu)
+- 11/27/98 - last update
 
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -118,9 +119,12 @@ COMMAND         - USAGE and DESCRIPTION
                               improved ACKPATCH.  Should never need 
                               to be used.
                     TKLINES - Clears temporary klines
+                    GLINES  - Clears G lines
                     GC      - Performs garbage collecting of excess
                               memory.
                     MOTD    - Re-reads MOTD file
+                    HELP    - Re-reads this HELP file
+                    DLINES  - Re-hashes D-lines
 
   RESTART       - RESTART
                   Restarts the IRC server.

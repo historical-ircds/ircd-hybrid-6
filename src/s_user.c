@@ -59,6 +59,10 @@ int    botwarn (char *, char *, char *, char *);
 extern char motd_last_changed_date[];
 extern int send_motd(aClient *,aClient *,int, char **,aMessageFile *);
 
+#ifdef ANTI_SPAMBOT_EXTRA
+extern int spambot_privmsg_count;
+#endif
+
 #ifdef OPER_MOTD
 extern aMessageFile *opermotd;	/* defined in s_serv.c */
 extern int send_oper_motd(aClient *,aClient *,int, char **,aMessageFile *);
@@ -1345,8 +1349,9 @@ int	m_nick(aClient *cptr,
   if(MyConnect(sptr) &&
      !IsAnOper(sptr) && find_special_conf(nick,CONF_QUARANTINED_NICK)) 
     {
-      sendto_realops("Quarantined nick [%s], dumping user %s",
-		     nick,get_client_name(cptr, FALSE));
+      sendto_realops_lev(REJ_LEV,
+			 "Quarantined nick [%s], dumping user %s",
+			 nick,get_client_name(cptr, FALSE));
 
       return exit_client(cptr, sptr, &me, "quarantined nick");
     }
@@ -1985,11 +1990,12 @@ static	int	m_message(aClient *cptr,
 	}
 #endif
 #ifdef ANTI_SPAMBOT_EXTRA
-      if( MyConnect(sptr) &&
+      if( MyConnect(sptr) && spambot_privmsg_count &&
 	  ((sptr->person_privmsgs - sptr->channel_privmsgs)
-	   > SPAMBOT_PRIVMSG_POSSIBLE_SPAMBOT_COUNT) )
+	   > spambot_privmsg_count) )
 	{
-	  sendto_realops("Possible spambot %s [%s@%s] : privmsgs to clients %d privmsgs to channels %d",
+	  sendto_realops_lev(REJ_LEV,
+"Possible spambot %s [%s@%s] : privmsgs to clients %d privmsgs to channels %d",
 			 sptr->name, sptr->user->username,
 			 sptr->user->host,
 			 sptr->person_privmsgs,sptr->channel_privmsgs);
@@ -2057,11 +2063,12 @@ static	int	m_message(aClient *cptr,
 				parv[2]);
 
 #ifdef ANTI_SPAMBOT_EXTRA
-	  if( MyConnect(sptr) &&
+	  if( MyConnect(sptr) && spambot_privmsg_count &&
 	      ((sptr->person_privmsgs - sptr->channel_privmsgs)
-	       > SPAMBOT_PRIVMSG_POSSIBLE_SPAMBOT_COUNT) )
+	       > spambot_privmsg_count) )
 	    {
-	      sendto_realops("Possible spambot %s [%s@%s] : privmsgs to clients %d privmsgs to channels %d",
+	      sendto_realops_lev(REJ_LEV,
+"Possible spambot %s [%s@%s] : privmsgs to clients %d privmsgs to channels %d",
 			     sptr->name, sptr->user->username,
 			     sptr->user->host,
 			     sptr->person_privmsgs,sptr->channel_privmsgs);
@@ -2095,11 +2102,12 @@ static	int	m_message(aClient *cptr,
 	sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
 		   me.name, parv[0], nick);
 #ifdef ANTI_SPAMBOT_EXTRA
-      if( MyConnect(sptr) &&
+      if( MyConnect(sptr) && spambot_privmsg_count &&
 	  ((sptr->person_privmsgs - sptr->channel_privmsgs)
-	   > SPAMBOT_PRIVMSG_POSSIBLE_SPAMBOT_COUNT) )
+	   > spambot_privmsg_count) )
 	{
-	  sendto_realops("Possible spambot %s [%s@%s] : privmsgs to clients %d privmsgs to channels %d",
+	  sendto_realops_lev(REJ_LEV,
+"Possible spambot %s [%s@%s] : privmsgs to clients %d privmsgs to channels %d",
 			 sptr->name, sptr->user->username,
 			 sptr->user->host,
 			 sptr->person_privmsgs,sptr->channel_privmsgs);
@@ -2848,7 +2856,8 @@ int	m_quit(aClient *cptr,
 	{
 	  if((sptr->person_privmsgs > 4) && !sptr->channel_privmsgs)
 	    {
-	      sendto_realops("Possible spambot exiting %s [%s@%s] [%s] : privmsgs to clients %d, privmsgs to channels %d",
+	      sendto_realops_lev(REJ_LEV,
+"Possible spambot exiting %s [%s@%s] [%s] : privmsgs to clients %d, privmsgs to channels %d",
 			     sptr->name, sptr->user->username,
 			     sptr->user->host, 
 			     comment,

@@ -1575,7 +1575,8 @@ int 	initconf(int opt, int fd,int use_include)
 	  break;
 
 	case 'd':
-	  aconf->status = (CONF_DLINE|CONF_ELINE);
+	  aconf->status = CONF_DLINE;
+	  aconf->flags = CONF_FLAGS_E_LINED;
 	  break;
 	case 'D': /* Deny lines (immediate refusal) */
 	  aconf->status = CONF_DLINE;
@@ -1883,7 +1884,7 @@ int 	initconf(int opt, int fd,int use_include)
 	{
 	  dontadd = 1;
 	  DupString(aconf->mask,aconf->host);
-	  if(aconf->status & CONF_ELINE)
+	  if(aconf->flags & CONF_FLAGS_E_LINED)
 	    add_dline(aconf);
 	  else
 	    add_Dline(aconf);

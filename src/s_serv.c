@@ -98,6 +98,10 @@ extern int spare_fd;		/* defined in ircd.c */
 int     max_connection_count = 1, max_client_count = 1;
 #endif
 
+#ifdef ANTI_SPAMBOT_EXTRA
+int spambot_privmsg_count = PRIVMSG_POSSIBLE_SPAMBOT_COUNT;
+#endif
+
 extern aConfItem *temporary_klines;	/* defined in s_conf.c */
 #ifdef IDLE_CHECK
 extern int idle_time;			/* defined in ircd.c */
@@ -3346,7 +3350,7 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 
               if(newval <= 0)
                 {
-                  sendto_one(sptr, ":%s NOTICE %s :spam NUM must be > 0",
+                  sendto_one(sptr, ":%s NOTICE %s :SPAMNUM must be > 0",
                              me.name, parv[0]);
                   return 0;
                 }
@@ -3354,14 +3358,14 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 		spam_num = MIN_SPAM_NUM;
 	      else
 		spam_num = newval;
-              sendto_ops("%s has changed spam NUM to %i", parv[0], spam_num);
+              sendto_ops("%s has changed SPAMNUM to %i", parv[0], spam_num);
               sendto_one(sptr, ":%s NOTICE %s :spam NUM is now set to %i",
                          me.name, parv[0], spam_num);
               return 0;
             }
           else
             {
-              sendto_one(sptr, ":%s NOTICE %s :spam NUM is currently %i",
+              sendto_one(sptr, ":%s NOTICE %s :SPAMNUM is currently %i",
                          me.name, parv[0], spam_num);
               return 0;
             }
@@ -3374,7 +3378,7 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 
               if(newval <= 0)
                 {
-                  sendto_one(sptr, ":%s NOTICE %s :spam TIME must be > 0",
+                  sendto_one(sptr, ":%s NOTICE %s :SPAMTIME must be > 0",
                              me.name, parv[0]);
                   return 0;
                 }
@@ -3382,21 +3386,51 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 		spam_time = MIN_SPAM_TIME;
 	      else
 		spam_time = newval;
-              sendto_ops("%s has changed spam TIME to %i", parv[0], spam_time);
-              sendto_one(sptr, ":%s NOTICE %s :SPAM TIME is now set to %i",
+              sendto_ops("%s has changed SPAMTIME to %i", parv[0], spam_time);
+              sendto_one(sptr, ":%s NOTICE %s :SPAMTIME is now set to %i",
                          me.name, parv[0], spam_time);
               return 0;
             }
           else
             {
-              sendto_one(sptr, ":%s NOTICE %s :spam TIME is currently %i",
+              sendto_one(sptr, ":%s NOTICE %s :SPAMTIME is currently %i",
                          me.name, parv[0], spam_time);
               return 0;
             }
         }
-
 #endif
+#ifdef ANTI_SPAMBOT_EXTRA
+      else if(!strncasecmp(command, "SPAMMSGS",8))
+        {
+          if(parc > 2)
+            {
+              int newval = atoi(parv[2]);
+
+              if(newval <= 0)
+                {
+                  sendto_one(sptr, ":%s NOTICE %s :spam message count must be > 0",
+                             me.name, parv[0]);
+                  return 0;
+                }
+              if(newval < PRIVMSG_POSSIBLE_SPAMBOT_COUNT)
+		spambot_privmsg_count = PRIVMSG_POSSIBLE_SPAMBOT_COUNT;
+	      else
+		spambot_privmsg_count = newval;
+              sendto_ops("%s has changed spam message count to %i",
+			 parv[0], spambot_privmsg_count);
+              sendto_one(sptr, ":%s NOTICE %s :SPAMMSGS is now set to %i",
+                         me.name, parv[0], spambot_privmsg_count);
+              return 0;
+            }
+          else
+            {
+              sendto_one(sptr, ":%s NOTICE %s :SPAMMSGS is currently %i",
+                         me.name, parv[0], spambot_privmsg_count);
+              return 0;
+            }
+        }
       }
+#endif
   else
     {
       sendto_one(sptr, ":%s NOTICE %s :Options: MAX AUTOCONN",
@@ -3407,6 +3441,10 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 #endif
 #ifdef ANTI_SPAMBOT
       sendto_one(sptr, ":%s NOTICE %s :Options: SPAMNUM, SPAMTIME",
+		 me.name, parv[0]);
+#endif
+#ifdef ANTI_SPAMBOT_EXTRA
+      sendto_one(sptr, ":%s NOTICE %s :Options: SPAMMSGS",
 		 me.name, parv[0]);
 #endif
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
@@ -5375,6 +5413,17 @@ int	m_rehash(aClient *cptr,
 	  sendto_ops("%s is dumping conf file",parv[0]);
 	  rehash_dump(sptr,parv[0]);
 	  found = YES;
+	}
+      else if(mycmp(parv[1],"dlines") == 0)
+	{
+	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
+	  sendto_ops("%s is rehashing Server config file while whistling innocently",
+		     parv[0]);
+#ifdef USE_SYSLOG
+	  syslog(LOG_NOTICE, "REHASH From %s\n", get_client_name(sptr, FALSE));
+#endif
+	  dline_in_progress = 1;
+	  return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q')?2:0) : 0);
 	}
       if(found)
 	{

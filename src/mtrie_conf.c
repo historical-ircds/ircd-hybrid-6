@@ -122,7 +122,7 @@ void add_mtrie_conf_entry(aConfItem *aconf,int flags)
 {
   char tokenized_host[HOSTLEN+1];
 
-  if( aconf->mask && host_is_legal_ip(aconf->mask) )
+  if( (aconf->name[0] == 'x') && aconf->mask && host_is_legal_ip(aconf->mask) )
     {
       add_to_ip_ilines(aconf);
       return;

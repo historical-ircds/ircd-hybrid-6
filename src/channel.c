@@ -955,7 +955,9 @@ static  void     set_mode(aClient *cptr,
   char  *mbufw_new = modebuf_new;
   char  *pbufw_new = parabuf_new;
 
-  int	ischop, isok, isdeop, chan_op;
+  int	ischop, isok, isdeop, chan_op, self_lose_ops;
+
+  self_lose_ops = 0;
 
   chan_op = is_chan_op(sptr, chptr);
 
@@ -1077,7 +1079,7 @@ static  void     set_mode(aClient *cptr,
 	      if((whatt == MODE_ADD) && !isok)
 		break;
 	      if(whatt == MODE_DEL)
-		isok = 0;
+		self_lose_ops = 1;
 	      }
 
 	  /* ignore server-generated MODE +-ovh */
@@ -1118,6 +1120,9 @@ static  void     set_mode(aClient *cptr,
 	  opcnt++;
 
 	  change_chan_flag(chptr, who, the_mode|whatt);
+
+	  if (self_lose_ops)
+	    isok = 0;
 
 	  break;
 
@@ -2978,6 +2983,7 @@ int	m_invite(aClient *cptr,
 {
   aClient *acptr;
   aChannel *chptr;
+  int need_invite=NO;
 
   if (parc < 3 || *parv[1] == '\0')
     {
@@ -3022,8 +3028,10 @@ int	m_invite(aClient *cptr,
 		 me.name, parv[0], parv[1], parv[2]);
       return 0;
     }
+
   if (chptr && (chptr->mode.mode & MODE_INVITEONLY))
     {
+      need_invite = YES;
       if (!is_chan_op(sptr, chptr))
 	{
 	  sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
@@ -3057,8 +3065,13 @@ int	m_invite(aClient *cptr,
 
     }
 
+  /* don't attach anything to the invite links if don't need_invite
+   * to channel, i.e. channel is not +i. If it goes +i after the invite
+   * tough. -Dianora
+   */
+
   if (MyConnect(acptr))
-    if (chptr && sptr->user && is_chan_op(sptr, chptr))
+    if (chptr && sptr->user && is_chan_op(sptr, chptr) && need_invite)
       add_invite(acptr, chptr);
   sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s",parv[0],
 		    acptr->name, ((chptr) ? (chptr->chname) : parv[2]));
