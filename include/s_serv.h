@@ -31,6 +31,7 @@
 #endif
 
 struct Client;
+struct ConfItem;
 
 struct Capability
 {
@@ -104,6 +105,7 @@ extern int    hunt_server(struct Client* cptr, struct Client* sptr,
 extern int    server_estab(struct Client* cptr);
 extern int    check_server(struct Client* server);
 extern time_t try_connections(time_t currenttime);
+extern const char* my_name_for_link(const char* name, struct ConfItem* conf);
 
 #endif /* INCLUDED_s_serv_h */
 
