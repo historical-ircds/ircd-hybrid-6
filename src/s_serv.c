@@ -33,6 +33,7 @@
 #include "channel.h"
 #include "h.h"
 #include "list.h"
+#include "parse.h"
 #include "s_zip.h"
 #include "s_bsd.h"
 #include "dline_conf.h"

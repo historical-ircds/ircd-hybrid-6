@@ -42,6 +42,7 @@
 #include "channel.h"
 #include "h.h"
 #include "list.h"
+#include "parse.h"
 #include "send.h"
 #include "hash.h"
 #include "whowas.h"

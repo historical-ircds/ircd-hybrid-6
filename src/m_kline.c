@@ -32,6 +32,7 @@
 #include "class.h"
 #include "send.h"
 #include "h.h"
+#include "parse.h"
 #include "m_kline.h"
 #include "dline_conf.h"
 #include "mtrie_conf.h"

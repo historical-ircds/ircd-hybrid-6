@@ -28,6 +28,8 @@
 #include "class.h"
 #include "s_auth.h"
 #include "channel.h"
+#include "list.h"
+#include "parse.h"
 #include "h.h"
 #include "mtrie_conf.h"
 #include "s_conf.h"

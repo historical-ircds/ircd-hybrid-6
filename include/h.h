@@ -67,15 +67,7 @@ extern  int     debuglevel;
 extern  int     debugtty;
 extern  char*   debugmode;
 
-
 extern  time_t  check_fdlists (time_t);
-
-extern struct Client* find_chasing (struct Client *, char *, int *);
-extern struct Client* find_client(const char* name, struct Client* client);
-extern struct Client* find_name (char *, struct Client *);
-extern struct Client* find_person (char *, struct Client *);
-extern struct Client* find_server(const char* name, struct Client* dflt_client);
-extern struct Client* find_userhost (char *, char *, struct Client *, int *);
 
 
 #ifdef  GLINES
@@ -85,9 +77,11 @@ extern  void    flush_glines(void);
 extern  void    report_glines(struct Client *); 
 #endif
 
-extern  int     rehash (struct Client *, struct Client *, int);
-extern  void    report_error_on_tty(const char* message); /* ircd.c */
 
+/* ircd.c */
+extern void        report_error_on_tty(const char* message);
+
+/* scache.c */
 extern void        clear_scache_hash_table(void);
 extern const char* find_or_add(const char* name);
 extern void        count_scache(int *,unsigned long *);
@@ -98,18 +92,19 @@ extern void     dummy(int signo);
 extern  char    *form_str (int);
 extern  void    get_my_name (struct Client *, char *, int);
 
-extern  void    terminate (void);
+/* s_bsd.c */
 extern  int     send_queued(struct Client*);
 
+/* s_serv.c */
 extern  void    send_capabilities(struct Client *,int);
 
+/* bsd.c */
 extern  int     deliver_it (struct Client *, char *, int);
 
-extern  int     parse (struct Client *, char *, char *);
-extern  void    init_tree_parse (struct Message *);
-
+/* s_numeric.c */
 extern  int     do_numeric (int, struct Client *, struct Client *, int, char **);
 
+/* packet.c */
 extern  int     dopacket (struct Client *, char *, int);
 
 #ifdef FLUD

@@ -30,6 +30,7 @@
 #include "class.h"
 #include "numeric.h"
 #include "h.h"
+#include "parse.h"
 #include "fdlist.h"
 #include "send.h"
 #include "restart.h"

@@ -37,6 +37,7 @@
 #include "hash.h"
 #include "whowas.h"
 #include "channel.h"
+#include "s_misc.h"
 
 #include <assert.h>
 #include <fcntl.h>
