@@ -84,6 +84,7 @@ SRCS = \
 	s_debug.c \
 	s_misc.c \
 	s_serv.c \
+	s_stats.c \
 	s_user.c \
 	s_zip.c \
 	scache.c \
@@ -119,8 +120,8 @@ SRCS = \
 #	m_die.o \
 #	m_error.o \
 #	m_gline.o \
-#	m_htm.o \
 #	m_help.o \
+#	m_htm.o \
 #	m_info.o \
 #	m_kline.o \
 #	m_links.o \
@@ -159,12 +160,13 @@ SRCS = \
 #	s_debug.o \
 #	s_misc.o \
 #	s_numeric.o \
-#       sprintf_irc.o \
 #	s_serv.o \
+#	s_stats.o \
 #	s_user.o \
 #	s_zip.o \
 #	scache.o \
 #	send.o \
+#	sprintf_irc.o \
 #	support.o \
 #	whowas.o
 

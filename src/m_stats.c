@@ -39,8 +39,9 @@
 #include "s_bsd.h"       /* highest_fd */
 #include "s_conf.h"      /* ConfItem, report_configured_links */
 #include "s_debug.h"     /* send_usage */
-#include "s_misc.h"      /* tstats */
+#include "s_misc.h"      /* serv_info */
 #include "s_serv.h"      /* hunt_server, show_servers */
+#include "s_stats.h"     /* tstats */
 #include "s_user.h"      /* show_opers */
 
 #include <string.h>

@@ -34,8 +34,8 @@
 #include "restart.h"
 #include "s_auth.h"
 #include "s_conf.h"
-#include "s_misc.h"
 #include "s_serv.h"
+#include "s_stats.h"
 #include "s_zip.h"
 #include "send.h"
 #include "struct.h"
@@ -757,21 +757,21 @@ void close_connection(struct Client *cptr)
 
   if (IsServer(cptr))
     {
-      ircstp->is_sv++;
-      ircstp->is_sbs += cptr->sendB;
-      ircstp->is_sbr += cptr->receiveB;
-      ircstp->is_sks += cptr->sendK;
-      ircstp->is_skr += cptr->receiveK;
-      ircstp->is_sti += CurrentTime - cptr->firsttime;
-      if (ircstp->is_sbs > 2047)
+      ServerStats->is_sv++;
+      ServerStats->is_sbs += cptr->sendB;
+      ServerStats->is_sbr += cptr->receiveB;
+      ServerStats->is_sks += cptr->sendK;
+      ServerStats->is_skr += cptr->receiveK;
+      ServerStats->is_sti += CurrentTime - cptr->firsttime;
+      if (ServerStats->is_sbs > 2047)
         {
-          ircstp->is_sks += (ircstp->is_sbs >> 10);
-          ircstp->is_sbs &= 0x3ff;
+          ServerStats->is_sks += (ServerStats->is_sbs >> 10);
+          ServerStats->is_sbs &= 0x3ff;
         }
-      if (ircstp->is_sbr > 2047)
+      if (ServerStats->is_sbr > 2047)
         {
-          ircstp->is_skr += (ircstp->is_sbr >> 10);
-          ircstp->is_sbr &= 0x3ff;
+          ServerStats->is_skr += (ServerStats->is_sbr >> 10);
+          ServerStats->is_sbr &= 0x3ff;
         }
       /*
        * If the connection has been up for a long amount of time, schedule
@@ -796,25 +796,25 @@ void close_connection(struct Client *cptr)
     }
   else if (IsClient(cptr))
     {
-      ircstp->is_cl++;
-      ircstp->is_cbs += cptr->sendB;
-      ircstp->is_cbr += cptr->receiveB;
-      ircstp->is_cks += cptr->sendK;
-      ircstp->is_ckr += cptr->receiveK;
-      ircstp->is_cti += CurrentTime - cptr->firsttime;
-      if (ircstp->is_cbs > 2047)
+      ServerStats->is_cl++;
+      ServerStats->is_cbs += cptr->sendB;
+      ServerStats->is_cbr += cptr->receiveB;
+      ServerStats->is_cks += cptr->sendK;
+      ServerStats->is_ckr += cptr->receiveK;
+      ServerStats->is_cti += CurrentTime - cptr->firsttime;
+      if (ServerStats->is_cbs > 2047)
         {
-          ircstp->is_cks += (ircstp->is_cbs >> 10);
-          ircstp->is_cbs &= 0x3ff;
+          ServerStats->is_cks += (ServerStats->is_cbs >> 10);
+          ServerStats->is_cbs &= 0x3ff;
         }
-      if (ircstp->is_cbr > 2047)
+      if (ServerStats->is_cbr > 2047)
         {
-          ircstp->is_ckr += (ircstp->is_cbr >> 10);
-          ircstp->is_cbr &= 0x3ff;
+          ServerStats->is_ckr += (ServerStats->is_cbr >> 10);
+          ServerStats->is_cbr &= 0x3ff;
         }
     }
   else
-    ircstp->is_ni++;
+    ServerStats->is_ni++;
   
   if (cptr->dns_reply) {
     --cptr->dns_reply->ref_count;
@@ -879,7 +879,7 @@ void add_connection(struct Listener* listener, int fd)
   if (getpeername(fd, (struct sockaddr*) &addr, &len)) {
     report_error("Failed in adding new connection %s :%s", 
                  get_listener_name(listener), errno);
-    ircstp->is_ref++;
+    ServerStats->is_ref++;
     close(fd);
     return;
   }

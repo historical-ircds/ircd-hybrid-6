@@ -37,8 +37,8 @@
 #include "numeric.h"
 #include "s_bsd.h"
 #include "s_conf.h"
-#include "s_misc.h"
 #include "s_serv.h"
+#include "s_stats.h"
 #include "scache.h"
 #include "send.h"
 #include "struct.h"
@@ -539,7 +539,7 @@ static int register_user(aClient *cptr, aClient *sptr,
         syslog(LOG_INFO,"%s from %s.", "Too many connections",
                get_client_host(sptr));
 #endif
-            ircstp->is_ref++;
+            ServerStats->is_ref++;
             return exit_client(cptr, sptr, &me, 
                "No more connections allowed in your connection class" );
           break;
@@ -559,7 +559,7 @@ static int register_user(aClient *cptr, aClient *sptr,
           else
 #endif
             {
-              ircstp->is_ref++;
+              ServerStats->is_ref++;
               sendto_realops_flags(FLAGS_CCONN, "%s from %s [%s].",
                                  "Unauthorized client connection",
                                  get_client_host(sptr),
@@ -568,7 +568,7 @@ static int register_user(aClient *cptr, aClient *sptr,
               syslog(LOG_INFO,"%s from %s.",
                      "Unauthorized client connection", get_client_host(sptr));
 #endif
-              ircstp->is_ref++;
+              ServerStats->is_ref++;
               return exit_client(cptr, sptr, &me,
                                  "You are not authorized to use this server");
             }
@@ -590,7 +590,7 @@ static int register_user(aClient *cptr, aClient *sptr,
 
             if ( tell_user_off( sptr, &reason ))
               {
-                ircstp->is_ref++;
+                ServerStats->is_ref++;
                 return exit_client(cptr, sptr, &me, "Banned" );
               }
             else
@@ -618,7 +618,7 @@ static int register_user(aClient *cptr, aClient *sptr,
         {
           if (IsNeedIdentd(aconf))
             {
-              ircstp->is_ref++;
+              ServerStats->is_ref++;
               sendto_one(sptr,
  ":%s NOTICE %s :*** Notice -- You need to install identd to use this server",
                          me.name, cptr->name);
@@ -639,7 +639,7 @@ static int register_user(aClient *cptr, aClient *sptr,
       /* password check */
       if (!BadPtr(aconf->passwd) && 0 != strcmp(sptr->passwd, aconf->passwd))
         {
-          ircstp->is_ref++;
+          ServerStats->is_ref++;
           sendto_one(sptr, form_str(ERR_PASSWDMISMATCH),
                      me.name, parv[0]);
           return exit_client(cptr, sptr, &me, "Bad Password");
@@ -668,7 +668,7 @@ static int register_user(aClient *cptr, aClient *sptr,
           sendto_realops_flags(FLAGS_FULL,
                                "Too many clients, rejecting %s[%s].",
                                nick, sptr->host);
-          ircstp->is_ref++;
+          ServerStats->is_ref++;
           return exit_client(cptr, sptr, &me,
                              "Sorry, server is full - try later");
         }
@@ -688,7 +688,7 @@ static int register_user(aClient *cptr, aClient *sptr,
               sendto_realops_flags(FLAGS_BOTS, "Rejecting %s: %s",
                                  type_of_bot[sptr->isbot],
                                  get_client_name(sptr,FALSE));
-              ircstp->is_ref++;
+              ServerStats->is_ref++;
               return exit_client(cptr, sptr, sptr, type_of_bot[sptr->isbot] );
             }
         }
@@ -701,7 +701,7 @@ static int register_user(aClient *cptr, aClient *sptr,
         {
           sendto_realops_flags(FLAGS_REJ,"Invalid username: %s (%s@%s)",
                              nick, sptr->username, sptr->host);
-          ircstp->is_ref++;
+          ServerStats->is_ref++;
           ircsprintf(tmpstr2, "Invalid username [%s]", sptr->username);
           return exit_client(cptr, sptr, &me, tmpstr2);
         }
@@ -720,13 +720,13 @@ static int register_user(aClient *cptr, aClient *sptr,
               
               if(aconf->port)
                 {
-                  ircstp->is_ref++;
+                  ServerStats->is_ref++;
                   sendto_realops_flags(FLAGS_REJ,
                                      "X-line Rejecting [%s] [%s], user %s",
                                      sptr->info,
                                      reason,
                                      get_client_name(cptr, FALSE));
-                  ircstp->is_ref++;      
+                  ServerStats->is_ref++;      
                   return exit_client(cptr, sptr, &me, "Bad user info");
                 }
               else
@@ -743,7 +743,7 @@ static int register_user(aClient *cptr, aClient *sptr,
                                  "Quarantined nick [%s], dumping user %s",
                                  nick,get_client_name(cptr, FALSE));
       
-              ircstp->is_ref++;      
+              ServerStats->is_ref++;      
               return exit_client(cptr, sptr, &me, "quarantined nick");
             }
         }
@@ -1361,7 +1361,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
       
       if (IsServer(cptr))
         {
-          ircstp->is_kill++;
+          ServerStats->is_kill++;
           sendto_realops_flags(FLAGS_DEBUG, "Bad Nick: %s From: %s %s",
                              parv[1], parv[0],
                              get_client_name(cptr, FALSE));
@@ -1431,7 +1431,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
       sendto_ops("Nick collision on %s(%s <- %s)",
                  sptr->name, acptr->from->name,
                  get_client_name(cptr, FALSE));
-      ircstp->is_kill++;
+      ServerStats->is_kill++;
       sendto_one(cptr, ":%s KILL %s :%s (%s <- %s)",
                  me.name, sptr->name, me.name, acptr->from->name,
                  /* NOTE: Cannot use get_client_name
@@ -1571,7 +1571,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
           sendto_ops("Nick collision on %s(%s <- %s)(both killed)",
                      acptr->name, acptr->from->name,
                      get_client_name(cptr, FALSE));
-          ircstp->is_kill++;
+          ServerStats->is_kill++;
           sendto_one(acptr, form_str(ERR_NICKCOLLISION),
                      me.name, acptr->name, acptr->name);
 #ifndef NICK_KILL_LOCALLY
@@ -1607,7 +1607,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
                            acptr->name, acptr->from->name,
                            get_client_name(cptr, FALSE));
               
-              ircstp->is_kill++;
+              ServerStats->is_kill++;
               sendto_one(acptr, form_str(ERR_NICKCOLLISION),
                          me.name, acptr->name, acptr->name);
 
@@ -1638,7 +1638,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
       sendto_ops("Nick change collision from %s to %s(%s <- %s)(both killed)",
                  sptr->name, acptr->name, acptr->from->name,
                  get_client_name(cptr, FALSE));
-      ircstp->is_kill++;
+      ServerStats->is_kill++;
       sendto_one(acptr, form_str(ERR_NICKCOLLISION),
                  me.name, acptr->name, acptr->name);
 
@@ -1648,7 +1648,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
                          me.name, sptr->name, me.name, acptr->from->name,
                          acptr->name, get_client_name(cptr, FALSE));
 #endif
-      ircstp->is_kill++;
+      ServerStats->is_kill++;
 #ifndef NICK_KILL_LOCALLY
       sendto_serv_butone(NULL, /* Kill new from incoming link */
                          ":%s KILL %s :%s (%s <- %s(%s))",
@@ -1675,7 +1675,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
             sendto_ops("Nick change collision from %s to %s(%s <- %s)(newer killed)",
                        sptr->name, acptr->name, acptr->from->name,
                        get_client_name(cptr, FALSE));
-          ircstp->is_kill++;
+          ServerStats->is_kill++;
 #ifndef NICK_KILL_LOCALLY
           sendto_serv_butone(cptr, /* KILL old from outgoing servers */
                              ":%s KILL %s :%s (%s(%s) <- %s)",
@@ -1699,7 +1699,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
                        acptr->name, acptr->from->name,
                        get_client_name(cptr, FALSE));
           
-          ircstp->is_kill++;
+          ServerStats->is_kill++;
           sendto_one(acptr, form_str(ERR_NICKCOLLISION),
                      me.name, acptr->name, acptr->name);
 #ifndef NICK_KILL_LOCALLY
@@ -3031,7 +3031,7 @@ check_for_flud(aClient *fluder, /* fluder, client being fluded */
   if(!blocking && (count > FLUDNUM))
     {
       blocking = 1;   
-      ircstp->is_flud++;
+      ServerStats->is_flud++;
       
       /* if we are going to say anything to the fludee, now is the
       ** time to mention it to them. */

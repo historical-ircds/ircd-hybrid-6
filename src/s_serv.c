@@ -37,7 +37,7 @@
 #include "struct.h"
 #include "s_bsd.h"
 #include "s_conf.h"
-#include "s_misc.h"
+#include "s_stats.h"
 #include "s_user.h"
 #include "s_zip.h"
 #include "scache.h"
@@ -527,7 +527,7 @@ int server_estab(struct Client *cptr)
 
   if (!(n_conf = find_conf_name(cptr->confs, host, CONF_NOCONNECT_SERVER)))
     {
-      ircstp->is_ref++;
+      ServerStats->is_ref++;
       sendto_one(cptr,
                  "ERROR :Access denied. No N line for server %s", inpath);
       sendto_ops("Access denied. No N line for server %s", inpath);
@@ -535,7 +535,7 @@ int server_estab(struct Client *cptr)
     }
   if (!(c_conf = find_conf_name(cptr->confs, host, CONF_CONNECT_SERVER )))
     {
-      ircstp->is_ref++;
+      ServerStats->is_ref++;
       sendto_one(cptr, "ERROR :Only N (no C) field for server %s", inpath);
       sendto_ops("Only N (no C) field for server %s",inpath);
       return exit_client(cptr, cptr, cptr, "No C line for server");
@@ -557,7 +557,7 @@ int server_estab(struct Client *cptr)
 #endif  /* CRYPT_LINK_PASSWORD */
   if (*n_conf->passwd && 0 != strcmp(n_conf->passwd, encr))
     {
-      ircstp->is_ref++;
+      ServerStats->is_ref++;
       sendto_one(cptr, "ERROR :No Access (passwd mismatch) %s",
                  inpath);
       sendto_ops("Access denied (passwd mismatch) %s", inpath);
@@ -576,7 +576,7 @@ int server_estab(struct Client *cptr)
    */
   if (serv_cptr_list)   
     {
-      ircstp->is_ref++;
+      ServerStats->is_ref++;
       sendto_one(cptr, "ERROR :I'm a leaf not a hub");
       return exit_client(cptr, cptr, cptr, "I'm a leaf");
     }
@@ -600,7 +600,7 @@ int server_estab(struct Client *cptr)
              n_conf->user, cptr->username));
       if (!match(n_conf->user, cptr->username))
         {
-          ircstp->is_ref++;
+          ServerStats->is_ref++;
           sendto_ops("Username mismatch [%s]v[%s] : %s",
                      n_conf->user, cptr->username,
                      get_client_name(cptr, TRUE));

@@ -26,7 +26,7 @@
 #include "irc_string.h"
 #include "ircd.h"
 #include "numeric.h"
-#include "s_misc.h"
+#include "s_stats.h"
 #include "send.h"
 #include "struct.h"
 
@@ -129,7 +129,7 @@ int parse(aClient *cptr, char *buffer, char *bufend)
             {
               Debug((DEBUG_ERROR, "Unknown prefix (%s)(%s) from (%s)",
                      sender, buffer, cptr->name));
-              ircstp->is_unpf++;
+              ServerStats->is_unpf++;
 
               remove_unknown(cptr, sender, buffer);
 
@@ -137,7 +137,7 @@ int parse(aClient *cptr, char *buffer, char *bufend)
             }
           if (from->from != cptr)
             {
-              ircstp->is_wrdi++;
+              ServerStats->is_wrdi++;
               Debug((DEBUG_ERROR, "Message (%s) coming from (%s)",
                      buffer, cptr->name));
 
@@ -150,7 +150,7 @@ int parse(aClient *cptr, char *buffer, char *bufend)
 
   if (*ch == '\0')
     {
-      ircstp->is_empt++;
+      ServerStats->is_empt++;
       Debug((DEBUG_NOTICE, "Empty message from host %s:%s",
              cptr->name, from->name));
       return(-1);
@@ -172,7 +172,7 @@ int parse(aClient *cptr, char *buffer, char *bufend)
       mptr = (struct Message *)NULL;
       numeric = ch;
       paramcount = MAXPARA;
-      ircstp->is_num++;
+      ServerStats->is_num++;
       s = ch + 3;       /* I know this is ' ' from above if */
       *s++ = '\0';      /* blow away the ' ', and point s to next part */
     }
@@ -207,7 +207,7 @@ int parse(aClient *cptr, char *buffer, char *bufend)
               Debug((DEBUG_ERROR,"Unknown (%s) from %s",
                      ch, get_client_name(cptr, TRUE)));
             }
-          ircstp->is_unco++;
+          ServerStats->is_unco++;
           return(-1);
         }
 

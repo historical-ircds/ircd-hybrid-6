@@ -54,12 +54,6 @@ static char* weekdays[] = {
   "Thursday", "Friday", "Saturday"
 };
 
-/*
- * stats stuff
- */
-struct stats  ircst;
-struct stats* ircstp = &ircst;
-
 char* date(time_t clock) 
 {
   static        char        buf[80], plus;
@@ -133,104 +127,6 @@ char* small_file_date(time_t clock)
   return timebuffer;
 }
 #endif
-void        initstats()
-{
-  memset(&ircst, 0, sizeof(ircst));
-}
-
-void tstats(aClient *cptr,char *name)
-{
-  aClient        *acptr;
-  int        i;
-  struct stats        *sp;
-  struct        stats        tmp;
-
-  sp = &tmp;
-  memcpy((void *)sp, (void *)ircstp, sizeof(*sp));
-  for (i = 0; i < highest_fd; i++)
-    {
-      if (!(acptr = local[i]))
-        continue;
-      if (IsServer(acptr))
-        {
-          sp->is_sbs += acptr->sendB;
-          sp->is_sbr += acptr->receiveB;
-          sp->is_sks += acptr->sendK;
-          sp->is_skr += acptr->receiveK;
-          sp->is_sti += CurrentTime - acptr->firsttime;
-          sp->is_sv++;
-          if (sp->is_sbs > 1023)
-            {
-              sp->is_sks += (sp->is_sbs >> 10);
-              sp->is_sbs &= 0x3ff;
-            }
-          if (sp->is_sbr > 1023)
-            {
-              sp->is_skr += (sp->is_sbr >> 10);
-              sp->is_sbr &= 0x3ff;
-            }
-          
-        }
-      else if (IsClient(acptr))
-        {
-          sp->is_cbs += acptr->sendB;
-          sp->is_cbr += acptr->receiveB;
-          sp->is_cks += acptr->sendK;
-          sp->is_ckr += acptr->receiveK;
-          sp->is_cti += CurrentTime - acptr->firsttime;
-          sp->is_cl++;
-          if (sp->is_cbs > 1023)
-            {
-              sp->is_cks += (sp->is_cbs >> 10);
-              sp->is_cbs &= 0x3ff;
-            }
-          if (sp->is_cbr > 1023)
-            {
-              sp->is_ckr += (sp->is_cbr >> 10);
-              sp->is_cbr &= 0x3ff;
-            }
-          
-        }
-      else if (IsUnknown(acptr))
-        sp->is_ni++;
-    }
-
-  sendto_one(cptr, ":%s %d %s :accepts %u refused %u",
-             me.name, RPL_STATSDEBUG, name, sp->is_ac, sp->is_ref);
-  sendto_one(cptr, ":%s %d %s :unknown commands %u prefixes %u",
-             me.name, RPL_STATSDEBUG, name, sp->is_unco, sp->is_unpf);
-  sendto_one(cptr, ":%s %d %s :nick collisions %u unknown closes %u",
-             me.name, RPL_STATSDEBUG, name, sp->is_kill, sp->is_ni);
-  sendto_one(cptr, ":%s %d %s :wrong direction %u empty %u",
-             me.name, RPL_STATSDEBUG, name, sp->is_wrdi, sp->is_empt);
-  sendto_one(cptr, ":%s %d %s :numerics seen %u mode fakes %u",
-             me.name, RPL_STATSDEBUG, name, sp->is_num, sp->is_fake);
-  sendto_one(cptr, ":%s %d %s :auth successes %u fails %u",
-             me.name, RPL_STATSDEBUG, name, sp->is_asuc, sp->is_abad);
-  sendto_one(cptr, ":%s %d %s :local connections %u udp packets %u",
-             me.name, RPL_STATSDEBUG, name, sp->is_loc, sp->is_udp);
-  sendto_one(cptr, ":%s %d %s :Client Server",
-             me.name, RPL_STATSDEBUG, name);
-  sendto_one(cptr, ":%s %d %s :connected %u %u",
-             me.name, RPL_STATSDEBUG, name, sp->is_cl, sp->is_sv);
-  sendto_one(cptr, ":%s %d %s :bytes sent %u.%uK %u.%uK",
-             me.name, RPL_STATSDEBUG, name,
-             sp->is_cks, sp->is_cbs, sp->is_sks, sp->is_sbs);
-  sendto_one(cptr, ":%s %d %s :bytes recv %u.%uK %u.%uK",
-             me.name, RPL_STATSDEBUG, name,
-             sp->is_ckr, sp->is_cbr, sp->is_skr, sp->is_sbr);
-  sendto_one(cptr, ":%s %d %s :time connected %u %u",
-             me.name, RPL_STATSDEBUG, name, sp->is_cti, sp->is_sti);
-#ifdef FLUD
-  sendto_one(cptr, ":%s %d %s :CTCP Floods Blocked %u",
-             me.name, RPL_STATSDEBUG, name, sp->is_flud);
-#endif /* FLUD */
-#ifdef ANTI_IP_SPOOF
-  sendto_one(cptr, ":%s %d %s :IP Spoofers %u",
-             me.name, RPL_STATSDEBUG, name, sp->is_ipspoof);
-#endif /* ANTI_IP_SPOOF */
-}
-
 
 /*
  * Retarded - so sue me :-P

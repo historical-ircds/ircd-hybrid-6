@@ -43,6 +43,7 @@
 #include "s_debug.h"
 #include "s_misc.h"
 #include "s_serv.h"      /* try_connections */
+#include "s_stats.h"
 #include "s_zip.h"
 #include "scache.h"
 #include "send.h"
@@ -835,7 +836,7 @@ int main(int argc, char *argv[])
   initlists();
   initclass();
   initwhowas();
-  initstats();
+  init_stats();
   init_tree_parse(msgtab);      /* tree parse code (orabidoo) */
 
   fdlist_init();
