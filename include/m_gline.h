@@ -40,8 +40,8 @@ struct Client;
 struct ConfItem;
 
 #ifdef  GLINES
-extern struct ConfItem* find_gkill(struct Client* client);
-extern struct ConfItem* find_is_glined(const char* host, const char* name);
+extern struct ConfItem* find_gkill(struct Client *, char *);
+extern struct ConfItem* find_is_glined(const char *, const char *);
 extern void   flush_glines(void);             
 extern void   report_glines(struct Client *); 
 

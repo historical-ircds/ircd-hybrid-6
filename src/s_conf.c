@@ -97,7 +97,7 @@ static  int  oper_flags_from_string(char *);
 extern  void    outofmemory(void);        /* defined in list.c */
 
 #ifdef GLINES
-extern  struct ConfItem *find_gkill(aClient *); /* defined in m_gline.c */
+extern  struct ConfItem *find_gkill(aClient *,char *); /* defined in m_gline.c */
 #endif
 
 /* usually, with hash tables, you use a prime number...
@@ -422,12 +422,19 @@ int attach_Iline(aClient* cptr, const char* username, char **preason)
       if (aconf->status & CONF_CLIENT)
         {
 #ifdef GLINES
-          if ( !IsConfElined(aconf) && (gkill_conf = find_gkill(cptr)) )
+          if ( !IsConfElined(aconf) )
             {
-              *preason = gkill_conf->passwd;
-              sendto_one(cptr, ":%s NOTICE %s :*** G-lined",
-                           me.name,cptr->name);
-              return ( -5 );
+              if (IsGotId(cptr))
+                gkill_conf = find_gkill(cptr,cptr->username);
+              else
+                gkill_conf = find_gkill(cptr,non_ident);
+              if (gkill_conf)
+                {
+                  *preason = gkill_conf->passwd;
+                  sendto_one(cptr, ":%s NOTICE %s :*** G-lined",
+                             me.name,cptr->name);
+                  return ( -5 );
+                }
             }
 #endif        /* GLINES */
 

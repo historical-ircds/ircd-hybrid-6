@@ -365,7 +365,7 @@ time_t check_pings(time_t currenttime)
               if(IsPerson(cptr))
                 {
 #ifdef GLINES
-                  if( (aconf = find_gkill(cptr)) )
+                  if( (aconf = find_gkill(cptr,cptr->username)) )
                     {
                       if(IsElined(cptr))
                         {

@@ -495,10 +495,10 @@ void flush_glines()
  * side effects - none
  */
 
-aConfItem *find_gkill(aClient* cptr)
+aConfItem *find_gkill(aClient* cptr, char* username)
 {
   assert(0 != cptr);
-  return (IsElined(cptr)) ? 0 : find_is_glined(cptr->host, cptr->username);
+  return (IsElined(cptr)) ? 0 : find_is_glined(cptr->host, username);
 }
 
 /*
