@@ -566,14 +566,16 @@ int	m_server(aClient *cptr,
 		 char *parv[])
 {
   Reg	int	i;
-  char	info[REALLEN+1], *inpath, *host;
+  char	info[REALLEN+1];
+  /*  char *inpath; */
+  char  *host;
   aClient *acptr, *bcptr;
   aConfItem *aconf;
   int	hop;
   char clean_host[(2*HOSTLEN)+1];
 
   info[0] = '\0';
-  inpath = get_client_name(cptr,FALSE);
+  /*  inpath = get_client_name(cptr,FALSE); */
   if (parc < 2 || *parv[1] == '\0')
     {
       sendto_one(cptr,"ERROR :No servername");
@@ -758,7 +760,7 @@ int	m_server(aClient *cptr,
       */
       sendto_one(cptr,"ERROR :Nickname %s already exists!", host);
       sendto_ops("Link %s cancelled: Server/nick collision on %s",
-		 inpath, host);
+		 /* inpath */ get_client_name(cptr,FALSE), host);
       return exit_client(cptr, cptr, cptr, "Nick as Server");
     }
 
@@ -1139,11 +1141,22 @@ int	m_server_estab(aClient *cptr)
 	    continue;
 	  split = (MyConnect(acptr) &&
 		   mycmp(acptr->name, acptr->sockhost));
+
+	  /* DON'T give away the IP of the server here
+	   * if its a hub especially.
+	   */
+
 	  if (split)
+	    sendto_one(cptr, ":%s SERVER %s %d :%s",
+		       acptr->serv->up, acptr->name,
+		       acptr->hopcount+1,
+		       acptr->info);
+	    /*
 	    sendto_one(cptr, ":%s SERVER %s %d :[%s] %s",
 		       acptr->serv->up, acptr->name,
 		       acptr->hopcount+1,
 		       acptr->sockhost, acptr->info);
+		       */
 	  else
 	    sendto_one(cptr, ":%s SERVER %s %d :%s",
 		       acptr->serv->up, acptr->name,
@@ -1850,6 +1863,7 @@ int	m_links(aClient *cptr,
   char *s;
   char *d;
   int  n;
+  char *p;
   static time_t last_used=0L;
 
   if (parc > 2)
@@ -1928,10 +1942,32 @@ int	m_links(aClient *cptr,
 	continue;
       if (!BadPtr(mask) && matches(mask, acptr->name))
 	continue;
-      sendto_one(sptr, rpl_str(RPL_LINKS),
-		 me.name, parv[0], acptr->name, acptr->serv->up,
-		 acptr->hopcount, (acptr->info[0] ? acptr->info :
-				   "(Unknown Location)"));
+      if(IsAnOper(sptr))
+	 sendto_one(sptr, rpl_str(RPL_LINKS),
+		    me.name, parv[0], acptr->name, acptr->serv->up,
+		    acptr->hopcount, (acptr->info[0] ? acptr->info :
+				      "(Unknown Location)"));
+      else
+	{
+	  if(acptr->info[0])
+	    {
+	      /* kludge, you didn't see this nor am I going to admit
+               * that I coded this.
+	       */
+	      p = strchr(acptr->info,']');
+	      if(p)
+		p += 2;	/* skip the nasty [IP] part */
+	      else
+		p = acptr->info;
+	    }
+	  else
+	    p = "(Unknown Location)";
+
+	  sendto_one(sptr, rpl_str(RPL_LINKS),
+		    me.name, parv[0], acptr->name, acptr->serv->up,
+		    acptr->hopcount, p);
+	}
+
     }
   
   sendto_one(sptr, rpl_str(RPL_ENDOFLINKS), me.name, parv[0],

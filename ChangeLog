@@ -22,6 +22,11 @@ I started this file to keep track of changes made in hybrid-6,
 beginning with b37.  We are in VERY HIGH SPEED development mode,
 so it's important to keep track of this. =)
 
+version hybrid-6-b42    24-Jan-1999
+* removed [IP] being sent in CONNECT in connect burst
+* removed [IP] if seen in m_links from prying eyes of users
+-Dianora
+	
 version hybrid-6-b41    23-Jan-1999
 * removed USERNAMES_IN_TRACE default is always on now
 * get_client_name() will default to sptr->username if sptr->user->username
