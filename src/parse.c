@@ -54,122 +54,6 @@ static struct Message *tree_parse(char *);
 static char buffer[1024];  /* ZZZ must this be so big? must it be here? */
 
 /*
-**  Find a client (server or user) by name.
-**
-**  *Note*
-**      Semantics of this function has been changed from
-**      the old. 'name' is now assumed to be a null terminated
-**      string and the search is the for server and user.
-*/
-
-aClient* find_client(const char* name, aClient *cptr)
-{
-  if (name)
-    cptr = hash_find_client(name, cptr);
-
-  return cptr;
-}
-
-/*
-**  Find a user@host (server or user).
-**
-**  *Note*
-**      Semantics of this function has been changed from
-**      the old. 'name' is now assumed to be a null terminated
-**      string and the search is the for server and user.
-*/
-aClient *find_userhost(char *user,
-                       char *host,
-                       aClient *cptr,
-                       int *count)
-{
-  aClient       *c2ptr;
-  aClient       *res = cptr;
-
-  *count = 0;
-  if (collapse(user))
-    for (c2ptr = GlobalClientList; c2ptr; c2ptr = c2ptr->next) 
-      {
-        if (!MyClient(c2ptr)) /* implies mine and a user */
-          continue;
-        if ((!host || match(host, c2ptr->host)) &&
-            irccmp(user, c2ptr->username) == 0)
-          {
-            (*count)++;
-            res = c2ptr;
-          }
-      }
-  return res;
-}
-
-/*
-**  Find server by name.
-**
-**      This implementation assumes that server and user names
-**      are unique, no user can have a server name and vice versa.
-**      One should maintain separate lists for users and servers,
-**      if this restriction is removed.
-**
-**  *Note*
-**      Semantics of this function has been changed from
-**      the old. 'name' is now assumed to be a null terminated
-**      string.
-*/
-
-aClient* find_server(const char* name, aClient *cptr)
-{
-  if (name)
-    cptr = hash_find_server(name, cptr);
-  return cptr;
-}
-
-aClient *find_name(char *name, aClient *cptr)
-{
-  aClient *c2ptr = cptr;
-
-  if (!name)
-    return c2ptr;
-
-  if ((c2ptr = hash_find_server(name, cptr)))
-    return (c2ptr);
-  if (!strchr(name, '*'))
-    return c2ptr;
-
-  /* hmmm hot spot for host masked servers (ick)
-   * a separate link list for all servers would help here
-   * instead of having to scan 50k client structs. (ick)
-   * -Dianora
-   */
-
-  for (c2ptr = GlobalClientList; c2ptr; c2ptr = c2ptr->next)
-    {
-      if (!IsServer(c2ptr) && !IsMe(c2ptr))
-        continue;
-      if (match(name, c2ptr->name))
-        break;
-      if (strchr(c2ptr->name, '*'))
-        if (match(c2ptr->name, name))
-          break;
-    }
-  return (c2ptr ? c2ptr : cptr);
-}
-
-/*
-**  Find person by (nick)name.
-*/
-aClient *find_person(char *name, aClient *cptr)
-{
-  aClient       *c2ptr = cptr;
-
-  c2ptr = find_client(name, c2ptr);
-
-  if (c2ptr && IsClient(c2ptr) && c2ptr->user)
-    return c2ptr;
-  else
-    return cptr;
-}
-
-/*
  * parse a buffer.
  *
  * NOTE: parse() should not be called recusively by any other functions!
@@ -228,7 +112,7 @@ int parse(aClient *cptr, char *buffer, char *bufend)
         {
           from = find_client(sender, (aClient *) NULL);
           if (!from || !match(from->name, sender))
-            from = find_server(sender, (aClient *)NULL);
+            from = find_server(sender);
 
           para[0] = sender;
           
@@ -810,7 +694,7 @@ static int     do_numeric(
             sendto_prefix_one(acptr, sptr,":%s %s %s%s",
                               parv[0], numeric, nick, buffer);
         }
-      else if ((acptr = find_server(nick, (aClient *)NULL)))
+      else if ((acptr = find_server(nick)))
         {
           if (!IsMe(acptr) && acptr->from != cptr)
             sendto_prefix_one(acptr, sptr,":%s %s %s%s",

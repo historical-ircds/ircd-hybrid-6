@@ -33,7 +33,6 @@
 #include "s_err.h"
 #include "ircd.h"
 #include "s_misc.h"
-#include "parse.h"
 #include "m_kline.h"
 #include "dline_conf.h"
 #include "mtrie_conf.h"

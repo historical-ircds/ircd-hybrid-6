@@ -123,7 +123,7 @@ int     autoconn = 1;           /* allow auto conns or not */
  *      function should be made latest. (No harm done if this
  *      is called earlier or later...)
  */
-static  time_t  try_connections(time_t currenttime)
+static time_t try_connections(time_t currenttime)
 {
   aConfItem     *aconf;
   aClient       *cptr;
@@ -166,7 +166,7 @@ static  time_t  try_connections(time_t currenttime)
       ** Found a CONNECT config with port specified, scan clients
       ** and see if this server is already connected?
       */
-      cptr = find_name(aconf->name, (aClient *)NULL);
+      cptr = find_server(aconf->name);
       
       if (!cptr && (Links(cltmp) < MaxLinks(cltmp)) &&
           (!connecting || (ClassType(cltmp) > con_class)))

@@ -104,25 +104,25 @@ int hunt_server(aClient *cptr, aClient *sptr, char *command,
   int wilds;
 
   /*
-  ** Assume it's me, if no server
-  */
+   * Assume it's me, if no server
+   */
   if (parc <= server || BadPtr(parv[server]) ||
       match(me.name, parv[server]) ||
       match(parv[server], me.name))
     return (HUNTED_ISME);
   /*
-  ** These are to pickup matches that would cause the following
-  ** message to go in the wrong direction while doing quick fast
-  ** non-matching lookups.
-  */
+   * These are to pickup matches that would cause the following
+   * message to go in the wrong direction while doing quick fast
+   * non-matching lookups.
+   */
   if ((acptr = find_client(parv[server], NULL)))
     if (acptr->from == sptr->from && !MyConnect(acptr))
       acptr = NULL;
-  if (!acptr && (acptr = find_server(parv[server], NULL)))
+  if (!acptr && (acptr = find_server(parv[server])))
     if (acptr->from == sptr->from && !MyConnect(acptr))
       acptr = NULL;
 
-  (void)collapse(parv[server]);
+  collapse(parv[server]);
   wilds = (strchr(parv[server], '?') || strchr(parv[server], '*'));
 
   /*
@@ -130,13 +130,11 @@ int hunt_server(aClient *cptr, aClient *sptr, char *command,
    * name, use the hash lookup
    * - Dianora
    */
-
   if (!acptr)
     {
-      if(!wilds)
+      if (!wilds)
         {
-          acptr = find_name(parv[server],(aClient *)NULL);
-          if( !acptr || !IsRegistered(acptr) || !IsServer(acptr) )
+          if (!(acptr = find_server(parv[server])))
             {
               sendto_one(sptr, form_str(ERR_NOSUCHSERVER), me.name,
                          parv[0], parv[server]);
@@ -995,7 +993,7 @@ static  void    report_configured_links(struct Client *sptr,int mask)
             break;
         if(p->conf_type == 0)return;
 
-        GetPrintableaConfItem(tmp, &name, &host, &pass, &user, &port);
+        get_printable_conf(tmp, &name, &host, &pass, &user, &port);
 
         if(mask & (CONF_CONNECT_SERVER|CONF_NOCONNECT_SERVER))
           {
@@ -1077,7 +1075,7 @@ static  void    report_specials(struct Client *sptr,int flags,int numeric)
   for (aconf = this_conf; aconf; aconf = aconf->next)
     if (aconf->status & flags)
       {
-        GetPrintableaConfItem(aconf, &name, &host, &pass, &user, &port);
+        get_printable_conf(aconf, &name, &host, &pass, &user, &port);
 
         sendto_one(sptr, form_str(numeric),
                    me.name,
@@ -1739,130 +1737,6 @@ int show_lusers(struct Client *cptr,
 }
 
   
-/***********************************************************************
- * m_connect() - Added by Jto 11 Feb 1989
- ***********************************************************************/
-
-/*
-** m_connect
-**      parv[0] = sender prefix
-**      parv[1] = servername
-**      parv[2] = port number
-**      parv[3] = remote server
-*/
-int m_connect(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
-{
-  int        port;
-  int        tmpport;
-  aConfItem* aconf;
-  struct Client*   acptr;
-
-  if (!IsPrivileged(sptr))
-    {
-      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-      return -1;
-    }
-
-  if (IsLocOp(sptr) && parc > 3)        /* Only allow LocOps to make */
-    return 0;           /* local CONNECTS --SRB      */
-
-  if (MyConnect(sptr) && !IsOperRemote(sptr) && parc > 3)
-    {
-      sendto_one(sptr,":%s NOTICE %s :You have no R flag",me.name,parv[0]);
-      return 0;
-    }
-
-  if (hunt_server(cptr,sptr,":%s CONNECT %s %s :%s",
-                  3,parc,parv) != HUNTED_ISME)
-    return 0;
-
-  if (parc < 2 || *parv[1] == '\0')
-    {
-      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
-                 me.name, parv[0], "CONNECT");
-      return -1;
-    }
-
-  if ((acptr = find_server(parv[1], NULL)))
-    {
-      sendto_one(sptr, ":%s NOTICE %s :Connect: Server %s %s %s.",
-                 me.name, parv[0], parv[1], "already exists from",
-                 acptr->from->name);
-      return 0;
-    }
-
-  for (aconf = ConfigItemList; aconf; aconf = aconf->next)
-    if ((aconf->status == CONF_CONNECT_SERVER) &&
-        match(parv[1], aconf->name))
-      break;
-
-  /* Checked first servernames, then try hostnames. */
-  if (!aconf)
-    {
-      for (aconf = ConfigItemList; aconf; aconf = aconf->next)
-        {
-          if ((aconf->status == CONF_CONNECT_SERVER) &&
-              match(parv[1], aconf->host))
-            {
-              break;
-            }
-        }
-    }
-
-  if (!aconf)
-    {
-      sendto_one(sptr,
-                 "NOTICE %s :Connect: Host %s not listed in ircd.conf",
-                 parv[0], parv[1]);
-      return 0;
-    }
-  /*
-  ** Get port number from user, if given. If not specified,
-  ** use the default form configuration structure. If missing
-  ** from there, then use the precompiled default.
-  */
-  tmpport = port = aconf->port;
-  if (parc > 2 && !BadPtr(parv[2]))
-    {
-      if ((port = atoi(parv[2])) <= 0)
-        {
-          sendto_one(sptr,
-                     "NOTICE %s :Connect: Illegal port number",
-                     parv[0]);
-          return 0;
-        }
-    }
-  else if (port <= 0 && (port = PORTNUM) <= 0)
-    {
-      sendto_one(sptr, ":%s NOTICE %s :Connect: missing port number",
-                 me.name, parv[0]);
-      return 0;
-    }
-  /*
-  ** Notify all operators about remote connect requests
-  */
-  if (!IsAnOper(cptr))
-    {
-      sendto_ops_butone(NULL, &me,
-                        ":%s WALLOPS :Remote CONNECT %s %s from %s",
-                        me.name, parv[1], parv[2] ? parv[2] : "",
-                        get_client_name(sptr,FALSE));
-#if defined(USE_SYSLOG) && defined(SYSLOG_CONNECT)
-      syslog(LOG_DEBUG, "CONNECT From %s : %s %s", parv[0], parv[1], parv[2] ? parv[2] : "");
-#endif
-    }
-
-  aconf->port = port;
-  if (connect_server(aconf, sptr, 0))
-     sendto_one(sptr, ":%s NOTICE %s :*** Connecting to %s[%s].%d",
-                me.name, parv[0], aconf->host, aconf->name, aconf->port);
-  else
-      sendto_one(sptr, ":%s NOTICE %s :*** Couldn't connect to %s.%d",
-                 me.name, parv[0], aconf->host,aconf->port);
-  aconf->port = tmpport;
-  return 0;
-}
-
 
  
 /*
@@ -3464,7 +3338,7 @@ static void set_autoconn(struct Client *sptr,char *parv0,char *name,int newval)
 {
   aConfItem *aconf;
 
-  if((aconf= find_conf_name(name,CONF_CONNECT_SERVER)))
+  if((aconf= find_conf_by_name(name, CONF_CONNECT_SERVER)))
     {
       if(newval)
         aconf->flags |= CONF_FLAGS_ALLOW_AUTO_CONN;

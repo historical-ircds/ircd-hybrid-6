@@ -34,7 +34,6 @@
 #include "motd.h"
 #include "msg.h"
 #include "numeric.h"
-#include "parse.h"
 #include "s_bsd.h"
 #include "s_conf.h"
 #include "s_err.h"
@@ -600,7 +599,7 @@ static int register_user(aClient *cptr, aClient *sptr,
 
   SetClient(sptr);
 
-  sptr->servptr = find_server(user->server, NULL);
+  sptr->servptr = find_server(user->server);
   if (!sptr->servptr)
     {
       sendto_ops("Ghost killed: %s on invalid server %s",
@@ -684,8 +683,7 @@ static int register_user(aClient *cptr, aClient *sptr,
   else if (IsServer(cptr))
     {
       aClient *acptr;
-      if ((acptr = find_server(user->server, NULL)) &&
-          acptr->from != sptr->from)
+      if ((acptr = find_server(user->server)) && acptr->from != sptr->from)
         {
           sendto_realops_flags(FLAGS_DEBUG, 
                              "Bad User [%s] :%s USER %s@%s %s, != %s[%s]",
@@ -1237,7 +1235,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
   ** is present in the nicklist (due to the way the below for loop is
   ** constructed). -avalon
   */
-  if ((acptr = find_server(nick, NULL)))
+  if ((acptr = find_server(nick)))
     if (MyConnect(sptr))
       {
         sendto_one(sptr, form_str(ERR_NICKNAMEINUSE), me.name,
@@ -1892,7 +1890,7 @@ static  int     m_message(aClient *cptr,
   ** user[%host]@server addressed?
   */
   if ((server = (char *)strchr(nick, '@')) &&
-      (acptr = find_server(server + 1, NULL)))
+      (acptr = find_server(server + 1)))
     {
       int count = 0;
 
@@ -2300,7 +2298,7 @@ int     m_whois(aClient *cptr,
           invis = IsInvisible(acptr);
           member = (user->channel) ? 1 : 0;
 
-          a2cptr = find_server(user->server, NULL);
+          a2cptr = find_server(user->server);
           
           sendto_one(sptr, form_str(RPL_WHOISUSER), me.name,
                      parv[0], name,
@@ -2428,7 +2426,7 @@ int     m_whois(aClient *cptr,
           if (!showperson)
             continue;
           
-          a2cptr = find_server(user->server, NULL);
+          a2cptr = find_server(user->server);
           
           sendto_one(sptr, form_str(RPL_WHOISUSER), me.name,
                      parv[0], name,
@@ -2929,12 +2927,12 @@ int     m_ping(aClient *cptr,
 
   acptr = find_client(origin, NULL);
   if (!acptr)
-    acptr = find_server(origin, NULL);
+    acptr = find_server(origin);
   if (acptr && acptr != sptr)
     origin = cptr->name;
   if (!BadPtr(destination) && irccmp(destination, me.name) != 0)
     {
-      if ((acptr = find_server(destination, NULL)))
+      if ((acptr = find_server(destination)))
         sendto_one(acptr,":%s PING %s :%s", parv[0],
                    origin, destination);
       else
@@ -2993,7 +2991,7 @@ int     m_pong(aClient *cptr,
                 && IsRegistered(sptr))
     {
       if ((acptr = find_client(destination, NULL)) ||
-          (acptr = find_server(destination, NULL)))
+          (acptr = find_server(destination)))
         sendto_one(acptr,":%s PONG %s %s",
                    parv[0], origin, destination);
       else

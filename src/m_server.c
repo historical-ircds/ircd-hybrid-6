@@ -30,7 +30,6 @@
 #include "ircd.h"        /* me */
 #include "list.h"        /* make_server */
 #include "numeric.h"     /* ERR_xxx */
-#include "parse.h"       /* find_name, find_client */
 #include "s_bsd.h"       /* check_server_init */
 #include "s_conf.h"      /* struct ConfItem */
 #include "s_misc.h"      /* my_name_for_link */
@@ -162,18 +161,18 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   if (IsPerson(cptr))
     {
       /*
-      ** A local link that has been identified as a USER
-      ** tries something fishy... ;-)
-      */
+       * A local link that has been identified as a USER
+       * tries something fishy... ;-)
+       */
       sendto_one(cptr, form_str(ERR_UNKNOWNCOMMAND),
                  me.name, parv[0], "SERVER");
+#if 0              
       /*
-        Just ignore it for fripps sake... - Dianora
-              
-        sendto_ops("User %s trying to become a server %s",
-        get_client_name(cptr, TRUE), host);
-        */
-            
+       *   Just ignore it for fripps sake... - Dianora
+       */
+      sendto_ops("User %s trying to become a server %s",
+      get_client_name(cptr, TRUE), host);
+#endif            
       return 0;
     }
   else
@@ -225,7 +224,7 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
    */
   if (!IsServer(cptr))
     {
-      if (find_conf_name(host, CONF_NOCONNECT_SERVER) == NULL)
+      if (find_conf_by_name(host, CONF_NOCONNECT_SERVER) == NULL)
         {
 #ifdef WARN_NO_NLINE
           sendto_realops("Link %s Server %s dropped, no N: line",
@@ -242,7 +241,7 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       return exit_client(cptr, cptr, cptr, "AUTOCONNS off");
     }
 
-  if ((acptr = find_name(host, NULL)))
+  if ((acptr = find_server(host)))
     {
       /*
        * This link is trying feed me a server that I already have
@@ -286,7 +285,6 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
    *
    * -Dianora
    */
-
   if ((acptr = find_client(host, NULL)) && acptr != cptr)
     {
       /*
@@ -335,12 +333,10 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
         {
           sendto_ops("Non-Hub link %s introduced %s(%s).",
                      get_client_name(cptr,  TRUE), host,
-                     aconf ? (aconf->host ? aconf->host : "*") :
-                     "!");
+                     aconf ? (aconf->host ? aconf->host : "*") : "!");
           sendto_one(cptr, "ERROR :%s has no H: line for %s.",
                      get_client_name(cptr,  TRUE), host);
-          return exit_client(cptr, cptr, cptr,
-                             "Too many servers");
+          return exit_client(cptr, cptr, cptr, "Too many servers");
         }
 
       acptr = make_client(cptr);
@@ -349,6 +345,7 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       strncpy_irc(acptr->name, host, HOSTLEN);
       strncpy_irc(acptr->info, info, REALLEN);
       acptr->serv->up = find_or_add(parv[0]);
+      acptr->servptr = sptr;
 
       SetServer(acptr);
 
@@ -356,7 +353,6 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
       add_client_to_list(acptr);
       add_to_client_hash_table(acptr->name, acptr);
-      acptr->servptr = sptr;
       add_client_to_llist(&(acptr->servptr->serv->servers), acptr);
 
       /*
@@ -372,19 +368,18 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
             {
               sendto_ops("Lost N-line for %s on %s. Closing",
                          get_client_name(cptr, TRUE), host);
-              return exit_client(cptr, cptr, cptr,
-                                 "Lost N line");
+              return exit_client(cptr, cptr, cptr, "Lost N line");
             }
           if (match(my_name_for_link(me.name, aconf), acptr->name))
             continue;
 
           sendto_one(bcptr, ":%s SERVER %s %d :%s",
-                     parv[0], acptr->name, hop+1, acptr->info);
+                     parv[0], acptr->name, hop + 1, acptr->info);
                          
         }
       
-      sendto_realops_flags(FLAGS_EXTERNAL,"Server %s being introduced by %s",
-                         acptr->name, sptr->name);
+      sendto_realops_flags(FLAGS_EXTERNAL, "Server %s being introduced by %s",
+                           acptr->name, sptr->name);
       return 0;
     }
 
@@ -424,6 +419,6 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
                  get_client_host(cptr));
       return exit_client(cptr, cptr, cptr, "No C/N conf lines");
     }
-
 }
+
 

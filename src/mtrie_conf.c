@@ -1275,7 +1275,7 @@ static void report_unsortable_klines(aClient *sptr,char *need_host)
   for(found_conf = unsortable_list_klines;
       found_conf;found_conf=found_conf->next)
     {
-      GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port );
+      get_printable_conf(found_conf, &name, &host, &pass, &user, &port );
 
       /* Hide any comment following a '|' seen in the password field */
       if(match(host,need_host))
@@ -1329,7 +1329,7 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
              IsConfDoSpoofIp(found_conf))
             continue;
 
-          GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port );
+          get_printable_conf(found_conf, &name, &host, &pass, &user, &port );
 
           c = 'I';
 #ifdef LITTLE_I_LINES
@@ -1349,7 +1349,7 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
       for(found_conf = wild_card_ilines;
           found_conf;found_conf=found_conf->next)
         {
-          GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port);
+          get_printable_conf(found_conf, &name, &host, &pass, &user, &port);
 
           c = 'I';
 #ifdef LITTLE_I_LINES
@@ -1369,7 +1369,7 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
       for(found_conf = ip_i_lines;
           found_conf;found_conf=found_conf->next)
         {
-          GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port );
+          get_printable_conf(found_conf, &name, &host, &pass, &user, &port );
 
           if(!(found_conf->status&CONF_CLIENT))
             continue;
@@ -1396,7 +1396,7 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
       for(found_conf = unsortable_list_klines;
           found_conf;found_conf=found_conf->next)
         {
-          GetPrintableaConfItem(found_conf, &name, &host, &pass, &user, &port);
+          get_printable_conf(found_conf, &name, &host, &pass, &user, &port);
 
           /* Hide any comment following a '|' seen in the password field */
           p = (char *)NULL;
@@ -1510,7 +1510,7 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 
               if(aconf->status & flags)
                 {
-                  GetPrintableaConfItem(aconf, &name, &host, &pass, &user,
+                  get_printable_conf(aconf, &name, &host, &pass, &user,
                                         &port);
 
                   if (aconf->status == CONF_KILL)
@@ -1568,7 +1568,7 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 
               if(aconf->status & flags)
                 {
-                  GetPrintableaConfItem(aconf, &name, &host, &pass,
+                  get_printable_conf(aconf, &name, &host, &pass,
                                         &user, &port);
 
                   if (aconf->status == CONF_KILL)
@@ -1778,7 +1778,7 @@ static void report_dup(char type,aConfItem *aconf)
   char *name, *host, *pass, *user;
   int port;
 
-  GetPrintableaConfItem(aconf, &name, &host, &pass, &user, &port);
+  get_printable_conf(aconf, &name, &host, &pass, &user, &port);
 
   sendto_realops("DUP: %c: (%s@%s) pass %s name %s port %d",
                  type,user,host,pass,name,port);

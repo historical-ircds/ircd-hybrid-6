@@ -42,7 +42,6 @@
 #include "numeric.h"
 #include "ircd.h"
 #include "list.h"
-#include "parse.h"
 #include "send.h"
 #include "hash.h"
 #include "whowas.h"
@@ -125,32 +124,6 @@ static  int     list_length(Link *lp)
   for (; lp; lp = lp->next)
     count++;
   return count;
-}
-
-/*
-** find_chasing
-**      Find the client structure for a nick name (user) using history
-**      mechanism if necessary. If the client is not found, an error
-**      message (NO SUCH NICK) is generated. If the client was found
-**      through the history, chasing will be 1 and otherwise 0.
-*/
-aClient *find_chasing(aClient *sptr, char *user, int *chasing)
-{
-  aClient *who = find_client(user, (aClient *)NULL);
-  
-  if (chasing)
-    *chasing = 0;
-  if (who)
-    return who;
-  if (!(who = get_history(user, (long)KILLCHASETIMELIMIT)))
-    {
-      sendto_one(sptr, form_str(ERR_NOSUCHNICK),
-                 me.name, sptr->name, user);
-      return ((aClient *)NULL);
-    }
-  if (chasing)
-    *chasing = 1;
-  return who;
 }
 
 /*

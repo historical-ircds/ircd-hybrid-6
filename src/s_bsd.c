@@ -29,7 +29,6 @@
 #include "listener.h"
 #include "numeric.h"
 #include "packet.h"
-#include "parse.h"
 #include "res.h"
 #include "restart.h"
 #include "s_auth.h"
@@ -102,7 +101,6 @@ static struct sockaddr_in mysk;
 static char               readBuf[READBUF_SIZE];
 
 static int        completed_connection (aClient *);
-static int        check_init (aClient *, char *);
 static void       do_dns_async(void);
 
 
@@ -384,7 +382,7 @@ void init_sys()
   return;
 }
 
-                
+#if 0
 /*
  * check_init - initialize the various name strings used to store hostnames. 
  * This is set from either the server's sockhost (if client fd is a tty or 
@@ -421,6 +419,7 @@ static int check_init(aClient* cptr, char* sockn)
   return 0;
 }
 
+#endif
 /*
  * Ordinary client access check. Look for conf lines which have the same
  * status as the flags passed.
@@ -445,14 +444,6 @@ int check_client(aClient *cptr,char *username,char **reason)
   Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]",
          cptr->name, inetntoa((char *)&cptr->ip)));
 
-#if 0
-  /* 
-   * XXX - already done by the time this is called
-   */
-  if (check_init(cptr, sockname))
-    return -2;
-#endif
-
   if (cptr->dns_reply)
     hp = cptr->dns_reply->hp;
 
@@ -472,20 +463,15 @@ static int check_server(aClient* cptr, struct DNSReply* dns_reply,
                         aConfItem *c_conf, aConfItem *n_conf)
 {
   char*           name;
-  char            sockname[HOSTLEN + 1];
   Link*           lp = cptr->confs;
   int             i;
   struct hostent* hp;
 
+  assert(0 != cptr);
+
   ClearAccess(cptr);
-  if (IsConnecting(cptr)) {
-    if (check_init(cptr, sockname))
-      return -2;
-  }
 
   hp = (dns_reply) ? dns_reply->hp : 0;
-  if (!hp && cptr->dns_reply)
-    hp = cptr->dns_reply->hp;
 
   if (hp)
     {
@@ -494,7 +480,7 @@ static int check_server(aClient* cptr, struct DNSReply* dns_reply,
        */
       for (i = 0; hp->h_addr_list[i]; i++)
         {
-          if (0 == memcmp(hp->h_addr_list[i], (char*)&cptr->ip,
+          if (0 == memcmp(hp->h_addr_list[i], (char*) &cptr->ip,
                           sizeof(struct in_addr)))
             break;
         }
@@ -502,8 +488,8 @@ static int check_server(aClient* cptr, struct DNSReply* dns_reply,
         {
           sendto_realops_flags(FLAGS_DEBUG,
                                "Server IP# Mismatch: %s != %s[%08x]",
-                               inetntoa((char *)&cptr->ip), hp->h_name,
-                               *((unsigned long *)hp->h_addr));
+                               inetntoa((char*) &cptr->ip), hp->h_name,
+                               *((unsigned long*) hp->h_addr));
           hp = NULL;
         }
     }
@@ -534,12 +520,12 @@ static int check_server(aClient* cptr, struct DNSReply* dns_reply,
    * of the host the server runs on. This also checks the case where
    * there is a server connecting from 'localhost'.
    */
-  if (IsUnknown(cptr) && (!c_conf || !n_conf))
+  if (IsUnknown(cptr))
     {
       if (!c_conf)
-        c_conf = find_conf_host(lp, sockname, CONF_CONNECT_SERVER);
+        c_conf = find_conf_host(lp, cptr->name, CONF_CONNECT_SERVER);
       if (!n_conf)
-        n_conf = find_conf_host(lp, sockname, CONF_NOCONNECT_SERVER);
+        n_conf = find_conf_host(lp, cptr->name, CONF_NOCONNECT_SERVER);
     }
   /*
    * Attach by IP# only if all other checks have failed.
@@ -549,15 +535,15 @@ static int check_server(aClient* cptr, struct DNSReply* dns_reply,
   if (!hp)
     {
       if (!c_conf)
-        c_conf = find_conf_ip(lp, (char*)&cptr->ip,
+        c_conf = find_conf_ip(lp, (char*)& cptr->ip,
                               cptr->username, CONF_CONNECT_SERVER);
       if (!n_conf)
-        n_conf = find_conf_ip(lp, (char*)&cptr->ip,
+        n_conf = find_conf_ip(lp, (char*)& cptr->ip,
                               cptr->username, CONF_NOCONNECT_SERVER);
     }
   else
     {
-      for (i = 0; hp->h_addr_list[i]; i++)
+      for (i = 0; hp->h_addr_list[i]; ++i)
         {
           if (!c_conf)
             c_conf = find_conf_ip(lp, hp->h_addr_list[i],
@@ -608,21 +594,24 @@ static int check_server(aClient* cptr, struct DNSReply* dns_reply,
  * -1 = Access denied
  * -2 = Bad socket.
  */
-int check_server_init(aClient *cptr)
+int check_server_init(aClient* cptr)
 {
-  char*            name;
   struct ConfItem* c_conf    = NULL;
   struct ConfItem* n_conf    = NULL;
   struct DNSReply* dns_reply = NULL;
   struct SLink*    lp;
+  assert(0 != cptr);
 
-  name = cptr->name;
-  Debug((DEBUG_DNS, "sv_cl: check access for %s[%s]", name, cptr->host));
+  dns_reply = cptr->dns_reply;
+
+  Debug((DEBUG_DNS, "sv_cl: check access for %s[%s]", 
+         cptr->name, cptr->host));
 
   if (IsUnknown(cptr) && 
-      !attach_confs(cptr, name, CONF_CONNECT_SERVER | CONF_NOCONNECT_SERVER ))
+      !attach_confs(cptr, cptr->name, 
+                    CONF_CONNECT_SERVER | CONF_NOCONNECT_SERVER ))
     {
-      Debug((DEBUG_DNS,"No C/N lines for %s", name));
+      Debug((DEBUG_DNS,"No C/N lines for %s", cptr->name));
       return -1;
     }
   lp = cptr->confs;
@@ -633,36 +622,35 @@ int check_server_init(aClient *cptr)
    */
   if (IsConnecting(cptr) || IsHandshake(cptr))
     {
-      c_conf = find_conf(lp, name, CONF_CONNECT_SERVER);
-      n_conf = find_conf(lp, name, CONF_NOCONNECT_SERVER);
+      c_conf = find_conf(lp, cptr->name, CONF_CONNECT_SERVER);
+      n_conf = find_conf(lp, cptr->name, CONF_NOCONNECT_SERVER);
       if (!c_conf || !n_conf)
         {
-          sendto_realops_flags(FLAGS_DEBUG, "Connecting Error: %s[%s]", name,
-                             cptr->host);
+          sendto_realops_flags(FLAGS_DEBUG, "Connecting Error: %s[%s]", 
+                               cptr->name, cptr->host);
           det_confs_butmask(cptr, 0);
           return -1;
         }
     }
   /*
-  ** If the servername is a hostname, either an alias (CNAME) or
-  ** real name, then check with it as the host. Use gethostbyname()
-  ** to check for servername as hostname.
-  */
-  if (!cptr->dns_reply)
+   * If the servername is a hostname, either an alias (CNAME) or
+   * real name, then check with it as the host. Use gethostbyname()
+   * to check for servername as hostname.
+   */
+  if (!dns_reply)
     {
-      aConfItem* aconf = count_cnlines(lp);
-      if (aconf)
+      struct ConfItem* conf = find_first_nline(lp);
+      if (conf)
         {
           /*
-          ** Do a lookup for the CONF line *only* and not
-          ** the server connection else we get stuck in a
-          ** nasty state since it takes a SERVER message to
-          ** get us here and we cant interrupt that very
-          ** well.
-          */
-          ClearAccess(cptr);
-          Debug((DEBUG_DNS,"sv_ci:cache lookup (%s)",aconf->host));
-          dns_reply = conf_dns_lookup(aconf);
+           * Do a lookup for the CONF line *only* and not
+           * the server connection else we get stuck in a
+           * nasty state since it takes a SERVER message to
+           * get us here and we cant interrupt that very
+           * well.
+           */
+          Debug((DEBUG_DNS,"sv_ci:cache lookup (%s)", conf->host));
+          dns_reply = conf_dns_lookup(conf);
         }
     }
   return check_server(cptr, dns_reply, c_conf, n_conf);
@@ -742,20 +730,20 @@ static int connect_inet(aConfItem *aconf, aClient *cptr)
    * Bind to a local IP# (with unknown port - let unix decide) so
    * we have some chance of knowing the IP# that gets used for a host
    * with more than one IP#.
+   * 
+   * No we don't bind it, not all OS's can handle connecting with
+   * an already bound socket, different ip# might occur anyway
+   * leading to a freezing select() on this side for some time.
    */
-  /* No we don't bind it, not all OS's can handle connecting with
-     an already bound socket, different ip# might occur anyway
-     leading to a freezing select() on this side for some time.
-     */
   if (specific_virtual_host)
     {
       mysk.sin_addr = vserv.sin_addr;
 
       /*
-      ** No, we do bind it if we have virtual host support. If we don't
-      ** explicitly bind it, it will default to IN_ADDR_ANY and we lose
-      ** due to the other server not allowing our base IP --smg
-      */        
+       * No, we do bind it if we have virtual host support. If we don't
+       * explicitly bind it, it will default to IN_ADDR_ANY and we lose
+       * due to the other server not allowing our base IP --smg
+       */        
       if (bind(cptr->fd, (struct sockaddr*) &mysk, sizeof(mysk)))
         {
           report_error("error binding to local port for %s:%s", 
@@ -815,7 +803,7 @@ int connect_server(aConfItem *aconf, aClient* by, struct DNSReply* reply)
   Debug((DEBUG_NOTICE,"Connect to %s[%s] @%s",
          aconf->user, aconf->host, inetntoa((char*)&aconf->ipnum)));
 
-  if ((cptr = find_server(aconf->name, NULL)))
+  if ((cptr = find_server(aconf->name)))
     {
       sendto_ops("Server %s already present from %s",
                  aconf->name, get_client_name(cptr, TRUE));
@@ -925,10 +913,10 @@ int connect_server(aConfItem *aconf, aClient* by, struct DNSReply* reply)
 }
 
 /*
-** close_connection
-**        Close the physical connection. This function must make
-**        MyConnect(cptr) == FALSE, and set cptr->from == NULL.
-*/
+ * close_connection
+ *        Close the physical connection. This function must make
+ *        MyConnect(cptr) == FALSE, and set cptr->from == NULL.
+ */
 void close_connection(aClient *cptr)
 {
   aConfItem *aconf;
@@ -1004,9 +992,9 @@ void close_connection(aClient *cptr)
       local[cptr->fd] = NULL;
 #ifdef ZIP_LINKS
         /*
-        ** the connection might have zip data (even if
-               ** FLAGS2_ZIP is not set)
-        */
+         * the connection might have zip data (even if
+         * FLAGS2_ZIP is not set)
+         */
       if (IsServer(cptr))
         zip_free(cptr);
 #endif
@@ -1115,13 +1103,13 @@ static int parse_client_queued(struct Client* cptr)
     dolen = dbuf_getmsg(&cptr->recvQ, readBuf, READBUF_SIZE);
 
     /*
-    ** Devious looking...whats it do ? well..if a client
-    ** sends a *long* message without any CR or LF, then
-    ** dbuf_getmsg fails and we pull it out using this
-    ** loop which just gets the next 512 bytes and then
-    ** deletes the rest of the buffer contents.
-    ** -avalon
-    */
+     * Devious looking...whats it do ? well..if a client
+     * sends a *long* message without any CR or LF, then
+     * dbuf_getmsg fails and we pull it out using this
+     * loop which just gets the next 512 bytes and then
+     * deletes the rest of the buffer contents.
+     * -avalon
+     */
     while (dolen <= 0) {
       if (dolen < 0)
 	return exit_client(cptr, cptr, cptr, "dbuf_getmsg fail");
@@ -1196,10 +1184,10 @@ static int read_packet(struct Client *cptr)
   }
   else {
     /*
-    ** Before we even think of parsing what we just read, stick
-    ** it on the end of the receive queue and do it when its
-    ** turn comes around.
-    */
+     * Before we even think of parsing what we just read, stick
+     * it on the end of the receive queue and do it when its
+     * turn comes around.
+     */
     if (dbuf_put(&cptr->recvQ, readBuf, length) < 0)
       return exit_client(cptr, cptr, cptr, "dbuf_put fail");
     
@@ -1673,8 +1661,8 @@ int read_message(time_t delay, unsigned char mask)
         {
           int     write_err = 0;
           /*
-          ** ...room for writing, empty some queue then...
-          */
+           * ...room for writing, empty some queue then...
+           */
           if (IsConnecting(cptr))
             write_err = completed_connection(cptr);
           if (!write_err)

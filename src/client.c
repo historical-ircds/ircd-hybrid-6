@@ -51,7 +51,7 @@
 
 
 /* 
- * Number of aClient structures to preallocate at a time
+ * Number of struct Client structures to preallocate at a time
  * for Efnet 1024 is reasonable 
  * for smaller nets who knows? -Dianora
  *
@@ -105,7 +105,7 @@ struct Client* make_client(struct Client* from)
 
   if (!from)
     {
-      cptr = BlockHeapALLOC(localClientFreeList, aClient);
+      cptr = BlockHeapALLOC(localClientFreeList, struct Client);
       if (cptr == NULL)
         outofmemory();
       assert(0 != cptr);
@@ -131,7 +131,7 @@ struct Client* make_client(struct Client* from)
     }
   else
     { /* from is not NULL */
-      cptr = BlockHeapALLOC(remoteClientFreeList, aClient);
+      cptr = BlockHeapALLOC(remoteClientFreeList, struct Client);
       if(cptr == NULL)
         outofmemory();
       assert(0 != cptr);
@@ -301,7 +301,7 @@ void remove_client_from_list(struct Client* cptr)
  * in this file, shouldnt they ?  after all, this is list.c, isnt it ?
  * -avalon
  */
-void add_client_to_list(aClient *cptr)
+void add_client_to_list(struct Client *cptr)
 {
   /*
    * since we always insert new clients to the top of the list,
@@ -317,7 +317,7 @@ void add_client_to_list(aClient *cptr)
 /* Functions taken from +CSr31, paranoified to check that the client
 ** isn't on a llist already when adding, and is there when removing -orabidoo
 */
-void add_client_to_llist(aClient **bucket, aClient *client)
+void add_client_to_llist(struct Client **bucket, struct Client *client)
 {
   if (!client->lprev && !client->lnext)
     {
@@ -328,7 +328,7 @@ void add_client_to_llist(aClient **bucket, aClient *client)
     }
 }
 
-void del_client_from_llist(aClient **bucket, aClient *client)
+void del_client_from_llist(struct Client **bucket, struct Client *client)
 {
   if (client->lprev)
     {
@@ -343,6 +343,151 @@ void del_client_from_llist(aClient **bucket, aClient *client)
       client->lnext->lprev = client->lprev;
     }
   client->lnext = client->lprev = NULL;
+}
+
+/*
+ *  find_client - find a client (server or user) by name.
+ *
+ *  *Note*
+ *      Semantics of this function has been changed from
+ *      the old. 'name' is now assumed to be a null terminated
+ *      string and the search is the for server and user.
+ */
+struct Client* find_client(const char* name, struct Client *cptr)
+{
+  if (name)
+    cptr = hash_find_client(name, cptr);
+
+  return cptr;
+}
+
+/*
+ *  find_userhost - find a user@host (server or user).
+ *
+ *  *Note*
+ *      Semantics of this function has been changed from
+ *      the old. 'name' is now assumed to be a null terminated
+ *      string and the search is the for server and user.
+ */
+struct Client *find_userhost(char *user, char *host, struct Client *cptr, int *count)
+{
+  struct Client       *c2ptr;
+  struct Client       *res = cptr;
+
+  *count = 0;
+  if (collapse(user))
+    for (c2ptr = GlobalClientList; c2ptr; c2ptr = c2ptr->next) 
+      {
+        if (!MyClient(c2ptr)) /* implies mine and a user */
+          continue;
+        if ((!host || match(host, c2ptr->host)) &&
+            irccmp(user, c2ptr->username) == 0)
+          {
+            (*count)++;
+            res = c2ptr;
+          }
+      }
+  return res;
+}
+
+/*
+ *  find_server - find server by name.
+ *
+ *      This implementation assumes that server and user names
+ *      are unique, no user can have a server name and vice versa.
+ *      One should maintain separate lists for users and servers,
+ *      if this restriction is removed.
+ *
+ *  *Note*
+ *      Semantics of this function has been changed from
+ *      the old. 'name' is now assumed to be a null terminated
+ *      string.
+ */
+struct Client* find_server(const char* name)
+{
+  if (name)
+    return hash_find_server(name);
+  return 0;
+}
+
+#if 0
+/*
+ * find_server_by_name - attempt to find server in hash table, otherwise 
+ * scan the GlobalClientList
+ */
+struct Client* find_server_by_name(const char* name)
+{
+  struct Client* cptr = 0;
+
+  if (EmptyString(name))
+    return cptr;
+
+  if ((cptr = hash_find_server(name)))
+    return cptr;
+  /*
+   * XXX - this shouldn't be needed at all hash_find_server should
+   * find hostmasked names
+   */
+  if (!strchr(name, '*'))
+    return cptr;
+
+  /* hmmm hot spot for host masked servers (ick)
+   * a separate link list for all servers would help here
+   * instead of having to scan 50k client structs. (ick)
+   * -Dianora
+   */
+  for (cptr = GlobalClientList; cptr; cptr = cptr->next)
+    {
+      if (!IsServer(cptr) && !IsMe(cptr))
+        continue;
+      if (match(name, cptr->name))
+        break;
+      if (strchr(cptr->name, '*'))
+        if (match(cptr->name, name))
+          break;
+    }
+  return cptr;
+}
+#endif
+
+/*
+ *  find_person - find person by (nick)name.
+ */
+struct Client *find_person(char *name, struct Client *cptr)
+{
+  struct Client       *c2ptr = cptr;
+
+  c2ptr = find_client(name, c2ptr);
+
+  if (c2ptr && IsClient(c2ptr) && c2ptr->user)
+    return c2ptr;
+  else
+    return cptr;
+}
+
+/*
+ * find_chasing - find the client structure for a nick name (user) 
+ *      using history mechanism if necessary. If the client is not found, 
+ *      an error message (NO SUCH NICK) is generated. If the client was found
+ *      through the history, chasing will be 1 and otherwise 0.
+ */
+struct Client *find_chasing(struct Client *sptr, char *user, int *chasing)
+{
+  struct Client *who = find_client(user, (struct Client *)NULL);
+  
+  if (chasing)
+    *chasing = 0;
+  if (who)
+    return who;
+  if (!(who = get_history(user, (long)KILLCHASETIMELIMIT)))
+    {
+      sendto_one(sptr, form_str(ERR_NOSUCHNICK),
+                 me.name, sptr->name, user);
+      return ((struct Client *)NULL);
+    }
+  if (chasing)
+    *chasing = 1;
+  return who;
 }
 
 
@@ -361,7 +506,7 @@ void del_client_from_llist(aClient **bucket, aClient *client)
  * error message should be restricted to local clients and some
  * other thing generated for remotes...
  */
-int check_registered_user(aClient* client)
+int check_registered_user(struct Client* client)
 {
   if (!IsRegisteredUser(client))
     {
@@ -376,7 +521,7 @@ int check_registered_user(aClient* client)
  * registered (e.g. we don't know yet whether a server
  * or user)
  */
-int check_registered(aClient* client)
+int check_registered(struct Client* client)
 {
   if (!IsRegistered(client))
     {
@@ -507,10 +652,10 @@ const char* get_client_host(struct Client* client)
 ** Exit one client, local or remote. Assuming all dependents have
 ** been already removed, and socket closed for local client.
 */
-static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from,
+static void exit_one_client(struct Client *cptr, struct Client *sptr, struct Client *from,
                             const char* comment)
 {
-  aClient* acptr;
+  struct Client* acptr;
   Link*    lp;
 
   if (IsServer(sptr))
@@ -604,11 +749,11 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from,
 ** a link gets a SQUIT, it doesn't need any QUIT/SQUITs for clients depending
 ** on that one -orabidoo
 */
-static void recurse_send_quits(aClient *cptr, aClient *sptr, aClient *to,
+static void recurse_send_quits(struct Client *cptr, struct Client *sptr, struct Client *to,
                                 const char* comment,  /* for servers */
                                 const char* myname)
 {
-  aClient *acptr;
+  struct Client *acptr;
 
   /* If this server can handle quit storm (QS) removal
    * of dependents, just send the SQUIT -Dianora
@@ -646,9 +791,9 @@ static void recurse_send_quits(aClient *cptr, aClient *sptr, aClient *to,
 /*
  * added sanity test code.... sptr->serv might be NULL... -Dianora
  */
-static void recurse_remove_clients(aClient* sptr, const char* comment)
+static void recurse_remove_clients(struct Client* sptr, const char* comment)
 {
-  aClient *acptr;
+  struct Client *acptr;
 
   if (IsMe(sptr))
     return;
@@ -679,13 +824,13 @@ static void recurse_remove_clients(aClient* sptr, const char* comment)
 ** all necessary QUITs and SQUITs.  sptr itself is still on the lists,
 ** and its SQUITs have been sent except for the upstream one  -orabidoo
 */
-static void remove_dependents(aClient* cptr, 
-                               aClient* sptr,
-                               aClient* from,
+static void remove_dependents(struct Client* cptr, 
+                               struct Client* sptr,
+                               struct Client* from,
                                const char* comment,
                                const char* comment1)
 {
-  aClient *to;
+  struct Client *to;
   int i;
   aConfItem *aconf;
   static char myname[HOSTLEN+1];
@@ -744,19 +889,19 @@ static void remove_dependents(aClient* cptr,
 **        0                if (cptr != sptr)
 */
 int exit_client(
-aClient* cptr,        /*
+struct Client* cptr,        /*
                 ** The local client originating the exit or NULL, if this
                 ** exit is generated by this server for internal reasons.
                 ** This will not get any of the generated messages.
 
                 */
-aClient* sptr,        /* Client exiting */
-aClient* from,        /* Client firing off this Exit, never NULL! */
+struct Client* sptr,        /* Client exiting */
+struct Client* from,        /* Client firing off this Exit, never NULL! */
 const char* comment        /* Reason for the exit */
                    )
 {
-  aClient        *acptr;
-  aClient        *next;
+  struct Client        *acptr;
+  struct Client        *next;
 #ifdef        FNAME_USERLOG
   time_t        on_for;
 #endif
@@ -776,8 +921,8 @@ const char* comment        /* Reason for the exit */
           /* LINKLIST */
           /* oh for in-line functions... */
           {
-            aClient *prev_cptr=(aClient *)NULL;
-            aClient *cur_cptr = oper_cptr_list;
+            struct Client *prev_cptr=(struct Client *)NULL;
+            struct Client *cur_cptr = oper_cptr_list;
             while(cur_cptr) 
               {
                 if(sptr == cur_cptr)
@@ -786,7 +931,7 @@ const char* comment        /* Reason for the exit */
                       prev_cptr->next_oper_client = cur_cptr->next_oper_client;
                     else
                       oper_cptr_list = cur_cptr->next_oper_client;
-                    cur_cptr->next_oper_client = (aClient *)NULL;
+                    cur_cptr->next_oper_client = (struct Client *)NULL;
                     break;
                   }
                 else
@@ -819,7 +964,7 @@ const char* comment        /* Reason for the exit */
                   sptr->previous_local_client;
 
               sptr->previous_local_client = sptr->next_local_client = 
-                (aClient *)NULL;
+                (struct Client *)NULL;
             }
         }
       if (IsServer(sptr))
@@ -830,8 +975,8 @@ const char* comment        /* Reason for the exit */
           /* LINKLIST */
           /* oh for in-line functions... */
           {
-            aClient *prev_cptr = (aClient *)NULL;
-            aClient *cur_cptr = serv_cptr_list;
+            struct Client *prev_cptr = NULL;
+            struct Client *cur_cptr = serv_cptr_list;
             while(cur_cptr)
               {
                 if(sptr == cur_cptr)
@@ -841,7 +986,7 @@ const char* comment        /* Reason for the exit */
                         cur_cptr->next_server_client;
                     else
                       serv_cptr_list = cur_cptr->next_server_client;
-                    cur_cptr->next_server_client = (aClient *)NULL;
+                    cur_cptr->next_server_client = NULL;
                     break;
                   }
                 else

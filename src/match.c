@@ -68,6 +68,8 @@ int match(const char *mask, const char *name)
   int   calls = 0;
   assert(0 != mask);
   assert(0 != name);
+  if (!mask || !name)
+    return 0;
 
   while (calls++ < MATCH_MAX_CALLS) {
     if (*m == '*') {
