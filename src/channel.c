@@ -352,13 +352,9 @@ static	int	add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
 }
 
 /*
- * This original comment makes no sense to me -Dianora
  *
  * "del_banid - delete an id belonging to cptr
  * if banid is null, deleteall banids belonging to cptr."
- *
- * "cptr" what cptr? if banid is null,it just returns with an -1
- * -Dianora
  *
  * from orabidoo
  */
