@@ -139,7 +139,7 @@
  * This will not show IPs of any server to anyone, to protect hidden
  * hubs from untrustable opers.
  */
-#undef HIDE_SERVERS_IPS
+#define HIDE_SERVERS_IPS
 
 /* NETWORK_NAME
  * Displayed in place of the servername when SERVERHIDE is enabled

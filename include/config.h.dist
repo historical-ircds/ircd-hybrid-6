@@ -139,7 +139,7 @@
  * This will not show IPs of any server to anyone, to protect hidden
  * hubs from untrustable opers.
  */
-#undef HIDE_SERVERS_IPS
+#define HIDE_SERVERS_IPS
 
 /* NETWORK_NAME
  * Displayed in place of the servername when SERVERHIDE is enabled
@@ -331,7 +331,7 @@
  *  non-opers, denying them permission to see configured ports
  *
  *  U_LINES_OPER_ONLY only applies to STATS U (capital U, not lowercase).
- *  U-lines are used to share D/K-lines between servers.
+ *  U-lines are used to share K/D-lines between servers.
  */
 #define B_LINES_OPER_ONLY
 #define E_LINES_OPER_ONLY
