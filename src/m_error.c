@@ -97,10 +97,11 @@
  */
 int m_error(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
+#ifndef HIDE_ERROR_MESSAGES
   char* para;
 
   para = (parc > 1 && *parv[1] != '\0') ? parv[1] : "<>";
-  
+
   Debug((DEBUG_ERROR,"Received ERROR message from %s: %s",
          sptr->name, para));
   /*
@@ -111,6 +112,7 @@ int m_error(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
    */
   if (IsPerson(cptr) || IsUnknown(cptr))
     return 0;
+
 #if (defined SERVERHIDE) || (defined HIDE_SERVERS_IPS)
   if (cptr == sptr)
     sendto_realops("ERROR :from %s -- %s",
@@ -126,6 +128,8 @@ int m_error(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
     sendto_realops("ERROR :from %s via %s -- %s", sptr->name,
                get_client_name(cptr,FALSE), para);
 #endif
+
+#endif /* HIDE_ERRORS */
   return 0;
 }
 

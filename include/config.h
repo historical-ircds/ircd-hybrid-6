@@ -141,6 +141,13 @@
  */
 #define HIDE_SERVERS_IPS
 
+/* HIDE_ERROR_MESSAGES
+ * ERROR messages coming from servers can sometimes have IPs in them.
+ * This will not show any error messages that are received, a 
+ * consequence being you may not see squit reasons..
+ */
+#define HIDE_ERROR_MESSAGES
+
 /* NETWORK_NAME
  * Displayed in place of the servername when SERVERHIDE is enabled
  */   
