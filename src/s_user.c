@@ -76,20 +76,20 @@ extern int reject_held_fds;		/* defined in ircd.c */
 #endif
 
 static char buf[BUFSIZE], buf2[BUFSIZE];
-static int user_modes[]		= { FLAGS_OPER, 'o',
-				FLAGS_LOCOP, 'O',
-				FLAGS_INVISIBLE, 'i',
-				FLAGS_WALLOP, 'w',
-				FLAGS_SERVNOTICE, 's',
-				FLAGS_OPERWALL,'z',
-				FLAGS_CCONN, 'c',
-				FLAGS_REJ, 'r',
-				FLAGS_SKILL, 'k',
-				FLAGS_FULL, 'f',
-				FLAGS_SPY, 'y',
-				FLAGS_DEBUG, 'd',
-				FLAGS_NCHANGE, 'n',
-				0, 0 };
+static int user_modes[]		= { 
+  FLAGS_INVISIBLE, 'i',
+  FLAGS_WALLOP, 'w',
+  FLAGS_SERVNOTICE, 's',
+  FLAGS_OPERWALL,'z',
+  FLAGS_CCONN, 'c',
+  FLAGS_REJ, 'r',
+  FLAGS_SKILL, 'k',
+  FLAGS_FULL, 'f',
+  FLAGS_SPY, 'y',
+  FLAGS_DEBUG, 'd',
+  FLAGS_NCHANGE, 'n',
+  0, 0
+};
 
 /* internally defined functions */
 #ifdef BOTCHECK
@@ -3197,13 +3197,13 @@ int	m_oper(aClient *cptr,
 	  SetLocOp(sptr);
 	  if((int)aconf->hold)
 	    {
-	      sptr->set_flags |= ((int)aconf->hold & ALL_UMODES); 
+	      sptr->umodes |= ((int)aconf->hold & ALL_UMODES); 
 	      sendto_one(sptr, ":%s NOTICE %s:*** Oper flags set from conf",
 			 me.name,parv[0]);
 	    }
 	  else
 	    {
-	      sptr->set_flags |= (LOCOP_UMODES);
+	      sptr->umodes |= (LOCOP_UMODES);
 	    }
 
 	  /* A local oper can't global kill ever, or do remote re-routes
@@ -3218,16 +3218,16 @@ int	m_oper(aClient *cptr,
 	  SetOper(sptr);
 	  if((int)aconf->hold)
 	    {
-	      sptr->set_flags |= ((int)aconf->hold & ALL_UMODES); 
+	      sptr->umodes |= ((int)aconf->hold & ALL_UMODES); 
 	      if( !IsSetOperN(sptr) )
-		sptr->set_flags &= ~FLAGS_NCHANGE;
+		sptr->umodes &= ~FLAGS_NCHANGE;
 	      
 	      sendto_one(sptr, ":%s NOTICE %s:*** Oper flags set from conf",
 			 me.name,parv[0]);
 	    }
 	  else
 	    {
-	      sptr->set_flags |= (OPER_UMODES);
+	      sptr->umodes |= (OPER_UMODES);
 	    }
 	}
       SetIPHidden(sptr);
@@ -3609,7 +3609,7 @@ int	m_umode(aClient *cptr,
   /* find flags already set for user */
   setflags = 0;
   for (s = user_modes; (flag = *s); s += 2)
-    if (sptr->set_flags & flag)
+    if (sptr->umodes & flag)
       setflags |= flag;
   
   /*
@@ -3638,9 +3638,9 @@ int	m_umode(aClient *cptr,
 	    if (*m == (char)(*(s+1)))
 	      {
 		if (what == MODE_ADD)
-		  sptr->set_flags |= flag;
+		  sptr->umodes |= flag;
 		else
-		  sptr->set_flags &= ~flag;	
+		  sptr->umodes &= ~flag;	
 		break;
 	      }
 	  if (flag == 0 && MyConnect(sptr))
@@ -3651,60 +3651,11 @@ int	m_umode(aClient *cptr,
   if(badflag)
     sendto_one(sptr, form_str(ERR_UMODEUNKNOWNFLAG), me.name, parv[0]);
 
-  /*
-   * stop users making themselves operators too easily
-   */
-  if (!(setflags & FLAGS_OPER) && IsOper(sptr) && !IsServer(cptr))
-    ClearOper(sptr);
-
-  if (!(setflags & FLAGS_LOCOP) && IsLocOp(sptr) && !IsServer(cptr))
-    sptr->set_flags &= ~FLAGS_LOCOP;
-
-  if ((setflags & (FLAGS_OPER|FLAGS_LOCOP)) && !IsAnOper(sptr) &&
-      MyConnect(sptr))
-    det_confs_butmask(sptr, CONF_CLIENT & ~CONF_OPS);
-
-  if (!(setflags & (FLAGS_OPER|FLAGS_LOCOP)) && IsAnOper(sptr))
-    {
-      Count.oper++;
-    }
-
-  if ((sptr->flags & FLAGS_NCHANGE) && !IsSetOperN(sptr))
+  if ((sptr->umodes & FLAGS_NCHANGE) && !IsSetOperN(sptr))
     {
       sendto_one(sptr,":%s NOTICE %s :*** You need oper and N flag for +n",
 		 me.name,parv[0]);
-      sptr->set_flags &= ~FLAGS_NCHANGE; /* only tcm's really need this */
-    }
-
-  if ((setflags & (FLAGS_OPER|FLAGS_LOCOP)) && !IsAnOper(sptr))
-    {
-      Count.oper--;
-
-      if (MyConnect(sptr))
-        {
-          aClient *prev_cptr = (aClient *)NULL;
-          aClient *cur_cptr = oper_cptr_list;
-
-	  delfrom_fdlist(sptr->fd, &oper_fdlist);
-
-	  sptr->flags2 &= ~FLAGS2_OPER_FLAGS;
-
-          while(cur_cptr)
-            {
-              if(sptr == cur_cptr) 
-                {
-                  if(prev_cptr)
-                    prev_cptr->next_oper_client = cur_cptr->next_oper_client;
-                  else
-                    oper_cptr_list = cur_cptr->next_oper_client;
-                  cur_cptr->next_oper_client = (aClient *)NULL;
-                  break;
-                }
-	      else
-		prev_cptr = cur_cptr;
-              cur_cptr = cur_cptr->next_oper_client;
-            }
-        }
+      sptr->umodes &= ~FLAGS_NCHANGE; /* only tcm's really need this */
     }
 
   if (!(setflags & FLAGS_INVISIBLE) && IsInvisible(sptr))
@@ -3744,7 +3695,7 @@ void	send_umode(aClient *cptr,
     {
       if (MyClient(sptr) && !(flag & sendmask))
 	continue;
-      if ((flag & old) && !(sptr->flags & flag))
+      if ((flag & old) && !(sptr->umodes & flag))
 	{
 	  if (what == MODE_DEL)
 	    *m++ = *(s+1);
@@ -3755,7 +3706,7 @@ void	send_umode(aClient *cptr,
 	      *m++ = *(s+1);
 	    }
 	}
-      else if (!(flag & old) && (sptr->flags & flag))
+      else if (!(flag & old) && (sptr->umodes & flag))
 	{
 	  if (what == MODE_ADD)
 	    *m++ = *(s+1);

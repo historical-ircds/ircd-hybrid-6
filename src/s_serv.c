@@ -2628,7 +2628,7 @@ int   m_set(aClient *cptr,
 	    {
 	      int newval = atoi(parv[3]);
 
-	      if(!(parv[2],"ALL"))
+	      if(!irccmp(parv[2],"ALL"))
 		{
 		  sendto_realops(
 				 "%s has changed AUTOCONN ALL to %i",
