@@ -13,7 +13,6 @@ dnl Checks for programs.
 AC_PROG_CC
 AC_ISC_POSIX
 AC_CANONICAL_SYSTEM
-AC_AIX
 AC_PROG_MAKE_SET
 AC_PATH_PROG(RM,rm)
 AC_PATH_PROG(CP,cp)
@@ -28,17 +27,13 @@ AC_CHECK_FUNC(crypt,, AC_CHECK_LIB(descrypt, crypt,,AC_CHECK_LIB(crypt, crypt,,)
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(sys/param.h unistd.h errno.h string.h strings.h sys/syslog.h stdlib.h stddef.h) 
-AC_CHECK_HEADER(malloc.h, AC_DEFINE(MALLOCH, <malloc.h>)) 
+AC_CHECK_HEADERS(sys/param.h unistd.h errno.h string.h sys/syslog.h stdlib.h stddef.h) 
 
 dnl Check for stdarg.h - if we can't find it, halt configure
 AC_CHECK_HEADER(stdarg.h, , AC_MSG_ERROR(** stdarg.h could not be found - ircd-hybrid will not compile without it **))
 
 dnl Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
-AC_CHECK_FUNCS(index strerror strtoken strtok inet_addr inet_ntoa inet_netof inet_aton)
-AC_CHECK_FUNCS(gettimeofday lrand48 sigaction bzero bcmp bcopy)
-AC_CHECK_FUNCS(dn_skipname __dn_skipname getrusage times, break)
 
 dnl check for poll() call
 AC_CHECK_FUNC(poll, AC_DEFINE(USE_POLL),)
@@ -184,8 +179,6 @@ dnl don't add more of these unless it's critical.  Trying to get rid of them.
 AC_MSG_CHECKING(operating system)
 case "$target" in
 *-solaris2*) AC_DEFINE(OS_SOLARIS2) AC_MSG_RESULT(Solaris 2.x) ;;
-*-sequent-ptx*) AC_DEFINE(OS_DYNIXPTX) AC_MSG_RESULT(Dynix PTX) ;;
-*-hpux*) AC_DEFINE(OS_HPUX) AC_MSG_RESULT(HP-UX) ;;
 *) AC_MSG_RESULT(nothing special required) ;;
 esac
 
