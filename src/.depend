@@ -150,7 +150,7 @@ s_auth.o: s_auth.c ../include/s_auth.h ../include/config.h \
  ../include/ircd_defs.h ../include/dbuf.h ../include/common.h \
  ../include/irc_string.h ../include/numeric.h ../include/s_bsd.h \
  ../include/res.h ../include/ircd.h ../include/s_misc.h \
- ../include/struct.h
+ ../include/struct.h ../include/fdlist.h
 s_bsd.o: s_bsd.c ../include/s_bsd.h ../include/s_serv.h \
  ../include/listener.h ../include/ircd_defs.h ../include/config.h \
  ../include/setup.h ../include/struct.h ../include/client.h \
