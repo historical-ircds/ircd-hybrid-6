@@ -226,12 +226,6 @@ int	check_registered(aClient *sptr)
 **	differs from the advertised name (other than case).
 **	But, this can be used to any client structure.
 **
-**	Returns:
-**	  "name[user@ip#.port]" if 'showip' is true;
-**	  "name[sockethost]", if name and sockhost are different and
-**	  showip is false; else
-**	  "name".
-**
 ** NOTE 1:
 **	Watch out the allocation of "nbuf", if either sptr->name
 **	or sptr->sockhost gets changed into pointers instead of
@@ -245,67 +239,62 @@ int	check_registered(aClient *sptr)
 char	*get_client_name(aClient *sptr,int showip)
 {
   static char nbuf[HOSTLEN * 2 + USERLEN + 5];
+  char t_port[7], t_user[USERLEN+2], t_host[HOSTLEN+1], t_id[4];
+
+  /*
+   * The idea here is to build our text first, then do the
+   * ircsprintf(), as all these conditionals are getting very
+   * hairy.  -- FlashMan
+   */
+
+  t_port[0]='\0';
+  t_user[0]='\0';
+  t_host[0]='\0';
+  t_id[0]='\0';
 
   if (MyConnect(sptr))
     {
+
+      /* Check for ident */
+      if (IsGotId(sptr))
+        (void)strcpy(t_id, "(+)");
+
+#ifdef USERNAMES_IN_TRACE
+      /* Check for a username (listening ports don't have usernames) */
+      if (sptr->user)
+        (void)strcpy(t_user, sptr->user->username);
+      else
+        if (sptr->username[0])
+          (void)strcpy(t_user, sptr->username);
+      if (t_user[0])
+        (void)strcat(t_user, "@");
+#endif
+
+      /* Check for a port number, needed for listening ports */
+      if (sptr->flags & FLAGS_LISTEN)
+        (void)sprintf(t_port, "%c%.u", '/', sptr->port);
+
+      /* And finally, let's get the host information, ip or name */
       switch (showip)
         {
           case TRUE:
-#ifdef SHOW_UH
-	    (void)ircsprintf(nbuf, "%s[%s%s%s%s]",
-			     sptr->name,
-			     (!IsGotId(sptr)) ? "" :
-			     "(+)",
-			     sptr->user?sptr->user->username :
-			     sptr->username, 
-			     (sptr->user?sptr->user->username[0] :
-		             sptr->username[0]) ? "@" : "",
-			     inetntoa((char *)&sptr->ip));
-#else
-	    (void)sprintf(nbuf, "%s[%s%s%s]",
-			sptr->name,
-			(!isGotId(sptr)) ? "" :
-			sptr->username,
-			sptr->username[0] ? "@" : "",
-			inetntoa((char *)&sptr->ip));
-#endif
+            strcpy(t_host, inetntoa((char *)&sptr->ip));
             break;
           case HIDEME:
-#ifdef SHOW_UH
-            (void)ircsprintf(nbuf, "%s[%s%s@%s]",
-                             sptr->name,
-                             (!IsGotId(sptr)) ? "" :
-                             "(+)",
-                             sptr->user?sptr->user->username :
-                             sptr->username,
-                             "255.255.255.255");
-#else
-            (void)sprintf(nbuf, "%s[%s@%s]",
-                        sptr->name,
-                        (!IsGotId(sptr)) ? "" :
-                        sptr->username,
-                        "255.255.255.255");
-#endif
+            strcpy(t_host, "255.255.255.255");
             break;
-	  default:
-	      if (mycmp(sptr->name, sptr->sockhost))
-#ifdef USERNAMES_IN_TRACE
-		(void)ircsprintf(nbuf, "%s[%s%s%s]",
-				 sptr->name,
-				 sptr->user ? sptr->user->username :
-				 sptr->username,
-				 (sptr->user ? sptr->user->username[0] :
-				 sptr->username[0]) ? "@" : "",
-				 sptr->sockhost);
-#else
-	      (void)ircsprintf(nbuf, "%s[%s]",
-			       sptr->name, sptr->sockhost);
-#endif
-	      else
-		return sptr->name;
+          default:
+            strcpy(t_host, sptr->sockhost);
         }
-      return nbuf;
+
+      /* Now we add everything together */
+      (void)ircsprintf(nbuf, "%s[%s%s%s%s]", sptr->name, t_id,
+        t_user, t_host, t_port);
+
     }
+
+  if (mycmp(sptr->name,sptr->sockhost) || t_port[0])
+    return nbuf;
   return sptr->name;
 }
 

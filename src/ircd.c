@@ -815,6 +815,8 @@ int	main(int argc, char *argv[])
   time_t	delay = 0;
   int fd;
 
+  aConfItem *aconf;
+
   cold_start = YES;		/* set when server first starts up */
 
   if((timeofday = time(NULL)) == -1)
@@ -1171,46 +1173,20 @@ normal user.\n");
     (void)initconf(0,fd,NO);
 #endif
 #endif
-  if (!(bootopt & BOOT_INETD))
+  if (bootopt & BOOT_INETD)
+    if (inetport(&me, 0, 0))
     {
-      aConfItem	*aconf;
-      u_long vaddr;
-      
-      if ((aconf = find_me()) && portarg <= 0 && aconf->port > 0)
-	portnum = aconf->port;
-      Debug((DEBUG_ERROR, "Port = %d", portnum));
-      if ((aconf->passwd[0] != '\0') && (aconf->passwd[0] != '*'))
-        {
-	  vaddr = inet_addr(aconf->passwd);
-          me.ip.s_addr = vaddr;
-        }
-      else
-        vaddr = (u_long) NULL;
-
-      if (inetport(&me, portnum, vaddr))
-      {
-	if (bootopt & BOOT_STDERR)
-          fprintf(stderr,"Couldn't bind to primary port %d\n", portnum);
-#ifdef USE_SYSLOG
-	(void)syslog(LOG_CRIT, "Couldn't bind to primary port %d\n", portnum);
-#endif
-	exit(1);
-      }
-    }
-  else if (inetport(&me, 0, 0))
-  {
-    if (bootopt & BOOT_STDERR)
-      fprintf(stderr,"Couldn't bind to port passed from inetd\n");
+      if (bootopt & BOOT_STDERR)
+        fprintf(stderr,"Couldn't bind to port passed from inetd\n");
 #ifdef USE_SYSLOG
       (void)syslog(LOG_CRIT, "Couldn't bind to port passed from inetd\n");
 #endif
-    exit(1);
-  }
+      exit(1);
+    }
 
-  (void)get_my_name(&me, me.sockhost, sizeof(me.sockhost)-1);
-  if (me.name[0] == '\0')
-    strncpyzt(me.name, me.sockhost, sizeof(me.name));
-  (void)ircsprintf(me.sockhost, "%-.42s/%.u", me.sockhost, (unsigned int)me.port);
+  aconf = find_me();
+  strncpyzt(me.name, aconf->host, sizeof(me.name));
+  strncpyzt(me.sockhost, aconf->host, sizeof(me.sockhost));
   me.hopcount = 0;
   me.authfd = -1;
   me.confs = NULL;

@@ -1640,18 +1640,13 @@ int	m_info(aClient *cptr,
 #undef OUT3
 #undef OUT4
 
-#ifdef SHOW_UH
 #ifdef SHOW_INVISIBLE_LUSERS
 #define OUT1 "SHOW_INVISIBLE_LUSERS=1"
 #else
 #define OUT1 "SHOW_INVISIBLE_LUSERS=0"
 #endif
-#define OUT2 " SHOW_UH=1"
-#else
-#define OUT2 " SHOW_UH=0"
-#endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 );
+		me.name, parv[0], OUT1);
 
 #undef OUT1
 #undef OUT2

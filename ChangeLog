@@ -1,0 +1,15 @@
+
+I started this file to keep track of changes made in hybrid-6,
+beginning with b37.  We are in VERY HIGH SPEED development mode,
+so it's important to keep track of this. =)
+
+version hybrid-6-b37	13-Jan-1999
+
+* removed M: line port & address activation on startup
+  you *must* use at least one P: line in your config file now -- FlashMan
+* completely rewrote get_client_name() to clean up the conditionals mess
+  makes things look prettier overall -- FlashMan
+* RPL_YOURHOST is now given to the client as server_name[sockhost/port]
+  that the client connected to -- for virtual addresses and such -- FlashMan
+* Removed SHOW_UH define from config.h -- no longer needed -- FlashMan
+

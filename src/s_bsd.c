@@ -241,13 +241,11 @@ int	inetport(aClient *cptr, int port, u_long bind_addr)
 {
   static struct sockaddr_in server;
   int len = sizeof(server);
+  struct hostent *hp;
+  Link *lp;
 
-  if (cptr != &me)
-    {
-      (void)ircsprintf(cptr->sockhost, "%-.42s/%.u",
-		       me.name, (unsigned int)port);
-      (void)strcpy(cptr->name, me.name);
-    }
+  (void)strcpy(cptr->name, me.name);
+
   /*
    * At first, open a new socket
    */
@@ -283,9 +281,20 @@ int	inetport(aClient *cptr, int port, u_long bind_addr)
       server.sin_family = AF_INET;
 
       if (bind_addr)
-	server.sin_addr.s_addr = bind_addr;
+        {
+	  server.sin_addr.s_addr = bind_addr;
+          if (hp = gethostbyaddr((char *)&bind_addr, sizeof(bind_addr),
+            AF_INET))
+              strncpyzt(cptr->sockhost, hp->h_name, HOSTLEN);
+          else
+              strncpyzt(cptr->sockhost, inetntoa((char *)&bind_addr), HOSTLEN);
+        }
       else
-        server.sin_addr.s_addr = INADDR_ANY;
+        {
+          server.sin_addr.s_addr = INADDR_ANY;
+          strncpyzt(cptr->sockhost, me.name, HOSTLEN);
+        }
+
       
       server.sin_port = htons(port);
       /*
@@ -332,7 +341,7 @@ int	inetport(aClient *cptr, int port, u_long bind_addr)
 /*
  * add_listener
  *
- * Create a new client which is essentially the stub like 'me' to be used
+ * Create a new client
  * for a socket that is passive (listen'ing for connections to be accepted).
  */
 int	add_listener(aConfItem *aconf)
@@ -2595,6 +2604,7 @@ static	struct	sockaddr *connect_inet(aConfItem *aconf,
       return NULL;
     }
   mysk.sin_port = 0;
+  mysk.sin_family = AF_INET;
   memset((void *)&server, 0, sizeof(server));
   server.sin_family = AF_INET;
   get_sockhost(cptr, aconf->host);
@@ -2654,77 +2664,6 @@ static	struct	sockaddr *connect_inet(aConfItem *aconf,
   server.sin_port = htons((aconf->port > 0) ? aconf->port : portnum);
   *lenp = sizeof(server);
   return	(struct sockaddr *)&server;
-}
-
-/*
-** find the real hostname for the host running the server (or one which
-** matches the server's name) and its primary IP#.  Hostname is stored
-** in the client structure passed as a pointer.
-*/
-void	get_my_name(aClient *cptr,
-		    char *name,
-		    int len)
-{
-  static	char tmp[HOSTLEN+1];
-  struct	hostent	*hp;
-/* The following conflicts with both AIX and linux prototypes
-   oh well, we can put up with the errors from other systems
-   -Dianora 
-*/
-/*  extern int	gethostname(char *, int); */
-
-  char	*cname = cptr->name;
-
-  /*
-  ** Setup local socket structure to use for binding to.
-  */
-  memset((void *)&mysk, 0, sizeof(mysk));
-  mysk.sin_family = AF_INET;
-
-  if (gethostname(name, len) == -1)
-    return;
-  name[len] = '\0';
-
-  /* assume that a name containing '.' is a FQDN */
-  if (!strchr(name,'.'))
-    add_local_domain(name, len - strlen(name));
-  
-  /*
-  ** If hostname gives another name than cname, then check if there is
-  ** a CNAME record for cname pointing to hostname. If so accept
-  ** cname as our name.   meLazy
-  */
-  if (BadPtr(cname))
-    return;
-  if ((hp = gethostbyname(cname)) || (hp = gethostbyname(name)))
-    {
-      char	*hname;
-      int	i = 0;
-
-      for (hname = hp->h_name; hname; hname = hp->h_aliases[i++])
-	{
-	  strncpyzt(tmp, hname, sizeof(tmp));
-	  add_local_domain(tmp, sizeof(tmp) - strlen(tmp));
-
-	  /*
-	  ** Copy the matching name over and store the
-	  ** 'primary' IP# as 'myip' which is used
-	  ** later for making the right one is used
-	  ** for connecting to other hosts.
-	  */
-	  if (!mycmp(me.name, tmp))
-	    break;
-	}
-      if (mycmp(me.name, tmp))
-	strncpyzt(name, hp->h_name, len);
-      else
-	strncpyzt(name, tmp, len);
-      bcopy(hp->h_addr, (char *)&mysk.sin_addr,
-	    sizeof(struct in_addr));
-      Debug((DEBUG_DEBUG,"local name is %s",
-	     get_client_name(&me,TRUE)));
-    }
-  return;
 }
 
 /*
