@@ -210,6 +210,9 @@ version.c: version.c.SH
 depend:
 	${MKDEP} ${CPPFLAGS} ${SRCS} > .depend
 
+lint:
+	lint -aacgprxhH $(CPPFLAGS) $(SRCS) >../lint.out
+
 clean:
 	${RM} -f *.o *.exe *~ ircd.core core ircd 
 

@@ -129,6 +129,13 @@ depend:
 		${MAKE} depend; cd ..;\
 	done
 
+lint:
+	@for i in $(SUBDIRS); do \
+		echo "lint'ing in $$i";\
+		cd $$i;\
+		${MAKE} lint; cd ..;\
+	done
+
 install: all
 	@./tools/install_ircd
 

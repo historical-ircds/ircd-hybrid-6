@@ -51,6 +51,10 @@ install: build
 
 depend:
 
+lint:
+	lint -aacgprxhH $(INCLUDEDIR) $(mkpasswd_SOURCES) $(viconf_SOURCES) $(fixklines_SOURCES) $(encspeed_SOURCES) >>../lint.out
+	@echo done
+
 # DO NOT DELETE
 
 mkpasswd.o: ../include/setup.h ../zlib/zlib.h
