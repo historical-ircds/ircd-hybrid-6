@@ -1,3 +1,11 @@
+*** 20011129_1 by db
+- since the old code did a ++addr_count then compared to RES_MAXADDRS,
+  it would not find any ip's, depending on the compilers interpretation
+  of sequence points. Its quite possible, it would have resolved on sunpro
+  compiler, but it sure does not on freebsd gcc.
+
+
+
 *** 20011128_1 by lusky
 - revved patchlevel to 6.2.1rc2
 - another spoofing fix
