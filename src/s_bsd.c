@@ -427,21 +427,15 @@ void        init_sys()
   if (!getrlimit(RLIMIT_FD_MAX, &limit))
     {
 
-#ifdef        pyr
-      if (limit.rlim_cur < MAXCONNECTIONS)
-#else
-        if (limit.rlim_max < MAXCONNECTIONS)
-#endif        /* ifdef pyr */
+      if (limit.rlim_max < MAXCONNECTIONS)
+	{
+	  (void)fprintf(stderr,"ircd fd table too big\n");
+	  (void)fprintf(stderr,"Hard Limit: %ld IRC max: %d\n",
+			(long) limit.rlim_max, MAXCONNECTIONS);
+	  (void)fprintf(stderr,"Fix MAXCONNECTIONS\n");
+	  exit(-1);
+	}
 
-          {
-            (void)fprintf(stderr,"ircd fd table too big\n");
-            (void)fprintf(stderr,"Hard Limit: %ld IRC max: %d\n",
-                          (long) limit.rlim_max, MAXCONNECTIONS);
-            (void)fprintf(stderr,"Fix MAXCONNECTIONS\n");
-            exit(-1);
-          }
-
-#ifndef        pyr
       limit.rlim_cur = limit.rlim_max; /* make soft limit the max */
       if (setrlimit(RLIMIT_FD_MAX, &limit) == -1)
         {
@@ -460,23 +454,16 @@ void        init_sys()
             "Make sure your kernel supports a larger FD_SETSIZE then recompile with -DFD_SETSIZE=%d\n",MAXCONNECTIONS);
           exit(-1);
         }
-#endif        /* USE_POLL */
-
-#ifndef USE_POLL
-
 #ifndef HAVE_FD_ALLOC
       printf("Value of FD_SETSIZE is %d\n", FD_SETSIZE);
 #endif
-
 #endif /* USE_POLL */
-
       printf("Value of NOFILE is %d\n", NOFILE);
-#endif        /* pyr */
     }
 #endif        /* RLIMIT_FD_MAX */
 
-#ifdef sequent
-# ifndef        DYNIXPTX
+#ifdef  sequent
+#ifndef DYNIXPTX
   int        fd_limit;
 
   fd_limit = setdtablesize(MAXCONNECTIONS + 1);
@@ -488,21 +475,21 @@ void        init_sys()
       (void)fprintf(stderr,"Fix MAXCONNECTIONS\n");
       exit(-1);
     }
-# endif
-#endif
+#endif  /* !DYNIXPIX */
+#endif  /* sequent */
 #if defined(DYNIXPTX) || defined(SVR3)
   char        logbuf[BUFSIZ];
 
   (void)setvbuf(stderr,logbuf,_IOLBF,sizeof(logbuf));
-#else
+#else /* !(defined(HPUX) || defined(__CYGWIN__)) */
 # if defined(HPUX) || defined(__CYGWIN__)
   (void)setvbuf(stderr, NULL, _IOLBF, 0);
 # else
 #  if !defined(SOL20) && !defined(__EMX__)
   (void)setlinebuf(stderr);
 #  endif
-# endif
-#endif
+# endif /* !(defined(HPUX) || defined(__CYGWIN__)) */
+#endif  /* !(defined(DYNIXPTX) || defined(SVR3)) */
 
 #ifndef USE_POLL
   read_set = &readset;
@@ -1501,10 +1488,6 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
   aClient*       cptr;
   int            nfds;
   struct timeval wait;
-#ifdef  pyr
-  struct timeval nowt;
-  u_long   us;
-#endif
   time_t         delay2 = delay;
   time_t         now;
   u_long         usec = 0;
@@ -1515,12 +1498,7 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
   int            i;
   int            rr;
 
-#ifdef        pyr
-  (void) gettimeofday(&nowt, NULL);
-  now = nowt.tv_sec;
-#else
   now = timeofday;
-#endif
 
   /* if it is called with NULL we check all active fd's */
   if (!listp) {
@@ -1566,26 +1544,9 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
               || ((cptr->flags2 & FLAGS2_ZIP) && (cptr->zip->outcount > 0))
 #endif
               )
-#ifndef        pyr
-          FD_SET(i, write_set);
-#else
-          {
-            if (!(cptr->flags & FLAGS_BLOCKED))
-              {
-                FD_SET(i, write_set);
-              }
-            else
-              delay2 = 0, usec = 500000;
-          }
-          if (now - cptr->lw.tv_sec &&
-              nowt.tv_usec - cptr->lw.tv_usec < 0)
-            us = 1000000;
-          else
-            us = 0;
-          us += nowt.tv_usec;
-          if (us - cptr->lw.tv_usec > 500000)
-            cptr->flags &= ~FLAGS_BLOCKED;
-#endif
+            {
+               FD_SET(i, write_set);
+            }
         }
       
       if (ResolverFileDescriptor >= 0)
