@@ -60,15 +60,6 @@
  */
 #define MAX_BUFFER      60
 
-#if defined(__CYGWIN__)
-#undef  HARD_FDLIMIT_
-#define HARD_FDLIMIT_   64
-#undef  INIT_MAXCLIENTS
-#define INIT_MAXCLIENTS 20
-#undef  MAX_BUFFER
-#define MAX_BUFFER      10
-#endif /* __CYGWIN__ */
-
 /* NICKNAMEHISTORYLENGTH - size of WHOWAS array
  * this defines the length of the nickname history.  each time a user changes
  * nickname or signs off, their old nickname is added to the top of the list.
