@@ -504,27 +504,40 @@ static void sendnick_TS(struct Client *cptr, struct Client *acptr)
  * inputs       - pointer to an aClient
  * output       - pointer to static string
  * side effects - build up string representing capabilities of server listed
- *
- * Added ENC showing as a capability although it isn't implemented as one.
- * -einride.
  */
 
 const char* show_capabilities(struct Client* acptr)
 {
   static char        msgbuf[BUFSIZE];
   struct Capability* cap;
+  chat *t;
+  int tl;
 
-  strcpy(msgbuf,"TS ");
+  t = msgbuf;
+  tl = ircsprintf(msgbuf, "TS ");
+  t += tl;
+
+  /* Short circuit if no caps -- send back TS and that's it. */
+  if (!acptr->caps)
+  {
+    msgbuf[2] = '\0';
+    return(msgbuf);
+  }
 
   for (cap = captab; cap->cap; ++cap)
+  {
+    if (cap->cap & acptr->caps)
     {
-      if(cap->cap & acptr->caps)
-        {
-          strcat(msgbuf, cap->name);
-          strcat(msgbuf, " ");
-        }
+      tl = ircsprintf(t, "%s ", cap->name);
+      t += tl;
     }
-  return msgbuf;
+  }
+
+  /* Remove the trailing space, and terminate the string. */
+  t--;
+  *t = '\0';
+
+  return(msgbuf);
 }
 
 int server_estab(struct Client *cptr)
