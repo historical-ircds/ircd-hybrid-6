@@ -1,3 +1,7 @@
+*** 20000611_2 by lusky
+updated README file with new Solaris7 64bit compiler info
+
+
 *** 20000611_1 by lusky
 removed unused variable (compile warning)
 
