@@ -69,7 +69,7 @@ int     dopacket(aClient *cptr, char *buffer, int length)
       cptr->receiveB &= 0x03ff; /* 2^10 = 1024, 3ff = 1023 */
     }
 
-  else if (me.receiveB > 1023)
+  if (me.receiveB > 1023)
     {
       me.receiveK += (me.receiveB >> 10);
       me.receiveB &= 0x03ff;
