@@ -1,3 +1,8 @@
+*** 20000410_2 by lusky
+revved patchlevel to b123
+moved NICKNAMEHISTORYLENGTH to near top of config.h
+
+
 *** 20000410_1 by lusky
 chan mode +p/+s fix (ejb)
 use MAX_SETBACK_TIME for threshold of clock jump--now 1800secs (db)
