@@ -62,6 +62,7 @@ static	int	lookup_confhost (aConfItem *);
 static  int     attach_iline(aClient *, aConfItem *);
 aConfItem *find_special_conf(char *, int );
 void clear_special_conf(aConfItem **);
+static aConfItem *find_tkline(char *,char *);
 
 aConfItem *temporary_klines = (aConfItem *)NULL;
 
@@ -165,8 +166,9 @@ int	attach_Iline(aClient *cptr,
 		     char *username,
 		     char **preason)
 {
-  Reg	aConfItem	*aconf;
-  Reg	char	*hname;
+  register aConfItem *aconf;
+  register aConfItem *tkline_conf;
+  register char *hname;
   /*  static	char	user[USERLEN+3]; */
   static	char	host[HOSTLEN+3];
   static	char	fullname[HOSTLEN+1];
@@ -198,10 +200,26 @@ int	attach_Iline(aClient *cptr,
     }
 
   if(cptr->flags & FLAGS_GOTID)
-    aconf = find_matching_mtrie_conf(host,cptr->username,
-				     ntohl(cptr->ip.s_addr));
+    {
+      aconf = find_matching_mtrie_conf(host,cptr->username,
+				       ntohl(cptr->ip.s_addr));
+      if(!IsConfElined(aconf))
+	{
+	  tkline_conf = find_tkline(host,cptr->username);
+	  if(tkline_conf)
+	    aconf = tkline_conf;
+	}
+    }
   else
-    aconf = find_matching_mtrie_conf(host,username,ntohl(cptr->ip.s_addr));
+    {
+      aconf = find_matching_mtrie_conf(host,username,ntohl(cptr->ip.s_addr));
+      if(!IsConfElined(aconf))
+	{
+	  tkline_conf = find_tkline(host,username);
+	  if(tkline_conf)
+	    aconf = tkline_conf;
+	}
+    }
 
   if(aconf)
     {
@@ -2090,11 +2108,49 @@ aConfItem *find_kill(aClient *cptr)
 }
 
 /*
+ * find_is_klined()
+ *
+ * inputs	- hostname
+ *		- username
+ *		- ip of possible "victim"
+ * output	- matching aConfItem or NULL
+ * side effects	-
+ *
  * WARNING, no sanity checking on length of name,host etc.
  * thats expected to be done by caller.... *sigh* -Dianora
  */
 
 aConfItem *find_is_klined(char *host,char *name,unsigned long ip)
+{
+  aConfItem *found_aconf;
+
+  if(found_aconf = find_tkline(host,name))
+    return(found_aconf);
+
+  /* find_matching_mtrie_conf() can return either a CONF_KILL
+   * or a CONF_CLIENT
+   */
+
+  found_aconf = find_matching_mtrie_conf(host,name,ntohl(ip));
+  if(found_aconf && found_aconf->status & CONF_KILL)
+    return(found_aconf);
+  else
+    return((aConfItem *)NULL);
+}
+
+/*
+ * find_tkline
+ *
+ * inputs	- hostname
+ *		- username
+ * output	- matching aConfItem or NULL
+ * side effects	-
+ *
+ * WARNING, no sanity checking on length of name,host etc.
+ * thats expected to be done by caller.... *sigh* -Dianora
+ */
+
+static aConfItem *find_tkline(char *host,char *name)
 {
   aConfItem *kill_list_ptr;	/* used for the link list only */
   aConfItem *last_list_ptr;
@@ -2102,10 +2158,10 @@ aConfItem *find_is_klined(char *host,char *name,unsigned long ip)
   aConfItem *tmp;
 
   /* Temporary kline handling...
-     I expect this list to be very tiny. (crosses fingers) so CPU
-     time in this, should be minimum.
-     -Dianora
-  */
+   * I expect this list to be very tiny. (crosses fingers) so CPU
+   * time in this, should be minimum.
+   * -Dianora
+   */
 
   if(temporary_klines)
     {
@@ -2135,9 +2191,10 @@ aConfItem *find_is_klined(char *host,char *name,unsigned long ip)
 	    }
 	  else
 	    {
-	      if( (kill_list_ptr->name && (!name || !match(kill_list_ptr->name,
-                 name))) && (kill_list_ptr->host &&
-                   (!host || !match(kill_list_ptr->host,host))))
+	      if( (kill_list_ptr->name
+		   && (!name || !match(kill_list_ptr->name, name)))
+		  && (kill_list_ptr->host
+		      && (!host || !match(kill_list_ptr->host,host))))
 		return(kill_list_ptr);
               last_list_ptr = kill_list_ptr;
               kill_list_ptr = kill_list_ptr->next;
@@ -2155,16 +2212,7 @@ aConfItem *find_is_klined(char *host,char *name,unsigned long ip)
 	      return((aConfItem *)NULL);
 	  }
 	  */
-
-  /* find_matching_mtrie_conf() can return either a CONF_KILL
-   * or a CONF_CLIENT
-   */
-
-  tmp = find_matching_mtrie_conf(host,name,ntohl(ip));
-  if(tmp && tmp->status & CONF_KILL)
-    return(tmp);
-  else
-    return((aConfItem *)NULL);
+  return((aConfItem *)NULL);
 }
 
 /* add_temp_kline

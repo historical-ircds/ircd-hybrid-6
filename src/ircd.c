@@ -560,7 +560,8 @@ static	time_t	check_pings(time_t currenttime)
 #ifdef IDLE_CHECK
       if (IsPerson(cptr))
 	{
-	  if( !IsElined(cptr) && ((timeofday - cptr->user->last) > idle_time))
+	  if( !IsElined(cptr) && idle_time && 
+	      ((timeofday - cptr->user->last) > idle_time))
 	    {
 	      aConfItem *aconf;
 

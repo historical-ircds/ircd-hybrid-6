@@ -1507,18 +1507,13 @@ int	m_info(aClient *cptr,
 #else
 #define OUT1 "NON_REDUNDANT_KLINES=0"
 #endif
-#ifdef NO_CHANOPS_WHEN_SPLIT
-#define OUT2 " NO_CHANOPS_WHEN_SPLIT=1"
-#else
-#define OUT2 " NO_CHANOPS_WHEN_SPLIT=0"
-#endif
 #ifdef NO_DEFAULT_INVISIBLE
-#define OUT3 " NO_DEFAULT_INVISIBLE=1"
+#define OUT2 " NO_DEFAULT_INVISIBLE=1"
 #else
-#define OUT3 " NO_DEFAULT_INVISIBLE=0"
+#define OUT2 " NO_DEFAULT_INVISIBLE=0"
 #endif
         sendto_one(sptr, rpl_str(RPL_INFO),
-                me.name, parv[0], OUT1 OUT2 OUT3);
+                me.name, parv[0], OUT1 OUT2);
 
 #undef OUT1
 #undef OUT2
@@ -1771,6 +1766,30 @@ int	m_info(aClient *cptr,
         ircsprintf(outstr,"TS_MAX_DELTA=%d TS_WARN_DELTA=%d",TS_MAX_DELTA,TS_WARN_DELTA);
 	sendto_one(sptr, rpl_str(RPL_INFO),
 		me.name, parv[0], outstr);
+
+#ifdef NO_CHANOPS_WHEN_SPLIT
+#undef OUT
+#define OUT "NO_CHANOPS_WHEN_SPLIT"
+#endif
+
+#ifdef NO_JOIN_ON_SPLIT
+#undef OUT
+#define OUT "NO_JOIN_ON_SPLIT"
+#endif
+
+#ifdef PRESERVE_CHANNEL_ON_SPLIT
+#undef OUT
+#define OUT "PRESERVE_CHANNEL_ON_SPLIT"
+#endif
+
+#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
+	defined(NO_JOIN_ON_SPLIT)
+
+        ircsprintf(outstr,"%s SPLIT_SMALLNET_SIZE %d",
+		   OUT, SPLIT_SMALLNET_SIZE) ;
+	sendto_one(sptr, rpl_str(RPL_INFO),
+		me.name, parv[0], outstr);
+#endif
       }
 
       sendto_one(sptr,
@@ -3192,13 +3211,14 @@ int   m_set(aClient *cptr,
 	  if(parc > 2)
 	    {
 	      int newval = atoi(parv[2]);
-
+	      /*
 	      if((newval*60) < MIN_IDLETIME)
 		{
 		  sendto_one(sptr, ":%s NOTICE %s :IDLETIME must be >= %d",
 			     me.name, parv[0],MIN_IDLETIME/60);
 		  return 0;
 		}       
+		*/
 	      sendto_ops("%s has changed IDLETIME to %i", parv[0], newval);
 	      sendto_one(sptr, ":%s NOTICE %s :IDLETIME is now set to %i",
 			 me.name, parv[0], newval);
@@ -5567,9 +5587,10 @@ int	m_trace(aClient *cptr,
         }
     }
 
-  sendto_realops_lev(SPY_LEV, "trace requested by %s (%s@%s) [%s]",
-		     sptr->name, sptr->user->username, sptr->user->host,
-		     sptr->user->server);
+  if(MyClient(sptr))
+    sendto_realops_lev(SPY_LEV, "trace requested by %s (%s@%s) [%s]",
+		       sptr->name, sptr->user->username, sptr->user->host,
+		       sptr->user->server);
 
 
   doall = (parv[1] && (parc > 1)) ? !matches(tname, me.name): TRUE;
