@@ -1,26 +1,6 @@
-/************************************************************************
- *   IRC - Internet Relay Chat, src/ircd.c
- *   Copyright (C) 1990 Jarkko Oikarinen and
- *                      University of Oulu, Computing Center
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 1, or (at your option)
- *   any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program; if not, write to the Free Software
- *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
 
-I started this file to keep track of changes made in hybrid-6,
-beginning with b37.  We are in VERY HIGH SPEED development mode,
-so it's important to keep track of this. =)
+*** HYBRID CHANGELOG
+*** Newest entries at top
 	
 version hybrid-6-b44    30-Jan-1999
 * (s_bsd.c) fixed a botch with rr = 0 causing bizarre behaviour under solaris
@@ -33,6 +13,10 @@ version hybrid-6-b44    30-Jan-1999
   idented names should not have ~ non-idented names should have ~
   lets not be inconsitent with (+) prefixes for idented names
 -Dianora
+* changed example.conf to remind people to have their virtual address in
+  the M: line for outbound connects
+* fixed the STATS_NOTICE invalid directive.  made it #define by default.
+-FlashMan
 	
 version hybrid-6-b43    24-Jan-1999
 * reworked io_loop dropping CPU load significantly, this is still something 

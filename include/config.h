@@ -407,15 +407,12 @@
 #define F_LINES_OPER_ONLY
 
 /* STATS_NOTICE - See a notice when a user does a /stats
- * Some people find this invasive and with the STAT command on PACE throttle
- * the server shouldn't suffer but lusers stat for different reasons and many
- * times it's been a prelude to some other form of attack. -Wintrhawk
  *
- * Bah. You don't need this its extra noise, the users can't
- * flood a server anyway, and its an invasion of privacy. -Dianora
- * YOUR CHOICE ;-)
+ * This is left on by default.
+ * Members of the development team were split on supporting the
+ * default here.
  */
-#define_this_or_undef_this STATS_NOTICE
+#define STATS_NOTICE
 
 /* LINKS_NOTICE - See a notice when a user does a /links
  * its always defined now

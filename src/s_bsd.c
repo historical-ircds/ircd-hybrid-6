@@ -93,6 +93,8 @@ int rcvbufmax = 0, sndbufmax = 0;
 void	reset_sock_opts (int, int);
 #endif
 
+extern char specific_virtual_host;	/* defined in s_conf.c */
+extern struct sockaddr_in vserv;	/* defined in s_conf.c */
 extern int spare_fd;	/* defined in ircd.c */
 extern aClient *serv_cptr_list;	/* defined in ircd.c */
 extern aClient *local_cptr_list;/* defined in ircd.c */
@@ -109,8 +111,6 @@ static	struct	sockaddr *connect_inet (aConfItem *, aClient *, int *);
 static	int	completed_connection (aClient *);
 static	int	check_init (aClient *, char *);
 static	void	do_dns_async (void), set_sock_opts (int, aClient *);
-struct sockaddr_in vserv;
-char	specific_virtual_host;
 
 #if defined(MAXBUFFERS) && !defined(SEQUENT)
 static	char	*readbuf;
