@@ -1,3 +1,17 @@
+leeh        2001/12/07 09:38:48 EST	(20011207_8)
+
+  Modified files:
+    src                  client.c dline_conf.c 
+  Log:
+  - fixes for KLINE_WITH_REASON/CONNECTION_CLOSED as reported by kindred/hwy
+  - missing oper_reason causing a core..
+  
+  Revision  Changes    Path
+  1.73      +26 -4     ircd-hybrid-6/src/client.c
+  1.40      +2 -2      ircd-hybrid-6/src/dline_conf.c
+
+
+
 db          2001/12/07 00:35:57 EST	(20011207_7)
 
   Modified files:
