@@ -40,7 +40,7 @@ static char *rcs_version = "$Id$";
 			/* define it (BSD4.2 needs this) */
 #include "h.h"
 
-static void authsenderr(aClient *);
+static void authsenderr(aClient *);	/* locally defined */
 
 /*
  * start_auth

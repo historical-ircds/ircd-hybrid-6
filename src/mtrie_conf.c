@@ -1239,8 +1239,11 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
       for(found_conf = unsortable_list_ilines;
 	  found_conf;found_conf=found_conf->next)
 	{
-	  /* Non opers do not need to know about I lines that do spoofing */
-	  if(!IsAnOper(sptr) && IsConfDoSpoofIp(found_conf))
+	  /* Non local opers do not need to know about
+	   * I lines that do spoofing 
+	   */
+	  if(!(MyConnect(sptr) && IsAnOper(sptr)) &&
+	     IsConfDoSpoofIp(found_conf))
 	    continue;
 
 	  host = BadPtr(found_conf->host) ? null : found_conf->host;
@@ -1452,10 +1455,11 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 		    }
 		  else
 		    {
-		      /* Non opers do not need to know about
+		      /* Non local opers do not need to know about
 		       * I lines that do spoofing
 		       */
-		      if(!IsAnOper(sptr) && IsConfDoSpoofIp(aconf))
+		      if(!(MyConnect(sptr) && IsAnOper(sptr))
+			 && IsConfDoSpoofIp(aconf))
 			continue;
 
 		      c = 'I';
@@ -1500,10 +1504,11 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 		    }
 		  else
 		    {
-		      /* Non opers do not need to know about
+		      /* Non local opers do not need to know about
 		       * I lines that do spoofing
 		       */
-		      if(!IsAnOper(sptr) && IsConfDoSpoofIp(aconf))
+		      if(!(MyConnect(sptr) && IsAnOper(sptr))
+			 && IsConfDoSpoofIp(aconf))
 			continue;
 		      c = 'I';
 #ifdef LITTLE_I_LINES

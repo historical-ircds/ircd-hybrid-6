@@ -25,6 +25,14 @@ version hybrid-6-b44    31-Jan-1999
   on socket open logically where it should be.
 * fixed the USE_FAST_FD_ISSET botch I introduced, corrected an unforseen
   error thats been there for a while.
+* added a little more useful information in the bug report in blalloc.c
+  I added a report of what size of block is being freed.
+* I added a horrible kludge to ircd.c/struct.h to bit mark clients
+  that have already been exited. It appears that somehow, the same
+  client is being examined twice and exited twice =occasionally=
+  Because of the block allocator, its safe to check the bit after free
+  *kludge* I really didn't want to admit I coded that.
+* Don't allow non local opers to see spoofed I lines. 
 -Dianora
 	
 version hybrid-6-b43    24-Jan-1999

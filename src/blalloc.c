@@ -295,7 +295,8 @@ int BlockHeapFree(BlockHeap *bh, void *ptr)
 #if defined(USE_SYSLOG) && defined(SYSLOG_BLOCK_ALLOCATOR)
 	      syslog(LOG_DEBUG,"blalloc.c bit already clear in map!");
 #endif
-	      sendto_ops("blalloc.c bit already clear in map!");
+	      sendto_ops("blalloc.c bit already clear in map! elemSize %d",
+			 bh->elemSize);
 	      sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
 	    }
 	  else

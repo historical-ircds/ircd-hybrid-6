@@ -245,6 +245,7 @@ typedef struct	MessageFileItem aMessageFile;
 #ifdef IDLE_CHECK
 #define FLAGS2_IDLE_LINED   0x10000
 #endif
+#define FLAGS2_ALREADY_EXITED	0x20000 /* kludge grrrr */
 
 /* for sendto_ops_lev */
 #define CCONN_LEV	1

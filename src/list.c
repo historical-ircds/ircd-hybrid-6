@@ -192,7 +192,6 @@ aClient	*make_client(aClient *from)
       /* cptr->buffer[0] = '\0'; */
       /* cptr->username[0] = '\0'; */
       cptr->authfd = -1;
-      return (cptr);
     }
   else
     { /* from is not NULL */
@@ -215,8 +214,8 @@ aClient	*make_client(aClient *from)
       cptr->status = STAT_UNKNOWN;
       cptr->fd = -1;
       (void)strcpy(cptr->username, "unknown");
-      return (cptr);
     }
+  return (cptr);
 }
 
 void free_client(aClient *cptr)
