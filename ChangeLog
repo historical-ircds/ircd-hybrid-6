@@ -1,13 +1,17 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b76   28-May-1999
+* make sure mtrie returned aconf is a CONF_KILL in s_serv.c
+* take care of ~*@some.host.at.tld case
+-Dianora
+	
 version hybrid-6-b75   26-May-1999
 * '*' is not a legal IP. corrected is_address code.
 * corrected possible buffer overflows in m_knock, m_invite
 * server auto sets +nt on new channels.
 * was never setting ip/ip_mask on m_kline ip klines, so
   ip /quote kline klines needed rehash to take effect.
-	
 -Dianora
 	
 version hybrid-6-b74   19-May-1999

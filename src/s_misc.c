@@ -712,7 +712,10 @@ static	void recurse_remove_clients(aClient *sptr, char *comment)
   if (IsMe(sptr))
     return;
 
-  while (sptr->serv && (acptr = sptr->serv->servers))
+  if (!sptr->serv)	/* oooops. uh this is actually a major bug */
+    return;
+
+  while (acptr = sptr->serv->servers)
     {
       recurse_remove_clients(acptr, comment);
       /*
@@ -722,7 +725,8 @@ static	void recurse_remove_clients(aClient *sptr, char *comment)
       acptr->flags |= FLAGS_KILLED;
       exit_one_client(NULL, acptr, &me, me.name);
     }
-  while (sptr->serv && (acptr = sptr->serv->users))
+
+  while (acptr = sptr->serv->users)
     {
       acptr->flags |= FLAGS_KILLED;
       exit_one_client(NULL, acptr, &me, comment);
@@ -825,7 +829,8 @@ static	void	exit_one_client(aClient *cptr,
       if (acptr && IsServer(acptr) && acptr != cptr && !IsMe(acptr) &&
 	  (sptr->flags & FLAGS_KILLED) == 0)
 	sendto_one(acptr, ":%s SQUIT %s :%s", from->name, sptr->name, comment);
-    } else if (!(IsPerson(sptr)))
+    }
+  else if (!(IsPerson(sptr)))
       /* ...this test is *dubious*, would need
       ** some thought.. but for now it plugs a
       ** nasty hole in the server... --msa

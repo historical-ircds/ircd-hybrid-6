@@ -3956,17 +3956,20 @@ int     m_kline(aClient *cptr,
      {
        char *reason;
 
-       reason = aconf->passwd ? aconf->passwd : "<No Reason>";
+       if( aconf->status & CONF_KILL )
+	 {
+	   reason = aconf->passwd ? aconf->passwd : "<No Reason>";
 #ifdef SLAVE_SERVERS
-       if(!IsServer(sptr))
+	   if(!IsServer(sptr))
 #endif
-	 sendto_one(sptr,
-		    ":%s NOTICE %s :[%s@%s] already K-lined by [%s@%s] - %s",
-		    me.name,
-		    parv[0],
-		    user,host,
-		    aconf->name,aconf->host,reason);
-       return 0;
+	     sendto_one(sptr,
+			":%s NOTICE %s :[%s@%s] already K-lined by [%s@%s] - %s",
+			me.name,
+			parv[0],
+			user,host,
+			aconf->name,aconf->host,reason);
+	   return 0;
+	 }
      }
 #endif
 
