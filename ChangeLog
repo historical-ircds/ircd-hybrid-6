@@ -1,3 +1,8 @@
+*** 20010624_2 by db
+- removed SEPARATE_KLINES_BY_DATE no one ever used it. 
+
+
+
 *** 20010624_1 by db
 - upped config.h level from6 to 6.1 CONFIG_H_LEVEL_6_1
   there are enough differences
