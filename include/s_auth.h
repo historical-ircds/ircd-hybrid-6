@@ -23,10 +23,8 @@
 #include <sys/types.h>
 #define INCLUDED_sys_types_h
 #endif
-#if 0
 #ifndef INCLUDED_config_h
 #include "config.h"
-#endif
 #endif
 
 struct Client;
