@@ -58,7 +58,6 @@
 /*
  * status macros.
  */
-#define	STAT_LOG	-6	/* logfile for -x */
 #define	STAT_MASTER	-5	/* Local ircd master before identification */
 #define	STAT_CONNECTING	-4
 #define	STAT_HANDSHAKE	-3
@@ -66,208 +65,6 @@
 #define	STAT_UNKNOWN	-1
 #define	STAT_SERVER	0
 #define	STAT_CLIENT	1
-
-
-#define	IsRegisteredUser(x)	((x)->status == STAT_CLIENT)
-#define	IsRegistered(x)		((x)->status >= STAT_SERVER)
-#define	IsConnecting(x)		((x)->status == STAT_CONNECTING)
-#define	IsHandshake(x)		((x)->status == STAT_HANDSHAKE)
-#define	IsMe(x)			((x)->status == STAT_ME)
-#define	IsUnknown(x)		((x)->status == STAT_UNKNOWN || \
-				 (x)->status == STAT_MASTER)
-#define	IsServer(x)		((x)->status == STAT_SERVER)
-#define	IsClient(x)		((x)->status == STAT_CLIENT)
-#define	IsLog(x)		((x)->status == STAT_LOG)
-
-#define	SetMaster(x)		((x)->status = STAT_MASTER)
-#define	SetConnecting(x)	((x)->status = STAT_CONNECTING)
-#define	SetHandshake(x)		((x)->status = STAT_HANDSHAKE)
-#define	SetMe(x)		((x)->status = STAT_ME)
-#define	SetUnknown(x)		((x)->status = STAT_UNKNOWN)
-#define	SetServer(x)		((x)->status = STAT_SERVER)
-#define	SetClient(x)		((x)->status = STAT_CLIENT)
-#define	SetLog(x)		((x)->status = STAT_LOG)
-
-
-#define	FLAGS_PINGSENT     0x0001 /* Unreplied ping sent */
-#define	FLAGS_DEADSOCKET   0x0002 /* Local socket is dead--Exiting soon */
-#define	FLAGS_KILLED       0x0004 /* Prevents "QUIT" from being sent for this */
-#define	FLAGS_OPER         0x0008 /* Operator */
-#define	FLAGS_LOCOP        0x0010 /* Local operator -- SRB */
-#define	FLAGS_INVISIBLE    0x0020 /* makes user invisible */
-#define	FLAGS_WALLOP       0x0040 /* send wallops to them */
-#define	FLAGS_SERVNOTICE   0x0080 /* server notices such as kill */
-#define	FLAGS_BLOCKED      0x0100 /* socket is in a blocked condition */
-#define FLAGS_REJECT_HOLD  0x0200 /* client has been klined */
-#define	FLAGS_CLOSING      0x0400 /* set when closing to suppress errors */
-#define	FLAGS_LISTEN       0x0800 /* used to mark clients which we listen on */
-#define	FLAGS_CHKACCESS    0x1000 /* ok to check clients access if set */
-/* #define FLAGS_DOINGDNS  0x2000    UNUSED */
-/* #define FLAGS_AUTH	   0x4000    UNUSED */
-/* #define FLAGS_WRAUTH	   0x8000    UNUSED */
-#define	FLAGS_LOCAL	  0x10000 /* set for local clients */
-#define	FLAGS_GOTID	  0x20000 /* successful ident lookup achieved */
-#define	FLAGS_NEEDID	  0x40000 /* I-lines say must use ident return */
-#define	FLAGS_NONL	  0x80000 /* No \n in buffer */
-#define FLAGS_CCONN      0x100000 /* Client Connections */
-#define FLAGS_REJ        0x200000 /* Bot Rejections */
-#define FLAGS_SKILL      0x400000 /* Server Killed */
-#define FLAGS_FULL       0x800000 /* Full messages */
-#define FLAGS_NORMALEX  0x1000000 /* Client exited normally */
-#define	FLAGS_NCHANGE   0x2000000 /* Nick change notice */
-#define	FLAGS_SPY       0x4000000 /* see STATS / LINKS */
-#define FLAGS_DEBUG     0x8000000 /* 'debugging' info */
-#define FLAGS_SENDQEX  0x10000000 /* Sendq exceeded */
-#define FLAGS_OPERWALL 0x20000000 /* Operwalls */
-#define FLAGS_IPHASH   0x40000000 /* iphashed this client */
-
-/* *sigh* overflow flags */
-#define FLAGS2_RESTRICTED   0x0001      /* restricted client */
-#define FLAGS2_PING_TIMEOUT 0x0002
-#define FLAGS2_E_LINED	    0x0004	/* client is graced with E line */
-#define FLAGS2_B_LINED	    0x0008	/* client is graced with B line */
-#define FLAGS2_F_LINED	    0x0010	/* client is graced with F line */
-
-/* oper priv flags */
-
-#define FLAGS2_OPER_GLOBAL_KILL 0x0020	/* oper can global kill */
-#define FLAGS2_OPER_REMOTE	0x0040	/* oper can do squits/connects */
-#define FLAGS2_OPER_UNKLINE	0x0080	/* oper can use unkline */
-#define FLAGS2_OPER_GLINE	0x0100	/* oper can use gline */
-#define FLAGS2_OPER_N		0x0200	/* oper can umode n */
-#define FLAGS2_OPER_K		0x0400	/* oper can kill/kline */
-#define FLAGS2_OPER_DIE         0x0800  /* oper can die */
-#define FLAGS2_OPER_REHASH      0x1000  /* oper can rehash */
-#define FLAGS2_OPER_FLAGS	(FLAGS2_OPER_GLOBAL_KILL | \
-				 FLAGS2_OPER_REMOTE | \
-				 FLAGS2_OPER_UNKLINE | \
-				 FLAGS2_OPER_GLINE | \
-				 FLAGS2_OPER_N | \
-				 FLAGS2_OPER_K | \
-				 FLAGS2_OPER_DIE | \
-                                 FLAGS2_OPER_REHASH)
-/* ZIP_LINKS */
-
-#define FLAGS2_ZIP	     0x4000  /* (server) link is zipped */
-#define FLAGS2_ZIPFIRST	     0x8000  /* start of zip (ignore any CR/LF) */
-#define FLAGS2_CBURST	    0x10000  /* connection burst being sent */
-
-#define FLAGS2_DOINGLIST    0x20000  /* client is doing a list */
-#ifdef IDLE_CHECK
-#define FLAGS2_IDLE_LINED   0x40000
-#endif
-#define FLAGS2_ALREADY_EXITED	0x80000         /* kludge grrrr */
-#define FLAGS2_IP_SPOOFING	0x100000	/* client IP is spoofed */
-#define FLAGS2_IP_HIDDEN	0x200000	/* client IP should be hidden
-					           from non opers */
-
-
-#define	SEND_UMODES  (FLAGS_INVISIBLE | FLAGS_OPER | FLAGS_WALLOP)
-#define	ALL_UMODES   (SEND_UMODES | FLAGS_SERVNOTICE | FLAGS_CCONN | \
-                      FLAGS_REJ | FLAGS_SKILL | FLAGS_FULL | FLAGS_SPY | \
-                      FLAGS_NCHANGE | FLAGS_OPERWALL | FLAGS_DEBUG)
-
-#ifndef OPER_UMODES
-#define OPER_UMODES  (FLAGS_OPER | FLAGS_WALLOP | FLAGS_SERVNOTICE | \
-                      FLAGS_SPY | FLAGS_OPERWALL | FLAGS_DEBUG)
-#endif /* OPER_UMODES */
-#ifndef LOCOP_UMODES
-#define LOCOP_UMODES (FLAGS_LOCOP | FLAGS_WALLOP | FLAGS_SERVNOTICE | \
-                      FLAGS_SPY | FLAGS_DEBUG)
-#endif /* LOCOP_UMODES */
-#define	FLAGS_ID     (FLAGS_NEEDID | FLAGS_GOTID)
-
-/*
- * flags macros.
- */
-#define	IsOper(x)		((x)->flags & FLAGS_OPER)
-#define	IsLocOp(x)		((x)->flags & FLAGS_LOCOP)
-#define	IsInvisible(x)		((x)->flags & FLAGS_INVISIBLE)
-#define	IsAnOper(x)		((x)->flags & (FLAGS_OPER|FLAGS_LOCOP))
-#define	IsPerson(x)		((x)->user && IsClient(x))
-#define	IsPrivileged(x)		(IsAnOper(x) || IsServer(x))
-#define	SendWallops(x)		((x)->flags & FLAGS_WALLOP)
-#define	SendServNotice(x)	((x)->flags & FLAGS_SERVNOTICE)
-#define SendOperwall(x)		((x)->flags & FLAGS_OPERWALL)
-#define SendCConnNotice(x)	((x)->flags & FLAGS_CCONN)
-#define SendRejNotice(x)	((x)->flags & FLAGS_REJ)
-#define SendSkillNotice(x)	((x)->flags & FLAGS_SKILL)
-#define SendFullNotice(x)	((x)->flags & FLAGS_FULL)
-#define SendSpyNotice(x)	((x)->flags & FLAGS_SPY)
-#define SendDebugNotice(x)	((x)->flags & FLAGS_DEBUG)
-#define SendNickChange(x)	((x)->flags & FLAGS_NCHANGE)
-#define	IsListening(x)		((x)->flags & FLAGS_LISTEN)
-#define	DoAccess(x)		((x)->flags & FLAGS_CHKACCESS)
-#define	IsLocal(x)		((x)->flags & FLAGS_LOCAL)
-#define	IsDead(x)		((x)->flags & FLAGS_DEADSOCKET)
-#define	SetOper(x)		((x)->flags |= FLAGS_OPER)
-#define	SetLocOp(x)    		((x)->flags |= FLAGS_LOCOP)
-#define	SetInvisible(x)		((x)->flags |= FLAGS_INVISIBLE)
-#define	SetWallops(x)  		((x)->flags |= FLAGS_WALLOP)
-#define	SetAccess(x)		((x)->flags |= FLAGS_CHKACCESS)
-#define	NoNewLine(x)		((x)->flags & FLAGS_NONL)
-#define	ClearOper(x)		((x)->flags &= ~FLAGS_OPER)
-#define ClearLocOp(x)		((x)->flags &= ~FLAGS_LOCOP)
-#define	ClearInvisible(x)	((x)->flags &= ~FLAGS_INVISIBLE)
-#define	ClearWallops(x)		((x)->flags &= ~FLAGS_WALLOP)
-#define	ClearAccess(x)		((x)->flags &= ~FLAGS_CHKACCESS)
-
-#ifdef REJECT_HOLD
-#define IsRejectHeld(x)	        ((x)->flags & FLAGS_REJECT_HOLD)
-#define SetRejectHold(x)        ((x)->flags |= FLAGS_REJECT_HOLD)
-#endif
-
-#define SetIpHash		((x)->flags |= FLAGS_IPHASH)
-#define ClearIpHash		((x)->flags &= ~FLAGS_IPHASH)
-#define IsIpHash		((x)->flags & FLAGS_IPHASH)
-
-#define SetNeedId(x)		((x)->flags |= FLAGS_NEEDID)
-#define IsNeedId(x)             (((x)->flags & FLAGS_NEEDID) != 0)
-
-#define SetGotId(x)		((x)->flags |= FLAGS_GOTID)
-#define IsGotId(x)		(((x)->flags & FLAGS_GOTID) != 0)
-
-/*
- * flags2 macros.
- */
-#define IsRestricted(x)		((x)->flags2 & FLAGS2_RESTRICTED)
-#define SetRestricted(x)	((x)->flags2 |= FLAGS2_RESTRICTED)
-#define ClearDoingList(x)	((x)->flags2 &= ~FLAGS2_DOINGLIST)
-#define SetDoingList(x)         ((x)->flags2 |= FLAGS2_DOINGLIST)
-#define IsDoingList(x)		((x)->flags2 & FLAGS2_DOINGLIST)
-#define IsElined(x)		((x)->flags2 & FLAGS2_E_LINED)
-#define SetElined(x)		((x)->flags2 |= FLAGS2_E_LINED)
-#define IsBlined(x)		((x)->flags2 & FLAGS2_B_LINED)
-#define SetBlined(x)		((x)->flags2 |= FLAGS2_B_LINED)
-#define IsFlined(x)		((x)->flags2 & FLAGS2_F_LINED)
-#define SetFlined(x)		((x)->flags2 |= FLAGS2_F_LINED)
-#define SetIPSpoof(x)		((x)->flags2 |= FLAGS2_IP_SPOOFING)
-#define IsIPSpoof(x)		((x)->flags2 & FLAGS2_IP_SPOOFING)
-#define SetIPHidden(x)		((x)->flags2 |= FLAGS2_IP_HIDDEN)
-#define IsIPHidden(x)		((x)->flags2 & FLAGS2_IP_HIDDEN)
-
-#ifdef IDLE_CHECK
-#define SetIdlelined(x)		((x)->flags2 |= FLAGS2_IDLE_LINED)
-#define IsIdlelined(x)		((x)->flags2 & FLAGS2_IDLE_LINED)
-#endif
-
-#define SetOperGlobalKill(x)	((x)->flags2 |= FLAGS2_OPER_GLOBAL_KILL)
-#define IsOperGlobalKill(x)	((x)->flags2 & FLAGS2_OPER_GLOBAL_KILL)
-#define SetOperRemote(x)	((x)->flags2 |= FLAGS2_OPER_REMOTE)
-#define IsOperRemote(x)		((x)->flags2 & FLAGS2_OPER_REMOTE)
-#define SetOperUnkline(x)	((x)->flags2 |= FLAGS2_OPER_UNKLINE)
-#define IsSetOperUnkline(x)	((x)->flags2 & FLAGS2_OPER_UNKLINE)
-#define SetOperGline(x)		((x)->flags2 |= FLAGS2_OPER_GLINE)
-#define IsSetOperGline(x)	((x)->flags2 & FLAGS2_OPER_GLINE)
-#define SetOperN(x)		((x)->flags2 |= FLAGS2_OPER_N)
-#define IsSetOperN(x)		((x)->flags2 & FLAGS2_OPER_N)
-#define SetOperK(x)		((x)->flags2 |= FLAGS2_OPER_K)
-#define IsSetOperK(x)		((x)->flags2 & FLAGS2_OPER_K)
-#define SetOperDie(x)           ((x)->flags2 |= FLAGS2_OPER_DIE)
-#define IsOperDie(x)            ((x)->flags2 & FLAGS2_OPER_DIE)
-#define SetOperRehash(x)        ((x)->flags2 |= FLAGS2_OPER_REHASH)
-#define IsOperRehash(x)         ((x)->flags2 &= FLAGS2_OPER_REHASH)
-#define CBurst(x)		((x)->flags2 & FLAGS2_CBURST)
 
 /*
  * pre declare structs
@@ -465,6 +262,210 @@ struct Client
   char	            passwd[PASSWDLEN + 1];
   int	            caps;	/* capabilities bit-field */
 };
+
+
+#define	IsRegisteredUser(x)	((x)->status == STAT_CLIENT)
+#define	IsRegistered(x)		((x)->status >= STAT_SERVER)
+#define	IsConnecting(x)		((x)->status == STAT_CONNECTING)
+#define	IsHandshake(x)		((x)->status == STAT_HANDSHAKE)
+#define	IsMe(x)			((x)->status == STAT_ME)
+#define	IsUnknown(x)		((x)->status == STAT_UNKNOWN || \
+				 (x)->status == STAT_MASTER)
+#define	IsServer(x)		((x)->status == STAT_SERVER)
+#define	IsClient(x)		((x)->status == STAT_CLIENT)
+
+#define	SetMaster(x)		((x)->status = STAT_MASTER)
+#define	SetConnecting(x)	((x)->status = STAT_CONNECTING)
+#define	SetHandshake(x)		((x)->status = STAT_HANDSHAKE)
+#define	SetMe(x)		((x)->status = STAT_ME)
+#define	SetUnknown(x)		((x)->status = STAT_UNKNOWN)
+#define	SetServer(x)		((x)->status = STAT_SERVER)
+#define	SetClient(x)		((x)->status = STAT_CLIENT)
+
+
+#define	FLAGS_PINGSENT     0x0001 /* Unreplied ping sent */
+#define	FLAGS_DEADSOCKET   0x0002 /* Local socket is dead--Exiting soon */
+#define	FLAGS_KILLED       0x0004 /* Prevents "QUIT" from being sent for this */
+#define	FLAGS_OPER         0x0008 /* Operator */
+#define	FLAGS_LOCOP        0x0010 /* Local operator -- SRB */
+#define	FLAGS_INVISIBLE    0x0020 /* makes user invisible */
+#define	FLAGS_WALLOP       0x0040 /* send wallops to them */
+#define	FLAGS_SERVNOTICE   0x0080 /* server notices such as kill */
+#define	FLAGS_BLOCKED      0x0100 /* socket is in a blocked condition */
+#define FLAGS_REJECT_HOLD  0x0200 /* client has been klined */
+#define	FLAGS_CLOSING      0x0400 /* set when closing to suppress errors */
+#define	FLAGS_LISTEN       0x0800 /* used to mark clients which we listen on */
+#define	FLAGS_CHKACCESS    0x1000 /* ok to check clients access if set */
+/* #define FLAGS_DOINGDNS  0x2000    UNUSED */
+/* #define FLAGS_AUTH	   0x4000    UNUSED */
+/* #define FLAGS_WRAUTH	   0x8000    UNUSED */
+#define	FLAGS_LOCAL	  0x10000 /* set for local clients */
+#define	FLAGS_GOTID	  0x20000 /* successful ident lookup achieved */
+#define	FLAGS_NEEDID	  0x40000 /* I-lines say must use ident return */
+#define	FLAGS_NONL	  0x80000 /* No \n in buffer */
+#define FLAGS_CCONN      0x100000 /* Client Connections */
+#define FLAGS_REJ        0x200000 /* Bot Rejections */
+#define FLAGS_SKILL      0x400000 /* Server Killed */
+#define FLAGS_FULL       0x800000 /* Full messages */
+#define FLAGS_NORMALEX  0x1000000 /* Client exited normally */
+#define	FLAGS_NCHANGE   0x2000000 /* Nick change notice */
+#define	FLAGS_SPY       0x4000000 /* see STATS / LINKS */
+#define FLAGS_DEBUG     0x8000000 /* 'debugging' info */
+#define FLAGS_SENDQEX  0x10000000 /* Sendq exceeded */
+#define FLAGS_OPERWALL 0x20000000 /* Operwalls */
+#define FLAGS_IPHASH   0x40000000 /* iphashed this client */
+
+/* *sigh* overflow flags */
+#define FLAGS2_RESTRICTED   0x0001      /* restricted client */
+#define FLAGS2_PING_TIMEOUT 0x0002
+#define FLAGS2_E_LINED	    0x0004	/* client is graced with E line */
+#define FLAGS2_B_LINED	    0x0008	/* client is graced with B line */
+#define FLAGS2_F_LINED	    0x0010	/* client is graced with F line */
+
+/* oper priv flags */
+
+#define FLAGS2_OPER_GLOBAL_KILL 0x0020	/* oper can global kill */
+#define FLAGS2_OPER_REMOTE	0x0040	/* oper can do squits/connects */
+#define FLAGS2_OPER_UNKLINE	0x0080	/* oper can use unkline */
+#define FLAGS2_OPER_GLINE	0x0100	/* oper can use gline */
+#define FLAGS2_OPER_N		0x0200	/* oper can umode n */
+#define FLAGS2_OPER_K		0x0400	/* oper can kill/kline */
+#define FLAGS2_OPER_DIE         0x0800  /* oper can die */
+#define FLAGS2_OPER_REHASH      0x1000  /* oper can rehash */
+#define FLAGS2_OPER_FLAGS	(FLAGS2_OPER_GLOBAL_KILL | \
+				 FLAGS2_OPER_REMOTE | \
+				 FLAGS2_OPER_UNKLINE | \
+				 FLAGS2_OPER_GLINE | \
+				 FLAGS2_OPER_N | \
+				 FLAGS2_OPER_K | \
+				 FLAGS2_OPER_DIE | \
+                                 FLAGS2_OPER_REHASH)
+/* ZIP_LINKS */
+
+#define FLAGS2_ZIP	     0x4000  /* (server) link is zipped */
+#define FLAGS2_ZIPFIRST	     0x8000  /* start of zip (ignore any CR/LF) */
+#define FLAGS2_CBURST	    0x10000  /* connection burst being sent */
+
+#define FLAGS2_DOINGLIST    0x20000  /* client is doing a list */
+#ifdef IDLE_CHECK
+#define FLAGS2_IDLE_LINED   0x40000
+#endif
+#define FLAGS2_ALREADY_EXITED	0x80000         /* kludge grrrr */
+#define FLAGS2_IP_SPOOFING	0x100000	/* client IP is spoofed */
+#define FLAGS2_IP_HIDDEN	0x200000	/* client IP should be hidden
+					           from non opers */
+
+
+#define	SEND_UMODES  (FLAGS_INVISIBLE | FLAGS_OPER | FLAGS_WALLOP)
+#define	ALL_UMODES   (SEND_UMODES | FLAGS_SERVNOTICE | FLAGS_CCONN | \
+                      FLAGS_REJ | FLAGS_SKILL | FLAGS_FULL | FLAGS_SPY | \
+                      FLAGS_NCHANGE | FLAGS_OPERWALL | FLAGS_DEBUG)
+
+#ifndef OPER_UMODES
+#define OPER_UMODES  (FLAGS_OPER | FLAGS_WALLOP | FLAGS_SERVNOTICE | \
+                      FLAGS_SPY | FLAGS_OPERWALL | FLAGS_DEBUG)
+#endif /* OPER_UMODES */
+#ifndef LOCOP_UMODES
+#define LOCOP_UMODES (FLAGS_LOCOP | FLAGS_WALLOP | FLAGS_SERVNOTICE | \
+                      FLAGS_SPY | FLAGS_DEBUG)
+#endif /* LOCOP_UMODES */
+#define	FLAGS_ID     (FLAGS_NEEDID | FLAGS_GOTID)
+
+/*
+ * flags macros.
+ */
+#define	IsOper(x)		((x)->flags & FLAGS_OPER)
+#define	IsLocOp(x)		((x)->flags & FLAGS_LOCOP)
+#define	IsInvisible(x)		((x)->flags & FLAGS_INVISIBLE)
+#define	IsAnOper(x)		((x)->flags & (FLAGS_OPER|FLAGS_LOCOP))
+#define	IsPerson(x)		((x)->user && IsClient(x))
+#define	IsPrivileged(x)		(IsAnOper(x) || IsServer(x))
+#define	SendWallops(x)		((x)->flags & FLAGS_WALLOP)
+#define	SendServNotice(x)	((x)->flags & FLAGS_SERVNOTICE)
+#define SendOperwall(x)		((x)->flags & FLAGS_OPERWALL)
+#define SendCConnNotice(x)	((x)->flags & FLAGS_CCONN)
+#define SendRejNotice(x)	((x)->flags & FLAGS_REJ)
+#define SendSkillNotice(x)	((x)->flags & FLAGS_SKILL)
+#define SendFullNotice(x)	((x)->flags & FLAGS_FULL)
+#define SendSpyNotice(x)	((x)->flags & FLAGS_SPY)
+#define SendDebugNotice(x)	((x)->flags & FLAGS_DEBUG)
+#define SendNickChange(x)	((x)->flags & FLAGS_NCHANGE)
+#define	IsListening(x)		((x)->flags & FLAGS_LISTEN)
+#define	DoAccess(x)		((x)->flags & FLAGS_CHKACCESS)
+#define	IsLocal(x)		((x)->flags & FLAGS_LOCAL)
+#define	IsDead(x)		((x)->flags & FLAGS_DEADSOCKET)
+#define	SetOper(x)		((x)->flags |= FLAGS_OPER)
+#define	SetLocOp(x)    		((x)->flags |= FLAGS_LOCOP)
+#define	SetInvisible(x)		((x)->flags |= FLAGS_INVISIBLE)
+#define	SetWallops(x)  		((x)->flags |= FLAGS_WALLOP)
+#define	SetAccess(x)		((x)->flags |= FLAGS_CHKACCESS)
+#define	NoNewLine(x)		((x)->flags & FLAGS_NONL)
+#define	ClearOper(x)		((x)->flags &= ~FLAGS_OPER)
+#define ClearLocOp(x)		((x)->flags &= ~FLAGS_LOCOP)
+#define	ClearInvisible(x)	((x)->flags &= ~FLAGS_INVISIBLE)
+#define	ClearWallops(x)		((x)->flags &= ~FLAGS_WALLOP)
+#define	ClearAccess(x)		((x)->flags &= ~FLAGS_CHKACCESS)
+
+#define	MyConnect(x)		((x)->local_flag != 0)
+#define	MyClient(x)		(MyConnect(x) && IsClient(x))
+#define	MyOper(x)		(MyConnect(x) && IsOper(x))
+
+#ifdef REJECT_HOLD
+#define IsRejectHeld(x)	        ((x)->flags & FLAGS_REJECT_HOLD)
+#define SetRejectHold(x)        ((x)->flags |= FLAGS_REJECT_HOLD)
+#endif
+
+#define SetIpHash		((x)->flags |= FLAGS_IPHASH)
+#define ClearIpHash		((x)->flags &= ~FLAGS_IPHASH)
+#define IsIpHash		((x)->flags & FLAGS_IPHASH)
+
+#define SetNeedId(x)		((x)->flags |= FLAGS_NEEDID)
+#define IsNeedId(x)             (((x)->flags & FLAGS_NEEDID) != 0)
+
+#define SetGotId(x)		((x)->flags |= FLAGS_GOTID)
+#define IsGotId(x)		(((x)->flags & FLAGS_GOTID) != 0)
+
+/*
+ * flags2 macros.
+ */
+#define IsRestricted(x)		((x)->flags2 & FLAGS2_RESTRICTED)
+#define SetRestricted(x)	((x)->flags2 |= FLAGS2_RESTRICTED)
+#define ClearDoingList(x)	((x)->flags2 &= ~FLAGS2_DOINGLIST)
+#define SetDoingList(x)         ((x)->flags2 |= FLAGS2_DOINGLIST)
+#define IsDoingList(x)		((x)->flags2 & FLAGS2_DOINGLIST)
+#define IsElined(x)		((x)->flags2 & FLAGS2_E_LINED)
+#define SetElined(x)		((x)->flags2 |= FLAGS2_E_LINED)
+#define IsBlined(x)		((x)->flags2 & FLAGS2_B_LINED)
+#define SetBlined(x)		((x)->flags2 |= FLAGS2_B_LINED)
+#define IsFlined(x)		((x)->flags2 & FLAGS2_F_LINED)
+#define SetFlined(x)		((x)->flags2 |= FLAGS2_F_LINED)
+#define SetIPSpoof(x)		((x)->flags2 |= FLAGS2_IP_SPOOFING)
+#define IsIPSpoof(x)		((x)->flags2 & FLAGS2_IP_SPOOFING)
+#define SetIPHidden(x)		((x)->flags2 |= FLAGS2_IP_HIDDEN)
+#define IsIPHidden(x)		((x)->flags2 & FLAGS2_IP_HIDDEN)
+
+#ifdef IDLE_CHECK
+#define SetIdlelined(x)		((x)->flags2 |= FLAGS2_IDLE_LINED)
+#define IsIdlelined(x)		((x)->flags2 & FLAGS2_IDLE_LINED)
+#endif
+
+#define SetOperGlobalKill(x)	((x)->flags2 |= FLAGS2_OPER_GLOBAL_KILL)
+#define IsOperGlobalKill(x)	((x)->flags2 & FLAGS2_OPER_GLOBAL_KILL)
+#define SetOperRemote(x)	((x)->flags2 |= FLAGS2_OPER_REMOTE)
+#define IsOperRemote(x)		((x)->flags2 & FLAGS2_OPER_REMOTE)
+#define SetOperUnkline(x)	((x)->flags2 |= FLAGS2_OPER_UNKLINE)
+#define IsSetOperUnkline(x)	((x)->flags2 & FLAGS2_OPER_UNKLINE)
+#define SetOperGline(x)		((x)->flags2 |= FLAGS2_OPER_GLINE)
+#define IsSetOperGline(x)	((x)->flags2 & FLAGS2_OPER_GLINE)
+#define SetOperN(x)		((x)->flags2 |= FLAGS2_OPER_N)
+#define IsSetOperN(x)		((x)->flags2 & FLAGS2_OPER_N)
+#define SetOperK(x)		((x)->flags2 |= FLAGS2_OPER_K)
+#define IsSetOperK(x)		((x)->flags2 & FLAGS2_OPER_K)
+#define SetOperDie(x)           ((x)->flags2 |= FLAGS2_OPER_DIE)
+#define IsOperDie(x)            ((x)->flags2 & FLAGS2_OPER_DIE)
+#define SetOperRehash(x)        ((x)->flags2 |= FLAGS2_OPER_REHASH)
+#define IsOperRehash(x)         ((x)->flags2 &= FLAGS2_OPER_REHASH)
+#define CBurst(x)		((x)->flags2 & FLAGS2_CBURST)
 
 /*
  * 'offsetof' is defined in ANSI-C. The following definition
