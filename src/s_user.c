@@ -733,6 +733,10 @@ static int register_user(aClient *cptr, aClient *sptr,
             }
          }
 
+#ifndef NO_DEFAULT_INVISIBLE
+      sptr->umodes |= FLAGS_INVISIBLE;
+#endif
+
       sendto_realops_flags(FLAGS_CCONN,
                          "Client connecting: %s (%s@%s) [%s] {%d}",
                          nick, sptr->username, sptr->host,
@@ -741,6 +745,9 @@ static int register_user(aClient *cptr, aClient *sptr,
 #endif /* HIDE_SPOOF_IPS */
                          inetntoa((char *)&sptr->ip),
                          get_client_class(sptr));
+
+      if(IsInvisible(sptr))
+        Count.invisi++;
 
       if ((++Count.local) > Count.max_loc)
         {
@@ -1875,15 +1882,12 @@ int m_user(aClient* cptr, aClient* sptr, int parc, char *parv[])
 static int do_user(char* nick, aClient* cptr, aClient* sptr,
                    char* username, char *host, char *server, char *realname)
 {
-  unsigned int oflags;
   struct User* user;
 
   assert(0 != sptr);
   assert(sptr->username != username);
 
   user = make_user(sptr);
-
-  oflags = sptr->umodes;
 
   if (!MyConnect(sptr))
     {
@@ -1900,9 +1904,6 @@ static int do_user(char* nick, aClient* cptr, aClient* sptr,
           sendto_one(sptr, form_str(ERR_ALREADYREGISTRED), me.name, nick);
           return 0;
         }
-#ifndef NO_DEFAULT_INVISIBLE
-      sptr->umodes |= FLAGS_INVISIBLE;
-#endif
 
 #if 0
       /* Undocumented lame extension to the protocol
@@ -1912,8 +1913,6 @@ static int do_user(char* nick, aClient* cptr, aClient* sptr,
       sptr->flags |= (UFLAGS & atoi(host));
 #endif
 
-      if (!(oflags & FLAGS_INVISIBLE) && IsInvisible(sptr))
-        Count.invisi++;
       /*
        * don't take the clients word for it, ever
        *  strncpy_irc(user->host, host, HOSTLEN); 
