@@ -91,7 +91,7 @@ void	start_auth(aClient *cptr)
    * and machines with multiple IP addresses are common now
    */
   locallen = sizeof(struct sockaddr_in);
-  bzero(&localaddr, locallen);
+  memset((void *)&localaddr, 0, locallen);
   getsockname(cptr->fd, (struct sockaddr *)&localaddr, &locallen);
   localaddr.sin_port = htons(0);
 

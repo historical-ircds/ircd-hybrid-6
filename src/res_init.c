@@ -54,7 +54,7 @@ struct state _res = {
  *
  * Return 0 if completes successfully, -1 on error
  */
-res_init()
+int res_init()
 {
   register FILE *fp;
   register char *cp, *dp, **pp;
@@ -95,7 +95,7 @@ res_init()
 	      if ((*cp == '\0') || (*cp == '\n'))
 		continue;
 	      (void)strncpy(_res.defdname, cp, sizeof(_res.defdname) - 1);
-	      if ((cp = index(_res.defdname, '\n')) != NULL)
+	      if ((cp = strchr(_res.defdname, '\n')) != NULL)
 		*cp = '\0';
 	      havesearch = 0;
 	      continue;
@@ -111,7 +111,7 @@ res_init()
 	      if ((*cp == '\0') || (*cp == '\n'))
 		continue;
 	      (void)strncpy(_res.defdname, cp, sizeof(_res.defdname) - 1);
-	      if ((cp = index(_res.defdname, '\n')) != NULL)
+	      if ((cp = strchr(_res.defdname, '\n')) != NULL)
 		*cp = '\0';
 	      /*
 	       * Set search list to be blank-separated strings
@@ -151,11 +151,12 @@ res_init()
 	      if ((*cp == '\0') || (*cp == '\n'))
 		continue;
 	      if ((_res.nsaddr_list[nserv].sin_addr.s_addr =
-		   inet_addr(cp)) == (unsigned)-1) {
-		_res.nsaddr_list[nserv].sin_addr.s_addr
-		  = INADDR_ANY;
-		continue;
-	      }
+		   inet_addr(cp)) == (unsigned)-1)
+		{
+		  _res.nsaddr_list[nserv].sin_addr.s_addr
+		    = INADDR_ANY;
+		  continue;
+		}
 	      _res.nsaddr_list[nserv].sin_family = AF_INET;
 	      _res.nsaddr_list[nserv].sin_port = htons(NAMESERVER_PORT);
 	      nserv++;
@@ -171,7 +172,7 @@ res_init()
 		continue;
 	      norder = 0;
 	      do {
-		if ((dp = index(cp, ',')) != NULL)
+		if ((dp = strchr(cp, ',')) != NULL)
 		  *dp = '\0';
 		if (norder >= MAXSERVICES)
 		  continue;
@@ -192,7 +193,7 @@ res_init()
   if (_res.defdname[0] == 0)
     {
       if (gethostname(buf, sizeof(_res.defdname)) == 0 &&
-	  (cp = index(buf, '.')))
+	  (cp = strchr(buf, '.')))
 	(void)strcpy(_res.defdname, cp + 1);
     }
 
@@ -207,7 +208,7 @@ res_init()
       cp = _res.defdname;
       for (; n >= LOCALDOMAINPARTS && pp < _res.dnsrch + MAXDFLSRCH;n--)
 	{
-	  cp = index(cp, '.');
+	  cp = strchr(cp, '.');
 	  *pp++ = ++cp;
 	}
       *pp++ = 0;

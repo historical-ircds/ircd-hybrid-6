@@ -93,7 +93,7 @@ int	init_resolver(int op)
 #endif
   if (op & RES_INITLIST)
     {
-      bzero((char *)&reinfo, sizeof(reinfo));
+      memset((void *)&reinfo, 0, sizeof(reinfo));
       first = last = NULL;
     }
   if (op & RES_CALLINIT)
@@ -121,15 +121,30 @@ int	init_resolver(int op)
 #endif
   if (op & RES_INITCACH)
     {
-      bzero((char *)&cainfo, sizeof(cainfo));
-      bzero((char *)hashtable, sizeof(hashtable));
+      memset((void *)&cainfo, 0, sizeof(cainfo));
+      memset((void *)hashtable, 0, sizeof(hashtable));
     }
   if (op == 0)
     ret = resfd;
   return ret;
 }
 
-static	int	add_request(ResRQ *new)
+int restart_resolver()
+{
+  int ret = 0;
+  int on = 0;
+
+  flush_cache();	/* flush the dns cache */
+  ret = res_init();
+  (void)close(resfd);
+  ret = resfd = socket(AF_INET, SOCK_DGRAM, 0);
+  (void) setsockopt(ret, SOL_SOCKET, SO_BROADCAST,
+		    (char *)&on, sizeof(on));
+
+  return ret;
+}
+
+static int add_request(ResRQ *new)
 {
   if (!new)
     return -1;
@@ -185,21 +200,21 @@ static	void	rem_request(ResRQ *old)
 /*
  * Create a DNS request record for the server.
  */
-static	ResRQ	*make_request(Link *lp)
+static ResRQ *make_request(Link *lp)
 {
-  Reg	ResRQ	*nreq;
+  register ResRQ *nreq;
 
   nreq = (ResRQ *)MyMalloc(sizeof(ResRQ));
-  bzero((char *)nreq, sizeof(ResRQ));
+  memset((void *)nreq, 0, sizeof(ResRQ));
   nreq->next = NULL; /* where NULL is non-zero ;) */
   nreq->sentat = timeofday;
   nreq->retries = 3;
   nreq->resend = 1;
   nreq->srch = -1;
   if (lp)
-    bcopy((char *)lp, (char *)&nreq->cinfo, sizeof(Link));
+    memcpy((void *)&nreq->cinfo,(void *)lp,sizeof(Link));
   else
-    bzero((char *)&nreq->cinfo, sizeof(Link));
+    memset((void *)&nreq->cinfo, 0, sizeof(Link));
   nreq->timeout = 4;	/* start at 4 and exponential inc. */
   nreq->he.h_addrtype = AF_INET;
   nreq->he.h_name = NULL;
@@ -335,7 +350,7 @@ static	ResRQ	*find_id(int id)
   return((ResRQ *)NULL);
 }
 
-struct	hostent	*gethost_byname(char *name, Link *lp)
+struct hostent *gethost_byname(char *name, Link *lp)
 {
   Reg	aCache	*cp;
 
@@ -367,7 +382,7 @@ struct	hostent	*gethost_byaddr(char *addr,Link *lp)
   return((struct hostent *)NULL);
 }
 
-static	int	do_query_name(Link *lp, char *name, ResRQ *rptr)
+static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 {
   char	hname[HOSTLEN+1];
   int	len;
@@ -440,7 +455,7 @@ static	int	query_name(char *name,
   int	r,s,k = 0;
   HEADER	*hptr;
 
-  bzero(buf, sizeof(buf));
+  memset((void *)buf, 0, sizeof(buf));
   r = res_mkquery(QUERY, name, class, type, NULL, 0, NULL,
 		  buf, sizeof(buf));
   if (r <= 0)
@@ -1149,7 +1164,7 @@ static	aCache	*make_cache(ResRQ *rptr)
   ** a matching entry wasnt found in the cache so go and make one up.
   */ 
   cp = (aCache *)MyMalloc(sizeof(aCache));
-  bzero((char *)cp, sizeof(aCache));
+  memset((void *)cp, 0, sizeof(aCache));
   hp = &cp->he;
   for (i = 0; i < MAXADDRS; i++)
     if (!rptr->he.h_addr_list[i].s_addr)
@@ -1159,10 +1174,10 @@ static	aCache	*make_cache(ResRQ *rptr)
   ** build two arrays, one for IP#'s, another of pointers to them.
   */
   t = hp->h_addr_list = (char **)MyMalloc(sizeof(char *) * (i+1));
-  bzero((char *)t, sizeof(char *) * (i+1));
+  memset((void *)t, 0, sizeof(char *) * (i+1));
 
   s = (char *)MyMalloc(sizeof(struct in_addr) * i);
-  bzero(s, sizeof(struct in_addr) * i);
+  memset((void *)s, 0, sizeof(struct in_addr) * i);
 
   for (n = 0; n < i; n++, s += sizeof(struct in_addr))
     {
@@ -1364,6 +1379,12 @@ int	m_dns(aClient *cptr,
 	}
       return 0;
     }
+  if (parv[1] && *parv[1] == 'd')
+    {
+      sendto_one(sptr, "NOTICE %s :resfd = %d", parv[0], resfd);
+      return 0;
+    }
+
   sendto_one(sptr,"NOTICE %s :Ca %d Cd %d Ce %d Cl %d Ch %d:%d Cu %d",
 	     sptr->name,
 	     cainfo.ca_adds, cainfo.ca_dels, cainfo.ca_expires,

@@ -930,7 +930,7 @@ int	m_server_estab(aClient *cptr)
       sendto_ops("Access denied (passwd mismatch) %s", inpath);
       return exit_client(cptr, cptr, cptr, "Bad Password");
     }
-  bzero(cptr->passwd, sizeof(cptr->passwd));
+  memset((void *)cptr->passwd, 0,sizeof(cptr->passwd));
 
   /* Its got identd , since its a server */
   cptr->flags |= FLAGS_GOTID;
@@ -963,7 +963,7 @@ int	m_server_estab(aClient *cptr)
     }
   else
     {
-      s = (char *)index(aconf->host, '@');
+      s = (char *)strchr(aconf->host, '@');
       if(s)
 	*s = '\0'; /* should never be NULL -- wanna bet? -Dianora */
       Debug((DEBUG_INFO, "Check Usernames [%s]vs[%s]",
@@ -2073,7 +2073,7 @@ int	m_stats(aClient *cptr,
 	doall = 2;
       else if (matches(name, me.name) == 0)
 	doall = 1;
-      if (index(name, '*') || index(name, '?'))
+      if (strchr(name, '*') || strchr(name, '?'))
 	wilds = 1;
     }
   else
@@ -5129,8 +5129,7 @@ int	m_rehash(aClient *cptr,
       if(mycmp(parv[1],"DNS") == 0)
 	{
 	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], "DNS");
-	  flush_cache();	/* flush the dns cache */
-	  res_init();		/* re-read /etc/resolv.conf */
+	  restart_resolver();	/* re-read /etc/resolv.conf */
 	  sendto_ops("%s is rehashing DNS while whistling innocently",
 		 parv[0]);
 	  return 0;
@@ -5325,7 +5324,7 @@ int	m_trace(aClient *cptr,
     }
 
   doall = (parv[1] && (parc > 1)) ? !matches(tname, me.name): TRUE;
-  wilds = !parv[1] || index(tname, '*') || index(tname, '?');
+  wilds = !parv[1] || strchr(tname, '*') || strchr(tname, '?');
   dow = wilds || doall;
   
   if (dow && lifesux && !IsOper(sptr))
@@ -5334,8 +5333,8 @@ int	m_trace(aClient *cptr,
       return 0;
     }
 
-  bzero((char *)link_s,sizeof(link_s));
-  bzero((char *)link_u,sizeof(link_u));
+  memset((void *)link_s,0,sizeof(link_s));
+  memset((void *)link_u,0,sizeof(link_u));
 
   /*
    * Count up all the servers and clients in a downlink.
@@ -5645,9 +5644,9 @@ void	read_message_file(char *filename,aMessageFile **ptr)
 
   while (dgets(fd, buffer, MESSAGELINELEN-1) > 0)
     {
-      if ((tmp = (char *)index(buffer, '\n')))
+      if ((tmp = (char *)strchr(buffer, '\n')))
 	*tmp = '\0';
-      if ((tmp = (char *)index(buffer, '\r')))
+      if ((tmp = (char *)strchr(buffer, '\r')))
 	*tmp = '\0';
       temp = (aMessageFile*) MyMalloc(sizeof(aMessageFile));
 

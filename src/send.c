@@ -430,7 +430,7 @@ va_dcl
   va_start(vl);
 # endif
 
-  bzero((char *)sentalong,sizeof(sentalong));
+  memset((void *)sentalong, 0, sizeof(sentalong));
   for (lp = chptr->members; lp; lp = lp->next)
     {
       acptr = lp->value.cptr;
@@ -497,7 +497,7 @@ va_dcl
   va_start(vl);
 # endif
 
-  bzero((char *)sentalong,sizeof(sentalong));
+  memset((void *)sentalong,0,sizeof(sentalong));
   for (lp = chptr->members; lp; lp = lp->next)
     {
       if (!(lp->flags & type))
@@ -604,7 +604,7 @@ va_dcl
 # ifdef	USE_VARARGS
   va_start(vl);
 # endif
-  bzero((char *)sentalong,sizeof(sentalong));
+  memset((void *)sentalong,0,sizeof(sentalong));
   if (user->fd >= 0)
     sentalong[user->fd] = 1;
   if (user->user)
@@ -698,7 +698,7 @@ va_dcl
 # ifdef USE_VARARGS
   va_start(vl);
 # endif
-  bzero((char *)sentalong,sizeof(sentalong));
+  memset((void *)sentalong,0,sizeof(sentalong));
   for (lp = chptr->members; lp; lp = lp->next)
     {
       acptr = lp->value.cptr;
@@ -1148,7 +1148,7 @@ va_dcl
 #ifdef	USE_VARARGS
   va_start(vl);
 #endif
-  bzero((char *)sentalong,sizeof(sentalong));
+  memset((void *)sentalong,0,sizeof(sentalong));
   for (cptr = client; cptr; cptr = cptr->next)
     {
       if (!SendWallops(cptr))
@@ -1202,7 +1202,7 @@ va_dcl
 #ifdef  USE_VARARGS
   va_start(vl);
 #endif
-  bzero((char *)sentalong,sizeof(sentalong));
+  memset((void *)sentalong,0,sizeof(sentalong));
   for (cptr = client; cptr; cptr = cptr->next)
     {
       if (!SendWallops(cptr))

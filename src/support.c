@@ -51,7 +51,7 @@ char *str, *fs;
     if (str)
 	pos = str;		/* new string scan */
 
-    while (pos && *pos && index(fs, *pos) != NULL)
+    while (pos && *pos && strchr(fs, *pos) != NULL)
 	pos++; 		 	/* skip leading separators */
 
     if (!pos || !*pos)
@@ -59,7 +59,7 @@ char *str, *fs;
 
     tmp = pos; 			/* now, keep position of the token */
 
-    while (*pos && index(fs, *pos) == NULL)
+    while (*pos && strchr(fs, *pos) == NULL)
 	pos++; 			/* skip content of the token */
 
     if (*pos)
@@ -286,7 +286,7 @@ int dgets(int fd,char *buf,int num)
       ** check input buffer for EOL and if present return string.
       */
       if (head < tail &&
-	  ((s = index(head, '\n')) || (s = index(head, '\r'))) && s < tail)
+	  ((s = strchr(head, '\n')) || (s = strchr(head, '\r'))) && s < tail)
 	{
 	  n = MIN(s - head + 1, num);	/* at least 1 byte */
 	  bcopy(head, buf, n);
@@ -332,7 +332,7 @@ int dgets(int fd,char *buf,int num)
       tail += nr;
       *tail = '\0';
 
-      for (t = head; (s = index(t, '\n')); )
+      for (t = head; (s = strchr(t, '\n')); )
 	{
 	  if ((s > head) && (s > dgbuf))
 	    {

@@ -167,7 +167,7 @@ void	clear_client_hash_table()
 					sizeof(aHashEntry));
 #endif
 
-  bzero((char *)clientTable, sizeof(aHashEntry) * U_MAX);
+  memset((void *)clientTable, 0, sizeof(aHashEntry) * U_MAX);
 }
 
 void	clear_channel_hash_table()
@@ -179,7 +179,7 @@ void	clear_channel_hash_table()
     channelTable = (aHashEntry *)MyMalloc(CHANNELHASHSIZE *
 					  sizeof(aHashEntry));
 #endif
-  bzero((char *)channelTable, sizeof(aHashEntry) * CH_MAX);
+  memset((void *)channelTable, 0, sizeof(aHashEntry) * CH_MAX);
 }
 
 /*

@@ -313,7 +313,7 @@ void clear_ip_hash_table()
       new_IP_ENTRY->next = (IP_ENTRY *)NULL;
       last_IP_ENTRY = new_IP_ENTRY;
     }
-  bzero((char *)ip_hash_table, sizeof(ip_hash_table));
+  memset((void *)ip_hash_table, 0, sizeof(ip_hash_table));
 }
 
 /* 
@@ -1051,7 +1051,7 @@ aConfItem *find_conf_ip(Link *lp,char *ip,char *user, int statmask)
       tmp = lp->value.aconf;
       if (!(tmp->status & statmask))
 	continue;
-      s = index(tmp->host, '@');
+      s = strchr(tmp->host, '@');
       if(s == (char *)NULL)
 	continue;
       *s = '\0';
@@ -1421,7 +1421,7 @@ int 	initconf(int opt, int fd,int use_include)
        *
        * old code was...
        *
-       * if ((tmp = (char *)index(line, '\n')))
+       * if ((tmp = (char *)strchr(line, '\n')))
        *    *tmp = '\0';
        */
 
@@ -1759,13 +1759,13 @@ int 	initconf(int opt, int fd,int use_include)
 	}
       if (aconf->status & CONF_SERVER_MASK)
 	if (ncount > MAXCONFLINKS || ccount > MAXCONFLINKS ||
-	    !aconf->host || index(aconf->host, '*') ||
-	    index(aconf->host,'?') || !aconf->name)
+	    !aconf->host || strchr(aconf->host, '*') ||
+	    strchr(aconf->host,'?') || !aconf->name)
 	  continue;
       
       if (aconf->status &
 	  (CONF_SERVER_MASK|CONF_LOCOP|CONF_OPERATOR))
-	if (!index(aconf->host, '@') && *aconf->host != '/')
+	if (!strchr(aconf->host, '@') && *aconf->host != '/')
 	  {
 	    char	*newhost;
 	    int	len;		
@@ -1804,7 +1804,7 @@ int 	initconf(int opt, int fd,int use_include)
 		      sizeof(me.name));
 	    if ((aconf->passwd[0] != '\0') && (aconf->passwd[0] != '*'))
             {
-		bzero((char *) &vserv, sizeof(vserv));
+		memset((void *) &vserv,0, sizeof(vserv));
 		vserv.sin_family = AF_INET;
 		vaddr = inet_addr(aconf->passwd);
 		bcopy((char *) &vaddr, (char *)&vserv.sin_addr, sizeof(struct in_addr));
@@ -1947,12 +1947,12 @@ static	int	lookup_confhost(aConfItem *aconf)
   if (BadPtr(aconf->host) || BadPtr(aconf->name))
     {
       if (aconf->ipnum.s_addr == -1)
-	bzero((char *)&aconf->ipnum, sizeof(struct in_addr));
+	memset((void *)&aconf->ipnum, 0, sizeof(struct in_addr));
       Debug((DEBUG_ERROR,"Host/server name error: (%s) (%s)",
 	     aconf->host, aconf->name));
       return -1;
     }
-  if ((s = index(aconf->host, '@')))
+  if ((s = strchr(aconf->host, '@')))
     s++;
   else
     s = aconf->host;
@@ -1963,7 +1963,7 @@ static	int	lookup_confhost(aConfItem *aconf)
   if (!isalpha(*s) && !isdigit(*s))
     {
       if (aconf->ipnum.s_addr == -1)
-	bzero((char *)&aconf->ipnum, sizeof(struct in_addr));
+	memset((void *)&aconf->ipnum, 0, sizeof(struct in_addr));
       Debug((DEBUG_ERROR,"Host/server name error: (%s) (%s)",
 	     aconf->host, aconf->name));
       return -1;
@@ -1988,7 +1988,7 @@ static	int	lookup_confhost(aConfItem *aconf)
 	  sizeof(struct in_addr));
   
   if (aconf->ipnum.s_addr == -1)
-    bzero((char *)&aconf->ipnum, sizeof(struct in_addr));
+    memset((void *)&aconf->ipnum, 0, sizeof(struct in_addr));
   {
     Debug((DEBUG_ERROR,"Host/server name error: (%s) (%s)",
 	   aconf->host, aconf->name));
@@ -2817,7 +2817,7 @@ int	find_restrict(aClient *cptr)
       while ((n = dgets(pi[0], temprpl, sizeof(temprpl)-1)) > 0)
 	{
 	  temprpl[n] = '\0';
-	  if ((s = (char *)index(temprpl, '\n')))
+	  if ((s = (char *)strchr(temprpl, '\n')))
 	    *s = '\0';
 	  if (strlen(temprpl) + strlen(reply) < sizeof(reply)-2)
 	    (void)ircsprintf(rplhold, "%s %s", rplhold,
@@ -2898,7 +2898,7 @@ static int check_time_interval(char *interval)
 
   while (interval)
     {
-      p = (char *)index(interval, ',');
+      p = (char *)strchr(interval, ',');
       if (p)
 	*p = '\0';
       if (sscanf(interval, "%2d%2d-%2d%2d",
@@ -2966,7 +2966,7 @@ static int check_time_interval(char *interval)
 
 void clear_dline_hash_table()
 {
-  bzero((char *)dline_hash_table, sizeof(dline_hash_table));
+  memset((void *)dline_hash_table, 0, sizeof(dline_hash_table));
 }
 
 /*

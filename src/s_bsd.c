@@ -143,7 +143,7 @@ void	add_local_domain(char *hname,int size)
 {
 #ifdef RES_INIT
   /* try to fix up unqualified names */
-  if (!index(hname, '.'))
+  if (!strchr(hname, '.'))
     {
       if (!(_res.options & RES_INIT))
 	{
@@ -273,7 +273,7 @@ int	inetport(aClient *cptr, char *name, int port, u_long bind_addr)
    */
   if (port)
     {
-      bzero((char *) &server, sizeof(server));
+      memset((void *) &server, 0, sizeof(server));
       server.sin_family = AF_INET;
 
       if (bind_addr)
@@ -738,7 +738,7 @@ int	check_server_init(aClient *cptr)
 	  lin.value.aconf = aconf;
 	  lin.flags = ASYNC_CONF;
 	  nextdnscheck = 1;
-	  if ((s = index(aconf->host, '@')))
+	  if ((s = strchr(aconf->host, '@')))
 	    s++;
 	  else
 	    s = aconf->host;
@@ -1033,7 +1033,7 @@ void	close_connection(aClient *cptr)
       cptr->fd = -2;
       DBufClear(&cptr->sendQ);
       DBufClear(&cptr->recvQ);
-      bzero(cptr->passwd, sizeof(cptr->passwd));
+      memset((void *)cptr->passwd, 0, sizeof(cptr->passwd));
       /*
        * clean up extra sockets from P-lines which have been
        * discarded.
@@ -2173,7 +2173,7 @@ int	read_message(time_t delay)
 	  if (DoingAuth(cptr))
 	    {
 	      if (auth == 0)
-		bzero( (char *)&authclnts, sizeof(authclnts) );
+		memset( (void *)&authclnts, 0, sizeof(authclnts) );
 	      auth++;
 	      Debug((DEBUG_NOTICE,"auth on %x %d", cptr, i));
 	      PFD_SETR(cptr->authfd);
@@ -2448,7 +2448,7 @@ int	connect_server(aConfItem *aconf,
       lin.flags = ASYNC_CONNECT;
       lin.value.aconf = aconf;
       nextdnscheck = 1;
-      s = (char *)index(aconf->host, '@');
+      s = (char *)strchr(aconf->host, '@');
       if(s)
 	s++; /* should NEVER be NULL */
       else
@@ -2578,7 +2578,7 @@ static	struct	sockaddr *connect_inet(aConfItem *aconf,
       return NULL;
     }
   mysk.sin_port = 0;
-  bzero((char *)&server, sizeof(server));
+  memset((void *)&server, 0, sizeof(server));
   server.sin_family = AF_INET;
   get_sockhost(cptr, aconf->host);
 
@@ -2661,7 +2661,7 @@ void	get_my_name(aClient *cptr,
   /*
   ** Setup local socket structure to use for binding to.
   */
-  bzero((char *)&mysk, sizeof(mysk));
+  memset((void *)&mysk, 0, sizeof(mysk));
   mysk.sin_family = AF_INET;
 
   if (gethostname(name, len) == -1)
@@ -2669,7 +2669,7 @@ void	get_my_name(aClient *cptr,
   name[len] = '\0';
 
   /* assume that a name containing '.' is a FQDN */
-  if (!index(name,'.'))
+  if (!strchr(name,'.'))
     add_local_domain(name, len - strlen(name));
   
   /*
@@ -2716,13 +2716,13 @@ void	get_my_name(aClient *cptr,
  * Called when the fd returned from init_resolver() has been selected for
  * reading.
  */
-static	void	do_dns_async()
+static void do_dns_async()
 {
-  static	Link	ln;
-  aClient	*cptr;
-  aConfItem	*aconf;
-  struct	hostent	*hp;
-  int	bytes, packets = 0;
+  static Link ln;
+  aClient *cptr;
+  aConfItem *aconf;
+  struct hostent *hp;
+  int bytes, packets = 0;
 
 /*
   if (ioctl(resfd, FIONREAD, &bytes) == -1)

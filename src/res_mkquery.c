@@ -61,7 +61,7 @@ res_mkquery(
    */
   if ((buf == NULL) || (buflen < sizeof(HEADER)))
     return(-1);
-  bzero(buf, sizeof(HEADER));
+  memset((void *)buf, 0, sizeof(HEADER));
   hp = (HEADER *) buf;
   hp->id = htons(++_res.id);
   hp->opcode = op;

@@ -67,7 +67,7 @@ static int newblock(BlockHeap *bh)
    b->freeElems = bh->elemsPerBlock;
    b->next = bh->base;
    b->allocMap = (long *) MyMalloc (sizeof(long) * (bh->numlongs +1));
-   bzero((void *)b->allocMap, (bh->numlongs + 1 ) * sizeof(long));
+   memset((void *)b->allocMap, 0, (bh->numlongs + 1 ) * sizeof(long));
 
    if (b->allocMap == NULL)
      {

@@ -272,7 +272,7 @@ int	hunt_server(aClient *cptr,
       acptr = NULL;
 
   (void)collapse(parv[server]);
-  wilds = (index(parv[server], '?') || index(parv[server], '*'));
+  wilds = (strchr(parv[server], '?') || strchr(parv[server], '*'));
 
   /*
    * Again, if there are no wild cards involved in the server
@@ -658,7 +658,7 @@ static	int	register_user(aClient *cptr,
 		     me.name, parv[0]);
 	  return exit_client(cptr, sptr, &me, "Bad Password");
 	}
-      bzero(sptr->passwd, sizeof(sptr->passwd));
+      memset((void *)sptr->passwd,0, sizeof(sptr->passwd));
 
       /* If this user is in the exception class, Set it "E lined" */
       if(IsConfElined(aconf))
@@ -849,7 +849,7 @@ static	int	register_user(aClient *cptr,
     lower = upper = special = cc = 0;
 
 /* check for "@" in identd reply -Taner */
-    if ((index(user->username,'@') != NULL) || (index(username,'@') != NULL))
+    if ((strchr(user->username,'@') != NULL) || (strchr(username,'@') != NULL))
       {
 	sendto_realops_lev(REJ_LEV,
 			   "Illegal \"@\" in username: %s (%s)",
@@ -1324,7 +1324,7 @@ int	m_nick(aClient *cptr,
 
   fromTS = (parc > 6);
   
-  if (MyConnect(sptr) && (s = (char *)index(parv[1], '~')))
+  if (MyConnect(sptr) && (s = (char *)strchr(parv[1], '~')))
     *s = '\0';
   strncpyzt(nick, parv[1], NICKLEN+1);
 
@@ -2106,7 +2106,7 @@ static	int	m_message(aClient *cptr,
   */
   if ((*nick == '$' || *nick == '#') && IsAnOper(sptr))
     {
-      if (!(s = (char *)rindex(nick, '.')))
+      if (!(s = (char *)strrchr(nick, '.')))
 	{
 	  sendto_one(sptr, err_str(ERR_NOTOPLEVEL),
 		     me.name, parv[0], nick);
@@ -2133,7 +2133,7 @@ static	int	m_message(aClient *cptr,
   /*
   ** user[%host]@server addressed?
   */
-  if ((server = (char *)index(nick, '@')) &&
+  if ((server = (char *)strchr(nick, '@')) &&
       (acptr = find_server(server + 1, NULL)))
     {
       int count = 0;
@@ -2149,7 +2149,7 @@ static	int	m_message(aClient *cptr,
 	}
       *server = '\0';
 	
-      if ((host = (char *)index(nick, '%')))
+      if ((host = (char *)strchr(nick, '%')))
 	*host++ = '\0';
 
       /*
@@ -2480,7 +2480,7 @@ int	m_whois(aClient *cptr,
       
       found = 0;
       (void)collapse(nick);
-      wilds = (index(nick, '?') || index(nick, '*'));
+      wilds = (strchr(nick, '?') || strchr(nick, '*'));
       /*
       ** We're no longer allowing remote users to generate
       ** requests with wildcards.
@@ -2727,7 +2727,7 @@ int	m_user(aClient *cptr,
 #define	UFLAGS	(FLAGS_INVISIBLE|FLAGS_WALLOP|FLAGS_SERVNOTICE)
   char	*username, *host, *server, *realname;
  
-  if (parc > 2 && (username = (char *)index(parv[1],'@')))
+  if (parc > 2 && (username = (char *)strchr(parv[1],'@')))
     *username = '\0'; 
   if (parc < 5 || *parv[1] == '\0' || *parv[2] == '\0' ||
       *parv[3] == '\0' || *parv[4] == '\0')
@@ -3071,7 +3071,7 @@ int	m_kill(aClient *cptr,
 		     BadPtr(parv[2]) ? sptr->name : parv[2]);
   else
     {
-      if ((killer = index(path, ' ')))
+      if ((killer = strchr(path, ' ')))
 	{
 	  while (*killer && *killer != '!')
 	    killer--;
@@ -3364,7 +3364,7 @@ int	m_oper(aClient *cptr,
       int old = (sptr->flags & ALL_UMODES);
       char *s;
       
-      s = index(aconf->host, '@');
+      s = strchr(aconf->host, '@');
       if(s == (char *)NULL)
         {
           sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);

@@ -39,8 +39,7 @@ static SCACHE *scache_hash[SCACHE_HASH_SIZE];
 
 void clear_scache_hash_table(void)
 {
-  /*  memset(scache_hash, 0, sizeof(scache_hash)); */
-  bzero((char *)scache_hash, sizeof(scache_hash));
+  memset((void *)scache_hash, 0, sizeof(scache_hash));
 }
 
 static int hash(char *string)

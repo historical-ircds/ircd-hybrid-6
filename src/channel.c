@@ -230,7 +230,7 @@ static	int	add_banid(aClient *cptr, aChannel *chptr, char *banid)
     }
 
   ban = make_link();
-  bzero((char *)ban, sizeof(Link));
+  memset((void *)ban, 0, sizeof(Link));
   ban->flags = CHFL_BAN;
   ban->next = chptr->banlist;
 
@@ -305,7 +305,7 @@ static	int	add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
     }
 
   ex = make_link();
-  bzero((char *)ex, sizeof(Link));
+  memset((void *)ex, 0, sizeof(Link));
   ex->flags = CHFL_EXCEPTION;
   ex->next = chptr->exceptlist;
 
@@ -834,15 +834,15 @@ static	char	*pretty_mask(char *mask)
 {
   register	char	*cp, *user, *host;
 
-  if ((user = index((cp = mask), '!')))
+  if ((user = strchr((cp = mask), '!')))
     *user++ = '\0';
-  if ((host = rindex(user ? user : cp, '@')))
+  if ((host = strrchr(user ? user : cp, '@')))
     {
       *host++ = '\0';
       if (!user)
 	return make_nick_user_host(NULL, cp, host);
     }
-  else if (!user && index(cp, '.'))
+  else if (!user && strchr(cp, '.'))
     return make_nick_user_host(NULL, NULL, cp);
   return make_nick_user_host(cp, user, host);
 }
@@ -1400,7 +1400,7 @@ static  void     set_mode(aClient *cptr,
 	      if (!(nusers = atoi(arg)))
 		break;
 	      ircsprintf(numeric, "%-15d", nusers);
-	      if ((tmpc = index(numeric, ' ')))
+	      if ((tmpc = strchr(numeric, ' ')))
 		*tmpc = '\0';
 	      arg = numeric;
 
@@ -1867,7 +1867,7 @@ static	aChannel *get_channel(aClient *cptr,
   if (flag == CREATE)
     {
       chptr = (aChannel *)MyMalloc(sizeof(aChannel) + len);
-      bzero((char *)chptr, sizeof(aChannel));
+      memset((void *)chptr, 0, sizeof(aChannel));
       strncpyzt(chptr->chname, chname, len+1);
       if (channel)
 	channel->prevch = chptr;
@@ -2319,7 +2319,7 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 	    {
 	      if( (server_split_time + server_split_recovery_time) < NOW)
 		{
-		  if(Count.myserver > 0)
+		  if(Count.myserver > NO_CHANOPS_SMALLNET_SIZE)
 		    server_was_split = NO;
 		  else
 		    {
@@ -3157,7 +3157,7 @@ int	m_names( aClient *cptr,
 
   if (!BadPtr(para))
     {
-      s = index(para, ',');
+      s = strchr(para, ',');
       if (s)
 	{
 	  parv[1] = ++s;
@@ -3309,7 +3309,7 @@ void	send_user_joins(aClient *cptr, aClient *user)
       chptr = lp->value.chptr;
       if (*chptr->chname == '&')
 	continue;
-      if ((mask = index(chptr->chname, ':')))
+      if ((mask = strchr(chptr->chname, ':')))
 	if (matches(++mask, cptr->name))
 	  continue;
       clen = strlen(chptr->chname);
@@ -3395,7 +3395,7 @@ int	m_sjoin(aClient *cptr,
   if (!IsChannelName(parv[2]))
     return 0;
   newts = atol(parv[1]);
-  bzero((char *)&mode, sizeof(mode));
+  memset((void *)&mode, 0, sizeof(mode));
 
   s = parv[3];
   while (*s)
@@ -3602,7 +3602,7 @@ int	m_sjoin(aClient *cptr,
 	}
       *mbuf++ = 'l';
       (void)sprintf(numeric, "%-15d", mode.limit);
-      if ((s = index(numeric, ' ')))
+      if ((s = strchr(numeric, ' ')))
 	*s = '\0';
       strcat(parabuf, numeric);
       strcat(parabuf, " ");

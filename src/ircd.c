@@ -868,7 +868,7 @@ int	main(int argc, char *argv[])
 
   myargv = argv;
   (void)umask(077);                /* better safe than sorry --SRB */
-  bzero((char *)&me, sizeof(me));
+  memset((void *)&me, 0, sizeof(me));
 
   setup_signals();
   

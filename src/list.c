@@ -75,7 +75,7 @@ BlockHeap *free_anUsers;
 BlockHeap *free_fludbots;
 #endif /* FLUD */
 
-void	initlists()
+void initlists()
 {
   /* Might want to bump up LINK_PREALLOCATE if FLUD is defined */
   free_Links = BlockHeapCreate((size_t)sizeof(Link),LINK_PREALLOCATE);
@@ -117,7 +117,7 @@ void	initlists()
  *		  -Dianora
  */
 
-void	outofmemory()
+void outofmemory()
 {
   static int was_here=0;
 
@@ -152,7 +152,7 @@ aClient	*make_client(aClient *from)
       if(cptr == (aClient *)NULL)
 	outofmemory();
 
-      bzero((char *)cptr, CLIENT_LOCAL_SIZE);
+      memset((void *)cptr, 0, CLIENT_LOCAL_SIZE);
       
       /* Note:  structure is zero (calloc) */
       cptr->from = cptr; /* 'from' of local client is self! */
@@ -192,7 +192,7 @@ aClient	*make_client(aClient *from)
       if(cptr == (aClient *)NULL)
 	outofmemory();
 
-      bzero((char *)cptr, CLIENT_REMOTE_SIZE);
+      memset((void *)cptr, 0, CLIENT_REMOTE_SIZE);
 
       /* Note:  structure is zero (calloc) */
       cptr->from = from; /* 'from' of local client is self! */
@@ -242,7 +242,7 @@ void free_client(aClient *cptr)
 ** 'make_user' add's an User information block to a client
 ** if it was not previously allocated.
 */
-anUser	*make_user(aClient *cptr)
+anUser *make_user(aClient *cptr)
 {
   Reg	anUser	*user;
 
@@ -265,18 +265,18 @@ anUser	*make_user(aClient *cptr)
   return user;
 }
 
-aServer	*make_server(aClient *cptr)
+aServer *make_server(aClient *cptr)
 {
   Reg	aServer	*serv = cptr->serv;
 
   if (!serv)
     {
       serv = (aServer *)MyMalloc(sizeof(aServer));
-      bzero((char *)serv, sizeof(aServer));
+      memset((void *)serv, 0, sizeof(aServer));
 
       /* The commented out lines before are
        * for documentation purposes only
-       * as they are zeroed by bzero above
+       * as they are zeroed by memset above
        */
       /*      serv->user = NULL; */
       /*      serv->users = NULL; */
@@ -294,7 +294,7 @@ aServer	*make_server(aClient *cptr)
 **	Decrease user reference count by one and release block,
 **	if count reaches 0
 */
-void	free_user(anUser *user, aClient *cptr)
+void free_user(anUser *user, aClient *cptr)
 {
   if (--user->refcnt <= 0)
     {
@@ -328,7 +328,7 @@ void	free_user(anUser *user, aClient *cptr)
  * taken the code from ExitOneClient() for this and placed it here.
  * - avalon
  */
-void	remove_client_from_list(aClient *cptr)
+void remove_client_from_list(aClient *cptr)
 {
   if (IsServer(cptr)) Count.server--;
   else if (IsClient(cptr))
@@ -396,7 +396,7 @@ void	remove_client_from_list(aClient *cptr)
  * in this file, shouldnt they ?  after all, this is list.c, isnt it ?
  * -avalon
  */
-void	add_client_to_list(aClient *cptr)
+void add_client_to_list(aClient *cptr)
 {
   /*
    * since we always insert new clients to the top of the list,
@@ -412,7 +412,7 @@ void	add_client_to_list(aClient *cptr)
 /*
  * Look for ptr in the linked listed pointed to by link.
  */
-Link	*find_user_link(Link *lp, aClient *ptr)
+Link *find_user_link(Link *lp, aClient *ptr)
 {
   if (ptr)
     while (lp)
@@ -433,7 +433,7 @@ Link *find_channel_link(Link *lp, aChannel *chptr)
   return ((Link *)NULL);
 }
 
-Link	*make_link()
+Link *make_link()
 {
   Reg	Link	*lp;
 
@@ -455,7 +455,7 @@ void free_link(Link *lp)
 	}
 }
 
-aClass	*make_class()
+aClass *make_class()
 {
   Reg	aClass	*tmp;
 
@@ -463,7 +463,7 @@ aClass	*make_class()
   return tmp;
 }
 
-void	free_class(tmp)
+void free_class(tmp)
 Reg	aClass	*tmp;
 {
   MyFree((char *)tmp);
@@ -471,10 +471,10 @@ Reg	aClass	*tmp;
 
 aConfItem *make_conf()
 {
-  Reg	aConfItem *aconf;
+  register aConfItem *aconf;
 
   aconf = (struct ConfItem *)MyMalloc(sizeof(aConfItem));
-  bzero((char *)aconf, sizeof(aConfItem));
+  memset((void *)aconf, 0, sizeof(aConfItem));
   /*  aconf->next = NULL; */
   /* aconf->host = aconf->passwd = aconf->name = NULL; */
   aconf->status = CONF_ILLEGAL;
@@ -485,7 +485,7 @@ aConfItem *make_conf()
   return (aconf);
 }
 
-void  delist_conf(aConfItem *aconf)
+void delist_conf(aConfItem *aconf)
 {
   if (aconf == conf)
     conf = conf->next;
@@ -500,12 +500,12 @@ void  delist_conf(aConfItem *aconf)
   aconf->next = NULL;
 }
 
-void	free_conf(aConfItem *aconf)
+void free_conf(aConfItem *aconf)
 {
   del_queries((char *)aconf);
   MyFree(aconf->host);
   if (aconf->passwd)
-    bzero(aconf->passwd, strlen(aconf->passwd));
+    memset((void *)aconf->passwd, 0, strlen(aconf->passwd));
   MyFree(aconf->passwd);
   MyFree(aconf->name);
   MyFree(aconf->mask);
@@ -549,7 +549,7 @@ void add_client_to_llist(aClient **bucket, aClient *client)
     }
 }
 
-void    del_client_from_llist(aClient **bucket, aClient *client)
+void del_client_from_llist(aClient **bucket, aClient *client)
 {
   if (client->lprev)
     {
@@ -565,3 +565,7 @@ void    del_client_from_llist(aClient **bucket, aClient *client)
     }
   client->lnext = client->lprev = (aClient *)NULL;
 }
+
+
+
+

@@ -179,7 +179,7 @@ char	*myctime(time_t value)
   Reg	char	*p;
 
   (void)strcpy(buf, ctime(&value));
-  if ((p = (char *)index(buf, '\n')) != NULL)
+  if ((p = (char *)strchr(buf, '\n')) != NULL)
     *p = '\0';
 
   return buf;
@@ -333,7 +333,7 @@ char  *get_client_host(aClient *cptr)
 void	get_sockhost(aClient *cptr,char *host)
 {
   Reg	char	*s;
-  if ((s = (char *)index(host, '@')))
+  if ((s = (char *)strchr(host, '@')))
     s++;
   else
     s = host;
@@ -356,7 +356,7 @@ char	*my_name_for_link(char *name,aConfItem *aconf)
   while (count-- && name)
     {
       name++;
-      name = (char *)index(name, '.');
+      name = (char *)strchr(name, '.');
     }
   if (!name)
     return start;
@@ -495,7 +495,7 @@ char	*comment	/* Reason for the exit */
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
 	defined(NO_JOIN_ON_SPLIT)
-	  if(Count.myserver == 0)
+	  if(Count.myserver < NO_CHANOPS_SMALLNET_SIZE)
 	    {
 	      server_was_split = YES;
 	      server_split_time = NOW;
@@ -908,7 +908,7 @@ void	checklist()
 
 void	initstats()
 {
-  bzero((char *)&ircst, sizeof(ircst));
+  memset((void *)&ircst, 0, sizeof(ircst));
 }
 
 void	tstats(aClient *cptr,char *name)
