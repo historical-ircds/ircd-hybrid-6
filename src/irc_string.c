@@ -50,6 +50,10 @@ const char* myctime(time_t value)
 
 /*
  * strncpy_irc - optimized strncpy
+ * This may not look like it would be the fastest possible way to do it,
+ * but it generally outperforms everything else on many platforms, 
+ * including asm library versions and memcpy, if compiled with the 
+ * optimizer on. (-O2 for gcc) --Bleep
  */
 char* strncpy_irc(char* s1, const char* s2, size_t n)
 {
