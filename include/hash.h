@@ -39,13 +39,6 @@
  */
 #define CH_MAX 16384
 
-/* 
- * Whowas hash table size
- *
- * used in whowas.c 
- */
-#define WW_MAX 65536
-
 struct Client;
 struct Channel;
 
@@ -55,11 +48,11 @@ extern void   clear_channel_hash_table(void);
 extern void   clear_client_hash_table(void);
 extern void   add_to_client_hash_table(const char* name, 
                                        struct Client* client);
-extern int    del_from_client_hash_table(const char* name, 
+extern void   del_from_client_hash_table(const char* name, 
                                          struct Client* client);
 extern void   add_to_channel_hash_table(const char* name, 
                                         struct Channel* chan);
-extern int    del_from_channel_hash_table(const char* name, 
+extern void   del_from_channel_hash_table(const char* name, 
                                           struct Channel* chan);
 extern struct Channel* hash_find_channel(const char* name, 
                                          struct Channel* chan);

@@ -28,6 +28,7 @@
 #include "numeric.h"
 #include "h.h"
 #include "send.h"
+#include "hash.h"
 
 #if defined( HAVE_STRING_H )
 #include <string.h>

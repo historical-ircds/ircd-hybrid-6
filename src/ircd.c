@@ -34,6 +34,7 @@
 #include "motd.h"
 #include "s_bsd.h"
 #include "send.h"
+#include "hash.h"
 
 #include <sys/file.h>
 #include <sys/stat.h>

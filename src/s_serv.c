@@ -42,6 +42,7 @@
 #include "s_conf.h"
 #include "class.h"
 #include "send.h"
+#include "hash.h"
 
 #ifndef __EMX__
 #include <utmp.h> /* old slackware utmp.h defines BYTE_ORDER */

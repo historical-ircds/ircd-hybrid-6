@@ -15,21 +15,23 @@
 *   You should have received a copy of the GNU General Public License
 *   along with this program; if not, write to the Free Software
 *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*
+*   $Id$
 */
-
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
 #include "h.h"
 #include "send.h"
+#include "hash.h"
 
-#ifndef lint
-static char *rcs_version = "$Id$";
-#endif
-
-/* externally defined functions */
-unsigned int hash_whowas_name(char *);		/* defined in hash.c */
+/*
+ * Whowas hash table size
+ *
+ * used in whowas.c
+ */
+#define WW_MAX 65536
 
 /* internally defined function */
 static void add_whowas_to_clist(aWhowas **,aWhowas *);
@@ -41,6 +43,17 @@ aWhowas WHOWAS[NICKNAMEHISTORYLENGTH];
 aWhowas *WHOWASHASH[WW_MAX];
 
 int whowas_next = 0;
+
+static unsigned int hash_whowas_name(const char* name)
+{
+  unsigned int h = 0;
+
+  while (*name)
+    {
+      h = (h << 4) - (h + (unsigned char)tolower(*name++));
+    }
+  return(h & (WW_MAX - 1));
+}
 
 void add_history(aClient *cptr, int online)
 {

@@ -34,6 +34,7 @@
 #include "s_bsd.h"
 #include "h.h"
 #include "send.h"
+#include "hash.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -1639,7 +1640,7 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
   **  Finally set new nick name.
   */
   if (sptr->name[0])
-    (void)del_from_client_hash_table(sptr->name, sptr);
+    del_from_client_hash_table(sptr->name, sptr);
   strcpy(sptr->name, nick);
   add_to_client_hash_table(nick, sptr);
 

@@ -16,9 +16,8 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-
-/*
+ *
+ *
  * a number of behaviours in set_mode() have been rewritten
  * These flags can be set in a define if you wish.
  *
@@ -33,15 +32,10 @@
  * OLD_NON_RED	- Current code allows /mode * -s etc. to be applied
  *		  even if +s is not set. Old behaviour was not to allow
  *		  mode * -p etc. if flag was clear
+ *
+ *
+ * $Id$
  */
-
-#ifndef	lint
-static	char sccsid[] = "@(#)channel.c	2.58 2/18/94 (C) 1990 University of Oulu, Computing\
- Center and Jarkko Oikarinen";
-
-static char *rcs_version="$Id$";
-#endif
-
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -49,6 +43,7 @@ static char *rcs_version="$Id$";
 #include "channel.h"
 #include "h.h"
 #include "send.h"
+#include "hash.h"
 
 #ifdef NEED_SPLITCODE
 int server_was_split=YES;
@@ -2346,8 +2341,8 @@ static	void	sub1_from_channel(aChannel *chptr)
 #ifdef FLUD
 	  free_fluders(NULL, chptr);
 #endif
-	  (void)del_from_channel_hash_table(chptr->chname, chptr);
-	  MyFree((char *)chptr);
+	  del_from_channel_hash_table(chptr->chname, chptr);
+	  MyFree((char*) chptr);
 	  Count.chan--;
 	}
     }
@@ -2630,9 +2625,9 @@ void remove_empty_channels()
 #ifdef FLUD
       free_fluders(NULL, empty_channel_list);
 #endif
-      (void)del_from_channel_hash_table(empty_channel_list->chname, 
+      del_from_channel_hash_table(empty_channel_list->chname, 
 					empty_channel_list);
-      MyFree((char *)empty_channel_list);
+      MyFree((char*) empty_channel_list);
       Count.chan--;
     }
 }

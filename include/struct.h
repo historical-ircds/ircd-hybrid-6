@@ -69,9 +69,6 @@
 # define INCLUDED_zlib_h
 #endif
 
-#ifndef INCLUDED_hash_h
-# include "hash.h"
-#endif
 #ifndef INCLUDED_client_h
 # include "client.h"
 #endif
