@@ -1498,7 +1498,7 @@ void report_qlines(aClient *sptr)
           get_printable_conf(aconf, &name, &host, &pass, &user, &port);
           
           sendto_one(sptr, form_str(RPL_STATSQLINE),
-                     me.name, sptr->name, name, pass, user, host);
+                     me.name, sptr->name, name, user, host, pass);
         }
     }
 }
