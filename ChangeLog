@@ -1,3 +1,15 @@
+db          2001/12/10 01:43:11 EST	(20011210_3)
+
+  Modified files:
+    src                  m_kline.c 
+  Log:
+  - fixed another core
+  
+  Revision  Changes    Path
+  1.68      +14 -6     ircd-hybrid-6/src/m_kline.c
+
+
+
 db          2001/12/10 01:29:30 EST	(20011210_2)
 
   Modified files:
