@@ -168,19 +168,6 @@ static int user_modes_from_c_to_bitmask[] =
   /* 0xF0 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  /* 0xFF */
 };
 
-/* internally defined functions */
-#ifdef BOTCHECK
-static int bot_check(char *);
-
-const char *type_of_bot[]={
-  "NONE",
-  "eggdrop",
-  "vald/com/joh bot",
-  "spambot",
-  "annoy/ojnkbot"
-};
-
-#endif
 
 unsigned long my_rand(void);    /* provided by orabidoo */
 
@@ -690,9 +677,6 @@ static int register_user(aClient *cptr, aClient *sptr,
        */
       /* Except "F:" clients */
       if ( (
-#ifdef BOTCHECK
-          !sptr->isbot &&
-#endif /* BOTCHECK */
           ((Count.local + 1) >= (MAXCLIENTS+MAX_BUFFER))) ||
             (((Count.local +1) >= (MAXCLIENTS - 5)) && !(IsFlined(sptr))))
         {
@@ -703,28 +687,6 @@ static int register_user(aClient *cptr, aClient *sptr,
           return exit_client(cptr, sptr, &me,
                              "Sorry, server is full - try later");
         }
-      /* botcheck */
-#ifdef BOTCHECK
-      if(sptr->isbot)
-        {
-          if(IsBlined(sptr))
-            {
-              sendto_realops_flags(FLAGS_BOTS,
-                                 "Possible %s: %s (%s@%s) [B-lined]",
-                                 type_of_bot[sptr->isbot],
-                                 sptr->name, sptr->username, sptr->host);
-            }
-          else
-            {
-              sendto_realops_flags(FLAGS_BOTS, "Rejecting %s: %s",
-                                 type_of_bot[sptr->isbot],
-                                 get_client_name(sptr,FALSE));
-              ServerStats->is_ref++;
-              return exit_client(cptr, sptr, sptr, type_of_bot[sptr->isbot] );
-            }
-        }
-#endif
-      /* End of botcheck */
 
       /* valid user name check */
 
@@ -1108,15 +1070,6 @@ report_and_set_user_flags(aClient *sptr,aConfItem *aconf)
                  me.name,sptr->name);
     }
 #endif /* GLINES */
-
-  /* If this user can run bots set it "B lined" */
-  if(IsConfBlined(aconf))
-    {
-      SetBlined(sptr);
-      sendto_one(sptr,
-                 ":%s NOTICE %s :*** You can run bots here. congrats.",
-                 me.name,sptr->name);
-    }
 
   /* If this user is exempt from user limits set it F lined" */
   if(IsConfFlined(aconf))
@@ -1905,11 +1858,6 @@ int m_user(aClient* cptr, aClient* sptr, int parc, char *parv[])
   server   = (parc < 4 || BadPtr(parv[3])) ? "<noserver>" : parv[3];
   realname = (parc < 5 || BadPtr(parv[4])) ? "<bad-realname>" : parv[4];
   
-#ifdef BOTCHECK
-  /* Only do bot checks on local connecting clients */
-      if(MyClient(cptr))
-        cptr->isbot = bot_check(host);
-#endif
 
   return do_user(parv[0], cptr, sptr, username, host, server, realname);
 }
@@ -2253,27 +2201,3 @@ void send_umode_out(aClient *cptr,
   if (cptr && MyClient(cptr))
     send_umode(cptr, sptr, old, ALL_UMODES, buf);
 }
-
-
-#ifdef BOTCHECK
-/**
- ** bot_check(host)
- **   Reject a bot based on a fake hostname...
- **           -Taner
- **/
-static int bot_check(char *host)
-{
-/*
- * Eggdrop Bots:        "USER foo 1 1 :foo"
- * Vlad, Com, joh Bots: "USER foo null null :foo"
- * Annoy/OJNKbots:      "user foo . . :foo"   (disabled)
- * Spambots that are based on OJNK: "user foo x x :foo"
- */
-  if (!strcmp(host,"1")) return 1;
-  if (!strcmp(host,"null")) return 2;
-  if (!strcmp(host, "x")) return 3;
-
-  return 0;
-}
-#endif
-

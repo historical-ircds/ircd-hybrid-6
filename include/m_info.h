@@ -93,12 +93,6 @@ Info MyInformation[] = {
   { "BAN_INFO", "OFF", 0, "Displays who set a ban and when" },
 #endif /* BAN_INFO */
 
-#ifdef BOTCHECK
-  { "BOTCHECK", "ON", 0, "Rudimentary Bot Checking" },
-#else
-  { "BOTCHECK", "OFF", 0, "Rudimentary Bot Checking" },
-#endif /* BOTCHECK */
-
   { "BUFFERPOOL", "", BUFFERPOOL, "Maximum size of all SendQs" },
 
 #ifdef CLIENT_FLOOD

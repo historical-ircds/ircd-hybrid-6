@@ -1435,12 +1435,6 @@ char *show_iline_prefix(struct Client *sptr,struct ConfItem *aconf,char *name)
     if (IsConfElined(aconf))
       *prefix_ptr++ = '^';
 
-#ifdef B_LINES_OPER_ONLY
-  if(IsAnOper(sptr))
-#endif
-    if (IsConfBlined(aconf))
-      *prefix_ptr++ = '&';
-
 #ifdef F_LINES_OPER_ONLY
   if(IsAnOper(sptr))
 #endif

@@ -324,10 +324,6 @@
  */
 #define KLINE_WITH_CONNECTION_CLOSED
 
-/* BOTCHECK - rudimentary bot checking
- */
-#define BOTCHECK
-
 /* x_LINES_OPER_ONLY - Allow only local opers to see these stats
  *
  *  Any one with an F line can almost always get on the server, as

@@ -185,9 +185,6 @@ struct Client
    * these fields, if (from != self).
    */
   int               count;       /* Amount of data in buffer */
-#ifdef BOTCHECK
-  unsigned char     isbot;      /* non 0 if its a type of bot */
-#endif
 #ifdef FLUD
   time_t            fludblock;
   struct fludbot*   fluders;

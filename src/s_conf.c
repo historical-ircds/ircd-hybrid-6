@@ -1792,8 +1792,7 @@ static char *set_conf_flags(struct ConfItem *aconf,char *tmp)
         case '^':        /* is exempt from k/g lines */
           aconf->flags |= CONF_FLAGS_E_LINED;
           break;
-        case '&':        /* can run a bot */
-          aconf->flags |= CONF_FLAGS_B_LINED;
+        case '&':        /* obsolete flag was "can run a bot" */
           break;
         case '>':        /* can exceed max connects */
           aconf->flags |= CONF_FLAGS_F_LINED;
