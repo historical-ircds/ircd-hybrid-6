@@ -97,7 +97,6 @@ extern void     dummy(int signo);
 
 extern  char    *form_str (int);
 extern  void    get_my_name (struct Client *, char *, int);
-extern  int     setup_ping (void);
 
 extern  void    terminate (void);
 extern  int     send_queued(struct Client*);
@@ -105,12 +104,6 @@ extern  int     send_queued(struct Client*);
 extern  void    send_capabilities(struct Client *,int);
 
 extern  int     deliver_it (struct Client *, char *, int);
-
-extern  const    char* my_name_for_link(const char* name,
-                   struct ConfItem* conf);
-extern  char*   date(time_t);
-extern  void    initstats (void), tstats (struct Client *, char *);
-extern  void    serv_info (struct Client *, char *);
 
 extern  int     parse (struct Client *, char *, char *);
 extern  void    init_tree_parse (struct Message *);
