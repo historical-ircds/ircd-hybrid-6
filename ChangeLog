@@ -1,3 +1,7 @@
+*** 20001019_1 by lusky
+dns cache entries were never fully expiring, stayed in the hashtable forever
+
+
 *** 20001018_1 by lusky
 fix for whois_notice (tv)
 
