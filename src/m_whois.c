@@ -268,7 +268,7 @@ int     m_whois(struct Client *cptr,
             sendto_one(sptr, form_str(RPL_WHOISOPERATOR),
                        me.name, parv[0], name);
 #ifdef WHOIS_NOTICE
-          if ((MyOper(acptr)) && ((acptr)->flags & FLAGS_SPY) &&
+          if ((MyOper(acptr)) && ((acptr)->umodes & FLAGS_SPY) &&
               (MyConnect(sptr)) && (IsPerson(sptr)) && (acptr != sptr))
             sendto_one(acptr,
                        ":%s NOTICE %s :*** Notice -- %s (%s@%s) is doing a /whois on you.",

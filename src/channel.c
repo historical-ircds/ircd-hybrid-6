@@ -57,7 +57,7 @@
 #ifdef NEED_SPLITCODE
 
 static void check_still_split();
-int server_was_split;
+int server_was_split=YES;
 int got_server_pong;
 time_t server_split_time;
 

@@ -344,7 +344,7 @@ static  char *  replies[] = {
 /* 314 RPL_WHOWASUSER, */       ":%s 314 %s %s %s %s * :%s",
 /* 315 RPL_ENDOFWHO, */         ":%s 315 %s %s :End of /WHO list.",
 /* 316 RPL_WHOISCHANOP, */      (char *)NULL,
-/* 317 RPL_WHOISIDLE, */        ":%s 317 %s %s %lu %lu :seconds idle, signon time",
+/* 317 RPL_WHOISIDLE, */        ":%s 317 %s %s %d %d :seconds idle, signon time",
 /* 318 RPL_ENDOFWHOIS, */       ":%s 318 %s %s :End of /WHOIS list.",
 /* 319 RPL_WHOISCHANNELS, */    ":%s 319 %s %s :%s",
 /* 320 */       (char *)NULL,

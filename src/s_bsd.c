@@ -349,7 +349,6 @@ int check_client(struct Client *cptr,char *username,char **reason)
 {
   static char     sockname[HOSTLEN + 1];
   int             i;
-  struct hostent* hp = 0;
  
   ClearAccess(cptr);
 
