@@ -510,7 +510,7 @@ const char* show_capabilities(struct Client* acptr)
 {
   static char        msgbuf[BUFSIZE];
   struct Capability* cap;
-  chat *t;
+  char *t;
   int tl;
 
   t = msgbuf;
