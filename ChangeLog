@@ -1,3 +1,10 @@
+*** 20000131_2 by lusky
+revved patchlevel to b120
+dropped TS_MAX_DELTA default to 300 seconds
+various compile warning fixes
+turn off GLINES by default
+
+
 *** 20000131_1 by lusky
 reverted to -5 nick collide code (db)
 fixes to make debugmode compile (db)
