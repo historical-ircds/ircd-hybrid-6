@@ -382,7 +382,7 @@ void add_Dline(aConfItem *conf_ptr)
   /* resolve ambiguities, duplicates, etc. */
 
   node=find_ip_subtree(Dline[host_ip>>24], host_ip);
-  if ((node) && (node->ip_mask < host_mask)) /* found a broader Dline, dont add this one */
+  if ((node) && (node->ip_mask <= host_mask)) /* found a broader Dline, dont add this one */
     return;
   /* check if this Dline is covered by an exception */
   if(find_exception(host_ip))  /* it is!  throw it away! */
