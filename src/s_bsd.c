@@ -374,13 +374,21 @@ static int completed_connection(struct Client* cptr)
   c_conf = find_conf_name(cptr->confs, cptr->name, CONF_CONNECT_SERVER);
   if (!c_conf)
     {
+#ifdef HIDE_SERVERS_IPS
+      sendto_realops("Lost C-Line for %s", get_client_name(cptr,MASK_IP));
+#else      
       sendto_realops("Lost C-Line for %s", get_client_name(cptr,FALSE));
+#endif      
       return 0;
     }
   n_conf = find_conf_name(cptr->confs, cptr->name, CONF_NOCONNECT_SERVER);
   if (!n_conf)
     {
+#ifdef HIDE_SERVERS_IPS
+      sendto_realops("Lost N-Line for %s", get_client_name(cptr, MASK_IP));
+#else      
       sendto_realops("Lost N-Line for %s", get_client_name(cptr,FALSE));
+#endif      
       return 0;
     }
   
@@ -475,17 +483,33 @@ static int connect_inet(struct ConfItem *aconf, struct Client *cptr)
               HOSTIPLEN);
 
   if (!set_non_blocking(cptr->fd))
-    report_error(NONB_ERROR_MSG, get_client_name(cptr, TRUE), errno);
+    report_error(NONB_ERROR_MSG, 
+#ifdef HIDE_SERVERS_IPS
+		get_client_name(cptr, MASK_IP),
+#else		
+    		get_client_name(cptr, TRUE), 
+#endif		
+		errno);
 
   if (!set_sock_buffers(cptr->fd, READBUF_SIZE))
+#ifdef HIDE_SERVERS_IPS
+    report_error(SETBUF_ERROR_MSG, get_client_name(cptr, MASK_IP), errno);
+#else    
     report_error(SETBUF_ERROR_MSG, get_client_name(cptr, TRUE), errno);
+#endif    
 
   if (connect(cptr->fd, (struct sockaddr*) &sin, sizeof(sin)) && 
       errno != EINPROGRESS)
     {
       int errtmp = errno; /* other system calls may eat errno */
+
+#ifdef HIDE_SERVERS_IPS      
+      report_error("Connect to host %s failed: %s",
+      		   get_client_name(cptr, MASK_IP), errno);
+#else		   
       report_error("Connect to host %s failed: %s",
                    get_client_name(cptr, TRUE), errno);
+#endif		   
       errno = errtmp;
       return 0;
     }
@@ -523,12 +547,21 @@ int connect_server(struct ConfItem* aconf,
    */
   if ((cptr = find_server(aconf->name)))
     {
+#ifdef HIDE_SERVERS_IPS
+      sendto_realops("Server %s already present from %s",
+      		 aconf->name, get_client_name(cptr, MASK_IP));
+      if (by && IsPerson(by) && !MyClient(by))
+        sendto_one(by, ":%s NOTICE %s :Server %s already present from %s",
+	           me.name, by->name, aconf->name,
+		   get_client_name(cptr, MASK_IP));
+#else		   
       sendto_realops("Server %s already present from %s",
                  aconf->name, get_client_name(cptr, TRUE));
       if (by && IsPerson(by) && !MyClient(by))
         sendto_one(by, ":%s NOTICE %s :Server %s already present from %s",
                    me.name, by->name, aconf->name,
                    get_client_name(cptr, TRUE));
+#endif		   
       return 0;
     }
 
@@ -790,10 +823,17 @@ void add_connection(struct Listener* listener, int fd)
   new_client->listener  = listener;
   ++listener->ref_count;
 
+#ifdef HIDE_SERVERS_IPS
+  if (!set_non_blocking(new_client->fd))
+    report_error(NONB_ERROR_MSG, get_client_name(new_client, MASK_IP), errno);
+  if (!disable_sock_options(new_client->fd))
+    report_error(OPT_ERROR_MSG, get_client_name(new_client, MASK_IP), errno);
+#else    
   if (!set_non_blocking(new_client->fd))
     report_error(NONB_ERROR_MSG, get_client_name(new_client, TRUE), errno);
   if (!disable_sock_options(new_client->fd))
     report_error(OPT_ERROR_MSG, get_client_name(new_client, TRUE), errno);
+#endif    
   start_auth(new_client);
 }
 
@@ -974,13 +1014,22 @@ static void error_exit_client(struct Client* cptr, int error)
   if (IsServer(cptr) || IsHandshake(cptr))
     {
       int connected = CurrentTime - cptr->firsttime;
-      
+
+#ifdef HIDE_SERVERS_IPS
       if (0 == error)
         sendto_ops("Server %s closed the connection",
-                   get_client_name(cptr, MASK_IP));
+		   get_client_name(cptr, MASK_IP));
+      else
+        report_error("Lost connection to %s:%s",
+		   get_client_name(cptr, MASK_IP), current_error);
+#else		   
+      if (0 == error)
+        sendto_ops("Server %s closed the connection",
+                   get_client_name(cptr, TRUE));
       else
         report_error("Lost connection to %s:%s", 
                      get_client_name(cptr, TRUE), current_error);
+#endif		     
       sendto_realops("%s had been connected for %d day%s, %2d:%02d:%02d",
                  cptr->name, connected/86400,
                  (connected/86400 == 1) ? "" : "s",

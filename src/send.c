@@ -156,7 +156,11 @@ send_message(aClient *to, char *msg, int len)
         {
                 if (IsServer(to))
                         sendto_realops("Max SendQ limit exceeded for %s: %d > %d",
+#ifdef HIDE_SERVERS_IPS
+				get_client_name(to, MASK_IP),
+#else				
                                 get_client_name(to, FALSE),
+#endif				
                                 DBufLength(&to->sendQ), get_sendq(to));
 
                 if (IsDoingList(to)) {
@@ -277,7 +281,11 @@ send_message(aClient *to, char *msg, int len)
                 {
                         sendto_ops_butone(to,
                                 "Max SendQ limit exceeded for %s : %d > %d",
+#ifdef HIDE_SERVERS_IPS
+				get_client_name(to, MASK_IP),
+#else				
                                 get_client_name(to, FALSE),
+#endif				
                                 DBufLength(&to->sendQ), get_sendq(to));
 
                                 return dead_link(to, "Max Sendq exceeded");

@@ -237,7 +237,7 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
                 if(IsIPHidden(acptr) || IsServer(acptr))
                   sendto_one(sptr, Lformat, me.name,
                      RPL_STATSLINKINFO, parv[0],
-                     get_client_name(acptr, HIDEME),
+                     get_client_name(acptr, MASK_IP),
                      (int)DBufLength(&acptr->sendQ),
                      (int)acptr->sendM, (int)acptr->sendK,
                      (int)acptr->receiveM, (int)acptr->receiveK,

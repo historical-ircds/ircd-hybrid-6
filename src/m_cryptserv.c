@@ -129,8 +129,7 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
       sendto_one(sptr, form_str(ERR_UNKNOWNCOMMAND), me.name, parv[0], "CRYPTSERV");
 #ifdef HIDE_SERVERS_IPS
       sendto_realops("CRYPTSERV command from %s -- %s is a hacked server",
-                     get_client_name(sptr, MASK_IP),
-    		     get_client_name(sptr, MASK_IP));
+                     sptr->name, cptr->name);
 #else		   
       sendto_realops("CRYPTSERV command from %s -- %s is a hacked server",
 	  	     get_client_name(sptr,SHOW_IP),
@@ -151,7 +150,7 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
     {
 #ifdef HIDE_SERVERS_IPS
       sendto_realops("CRYPTSERV from server %s -- it's hacked",
-                     get_client_name(cptr, MASK_IP));
+                     cptr->name);
 #else		   
       sendto_realops("CRYPTSERV from server %s -- it's hacked",
 		     get_client_name(cptr, SHOW_IP));
@@ -208,7 +207,7 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
     {
 #ifdef HIDE_SERVERS_IPS 
       sendto_realops("WARNING AUTOCONN is 0, Closing %s",
-		     get_client_name(cptr, MASK_IP));
+		     cptr->name);
 #else
       sendto_realops("WARNING AUTOCONN is 0, Closing %s",
                      get_client_name(cptr, TRUE));
@@ -234,7 +233,7 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
       sendto_one(cptr,"ERROR :Nickname %s already exists!", host);
 #ifdef HIDE_SERVERS_IPS
       sendto_ops("Link %s cancelled: Server/nick collision on %s",
-                       /* inpath */ get_client_name(cptr,MASK_IP), host);
+                       /* inpath */ cptr->name, host);
 #else		       
       sendto_ops("Link %s cancelled: Server/nick collision on %s",
                  /* inpath */ get_client_name(cptr,FALSE), host);
@@ -260,7 +259,7 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
       {
 #ifdef HIDE_SERVERS_IPS
         sendto_realops("Link %s cancelled, server %s already exists",
-	                   get_client_name(bcptr, MASK_IP), host);
+	                   bcptr->name, host);
 #else			   
         sendto_realops("Link %s cancelled, server %s already exists",
                    get_client_name(bcptr, TRUE), host);
@@ -280,7 +279,7 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
 #ifdef HIDE_SERVERS_IPS
       strcpy(nbuf, get_client_name(bcptr, MASK_IP));
       sendto_realops("Link %s cancelled, server %s reintroduced by %s",
-	                    nbuf, host, get_client_name(cptr, MASK_IP));
+	                    nbuf, host, cptr->name);
 #else			    
       strcpy(nbuf, get_client_name(bcptr, TRUE));
       sendto_realops("Link %s cancelled, server %s reintroduced by %s",
@@ -302,11 +301,11 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
 #ifdef WARN_NO_NLINE
 #ifdef HIDE_SERVERS_IPS
     sendto_realops("No N/C line for %s - dropping link", get_client_name(cptr, MASK_IP));
-    log(L_NOTICE, "Access denied. No N line for server %s",
-        get_client_name(cptr, TRUE));
 #else    
     sendto_realops("No N/C line for %s - dropping link", get_client_name(cptr, TRUE));
-#endif    
+#endif   
+    log(L_NOTICE, "Access denied. No N line for server %s",
+       get_client_name(cptr, TRUE));
 #endif
     return exit_client(cptr, cptr, cptr, "Missing C/N-line");
   }
@@ -329,7 +328,7 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
     {
 #ifdef HIDE_SERVERS_IPS  
       sendto_realops("%s wanted an encrypted link without supplying cipher list", 
-                     get_client_name(cptr, MASK_IP));
+                     cptr->name);
 #else
       sendto_realops("%s wanted an encrypted link without supplying cipher list", 
                      get_client_name(cptr, TRUE));
@@ -348,7 +347,7 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
     {
 #ifdef HIDE_SERVERS_IPS
       sendto_realops("Failed decrypting session key received from %s", 
-                     get_client_name(cptr, MASK_IP));
+                     cptr->name);
 #else    
       sendto_realops("Failed decrypting session key received from %s", 
                      get_client_name(cptr, TRUE));

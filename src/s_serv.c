@@ -551,8 +551,13 @@ int server_estab(struct Client *cptr)
   assert(0 != cptr);
   ClearAccess(cptr);
 
+#ifdef HIDE_SERVERS_IPS
+  strcpy(inpath_ip, get_client_name(cptr, MASK_IP));
+  inpath = get_client_name(cptr, MASK_IP);
+#else  
   strcpy(inpath_ip, get_client_name(cptr, SHOW_IP));
-  inpath = get_client_name(cptr, MASK_IP); /* "refresh" inpath with host */
+  inpath = get_client_name(cptr, HIDE_IP); /* "refresh" inpath with host */
+#endif  
 
   split = irccmp(cptr->name, cptr->host);
   host = cptr->name;

@@ -524,9 +524,15 @@ static  int     cancel_clients(aClient *cptr,
    */
   if (IsServer(sptr) || IsMe(sptr))
     {
+#ifdef HIDE_SERVERS_IPS
+      sendto_realops_flags(FLAGS_DEBUG, "Message for %s[%s] from %s",
+      			 sptr->name, sptr->from->name,
+			 get_client_name(cptr, MASK_IP));
+#else			 
       sendto_realops_flags(FLAGS_DEBUG, "Message for %s[%s] from %s",
                          sptr->name, sptr->from->name,
                          get_client_name(cptr, TRUE));
+#endif			 
       if (IsServer(cptr))
         {
           sendto_realops_flags(FLAGS_DEBUG,
@@ -560,26 +566,40 @@ static  int     cancel_clients(aClient *cptr,
     if (DoesTS(cptr))
       {
         if (sptr->user)
+#ifdef HIDE_SERVERS_IPS
+	  sendto_realops_flags(FLAGS_DEBUG,
+	      "Message for %s[%s@%s!%s] from %s (TS, ignored)",
+	      sptr->name, sptr->username, sptr->host,
+	      sptr->from->name, get_client_name(cptr, MASK_IP));
+#else	      
           sendto_realops_flags(FLAGS_DEBUG,
               "Message for %s[%s@%s!%s] from %s (TS, ignored)",
                              sptr->name, sptr->username, sptr->host,
                            sptr->from->name, get_client_name(cptr, TRUE));
+#endif			   
         return 0;
       }
     else
       {
         if (sptr->user)
           {
+#ifdef HIDE_SERVERS_IPS
+	    sendto_realops_flags(FLAGS_DEBUG,
+	    		"Message for %s[%s@%s!%s] from %s",
+			sptr->name, sptr->username, sptr->host,
+			sptr->from->name, get_client_name(cptr, MASK_IP));
+#else			
             sendto_realops_flags(FLAGS_DEBUG,
                              "Message for %s[%s@%s!%s] from %s",
                            sptr->name, sptr->username, sptr->host,
                            sptr->from->name, get_client_name(cptr, TRUE));
+#endif			   
           }
         sendto_serv_butone(NULL,
                            ":%s KILL %s :%s (%s[%s] != %s, Fake Prefix)",
                            me.name, sptr->name, me.name,
                            sptr->name, sptr->from->name,
-                           get_client_name(cptr, TRUE));
+                           cptr->name);
         sptr->flags |= FLAGS_KILLED;
         return exit_client(cptr, sptr, &me, "Fake Prefix");
       }
@@ -616,13 +636,21 @@ static  void    remove_unknown(aClient *cptr,
   if (!strchr(sender, '.'))
     sendto_one(cptr, ":%s KILL %s :%s (%s(?) <- %s)",
                me.name, sender, me.name, sender,
-               get_client_name(cptr, FALSE));
+               cptr->name);
   else
     {
+#ifdef HIDE_SERVERS_IPS
+      sendto_realops_flags(FLAGS_DEBUG,
+              "Unknown prefix (%s) from %s, Squitting %s",
+	      buffer, get_client_name(cptr, MASK_IP), sender);
+      sendto_one(cptr, ":%s SQUIT %s :(Unknown prefix (%s) from %s)",
+      		 me.name, sender, buffer, get_client_name(cptr, MASK_IP));
+#else		 
       sendto_realops_flags(FLAGS_DEBUG,
         "Unknown prefix (%s) from %s, Squitting %s", buffer, get_client_name(cptr, FALSE), sender);
       sendto_one(cptr, ":%s SQUIT %s :(Unknown prefix (%s) from %s)",
                  me.name, sender, buffer, get_client_name(cptr, FALSE));
+#endif		 
     }
 }
 
