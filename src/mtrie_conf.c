@@ -703,53 +703,25 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
                                     unsigned long ip)
 {
   aConfItem *iline_aconf_unsortable = NULL;
-#ifdef USE_IP_I_LINE_FIRST
-  aConfItem *ip_iline_aconf = NULL;
-#endif
   aConfItem *iline_aconf = NULL;
   aConfItem *kline_aconf = NULL;
   char tokenized_host[HOSTLEN + 1];
   int top_of_stack = 0;
 
-  /* I look in the unsortable i line list first, to find
-   * special cases like *@*ppp* first
+  last_found_iline_aconf = NULL;
+
+  /* Look in the unsortable i line list first, to find
+   * special cases like *@*ppp* first.
    */
 
   iline_aconf_unsortable = look_in_unsortable_ilines(host,user);
-
-  /* an E lined I line is always accepted first
-   * there is no point checking for a k-line
-   */
 
   if(iline_aconf_unsortable &&
      (iline_aconf_unsortable->flags & CONF_FLAGS_E_LINED))
     return(iline_aconf_unsortable);
 
-  /* I now look in the mtrie tree, if I found an I line
-   * in the unsortable, an E line is going to over-rule it.
-   * Otherwise, I will find the bulk of the I lines here,
-   * in the mtrie tree.
-   */
-
-  last_found_iline_aconf = NULL;
-
-#ifdef USE_IP_I_LINE_FIRST
-  /* 
-   * See if there is a matching IP CIDR first and use it.
-   */
-
-  if(ip)
-    {
-      ip_iline_aconf = find_matching_ip_i_line(ip);
-    }
-
-  if(!ip_iline_aconf && trie_list)
-    {
-#else
-
   if(trie_list)
     {
-#endif
       stack_pointer = 0;
       tokenize_and_stack(tokenized_host, host);
       top_of_stack = stack_pointer;
@@ -757,47 +729,25 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
       first_kline_trie_list = (DOMAIN_LEVEL *)NULL;
 
       iline_aconf = find_sub_mtrie(trie_list, host, user, CONF_CLIENT);
+    }
 
-      if(!iline_aconf)
-        iline_aconf = last_found_iline_aconf;
-
-      /* If either an E line or K line is found, there is no need
-       * to go any further. If there wasn't an I line found,
-       * the client has no access anyway, so there is no point checking
-       * for a K line.
-       * If the client had an E line in the unsortable list, I've already
-       * returned that aConfItem and I'm not even at this spot in the code.
-       * -Dianora
-       */
-
-      /* If nothing found in the mtrie,
-       * try looking for a top level domain match
-       */
-
-      if(!iline_aconf)
-        iline_aconf= find_wild_card_iline(user);
-
-      /* If its an E line, found from either the mtrie or the top level
-       * domain "*" return it. If its a K line found from the mtrie
-       * return it.
-       */
-
-      if(iline_aconf && ((iline_aconf->status & CONF_KILL) ||
-                         (iline_aconf->flags & CONF_FLAGS_E_LINED)))
-        return(iline_aconf);
+  if(iline_aconf)
+    {
+      if(iline_aconf->flags & CONF_FLAGS_E_LINED)
+	return(iline_aconf);
     }
   else
     {
-      iline_aconf= find_wild_card_iline(user);
-
-      /* If its an E line, found from either the mtrie or the top level
-       * domain "*" return it. If its a K line found from the mtrie
-       * return it.
-       */
-
-      if(iline_aconf && ((iline_aconf->status & CONF_KILL) ||
-                         (iline_aconf->flags & CONF_FLAGS_E_LINED)))
-        return(iline_aconf);
+      if(ip)
+	{
+	  iline_aconf= find_matching_ip_i_line(ip);
+	  
+	  if(iline_aconf)
+	    {
+	      if(iline_aconf->flags & CONF_FLAGS_E_LINED)
+		return(iline_aconf);
+	    }
+	}
     }
 
   /* always default to an I line found in the unsortable list */
@@ -805,20 +755,8 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
   if(iline_aconf_unsortable)
     iline_aconf = iline_aconf_unsortable;
 
-#ifdef USE_IP_I_LINE_FIRST
-  if(ip_iline_aconf)
-    iline_aconf = ip_iline_aconf;
-#else
-  /* 
-   * If there is no match found yet, and there is a legal IP to look at
-   * see if there is a matching IP CIDR, and use it.
-   */
-
-  if(ip && !iline_aconf)
-    {
-      iline_aconf = find_matching_ip_i_line(ip);
-    }
-#endif
+  if(!iline_aconf)
+    iline_aconf = find_wild_card_iline(user);
 
   /* If there is no I line, there is no point checking for a K line now
    * is there? -Dianora
@@ -826,6 +764,11 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
 
   if(!iline_aconf)
     return((aConfItem *)NULL);
+  else
+    {
+      if(iline_aconf->flags & CONF_FLAGS_E_LINED)
+	return(iline_aconf);
+    }
 
   /* I have an I line, now I have to see if it gets
    * over-ruled by a K line somewhere else in the tree.
@@ -849,21 +792,6 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
 
   if(trie_list)
     {
-#ifdef USE_IP_I_LINE_FIRST
-      if(ip_iline_aconf)
-        {
-          stack_pointer = 0;
-          tokenize_and_stack(tokenized_host, host);
-          stack_pointer = top_of_stack;
-          kline_aconf = find_sub_mtrie(trie_list,host,user,CONF_KILL);
-        }
-      else if(first_kline_trie_list)
-        {
-          stack_pointer = saved_stack_pointer;
-          kline_aconf = find_sub_mtrie(first_kline_trie_list,host,user,
-                                       CONF_KILL);
-        }
-#else
       if(first_kline_trie_list)
         {
           stack_pointer = saved_stack_pointer;
@@ -875,7 +803,6 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
           stack_pointer = top_of_stack;
           kline_aconf = find_sub_mtrie(trie_list,host,user,CONF_KILL);
         }
-#endif
     }
 
   /* I didn't find a kline in the mtrie, I'll try the unsortable list */
@@ -905,8 +832,6 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
  * output       - pointer to aConfItem or NULL
  * side effects -
  */
-
-
 
 static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
                                  const char* host, const char* user,int flags)
@@ -945,7 +870,9 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
       cur_piece = find_host_piece(cur_level,flags,cur_dns_piece,user);
 
       if(!cur_piece)
-        return((aConfItem *)NULL);
+	{
+	  return(last_found_iline_aconf);
+	}
     }
 
   if((cur_piece->flags & CONF_KILL) && (!first_kline_trie_list))

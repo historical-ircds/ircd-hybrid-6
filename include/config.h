@@ -609,12 +609,6 @@
 #define IDLE_TIME 60
 #define OPER_IDLE
 
-/* If defined USE_IP_I_LINE_FIRST will search IP I lines first
- * and use that in preference over the mtrie. (hi jimmie)
- * -Dianora
- */
-#undef USE_IP_I_LINE_FIRST
-
 /* SEND_FAKE_KILL_TO_CLIENT - make the client think it's being /KILL'ed
  * 
  * This was originally intended to prevent clients from reconnecting to the
