@@ -20,6 +20,8 @@
  *
  */
 
+/* jive replies originally from mr_bill - mrbill@mrbill.net (Bill Bradford) */
+
 #ifdef CUSTOM_ERR
 static	char *	replies[] = {
 /* 000 */	(char *)NULL,
