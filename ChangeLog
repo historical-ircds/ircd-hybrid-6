@@ -1,3 +1,7 @@
+*** 20011203_7 by androsyn
+that should be adns.c not adns.o
+
+
 *** 20011203_6 by androsyn
 Fix some macro clashes
 
