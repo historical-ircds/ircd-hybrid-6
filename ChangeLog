@@ -3,7 +3,7 @@ lusky       2002/04/15 18:38:25 EDT	(20020415_0)
   Modified files:
     src                  s_serv.c 
   Log:
-  - fix a leak in hidden ips
+  - fix a leak in hidden ips (patch from ohm)
   
   Submitted by:   bill
   Reviewed by:    fl_
