@@ -46,9 +46,11 @@
 #define NEWLINE "\r\n"
 
 static  char    sendbuf[2048];
+static  char    temp_sendbuf[2048];
 static  int     send_message (aClient *, char *, int);
 
 static  void vsendto_prefix_one(register aClient *, register aClient *, const char *, va_list);
+static  void vsendto_one(aClient *, const char *, va_list);
 static  void vsendto_one(aClient *, const char *, va_list);
 static  void vsendto_realops(const char *, va_list);
 
@@ -498,6 +500,83 @@ vsendto_one(aClient *to, const char *pattern, va_list args)
 
         (void)send_message(to, sendbuf, len);
 } /* vsendto_one() */
+
+/*
+ * vsendto_one_prefix()
+ * Backend for sendto_one_prefix() - send string with variable
+ * arguments to client 'to'
+ * -wnder
+*/
+
+static void
+vsendto_one_prefix(aClient *to, const char *prefix,
+                   const char *pattern, va_list args)
+
+{
+  int len; /* used for the length of the current message */
+  
+  if (to->from)
+    to = to->from;
+  
+  if (to->fd < 0)
+    {
+      Debug((DEBUG_ERROR,
+             "Local socket %s with negative fd... AARGH!",
+             to->name));
+    }
+  else if (IsMe(to))
+    {
+      sendto_ops("Trying to send [%s] to myself!", sendbuf);
+      return;
+    }
+
+  vsprintf_irc(temp_sendbuf, pattern+4, args );
+  len = ircsprintf(sendbuf, ":%s %s", prefix , temp_sendbuf );
+
+  /*
+   * from rfc1459
+   *
+   * IRC messages are always lines of characters terminated with a CR-LF
+   * (Carriage Return - Line Feed) pair, and these messages shall not
+   * exceed 512 characters in length, counting all characters including
+   * the trailing CR-LF. Thus, there are 510 characters maximum allowed
+   * for the command and its parameters.  There is no provision for
+   * continuation message lines.  See section 7 for more details about
+   * current implementations.
+   */
+
+  /*
+   * We have to get a \r\n\0 onto sendbuf[] somehow to satisfy
+   * the rfc. We must assume sendbuf[] is defined to be 513
+   * bytes - a maximum of 510 characters, the CR-LF pair, and
+   * a trailing \0, as stated in the rfc. Now, if len is greater
+   * than the third-to-last slot in the buffer, an overflow will
+   * occur if we try to add three more bytes, if it has not
+   * already occured. In that case, simply set the last three
+   * bytes of the buffer to \r\n\0. Otherwise, we're ok. My goal
+   * is to get some sort of vsnprintf() function operational
+   * for this routine, so we never again have a possibility
+   * of an overflow.
+   * -wnder
+   */
+        if (len > 510)
+        {
+                sendbuf[510] = '\r';
+                sendbuf[511] = '\n';
+                sendbuf[512] = '\0';
+                len = 512;
+        }
+        else
+        {
+                sendbuf[len++] = '\r';
+                sendbuf[len++] = '\n';
+                sendbuf[len] = '\0';
+        }
+
+        Debug((DEBUG_SEND,"Sending [%s] to %s",sendbuf,to->name));
+
+        (void)send_message(to, sendbuf, len);
+} /* vsendto_one_prefix() */
 
 void
 sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr, 
@@ -1241,20 +1320,8 @@ vsendto_prefix_one(register aClient *to, register aClient *from,
       par = sender;
     } /* if (user) */
 
-  /*
-   * Assume pattern is of the form: ":%s COMMAND ...",
-   * so jump past the ":%s " after we insert our new
-   * prefix
-   */
-  sprintf(temp, ":%s %s", par, &pattern[4]);
+  vsendto_one_prefix(to, par, pattern, args );
 
-  /*
-   * temp[] is now a modified version of pattern - pattern
-   * used to be: ":%s COMMAND ..."
-   * temp is now: ":nick!user@host COMMAND ..."
-   */
-
-  vsendto_one(to, temp, args);
 } /* vsendto_prefix_one() */
 
 /*
