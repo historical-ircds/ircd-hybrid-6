@@ -3750,7 +3750,7 @@ int	m_umode(aClient *cptr,
 
   if ((sptr->flags & FLAGS_NCHANGE) && !IsSetOperN(sptr))
     {
-      sendto_one(sptr,":%s NOTICE %s :*** You need oper and T flag for +n",
+      sendto_one(sptr,":%s NOTICE %s :*** You need oper and N flag for +n",
 		 me.name,parv[0]);
       sptr->flags &= ~FLAGS_NCHANGE; /* only tcm's really need this */
     }

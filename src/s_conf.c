@@ -2911,9 +2911,9 @@ static void clear_dlines()
  * inputs	- pointer to aConfItem 
  *		with following setup
  *
- *		- host ip banned as string
- *		- reason for ban
- *	
+ *		- host ip as string
+ *		- reason
+ *
  * output	- none
  * side effects	- none
 */

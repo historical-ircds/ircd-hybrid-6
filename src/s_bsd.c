@@ -1340,8 +1340,8 @@ aClient	*add_connection(aClient *cptr, int fd)
 	  return NULL;
 	}
 #ifdef SHOW_HEADERS
-      send(fd, REPORT_DO_DNS, R_do_dns, 0);
-      /*      sendheader(acptr, REPORT_DO_DNS, R_do_dns); */
+      /*      send(fd, REPORT_DO_DNS, R_do_dns, 0); */
+      sendheader(acptr, REPORT_DO_DNS, R_do_dns);
 #endif
       lin.flags = ASYNC_CLIENT;
       lin.value.cptr = acptr;
@@ -1353,8 +1353,8 @@ aClient	*add_connection(aClient *cptr, int fd)
 #ifdef SHOW_HEADERS
       else
 	{
-	  /*	  sendheader(acptr, REPORT_FIN_DNSC, R_fin_dnsc); */
-	  send(fd, REPORT_FIN_DNSC, R_fin_dnsc, 0);
+	  sendheader(acptr, REPORT_FIN_DNSC, R_fin_dnsc);
+	  /* send(fd, REPORT_FIN_DNSC, R_fin_dnsc, 0); */
 	}
 #endif
       nextdnscheck = 1;

@@ -236,7 +236,7 @@ time_t	timeout_query_list(time_t now)
 	      {
 	      case ASYNC_CLIENT :
 #ifdef SHOW_HEADERS
-		send(cptr->fd, REPORT_FAIL_DNS, R_fail_dns, 0);
+		sendheader(cptr, REPORT_FAIL_DNS, R_fail_dns);
 #endif
 		ClearDNS(cptr);
 		if (!DoingAuth(cptr))
