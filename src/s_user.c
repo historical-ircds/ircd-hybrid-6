@@ -58,7 +58,6 @@ static char *rcs_version="$Id$";
 static int do_user (char *, aClient *, aClient*, char *, char *, char *,
                      char *);
 
-int    botwarn (char *, char *, char *, char *);
 static int valid_hostname( anUser *);
 static int valid_username( anUser *);
 static void report_and_set_user_flags( aClient *, aConfItem * );
@@ -104,7 +103,11 @@ static int user_modes[]		= { FLAGS_OPER, 'o',
 				0, 0 };
 
 /* internally defined functions */
-int botreject(char *);
+#ifdef BOTCHECK
+static int botreject(char *, aClient *, char *);
+static int rejecting_bot(aClient *, int, char **);
+#endif
+
 unsigned long my_rand(void);	/* provided by orabidoo */
 
 /* externally defined functions */
@@ -439,9 +442,7 @@ static	int	register_user(aClient *cptr,
 #ifdef BOTCHECK
   int	isbot;
   char	bottemp[HOSTLEN + 1];
-#endif
-#ifdef EXTRA_BOT_NOTICES
-  char	botgecos[127];
+  char  *type_of_bot;
 #endif
 #ifdef ANTI_SPAMBOT
   char  spamchar = '\0';
@@ -677,11 +678,7 @@ static	int	register_user(aClient *cptr,
 #endif	/* GLINES */
 
 #ifdef BOTCHECK
-      if (IsBlined(cptr))
-	isbot = botwarn(bottemp, sptr->name, 
-			sptr->user->username, sptr->sockhost);
-      else
-	isbot = botreject(bottemp);
+      isbot = botreject(bottemp,cptr,nick);
 #endif
 
       /* Limit clients */
@@ -720,40 +717,21 @@ static	int	register_user(aClient *cptr,
 #endif
 
 #ifdef BOTCHECK
-  /* Check bot type... */
-  switch (isbot) {
-  case 0:       break;  /* it's ok */
-  case 1:       /* eggdrop */
-    sendto_realops_lev(REJ_LEV,"Rejecting eggdrop: %s",
-		       get_client_name(sptr,FALSE));
-    ircstp->is_ref++;
-    return exit_client(cptr, sptr, sptr, "Eggdrop bot detected, rejected.  If you are using a VMS client, please ftp the latest version from ubvmsa.cc.buffalo.edu:[.maslib.utilities.irc] to avoid this problem.");
-    break;
-  case 2:       /* vlad/com bot */
-    sendto_realops_lev(REJ_LEV,"Rejecting vlad/com/joh bot: %s",
-		       get_client_name(sptr,FALSE));
-    ircstp->is_ref++;
-    return exit_client(cptr, sptr, sptr, "Vlad/Com/joh bot detected, rejected.");
-    break;
-  case 3:	/* SpamBot */
-    sendto_realops_lev(REJ_LEV,"Rejecting Spambot: %s",
-		       get_client_name(sptr,FALSE));
-    ircstp->is_ref++;
-    return exit_client(cptr, sptr, sptr, "Spambot detected, rejected.");
-    break;
-  case 4:       /* annoy/ojnkbot */
-    sendto_realops_lev(REJ_LEV,"Rejecting annoy/ojnkbot: %s",
-		       get_client_name(sptr,FALSE));
-    ircstp->is_ref++;
-    return exit_client(cptr, sptr, sptr, "Annoy/OJNKbot detected, rejected.");
-    break;
-  default:      /* huh !? */
-    sendto_realops_lev(REJ_LEV,"Rejecting bot: %s",
-		       get_client_name(sptr,FALSE));
-    ircstp->is_ref++;
-    return exit_client(cptr, sptr, sptr, "Bot detected, rejected.");
-    break;
-  }
+  if(rejecting_bot(sptr,isbot,&type_of_bot))
+    {
+      if(IsBlined(sptr))
+	{
+	  sendto_realops_lev(CCONN_LEV, "Possible %s: %s (%s@%s) [B-lined]",
+			     type_of_bot, nick, user, user->host);
+	}
+      else
+	{
+	  sendto_realops_lev(REJ_LEV, "Rejecting %s: %s",
+			     type_of_bot, get_client_name(sptr,FALSE));
+	  ircstp->is_ref++;
+	  return exit_client(cptr, sptr, sptr, type_of_bot );
+	}
+    }
 #endif
 /* End of botcheck */
 
@@ -913,27 +891,6 @@ static	int	register_user(aClient *cptr,
 #endif
 
 
-#if defined(EXTRA_BOT_NOTICES) && defined(BOT_GCOS_WARN)
-      sprintf(botgecos, "/msg %s hello", nick);
-      if ((strcasecmp(sptr->info, botgecos)==0)
-	  || (match("/msg * hello", sptr->info)))
-	{
-	  sendto_realops_lev(REJ_LEV,
-			     "EggDrop signon alarm activated: %s [%s@%s] : [gecos: %s]",
-			     nick, sptr->user->username,
-			     sptr->user->host, sptr->info);
-	}
-      
-      sprintf(botgecos, "/msg %s help", nick);
-      if ((strcasecmp(sptr->info, botgecos)==0) ||
-	  (match("/msg * help", sptr->info)))
-	{
-	  sendto_realops_lev(REJ_LEV,
-			     "Generic bot signon alarm activated: %s [%s@%s] : [gecos: %s]",
-			     nick, sptr->user->username,
-			     sptr->user->host, sptr->info);
-	}
-#endif /* EXTRA_BOT_NOTICES && BOT_GCOS_WARN */
     }
   else if (IsServer(cptr))
     {
@@ -1098,6 +1055,8 @@ static int valid_username( anUser *user )
     {
       return ( NO );
     }
+
+  return ( YES );
 }
 
 /* report_and_set_user_flags
@@ -4044,13 +4003,17 @@ void	send_umode_out(aClient *cptr,
 }
 
 
+#ifdef BOTCHECK
 /**
  ** botreject(host)
  **   Reject a bot based on a fake hostname...
  **           -Taner
  **/
-int botreject(char *host)
+static int botreject(char *host,aClient *sptr,char *nick)
 {
+#ifdef EXTRA_BOT_NOTICES
+  char	botgecos[127];
+#endif
 
 /*
  * Eggdrop Bots:	"USER foo 1 1 :foo"
@@ -4058,49 +4021,66 @@ int botreject(char *host)
  * Annoy/OJNKbots:	"user foo . . :foo"   (disabled)
  * Spambots that are based on OJNK: "user foo x x :foo"
  */
-#undef CHECK_FOR_ANNOYOJNK
   if (!strcmp(host,"1")) return 1;
   if (!strcmp(host,"null")) return 2;
   if (!strcmp(host, "x")) return 3;
-#ifdef CHECK_FOR_ANNOYOJNK
-  if (!strcmp(host,".")) return 4;
-#endif
+
+#if defined(EXTRA_BOT_NOTICES) && defined(BOT_GCOS_WARN)
+  ircsprintf(botgecos, "/msg %s hello", nick);
+  if ((strcasecmp(sptr->info, botgecos)==0)
+      || (match("/msg * hello", sptr->info)))
+    {
+      return ( 1 );
+    }
+      
+  ircsprintf(botgecos, "/msg %s help", nick);
+  if ((strcasecmp(sptr->info, botgecos)==0) ||
+      (match("/msg * help", sptr->info)))
+    {
+      return ( 1 );
+    }
+#endif /* EXTRA_BOT_NOTICES && BOT_GCOS_WARN */
   return 0;
 }
 
-/**
- ** botwarn(host, nick, user, realhost)
- **     Warn that a bot MAY be connecting (added by ThemBones)
- **/
-int
-botwarn(char *host,
-	char *nick,
-	char *user,
-	char *realhost)
+static int rejecting_bot(aClient *sptr, int isbot,char **type_of_bot)
 {
-/*
- * Eggdrop Bots:      "USER foo 1 1 :foo"
- * Vlad, Com, joh Bots:       "USER foo null null :foo"
- * Annoy/OJNKbots:    "user foo . . :foo"   (disabled)
- */
-#undef CHECK_FOR_ANNOYOJNK
-  if (!strcmp(host,"1"))
-    sendto_realops_lev(CCONN_LEV,"Possible Eggdrop: %s (%s@%s) [B-lined]",
-		       nick, user, realhost);
-  if (!strcmp(host,"null"))
-    sendto_realops_lev(CCONN_LEV,"Possible ComBot: %s (%s@%s) [B-lined]",
-		       nick, user, realhost);
-  if (!strcmp(host,"x"))
-    sendto_realops_lev(CCONN_LEV,"Possible SpamBot: %s (%s@%s) [B-lined]",
-		       nick, user, realhost);
-#ifdef CHECK_FOR_ANNOYOJNK
-  if (!strcmp(host,"."))
-    sendto_realops_lev(CCONN_LEV,"Possible AnnoyBot: %s (%s@%s) [B-lined]",
-		       nick, user, realhost);
-#endif
+  /* Check bot type... */
+  switch (isbot)
+    {
+    case 0:       break;  /* it's ok */
+      return ( NO );
+      break;
 
-  return 0;
+    case 1:       /* eggdrop */
+      *type_of_bot = "eggdrop";
+      return ( YES );
+      break;
+
+    case 2:       /* vlad/com bot */
+      *type_of_bot = "vlad/com/joh bot";
+      return ( YES );
+      break;
+
+    case 3:	/* SpamBot */
+      *type_of_bot = "Spambot";
+      return ( YES );
+      break;
+
+    case 4:       /* annoy/ojnkbot */
+      *type_of_bot = "annoy/ojnkbot";
+      return ( YES );
+      break;
+
+    default:      /* huh !? */
+      *type_of_bot = "bot";
+      return ( YES );
+      break;
+    }
+
+  return ( NO );
 }
+#endif
 
 /* Shadowfax's FLUD code */
 
