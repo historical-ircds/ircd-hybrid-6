@@ -1,3 +1,20 @@
+lusky       2001/12/29 22:25:50 EST	(20011230_0)
+
+  Modified files:
+    src                  messages.tab messages_cust.tab parse.c 
+  Log:
+  - fixed handling of messages with too many parms--it was overwriting
+    para[0] with a null.
+  - changed 216 numeric to send a : before the comment, otherwise a :
+    would get inserted before para[15] wherever that happened to be.
+  
+  Revision  Changes    Path
+  1.24      +1 -1      ircd-hybrid-6/src/messages.tab
+  1.23      +1 -1      ircd-hybrid-6/src/messages_cust.tab
+  1.47      +2 -2      ircd-hybrid-6/src/parse.c
+
+
+
 lusky       2001/12/22 19:06:16 EST	(20011223_0)
 
   Modified files:
