@@ -61,6 +61,7 @@ static int do_user (char *, aClient *, aClient*, char *, char *, char *,
 static int valid_hostname( anUser *);
 static int valid_username( anUser *);
 static void report_and_set_user_flags( aClient *, aConfItem * );
+static int tell_user_off(aClient *,char **);
 
 extern char motd_last_changed_date[];
 extern int send_motd(aClient *,aClient *,int, char **,aMessageFile *);
@@ -519,55 +520,13 @@ static	int	register_user(aClient *cptr,
 		else
 		  (void)strncpy(user->username, username, USERLEN);
 	      }
-	    
-	    /* Ok... if using REJECT_HOLD, I'm not going to dump
-	     * the client immediately, but just mark the client for exit
-	     * at some future time, .. this marking also disables reads/
-	     * writes from the client. i.e. the client is "hanging" onto
-	     * an fd without actually being able to do anything with it
-	     * I still send the usual messages about the k line, but its
-	     * not exited immediately.
-	     * - Dianora
-	     */
-	    
-	    reason = (reason) ? reason : "K-lined";
-#ifdef REJECT_HOLD
-	    if( (reject_held_fds != REJECT_HELD_MAX ) )
-	      {
-		SetRejectHold(cptr);
-		reject_held_fds++;
-#ifdef KLINE_WITH_REASON
-		if(( p = strchr(reason, '|')) )
-		  *p = '\0';
 
-		sendto_one(sptr, ":%s NOTICE %s :*** K-lined for %s",
-			   me.name,cptr->name,reason);
-	    
-		if(p)
-		  *p = '|';
-#else
-		sendto_one(sptr, ":%s NOTICE %s :*** K-lined",
-			   me.name,cptr->name);
-#endif
-		return(0);
-	      }
-#else
-	    ircstp->is_ref++;
-
-#ifdef KLINE_WITH_REASON
-	    if( (p = strchr(reason, '|')) )
+	    if( tell_user_off( sptr, &reason ))
 	      {
-		*p = '\0';
-		strncpyzt(safe_reason,reason,MAX_REASON); /* ick */
-		*p = '|';
-		return exit_client(cptr, sptr, &me, safe_reason);
+		ircstp->is_ref++;
+		return exit_client(cptr, sptr, &me,
+				   "Banned" );
 	      }
-	    else
-	      return exit_client(cptr, sptr, &me, reason);
-#else
-	    return exit_client(cptr, sptr, &me, "K-lined");
-#endif
-#endif
 	    break;
 	  }
 	default:
@@ -634,52 +593,6 @@ static	int	register_user(aClient *cptr,
 
       /* report if user has &^>= etc. and set flags as needed in sptr */
       report_and_set_user_flags(sptr, aconf);
-
-#ifdef GLINES
-      if ( (aconf=find_gkill(sptr)) )
-	{
-	  char *reason;
-	  reason = aconf->passwd ? aconf->passwd : "G-lined";
-
-	  /* Ok...read note about REJECT_HOLD above -Dianora
-	   */
-
-#ifdef REJECT_HOLD
-	  SetRejectHold(cptr);
-#ifdef KLINE_WITH_REASON
-
-	  if( (p = strchr(reason, '|')) )
-	    *p = '\0';
-
-	  sendto_one(sptr, ":%s NOTICE %s :*** G-lined for %s",
-		     me.name,cptr->name,reason);
-
-	  if(p)
-	    *p = '|';
-#else
-	  sendto_one(sptr, ":%s NOTICE %s :*** G-lined",
-		     me.name,cptr->name);
-#endif
-	  return(0);
-#else
-	  ircstp->is_ref++;
-
-#ifdef KLINE_WITH_REASON
-	  if( (p = strchr(reason, '|')) )
-	    {
-	      *p = '\0';
-	      strncpyzt(safe_reason,reason,MAX_REASON); /* ick */
-	      *p = '|';
-	      return exit_client(cptr, sptr, &me, safe_reason);
-	    }
-	  else
-	    return exit_client(cptr, sptr, &me, reason);
-#else
-	  return exit_client(cptr, sptr, &me, "G-lined");
-#endif
-#endif
-	}
-#endif	/* GLINES */
 
 #ifdef BOTCHECK
       isbot = botreject(bottemp,cptr,nick);
@@ -1057,6 +970,57 @@ static int valid_username( anUser *user )
     {
       return ( NO );
     }
+
+  return ( YES );
+}
+
+/* 
+ * tell_user_off
+ *
+ */
+
+static int tell_user_off(aClient *cptr, char **preason )
+{
+  char *p;
+
+  /* Ok... if using REJECT_HOLD, I'm not going to dump
+   * the client immediately, but just mark the client for exit
+   * at some future time, .. this marking also disables reads/
+   * writes from the client. i.e. the client is "hanging" onto
+   * an fd without actually being able to do anything with it
+   * I still send the usual messages about the k line, but its
+   * not exited immediately.
+   * - Dianora
+   */
+	    
+#ifdef REJECT_HOLD
+  if( (reject_held_fds != REJECT_HELD_MAX ) )
+    {
+      SetRejectHold(cptr);
+      reject_held_fds++;
+#endif
+
+#ifdef KLINE_WITH_REASON
+      if(*preason)
+	{
+	  if(( p = strchr(*preason, '|')) )
+	    *p = '\0';
+
+	  sendto_one(cptr, ":%s NOTICE %s :*** Banned: %s",
+		     me.name,cptr->name,*preason);
+	    
+	  if(p)
+	    *p = '|';
+	}
+      else
+#else
+	sendto_one(cptr, ":%s NOTICE %s :*** Banned: No Reason",
+		   me.name,cptr->name);
+#endif
+#ifdef REJECT_HOLD
+      return( NO );
+    }
+#endif
 
   return ( YES );
 }

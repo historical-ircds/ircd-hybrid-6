@@ -178,8 +178,9 @@ int	attach_Iline(aClient *cptr,
 		     char **preason)
 {
   aConfItem *aconf;
+  aConfItem *gkill_conf;
   aConfItem *tkline_conf;
-   char *hname;
+  char *hname;
   char	host[HOSTLEN+3];
   char	fullname[HOSTLEN+1];
   char	non_ident[USERLEN+1];
@@ -201,7 +202,6 @@ int	attach_Iline(aClient *cptr,
 
       (void)strncat(host, fullname,
 		    sizeof(host) - strlen(host));
-      /*      (void)strncpy(user, cptr->username,sizeof(user)-1); */
     }
 
   if(*host == '\0')
@@ -238,6 +238,16 @@ int	attach_Iline(aClient *cptr,
     {
       if(aconf->status & CONF_CLIENT)
 	{
+#ifdef GLINES
+	  if ( (gkill_conf=find_gkill(cptr)) )
+	    {
+	      *preason = gkill_conf->passwd;
+	      sendto_one(cptr, ":%s NOTICE %s :*** G-lined",
+			   me.name,cptr->name);
+	      return ( -5 );
+	    }
+#endif	/* GLINES */
+
 	  if(IsConfDoIdentd(aconf))
 	    SetDoId(cptr);
 
