@@ -1,3 +1,7 @@
+*** 19991011_1 by lusky
+cptr->fd is <0 in some cases when its being used in send.c (db)
+
+
 *** 19991010_1 by lusky
 fixed bogus strncpy in s_conf.c report by Q (th)
 
