@@ -1,3 +1,7 @@
+*** 20010810_4 by leeh
+- if a channel is unjuped and is empty, destroy it
+
+
 *** 20010810_3 by leeh
 - cleanup of serveropts, as per dracus' patch
 
