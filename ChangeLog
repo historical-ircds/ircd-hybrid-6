@@ -1,3 +1,16 @@
+db          2001/12/07 21:27:57 EST	(20011208_2)
+
+  Modified files:
+    src                  channel.c mtrie_conf.c 
+  Log:
+  - removed another unused variable
+  
+  Revision  Changes    Path
+  1.223     +7 -7      ircd-hybrid-6/src/channel.c
+  1.84      +2 -2      ircd-hybrid-6/src/mtrie_conf.c
+
+
+
 db          2001/12/07 21:13:20 EST	(20011208_1)
 
   Modified files:
