@@ -12,7 +12,7 @@ fixklines_OBJECT = fixklines.o
 
 all_OBJECTS = $(viconf_OBJECTS) $(mkpasswd_OBJECTS) ${fixklines_OBJECT}
 
-all: viconf chkconf mkpasswd fixklines
+all: viconf mkpasswd fixklines
 
 build: all
 
