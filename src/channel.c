@@ -623,8 +623,7 @@ static	void	channel_modes(aClient *cptr,
   if (chptr->mode.limit)
     {
       *mbuf++ = 'l';
-	if (!(chptr->mode.mode & MODE_SECRET ||
-	   chptr->mode.mode & MODE_PRIVATE))
+      if (IsMember(cptr, chptr) || IsServer(cptr))
 	(void)ircsprintf(pbuf, "%d ", chptr->mode.limit);
     }
   if (*chptr->mode.key)
