@@ -47,6 +47,11 @@ typedef struct aname {
 } aName;
 
 /*
+** initwhowas
+*/
+extern void initwhowas(void);
+
+/*
 ** add_history
 **	Add the currently defined name of the client to history.
 **	usually called before changing to a new name (nick).

@@ -33,6 +33,7 @@
 #include "s_bsd.h"
 #include "send.h"
 #include "hash.h"
+#include "whowas.h"
 
 #include <assert.h>
 #include <fcntl.h>
