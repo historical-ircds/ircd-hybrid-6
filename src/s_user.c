@@ -1170,7 +1170,7 @@ static int nickkilldone(aClient *cptr, aClient *sptr, int parc,
           m = &parv[4][1];
           while (*m)
             {
-              flag = user_modes_from_c_to_bitmask[(int)(*m)];
+              flag = user_modes_from_c_to_bitmask[(int)(*m & 0xFF)];
               if( flag & FLAGS_INVISIBLE )
                 {
                   Count.invisi++;
@@ -1967,7 +1967,7 @@ int user_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
         case '\t' :
           break;
         default :
-          if( (flag = user_modes_from_c_to_bitmask[(int)(*m)]))
+          if( (flag = user_modes_from_c_to_bitmask[(int)(*m & 0xFF)]))
             {
               if (what == MODE_ADD)
                 sptr->umodes |= flag;
