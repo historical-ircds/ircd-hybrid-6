@@ -102,6 +102,7 @@ struct Server
   struct ConfItem* nline;       /* N-line pointer for this server */
   struct Client*   servers;     /* Servers on this server */
   struct Client*   users;       /* Users on this server */
+  int		   tsversion;   /* ts version sent in SVINFO */
 };
 
 struct Client
@@ -292,8 +293,8 @@ struct Client
 /*
  * ts stuff
  */
-#define TS_CURRENT      3       /* current TS protocol version */
-#define TS_MIN          1       /* minimum supported TS protocol version */
+#define TS_CURRENT      4       /* current TS protocol version */
+#define TS_MIN          3       /* minimum supported TS protocol version */
 #define TS_DOESTS       0x20000000
 #define DoesTS(x)       ((x)->tsinfo == TS_DOESTS)
 

@@ -3679,22 +3679,31 @@ int     m_sjoin(struct Client *cptr,
   else if (newts == oldts)
     tstosend = oldts;
   else if (newts < oldts)
+  {
+    if(sptr->serv->tsversion > 3)
     {
-#ifdef NO_HACK_OPS
       keep_our_modes = NO;
       chptr->channelts = tstosend = newts;
-#else
+    }
+    else
+    {
       if (doesop)
         keep_our_modes = NO;
       if (haveops && !doesop)
           tstosend = oldts;
       else
         chptr->channelts = tstosend = newts;
-#endif
     }
+  }
   else
+  {
+    if(sptr->serv->tsversion > 3)
     {
-#ifndef NO_HACK_OPS    
+      keep_new_modes = NO;
+      tstosend = oldts;
+    }
+    else
+    {
       if (haveops)
         keep_new_modes = NO;
       if (doesop && !haveops)
@@ -3703,11 +3712,8 @@ int     m_sjoin(struct Client *cptr,
         }
       else
         tstosend = oldts;
-#else
-      keep_new_modes = NO;
-      tstosend = oldts;
-#endif      
     }
+  }
 
   if (!keep_new_modes)
     mode = *oldmode;

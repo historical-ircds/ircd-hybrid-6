@@ -127,6 +127,8 @@ int m_svinfo(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       return exit_client(sptr, sptr, sptr, "Incompatible TS version");
     }
 
+  sptr->serv->tsversion = atoi(parv[1]);
+  
   /*
    * since we're here, might as well set CurrentTime while we're at it
    */
