@@ -327,6 +327,10 @@ time_t check_pings(time_t currenttime)
 
                   dying_clients[die_index] = cptr;
 /* Wintrhawk */
+#if defined(KLINE_WITH_CONNECTION_CLOSED) && defined(KLINE_WITH_REASON)
+                  dying_clients_reason[die_index++] = "Connection closed";
+		  reason = aconf->passwd ? aconf->passwd :"D-lined";
+#else
 #ifdef KLINE_WITH_CONNECTION_CLOSED
                   /*
                    * Use a generic non-descript message here on 
@@ -334,14 +338,18 @@ time_t check_pings(time_t currenttime)
                    * client disconnect, from harassing the IRCops.
                    */
                   reason = "Connection closed";
+		  dying_clients_reason[die_index++] = reason;
 #else
 #ifdef KLINE_WITH_REASON
                   reason = aconf->passwd ? aconf->passwd : "D-lined";
+		  dying_clients_reason[die_index++] = reason;
 #else
                   reason = "D-lined";
+		  dying_clients_reason[die_index++] = reason;
 #endif /* KLINE_WITH_REASON */
 #endif /* KLINE_WITH_CONNECTION_CLOSED */
-                  dying_clients_reason[die_index++] = reason;
+#endif /* KLINE_WITH_CONNECTION_CLOSED && KLINE_WITH_REASON */
+
                   dying_clients[die_index] = (struct Client *)NULL;
                   if(IsPerson(cptr))
                     {
@@ -371,6 +379,10 @@ time_t check_pings(time_t currenttime)
 
                       dying_clients[die_index] = cptr;
 /* Wintrhawk */
+#if defined(KLINE_WITH_CONNECTION_CLOSED) && defined(KLINE_WITH_REASON)
+                     dying_clients_reason[die_index++] = "Connection closed";
+		     reason = "Connection closed";
+#else
 #ifdef KLINE_WITH_CONNECTION_CLOSED
                       /*
                        * We use a generic non-descript message here on 
@@ -378,15 +390,18 @@ time_t check_pings(time_t currenttime)
                        * client, disconnect from harassing the IRCops.
                        */
                       reason = "Connection closed";
+		      dying_clients_reason[die_index++] = reason;
 #else
 #ifdef KLINE_WITH_REASON
                       reason = aconf->passwd ? aconf->passwd : "G-lined";
+		      dying_clients_reason[die_index++] = reason;
 #else
                       reason = "G-lined";
+		      dying_clients_reason[die_index++] = reason;
 #endif /* KLINE_WITH_REASON */
 #endif /* KLINE_WITH_CONNECTION_CLOSED */
+#endif /* KLINE_WITH_CONNECTION_CLOSED && KLINE_WITH_REASON */
 
-                      dying_clients_reason[die_index++] = reason;
                       dying_clients[die_index] = (struct Client *)NULL;
                       sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
                                  me.name, cptr->name, reason);
@@ -410,6 +425,10 @@ time_t check_pings(time_t currenttime)
                       dying_clients[die_index] = cptr;
 
 /* Wintrhawk */
+#if defined(KLINE_WITH_CONNECTION_CLOSED) && defined(KLINE_WITH_REASON)
+                      dying_clients_reason[die_index++] = "Connection closed";
+		      reason = aconf->passwd ? aconf->passwd :"D-lined";
+#else
 #ifdef KLINE_WITH_CONNECTION_CLOSED
                       /*
                        * We use a generic non-descript message here on 
@@ -417,15 +436,18 @@ time_t check_pings(time_t currenttime)
                        * client disconnect from harassing the IRCops
                        */
                       reason = "Connection closed";
+		      dying_clients_reason[die_index++] = reason;
 #else
 #ifdef KLINE_WITH_REASON
                       reason = aconf->passwd ? aconf->passwd : "K-lined";
+		      dying_clients_reason[die_index++] = reason;
 #else
                       reason = "K-lined";
+		      dying_clients_reason[die_index++] = reason;
 #endif /* KLINE_WITH_REASON */
 #endif /* KLINE_WITH_CONNECTION_CLOSED */
+#endif /* KLINE_WITH_CONNECTION_CLOSED && KLINE_WITH_REASON */
 
-                      dying_clients_reason[die_index++] = reason;
                       dying_clients[die_index] = (struct Client *)NULL;
                       sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
                                  me.name, cptr->name, reason);
