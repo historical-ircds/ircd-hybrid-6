@@ -374,6 +374,7 @@ const unsigned int CharAttrs[] = {
 /* ] */      PRINT_C|ALPHA_C|NICK_C|CHAN_C,
 /* ^ */      PRINT_C|ALPHA_C|NICK_C|CHAN_C,
 /* _ */      PRINT_C|NICK_C|CHAN_C,
+/* ` */      PRINT_C|NICK_C|CHAN_C,
 /* a */      PRINT_C|ALPHA_C|NICK_C|CHAN_C,
 /* b */      PRINT_C|ALPHA_C|NICK_C|CHAN_C,
 /* c */      PRINT_C|ALPHA_C|NICK_C|CHAN_C,
