@@ -633,6 +633,7 @@ int server_estab(struct Client *cptr)
   sendto_one(cptr,"SVINFO %d %d 0 :%lu", TS_CURRENT, TS_MIN, CurrentTime);
   
   det_confs_butmask(cptr, CONF_LEAF|CONF_HUB|CONF_NOCONNECT_SERVER);
+  release_client_dns_reply(cptr);
   /*
   ** *WARNING*
   **    In the following code in place of plain server's

@@ -370,7 +370,7 @@ void report_specials(struct Client* sptr, int flags, int numeric)
         sendto_one(sptr, form_str(numeric),
                    me.name,
                    sptr->name,
-                   user,
+                   name,
                    pass);
       }
 }
@@ -2380,7 +2380,7 @@ static void initconf(FBFILE* file, int use_include)
         {
           dontadd = 1;
           MyFree(aconf->user);
-          aconf->user = aconf->host;
+          aconf->name = aconf->host;
           aconf->host = (char *)NULL;
           aconf->next = x_conf;
           x_conf = aconf;
@@ -2389,7 +2389,7 @@ static void initconf(FBFILE* file, int use_include)
         {
           dontadd = 1;
           MyFree(aconf->user);
-          aconf->user = aconf->host;
+          aconf->name = aconf->host;
           aconf->host = (char *)NULL;
           aconf->next = u_conf;
           u_conf = aconf;

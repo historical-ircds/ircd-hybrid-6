@@ -106,6 +106,7 @@ int m_kill(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   char*       user;
   char*       path;
   char*       killer;
+  char*       reason;
   int         chasing = 0;
 
   if (parc < 2 || *parv[1] == '\0')
@@ -208,13 +209,33 @@ int m_kill(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
-  if (IsAnOper(sptr)) /* send it normally */
-    sendto_ops("Received KILL message for %s. From %s Path: %s!%s",
-               acptr->name, parv[0], inpath, path);
+
+  if(BadPtr(parv[2]))
+    {
+      reason = sptr->name;
+    }
   else
-    sendto_ops_flags(FLAGS_SKILL,
-                     "Received KILL message for %s. From %s Path: %s!%s",
-                     acptr->name, parv[0], inpath, path);
+    {
+      reason = strchr(parv[2],' ');
+      if(reason)
+        reason++;
+      else
+        reason = parv[2];
+    }
+
+  if (IsAnOper(sptr)) /* send it normally */
+    {
+      sendto_realops("Received KILL message for %s. From %s!%s@%s Path: %s!%s",
+                 acptr->name, parv[0], sptr->name, sptr->username, sptr->host,
+                 inpath, path);
+      sendto_ops("Received KILL message for %s. From %s!%s@%s:%s",
+                 acptr->name, sptr->name, sptr->username, sptr->host,
+                 parv[0], reason);
+    }
+  else
+    sendto_realops_flags(FLAGS_SKILL,
+                     "Received KILL message for %s. From %s",
+                     acptr->name, parv[0]);
 
 #if defined(USE_SYSLOG) && defined(SYSLOG_KILL)
   if (IsOper(sptr))
@@ -244,8 +265,15 @@ int m_kill(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   ** anyway (as this user don't exist there any more either)
   */
   if (MyConnect(acptr))
+    sendto_prefix_one(acptr, sptr,":%s KILL %s :%s",
+                      parv[0], acptr->name, reason);
+
+  /* XXX old code showed too much */
+  /*
     sendto_prefix_one(acptr, sptr,":%s KILL %s :%s!%s",
                       parv[0], acptr->name, inpath, path);
+    */
+
   /*
   ** Set FLAGS_KILLED. This prevents exit_one_client from sending
   ** the unnecessary QUIT for this. (This flag should never be
