@@ -56,6 +56,7 @@ static char *rcs_version = "$Id$";
 #include "dline_conf.h"
 #include "mtrie_conf.h"
 #include "fdlist.h"
+#include "fileio.h"
 
 extern int rehashed;
 extern aConfItem *temporary_klines;	/* defined in s_conf.c */
@@ -63,7 +64,7 @@ extern int dline_in_progress;	/* defined in ircd.c */
 int bad_tld(char *);
 extern int safe_write(aClient *,char *,char *,int,char *);
 extern char *smalldate(time_t);		/* defined in s_misc.c */
-static int flush_write(aClient *,int,char *,int,char *);
+static int flush_write(aClient *, FBFILE* , char *, char *);
 static int remove_tkline_match(char *,char *);
 
 /*
@@ -83,7 +84,8 @@ static int remove_tkline_match(char *,char *);
 */
 int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
 {
-  int   in, out;
+  FBFILE* in;
+  FBFILE* out;
   int	pairme = NO;
   char	buf[BUFSIZE];
   char  buff[BUFSIZE];	/* matches line definition in s_conf.c */
@@ -100,7 +102,6 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
   char  *p;
   int   nread;
   int   error_on_write = NO;
-  struct stat oldfilestat;
   mode_t oldumask;
 
   ircsprintf(temppath, "%s.tmp", klinefile);
@@ -198,7 +199,7 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
   filename = klinefile;
 #endif			
 
-  if( (in = open(filename, O_RDONLY)) == -1)
+  if( (in = fbopen(filename, "r")) == 0)
     {
       sendto_one(sptr, ":%s NOTICE %s :Cannot open %s",
 	me.name,parv[0],filename);
@@ -207,15 +208,13 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
 #endif
       return 0;
     }
-  if(fstat(in, &oldfilestat) < 0)	/* Save the old file mode */
-    oldfilestat.st_mode = 0644;
 
   oldumask = umask(0);			/* ircd is normally too paranoid */
-  if( (out = open(temppath, O_WRONLY|O_CREAT, oldfilestat.st_mode)) == -1)
+  if( (out = fbopen(temppath, "w")) == 0)
     {
       sendto_one(sptr, ":%s NOTICE %s :Cannot open %s",
         me.name,parv[0],temppath);
-      (void)close(in);
+      fbclose(in);
 #if defined (LOCKFILE) && !defined(SEPARATE_QUOTE_KLINES_BY_DATE)
       (void)unlink(LOCKFILE);
 #endif
@@ -229,10 +228,8 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
 K:bar:No reason (1997/08/30 14.56):foo
 */
 
-  while((nread = dgets(in, buf, sizeof(buf)) ) > 0) 
+  while(fbgets(buf, sizeof(buf), in)) 
     {
-      buf[nread] = '\0';
-
       if((buf[1] == ':') && ((buf[0] == 'k') || (buf[0] == 'K')))
 	{
 	  /* its a K: line */
@@ -240,12 +237,9 @@ K:bar:No reason (1997/08/30 14.56):foo
 	  char *found_user;
 	  char *found_comment;
 
-	  strncpy(buff,buf,BUFSIZE);	/* extra paranoia */
+	  strncpy(buff, buf, BUFSIZE);	/* extra paranoia */
 
 	  p = strchr(buff,'\n');
-	  if(p)
-	    *p = '\0';
-	  p = strchr(buff,'\r');
 	  if(p)
 	    *p = '\0';
 
@@ -258,8 +252,7 @@ K:bar:No reason (1997/08/30 14.56):foo
 	      sendto_one(sptr, ":%s NOTICE %s :Couldn't find host",
 			 me.name, parv[0]);
               if(!error_on_write)
-                error_on_write = flush_write(sptr,
-		  out,buf,strlen(buf),temppath);
+                error_on_write = flush_write(sptr, out, buf, temppath);
 	      continue;		/* This K line is corrupted ignore */
 	    }
 	  *p = '\0';
@@ -274,8 +267,7 @@ K:bar:No reason (1997/08/30 14.56):foo
 	      sendto_one(sptr, ":%s NOTICE %s :Couldn't find comment",
 			 me.name, parv[0]);
               if(!error_on_write)
-                error_on_write = flush_write(sptr,
-		  out,buf,strlen(buf),temppath);
+                error_on_write = flush_write(sptr, out, buf, temppath);
 	      continue;		/* This K line is corrupted ignore */
 	    }
           *p = '\0';
@@ -290,8 +282,7 @@ K:bar:No reason (1997/08/30 14.56):foo
 	  if(strcasecmp(host,found_host) || strcasecmp(user,found_user))
             {
               if(!error_on_write)
-                error_on_write = flush_write(sptr,
-		  out,buf,strlen(buf),temppath);
+                error_on_write = flush_write(sptr, out, buf, temppath);
             }
           else
 	    pairme++;
@@ -303,7 +294,7 @@ K:bar:No reason (1997/08/30 14.56):foo
 	  char *found_user;
 	  char *found_host;
 
-	  strncpy(buff,buf,BUFSIZE);
+	  strncpy(buff, buf, BUFSIZE);
 /*
 #Dianora!db@ts2-11.ottawa.net K'd: foo@bar:No reason
 K:bar:No reason (1997/08/30 14.56):foo
@@ -316,8 +307,7 @@ Then just ignore the line
 	  if(p == (char *)NULL)
 	    {
               if(!error_on_write)
-                error_on_write = flush_write(sptr,
-		  out,buf,strlen(buf),temppath);
+                error_on_write = flush_write(sptr, out, buf, temppath);
 	      continue;
 	    }
 	  *p = '\0';
@@ -329,8 +319,7 @@ Then just ignore the line
 	  if(p == (char *)NULL)
 	    {
               if(!error_on_write)
-                error_on_write = flush_write(sptr,
-		  out,buf,strlen(buf),temppath);
+                error_on_write = flush_write(sptr, out, buf, temppath);
 	      continue;
 	    }
           *p = '\0';
@@ -343,8 +332,7 @@ Then just ignore the line
 	  if(p == (char *)NULL)
 	    {
               if(!error_on_write)
-                error_on_write = flush_write(sptr,
-		  out,buf,strlen(buf),temppath);
+                error_on_write = flush_write(sptr, out, buf, temppath);
 	      continue;
 	    }
 	  *p = '\0';
@@ -354,27 +342,26 @@ Then just ignore the line
 	  if( (strcasecmp(found_host,host)) || (strcasecmp(found_user,user)) )
 	    {
               if(!error_on_write)
-                error_on_write = flush_write(sptr,
-		  out,buf,strlen(buf),temppath);
+                error_on_write = flush_write(sptr, out, buf, temppath);
             }
 	}
       else	/* its the ircd.conf file, and not a K line or comment */
         {
 	  if(!error_on_write)
-            error_on_write = flush_write(sptr,
-              out,buf,strlen(buf),temppath);
+            error_on_write = flush_write(sptr, out, buf, temppath);
         }
     }
 
-  (void)close(in);
+  fbclose(in);
 
 /* The result of the rename should be checked too... oh well */
 /* If there was an error on a write above, then its been reported
  * and I am not going to trash the original kline /conf file
  * -Dianora
  */
-  if( (!error_on_write) && (close(out) >= 0) )
+  if(!error_on_write)
     {
+      fbclose(out);
       (void)rename(temppath, filename);
       rehash(cptr,sptr,0);
     }
@@ -432,19 +419,15 @@ Then just ignore the line
  * -Dianora
  */
 
-static int flush_write(aClient *sptr,
-  int out,char *buf,int ntowrite,char *temppath)
+static int flush_write(aClient *sptr, FBFILE* out, char *buf, char *temppath)
 {
-  int nwritten;
-  int error_on_write = NO;
+  int error_on_write = (fbputs(buf, out) < 0) ? YES : NO;
 
-  nwritten = write(out,buf,ntowrite);
-  if(nwritten != ntowrite)
+  if (error_on_write)
     {
       sendto_one(sptr,":%s NOTICE %s :Unable to write to %s",
         me.name, sptr->name, temppath );
-      error_on_write = YES;
-      (void)close(out);
+      fbclose(out);
       if(temppath != (char *)NULL)
         (void)unlink(temppath);
     }

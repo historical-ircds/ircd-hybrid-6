@@ -46,6 +46,7 @@ static char *rcs_version="$Id$";
 #include "h.h"
 
 #include "mtrie_conf.h"
+#include "s_conf.h"
 
 #ifdef  IDLE_CHECK
 int	idle_time = MIN_IDLETIME;
@@ -904,11 +905,13 @@ int	main(int argc, char *argv[])
   uid_t	uid, euid;
   time_t	delay = 0;
   int fd;
+  FBFILE* file = 0;      /* initconf */
 
   aConfItem *aconf;
 
   client = &me;          /* Pointer to beginning of Client list */
   cold_start = YES;		/* set when server first starts up */
+
 
   if((timeofday = time(NULL)) == -1)
     {
@@ -1238,7 +1241,7 @@ normal user.\n");
 #define SYSLOG_ME     "ircd"
   openlog(SYSLOG_ME, LOG_PID|LOG_NDELAY, LOG_FACILITY);
 #endif
-  if ((fd = openconf(configfile)) == -1)
+  if ((file = openconf(configfile)) == 0)
     {
       Debug((DEBUG_FATAL, "Failed in reading configuration file %s",
 	     configfile));
@@ -1246,7 +1249,7 @@ normal user.\n");
 		   configfile);
       exit(-1);
     }
-  (void)initconf(bootopt,fd,YES);
+  initconf(bootopt, file, YES);
   (void)do_include_conf();
 /* comstuds SEPARATE_QUOTE_KLINES_BY_DATE code */
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
@@ -1257,7 +1260,7 @@ normal user.\n");
     tmptr = localtime(&NOW);
     (void)strftime(timebuffer, 20, "%Y%m%d", tmptr);
     ircsprintf(filename, "%s.%s", klinefile, timebuffer);
-    if ((fd = openconf(filename)) == -1)
+    if ((file = openconf(filename)) == 0)
       {
 	Debug((DEBUG_ERROR,"Failed reading kline file %s",
 	       filename));
@@ -1265,11 +1268,11 @@ normal user.\n");
 		     filename);
       }
     else
-      (void)initconf(0,fd,NO);
+      initconf(0, file, NO);
   }
 #else
 #ifdef KPATH
-  if ((fd = openconf(klinefile)) == -1)
+  if ((file = openconf(klinefile)) == 0)
     {
       Debug((DEBUG_ERROR,"Failed reading kline file %s",
 	     klinefile));
@@ -1277,7 +1280,7 @@ normal user.\n");
 		   klinefile);
     }
   else
-    (void)initconf(0,fd,NO);
+    initconf(0, file, NO);
 #endif
 #endif
   if (bootopt & BOOT_INETD)

@@ -63,6 +63,7 @@ static char *rcs_version = "$Id$";
 #include "dline_conf.h"
 #include "mtrie_conf.h"
 #include "fdlist.h"
+#include "fileio.h"
 
 /* internal variables */
 static	char	buf[BUFSIZE]; 
@@ -4020,7 +4021,7 @@ int read_message_file(char *filename,aMessageFile **ptr)
   register aMessageFile *mptr;
   register aMessageFile	*temp, *last;
   char		buffer[MESSAGELINELEN], *tmp;
-  int		fd;
+  FBFILE* file;
   
   mptr = *ptr;
 
@@ -4034,20 +4035,17 @@ int read_message_file(char *filename,aMessageFile **ptr)
       mptr = temp;
     }
   *ptr = ((aMessageFile *)NULL);
-  fd = open(filename, O_RDONLY);
-  if (fd == -1)
+  if ((file = fbopen(filename, "r")) == 0)
     return(-1);
   last = (aMessageFile *)NULL;
 
-  while (dgets(fd, buffer, MESSAGELINELEN-1) > 0)
+  while (fbgets(buffer, MESSAGELINELEN, file))
     {
       if ((tmp = (char *)strchr(buffer, '\n')))
 	*tmp = '\0';
-      if ((tmp = (char *)strchr(buffer, '\r')))
-	*tmp = '\0';
       temp = (aMessageFile*) MyMalloc(sizeof(aMessageFile));
 
-      strncpyzt(temp->line, buffer,MESSAGELINELEN);
+      strncpyzt(temp->line, buffer, MESSAGELINELEN);
       temp->next = (aMessageFile *)NULL;
       if (!*ptr)
 	*ptr = temp;
@@ -4055,7 +4053,7 @@ int read_message_file(char *filename,aMessageFile **ptr)
 	last->next = temp;
       last = temp;
     }
-  close(fd);
+  fbclose(file);
   return(0);
 }
 

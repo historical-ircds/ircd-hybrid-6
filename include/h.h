@@ -117,8 +117,6 @@ extern  void    add_gline(aConfItem *);		/* defined in s_conf.c */
 extern	int	find_restrict (aClient *);
 extern	int	rehash (aClient *, aClient *, int);
 extern  int	rehash_dump (aClient *,char *);
-extern	int	initconf (int, int,int );
-extern  int	openconf (char *);
 extern  int     lock_kline_file ();
 extern  void    report_error_on_tty(char *);
 

@@ -48,6 +48,7 @@ static char *rcs_version = "$Id$";
 #include "h.h"
 extern int rehashed;
 #include "mtrie_conf.h"
+#include "s_conf.h"
 
 struct sockaddr_in vserv;
 char	specific_virtual_host;
@@ -1402,7 +1403,7 @@ void clear_special_conf(aConfItem **this_conf)
 int	rehash_dump(aClient *sptr,char *parv0)
 {
   register aConfItem *aconf;
-  int out;
+  FBFILE* out;
   char ircd_dump_file[256];
   char result_buf[256];
   char timebuffer[MAX_DATE_STRING];
@@ -1413,7 +1414,7 @@ int	rehash_dump(aClient *sptr,char *parv0)
   (void)sprintf(ircd_dump_file,"%s/ircd.conf.%s",
 		DPATH,timebuffer);
   
-  if ((out = open(ircd_dump_file, O_RDWR|O_APPEND|O_CREAT,0664))==-1)
+  if ((out = fbopen(ircd_dump_file, "a")) == 0)
     {
       sendto_one(sptr, ":%s NOTICE %s :Problem opening %s ",
 		 me.name, parv0, ircd_dump_file);
@@ -1433,37 +1434,37 @@ int	rehash_dump(aClient *sptr,char *parv0)
 	  (void)sprintf(result_buf,"C:%s:%s:%s::%d\n",
 			aconf->host,aconf->passwd,aconf->name,
 			class_ptr->class);
-	  (void)write(out,result_buf,strlen(result_buf));
+	  fbputs(result_buf, out);
 	}
       else if(aconf->status == CONF_NOCONNECT_SERVER)
 	{
 	  (void)sprintf(result_buf,"N:%s:%s:%s::%d\n",
 			aconf->host,aconf->passwd,aconf->name,
 			class_ptr->class);
-	  (void)write(out,result_buf,strlen(result_buf));
+	  fbputs(result_buf, out);
 	}
       else if(aconf->status == CONF_OPERATOR)
 	{
 	  (void)sprintf(result_buf,"O:%s:%s:%s::%d\n",
 			aconf->host,aconf->passwd,aconf->name,
 			class_ptr->class);
-	  (void)write(out,result_buf,strlen(result_buf));
+	  fbputs(result_buf, out);
 	}
       else if(aconf->status == CONF_LOCOP)
 	{
 	  (void)sprintf(result_buf,"o:%s:%s:%s::%d\n",
 			aconf->host,aconf->passwd,aconf->name,
 			class_ptr->class);
-	  (void)write(out,result_buf,strlen(result_buf));
+	  fbputs(result_buf, out);
 	}
       else if(aconf->status == CONF_ADMIN)
 	{
 	  (void)sprintf(result_buf,"A:%s:%s:%s::\n",
 			aconf->host,aconf->passwd,aconf->name);
-	  (void)write(out,result_buf,strlen(result_buf));
+	  fbputs(result_buf, out);
 	}
     }
-  (void)close(out);
+  fbclose(out);
   return 0;
 }
 
@@ -1474,14 +1475,14 @@ int	rehash_dump(aClient *sptr,char *parv0)
  * as a result of an operator issuing this command, else assume it has been
  * called as a result of the server receiving a HUP signal.
  */
-int	rehash(aClient *cptr,aClient *sptr,int sig)
+int rehash(aClient *cptr,aClient *sptr,int sig)
 {
   register aConfItem **tmp = &conf, *tmp2;
   register aClass	*cltmp;
   register aClient	*acptr;
   register	int	i;
   int	ret = 0;
-  int   fd;
+  FBFILE* file = 0;
 
   if (sig == SIGHUP)
     {
@@ -1493,7 +1494,7 @@ int	rehash(aClient *cptr,aClient *sptr,int sig)
 #endif
     }
 
-  if ((fd = openconf(configfile)) == -1)
+  if ((file = openconf(configfile)) == 0)
     {
       sendto_ops("Can't open %s file aborting rehash!",configfile);
       return -1;
@@ -1574,7 +1575,7 @@ int	rehash(aClient *cptr,aClient *sptr,int sig)
   clear_special_conf(&u_conf);
   clear_q_lines();
 
-  (void) initconf(0,fd,YES);
+  initconf(0, file, YES);
   do_include_conf();
 
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
@@ -1586,17 +1587,17 @@ int	rehash(aClient *cptr,aClient *sptr,int sig)
     (void)strftime(timebuffer, 20, "%Y%m%d", tmptr);
     ircsprintf(filenamebuf, "%s.%s", klinefile, timebuffer);
 
-    if ((fd = openconf(filenamebuf)) == -1)
+    if ((file = openconf(filenamebuf)) == 0)
       sendto_ops("Can't open %s file klines could be missing!",filenamebuf);
     else
-      (void)initconf(0,fd,NO);
+      initconf(0, file, NO);
   }
 #else
 #ifdef KLINEFILE
-  if ((fd = openconf(klinefile)) == -1)
+  if ((file = openconf(klinefile)) == 0)
     sendto_ops("Can't open %s file klines could be missing!",klinefile);
   else
-    (void) initconf(0,fd,NO);
+    initconf(0, file, NO);
 #endif
 #endif
   close_listeners();
@@ -1621,13 +1622,12 @@ int	rehash(aClient *cptr,aClient *sptr,int sig)
 /*
  * openconf
  *
- * returns -1 on any error or else the fd opened from which to read the
- * configuration file from.  This may either be the file direct or one end
- * of a pipe from m4.
+ * returns 0 (NULL) on any error or else the fd opened from which to read the
+ * configuration file from.  
  */
-int	openconf(char *filename)
+FBFILE* openconf(char *filename)
 {
-  return open(filename, O_RDONLY);
+  return fbopen(filename, "r");
 }
 extern char *getfield();
 
@@ -1694,11 +1694,13 @@ static char *set_conf_flags(aConfItem *aconf,char *tmp)
 
 #define MAXCONFLINKS 150
 
-int 	initconf(int opt, int fd,int use_include)
+void initconf(int opt, FBFILE* file, int use_include)
 {
-  static	char	quotes[9][2] = {{'b', '\b'}, {'f', '\f'}, {'n', '\n'},
-					{'r', '\r'}, {'t', '\t'}, {'v', '\v'},
-					{'\\', '\\'}, { 0, 0}};
+  static char  quotes[9][2] = {
+    {'b', '\b'}, {'f', '\f'}, {'n', '\n'},
+    {'r', '\r'}, {'t', '\t'}, {'v', '\v'},
+    {'\\', '\\'}, { 0, 0}
+  };
 
   Reg	char	*tmp, *s;
   int	i, dontadd;
@@ -1711,27 +1713,10 @@ int 	initconf(int opt, int fd,int use_include)
   unsigned long ip_mask;
   int sendq = 0;
 
-  (void)dgets(-1, NULL, 0); /* make sure buffer is at empty pos */
-  while ((i = dgets(fd, line, sizeof(line) - 1)) > 0)
+  while (fbgets(line, sizeof(line), file))
     {
-      /*
-       * hey, wait a minute, dgets returns when it finds EOL
-       * returning number of chars read, hence newline should
-       * be at 1 less the number of characters read.
-       *
-       * old code was...
-       *
-       * if ((tmp = (char *)strchr(line, '\n')))
-       *    *tmp = '\0';
-       */
-
-      if(i>0)
-	{
-	  if(line[i-1] == '\n')
-	    line[i-1] = '\0';
-	}
-      else
-	line[i] = '\0';
+      if ((tmp = strchr(line, '\n')))
+        *tmp = '\0';
 
       /* 
        * There was code here to discard up till next
@@ -2385,8 +2370,7 @@ int 	initconf(int opt, int fd,int use_include)
     free_conf(aconf);
   aconf = NULL;
 
-  (void)dgets(-1, NULL, 0); /* make sure buffer is at empty pos */
-  (void)close(fd);
+  fbclose(file);
   check_class();
   nextping = nextconnect = time(NULL);
 
@@ -2398,7 +2382,6 @@ int 	initconf(int opt, int fd,int use_include)
 #endif
       exit(-1);
     }
-  return 0;
 }
 
 /*
@@ -2416,18 +2399,18 @@ int 	initconf(int opt, int fd,int use_include)
 
 void do_include_conf()
 {
-  int fd;
+  FBFILE* file;
   aConfItem *nextinclude;
 
   for( ; include_list; include_list = nextinclude )
     {
       nextinclude = include_list->next;
-      if ((fd = openconf(include_list->name)) == -1)
+      if ((file = openconf(include_list->name)) == 0)
 	sendto_ops("Can't open %s include file",include_list->name);
       else
 	{
 	  sendto_ops("Hashing in %s include file",include_list->name);
-	  initconf(0,fd,NO);
+	  initconf(0, file, NO);
 	}
       free_conf(include_list);
     }
@@ -3564,31 +3547,26 @@ int     m_killcomment(sptr, parv, filename)
 aClient *sptr;
 char    *parv, *filename;
 {
-  int     fd;
+  FBFILE* file;
   char    line[256];
   Reg1    char	*tmp;
   struct  stat	sb;
   struct  tm	*tm;
 
-  fd = open(filename, O_RDONLY);
-  if (fd == -1)
+  if ((file = fbopen(filename, "r")) == NULL)
     {
       sendto_one(sptr, ":%s %d %s :You are not welcome on this server.", me.name, ERR_YOUREBANNEDCREEP, parv);
       return 0;
     }
-  (void)fstat(fd, &sb);
+  (void)fbstat(&sb, file);
   tm = localtime(&sb.st_mtime);
-  (void)dgets(-1, NULL, 0); /* make sure buffer is at empty pos */
-  while (dgets(fd, line, sizeof(line)-1) > 0)
+  while (fbgets(line, sizeof(line), file))
     {
-      if ((tmp = (char *)index(line,'\n')))
-	*tmp = '\0';
-      if ((tmp = (char *)index(line,'\r')))
+      if ((tmp = strchr(line,'\n')))
 	*tmp = '\0';
       sendto_one(sptr, ":%s %d %s :%s.", me.name, ERR_YOUREBANNEDCREEP, parv,line);
     }
-  (void)dgets(-1, NULL, 0); /* make sure buffer is at empty pos */
-  (void)close(fd);
+  fdclose(file);
   return 0;
 }
 #endif /* KILL_COMMENT_IS_FILE */
