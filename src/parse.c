@@ -174,13 +174,13 @@ aClient *find_person(char *name, aClient *cptr)
  *
  * NOTE: parse() should not be called recusively by any other functions!
  */
-int     parse(aClient *cptr, char *buffer, char *bufend)
+int parse(aClient *cptr, char *buffer, char *bufend)
 {
   aClient *from = cptr;
   char  *ch;
   char  *s;
   int   i;
-  char  *numeric;
+  char* numeric = 0;
   int   paramcount;
   struct Message *mptr;
 
