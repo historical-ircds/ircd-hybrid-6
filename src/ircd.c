@@ -142,7 +142,11 @@ struct Client *serv_cptr_list  = NULL;
 
 static size_t      initialVMTop = 0;   /* top of virtual memory at init */
 static const char* logFileName = LPATH;
+#if defined(__CYGWIN__)
+static int         bootDaemon  = 0;
+#else
 static int         bootDaemon  = 1;
+#endif
 
 char**  myargv;
 int     dorehash   = 0;
