@@ -1,3 +1,9 @@
+*** 20001005_3 by lusky
+added CVS Id tags to numerous files
+brought Hybrid-team and version.c.SH
+deleted ChangeLog.old and include/defs.h
+
+
 *** 20001005_2 by bill
 
 Added myself to Hybrid development team
