@@ -1,3 +1,9 @@
+*** 20011008_4 by lusky
+- revved patchlevel to 6.2.1rc1
+- gutted the internal dns cache, BIND does a better job
+- fixed compile error in last commit
+
+
 *** 20011008_3 by db
 - fixed another potential bug.
 
