@@ -146,7 +146,10 @@ Debug((DEBUG_DEBUG,"send_message() msg = %s", msg));
 		   DBufLength(&to->sendQ), get_sendq(to));
       if (IsClient(to))
 	to->flags |= FLAGS_SENDQEX;
-      return dead_link(to, "Max Sendq exceeded");
+	if (IsDoingList(to))
+	      return dead_link(to, "Max Sendq exceeded while doing /list");
+	else
+	      return dead_link(to, "Max Sendq exceeded");
     }
   else
     {

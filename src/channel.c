@@ -3096,6 +3096,7 @@ int	m_list(aClient *cptr,
 
   if (parc < 2 || BadPtr(parv[1]))
     {
+      SetDoingList(sptr);     /* only set if its a full list */
       for (chptr = channel; chptr; chptr = chptr->nextch)
 	{
 	  if (!sptr->user ||
@@ -3107,6 +3108,7 @@ int	m_list(aClient *cptr,
 		     ShowChannel(sptr, chptr)?chptr->topic:"");
 	}
       sendto_one(sptr, rpl_str(RPL_LISTEND), me.name, parv[0]);
+      ClearDoingList(sptr);   /* yupo, its over */
       return 0;
     }
 

@@ -231,6 +231,8 @@ typedef struct	MessageFileItem aMessageFile;
 #define FLAGS2_ZIPFIRST	0x2000	/* start of zip (ignore any CR/LF) */
 #define FLAGS2_CBURST	0x4000	/* connection burst being sent */
 
+#define FLAGS2_DOINGLIST 	0x8000  /* client is doing a list */
+
 /* for sendto_ops_lev */
 #define CCONN_LEV	1
 #define REJ_LEV		2
@@ -312,6 +314,9 @@ typedef struct	MessageFileItem aMessageFile;
  */
 #define IsRestricted(x)		((x)->flags2 & FLAGS2_RESTRICTED)
 #define SetRestricted(x)	((x)->flags2 |= FLAGS2_RESTRICTED)
+#define ClearDoingList(x)        ((x)->flags2 &= ~FLAGS2_DOINGLIST)
+#define SetDoingList(x)         ((x)->flags2 |= FLAGS2_DOINGLIST)
+#define IsDoingList(x)		((x)->flags2 & FLAGS2_DOINGLIST)
 #define IsElined(x)		((x)->flags2 & FLAGS2_E_LINED)
 #define SetElined(x)		((x)->flags2 |= FLAGS2_E_LINED)
 #define IsBlined(x)		((x)->flags2 & FLAGS2_B_LINED)
