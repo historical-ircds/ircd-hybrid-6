@@ -56,7 +56,16 @@ static  char rcsid[] = "@(#)$Id$";
 **	I'm assuming that at best, ratio will be 25%. (tests show that
 **	best ratio is around 40%).
 */
-#define	UNZIP_BUFFER_SIZE	4*ZIP_BUFFER_SIZE
+
+/*
+ * On an hybrid test net, we achieved better than that,
+ * blowing up the unzipbuf! original was 4, and that should
+ * be sufficient for any real net
+ *
+ * -Dianora
+ */
+
+#define	UNZIP_BUFFER_SIZE	8*ZIP_BUFFER_SIZE
 
 /* buffers */
 static	char	unzipbuf[UNZIP_BUFFER_SIZE];
@@ -131,10 +140,20 @@ char *	unzip_packet(aClient *cptr, char *buffer, int *length)
 
   if (cptr->zip->incount + *length > ZIP_BUFFER_SIZE) /* sanity check */
     {
+      sendto_realops("Failed sanity test in unzip_packet cptr->zip->incount %d *length %d", 
+		     cptr->zip->incount,*length);
+
+      /* This one should never occur but if it ever did
+       * this is the logical course of action
+       * -Dianora
+       */
+      *length = -1;
+      return NULL;
     }
+
   /* put everything in zipbuf */
-  bcopy(cptr->zip->inbuf, zipbuf, cptr->zip->incount);
-  bcopy(buffer, zipbuf + cptr->zip->incount, *length);
+  memcpy((void *)zipbuf,(void *)cptr->zip->inbuf, cptr->zip->incount);
+  memcpy((void *)zipbuf + cptr->zip->incount, (void *)buffer, *length );
 
   zin->next_in = zipbuf;
   zin->avail_in = cptr->zip->incount + *length;
@@ -145,10 +164,42 @@ char *	unzip_packet(aClient *cptr, char *buffer, int *length)
     case Z_OK:
       if (zin->avail_in)
 	{
+	  /* There is something suspicious about this code fragment.
+	   * If there is anything left to inflate, then was the output
+	   * buffer filled up? That should be reported, as then there
+	   * is a "stray" bit of uncompressed data that should be 
+	   * kept for next call. That would mean an other buffer
+	   * in the zin struct perhaps or in cptr itself...
+	   * i.e. for the partially left over uncompressed data
+	   * Or, just ensure that the input stream really is only one
+	   * compressed block?
+	   * 
+	   * For now, flag the error, and abort.
+	   * (Thanks gang for the help finding this one)
+	   *
+	   * Actually, the entire code fragment is totally bogus grrr
+	   * as there is still uncompressed data sitting in the unzipbuf
+	   * that will be lost on next call. I'll just commit this
+	   * working code for now.
+	   *
+	   * -Dianora
+	   */
+
+	  if((unsigned long)zin->next_out >=
+	     ((unsigned long)unzipbuf+(unsigned long)UNZIP_BUFFER_SIZE))
+	    {
+	      sendto_realops("Overflowed unzipbuf increase UNZIP_BUFFER_SIZE");
+	      *length = -1;
+	      return NULL;
+	    }
+
 	  /* put the leftover in cptr->zip->inbuf */
-	  bcopy(zin->next_in, cptr->zip->inbuf, zin->avail_in);
+	  memcpy((void *)cptr->zip->inbuf,(void *)zin->next_in,
+		 zin->avail_in); 
+	  memcpy((void *)cptr->zip->inbuf,(void *)p, new_avail);
 	  cptr->zip->incount = zin->avail_in;
 	}
+
       *length = UNZIP_BUFFER_SIZE - zin->avail_out;
       return unzipbuf;
 
@@ -206,7 +257,11 @@ char *	zip_buffer(aClient *cptr, char *buffer, int *length, int flush)
   if (buffer)
     {
       /* concatenate buffer in cptr->zip->outbuf */
-      bcopy(buffer, cptr->zip->outbuf + cptr->zip->outcount,*length);
+      /* bcopy(buffer, cptr->zip->outbuf + cptr->zip->outcount,*length); */
+
+      memcpy((void *)cptr->zip->outbuf + cptr->zip->outcount, (void *)buffer,
+	     *length );
+
       cptr->zip->outcount += *length;
     }
   *length = 0;

@@ -826,9 +826,10 @@ struct Channel
 #define	TS_DOESTS	0x20000000
 #define	DoesTS(x)	((x)->tsinfo == TS_DOESTS)
 
-#define CAP_QS          0x00000001	/* Can handle quit storm removal */
-#define CAP_ZIP         0x00000002	/* Can do server compresion */
-#define CAP_EX		0x00000004	/* Can do channel +e exemptions */
+#define CAP_CAP		0x00000001	/* received a CAP to begin with */
+#define CAP_QS          0x00000002	/* Can handle quit storm removal */
+#define CAP_ZIP         0x00000004	/* Can do server compresion */
+#define CAP_EX		0x00000008	/* Can do channel +e exemptions */
 
 #define DoesCAP(x)      ((x)->caps)
 

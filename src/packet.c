@@ -63,7 +63,7 @@ int	dopacket(aClient *cptr, char *buffer, int length)
   me.receiveB += length; /* Update bytes received */
   cptr->receiveB += length;
 
-  if (cptr->receiveB & 0x0400)
+  if (cptr->receiveB > 1023)
     {
       cptr->receiveK += (cptr->receiveB >> 10);
       cptr->receiveB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
@@ -78,7 +78,7 @@ int	dopacket(aClient *cptr, char *buffer, int length)
 	  acpt->receiveB &= 0x03ff;
 	}
     }
-  else if (me.receiveB & 0x0400)
+  else if (me.receiveB > 1023)
     {
       me.receiveK += (me.receiveB >> 10);
       me.receiveB &= 0x03ff;
@@ -97,7 +97,7 @@ int	dopacket(aClient *cptr, char *buffer, int length)
       cptr->flags2 &= ~FLAGS2_ZIPFIRST;
     }
 
-  if (length && (cptr->flags2 & FLAGS2_ZIP))
+  if (cptr->flags2 & FLAGS2_ZIP)
     {
       /* uncompressed buffer first */
       zipped = length;
@@ -121,7 +121,16 @@ int	dopacket(aClient *cptr, char *buffer, int length)
        * of messages, backward compatibility is lost and major
        * problems will arise. - Avalon
        */
-      if ( g < '\16' && (g== '\n' || g == '\r'))
+
+      /* The previous code is just silly, you do at least one test
+       * to see if g is less than 16, then at least one more, total of two
+       * its gotta be a '\r' or a '\n' before anything happens, so why
+       * not just check for either '\n' or '\r' ?
+       * -Dianora
+       */
+      /*      if ( g < '\16' && (g== '\n' || g == '\r')) */
+
+      if ( g == '\n' || g == '\r' )
 	{
 	  if (ch1 == cptrbuf)
 	    continue; /* Skip extra LF/CR's */
