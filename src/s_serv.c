@@ -437,63 +437,6 @@ int check_server(struct Client* cptr)
 }
 
 /*
-** m_functions execute protocol messages on this server:
-**
-**      cptr    is always NON-NULL, pointing to a *LOCAL* client
-**              structure (with an open socket connected!). This
-**              identifies the physical socket where the message
-**              originated (or which caused the m_function to be
-**              executed--some m_functions may call others...).
-**
-**      sptr    is the source of the message, defined by the
-**              prefix part of the message if present. If not
-**              or prefix not found, then sptr==cptr.
-**
-**              (!IsServer(cptr)) => (cptr == sptr), because
-**              prefixes are taken *only* from servers...
-**
-**              (IsServer(cptr))
-**                      (sptr == cptr) => the message didn't
-**                      have the prefix.
-**
-**                      (sptr != cptr && IsServer(sptr) means
-**                      the prefix specified servername. (?)
-**
-**                      (sptr != cptr && !IsServer(sptr) means
-**                      that message originated from a remote
-**                      user (not local).
-**
-**              combining
-**
-**              (!IsServer(sptr)) means that, sptr can safely
-**              taken as defining the target structure of the
-**              message in this server.
-**
-**      *Always* true (if 'parse' and others are working correct):
-**
-**      1)      sptr->from == cptr  (note: cptr->from == cptr)
-**
-**      2)      MyConnect(sptr) <=> sptr == cptr (e.g. sptr
-**              *cannot* be a local connection, unless it's
-**              actually cptr!). [MyConnect(x) should probably
-**              be defined as (x == x->from) --msa ]
-**
-**      parc    number of variable parameter strings (if zero,
-**              parv is allowed to be NULL)
-**
-**      parv    a NULL terminated list of parameter pointers,
-**
-**                      parv[0], sender (prefix string), if not present
-**                              this points to an empty string.
-**                      parv[1]...parv[parc-1]
-**                              pointers to additional parameters
-**                      parv[parc] == NULL, *always*
-**
-**              note:   it is guaranteed that parv[0]..parv[parc-1] are all
-**                      non-NULL pointers.
-*/
-
-/*
 ** send the CAPAB line to a server  -orabidoo
 *
 * modified, always send all capabilities -Dianora
@@ -915,136 +858,6 @@ int server_estab(struct Client *cptr)
   return 0;
 }
 
-
-/*
-** m_locops (write to *all* local opers currently online)
-**      parv[0] = sender prefix
-**      parv[1] = message text
-*/
-int     m_locops(struct Client *cptr,
-                  struct Client *sptr,
-                  int parc,
-                  char *parv[])
-{
-  char *message = NULL;
-#ifdef SLAVE_SERVERS
-  char *slave_oper;
-  struct Client *acptr;
-#endif
-
-#ifdef SLAVE_SERVERS
-  if(IsServer(sptr))
-    {
-      if(!find_special_conf(sptr->name,CONF_ULINE))
-        {
-          sendto_realops("received Unauthorized locops from %s",sptr->name);
-          return 0;
-        }
-
-      if(parc > 2)
-        {
-          slave_oper = parv[1];
-
-          parc--;
-          parv++;
-
-          if ((acptr = hash_find_client(slave_oper,(struct Client *)NULL)))
-            {
-              if(!IsPerson(acptr))
-                return 0;
-            }
-          else
-            return 0;
-
-          if(parv[1])
-            {
-              message = parv[1];
-              send_operwall(acptr, "SLOCOPS", message);
-            }
-          else
-            return 0;
-#ifdef HUB
-          sendto_slaves(sptr,"LOCOPS",slave_oper,parc,parv);
-#endif
-          return 0;
-        }
-    }
-  else
-    {
-      message = parc > 1 ? parv[1] : NULL;
-    }
-#else
-  if(IsServer(sptr))
-    return 0;
-  message = parc > 1 ? parv[1] : NULL;
-#endif
-
-  if (BadPtr(message))
-    {
-      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
-                 me.name, parv[0], "LOCOPS");
-      return 0;
-    }
-
-  if(MyConnect(sptr) && IsAnOper(sptr))
-    {
-
-#ifdef SLAVE_SERVERS
-      sendto_slaves(NULL,"LOCOPS",sptr->name,parc,parv);
-#endif
-      send_operwall(sptr, "LOCOPS", message);
-    }
-  else
-    {
-      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-      return(0);
-    }
-
-  return(0);
-}
-
-int     m_operwall(struct Client *cptr,
-                   struct Client *sptr,
-                   int parc,
-                   char *parv[])
-{
-  char *message = parc > 1 ? parv[1] : NULL;
-
-
-  if (check_registered_user(sptr))
-    return 0;
-  if (!IsAnOper(sptr) || IsServer(sptr))
-    {
-      if (MyClient(sptr) && !IsServer(sptr))
-        sendto_one(sptr, form_str(ERR_NOPRIVILEGES),
-                   me.name, parv[0]);
-      return 0;
-    }
-  if (BadPtr(message))
-    {
-      if (MyClient(sptr))
-        sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
-                   me.name, parv[0], "OPERWALL");
-      return 0;
-    }
-
-#ifdef PACE_WALLOPS
-  if( MyClient(sptr) && ((LastUsedWallops + WALLOPS_WAIT) > CurrentTime) )
-    {
-      sendto_one(sptr, ":%s NOTICE %s :Oh, one of those annoying opers who doesn't know how to use a channel",
-                 me.name,parv[0]); 
-      return 0;
-    }
-  LastUsedWallops = CurrentTime;
-#endif
-
-  sendto_serv_butone(IsServer(cptr) ? cptr : NULL, ":%s OPERWALL :%s",
-                     parv[0], message);
-  send_operwall(sptr, "OPERWALL", message);
-  return 0;
-}
-
-
 /*
 ** m_time
 **      parv[0] = sender prefix
@@ -1182,7 +995,7 @@ static int m_set_parser(char *parsethis)
 
   for( i = 0; set_token_table[i]; i++ )
     {
-      if(!irccmp(set_token_table[i],parsethis))
+      if(!irccmp(set_token_table[i], parsethis))
         return i;
     }
   return TOKEN_BAD;
@@ -2352,104 +2165,6 @@ int     m_ltrace(struct Client *cptr,
 #endif /* LTRACE */
 
 /*
-** m_close - added by Darren Reed Jul 13 1992.
-*/
-int     m_close(struct Client *cptr,
-                struct Client *sptr,
-                int parc,
-                char *parv[])
-{
-  struct Client       *acptr;
-  int   i;
-  int   closed = 0;
-
-  if (!MyOper(sptr))
-    {
-      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-      return 0;
-    }
-
-  for (i = highest_fd; i; i--)
-    {
-      if (!(acptr = local[i]))
-        continue;
-      if (!IsUnknown(acptr) && !IsConnecting(acptr) &&
-          !IsHandshake(acptr))
-        continue;
-      sendto_one(sptr, form_str(RPL_CLOSING), me.name, parv[0],
-                 get_client_name(acptr, TRUE), acptr->status);
-      (void)exit_client(acptr, acptr, acptr, "Oper Closing");
-      closed++;
-    }
-  sendto_one(sptr, form_str(RPL_CLOSEEND), me.name, parv[0], closed);
-  return 0;
-}
-
-int m_die(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
-{
-  struct Client* acptr;
-  int      i;
-
-  if (!MyClient(sptr) || !IsAnOper(sptr))
-    {
-      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-      return 0;
-    }
-
-  if ( !IsOperDie(sptr) )
-    {
-      sendto_one(sptr,":%s NOTICE %s: You have no D flag", me.name, parv[0]);
-      return 0;
-    }
-
-  if(parc < 2)
-    {
-      sendto_one(sptr,":%s NOTICE %s :Need server name /die %s",
-                 me.name,sptr->name,me.name);
-      return 0;
-    }
-  else
-    {
-      if(irccmp(parv[1],me.name))
-        {
-          sendto_one(sptr,":%s NOTICE %s :Mismatch on /die %s",
-                     me.name,sptr->name,me.name);
-          return 0;
-        }
-    }
-
-  for (i = 0; i <= highest_fd; i++)
-    {
-      if (!(acptr = local[i]))
-        continue;
-      if (IsClient(acptr))
-        {
-          if(IsAnOper(acptr))
-            sendto_one(acptr,
-                       ":%s NOTICE %s :Server Terminating. %s",
-                       me.name, acptr->name,
-                       get_client_name(sptr, TRUE));
-          else
-            sendto_one(acptr,
-                       ":%s NOTICE %s :Server Terminating. %s",
-                       me.name, acptr->name,
-                       get_client_name(sptr, HIDEME));
-        }
-      else if (IsServer(acptr))
-        sendto_one(acptr, ":%s ERROR :Terminated by %s",
-                   me.name, get_client_name(sptr, HIDEME));
-    }
-  flush_connections(0);
-  /* 
-   * this is a normal exit, tell the os it's ok 
-   */
-  exit(0);
-  /* NOT REACHED */
-  return 0;
-}
-
-
-/*
  * set_autoconn
  *
  * inputs       - struct Client pointer to oper requesting change
@@ -2457,7 +2172,6 @@ int m_die(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
  * output       - none
  * side effects -
  */
-
 static void set_autoconn(struct Client *sptr,char *parv0,char *name,int newval)
 {
   struct ConfItem *aconf;

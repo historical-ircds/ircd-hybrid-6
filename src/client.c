@@ -603,8 +603,8 @@ void release_client_dns_reply(struct Client* client)
 }
 
 /*
- * get_client_name
- *      Return the name of the client for various tracking and
+ * get_client_name -  Return the name of the client
+ *    for various tracking and
  *      admin purposes. The main purpose of this function is to
  *      return the "socket host" name of the client, if that
  *        differs from the advertised name (other than case).
@@ -655,10 +655,10 @@ const char* get_client_name(struct Client* client, int showip)
       /* And finally, let's get the host information, ip or name */
       switch (showip)
         {
-          case TRUE:
+          case SHOW_IP:
             strcpy(t_host, inetntoa((char *)&client->ip));
             break;
-          case HIDEME:
+          case MASK_IP:
             strcpy(t_host, "255.255.255.255");
             break;
           default:

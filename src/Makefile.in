@@ -34,7 +34,9 @@ SRCS = \
 	listener.c \
 	m_away.c \
 	m_capab.c \
+	m_close.c \
 	m_connect.c \
+	m_die.c \
 	m_error.c \
 	m_gline.c \
 	m_info.c \
@@ -42,7 +44,9 @@ SRCS = \
 	m_help.c \
 	m_kline.c \
 	m_links.c \
+	m_locops.c \
 	m_lusers.c \
+	m_operwall.c \
 	m_oper.c \
 	m_pass.c \
 	m_ping.c \
@@ -98,15 +102,20 @@ SRCS = \
 #	ircd_signal.o \
 #	list.o \
 #	listener.o \
+#	m_away.o \
 #	m_capab.o \
+#	m_close.o \
 #	m_connect.o \
+#	m_die.o \
 #	m_error.o \
 #	m_gline.o \
 #	m_help.o \
 #	m_info.o \
 #	m_kline.o \
 #	m_links.o \
+#	m_locops.o \
 #	m_lusers.o \
+#	m_operwall.o \
 #	m_pass.o \
 #	m_server.o \
 #	m_squit.o \
@@ -116,6 +125,8 @@ SRCS = \
 #	m_users.o \
 #	m_version.o \
 #	m_wallops.o \
+#	m_who.o \
+#	m_whois.o \
 #	match.o \
 #	motd.o \
 #	mtrie_conf.o \

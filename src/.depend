@@ -77,12 +77,20 @@ m_away.o: m_away.c ../include/m_commands.h ../include/config.h \
 m_capab.o: m_capab.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/irc_string.h ../include/s_serv.h
+m_close.o: m_close.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
+ ../include/s_bsd.h ../include/send.h
 m_connect.o: m_connect.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/common.h ../include/irc_string.h \
  ../include/ircd.h ../include/numeric.h ../include/s_bsd.h \
  ../include/s_conf.h ../include/fileio.h ../include/motd.h \
  ../include/s_serv.h ../include/send.h
+m_die.o: m_die.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/ircd.h ../include/irc_string.h \
+ ../include/numeric.h ../include/send.h ../include/s_bsd.h
 m_error.o: m_error.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/common.h ../include/irc_string.h \
@@ -121,10 +129,18 @@ m_links.o: m_links.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/irc_string.h ../include/ircd.h \
  ../include/numeric.h ../include/s_serv.h ../include/send.h
+m_locops.o: m_locops.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/ircd.h ../include/irc_string.h \
+ ../include/numeric.h ../include/send.h ../include/s_user.h
 m_lusers.o: m_lusers.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
  ../include/s_serv.h ../include/s_user.h ../include/send.h
+m_operwall.o: m_operwall.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/ircd.h ../include/irc_string.h \
+ ../include/numeric.h ../include/send.h ../include/s_user.h
 m_oper.o: m_oper.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/ircd.h ../include/numeric.h \
  ../include/s_serv.h ../include/send.h ../include/fdlist.h \
@@ -188,6 +204,18 @@ m_wallops.o: m_wallops.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/irc_string.h \
  ../include/numeric.h ../include/send.h ../include/s_user.h
+m_who.o: m_who.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/channel.h ../include/hash.h \
+ ../include/struct.h ../include/ircd.h ../include/numeric.h \
+ ../include/s_serv.h ../include/send.h ../include/list.h \
+ ../include/irc_string.h
+m_whois.o: m_whois.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/channel.h ../include/hash.h \
+ ../include/struct.h ../include/ircd.h ../include/numeric.h \
+ ../include/s_serv.h ../include/send.h ../include/list.h \
+ ../include/irc_string.h
 match.o: match.c ../include/irc_string.h ../include/config.h \
  ../include/setup.h
 motd.o: motd.c ../include/motd.h ../include/ircd_defs.h \
