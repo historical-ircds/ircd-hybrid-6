@@ -970,14 +970,6 @@ static char *cluster(char *hostname)
  * added Rodders dated KLINE code
  * -Dianora
  *
- * BUGS:        There is a concern here with LOCKFILE handling
- * the LOCKFILE code only knows how to talk to the kline file.
- * Having an extra define allowing D lines to go into ircd.conf or
- * the kline file complicates life. LOCKFILE code should still respect
- * any lock placed.. The fix I believe is that we are going to have
- * to also pass along in the struct pkl struct, which file the entry
- * is to go into... or.. just remove the DLINES_IN_KPATH option.
- * -Dianora
  */
 
 int

@@ -40,8 +40,8 @@ static void del_whowas_from_clist(aWhowas **,aWhowas *);
 static void add_whowas_to_list(aWhowas **,aWhowas *);
 static void del_whowas_from_list(aWhowas **,aWhowas *);
 
-aWhowas WHOWAS[NICKNAMEHISTORYLENGTH];
-aWhowas *WHOWASHASH[WW_MAX];
+static aWhowas WHOWAS[NICKNAMEHISTORYLENGTH];
+static aWhowas *WHOWASHASH[WW_MAX];
 
 static int whowas_next = 0;
 

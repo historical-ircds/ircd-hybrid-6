@@ -73,9 +73,6 @@ static void expire_pending_glines();
 static int majority_gline(aClient*, const char *,const char *, const char *, 
                           const char* serv_name,
                           const char *,const char *,const char *); 
-/* defined in s_conf.c */
-
-
 
 #endif
 

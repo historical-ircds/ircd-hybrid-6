@@ -256,10 +256,11 @@ int parse(aClient *cptr, char *buffer, char *bufend)
 
       for (;;)
         {
-	  /* Never BAD CODE again */
-
 	  while(*s == ' ')	/* tabs are not considered space */
-	    s++;
+	    *s++ = '\0';
+
+          if(!*s)
+            break;
 
           if (*s == ':')
             {
@@ -273,21 +274,14 @@ int parse(aClient *cptr, char *buffer, char *bufend)
 	  else
 	    {
 	      para[i++] = s;
-	      if (i > paramcount)
-		{
-		  break;
-		}
-	      else
-		{
-		  /* scan for end of string, either ' ' or '\0' */
-		  while (IsNonEOS(*s))
-		    s++;
-
-		  if(*s == '\0')
-		    break;
-		  else
-		    *s++ = '\0';
-		}
+              /* scan for end of string, either ' ' or '\0' */
+              while (IsNonEOS(*s))
+                s++;
+              if (i > paramcount)
+                {
+                  *s = '\0';
+                  break;
+                }
 	    }
         }
     }
@@ -341,13 +335,11 @@ int parse(aClient *cptr, char *buffer, char *bufend)
   return (*mptr->func)(cptr, from, i, para);
 }
 
-
 /* for qsort'ing the msgtab in place -orabidoo */
 static int mcmp(struct Message *m1, struct Message *m2)
 {
   return strcmp(m1->cmd, m2->cmd);
 }
-
 
 /*
  * init_tree_parse()
@@ -707,4 +699,3 @@ static int     do_numeric(
     }
   return 0;
 }
-

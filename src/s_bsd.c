@@ -438,44 +438,6 @@ void init_sys()
   return;
 }
 
-#if 0
-/*
- * check_init - initialize the various name strings used to store hostnames. 
- * This is set from either the server's sockhost (if client fd is a tty or 
- * localhost) or from the ip# converted into a string. 
- * 0 = success, -1 = fail.
- */
-static int check_init(struct Client* cptr, char* sockn)
-{
-  struct sockaddr_in sk;
-  int                len = sizeof(struct sockaddr_in);
-
-  /* If descriptor is a tty, special checking... */
-  /* IT can't EVER be a tty */
-
-  if (getpeername(cptr->fd, (struct sockaddr *)&sk, &len) == -1)
-    {
-      report_error("connect failure: %s %s", 
-                    get_client_name(cptr, TRUE), errno);
-      return -1;
-    }
-  strcpy(sockn, inetntoa((char*)&sk.sin_addr));
-
-  if (inet_netof(sk.sin_addr) == IN_LOOPBACKNET)
-    {
-      if (cptr->dns_reply) {
-        --cptr->dns_reply->ref_count;
-        cptr->dns_reply = NULL;
-      }
-      strncpy_irc(sockn, me.name, HOSTLEN);
-    }
-  memcpy(&cptr->ip, &sk.sin_addr, sizeof(struct in_addr));
-  cptr->port = ntohs(sk.sin_port);
-
-  return 0;
-}
-
-#endif
 /*
  * Ordinary client access check. Look for conf lines which have the same
  * status as the flags passed.
@@ -652,6 +614,8 @@ static int connect_inet(struct ConfItem *aconf, struct Client *cptr)
  * be done, we loose the information about who started the connection and
  * it's considered an auto connect. This should only happen if the server
  * was started with the quick boot option, which is rarely if ever used.
+ *
+ * ZZZ - There is no more BOOT_QUICK option, so the above comment is moot. -db
  */
 int connect_server(struct ConfItem* aconf, 
                    struct Client* by, struct DNSReply* reply)
