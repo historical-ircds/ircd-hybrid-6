@@ -87,7 +87,6 @@ struct  Counter Count;
 
 time_t  CurrentTime;            /* GLOBAL - current system timestamp */
 int     ServerRunning;          /* GLOBAL - server execution state */
-size_t  InitialVMTop;           /* GLOBAL - top of virtual memory at init */
 aClient me;                     /* That's me */
 
 aClient* GlobalClientList = 0;  /* Pointer to beginning of Client list */
@@ -95,6 +94,8 @@ aClient* GlobalClientList = 0;  /* Pointer to beginning of Client list */
 aClient *local_cptr_list = NULL;
 aClient *oper_cptr_list  = NULL;
 aClient *serv_cptr_list  = NULL;
+
+static size_t initialVMTop;     /* top of virtual memory at init */
 
 static void open_debugfile();
 static void write_pidfile(void);
@@ -114,6 +115,34 @@ int     rehashed = YES;
 int     dline_in_progress = NO; /* killing off matching D lines ? */
 time_t  nextconnect = 1;        /* time for next try_connections call */
 time_t  nextping = 1;           /* same as above for check_pings() */
+
+
+/*
+ * get_vm_top - get the operating systems notion of the resident set size
+ */
+static size_t get_vm_top(void)
+{
+  /*
+   * NOTE: sbrk is not part of the ANSI C library or the POSIX.1 standard
+   * however it seems that everyone defines it. Calling sbrk with a 0
+   * argument will return a pointer to the top of the process virtual
+   * memory without changing the process size, so this call should be
+   * reasonably safe (sbrk returns the new value for the top of memory).
+   * This code relies on the notion that the address returned will be an 
+   * offset from 0 (NULL), so the result of sbrk is cast to a size_t and 
+   * returned. We really shouldn't be using it here but...
+   */
+  void* vptr = sbrk(0);
+  return (size_t) vptr;
+}
+
+/*
+ * get_maxrss - get the operating systems notion of the resident set size
+ */
+size_t get_maxrss(void)
+{
+  return get_vm_top() - initialVMTop;
+}
 
 
 /*
@@ -603,10 +632,9 @@ int main(int argc, char *argv[])
   Count.server = 1;     /* us */
 
   /* 
-   * set InitialVMTop before we allocate any memory
-   * XXX - we should fork *before* we allocate any memory
+   * set initialVMTop before we allocate any memory
    */
-  InitialVMTop = get_vm_top();
+  initialVMTop = get_vm_top();
 
   initialize_global_set_options();
 
