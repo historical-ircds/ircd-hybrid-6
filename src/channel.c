@@ -54,18 +54,12 @@
 #include <stdlib.h>
 
 #ifdef NEED_SPLITCODE
-int server_was_split=YES;
-time_t server_split_time;
-#ifdef SPLIT_PONG
-int got_server_pong=NO;
-#endif /* SPLIT_PONG */
 static void check_still_split();
-#define USE_ALLOW_OP
-#endif
 
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 aChannel *empty_channel_list=(aChannel*)NULL;
 void remove_empty_channels();
+#endif
 #endif
 
 aChannel *channel = NullChn;
