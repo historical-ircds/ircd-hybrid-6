@@ -24,6 +24,10 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.18  1999/07/17 03:13:03  db
+ * - corrected type casting problems, mainly const char *
+ * - moved prototype for safe_write into s_conf.h
+ *
  * Revision 1.17  1999/07/16 11:57:31  db
  * - more cleanups
  * - removed unused function in FLUD code
@@ -239,8 +243,7 @@ extern void write_kline_or_dline_to_conf_and_notice_opers(
 							  char *
 							  );
 extern const char *get_conf_name(KlineType);
-extern int safe_write(aClient *sptr,
-		      const char *filename, int out,char *buffer);
+extern int safe_write(struct Client *, const char *, int ,char *);
 
 typedef struct
 {
