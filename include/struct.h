@@ -51,34 +51,7 @@
 
 #include "zlib.h"
 
-#define REPORT_DO_DNS	"NOTICE AUTH :*** Looking up your hostname...\n"
-#define REPORT_FIN_DNS	"NOTICE AUTH :*** Found your hostname\n"
-#define REPORT_FIN_DNSC	"NOTICE AUTH :*** Found your hostname, cached\n"
-#define REPORT_FAIL_DNS	"NOTICE AUTH :*** Couldn't look up your hostname\n"
-#define REPORT_DO_ID	"NOTICE AUTH :*** Checking Ident\n"
-#define REPORT_FIN_ID	"NOTICE AUTH :*** Got Ident response\n"
-#define REPORT_FAIL_ID	"NOTICE AUTH :*** No Ident response\n"
-
-#define REPORT_DLINED   "NOTICE DLINE :*** You have been D-lined\n"
-
-/*
- * We don't want to calculate these every time they are used :)
- */
-
-#define R_do_dns (sizeof(REPORT_DO_DNS)-1)
-#define R_fin_dns (sizeof(REPORT_FIN_DNS)-1)
-#define R_fin_dnsc (sizeof(REPORT_FIN_DNSC)-1)
-#define R_fail_dns (sizeof(REPORT_FAIL_DNS)-1)
-#define R_do_id	(sizeof(REPORT_DO_ID)-1)
-#define R_fin_id (sizeof(REPORT_FIN_ID)-1)
-#define R_fail_id (sizeof(REPORT_FAIL_ID)-1)
-
-
-/* sendheader from orabidoo TS4 */
-#define sendheader(cptr, msg, len) do \
-   { if (IsUnknown(cptr)) \
-     send((cptr)->fd, (msg), (len), 0); } while(0)
-
+#define REPORT_DLINED  "NOTICE DLINE :*** You have been D-lined\r\n"
 
 #include "hash.h"
 
@@ -206,7 +179,7 @@ typedef struct	MessageFileItem aMessageFile;
 /* #define	FLAGS_WRAUTH	 0x8000	 set if we havent writen to ident server */
 #define	FLAGS_LOCAL	0x10000 /* set for local clients */
 #define	FLAGS_GOTID	0x20000	/* successful ident lookup achieved */
-#define	FLAGS_DOID	0x40000	/* I-lines say must use ident return */
+#define	FLAGS_NEEDID	0x40000	/* I-lines say must use ident return */
 #define	FLAGS_NONL	0x80000 /* No \n in buffer */
 #define FLAGS_CCONN    0x100000 /* Client Connections */
 #define FLAGS_REJ      0x200000 /* Bot Rejections */
@@ -277,7 +250,7 @@ typedef struct	MessageFileItem aMessageFile;
 #ifndef LOCOP_UMODES
 #define LOCOP_UMODES   (FLAGS_LOCOP|FLAGS_WALLOP|FLAGS_SERVNOTICE|FLAGS_SPY|FLAGS_DEBUG)
 #endif /* LOCOP_UMODES */
-#define	FLAGS_ID	(FLAGS_DOID|FLAGS_GOTID)
+#define	FLAGS_ID	(FLAGS_NEEDID | FLAGS_GOTID)
 
 /*
  * flags macros.
@@ -313,7 +286,6 @@ typedef struct	MessageFileItem aMessageFile;
 #define	ClearInvisible(x)	((x)->flags &= ~FLAGS_INVISIBLE)
 #define	ClearWallops(x)		((x)->flags &= ~FLAGS_WALLOP)
 #define	ClearAccess(x)		((x)->flags &= ~FLAGS_CHKACCESS)
-#define SetGotId(x)		((x)->flags |= FLAGS_GOTID)
 
 #ifdef REJECT_HOLD
 #define IsRejectHeld(x)	        ((x)->flags & FLAGS_REJECT_HOLD)
@@ -324,8 +296,11 @@ typedef struct	MessageFileItem aMessageFile;
 #define ClearIpHash		((x)->flags &= ~FLAGS_IPHASH)
 #define IsIpHash		((x)->flags & FLAGS_IPHASH)
 
-#define SetDoId(x)		((x)->flags |= FLAGS_DOID)
-#define IsGotId(x)		((x)->flags & FLAGS_GOTID)
+#define SetNeedId(x)		((x)->flags |= FLAGS_NEEDID)
+#define IsNeedId(x)             (((x)->flags & FLAGS_NEEDID) != 0)
+
+#define SetGotId(x)		((x)->flags |= FLAGS_GOTID)
+#define IsGotId(x)		(((x)->flags & FLAGS_GOTID) != 0)
 
 /*
  * flags2 macros.
