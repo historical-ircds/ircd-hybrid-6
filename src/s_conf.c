@@ -33,6 +33,7 @@
 #include "mtrie_conf.h"
 #include "s_bsd.h"
 #include "channel.h"
+#include "hash.h"
 #include "send.h"
 #include "s_err.h"
 #include "s_err.h"
@@ -2291,7 +2292,7 @@ static void initconf(FBFILE* file, int use_include)
               aChannel *chptr;
               int len;
 
-              if( (chptr = find_channel(aconf->name, (aChannel *)NULL)) )
+              if( (chptr = hash_find_channel(aconf->name, (aChannel *)NULL)) )
                 chptr->mode.mode |= MODE_JUPED;
               else
                 {

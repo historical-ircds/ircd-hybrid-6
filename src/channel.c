@@ -811,12 +811,6 @@ int     user_channel_mode(aClient *cptr, aChannel *chptr)
   return 0;
 }
 
-
-aChannel *find_channel(char *chname, aChannel *chptr)
-{
-  return hash_find_channel(chname, chptr);
-}
-
 /*
  * write the "simple" list of channel modes for channel chptr onto buffer mbuf
  * with the parameters in pbuf.
@@ -1047,7 +1041,7 @@ int     m_mode(aClient *cptr,
               return 0;
             }
 
-          chptr = find_channel(parv[1], NullChn);
+          chptr = hash_find_channel(parv[1], NullChn);
           if (chptr == NullChn)
             return m_umode(cptr, sptr, parc, parv);
         }
@@ -2387,7 +2381,7 @@ static aChannel* get_channel(aClient *cptr, char *chname, int flag)
       len = CHANNELLEN;
       *(chname + CHANNELLEN) = '\0';
     }
-  if ((chptr = find_channel(chname, NULL)))
+  if ((chptr = hash_find_channel(chname, NULL)))
     return (chptr);
 
   /*
@@ -3135,7 +3129,7 @@ int     m_join(aClient *cptr,
 
           /* To save a redundant hash table lookup later on */
            
-           if((chptr = find_channel(name, NullChn)))
+           if((chptr = hash_find_channel(name, NullChn)))
              flags = 0;
            else
              flags = CHFL_CHANOP;
@@ -3677,7 +3671,7 @@ int     m_knock(aClient *cptr,
     *p = '\0';
   name = parv[1]; /* strtoken(&p, parv[1], ","); */
 
-  if (!IsChannelName(name) || !(chptr = find_channel(name, NullChn)))
+  if (!IsChannelName(name) || !(chptr = hash_find_channel(name, NullChn)))
     {
       sendto_one(sptr, form_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
                  name);
@@ -3825,7 +3819,7 @@ int     m_topic(aClient *cptr,
 
   if (name && IsChannelName(name))
     {
-      chptr = find_channel(name, NullChn);
+      chptr = hash_find_channel(name, NullChn);
       if (!chptr)
         {
           sendto_one(sptr, form_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
@@ -3955,7 +3949,7 @@ int     m_invite(aClient *cptr,
   if (!MyConnect(acptr) && (parv[2][0] == '&'))
     return 0;
 
-  if (!(chptr = find_channel(parv[2], NullChn)))
+  if (!(chptr = hash_find_channel(parv[2], NullChn)))
     {
       if (MyClient(sptr))
         sendto_one(sptr, form_str(ERR_NOSUCHCHANNEL),
@@ -4184,7 +4178,7 @@ int     m_list(aClient *cptr,
   /* while(name) */
   if(name)
     {
-      chptr = find_channel(name, NullChn);
+      chptr = hash_find_channel(name, NullChn);
       if (chptr && ShowChannel(sptr, chptr) && sptr->user)
         sendto_one(sptr, form_str(RPL_LIST), me.name, parv[0],
                    ShowChannel(sptr,chptr) ? name : "*",
@@ -4289,7 +4283,7 @@ int     m_names( aClient *cptr,
           return 0;
         }
 
-      ch2ptr = find_channel(para, NULL);
+      ch2ptr = hash_find_channel(para, NULL);
     }
 
   *buf = '\0';

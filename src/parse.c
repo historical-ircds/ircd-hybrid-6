@@ -700,7 +700,7 @@ static int     do_numeric(
             sendto_prefix_one(acptr, sptr,":%s %s %s%s",
                               parv[0], numeric, nick, buffer);
         }
-      else if ((chptr = find_channel(nick, (aChannel *)NULL)))
+      else if ((chptr = hash_find_channel(nick, (aChannel *)NULL)))
         sendto_channel_butone(cptr,sptr,chptr,":%s %s %s%s",
                               parv[0],
                               numeric, chptr->chname, buffer);

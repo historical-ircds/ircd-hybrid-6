@@ -390,7 +390,7 @@ struct Client* hash_find_server(const char* name)
 }
 
 /*
- * hash_find_channel
+ * find_channel
  */
 struct Channel* hash_find_channel(const char* name, struct Channel* chptr)
 {

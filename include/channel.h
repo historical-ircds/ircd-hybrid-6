@@ -88,7 +88,7 @@ typedef struct  Channel aChannel;
 
 #define NullChn ((aChannel *)0)
 
-#define ChannelExists(n)        (find_channel(n, NullChn) != NullChn)
+#define ChannelExists(n)        (hash_find_channel(n, NullChn) != NullChn)
 
 /* Maximum mode changes allowed per client, per server is different */
 #define MAXMODEPARAMS   4
