@@ -145,6 +145,8 @@ int     m_whowas(aClient *cptr,
   register int cur = 0;
   int     max = -1, found = 0;
   char    *p, *nick, *s;
+  static time_t last_used=0L;
+  static int last_count=0;
 
   if (parc < 2)
     {
@@ -159,6 +161,18 @@ int     m_whowas(aClient *cptr,
       return 0;
 
   /*  parv[1] = canonize(parv[1]); */
+
+  if(!IsAnOper(sptr) && !MyConnect(sptr)) /* pace non local requests */
+    {
+      if((last_used + WHOIS_WAIT) > NOW)
+        {
+          return 0;
+        }
+      else
+        {
+          last_used = NOW;
+        }
+    }
 
   if (!MyConnect(sptr) && (max > 20))
     max = 20;

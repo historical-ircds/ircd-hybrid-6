@@ -402,6 +402,11 @@
  * its always defined now
  */
 
+/* WHOIS_WAIT - minimum seconds between remote use of WHOIS before
+ * max use count is reset
+ */
+#define WHOIS_WAIT 1
+
 /* PACE_WAIT - minimum seconds between use of MOTD, INFO, HELP, LINKS, TRACE
  * -Dianora
  */

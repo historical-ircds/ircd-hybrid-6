@@ -2533,7 +2533,7 @@ int	m_whois(aClient *cptr,
 
   if(!IsAnOper(sptr) && !MyConnect(sptr)) /* pace non local requests */
     {
-      if((last_used + PACE_WAIT) > NOW)
+      if((last_used + WHOIS_WAIT) > NOW)
         {
 	  /* Unfortunately, returning anything to a non local
 	   * request =might= increase sendq to be usable in a split hack
