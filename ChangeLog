@@ -10,6 +10,8 @@ version hybrid-6-b57   26-Mar-1999
 * massive cleaning of the doc subdir
 * changed defaults in config.h for public consumption
 * install_ircd now installs viconf and mkpasswd
+* added a couple of ifdefs to help compile under cygwin32b20.1
+* added simple.conf to doc directory
 -Rodder
 * fixed mtrie_conf.c kline code
 -Dianora
