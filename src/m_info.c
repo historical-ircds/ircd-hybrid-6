@@ -286,7 +286,7 @@ int	m_info(aClient *cptr,
 #define OUT3 " IGNORE_FIRST_CHAR=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-                   me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
 #undef OUT1
 #undef OUT2
 #undef OUT3
