@@ -682,6 +682,9 @@ aConfItem* match_ip_Kline(unsigned long ip, const char* name)
   /* rules are simple, Iline wins by default, K beats I, E beats K and I */
   for( scan=node->conf; scan; scan=scan->next)
     {
+      if (scan->ip != (ip & scan->ip_mask))
+        continue; /* Not even in the same ball park */
+
       if (scan->flags & CONF_FLAGS_E_LINED)  /* Eline */
         if (match(scan->user,name)) return scan; /* instant win! */
 

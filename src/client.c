@@ -1065,18 +1065,14 @@ void release_client_dns_reply(struct Client* client)
  *        to internal buffer (nbuf). *NEVER* use the returned pointer
  *        to modify what it points!!!
  */
+/* Apparently, the use of (+) for idented clients
+ * is unstandard. As it is a pain to parse, I'm just as happy
+ * to remove it. It also simplifies the code a bit. -Dianora
+ */
+
 const char* get_client_name(struct Client* client, int showip)
 {
   static char nbuf[HOSTLEN * 2 + USERLEN + 5];
-  char        t_user[USERLEN + 2];
-  char        t_host[HOSTLEN + 1];
-  char        t_id[4];
-
-  /*
-   * The idea here is to build our text first, then do the
-   * ircsprintf(), as all these conditionals are getting very
-   * hairy.  -- FlashMan
-   */
 
   assert(0 != client);
 
@@ -1085,34 +1081,21 @@ const char* get_client_name(struct Client* client, int showip)
       if (!irccmp(client->name, client->host))
         return client->name;
 
-      t_user[0]='\0';
-      t_host[0]='\0';
-      t_id[0]='\0';
-
-      /* Check for ident */
-
-      if(client->flags & FLAGS_GOTID)
-        strcpy(t_id, "(+)");
-
-      strcpy(t_user, client->username);
-      strcat(t_user, "@");
-
       /* And finally, let's get the host information, ip or name */
       switch (showip)
         {
           case SHOW_IP:
-            strcpy(t_host, inetntoa((char *)&client->ip));
+            ircsprintf(nbuf, "%s[%s@%s]", client->name, client->username,
+              client->sockhost);
             break;
           case MASK_IP:
-            strcpy(t_host, "255.255.255.255");
+            ircsprintf(nbuf, "%s[%s@255.255.255.255]", client->name,
+              client->username);
             break;
           default:
-            strcpy(t_host, client->host);
+            ircsprintf(nbuf, "%s[%s@%s]", client->name, client->username,
+              client->host);
         }
-
-      /* Now we add everything together */
-      ircsprintf(nbuf, "%s[%s%s%s]", client->name, t_id,
-        t_user, t_host); 
       return nbuf;
     }
 
@@ -1134,19 +1117,9 @@ const char* get_client_host(struct Client* client)
     return get_client_name(client, FALSE);
   else
     {
-      if(IsGotId(client))
-        {
-          ircsprintf(nbuf, "%s[(+)%-.*s@%-.*s]",
-                     client->name, USERLEN, client->username,
-                     HOSTLEN, client->host);
-        }
-      else
-        {
-          ircsprintf(nbuf, "%s[%-.*s@%-.*s]",
-                     client->name, USERLEN, client->username,
-                     HOSTLEN, client->host);
-        }
-
+      ircsprintf(nbuf, "%s[%-.*s@%-.*s]",
+                 client->name, USERLEN, client->username,
+                 HOSTLEN, client->host);
     }
   return nbuf;
 }

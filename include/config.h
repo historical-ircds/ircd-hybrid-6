@@ -503,7 +503,8 @@
  * NO_JOIN_ON_SPLIT
  *
  * When this is defined, users will not be allowed to join channels
- * that were present before a split.
+ * that were present before a split. THIS IS BROKEN - DO NOT USE
+ * ON A PRODUCTION SERVER --Rodder
  */
 #undef NO_JOIN_ON_SPLIT
 
