@@ -67,7 +67,6 @@
 #include "irc_string.h"
 #endif
 
-extern void flush_connections();
 extern struct SLink *find_user_link(/* struct SLink *, struct Client * */);
 
 /* argh where should this go? */

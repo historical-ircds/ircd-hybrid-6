@@ -56,5 +56,6 @@ extern  void sendto_prefix_one(struct Client *, struct Client *,
                                const char *, ...);
 
 extern  void    flush_server_connections(void);
+extern void flush_connections(struct Client* cptr);
 
 #endif /* INCLUDED_send_h */

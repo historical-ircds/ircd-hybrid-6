@@ -52,12 +52,6 @@
 #  include <syslog.h>
 #  define INCLUDED_syslog_h
 # endif
-# if defined( HAVE_SYS_SYSLOG_H )
-#  ifndef INCLUDED_sys_syslog_h
-#   include <sys/syslog.h>
-#   define INCLUDED_sys_syslog_h
-#  endif
-# endif
 #endif
 
 #ifndef INCLUDED_ircd_defs_h
