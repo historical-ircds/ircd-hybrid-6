@@ -830,6 +830,9 @@ struct Channel
   time_t fludblock;
   struct fludbot *fluders;
 #endif
+#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
+  struct Channel *next_empty_channel;
+#endif
   char	chname[1];
 };
 

@@ -83,9 +83,8 @@
 #define	MSG_HTM      "HTM"	/* HTM */
 #define MSG_SET      "SET"	/* SET */
 
-#ifdef GLINES
 #define MSG_GLINE    "GLINE"    /* GLINE */
-#endif
+
 
 #define MSG_LOCOPS   "LOCOPS"	/* LOCOPS */
 #ifdef LWALLOPS
@@ -100,9 +99,7 @@ extern int m_kline(aClient *,aClient *,int,char **);
 extern int m_unkline(aClient *,aClient *,int,char **);
 extern int m_dline(aClient *,aClient *,int,char **);
 
-#ifdef GLINES
 extern int m_gline(aClient *,aClient *,int,char **);
-#endif
 
 extern int m_locops(aClient *,aClient *,int,char **);
 
@@ -294,9 +291,7 @@ struct Message msgtab[] = {
   { MSG_UNKLINE, m_unkline,  0, MAXPARA, 1, 0, 0, 0L },
 #endif
   { MSG_DLINE,   m_dline,    0, MAXPARA, 1, 0, 0, 0L },
-#ifdef GLINES
   { MSG_GLINE,   m_gline,    0, MAXPARA, 1, 0, 0, 0L },
-#endif
   { MSG_HASH,    m_hash,     0, MAXPARA, 1, 0, 0, 0L },
   { MSG_DNS,     m_dns,      0, MAXPARA, 1, 0, 0, 0L },
   { MSG_REHASH,  m_rehash,   0, MAXPARA, 1, 0, 0, 0L },

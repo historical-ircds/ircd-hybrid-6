@@ -87,6 +87,7 @@ extern int server_was_split;		/* defined in channel.c */
 extern time_t server_split_time;	/* defined in channel.c */
 extern int server_split_recovery_time;	/* defined in channel.c */
 extern int split_smallnet_size;		/* defined in channel.c */
+extern void remove_empty_channels();	/* defined in channel.c */
 #endif
 
 extern int cold_start;		/* defined in ircd.c */
@@ -3344,7 +3345,7 @@ int   m_set(aClient *cptr,
 
               if(newval < 0)
                 {
-                  sendto_one(sptr, ":%s NOTICE %s :SPLITDELAY must be >= 0",
+                  sendto_one(sptr, ":%s NOTICE %s :SPLITDELAY must be > 0",
                              me.name, parv[0]);
                   return 0;
                 }
@@ -3360,6 +3361,7 @@ int   m_set(aClient *cptr,
 		{
 		  cold_start = NO;
 		  server_was_split = NO;
+		  remove_empty_channels();
 		}
               return 0;
             }
@@ -3726,7 +3728,7 @@ static char *cluster(char *hostname)
   return (result);
 }
 
-#ifdef GLINES
+
 
 /*
  * m_gline()
@@ -3737,6 +3739,10 @@ static char *cluster(char *hostname)
  *
  * Place a G line if 3 opers agree on the identical user@host
  * 
+ */
+
+/* Allow this server to pass along GLINE if received and
+ * GLINES is not defined.
  */
 
 int     m_gline(aClient *cptr,
@@ -3758,6 +3764,7 @@ int     m_gline(aClient *cptr,
 
   if(!IsServer(sptr)) /* allow remote opers to apply g lines */
     {
+#ifdef GLINES
       /* Only globals can apply Glines */
       if (!IsOper(sptr))
 	{
@@ -3868,12 +3875,19 @@ int     m_gline(aClient *cptr,
 			 user,
 			 host,
 			 reason);
+#else
+      sendto_one(sptr,":%s NOTICE %s :GLINE disabled",me.name,parv[0]);  
+#endif
     }
   else
     {
       if(!IsServer(sptr))
         return(0);
-      
+
+      /* Always good to be paranoid about arguments */
+      if(parc < 8)
+	return 0;
+
       oper_name = parv[1];
       oper_username = parv[2];
       oper_host = parv[3];
@@ -3889,6 +3903,7 @@ int     m_gline(aClient *cptr,
                          host,
                          reason);
     }
+#ifdef GLINES
    log_gline_request(oper_name,oper_username,oper_host,oper_server,
 		     user,host,reason);
 
@@ -3939,12 +3954,12 @@ int     m_gline(aClient *cptr,
 
       return 0;
     }
-  
+#endif  
   return 0;
 }
 
 
-
+#ifdef GLINES
 /*
  * log_gline_request()
  *

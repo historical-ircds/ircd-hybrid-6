@@ -22,15 +22,30 @@ I started this file to keep track of changes made in hybrid-6,
 beginning with b37.  We are in VERY HIGH SPEED development mode,
 so it's important to keep track of this. =)
 
+version hybrid-6-b39	20-Jan-1999
+* sanity test m_gline parc argument count, older hybrid-5 servers
+  with buggy GLINE can core new hybrid-6 correct GLINE code 
+* Forward the GLINE even if GLINE is not defined on this server.
+  No point having GLINE for opers on a HUB for example, and servers
+  that wish to opt out of others placing GLINE's can still relay it.
+* keep a link list of 0 member channels created on a split
+  if PRESERVE_CHANNEL_ON_SPLIT or NO_JOIN_ON_SPLIT is defined
+  remove all 0 member channels when split heals
+  redid NO_JOIN_ON_SPLIT to only care about channels that once existed.
+
+-Dianora
+	
 version hybrid-6-b38	20-Jan-1999
 
 * bumped version up to b38
 * fixed bugs with "reason" code in ircd.c
 * duplicated config.h to config.h.dist	
 * fixed bug in ircd.c with SEND_FAKE_KILL_TO_CLIENT
- 	if IDLE_CHECK not defined
+  if IDLE_CHECK not defined
 * Added new defines to m_info() in s_serv.c
 * Started adding code to deal with user@IP I lines to s_conf.c
+
+-Dianora
 	
 ============================================================================
 |        Mon Jan 18 00:13:39 PST 1999	Jake Khuon <khuon@GCtr.Net>        |

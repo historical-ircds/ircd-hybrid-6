@@ -3490,11 +3490,11 @@ int	m_oper(aClient *cptr,
       else
 	operprivs = "";
 
-#ifdef WINTRHAWK
+#ifdef CUSTOM_ERR
       sendto_ops("%s (%s@%s) has just acquired the personality of a petty megalomaniacal tyrant [IRC(%c)p]", parv[0],
 #else
       sendto_ops("%s (%s@%s) is now operator (%c)", parv[0],
-#endif /* WINTRHAWK */
+#endif /* CUSTOM_ERR */
 		 sptr->user->username, sptr->sockhost,
 		 IsOper(sptr) ? 'O' : 'o');
       send_umode_out(cptr, sptr, old);

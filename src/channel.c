@@ -56,6 +56,8 @@ time_t server_split_time;
 int server_split_recovery_time = (DEFAULT_SERVER_SPLIT_RECOVERY_TIME * 60);
 int split_smallnet_size = SPLIT_SMALLNET_SIZE;
 static void check_still_split();
+aChannel *empty_channel_list=(aChannel*)NULL;
+void remove_empty_channels();
 #define USE_ALLOW_OP
 #endif
 
@@ -1924,7 +1926,7 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key)
    * channel block is marked as split, remove the split mode bit
    */
 
-#ifdef PRESERVE_CHANNEL_ON_SPLIT
+#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
   if(chptr->mode.mode & MODE_SPLIT)
     {
       if(!server_was_split)
@@ -1933,12 +1935,21 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key)
 	  if(chptr->users == 0)
 	    chptr->mode.mode = 0;
 	}
+#ifdef NO_JOIN_ON_SPLIT
+      else
+	{
+	  return(ERR_NOJOINSPLIT);
+	}
+#endif
     }
   else
     {
       if(server_was_split)
 	{
 	  chptr->mode.mode |= MODE_SPLIT;
+#ifdef NO_JOIN_ON_SPLIT
+	  return(ERR_NOJOINSPLIT);
+#endif
 	}
     }
 #endif
@@ -2112,6 +2123,16 @@ static	void	sub1_from_channel(aChannel *chptr)
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
       if(server_was_split)
 	{
+	  /* If I haven't already stuck this channel into the
+	   * link list, stick it in now.
+	   */
+
+	  if(!(chptr->mode.mode & MODE_SPLIT))
+	    {
+	      chptr->next_empty_channel = empty_channel_list;
+	      empty_channel_list = chptr;
+	    }
+
 	  chptr->mode.mode |= MODE_SPLIT;
 
 	  /*
@@ -2366,11 +2387,90 @@ static void check_still_split()
 	   */
 	  server_was_split = NO;
 	  cold_start = NO;
+	  remove_empty_channels();
 	}
       else
 	{
 	  server_split_time = NOW; /* still split */
 	  server_was_split = YES;
+	}
+    }
+}
+
+/*
+ * remove_empty_channels
+ *
+ * inputs	- none
+ * output	- none
+ * side effects	- remove all channels on empty_channel_list that have
+ * 		  no members, clear link list
+ */
+
+void remove_empty_channels()
+{
+  Reg	Link *tmp;
+  Link	*obtmp;
+  aChannel *chptr;
+  aChannel *nextptr=(aChannel *)NULL;
+
+  for(chptr=empty_channel_list;chptr;chptr=nextptr)
+    {
+      chptr->mode.mode &= ~MODE_SPLIT;
+      nextptr = chptr->next_empty_channel;
+      chptr->next_empty_channel = (aChannel *)NULL;
+
+      if(chptr->users == 0)
+	{
+	  /*
+	   * Now, find all invite links from channel structure
+	   */
+	  while ((tmp = chptr->invites))
+	    del_invite(tmp->value.cptr, chptr);
+	  
+	  tmp = chptr->banlist;
+	  while (tmp)
+	    {
+	      obtmp = tmp;
+	      tmp = tmp->next;
+#ifdef BAN_INFO
+	      MyFree(obtmp->value.banptr->banstr);
+	      MyFree(obtmp->value.banptr->who);
+	      MyFree(obtmp->value.banptr);
+#else
+	      MyFree(obtmp->value.cp);
+#endif
+	      free_link(obtmp);
+	    }
+
+	  tmp = chptr->exceptlist;
+	  while (tmp)
+	    {
+	      obtmp = tmp;
+	      tmp = tmp->next;
+#ifdef BAN_INFO
+	      MyFree(obtmp->value.banptr->banstr);
+	      MyFree(obtmp->value.banptr->who);
+	      MyFree(obtmp->value.banptr);
+#else
+	      MyFree(obtmp->value.cp);
+#endif
+	      free_link(obtmp);
+	    }
+	  chptr->banlist = chptr->exceptlist = NULL;
+	  
+	  if (chptr->prevch)
+	    chptr->prevch->nextch = chptr->nextch;
+	  else
+	    channel = chptr->nextch;
+	  if (chptr->nextch)
+	    chptr->nextch->prevch = chptr->prevch;
+
+#ifdef FLUD
+	  free_fluders(NULL, chptr);
+#endif
+	  (void)del_from_channel_hash_table(chptr->chname, chptr);
+	  MyFree((char *)chptr);
+	  Count.chan--;
 	}
     }
 }
@@ -2448,28 +2548,21 @@ int	m_join(aClient *cptr,
 	  continue;
 	}
 
-#ifdef PRESERVE_CHANNEL_ON_SPLIT
+#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
       /* If from a cold start, there were never any channels
        * joined, hence all of them must be considered off limits
        * until this server joins the network
+       *
+       * cold_start is set to NO if SPLITDELAY is set to 0 in m_set()
        */
-      if(cold_start && MyClient(sptr))
+
+      if(cold_start && MyClient(sptr) &&
+	 (*name == '#') && !IsAnOper(sptr))
 	{
-	  if(server_was_split && (*name == '#') && !IsAnOper(sptr))
-	    {
 	      sendto_one(sptr, err_str(ERR_NOJOINSPLIT),
 			 me.name, parv[0], name);
 	      continue;
-	    }
-	}
-#endif
-#ifdef NO_JOIN_ON_SPLIT
-      if(server_was_split && MyClient(sptr) &&
-	 (*name == '#') && !IsAnOper(sptr))
-	{
-	  sendto_one(sptr, err_str(ERR_NOJOINSPLIT),
-		     me.name, parv[0], name);
-	  continue;
+
 	}
 #endif
       if (*jbuf)
