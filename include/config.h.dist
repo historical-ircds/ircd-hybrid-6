@@ -703,8 +703,9 @@
  */
 
 /* If this is defined, hack ops is simply not allowed at all
+ * 
  */
-#define NO_HACK_OPS
+#undef NO_HACK_OPS
 
 /* ----------------- not approved on EFnet section -------------------- 
  *
@@ -1016,6 +1017,10 @@
 #endif
 
 #define REPORT_DLINE_TO_USER
+
+#ifdef NO_JOIN_ON_SPLIT
+#define NO_CHANOPS_ON_SPLIT
+#endif
 
 #if defined(NO_CHANOPS_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 #define NEED_SPLITCODE
