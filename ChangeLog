@@ -1,3 +1,15 @@
+db          2001/12/08 13:33:05 EST	(20011208_20)
+
+  Modified files:
+    src                  channel.c 
+  Log:
+  - missing last_used I think this is right
+  
+  Revision  Changes    Path
+  1.224     +1 -0      ircd-hybrid-6/src/channel.c
+
+
+
 jdc         2001/12/08 13:25:13 EST	(20011208_19)
 
   Modified files:
