@@ -223,29 +223,26 @@ static	char *make_nick_user_host(char *nick, char *name, char *host)
 static	int	add_banid(aClient *cptr, aChannel *chptr, char *banid)
 {
   Reg	Link	*ban;
-  Reg	int	cnt = 0, len = 0;
+  Reg	int	cnt = 0;
 
   if (MyClient(cptr))
     (void)collapse(banid);
 
   for (ban = chptr->banlist; ban; ban = ban->next)
     {
-      len = strlen(BANSTR(ban));
-
-      if (MyClient(cptr))
+      if (MyClient(cptr) && (++cnt >= MAXBANS))
 	{
-	  if((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
-	    {
-	      sendto_one(cptr, form_str(ERR_BANLISTFULL),
-			 me.name, cptr->name,
-			 chptr->chname, banid);
-	      return -1;
-	    }
-	  if(!match(BANSTR(ban), banid) ||
-	     !match(banid,BANSTR(ban)))
-	    return -1;
+	  sendto_one(cptr, form_str(ERR_BANLISTFULL),
+		     me.name, cptr->name,
+		     chptr->chname, banid);
+	  return -1;
 	}
-      else if (!irccmp(BANSTR(ban), banid))
+      /* yikes, we were doing all sorts of weird crap here
+       * we ONLY want to know if current bans cover this ban,
+       * ban covers current ones, since it may cover other
+       * things too -wd
+       */
+      else if (!match(BANSTR(ban), banid))
 	return -1;
     }
 
@@ -299,39 +296,32 @@ static	int	add_banid(aClient *cptr, aChannel *chptr, char *banid)
 static	int	add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
 {
   Reg	Link	*ex, *ban;
-  Reg	int	cnt = 0, len = 0;
+  Reg	int	cnt = 0;
 
   if (MyClient(cptr))
     (void)collapse(eid);
 
-  if (MyClient(cptr))
+  for (ban = chptr->banlist; ban; ban = ban->next)
     {
-      for (ban = chptr->banlist; ban; ban = ban->next)
+      if (MyClient(cptr) && (++cnt >= MAXBANS))
 	{
-	  len = strlen(BANSTR(ban));
-	  if ((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
-		  return -1;
+	  sendto_one(cptr, form_str(ERR_BANLISTFULL),
+		     me.name, cptr->name,
+		     chptr->chname, eid);
+	  return -1;
 	}
     }
 
   for (ex = chptr->exceptlist; ex; ex = ex->next)
     {
-      len = strlen(BANSTR(ex));
-
-      if (MyClient(cptr))
+      if (MyClient(cptr) && (++cnt >= MAXBANS))
 	{
-	  if((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
-	    {
-	      sendto_one(cptr, form_str(ERR_BANLISTFULL),
-			 me.name, cptr->name,
-			 chptr->chname, eid);
-	      return -1;
-	    }
-	  if(!match(BANSTR(ex), eid) ||
-	     !match(eid,BANSTR(ex)))
-	    return -1;
+	  sendto_one(cptr, form_str(ERR_BANLISTFULL),
+		     me.name, cptr->name,
+		     chptr->chname, eid);
+	  return -1;
 	}
-      else if (!irccmp(BANSTR(ex), eid))
+      else if (!match(BANSTR(ex), eid))
 	return -1;
     }
 

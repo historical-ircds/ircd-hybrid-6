@@ -71,6 +71,7 @@ char *infotext[] =
 	"Dianora             Diane Bruce         db@db.net",
 	"FlashMan            Craig A. Huegen     chuegen@quadrunner.com",
 	"Rodder              Jon Lusky           lusky@blown.net",
+        "White_Dragon        Chip Norkus         wd@dal.net",
 	"WintrHawk           Jake Khuon          khuon@GCtr.Net",
 	"",
         "The following people have contributed to this release of hybrid",
