@@ -160,14 +160,14 @@ struct Client* make_client(struct Client* from)
   cptr->fd = -1;
   strcpy(cptr->username, "unknown");
 
-  cptr->listprogress=0; cptr->listprogress2=0;
-
 #ifdef NULL_POINTER_NOT_ZERO
   /* commenting out unnecessary assigns, but leaving them
    * for documentation. REMEMBER the fripping struct is already
    * zeroed up above =DUH= 
    * -Dianora 
    */
+  cptr->listprogress=0;
+  cptr->listprogress2=0;
   cptr->next    = NULL;
   cptr->prev    = NULL;
   cptr->hnext   = NULL;
