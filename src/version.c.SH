@@ -72,6 +72,7 @@ char *infotext[] =
   "cosine              Patrick Alken       wnder@uwns.underworld.net",
   "Dianora             Diane Bruce         db@db.net",
   "Neph|l|m            Adel Mezibra        adel@cybercable.fr",
+  "pro                 Bill Jonus          proggy@earthling.net",
   "Rodder              Jon Lusky           lusky@blown.net",
   "",
   "The following people have contributed to this release of hybrid",
