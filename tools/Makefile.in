@@ -8,22 +8,22 @@ mkpasswd_OBJECTS = mkpasswd.o
 viconf_SOURCES = viconf.c
 viconf_OBJECTS = viconf.o
 fixklines_SOURCES = fixklines.c
-fixklines_OBJECT = fixklines.o
+fixklines_OBJECTS = fixklines.o
 
-all_OBJECTS = $(viconf_OBJECTS) $(mkpasswd_OBJECTS) ${fixklines_OBJECT}
+all_OBJECTS = $(viconf_OBJECTS) $(mkpasswd_OBJECTS) $(fixklines_OBJECTS)
 
 all: viconf mkpasswd fixklines
 
 build: all
 
 mkpasswd: $(mkpasswd_OBJECTS)
-	$(CC) -o mkpasswd $(mkpasswd_OBJECTS) $(IRCDLIBS)
+	$(CC) $(LDFLAGS) -o mkpasswd $(mkpasswd_OBJECTS) $(IRCDLIBS)
 
-viconf: viconf.o
-	$(CC) -o viconf viconf.o ${IRCDLIBS}
+viconf: $(viconf_OBJECTS)
+	$(CC) $(LDFLAGS) -o viconf $(viconf_OBJECTS) $(IRCDLIBS)
 
-fixklines: fixklines.o
-	$(CC) -o fixklines fixklines.o
+fixklines: fixklines.o $(IRCDLIBS)
+	$(CC) $(LDFLAGS) -o fixklines $(fixklines_OBJECTS) $(IRCDLIBS)
 
 clean:
 	$(RM) -f $(all_OBJECTS) fixklines viconf chkconf mkpasswd *~ core

@@ -183,10 +183,9 @@ int ReadMessageFile(MessageFile *MessageFileptr)
   char *p;
   FBFILE* file;
 
-  stat(MessageFileptr->fileName, &sb);
+  if( stat(MessageFileptr->fileName, &sb) < 0 )
   /* file doesn't exist oh oh */
   /* might consider printing error message to all opers */
-  if(stat < 0)
     return -1;
 
   local_tm = localtime(&sb.st_mtime);

@@ -102,7 +102,7 @@ static char buf[BUFSIZE], buf2[BUFSIZE];
 int m_kill(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
   struct Client*    acptr;
-  const char* inpath = get_client_name(cptr,HIDE_IP);
+  const char* inpath = cptr->name;
   char*       user;
   char*       path;
   char*       killer;
@@ -184,12 +184,12 @@ int m_kill(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       **        ...!operhost!oper
       **        ...!operhost!oper (comment)
       */
-      inpath = cptr->host;
       if (!BadPtr(path))
         {
           ircsprintf(buf, "%s%s (%s)",
                            cptr->name, IsOper(sptr) ? "" : "(L)", path);
           path = buf;
+          reason = path;
         }
       else
         path = cptr->name;
@@ -216,21 +216,28 @@ int m_kill(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
     }
   else
     {
-      reason = strchr(parv[2],' ');
-      if(reason)
-        reason++;
+      if(IsAnOper(cptr))
+        {
+          reason = parv[2];
+        }
       else
-        reason = parv[2];
+        {
+          reason = strchr(parv[2], ' ');
+	  if(reason)
+	    reason++;
+	  else
+	    reason = parv[2];
+	}
     }
 
   if (IsAnOper(sptr)) /* send it normally */
     {
       sendto_realops("Received KILL message for %s. From %s!%s@%s Path: %s!%s",
-                 acptr->name, parv[0], sptr->name, sptr->username, sptr->host,
-                 inpath, path);
-      sendto_ops("Received KILL message for %s. From %s!%s@%s:%s",
                  acptr->name, sptr->name, sptr->username, sptr->host,
-                 parv[0], reason);
+                 inpath, path);
+      sendto_ops("Received KILL message for %s. From %s!%s@%s Path:supressed!%s",
+                 acptr->name, sptr->name, sptr->username, sptr->host,
+                 reason);
     }
   else
     sendto_realops_flags(FLAGS_SKILL,
@@ -250,8 +257,8 @@ int m_kill(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   */
   if (!MyConnect(acptr) || !MyConnect(sptr) || !IsAnOper(sptr))
     {
-      sendto_serv_butone(cptr, ":%s KILL %s :%s!%s",
-                         parv[0], acptr->name, inpath, path);
+      sendto_serv_butone(cptr, ":%s KILL %s :%s",
+                         parv[0], acptr->name, reason );
       if (chasing && IsServer(cptr))
         sendto_one(cptr, ":%s KILL %s :%s!%s",
                    me.name, acptr->name, inpath, path);

@@ -17,5 +17,5 @@
  */
 
 #ifndef PATCHLEVEL
-#define PATCHLEVEL    "2.8/hybrid-6b99"
+#define PATCHLEVEL    "2.8/hybrid-6b100"
 #endif
