@@ -1,3 +1,17 @@
+jdc         2001/12/08 19:55:53 EST	(20011209_0)
+
+  Modified files:
+    .                    configure 
+    autoconf             configure.in 
+  Log:
+  - Fix for duplicate -lz's during link-time.
+  
+  Revision  Changes    Path
+  1.25      +1 -1      ircd-hybrid-6/autoconf/configure.in
+  1.26      +49 -48    ircd-hybrid-6/configure
+
+
+
 lusky       2001/12/08 15:48:19 EST	(20011208_21)
 
   Modified files:
