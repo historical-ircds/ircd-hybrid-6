@@ -5137,10 +5137,13 @@ int     place_dline(aClient *sptr,
 
   if((ip_mask & 0xFFFFFF00) ^ 0xFFFFFF00)
     {
-      sendto_one(sptr, ":%s NOTICE %s :Can't use a mask less than 24 with dline",
-		 me.name,
-		 parv0);
-      return 0;
+      if(ip_mask != 0xFFFFFFFF)
+	{
+	  sendto_one(sptr, ":%s NOTICE %s :Can't use a mask less than 24 with dline",
+		     me.name,
+		     parv0);
+	  return 0;
+	}
     }
 
 #ifdef NON_REDUNDANT_KLINES

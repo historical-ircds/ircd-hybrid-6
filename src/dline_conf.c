@@ -79,9 +79,13 @@ struct ip_subtree *insert_ip_subtree(struct ip_subtree *head,
 				     struct ip_subtree *node)
 {
   if (!head) return node;   /* null, insert here */
-  if (head->ip > node->ip)
-    return insert_ip_subtree(head->left, node);
-  return insert_ip_subtree(head->right, node);
+  if (head->ip > node->ip) {
+    head->left=insert_ip_subtree(head->left, node);
+  }
+  else {
+    head->right=insert_ip_subtree(head->right, node);
+  }
+  return head;
 }
 
 /*
@@ -98,9 +102,9 @@ struct ip_subtree *find_ip_subtree(struct ip_subtree *head,
   while (cur) 
     {
       mask=cur->ip_mask;
-      if (!(diff=(cur->ip - (ip & mask))))
+      if (cur->ip == (ip & mask))
 	return cur;   /* found it */
-      if (diff>0)
+      if (cur->ip > (ip & mask))
 	cur=cur->left;
       else
 	cur=cur->right;
@@ -132,7 +136,7 @@ struct ip_subtree *delete_ip_subtree(struct ip_subtree *head,
   head->left=delete_ip_subtree(head->left, ip, mask, clist);
   head->right=delete_ip_subtree(head->right, ip, mask, clist);
 
-  if ((head->ip & head->ip_mask)==ip)
+  if ((head->ip & mask)==ip)
     {  /* IP match */
       if ((head->ip_mask) < mask)
 	return head; /* but is less specific */
@@ -229,7 +233,7 @@ aConfItem *trim_ip_Klines(aConfItem *cl, int mask)
 
 /*
  * trim_ip_Elines - removes any entry from the list.
- * use me when a *@ kline is added and a clist has to be inherited.
+ * use me when a *@ Eline is added and a clist has to be inherited.
  * only K/I/E lines that are more specific than mask will be toasted.
  * -good
  */
@@ -303,8 +307,6 @@ void add_dline(aConfItem *conf_ptr)
   unsigned long host_ip;
   unsigned long host_mask;
   struct ip_subtree *node;
-  aConfItem *clist;
-  aConfItem *temp;
 
   host_ip = host_name_to_ip(conf_ptr->host,&host_mask),
   host_ip &= host_mask;
@@ -319,6 +321,7 @@ void add_dline(aConfItem *conf_ptr)
   node=find_ip_subtree(Dline[host_ip>>24], host_ip);
   if (!node)
     {   /* no parent found, so add this to the leftovers list */
+      printf("no parent!\n");
       conf_ptr->next = leftover;
       leftover=conf_ptr;
       return;
@@ -328,9 +331,8 @@ void add_dline(aConfItem *conf_ptr)
    * 1st entry (D)
    * don't bother checking for ambiguities.. an exception is an exception :P
    */
-  clist=node->conf->next;
-  node->conf->next=conf_ptr;
-  node->conf->next->next=clist;
+  conf_ptr->next=node->conf->next;
+  node->conf->next=conf_ptr;      
 }
 
 
@@ -341,12 +343,15 @@ void add_dline(aConfItem *conf_ptr)
  */
 aConfItem *rescan_dlines(aConfItem *s)
 {
+  aConfItem *temp;
   if (!s) return NULL;
   s->next=rescan_dlines(s->next);
   if (find_ip_subtree(Dline[s->ip>>24],s->ip))
     { /* parent found! */
+      temp=s->next;
+      s->next=NULL;
       add_dline(s);
-      return s->next;
+      return temp;
     }
   return s;
 }
@@ -398,10 +403,7 @@ void add_Dline(aConfItem *conf_ptr)
   /* add the Dline's aConfItem to the head of the conf list */
 
   conf_ptr->next=clist;
-  if(clist)
-    clist->next=conf_ptr; 
-  else
-    clist=conf_ptr;
+  clist=conf_ptr;
 
   /* create a new node and insert it into the tree */
   node=new_ip_subtree(host_ip, host_mask, clist, NULL, NULL);
@@ -442,10 +444,7 @@ aConfItem *match_Dline(unsigned long ip)
       if (scan->ip == (ip & scan->ip_mask))
 	return ((aConfItem *)NULL);   /* exception found */
     }
-  if( node->conf && node->conf->status & CONF_DLINE)
-    return node->conf;  /* no exceptions, return the D-line */
-
-  return((aConfItem *)NULL);
+  return node->conf;  /* no exceptions, return the D-line */
 }
 
 /*
@@ -460,7 +459,7 @@ void add_ip_Kline(aConfItem *conf_ptr)
   aConfItem *scan = NULL;
   struct ip_subtree *node;
 
-  host_ip = host_name_to_ip(conf_ptr->host,&host_mask),
+  host_ip = host_name_to_ip(conf_ptr->host,&host_mask);
   host_ip &= host_mask;
 
   conf_ptr->ip=host_ip;
@@ -484,10 +483,7 @@ void add_ip_Kline(aConfItem *conf_ptr)
       clist=trim_ip_Klines(clist,0);
 
     conf_ptr->next=clist;
-    if(clist)
-      clist->next=conf_ptr; 
-    else
-      clist=conf_ptr;
+    clist=conf_ptr;
  
     /* create a new node and insert it into the tree */
     node=new_ip_subtree(host_ip, host_mask, clist, NULL, NULL);
@@ -559,10 +555,7 @@ void add_ip_Eline(aConfItem *conf_ptr)
       clist=trim_ip_Elines(clist,0);
 
     conf_ptr->next=clist;
-    if(clist)
-      clist->next=conf_ptr; 
-    else
-      clist=conf_ptr;
+    clist=conf_ptr;
  
     /* create a new node and insert it into the tree */
     node=new_ip_subtree(host_ip, host_mask, clist, NULL, NULL);
@@ -630,10 +623,7 @@ void add_ip_Iline(aConfItem *conf_ptr)
 
     /* insert the Iline */
     conf_ptr->next=clist;
-    if(clist)
-      clist->next=conf_ptr; 
-    else
-      clist=conf_ptr;
+    clist=conf_ptr;
  
     /* create a new node and insert it into the tree */
     node=new_ip_subtree(host_ip, host_mask, clist, NULL, NULL);
@@ -710,6 +700,7 @@ void clear_Dline_table()
   memset((void *)ike_oracle, 0, sizeof(oracle));
   memset((void *)Dline, 0, sizeof(Dline));
   memset((void *)ip_Kline, 0, sizeof(ip_Kline));
+  leftover=NULL;
 }
 
 
@@ -739,6 +730,7 @@ void zap_Dlines()
       free_conf(s);
       s=ss;
     }
+  leftover=NULL;
 }
 
 /*

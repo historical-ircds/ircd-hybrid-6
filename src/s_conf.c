@@ -205,9 +205,10 @@ int	attach_Iline(aClient *cptr,
 	{
 	  if(IsConfDoIdentd(aconf))
 	    SetDoId(cptr);
-	  
+
+	  /* Thanks for spoof idea amm */
 	  if(IsConfDoSpoofIp(aconf))
-	    strncpyzt(cptr->sockhost,"127.0.0.1",sizeof(cptr->sockhost));
+	    strncpyzt(cptr->sockhost,aconf->mask,sizeof(cptr->sockhost));
 	  else
 	    strncpyzt(cptr->sockhost,host,sizeof(cptr->sockhost));
 
@@ -1374,7 +1375,7 @@ extern char *getfield();
 
 static char *set_conf_flags(aConfItem *aconf,char *tmp)
 {
-  FOREVER
+  for(;*tmp;tmp++)
     {
       switch(*tmp)
 	{
@@ -1408,9 +1409,8 @@ static char *set_conf_flags(aConfItem *aconf,char *tmp)
 	default:
 	  return tmp;
 	}
-      tmp++;
     }
-  /* NOT REACHED */
+  return tmp;
 }
 
 /*
@@ -2995,7 +2995,7 @@ unsigned long host_name_to_ip(char *host,unsigned long *ip_mask_ptr)
   unsigned int octet=0;
   int found_mask=0;
 
-  while(*host)
+  for(;*host;host++)
     {
       if(isdigit(*host))
 	{
@@ -3017,23 +3017,20 @@ unsigned long host_name_to_ip(char *host,unsigned long *ip_mask_ptr)
 	  generated_host_ip = current_ip;
 	  current_ip = 0L;
 	}
-
-       if(*(host+1) == '\0')
-	{
-	  current_ip <<= 8;
-	  current_ip += octet;
-	  if(!found_mask)    
-	    generated_host_ip = current_ip;
-	}
-      host++;
     }
+
+  current_ip <<= 8;
+  current_ip += octet;
 
   if(found_mask)
     {
-      *ip_mask_ptr = cidr_to_bitmask[current_ip&0x1F];
+      if(current_ip>32)
+	current_ip = 32;
+      *ip_mask_ptr = cidr_to_bitmask[current_ip];
     }
   else
     {
+      generated_host_ip = current_ip;
       *ip_mask_ptr = 0xFFFFFFFFL;
     }
   return(generated_host_ip);
