@@ -67,18 +67,6 @@ static int valid_username(const char* username);
 static void report_and_set_user_flags( aClient *, aConfItem * );
 static int tell_user_off(aClient *,char **);
 
-/* LINKLIST */ 
-extern aClient *local_cptr_list;
-extern aClient *oper_cptr_list;
-extern aClient *serv_cptr_list;
- 
-extern void outofmemory(void);         /* defined in list.c */
-
-
-#ifdef REJECT_HOLD
-extern int reject_held_fds;             /* defined in ircd.c */
-#endif
-
 static char buf[BUFSIZE], buf2[BUFSIZE];
 
 /* table of ascii char letters to corresponding bitmask */
