@@ -20,7 +20,7 @@
 RM=@RM@
 
 # Default CFLAGS
-CFLAGS = -DNDEBUG -g -O2 -DNDEBUG
+CFLAGS = -DNDEBUG -g -O2
 
 #
 # For developers
