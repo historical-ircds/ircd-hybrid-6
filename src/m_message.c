@@ -148,11 +148,6 @@ static  int     m_message(struct Client *cptr,
 #endif
 #endif
 #ifdef NO_DUPE_MULTI_MESSAGES
-      if (strchr(parv[1],','))
-        parv[1] = canonize(parv[1]);
-#endif
-    }
-
   /* function to fix nick,nick,nick bug.  this will remove duped targets
      to cut down on flooding a little bit.
 	-pro
@@ -160,6 +155,8 @@ static  int     m_message(struct Client *cptr,
 
   nick = (char *) malloc(1024);
   fix_message_target(parv[1], nick);
+#endif
+    }
 
   /*
   ** channels are privmsg'd a lot more than other clients, moved up here
