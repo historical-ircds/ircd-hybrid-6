@@ -769,34 +769,14 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef  ZIP_LINKS
+  /* Make sure the include files match the library version number. */
+  /* configure takes care of looking for zlib and zlibVersion(). */
+  if (strcmp(zlibVersion(), ZLIB_VERSION) != 0)
   {
-    char z_ver_str_new[7];              /* 6 chars + \0 */
-    unsigned long z_ver_new;
-    const char *z_ver_str_old = zlibVersion();
-
-    /* Use zero-padded 2 decimal places. */
-    ircsprintf(z_ver_str_new, "%02d%02d%02d", atoi(z_ver_str_old+0),
-                                              atoi(z_ver_str_old+2),
-                                              atoi(z_ver_str_old+4) );
-
-    /* Convert the buffer into an actual long */
-    z_ver_new = strtol(z_ver_str_new, (char **) NULL, 10);
-
-    /* zlib library must be version 1.0.2 or above. */
-    if ( z_ver_new < 010002 )
-    {
-      fprintf(stderr, "ERROR: zlib version 1.0.2 or higher required.\n");
-      exit(1);
-    }
-
-    /* Make sure the include files match the library version number. */
-    if (strcmp(z_ver_str_old, ZLIB_VERSION) != 0)
-    {
-      fprintf(stderr, "WARNING: zlib include files differ from library.\n");
-      fprintf(stderr, "WARNING: ziplinks may fail!\n");
-      fprintf(stderr, "WARNING: library %s, include files %s\n",
-              z_ver_str_old, ZLIB_VERSION);
-    }
+    fprintf(stderr, "WARNING: zlib include files differ from library.\n");
+    fprintf(stderr, "WARNING: ZIPLINKS may fail!\n");
+    fprintf(stderr, "WARNING: library %s, include files %s\n",
+            zlibVersion(), ZLIB_VERSION);
   }
 #endif
 
