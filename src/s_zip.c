@@ -181,7 +181,10 @@ char *unzip_packet(aClient *cptr, char *buffer, int *length)
 	      /* ok, filled up output buffer, complain about it, but go on.
 	       * I need to find any incomplete "chunk" at the top of
 	       * the uncompressed output buffer, and save it for next call.
-	       * -Dianora
+	       * N.B. That cptr->zip->inbuf isn't really necessary
+	       * i.e. re-entrancy is not required since I know
+	       * there is more uncompressed data to do, and dopacket()
+	       * will not return until its all parsed. -db
 	       */
 	      sendto_realops("Overflowed unzipbuf increase UNZIP_BUFFER_SIZE");
 	      /*
@@ -189,35 +192,58 @@ char *unzip_packet(aClient *cptr, char *buffer, int *length)
 	       * length = -1;
 	       * return((char *)NULL);
 	       */
-	      /* Scan from the top of output, look for a complete
-	       * "chunk" N.B. there should be a check for p hitting
-	       * the bottom of the unzip buffer.
-	       * -Dianora
+
+	      /* Check for pathological case where output
+	       * just happened to have finished with a newline
+	       * and there is still input to do
+	       * Just stuff a newline in for now, it will be discarded
+	       * anyway, and continue parsing. -db
 	       */
-	      for(p = zin->next_out;;p >= unzipbuf)
+
+	      if((zin->next_out[0] == '\n') || (zin->next_out[0] == '\r'))
 		{
-		  if((*p == '\r') || (*p == '\n'))
-		    break;
-		  zin->avail_out++;
-		  p--;
-		  cptr->zip->incount++;
+		  cptr->zip->inbuf[0] = '\n';
+		  cptr->zip->incount = 1;
 		}
-	      /* A little sanity test never hurts -Dianora */
-	      if(p == unzipbuf)
+	      else
 		{
-		  cptr->zip->incount = 0;
-		  cptr->zip->inbuf[0] = '\0';	/* only for debugger */
-		  *length = -1;
-		  return((char *)NULL);
+		  /* Scan from the top of output, look for a complete
+		   * "chunk" N.B. there should be a check for p hitting
+		   * the bottom of the unzip buffer. -db
+		   */
+
+		  for(p = zin->next_out;;p >= unzipbuf)
+		    {
+		      if((*p == '\r') || (*p == '\n'))
+			break;
+		      zin->avail_out++;
+		      p--;
+		      cptr->zip->incount++;
+		    }
+		  /* A little sanity test never hurts -db */
+		  if(p == unzipbuf)
+		    {
+		      cptr->zip->incount = 0;
+		      cptr->zip->inbuf[0] = '\0';	/* only for debugger */
+		      *length = -1;
+		      return((char *)NULL);
+		    }
+		  /* Ok, stuff this "chunk" into inbuf
+		   * for next call -Dianora 
+		   */
+		  p++;
+		  cptr->zip->incount--;
+		  memcpy((void *)cptr->zip->inbuf,
+			 (void *)p,cptr->zip->incount);
 		}
-	      /* Ok, stuff this "chunk" into inbuf for next call -Dianora */
-	      p++;
-	      cptr->zip->incount--;
-	      memcpy((void *)cptr->zip->inbuf,(void *)p,cptr->zip->incount);
 	    }
 	  else
 	    {
-	      /* oh, hmmm I dunno then, but give up in complete disgust */
+	      /* outbuf buffer is not full, but still
+	       * input to do. I suppose its just bad data.
+	       * However I don't have much other choice here but to
+	       * give up in complete disgust -db
+	       */
 	      *length = -1;
 	      return((char *)NULL);
 	    }

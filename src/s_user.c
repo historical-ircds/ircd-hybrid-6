@@ -3609,7 +3609,7 @@ int	m_userhost(aClient *cptr,
 
   if (parc > 2)
     (void)m_userhost(cptr, sptr, parc-1, parv+1);
-  
+
   if (parc < 2)
     {
       sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -3708,7 +3708,7 @@ int     m_usrip(aClient *cptr,
 
 	(void)strncat(buf, buf2, sizeof(buf) - len);
 	len += strlen(buf2);
-                    }
+      }
   sendto_one(sptr, "%s", buf);
   return 0;
 }
