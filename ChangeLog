@@ -1,3 +1,7 @@
+*** 20000516_3 by lusky
+fixed a strncpy() (db)
+
+
 *** 20000516_2 by lusky
 reworked vsendto_one() again (pa)
 another fix to the llist fix (db)
