@@ -668,12 +668,6 @@ Info MyInformation[] = {
   { "USE_LOGFILE", "OFF", 0, "Log Errors to LPATH" },
 #endif /* USE_LOGFILE */
 
-#ifdef USE_RCS
-  { "USE_RCS", "ON", 0, "Use \"ci\" to Keep RCS Control" },
-#else
-  { "USE_RCS", "OFF", 0, "Use \"ci\" to Keep RCS Control" },
-#endif /* USE_RCS */
-
 #ifdef USE_SYSLOG
   { "USE_SYSLOG", "ON", 0, "Log Errors to syslog file" },
 #else

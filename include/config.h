@@ -1000,13 +1000,6 @@
 */
 #undef DEBUGMODE               /* define DEBUGMODE to enable debugging mode.*/
 
-/*
- * viconf option, if USE_RCS is defined, viconf will use rcs "ci"
- * to keep the conf file  under RCS control.
- */
-#define USE_RCS
-
-
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MAX_CLIENTS INIT_MAXCLIENTS
 
