@@ -1,3 +1,7 @@
+*** 20001023_1 by lusky
+sync'd key charset per discussion with comstud
+
+
 *** 20001021_1 by lusky
 fix for duplicate 401's for kick #validchan invalnick
 ServerStats->is_ref is incremented twice on an X-line
