@@ -1401,7 +1401,7 @@ int	m_nick(aClient *cptr,
       return 0;
     }
 
-  if(MyClient(sptr) &&
+  if(MyConnect(sptr) && !IsServer(sptr) &&
      !IsAnOper(sptr) && find_special_conf(nick,CONF_QUARANTINED_NICK)) 
     {
       sendto_realops_lev(REJ_LEV,
