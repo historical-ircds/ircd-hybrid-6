@@ -265,7 +265,7 @@ int	attach_Iline(aClient *cptr,
 			     cptr->name,host,
 			     inetntoa((char *)&cptr->ip),
 			     me.name);
-	      strncpyzt(cptr->sockhost,"oper.",sizeof(cptr->sockhost));
+CT	      strncpyzt(cptr->sockhost,"oper.",sizeof(cptr->sockhost));
 	      strcat(cptr->sockhost,me.name);
 #endif
 	      SetIPSpoof(cptr);
@@ -291,7 +291,11 @@ int	attach_Iline(aClient *cptr,
   /* Slow down the reconnectors who are rejected */
 
 #ifdef REJECT_HOLD
-  SetRejectHold(cptr);
+  if( (reject_held_fds != REJECT_HELD_MAX ) )
+    {
+      SetRejectHold(cptr);
+      reject_held_fds++;
+    }
 #endif
 
   return -1;	/* -1 on no match *bleh* */
