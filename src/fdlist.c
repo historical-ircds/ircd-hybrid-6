@@ -12,7 +12,7 @@ static char *rcs_version = "$Id$";
 
 void addto_fdlist(int fd,fdlist *listp)
 {
-  if ( fd > MAXCONNECTIONS )
+  if ( (unsigned int)fd > MAXCONNECTIONS )
     return;
   else
     listp->entry[fd] = 1;
@@ -20,7 +20,7 @@ void addto_fdlist(int fd,fdlist *listp)
 
 void delfrom_fdlist(int fd,fdlist *listp)
 {
-  if ( fd > MAXCONNECTIONS )
+  if ( (unsigned int)fd > MAXCONNECTIONS )
     return;
   else
     listp->entry[fd] = 0;

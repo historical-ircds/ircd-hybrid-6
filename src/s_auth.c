@@ -37,6 +37,8 @@ struct AuthRequest* AuthPollList = 0; /* GLOBAL - auth queries pending io */
 
 static struct AuthRequest* AuthIncompleteList = 0;
 
+static char *GetValidIdent(char *);
+
 /*
  * make_auth_request - allocate a new auth request
  */
@@ -374,50 +376,47 @@ void read_auth_reply(struct AuthRequest* auth)
   char* s;
   char* t;
   int   len;
+  int   count;
   char  buf[AUTH_BUFSIZ + 1]; /* buffer to read auth reply into */
-  char  ruser[USERLEN + 1];
-  char  tuser[USERLEN + 1];
-  int   remp = 0;
-  int   locp = 0;
 
-  *ruser = '\0';
   Debug((DEBUG_NOTICE,"read_auth_reply(%x) fd %d authfd %d flags %d",
          auth, auth->client->fd, auth->fd, auth->flags));
 
   len = recv(auth->fd, buf, AUTH_BUFSIZ, 0);
   
-  if (len > 0) {
-    buf[len] = '\0';
-    if (sscanf(buf, "%d , %d : USERID : %*[^:]: %10s", 
-               &remp, &locp, tuser) == 3) {
-      if ((s = strrchr(buf, ':'))) {
-        t = ruser;
-        for (++s; *s && (t < ruser + USERLEN); ++s) {
-          if (!isspace(*s) && *s != ':' && *s != '@')
-            *t++ = *s;
-        }
-        *t = '\0';
-        Debug((DEBUG_INFO,"auth reply ok"));
-      }
+  if (len > 0)
+    {
+      buf[len] = '\0';
+
+      if( (s = GetValidIdent(buf)) )
+	{
+	  t = auth->client->username;
+	  count = USERLEN;
+	  for (; *s && count; s++, count--)
+	    {
+	      if (!isspace(*s) && *s != ':' && *s != '@')
+		*t++ = *s;
+	    }
+	  *t = '\0';
+	}
     }
-  }
+
   close(auth->fd);
   auth->fd = -1;
   ClearAuth(auth);
   
-  if (0 == locp || 0 == remp || !*ruser) {
-    ++ircstp->is_abad;
-    strcpy(auth->client->username, "unknown");
-    return;
-  }
-  else {
-    sendheader(auth->client, REPORT_FIN_ID, R_fin_id);
-    ++ircstp->is_asuc;
-    strncpy(auth->client->username, ruser, USERLEN);
-    auth->client->username[USERLEN] = '\0';
-    SetGotId(auth->client);
-    Debug((DEBUG_INFO, "got username [%s]", ruser));
-  }
+  if (!s)
+    {
+      ++ircstp->is_abad;
+      strcpy(auth->client->username, "unknown");
+    }
+  else
+    {
+      sendheader(auth->client, REPORT_FIN_ID, R_fin_id);
+      ++ircstp->is_asuc;
+      SetGotId(auth->client);
+      Debug((DEBUG_INFO, "got username [%s]", ruser));
+    }
   unlink_auth_request(auth, &AuthPollList);
 
   if (IsDNSPending(auth))
@@ -429,3 +428,65 @@ void read_auth_reply(struct AuthRequest* auth)
 }
 
 
+/*
+ * GetValidIdent
+ * 
+ * Inputs	- pointer to ident buf
+ * Output	- NULL if no valid ident found, otherwise pointer to name
+ * Side effects	-
+ */
+
+static char *GetValidIdent(char *buf)
+{
+  int   remp = 0;
+  int   locp = 0;
+  char  *colon1Ptr;
+  char  *colon2Ptr;
+  char  *colon3Ptr;
+  char  *commaPtr;
+  char  *remotePortString;
+
+  /* All this to get rid of a sscanf() fun. */
+  remotePortString = buf;
+  
+  colon1Ptr = strchr(remotePortString,':');
+  if(!colon1Ptr)
+    return((char *)NULL);
+
+  *colon1Ptr = '\0';
+  colon1Ptr++;
+  colon2Ptr = strchr(colon1Ptr,':');
+  if(!colon2Ptr)
+    return((char *)NULL);
+
+  *colon2Ptr = '\0';
+  colon2Ptr++;
+  commaPtr = strchr(remotePortString, ',');
+
+  if(!commaPtr)
+    return((char *)NULL);
+
+  *commaPtr = '\0';
+  commaPtr++;
+
+  remp = atoi(remotePortString);
+  if(!remp)
+    return((char *)NULL);
+	      
+  locp = atoi(commaPtr);
+  if(!locp)
+    return((char *)NULL);
+
+  /* look for USERID bordered by first pair of colons */
+  if(!strstr(colon1Ptr,"USERID"))
+    return((char *)NULL);
+
+  colon3Ptr = strchr(colon2Ptr,':');
+  if(!colon3Ptr)
+    return((char *)NULL);
+  
+  *colon3Ptr = '\0';
+  colon3Ptr++;
+  Debug((DEBUG_INFO,"auth reply ok"));
+  return(colon3Ptr);
+}
