@@ -1,3 +1,9 @@
+*** 20000102_1 by lusky
+The "hack" ops message is just plain wrong. Its not needed anyway. (db).
+userhost formatting problem (ce)
+malformed U line caused strange cores on /rehash (db)
+
+
 *** 19991228_1 by lusky
 split m_list.c away from channel.c its getting too silly  ALL paced
   commands should give RPL_LOAD2HI if its a local client request.
