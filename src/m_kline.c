@@ -416,7 +416,7 @@ int     m_kline(aClient *cptr,
   aconf->status = CONF_KILL;
   DupString(aconf->host, host);
 
-  DupString(aconf->name, user);
+  DupString(aconf->user, user);
   aconf->port = 0;
 
   if(temporary_kline_time)

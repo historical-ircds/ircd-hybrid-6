@@ -2520,18 +2520,11 @@ aConfItem *find_is_klined(char *host,char *name,unsigned long ip)
  * thats expected to be done by caller.... *sigh* -Dianora
  */
 
-static aConfItem *find_tkline(char *host,char *name)
+static aConfItem *find_tkline(char *host,char *user)
 {
   aConfItem *kill_list_ptr;	/* used for the link list only */
   aConfItem *last_list_ptr;
   aConfItem *tmp_list_ptr;
-/*  aConfItem *tmp; */
-
-  /* Temporary kline handling...
-   * I expect this list to be very tiny. (crosses fingers) so CPU
-   * time in this, should be minimum.
-   * -Dianora
-   */
 
   if(temporary_klines)
     {
@@ -2561,8 +2554,8 @@ static aConfItem *find_tkline(char *host,char *name)
 	    }
 	  else
 	    {
-	      if( (kill_list_ptr->name
-		   && (!name || match(kill_list_ptr->name, name)))
+	      if( (kill_list_ptr->user
+		   && (!user || match(kill_list_ptr->user, user)))
 		  && (kill_list_ptr->host
 		      && (!host || match(kill_list_ptr->host,host))))
 		return(kill_list_ptr);
@@ -2572,16 +2565,6 @@ static aConfItem *find_tkline(char *host,char *name)
 	}
     }
 
-  /*
-      if (tmp->name && (!name || match(tmp->name, name)))
-	if(tmp->passwd)
-	  {
-	    if(check_time_interval(tmp->passwd))
-	      return(tmp);
-	    else
-	      return((aConfItem *)NULL);
-	  }
-	  */
   return((aConfItem *)NULL);
 }
 
@@ -2605,11 +2588,7 @@ void add_temp_kline(aConfItem *aconf)
  * inputs	- NONE
  * output	- NONE
  * side effects	- All temporary klines are flushed out. 
- *		  really should be used only for cases of extreme
- *		  goof up for now.
  *
- *		  Note, you can't free an object, and expect to
- *		  be able to dereference it under some malloc systems.
  */
 void flush_temp_klines()
 {
@@ -3588,7 +3567,7 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	      sendto_one(sptr, 
 			 ":%s NOTICE %s :K-line name [%s] host [%s] pass [%s]",
 			 me.name, parv[0], 
-			 name,
+			 user,
 			 host,
 			 pass);
 	    }
@@ -3610,7 +3589,7 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  sendto_one(sptr, 
 		     ":%s NOTICE %s :k-line name [%s] host [%s] pass [%s]",
 			     me.name, parv[0], 
-			     aconf->name,
+			     aconf->user,
 			     aconf->host,
 			     aconf->passwd);
 		}
