@@ -1,3 +1,7 @@
+*** 20010607_1 by kreator
+- fixed OpenSSL support that b0rked in the meantime
+
+
 *** 20010606_12 by db
 another patch by walter campbell
 
