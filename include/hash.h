@@ -15,37 +15,60 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ *   $Id$
  */
+#ifndef	INCLUDED_hash_h
+#define INCLUDED_hash_h
+#ifndef INCLUDED_sys_types_h
+#include <sys/types.h>
+#define INCLUDED_sys_types_h
+#endif
 
-/*
-$Id$
+/* 
+ * Client hash table size
+ *
+ * used in hash.c, s_debug.c
  */
-
-#ifndef	__hash_include__
-#define __hash_include__
-
-typedef	struct	hashentry {
-	int	hits;
-	int	links;
-	void	*list;
-	} aHashEntry;
-
-/* Client hash table */
-/* used in hash.c */
-
 #define U_MAX 65536
 
-/* Channel hash table */
-/* used in hash.c */
-
+/* 
+ * Channel hash table size
+ *
+ * used in hash.c, s_debug.c
+ */
 #define CH_MAX 16384
 
-/* Who was hash table */
-/* used in whowas.c */
-
+/* 
+ * Whowas hash table size
+ *
+ * used in whowas.c 
+ */
 #define WW_MAX 65536
 
-#endif	/* __hash_include__ */
+struct Client;
+struct Channel;
+
+extern size_t hash_get_client_table_size(void);
+extern size_t hash_get_channel_table_size(void);
+extern void   clear_channel_hash_table(void);
+extern void   clear_client_hash_table(void);
+extern void   add_to_client_hash_table(const char* name, 
+                                       struct Client* client);
+extern int    del_from_client_hash_table(const char* name, 
+                                         struct Client* client);
+extern void   add_to_channel_hash_table(const char* name, 
+                                        struct Channel* chan);
+extern int    del_from_channel_hash_table(const char* name, 
+                                          struct Channel* chan);
+extern struct Channel* hash_find_channel(const char* name, 
+                                         struct Channel* chan);
+extern struct Client* hash_find_client(const char* name, 
+                                       struct Client* client);
+extern struct Client* hash_find_server(const char* name, 
+                                       struct Client* client);
+
+#endif	/* INCLUDED_hash_h */
 
 
 
