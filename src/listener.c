@@ -336,7 +336,6 @@ void accept_connection(struct Listener* listener)
   /*
    * check conf for ip address access
    */
-#if 0
   if (!conf_connect_allowed(addr.sin_addr)) {
     ircstp->is_ref++;
 #ifdef REPORT_DLINE_TO_USER
@@ -345,7 +344,6 @@ void accept_connection(struct Listener* listener)
     close(fd);
     return;
   }
-#endif
   ircstp->is_ac++;
   nextping = timeofday;
 

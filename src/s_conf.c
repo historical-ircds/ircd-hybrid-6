@@ -2393,14 +2393,11 @@ static void lookup_confhost(aConfItem* aconf)
  */
 int conf_connect_allowed(struct in_addr addr)
 {
-  aConfItem *aconf;
-
-  aconf = match_Dline(ntohl((unsigned long)addr.s_addr));
+  aConfItem *aconf = match_Dline(ntohl((unsigned long)addr.s_addr));
 
   if (aconf && !IsConfElined(aconf))
-    return 1;
-  else
     return 0;
+  return 1;
 }
 
 /*
