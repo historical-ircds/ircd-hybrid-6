@@ -83,9 +83,10 @@ extern aConfItem *q_conf;
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
 	defined(NO_JOIN_ON_SPLIT)
-extern int server_was_split;
-extern time_t server_split_time;
-extern int server_split_recovery_time;
+extern int server_was_split;		/* defined in channel.c */
+extern time_t server_split_time;	/* defined in channel.c */
+extern int server_split_recovery_time;	/* defined in channel.c */
+extern int split_smallnet_size;		/* defined in channel.c */
 #endif
 
 extern int lifesux;		/* defined in ircd.c */
@@ -3150,7 +3151,7 @@ int   m_set(aClient *cptr,
   if (parc > 1)
     {
       command = parv[1];
-      if (!strncasecmp(command,"MAX",3))
+      if (!strcasecmp(command,"MAX"))
 	{
           if (parc > 2) {
 	    int new_value = atoi(parv[2]);
@@ -3178,7 +3179,7 @@ int   m_set(aClient *cptr,
 		     me.name, parv[0], MAXCLIENTS, Count.local);
           return 0;
         }
-      else if(!strncasecmp(command,"AUTOCONN",8))
+      else if(!strcasecmp(command,"AUTOCONN"))
 	{
 	  if(parc > 3)
 	    {
@@ -3206,7 +3207,7 @@ int   m_set(aClient *cptr,
 	    }
 	}
 #ifdef IDLE_CHECK
-      else if(!strncasecmp(command, "IDLETIME", 8))
+      else if(!strcasecmp(command, "IDLETIME"))
 	{
 	  if(parc > 2)
 	    {
@@ -3219,10 +3220,21 @@ int   m_set(aClient *cptr,
 		  return 0;
 		}       
 		*/
-	      sendto_ops("%s has changed IDLETIME to %i", parv[0], newval);
-	      sendto_one(sptr, ":%s NOTICE %s :IDLETIME is now set to %i",
-			 me.name, parv[0], newval);
-	      idle_time = (newval*60);
+	      if(newval == 0)
+		{
+		  sendto_ops("%s has disabled IDLE_CHECK",
+			     parv[0]);
+		  sendto_one(sptr, ":%s NOTICE %s :flud detection disabled",
+			     me.name, parv[0]);
+		  idle_time = 0;
+		}
+	      else
+		{
+		  sendto_ops("%s has changed IDLETIME to %i", parv[0], newval);
+		  sendto_one(sptr, ":%s NOTICE %s :IDLETIME is now set to %i",
+			     me.name, parv[0], newval);
+		  idle_time = (newval*60);
+		}
 	      return 0;       
 	    }
 	  else
@@ -3234,7 +3246,7 @@ int   m_set(aClient *cptr,
 	}
 #endif
 #ifdef FLUD
-      else if(!strncasecmp(command, "FLUDNUM",7))
+      else if(!strcasecmp(command, "FLUDNUM"))
 	{
 	  if(parc > 2)
 	    {
@@ -3259,7 +3271,7 @@ int   m_set(aClient *cptr,
 	      return 0;
 	    }
 	}
-      else if(!strncasecmp(command,"FLUDTIME",8))
+      else if(!strcasecmp(command,"FLUDTIME"))
 	{
 	  if(parc > 2)
 	    {
@@ -3267,24 +3279,24 @@ int   m_set(aClient *cptr,
 
 	      if(newval <= 0)
 		{
-		  sendto_one(sptr, ":%s NOTICE %s :flud TIME must be > 0",
+		  sendto_one(sptr, ":%s NOTICE %s :FLUDTIME must be > 0",
 			     me.name, parv[0]);
 		  return 0;
 		}       
 	      flud_time = newval;
-	      sendto_ops("%s has changed flud TIME to %i", parv[0], flud_time);
-	      sendto_one(sptr, ":%s NOTICE %s :flud TIME is now set to %i",
+	      sendto_ops("%s has changed FLUDTIME to %i", parv[0], flud_time);
+	      sendto_one(sptr, ":%s NOTICE %s :FLUDTIME is now set to %i",
 			 me.name, parv[0], flud_num);
 	      return 0;       
 	    }
 	  else
 	    {
-	      sendto_one(sptr, ":%s NOTICE %s :flud TIME is currently %i",
+	      sendto_one(sptr, ":%s NOTICE %s :FLUDTIME is currently %i",
 			 me.name, parv[0], flud_time);
 	      return 0;
 	    }
 	}
-      else if(!strncasecmp(command,"FLUDBLOCK",9))
+      else if(!strcasecmp(command,"FLUDBLOCK"))
 	{
 	  if(parc > 2)
 	    {
@@ -3292,7 +3304,7 @@ int   m_set(aClient *cptr,
 
 	      if(newval < 0)
 		{
-		  sendto_one(sptr, ":%s NOTICE %s :flud BLOCK must be >= 0",
+		  sendto_one(sptr, ":%s NOTICE %s :FLUDBLOCK must be >= 0",
 			     me.name, parv[0]);
 		  return 0;
 		}       
@@ -3306,16 +3318,16 @@ int   m_set(aClient *cptr,
 		}
 	      else
 		{
-		  sendto_ops("%s has changed flud BLOCK to %i",
+		  sendto_ops("%s has changed FLUDBLOCK to %i",
 			     parv[0],flud_block);
-		  sendto_one(sptr, ":%s NOTICE %s :flud BLOCK is now set to %i",
+		  sendto_one(sptr, ":%s NOTICE %s :FLUDBLOCK is now set to %i",
 			 me.name, parv[0], flud_block);
 		}
 	      return 0;       
 	    }
 	  else
 	    {
-	      sendto_one(sptr, ":%s NOTICE %s :flud BLOCK is currently %i",
+	      sendto_one(sptr, ":%s NOTICE %s :FLUDBLOCK is currently %i",
 			 me.name, parv[0], flud_block);
 	      return 0;
 	    }
@@ -3323,7 +3335,7 @@ int   m_set(aClient *cptr,
 #endif
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
 	defined(NO_JOIN_ON_SPLIT)
-      else if(!strncasecmp(command, "SPLITDELAY",10))
+      else if(!strcasecmp(command, "SPLITDELAY"))
 	{
           if(parc > 2)
             {
@@ -3331,27 +3343,53 @@ int   m_set(aClient *cptr,
 
               if(newval < 0)
                 {
-                  sendto_one(sptr, ":%s NOTICE %s :split delay must be >= 0",
+                  sendto_one(sptr, ":%s NOTICE %s :SPLITDELAY must be >= 0",
                              me.name, parv[0]);
                   return 0;
                 }
 	      if(newval > MAX_SERVER_SPLIT_RECOVERY_TIME)
 		{
-		  sendto_one(sptr, ":%s NOTICE %s :Cannot set SPLIT RECOVERY TIME over %d", parv[0], MAX_SERVER_SPLIT_RECOVERY_TIME);
+		  sendto_one(sptr, ":%s NOTICE %s :Cannot set SPLITDELAY over %d", parv[0], MAX_SERVER_SPLIT_RECOVERY_TIME);
 		  newval = MAX_SERVER_SPLIT_RECOVERY_TIME;
 		}
-              sendto_ops("%s has changed spam SERVER SPLIT RECOVERY TIME  to %i", parv[0], newval);
-              sendto_one(sptr, ":%s NOTICE %s :SERVER SPLIT RECOVERY TIME is now set to %i",
+              sendto_ops("%s has changed spam SPLITDELAY to %i", parv[0], newval);
+              sendto_one(sptr, ":%s NOTICE %s :SPLITDELAY is now set to %i",
                          me.name, parv[0], newval );
 	      server_split_recovery_time = (newval*60);
               return 0;
             }
 	  else
 	    {
-	      sendto_one(sptr, ":%s NOTICE %s :SERVER SPLIT RECOVERY TIME is currently %i",
+	      sendto_one(sptr, ":%s NOTICE %s :SPLITDELAY is currently %i",
 			 me.name,
 			 parv[0],
 			 server_split_recovery_time/60);
+	    }
+	}
+      else if(!strcasecmp(command, "SMALLNET"))
+	{
+          if(parc > 2)
+            {
+              int newval = atoi(parv[2]);
+
+              if(newval < SPLIT_SMALLNET_SIZE)
+                {
+                  sendto_one(sptr, ":%s NOTICE %s :SMALLNET must be >= %d",
+                             me.name, parv[0],SPLIT_SMALLNET_SIZE);
+                  return 0;
+                }
+              sendto_ops("%s has changed SMALLNET  to %i", parv[0], newval);
+              sendto_one(sptr, ":%s NOTICE %s :SMALLNET is now set to %i",
+                         me.name, parv[0], newval );
+	      split_smallnet_size = newval;
+              return 0;
+            }
+	  else
+	    {
+	      sendto_one(sptr, ":%s NOTICE %s :SMALLNET is currently %i",
+			 me.name,
+			 parv[0],
+			 split_smallnet_size);
 	    }
 	}
 #endif
@@ -3360,7 +3398,7 @@ int   m_set(aClient *cptr,
 int spam_time = MIN_JOIN_LEAVE_TIME;
 int spam_num = MAX_JOIN_LEAVE_COUNT;
 */
-      else if(!strncasecmp(command, "SPAMNUM",7))
+      else if(!strcasecmp(command, "SPAMNUM"))
         {
           if(parc > 2)
             {
@@ -3388,7 +3426,7 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
               return 0;
             }
         }
-      else if(!strncasecmp(command, "SPAMTIME",8))
+      else if(!strcasecmp(command, "SPAMTIME"))
         {
           if(parc > 2)
             {
@@ -3418,7 +3456,7 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
         }
 #endif
 #ifdef ANTI_SPAMBOT_EXTRA
-      else if(!strncasecmp(command, "SPAMMSGS",8))
+      else if(!strcasecmp(command, "SPAMMSGS"))
         {
           if(parc > 2)
             {
@@ -3467,7 +3505,7 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 #endif
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
 	defined(NO_JOIN_ON_SPLIT)
-	sendto_one(sptr, ":%s NOTICE %s :Options: SPLITDELAY",
+	sendto_one(sptr, ":%s NOTICE %s :Options: SMALLNET SPLITDELAY",
 		me.name, parv[0]);
 #endif
 #ifdef IDLE_CHECK

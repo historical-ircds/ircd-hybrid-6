@@ -1,6 +1,6 @@
 This file outlines the features that ircd-hybrid has for IRC Operators.
 - 09/27/97 - ThemBones (kraemer@u.washington.edu)
-- 11/27/98 - last update
+- 12/10/98 - last update
 
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -211,10 +211,26 @@ COMMAND         - USAGE and DESCRIPTION
                                  fluds to <value>
 
                     -- The following is if compiled with NO_CHANOPS_ON_SPLIT
+                       or NO_JOIN_ON_SPLIT or PRESERVE_CHANNEL_ON_SPLIT
                      SPLITDELAY - Sets how long after the connect burst
                                   starts before ops can be hacked on new
                                   channels. 5(minutes) is usually plenty.
+                                  Disable using 0.
 
+                     SMALLNET   - Below this number of servers present
+                                  means special split handling is now on.
+
+                     -- The following is if compiled with ANTI_SPAMBOT
+                      SPAMNUM   - Sets how many join/parts to channels
+                                  constitutes a possible spambot.
+                      SPAMTIME  - Below this time on a channel
+                                  counts as a join/part as above.
+
+                     -- The follow is if compiled with ANTI_SPAMBOT_EXTRA
+                      SPAMMSGS  - Sets how many messages to different
+                                  targets not to a channel will trigger
+                                  a possible spambot warning.
+                                  Disable using 0.
 + GLINE         - GLINE <user@host> :[reason]
                    -- if compiled with GLINE --
                    Attempts to add a global IRC-network wide ban on

@@ -54,6 +54,7 @@ static char *rcs_version="$Id$";
 int server_was_split=YES;
 time_t server_split_time;
 int server_split_recovery_time = (DEFAULT_SERVER_SPLIT_RECOVERY_TIME * 60);
+int split_smallnet_size = SPLIT_SMALLNET_SIZE;
 #define USE_ALLOW_OP
 #endif
 
@@ -1906,7 +1907,7 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key)
     {
       if((server_split_time + server_split_recovery_time) < NOW)
 	{
-	  if(Count.server > SPLIT_SMALLNET_SIZE)
+	  if(Count.server > split_smallnet_size)
 	    {
 	      /* server hasn't been split for a while, but no one has
 	       * joined from elsewhere, lets expire the channel now.
@@ -2482,7 +2483,7 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 	    {
 	      if( (server_split_time + server_split_recovery_time) < NOW)
 		{
-		  if(Count.server > SPLIT_SMALLNET_SIZE)
+		  if(Count.server > split_smallnet_size)
 		    server_was_split = NO;
 		  else
 		    {

@@ -561,7 +561,7 @@ static	int	proc_answer(ResRQ *rptr,
       else
 	cp += (n + QFIXEDSZ);
   /*
-   * proccess each answer sent to us blech.
+   * process each answer sent to us blech.
    */
   while (hptr->ancount-- > 0 && cp && cp < eob)
     {
