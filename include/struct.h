@@ -839,7 +839,7 @@ struct Channel
   struct fludbot *fluders;
 #endif
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-  struct Channel *next_empty_channel;
+  struct Channel *last_empty_channel, *next_empty_channel;
 #endif
   char	chname[1];
 };

@@ -2,6 +2,13 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b60   29-Apr-1999
+* if server split time is 0, i.e. split code is disabled, dont'
+  put the server into split mode, this can leave 0 member channels
+  lying around after a split.
+* recoded NO_JOIN_ON_SPLIT, all cleaned up.	 
+-Dianora
+	
 version hybrid-6-b59   17-Apr-1999
 * missing ac2ptr_is_NULL check in m_ltrace
 -Rodder

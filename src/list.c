@@ -344,7 +344,11 @@ void remove_client_from_list(aClient *cptr)
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
       defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
 
-	if(Count.server < split_smallnet_size)
+	/* Don't bother checking for a split, if split code
+	 * is deactivated with server_split_recovery_time == 0
+	 */
+
+	if(server_split_recovery_time && (Count.server < split_smallnet_size))
 	  {
 	    if (!server_was_split)
 	      {
