@@ -1620,6 +1620,8 @@ void set_channel_mode(struct Client *cptr,
                   sendto_realops("%s!%s@%s locally unjuping channel %s",
                                  sptr->name, sptr->username,
                                  sptr->host, chptr->chname);
+		  if(chptr->users == 0)
+		    sub1_from_channel(chptr);
                 }
             }
           break;
