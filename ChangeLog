@@ -1,3 +1,7 @@
+*** 19990909_2 by lusky
+corrected error in ChangeLog
+
+
 *** 19990909_1 by lusky
 revved patchlevel to b106
 fix return values for client_dopacket and dopacket (th)
