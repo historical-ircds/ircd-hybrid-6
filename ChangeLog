@@ -1,3 +1,18 @@
+db          2001/12/08 12:55:08 EST	(20011208_17)
+
+  Modified files:
+    src                  sprintf_irc.c 
+  Log:
+  - register is an obsolete keyword left over from the early recursive descent
+    compilers days of unix. Good grief. Any modern compiler will generate better
+    code without this keyword getting in the way.
+    DIE DIE DIE !
+  
+  Revision  Changes    Path
+  1.11      +16 -23    ircd-hybrid-6/src/sprintf_irc.c
+
+
+
 lusky       2001/12/08 04:13:44 EST	(20011208_16)
 
   Modified files:
