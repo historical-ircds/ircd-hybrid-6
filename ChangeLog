@@ -1,3 +1,8 @@
+*** 20011204_12 by db
+- added separate oper_reason to struct ConfItem. I got tired of the BS
+
+
+
 *** 20011204_11 by androsyn
 Added the cname_count crap to support classes in-addr resolution.
 
