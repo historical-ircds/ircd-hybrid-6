@@ -3642,6 +3642,7 @@ static void clear_out_old_conf(void)
     clear_special_conf(&x_conf);
     clear_special_conf(&u_conf);
     clear_q_lines();
+    mark_listeners_closing();
 }
 
 /*
