@@ -56,7 +56,7 @@ void delfrom_fdlist(int fd,fdlist *listp)
 void init_fdlist(fdlist *listp)
 {
   listp->last_entry=0;
-  bzero((char *)listp->entry,sizeof(listp->entry));
+  memset((void *)listp->entry,0,sizeof(listp->entry));
   return;
 }
   
