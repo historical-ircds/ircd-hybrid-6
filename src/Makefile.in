@@ -3,8 +3,7 @@ RM=@RM@
 IRCDLIBS=@LIBS@ ../zlib/libz.a
 INCLUDEDIR=-I../include -I../zlib
 
-# malloc package is commented out until we find a better behaved one
-SRC_1 = bsd.c channel.c class.c dbuf.c mtrie_conf.c # malloc-2.6.1.c
+SRC_1 = bsd.c channel.c class.c dbuf.c mtrie_conf.c
 SRC_2 = hash.c inet_addr.c ircd.c ircsprintf.c dline_conf.c
 SRC_3 = list.c match.c packet.c parse.c res.c s_zip.c fdlist.c
 SRC_4 = s_auth.c s_bsd.c s_conf.c s_debug.c s_err.c s_misc.c s_numeric.c
@@ -14,7 +13,7 @@ RES_SRC =
 # Do it this way for Ultrix, and its portable at least
 # just make sure OBJ's match SRC's (pointed out by Ian)
 # 
-OBJ_1 = bsd.o channel.o class.o dbuf.o mtrie_conf.o # malloc-2.6.1.o
+OBJ_1 = bsd.o channel.o class.o dbuf.o mtrie_conf.o
 OBJ_2 = hash.o inet_addr.o ircd.o ircsprintf.o dline_conf.o
 OBJ_3 = list.o match.o packet.o parse.o res.o s_zip.o fdlist.o
 OBJ_4 = s_auth.o s_bsd.o s_conf.o s_debug.o s_err.o s_misc.o s_numeric.o
