@@ -1,3 +1,10 @@
+*** 20011204_2 by androsyn
+Added some of the standard adns/ documents into the tree, just to give
+credit to the original author of adns who wrote such a nice resolver
+library.
+
+
+
 *** 20011204_1 by androsyn
 Fixed depend wackiness 
 
