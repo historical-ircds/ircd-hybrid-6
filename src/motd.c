@@ -51,6 +51,10 @@ int m_motd(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
   static time_t last_used = 0;
 
+  /* uhh.. servers should not send a motd request.. */
+  if(IsServer(sptr))
+      return 0;
+
   if(!IsAnOper(sptr))
     {
       if((last_used + PACE_WAIT) > CurrentTime)
