@@ -111,7 +111,10 @@ char* clean_string(char* dest, const unsigned char* src, size_t len)
             *d++ = 0x40 + *src;   /* turn it into a printable */
         }
       else if (*src > '~')
-        *d++ = '.';
+        {
+          if (d < (endp - 4))
+            d += ircsprintf(d,"\\%d",*src);
+        }
       else
         *d++ = *src;
       ++src;

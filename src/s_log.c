@@ -123,7 +123,7 @@ void log(int priority, const char* fmt, ...)
 
 #ifdef USE_SYSLOG  
   if (priority <= L_DEBUG)
-    syslog(sysLogLevel[priority], buf);
+    syslog(sysLogLevel[priority], "%s", buf);
 #endif
 #if defined(USE_LOGFILE) 
   write_log(buf);
