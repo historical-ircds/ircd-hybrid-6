@@ -127,43 +127,31 @@ char    serveropts[] = {
 'w',
 '\0'};
 
-#ifndef ssize_t
-#define ssize_t unsigned int
-#endif
-
-static  char    debugbuf[1024];
-
-void
-debug(int level, char *format, ...)
+void debug(int level, char *format, ...)
 
 {
-        va_list args;
-        int err = errno;
+  static char debugbuf[1024];
+  va_list args;
+  int err = errno;
 
-        va_start(args, format);
+  va_start(args, format);
 
-        (void) vsprintf(debugbuf, format, args);
+  vsprintf(debugbuf, format, args);
 
 #ifdef USE_SYSLOG
-        if (level == DEBUG_ERROR)
-                syslog(LOG_ERR, debugbuf);
+  if (level == DEBUG_ERROR)
+    syslog(LOG_ERR, debugbuf);
 #endif
 
-        if ((debuglevel >= 0) && (level <= debuglevel))
-        {
-                if (local[2])
-                {
-                        local[2]->sendM++;
-                        local[2]->sendB += strlen(debugbuf);
-                }
+  if ((debuglevel >= 0) && (level <= debuglevel))
+  {
+    fprintf(stderr, "%s", debugbuf);
+    fputc('\n', stderr);
+  }
 
-                (void)fprintf(stderr, "%s", debugbuf);
-                (void)fputc('\n', stderr);
-        }
+  va_end(args);
 
-        va_end(args);
-
-        errno = err;
+  errno = err;
 } /* debug() */
 
 /*
@@ -488,8 +476,8 @@ void count_memory(aClient *cptr,char *nick)
   tot += flud_memory_allocated;
 #endif
 
-  sendto_one(cptr, ":%s %d %s :TOTAL: %d Current max RSS: %u",
+  sendto_one(cptr, 
+             ":%s %d %s :TOTAL: %d Available:  Current max RSS: %u",
              me.name, RPL_STATSDEBUG, nick, tot, get_maxrss());
 
-  return;
 }
