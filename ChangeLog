@@ -1,3 +1,8 @@
+*** 20011126_1 by db
+- Stupid bug in m_gline.c found by David-T, committing before it gets lost
+
+
+
 *** 20011121_2 by db
 - A bogus numeric would not be cool.
 
