@@ -1,3 +1,8 @@
+*** 20010619_2 by wcampbel
+Updated the Release notes, and document the gdb bt procedure (backported from
+Hyb7)
+
+
 *** 20010619_1 by wcampbel
 Updated the mkpasswd program (Adds an option to specify the length of a 
 randomly generated salt)
