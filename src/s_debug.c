@@ -35,6 +35,7 @@
 
 #include <string.h>
 #include <stdarg.h>
+#include <unistd.h>
 #include <errno.h>
 #include <time.h>
 #include <sys/file.h>
@@ -165,12 +166,23 @@ debug(int level, char *format, ...)
         errno = err;
 } /* debug() */
 
+/*
+ * get_maxrss - get the operating systems notion of the resident set size
+ */
 size_t get_maxrss(void)
 {
-  struct rusage r;
-  if (getrusage(RUSAGE_SELF, &r))
-    return 0;
-  return r.ru_maxrss;
+  /*
+   * NOTE: sbrk is not part of the ANSI C library or the POSIX.1 standard
+   * however it seems that everyone defines it. Calling sbrk with a 0
+   * argument will return a pointer to the top of the process virtual
+   * memory without changing the process size, so this call should be
+   * reasonably safe (sbrk returns the new value for the top of memory).
+   * This code relies on the notion that the address returned will be an 
+   * offset from 0 (NULL), so the result of sbrk is cast to a size_t and 
+   * returned. We really shouldn't be using it here but...
+   */
+  void* vptr = sbrk(0);
+  return (size_t) vptr;
 }
 
 /*

@@ -76,6 +76,7 @@ SRCS = \
 #	hash.o \
 #	irc_string.o \
 #	ircd.o \
+	ircd_signal.o \
 #	list.o \
 #	listener.o \
 #	m_gline.o \

@@ -37,6 +37,7 @@
 #include "ircd.h"
 #include "s_misc.h"
 #include "struct.h"
+#include "fdlist.h"              /* default_fdlist */
 
 #include <netdb.h>               /* struct hostent */
 #include <string.h>
