@@ -265,7 +265,7 @@ int	attach_Iline(aClient *cptr,
 			     cptr->name,host,
 			     inetntoa((char *)&cptr->ip),
 			     me.name);
-CT	      strncpyzt(cptr->sockhost,"oper.",sizeof(cptr->sockhost));
+	      strncpyzt(cptr->sockhost,"oper.",sizeof(cptr->sockhost));
 	      strcat(cptr->sockhost,me.name);
 #endif
 	      SetIPSpoof(cptr);

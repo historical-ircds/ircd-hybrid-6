@@ -830,7 +830,6 @@ void	send_channel_modes(aClient *cptr, aChannel *chptr)
 
   *modebuf = *parabuf = '\0';
   channel_modes(cptr, modebuf, parabuf, chptr);
-  
 
   if (*parabuf)
     strcat(parabuf, " ");
@@ -2732,7 +2731,8 @@ int	m_join(aClient *cptr,
 
 
 #ifdef NO_JOIN_ON_SPLIT_SIMPLE
-      if (server_was_split && MyClient(sptr) && (*name != '&'))
+      if (server_was_split && MyClient(sptr) && (*name != '&') &&
+	  !IsAnOper(sptr))
         {
               sendto_one(sptr, form_str(ERR_UNAVAILRESOURCE),
                          me.name, parv[0], name);
@@ -2748,7 +2748,8 @@ int	m_join(aClient *cptr,
        * cold_start is set to NO if SPLITDELAY is set to 0 in m_set()
        */
 
-      if(cold_start && MyClient(sptr) && (*name != '&') )
+      if(cold_start && MyClient(sptr) && (*name != '&') &&
+	 !IsAnOper(sptr))
 	{
 	      sendto_one(sptr, form_str(ERR_UNAVAILRESOURCE),
 			 me.name, parv[0], name);
@@ -2931,7 +2932,7 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 		continue;
 
 	      /* allow local joins to this channel */
-	      if( chptr->users == 0 )
+	      if( (chptr->users == 0) && !IsAnOper(sptr) )
 		{
 		  sendto_one(sptr, form_str(ERR_UNAVAILRESOURCE),
 			     me.name, parv[0], name);
@@ -2971,9 +2972,6 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 
       if (MyConnect(sptr) && (i = can_join(sptr, chptr, key, &flags)))
 	{
-/*	  sendto_one(sptr,
-		     ":%s %d %s %s :Sorry, cannot join channel.",
-		     me.name, i, parv[0], name); */
           sendto_one(sptr,
                     form_str(i), me.name, parv[0], name);
 #ifdef ANTI_SPAMBOT

@@ -142,6 +142,7 @@ extern void count_memory(aClient *,char *); /* defined in s_debug.c */
 static void set_autoconn(aClient *,char *,char *,int);
 static void report_specials(aClient *,int,int);
 extern void report_qlines(aClient *);
+static int m_set_parser(char *);
 int bad_tld(char *);
 
 int send_motd(aClient *,aClient *,int, char **,aMessageFile *); 
@@ -2552,6 +2553,72 @@ extern int spam_time;
 
 
 /*
+ * m_set_parser - find the correct int. to return 
+ * so we can switch() it.
+ * KEY:  0 - MAX
+ * 	 1 - AUTOCONN
+ *	 2 - IDLETIME
+ *	 3 - FLUDNUM
+ *	 4 - FLUDTIME
+ *	 5 - FLUDBLOCK
+ *	 6 - DRONETIME
+ *	 7 - DRONECOUNT
+ *	 8 - SPLITDELAY
+ *	 9 - SPLITNUM
+ *      10 - SPLITUSERS
+ *	11 - SPAMNUM
+ *	12 - SPAMTIME
+ *	13 - SPAMMSGS	
+ * - rjp
+ */
+
+#define TOKEN_MAX 0
+#define TOKEN_AUTOCONN 1
+#define TOKEN_IDLETIME 2
+#define TOKEN_FLUDNUM 3
+#define TOKEN_FLUDTIME 4
+#define TOKEN_FLUDBLOCK 5
+#define TOKEN_DRONETIME 6
+#define TOKEN_DRONECOUNT 7
+#define TOKEN_SPLITDELAY 8
+#define TOKEN_SPLITNUM 9
+#define TOKEN_SPLITUSERS 10
+#define TOKEN_SPAMNUM 11
+#define TOKEN_SPAMTIME 12
+#define TOKEN_SPAMMSGS 13
+#define TOKEN_BAD 14
+
+static char *set_token_table[] = {
+  "MAX",
+  "AUTOCONN",
+  "IDLETIME",
+  "FLUDNUM",
+  "FLUDTIME",
+  "FLUDBLOCK",
+  "DRONETIME",
+  "DRONECOUNT",
+  "SPLITDELAY",
+  "SPLITNUM",
+  "SPLITUSERS",
+  "SPAMNUM",
+  "SPAMTIME",
+  "SPAMMSGS",
+  NULL
+};
+
+static int m_set_parser(char *parsethis)
+{
+  int i;
+
+  for( i = 0; set_token_table[i]; i++ )
+    {
+      if(!strcasecmp(set_token_table[i],parsethis))
+	return i;
+    }
+  return TOKEN_BAD;
+}
+
+/*
  * m_set - set options while running
  */
 int   m_set(aClient *cptr,
@@ -2560,6 +2627,7 @@ int   m_set(aClient *cptr,
 	    char *parv[])
 {
   char *command;
+  int cnum;
 
   if (!MyClient(sptr) || !IsAnOper(sptr))
     {
@@ -2570,46 +2638,51 @@ int   m_set(aClient *cptr,
   if (parc > 1)
     {
       command = parv[1];
-      if (!strcasecmp(command,"MAX"))
+      cnum = m_set_parser(command);
+/* This strcasecmp crap is annoying.. a switch() would be better.. 
+ * - rjp
+ */
+      switch(cnum)
 	{
-          if (parc > 2) {
-	    int new_value = atoi(parv[2]);
-	    if (new_value > MASTER_MAX)
-	      {
-                sendto_one(sptr,
-			   ":%s NOTICE %s :You cannot set MAXCLIENTS to > MASTER_MAX (%d)",
-			   me.name, parv[0], MASTER_MAX);
-                return 0;
-              }
-	    if (new_value < 32)
-	      {
-                sendto_one(sptr, ":%s NOTICE %s :You cannot set MAXCLIENTS to < 32 (%d:%d)",
-                      me.name, parv[0], MAXCLIENTS, highest_fd);
-                return 0;
-              }
-	    MAXCLIENTS = new_value;
-	    sendto_realops("%s!%s@%s set new MAXCLIENTS to %d (%d current)",
-			   parv[0], sptr->user->username, sptr->sockhost, MAXCLIENTS, Count.local);
-	    return 0;
-          }
-          sendto_one(sptr, ":%s NOTICE %s :Current Maxclients = %d (%d)",
+	case TOKEN_MAX:
+	  if (parc > 2)
+	    {
+	      int new_value = atoi(parv[2]);
+	      if (new_value > MASTER_MAX)
+		{
+		  sendto_one(sptr,
+			     ":%s NOTICE %s :You cannot set MAXCLIENTS to > MASTER_MAX (%d)",
+			     me.name, parv[0], MASTER_MAX);
+		  return 0;
+		}
+	      if (new_value < 32)
+		{
+		  sendto_one(sptr, ":%s NOTICE %s :You cannot set MAXCLIENTS to < 32 (%d:%d)",
+			     me.name, parv[0], MAXCLIENTS, highest_fd);
+		  return 0;
+		}
+	      MAXCLIENTS = new_value;
+	      sendto_realops("%s!%s@%s set new MAXCLIENTS to %d (%d current)",
+			     parv[0], sptr->user->username, sptr->sockhost, MAXCLIENTS, Count.local);
+	      return 0;
+	    }
+	  sendto_one(sptr, ":%s NOTICE %s :Current Maxclients = %d (%d)",
 		     me.name, parv[0], MAXCLIENTS, Count.local);
-          return 0;
-        }
-      else if(!strcasecmp(command,"AUTOCONN"))
-	{
+	  return 0;
+	  break;
+
+	case TOKEN_AUTOCONN:
 	  if(parc > 3)
 	    {
 	      int newval = atoi(parv[3]);
 
 	      if(!strcasecmp(parv[2],"ALL"))
-		 {
-		   sendto_realops(
-			      "%s has changed AUTOCONN ALL to %i",
-			      parv[0], newval);
-		   autoconn = newval;
-		   return 0;
-		 }
+		{
+		  sendto_realops(
+				 "%s has changed AUTOCONN ALL to %i",
+				 parv[0], newval);
+		  autoconn = newval;
+		}
 	      else
 		set_autoconn(sptr,parv[0],parv[2],newval);
 	    }
@@ -2617,158 +2690,143 @@ int   m_set(aClient *cptr,
 	    {
 	      sendto_one(sptr, ":%s NOTICE %s :AUTOCONN ALL is currently %i",
 			 me.name, parv[0], autoconn);
-	      return 0;
 	    }
-	}
+	  return 0;
+	  break;
+
 #ifdef IDLE_CHECK
-      else if(!strcasecmp(command, "IDLETIME"))
-	{
-	  if(parc > 2)
-	    {
-	      int newval = atoi(parv[2]);
-	      /*
-	      if((newval*60) < MIN_IDLETIME)
-		{
-		  sendto_one(sptr, ":%s NOTICE %s :IDLETIME must be >= %d",
-			     me.name, parv[0],MIN_IDLETIME/60);
-		  return 0;
-		}       
-		*/
-	      if(newval == 0)
-		{
-		  sendto_realops("%s has disabled IDLE_CHECK",
-			     parv[0]);
-		  idle_time = 0;
-		}
-	      else
-		{
-		  sendto_realops("%s has changed IDLETIME to %i",
-				 parv[0], newval);
-		  idle_time = (newval*60);
-		}
-	      return 0;       
-	    }
-	  else
-	    {
-	      sendto_one(sptr, ":%s NOTICE %s :IDLETIME is currently %i",
-			 me.name, parv[0], idle_time/60);
-	      return 0;
-	    }
-	}
+	  case TOKEN_IDLETIME:
+	    if(parc > 2)
+	      {
+		int newval = atoi(parv[2]);
+		if(newval == 0)
+		  {
+		    sendto_realops("%s has disabled IDLE_CHECK",
+				   parv[0]);
+		    idle_time = 0;
+		  }
+		else
+		  {
+		    sendto_realops("%s has changed IDLETIME to %i",
+				   parv[0], newval);
+		    idle_time = (newval*60);
+		  }
+	      }
+	    else
+	      {
+		sendto_one(sptr, ":%s NOTICE %s :IDLETIME is currently %i",
+			   me.name, parv[0], idle_time/60);
+	      }
+	    return 0;
+	    break;
 #endif
 #ifdef FLUD
-      else if(!strcasecmp(command, "FLUDNUM"))
-	{
-	  if(parc > 2)
-	    {
-	      int newval = atoi(parv[2]);
+	  case TOKEN_FLUDNUM:
+	    if(parc > 2)
+	      {
+		int newval = atoi(parv[2]);
 
-	      if(newval <= 0)
-		{
-		  sendto_one(sptr, ":%s NOTICE %s :FLUDNUM must be > 0",
-			     me.name, parv[0]);
-		  return 0;
-		}       
-	      flud_num = newval;
-	      sendto_realops("%s has changed FLUDNUM to %i",
-			     parv[0], flud_num);
-	      return 0;       
-	    }
-	  else
-	    {
-	      sendto_one(sptr, ":%s NOTICE %s :FLUDNUM is currently %i",
-			 me.name, parv[0], flud_num);
-	      return 0;
-	    }
-	}
-      else if(!strcasecmp(command,"FLUDTIME"))
-	{
-	  if(parc > 2)
-	    {
-	      int newval = atoi(parv[2]);
+		if(newval <= 0)
+		  {
+		    sendto_one(sptr, ":%s NOTICE %s :FLUDNUM must be > 0",
+			       me.name, parv[0]);
+		    return 0;
+		  }       
+		flud_num = newval;
+		sendto_realops("%s has changed FLUDNUM to %i",
+			       parv[0], flud_num);
+	      }
+	    else
+	      {
+		sendto_one(sptr, ":%s NOTICE %s :FLUDNUM is currently %i",
+			   me.name, parv[0], flud_num);
+	      }
+	    return 0;
+	    break;
 
-	      if(newval <= 0)
-		{
-		  sendto_one(sptr, ":%s NOTICE %s :FLUDTIME must be > 0",
-			     me.name, parv[0]);
-		  return 0;
-		}       
-	      flud_time = newval;
-	      sendto_realops("%s has changed FLUDTIME to %i",
-			     parv[0], flud_time);
-	      return 0;       
-	    }
-	  else
-	    {
-	      sendto_one(sptr, ":%s NOTICE %s :FLUDTIME is currently %i",
-			 me.name, parv[0], flud_time);
-	      return 0;
-	    }
-	}
-      else if(!strcasecmp(command,"FLUDBLOCK"))
-	{
-	  if(parc > 2)
-	    {
-	      int newval = atoi(parv[2]);
+	  case TOKEN_FLUDTIME:
+	    if(parc > 2)
+	      {
+		int newval = atoi(parv[2]);
 
-	      if(newval < 0)
-		{
-		  sendto_one(sptr, ":%s NOTICE %s :FLUDBLOCK must be >= 0",
-			     me.name, parv[0]);
-		  return 0;
-		}       
-	      flud_block = newval;
-	      if(flud_block == 0)
-		{
-		  sendto_realops("%s has disabled flud detection/protection",
-			     parv[0]);
-		}
-	      else
-		{
-		  sendto_realops("%s has changed FLUDBLOCK to %i",
-			     parv[0],flud_block);
-		}
-	      return 0;       
-	    }
-	  else
-	    {
-	      sendto_one(sptr, ":%s NOTICE %s :FLUDBLOCK is currently %i",
-			 me.name, parv[0], flud_block);
-	      return 0;
-	    }
-	}
+		if(newval <= 0)
+		  {
+		    sendto_one(sptr, ":%s NOTICE %s :FLUDTIME must be > 0",
+			       me.name, parv[0]);
+		    return 0;
+		  }       
+		flud_time = newval;
+		sendto_realops("%s has changed FLUDTIME to %i",
+			       parv[0], flud_time);
+	      }
+	    else
+	      {
+		sendto_one(sptr, ":%s NOTICE %s :FLUDTIME is currently %i",
+			   me.name, parv[0], flud_time);
+	      }
+	    return 0;       
+	    break;
+
+	  case TOKEN_FLUDBLOCK:
+	    if(parc > 2)
+	      {
+		int newval = atoi(parv[2]);
+
+		if(newval < 0)
+		  {
+		    sendto_one(sptr, ":%s NOTICE %s :FLUDBLOCK must be >= 0",
+			       me.name, parv[0]);
+		    return 0;
+		  }       
+		flud_block = newval;
+		if(flud_block == 0)
+		  {
+		    sendto_realops("%s has disabled flud detection/protection",
+				   parv[0]);
+		  }
+		else
+		  {
+		    sendto_realops("%s has changed FLUDBLOCK to %i",
+				   parv[0],flud_block);
+		  }
+	      }
+	    else
+	      {
+		sendto_one(sptr, ":%s NOTICE %s :FLUDBLOCK is currently %i",
+			   me.name, parv[0], flud_block);
+	      }
+	    return 0;       
+	    break;
 #endif
 #ifdef ANTI_DRONE_FLOOD
-      else if(!strcasecmp(command, "DRONETIME"))
-	{
-	  if(parc > 2)
-	    {
-	      int newval = atoi(parv[2]);
+	  case TOKEN_DRONETIME:
+	    if(parc > 2)
+	      {
+		int newval = atoi(parv[2]);
 
-	      if(newval < 0)
-		{
-		  sendto_one(sptr, ":%s NOTICE %s :DRONETIME must be > 0",
-			     me.name, parv[0]);
-		  return 0;
-		}       
-	      drone_time = newval;
-	      if(drone_time == 0)
+		if(newval < 0)
+		  {
+		    sendto_one(sptr, ":%s NOTICE %s :DRONETIME must be > 0",
+			       me.name, parv[0]);
+		    return 0;
+		  }       
+		drone_time = newval;
+		if(drone_time == 0)
 		  sendto_realops("%s has disabled the ANTI_DRONE_FLOOD code",
 				 parv[0]);
 		else
 		  sendto_realops("%s has changed DRONETIME to %i",
 				 parv[0], drone_time);
-	      return 0;       
-	    }
-	  else
-	    {
-	      sendto_one(sptr, ":%s NOTICE %s :DRONETIME is currently %i",
-			 me.name, parv[0], drone_time);
-	      return 0;
-	    }
-	}
-      else if(!strcasecmp(command,"DRONECOUNT"))
-	{
+	      }
+	    else
+	      {
+		sendto_one(sptr, ":%s NOTICE %s :DRONETIME is currently %i",
+			   me.name, parv[0], drone_time);
+	      }
+	    return 0;
+	    break;
+
+	case TOKEN_DRONECOUNT:
 	  if(parc > 2)
 	    {
 	      int newval = atoi(parv[2]);
@@ -2782,70 +2840,69 @@ int   m_set(aClient *cptr,
 	      drone_count = newval;
 	      sendto_realops("%s has changed DRONECOUNT to %i",
 			     parv[0], drone_count);
-	      return 0;       
 	    }
 	  else
 	    {
 	      sendto_one(sptr, ":%s NOTICE %s :DRONECOUNT is currently %i",
 			 me.name, parv[0], drone_count);
-	      return 0;
 	    }
-	}
+	  return 0;
+	  break;
 #endif
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-	defined(NO_JOIN_ON_SPLIT)  || defined(NO_JOIN_ON_SPLIT_SIMPLE)
-      else if(!strcasecmp(command, "SPLITDELAY"))
-	{
-          if(parc > 2)
-            {
-              int newval = atoi(parv[2]);
+	  defined(NO_JOIN_ON_SPLIT)  || defined(NO_JOIN_ON_SPLIT_SIMPLE)
 
-              if(newval < 0)
-                {
-                  sendto_one(sptr, ":%s NOTICE %s :SPLITDELAY must be > 0",
-                             me.name, parv[0]);
-                  return 0;
-                }
-	      /* sygma found it, the hard way */
-	      if(newval > MAX_SERVER_SPLIT_RECOVERY_TIME)
+	    case TOKEN_SPLITDELAY:
+	      if(parc > 2)
 		{
-		  sendto_one(sptr,
-			     ":%s NOTICE %s :Cannot set SPLITDELAY over %d",
-			     me.name, parv[0], MAX_SERVER_SPLIT_RECOVERY_TIME);
-		  newval = MAX_SERVER_SPLIT_RECOVERY_TIME;
-		}
-              sendto_realops("%s has changed SPLITDELAY to %i",
-			     parv[0], newval);
-	      server_split_recovery_time = (newval*60);
-	      if(server_split_recovery_time == 0)
-		{
-		  cold_start = NO;
-		  if (server_was_split)
+		  int newval = atoi(parv[2]);
+		  
+		  if(newval < 0)
 		    {
-		      server_was_split = NO;
-		      sendto_ops("split-mode deactived by manual override");
+		      sendto_one(sptr, ":%s NOTICE %s :SPLITDELAY must be > 0",
+				 me.name, parv[0]);
+		      return 0;
 		    }
+		  /* sygma found it, the hard way */
+		  if(newval > MAX_SERVER_SPLIT_RECOVERY_TIME)
+		    {
+		      sendto_one(sptr,
+				 ":%s NOTICE %s :Cannot set SPLITDELAY over %d",
+				 me.name, parv[0], MAX_SERVER_SPLIT_RECOVERY_TIME);
+		      newval = MAX_SERVER_SPLIT_RECOVERY_TIME;
+		    }
+		  sendto_realops("%s has changed SPLITDELAY to %i",
+				 parv[0], newval);
+		  server_split_recovery_time = (newval*60);
+		  if(server_split_recovery_time == 0)
+		    {
+		      cold_start = NO;
+		      if (server_was_split)
+			{
+			  server_was_split = NO;
+			  sendto_ops("split-mode deactived by manual override");
+			}
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-		  remove_empty_channels();
+		      remove_empty_channels();
 #endif
 #if defined(SPLIT_PONG)
-                  got_server_pong = YES;
+		      got_server_pong = YES;
 #endif
+		    }
 		}
-              return 0;
-            }
-	  else
+	      else
+		{
+		  sendto_one(sptr, ":%s NOTICE %s :SPLITDELAY is currently %i",
+			     me.name,
+			     parv[0],
+			     server_split_recovery_time/60);
+		}
+	  return 0;
+	  break;
+
+	case TOKEN_SPLITNUM:
+	  if(parc > 2)
 	    {
-	      sendto_one(sptr, ":%s NOTICE %s :SPLITDELAY is currently %i",
-			 me.name,
-			 parv[0],
-			 server_split_recovery_time/60);
-	    }
-	}
-      else if(!strcasecmp(command, "SPLITNUM"))
-	{
-          if(parc > 2)
-            {
               int newval = atoi(parv[2]);
 
               if(newval < SPLIT_SMALLNET_SIZE)
@@ -2857,7 +2914,6 @@ int   m_set(aClient *cptr,
               sendto_realops("%s has changed SPLITNUM to %i",
 			     parv[0], newval);
 	      split_smallnet_size = newval;
-              return 0;
             }
 	  else
 	    {
@@ -2866,70 +2922,70 @@ int   m_set(aClient *cptr,
 			 parv[0],
 			 split_smallnet_size);
 	    }
-	}
-      else if(!strcasecmp(command, "SPLITUSERS"))
-	{
-          if(parc > 2)
-            {
-              int newval = atoi(parv[2]);
+	  return 0;
+	  break;
 
-              if(newval < 0)
-                {
-                  sendto_one(sptr, ":%s NOTICE %s :SPLITUSERS must be >= 0",
-                             me.name, parv[0]);
-                  return 0;
-                }
-              sendto_realops("%s has changed SPLITUSERS to %i",
-			     parv[0], newval);
-	      split_smallnet_users = newval;
-              return 0;
-            }
-	  else
-	    {
-	      sendto_one(sptr, ":%s NOTICE %s :SPLITUSERS is currently %i",
-			 me.name,
-			 parv[0],
-			 split_smallnet_users);
-	    }
-	}
+	  case TOKEN_SPLITUSERS:
+	    if(parc > 2)
+	      {
+		int newval = atoi(parv[2]);
+
+		if(newval < 0)
+		  {
+		    sendto_one(sptr, ":%s NOTICE %s :SPLITUSERS must be >= 0",
+			       me.name, parv[0]);
+		    return 0;
+		  }
+		sendto_realops("%s has changed SPLITUSERS to %i",
+			       parv[0], newval);
+		split_smallnet_users = newval;
+	      }
+	    else
+	      {
+		sendto_one(sptr, ":%s NOTICE %s :SPLITUSERS is currently %i",
+			   me.name,
+			   parv[0],
+			   split_smallnet_users);
+	      }
+	    return 0;
+	    break;
 #endif
 #ifdef ANTI_SPAMBOT
-      else if(!strcasecmp(command, "SPAMNUM"))
-        {
-          if(parc > 2)
-            {
-              int newval = atoi(parv[2]);
+	  case TOKEN_SPAMNUM:
+	    if(parc > 2)
+	      {
+		int newval = atoi(parv[2]);
 
-              if(newval < 0)
-                {
-                  sendto_one(sptr, ":%s NOTICE %s :SPAMNUM must be > 0",
-                             me.name, parv[0]);
-                  return 0;
-                }
-	      if(newval == 0)
-		{
-		  sendto_realops("%s has disabled ANTI_SPAMBOT",
-				 parv[0]);
-		  return 0;
-		}
+		if(newval < 0)
+		  {
+		    sendto_one(sptr, ":%s NOTICE %s :SPAMNUM must be > 0",
+			       me.name, parv[0]);
+		    return 0;
+		  }
+		if(newval == 0)
+		  {
+		    sendto_realops("%s has disabled ANTI_SPAMBOT",
+				   parv[0]);
+		    return 0;
+		  }
 
-              if(newval < MIN_SPAM_NUM)
-		spam_num = MIN_SPAM_NUM;
-	      else
-		spam_num = newval;
-              sendto_realops("%s has changed SPAMNUM to %i",
-			     parv[0], spam_num);
-              return 0;
-            }
-          else
-            {
-              sendto_one(sptr, ":%s NOTICE %s :SPAMNUM is currently %i",
-                         me.name, parv[0], spam_num);
-              return 0;
-            }
-        }
-      else if(!strcasecmp(command, "SPAMTIME"))
-        {
+		if(newval < MIN_SPAM_NUM)
+		  spam_num = MIN_SPAM_NUM;
+		else
+		  spam_num = newval;
+		sendto_realops("%s has changed SPAMNUM to %i",
+			       parv[0], spam_num);
+	      }
+	    else
+	      {
+		sendto_one(sptr, ":%s NOTICE %s :SPAMNUM is currently %i",
+			   me.name, parv[0], spam_num);
+	      }
+
+	    return 0;
+	    break;
+
+	case TOKEN_SPAMTIME:
           if(parc > 2)
             {
               int newval = atoi(parv[2]);
@@ -2946,19 +3002,17 @@ int   m_set(aClient *cptr,
 		spam_time = newval;
               sendto_realops("%s has changed SPAMTIME to %i",
 			     parv[0], spam_time);
-              return 0;
             }
           else
             {
               sendto_one(sptr, ":%s NOTICE %s :SPAMTIME is currently %i",
                          me.name, parv[0], spam_time);
-              return 0;
             }
-        }
+	  return 0;
+	  break;
 #endif
 #ifdef ANTI_SPAMBOT_EXTRA
-      else if(!strcasecmp(command, "SPAMMSGS"))
-        {
+	case TOKEN_SPAMMSGS:
           if(parc > 2)
             {
               int newval = atoi(parv[2]);
@@ -2972,7 +3026,7 @@ int   m_set(aClient *cptr,
 	      if(newval == 0)
 		{
 		  sendto_realops("%s has disabled ANTI_SPAMBOT_EXTRA",
-			     parv[0]);
+				 parv[0]);
 		  spambot_privmsg_count = 0;
 		  return 0;
 		}
@@ -2982,48 +3036,48 @@ int   m_set(aClient *cptr,
 	      else
 		spambot_privmsg_count = newval;
               sendto_realops("%s has changed SPAMMSGS to %i",
-			 parv[0], spambot_privmsg_count);
-              return 0;
+			     parv[0], spambot_privmsg_count);
             }
           else
             {
               sendto_one(sptr, ":%s NOTICE %s :SPAMMSGS is currently %i",
                          me.name, parv[0], spambot_privmsg_count);
-              return 0;
             }
-	}
+	  return 0;
+	  break;
 #endif
+	default:
+	case TOKEN_BAD:
+	  break;
+	}
     }
-  else
-    {
-      sendto_one(sptr, ":%s NOTICE %s :Options: MAX AUTOCONN",
-		 me.name, parv[0]);
+  sendto_one(sptr, ":%s NOTICE %s :Options: MAX AUTOCONN",
+	     me.name, parv[0]);
 #ifdef FLUD
-      sendto_one(sptr, ":%s NOTICE %s :Options: FLUDNUM, FLUDTIME, FLUDBLOCK",
-		 me.name, parv[0]);
+  sendto_one(sptr, ":%s NOTICE %s :Options: FLUDNUM, FLUDTIME, FLUDBLOCK",
+	     me.name, parv[0]);
 #endif
 #ifdef ANTI_DRONE_FLOOD
-      sendto_one(sptr, ":%s NOTICE %s :Options: DRONETIME, DRONECOUNT",
-		 me.name, parv[0]);
+  sendto_one(sptr, ":%s NOTICE %s :Options: DRONETIME, DRONECOUNT",
+	     me.name, parv[0]);
 #endif
 #ifdef ANTI_SPAMBOT
-      sendto_one(sptr, ":%s NOTICE %s :Options: SPAMNUM, SPAMTIME",
-		 me.name, parv[0]);
+  sendto_one(sptr, ":%s NOTICE %s :Options: SPAMNUM, SPAMTIME",
+	     me.name, parv[0]);
 #endif
 #ifdef ANTI_SPAMBOT_EXTRA
-      sendto_one(sptr, ":%s NOTICE %s :Options: SPAMMSGS",
-		 me.name, parv[0]);
+  sendto_one(sptr, ":%s NOTICE %s :Options: SPAMMSGS",
+	     me.name, parv[0]);
 #endif
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-      defined(NO_JOIN_ON_SPLIT)  || defined(NO_JOIN_ON_SPLIT_SIMPLE)
-	sendto_one(sptr, ":%s NOTICE %s :Options: SPLITNUM SPLITUSERS SPLITDELAY",
-		   me.name, parv[0]);
+  defined(NO_JOIN_ON_SPLIT)  || defined(NO_JOIN_ON_SPLIT_SIMPLE)
+    sendto_one(sptr, ":%s NOTICE %s :Options: SPLITNUM SPLITUSERS SPLITDELAY",
+	       me.name, parv[0]);
 #endif
 #ifdef IDLE_CHECK
-      sendto_one(sptr, ":%s NOTICE %s :Options: IDLETIME",
-		 me.name, parv[0]);
+  sendto_one(sptr, ":%s NOTICE %s :Options: IDLETIME",
+	     me.name, parv[0]);
 #endif
-    }
   return 0;
 }
 
