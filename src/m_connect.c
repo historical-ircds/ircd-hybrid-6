@@ -154,12 +154,16 @@ int m_connect(struct Client* cptr, struct Client* sptr, int parc, char* parv[])
    * try to find the name, then host, if both fail notify ops and bail
    */
   if (!(aconf = find_conf_by_name(parv[1], CONF_CONNECT_SERVER))) {
+#ifndef HIDE_SERVERS_IPS  
     if (!(aconf = find_conf_by_host(parv[1], CONF_CONNECT_SERVER))) {
+#endif    
       sendto_one(sptr,
                  "NOTICE %s :Connect: Host %s not listed in ircd.conf",
                  parv[0], parv[1]);
       return 0;
+#ifndef HIDE_SERVERS_IPS      
     }
+#endif    
   }
   assert(0 != aconf);
   /*
