@@ -31,4 +31,6 @@
 /* Maximum mode changes allowed per client, per server is different */
 #define	MAXMODEPARAMS	4
 
+extern void sync_channels(time_t);
+
 #endif

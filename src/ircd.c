@@ -27,6 +27,7 @@
 #include "res.h"
 #include "class.h"
 #include "s_auth.h"
+#include "channel.h"
 #include "h.h"
 #include "mtrie_conf.h"
 #include "s_conf.h"
@@ -62,12 +63,6 @@ extern int    server_was_split;
 
 int cold_start = YES;	/* set if the server has just fired up */
 
-/* client pointer lists -Dianora */ 
-  
-aClient *local_cptr_list = NULL;
-aClient *oper_cptr_list  = NULL;
-aClient *serv_cptr_list  = NULL;
-
 /* fdlist's */
 fdlist serv_fdlist;
 fdlist oper_fdlist;
@@ -88,7 +83,12 @@ struct	Counter	Count;
 
 time_t	NOW;
 aClient me;			/* That's me */
+
 aClient* GlobalClientList = 0;	/* Pointer to beginning of Client list */
+/* client pointer lists -Dianora */ 
+aClient *local_cptr_list = NULL;
+aClient *oper_cptr_list  = NULL;
+aClient *serv_cptr_list  = NULL;
 
 void	    server_reboot();
 void	    restart(char*);
@@ -98,14 +98,7 @@ static void write_pidfile(void);
 
 static void initialize_global_set_options(void);
 static void initialize_message_files(void);
-
 static time_t io_loop(time_t);
-
-
-/* externally needed functions */
-
-extern  void init_fdlist(fdlist *);	/* defined in fdlist.c */
-extern  void sync_channels(time_t);	/* defined in channel.c */
 
 static char **myargv;
 
