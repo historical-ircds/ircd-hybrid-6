@@ -1,3 +1,10 @@
+*** 20010727_5 by leeh
+- TS_CURRENT is now 4
+- if sptr's ts version is > 3, older ts always wins
+  else any ts wins on an opless channel
+- sptr->serv->tsversion is the first param from SVINFO, their ts version
+
+
 *** 20010727_4 by jdc
 - Whoops, typo (chat != char ;-) ).
 
