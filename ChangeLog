@@ -1,3 +1,8 @@
+*** 20010705_3 by db
+- added NO_HACK_OPS, don't allow users to hack ops on a channel period.
+
+
+
 *** 20010705_2 by greg
 - config.h / ircd.c
 		made pid file stuffs more multi ircd in same directory
