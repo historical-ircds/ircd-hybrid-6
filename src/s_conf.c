@@ -245,6 +245,12 @@ int	attach_Iline(aClient *cptr,
 	}
     }
 
+  /* Slow down the reconnectors who are rejected */
+
+#ifdef REJECT_HOLD
+  setRejectHold(cptr);
+#endif
+
   return -1;	/* -1 on no match *bleh* */
 }
 

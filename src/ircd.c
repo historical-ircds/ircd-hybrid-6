@@ -113,6 +113,7 @@ extern  void sync_channels(time_t);	/* defined in channel.c */
 extern  void read_servers();		/* defined in s_bsd.c */
 extern	void read_opers();		/* defined in s_bsd.c */
 extern	void read_clients();		/* defined in s_bsd.c */
+extern	void read_unregistered();	/* defined in s_bsd.c */
 
 char	**myargv;
 int	portnum = -1;		    /* Server port number, listening this */
@@ -797,6 +798,9 @@ static	int	bad_command()
 #define LOADCFREQ 5	/* every 5s */
 #define LOADRECV 40	/* 40k/s */
 
+#define READ_CLIENTS_NUM 3	/* read connected clients (non oper/server) */
+#define READ_MESSAGE_NUM 7	/* read everything */
+
 int do_read_clients = 0;
 int do_read_message = 0;
 int lifesux = 1;
@@ -1397,16 +1401,12 @@ time_t io_loop(time_t delay)
     delay = 1;
   else
     delay = MIN(delay, TIMESEC);
-  /* This comment block below, is now just historical -db
-   *
-   * / *
-   * * We want to read servers on every io_loop, as well
-   * * as "busy" clients (which again, includes servers.
-   * * If "lifesux", then we read servers AGAIN, and then
-   * * flush any data to servers.
-   * *	-Taner
-   * * /
-   *
+  /*
+   * We want to read servers on every io_loop, as well
+   * as "busy" clients (which again, includes servers.
+   * If "lifesux", then we read servers AGAIN, and then
+   * flush any data to servers.
+   *	-Taner
    */
 
   if((timeofday = time(NULL)) == -1)
@@ -1420,31 +1420,26 @@ time_t io_loop(time_t delay)
   Debug((DEBUG_DEBUG,"read_message call at: %s %d",
 	 myctime(NOW), NOW));
 
-  /* Use non block read, with no select() setup on servers
-   * and opers. Do the same for clients every second time.
-   * Do a full select() scan every five loops
-   *
-   * select() is an unbelievably expensive system call
-   *
-   */
-  (void)read_servers();
-  (void)read_opers();
-
-  if (do_read_clients)
-    {
-      (void)read_clients();
-      do_read_clients = 0;
-    }
-  else
-    do_read_clients = 1;
-
-  if (do_read_message == 5)	/* only call every 5 loops */
+  if (do_read_message == READ_MESSAGE_NUM)
     {
       read_message(delay);
       do_read_message = 0;
     }
   else
-    do_read_message++;
+    {
+      (void)read_servers();
+      (void)read_opers();
+      
+      if (do_read_clients == READ_CLIENTS_NUM)
+	{
+	  (void)read_clients();
+	  do_read_clients = 0;
+	}
+      else
+	do_read_clients++;
+
+      do_read_message++;
+  }
 
   /*
   ** ...perhaps should not do these loops every time,
