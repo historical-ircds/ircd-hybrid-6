@@ -3946,9 +3946,13 @@ int     m_kline(aClient *cptr,
 	 }
        host = cidr_form_host;
     }
+  else
+    {
+      ip = 0L;
+    }
 
 #ifdef NON_REDUNDANT_KLINES
-  if( (aconf = find_is_klined(host,user,0L)) )
+  if( (aconf = find_matching_mtrie_conf(host,user,(unsigned long)ip)) )
      {
        char *reason;
 
