@@ -3579,9 +3579,9 @@ int   m_set(aClient *cptr,
                          me.name, parv[0], spambot_privmsg_count);
               return 0;
             }
-        }
-      }
+	}
 #endif
+    }
   else
     {
       sendto_one(sptr, ":%s NOTICE %s :Options: MAX AUTOCONN",
@@ -3599,13 +3599,13 @@ int   m_set(aClient *cptr,
 		 me.name, parv[0]);
 #endif
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-	defined(NO_JOIN_ON_SPLIT)
+      defined(NO_JOIN_ON_SPLIT)
 	sendto_one(sptr, ":%s NOTICE %s :Options: SPLITNUM SPLITUSERS SPLITDELAY",
-		me.name, parv[0]);
+		   me.name, parv[0]);
 #endif
 #ifdef IDLE_CHECK
-	sendto_one(sptr, ":%s NOTICE %s :Options: IDLETIME",
-		   me.name, parv[0]);
+      sendto_one(sptr, ":%s NOTICE %s :Options: IDLETIME",
+		 me.name, parv[0]);
 #endif
     }
   return 0;

@@ -217,12 +217,12 @@
 /* SHOW_FAILED_OPER_ID - if FAILED_OPER_NOTICE is defined, also notify when
  * a client fails to oper because of a identity mismatch (wrong host or nick)
  */
-#define SHOW_FAILED_OPER_ID
+#undef SHOW_FAILED_OPER_ID
 
 /* SHOW_FAILED_OPER_PASSWD - if FAILED_OPER_NOTICE is defined, also show the
  * attempted passwd
  */
-#define SHOW_FAILED_OPER_PASSWD
+#undef SHOW_FAILED_OPER_PASSWD
 
 /* CLIENT_SERVER - Don't be so fascist about idle clients ;)
  * changes behaviour of HTM code to make clients lag less.
@@ -1091,12 +1091,6 @@
  * You usually shouldn't need this. -Dianora
 */
 #undef DEBUGMODE               /* define DEBUGMODE to enable debugging mode.*/
-
-/* DEBUG_NO_FORK is used to stop the daemon from doing a fork(), makes it
- * easier for gdb. You won't need this unless you are planning on
- * debugging ircd. -Dianora
- */
-#undef DEBUG_NO_FORK
 
 /*
  * viconf option, if USE_RCS is defined, viconf will use rcs "ci"

@@ -2122,6 +2122,7 @@ static	int	m_message(aClient *cptr,
 	      sptr->person_privmsgs = 0;
 	      sptr->channel_privmsgs = 0;
 	    }
+#endif
 	}
       else
 	{
@@ -2129,7 +2130,6 @@ static	int	m_message(aClient *cptr,
 		     me.name, parv[0], nick);
 	  return -1;
 	}
-#endif
       return 0;
     }
 

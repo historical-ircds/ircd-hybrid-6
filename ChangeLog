@@ -2,6 +2,11 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b53   17-Mar-1999
+* fixed misplaced #ifdef's and } causing undef'ed ANTI_SPAMBOT_EXTRA to fail
+in s_serv.c s_user.c
+-Dianora
+
 version hybrid-6-b52   15-Mar-1999
 * userlength oopsies with usernames
 * added fix by comstud to s_misc.c remove_dependents() unnecessary WALLOPS
