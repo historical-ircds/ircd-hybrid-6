@@ -1,3 +1,9 @@
+*** 20010701_1 by greg
+Backing out some commit diane did about +d, it borked the -6 tree.
+
+Diane: feel free to surgically remove +d again, BUT, don't break the tree.
+
+
 *** 20010630_2 by greg
 Hi.
 
