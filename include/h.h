@@ -94,7 +94,7 @@ extern	int	find_restrict (aClient *);
 extern	int	rehash (aClient *, aClient *, int);
 extern  int	rehash_dump (aClient *,char *);
 extern  int     lock_kline_file ();
-extern  void    report_error_on_tty(char *);
+extern  void    report_error_on_tty(const char* message); /* ircd.c */
 
 extern  void    clear_scache_hash_table(void);
 extern  char    *find_or_add(char *);
