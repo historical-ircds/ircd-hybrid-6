@@ -1,3 +1,20 @@
+androsyn    2002/02/05 23:56:15 EST	(20020206_1)
+
+  Modified files:
+    adns                 internal.h transmit.c 
+    src                  adns.c ircd.c s_bsd.c 
+  Log:
+  Speed ups for the adns code and some minor tweaks to the select/poll code.
+  
+  Revision  Changes    Path
+  1.8       +1 -1      ircd-hybrid-6/adns/internal.h
+  1.5       +2 -1      ircd-hybrid-6/adns/transmit.c
+  1.9       +1 -0      ircd-hybrid-6/src/adns.c
+  1.164     +9 -7      ircd-hybrid-6/src/ircd.c
+  1.147     +3 -4      ircd-hybrid-6/src/s_bsd.c
+
+
+
 lusky       2002/02/05 22:21:27 EST	(20020206_0)
 
   Modified files:
