@@ -12,51 +12,22 @@ static char *rcs_version = "$Id$";
 
 void addto_fdlist(int fd,fdlist *listp)
 {
-  register int index;
-  if ( (index = ++listp->last_entry) >= MAXCONNECTIONS)
-    {
-      /* list too big.. must exit */
-      --listp->last_entry;
-
-#ifdef	USE_SYSLOG
-      (void)syslog(LOG_CRIT, "fdlist.c list too big.. must exit" );
-#endif
-      abort();
-    }
+  if ( fd > MAXCONNECTIONS )
+    return;
   else
-    listp->entry[index] = fd;
-  return;
+    listp->entry[fd] = 1;
 }
 
 void delfrom_fdlist(int fd,fdlist *listp)
 {
-  register int i;
-  for (i=listp->last_entry; i ; i--)
-    {
-      if (listp->entry[i]==fd)
-	break;
-    }
-  if (!i) return; /* could not find it! */
-  /* swap with last_entry */
-  if (i==listp->last_entry)
-    {
-      listp->entry[i] =0;
-      listp->last_entry--;
-      return;
-    }
+  if ( fd > MAXCONNECTIONS )
+    return;
   else
-    {
-      listp->entry[i] = listp->entry[listp->last_entry];
-      listp->entry[listp->last_entry] = 0;
-      listp->last_entry--;
-      return;
-    }
+    listp->entry[fd] = 0;
 }
 
 void init_fdlist(fdlist *listp)
 {
-  listp->last_entry=0;
-  memset((void *)listp->entry,0,sizeof(listp->entry));
-  return;
+  (void)memset((void *)listp,0,sizeof(fdlist));
 }
   

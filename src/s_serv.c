@@ -82,9 +82,7 @@ extern aConfItem *q_conf;
 	defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
 extern int server_was_split;		/* defined in channel.c */
 extern time_t server_split_time;	/* defined in channel.c */
-extern int server_split_recovery_time;	/* defined in channel.c */
-extern int split_smallnet_size;		/* defined in channel.c */
-extern int split_smallnet_users;	/* defined in channel.c */
+
 #ifdef SPLIT_PONG
 extern int got_server_pong;		/* defined in channel.c */
 #endif /* SPLIT_PONG */
@@ -98,7 +96,6 @@ extern fdlist serv_fdlist;
 extern int lifesux;		/* defined in ircd.c */
 extern int rehashed;		/* defined in ircd.c */
 extern int dline_in_progress;	/* defined in ircd.c */
-extern int autoconn;		/* defined in ircd.c */
 
 int     max_connection_count = 1, max_client_count = 1;
 
@@ -106,17 +103,10 @@ int     max_connection_count = 1, max_client_count = 1;
 int spambot_privmsg_count = PRIVMSG_POSSIBLE_SPAMBOT_COUNT;
 #endif
 
-#ifdef ANTI_DRONE_FLOOD
-extern int drone_time;
-extern int drone_count;
-#endif
+extern SetOptionsType GlobalSetOptions; /* defined in ircd.c */
 
 extern aConfItem *temporary_klines;	/* defined in s_conf.c */
 extern aConfItem *find_special_conf(char *,int); /* defined in s_conf.c */
-
-#ifdef IDLE_CHECK
-extern int idle_time;			/* defined in ircd.c */
-#endif
 
 /* external functions */
 #ifdef MAXBUFFERS
@@ -128,7 +118,6 @@ extern char *show_capabilities(aClient *); /* defined in s_misc.c */
 #if defined(GLINES) || defined(SEPARATE_QUOTE_KLINES_BY_DATE)
 extern char *small_file_date(time_t);	/* defined in s_misc.c */
 #endif
-
 
 extern char *oper_privs(aClient *,int);	/* defined in s_conf.c */
 extern char *oper_flags(int);		/* defined in s_conf.c */
@@ -661,7 +650,7 @@ int	m_server(aClient *cptr,
 	}
     }
 
-  if (MyConnect(cptr) && (autoconn == 0))
+  if (MyConnect(cptr) && (AUTOCONN == 0))
     {
       sendto_ops("WARNING AUTOCONN is 0, Closing %s",
 		 get_client_name(cptr, TRUE));
@@ -2681,7 +2670,7 @@ int   m_set(aClient *cptr,
 		  sendto_realops(
 				 "%s has changed AUTOCONN ALL to %i",
 				 parv[0], newval);
-		  autoconn = newval;
+		  AUTOCONN = newval;
 		}
 	      else
 		set_autoconn(sptr,parv[0],parv[2],newval);
@@ -2689,7 +2678,7 @@ int   m_set(aClient *cptr,
 	  else
 	    {
 	      sendto_one(sptr, ":%s NOTICE %s :AUTOCONN ALL is currently %i",
-			 me.name, parv[0], autoconn);
+			 me.name, parv[0], AUTOCONN);
 	    }
 	  return 0;
 	  break;
@@ -2703,19 +2692,19 @@ int   m_set(aClient *cptr,
 		  {
 		    sendto_realops("%s has disabled IDLE_CHECK",
 				   parv[0]);
-		    idle_time = 0;
+		    IDLETIME = 0;
 		  }
 		else
 		  {
 		    sendto_realops("%s has changed IDLETIME to %i",
 				   parv[0], newval);
-		    idle_time = (newval*60);
+		    IDLETIME = (newval*60);
 		  }
 	      }
 	    else
 	      {
 		sendto_one(sptr, ":%s NOTICE %s :IDLETIME is currently %i",
-			   me.name, parv[0], idle_time/60);
+			   me.name, parv[0], IDLETIME/60);
 	      }
 	    return 0;
 	    break;
@@ -2732,14 +2721,14 @@ int   m_set(aClient *cptr,
 			       me.name, parv[0]);
 		    return 0;
 		  }       
-		flud_num = newval;
+		FLUDNUM = newval;
 		sendto_realops("%s has changed FLUDNUM to %i",
-			       parv[0], flud_num);
+			       parv[0], FLUDNUM);
 	      }
 	    else
 	      {
 		sendto_one(sptr, ":%s NOTICE %s :FLUDNUM is currently %i",
-			   me.name, parv[0], flud_num);
+			   me.name, parv[0], FLUDNUM);
 	      }
 	    return 0;
 	    break;
@@ -2755,14 +2744,14 @@ int   m_set(aClient *cptr,
 			       me.name, parv[0]);
 		    return 0;
 		  }       
-		flud_time = newval;
+		FLUDTIME = newval;
 		sendto_realops("%s has changed FLUDTIME to %i",
-			       parv[0], flud_time);
+			       parv[0], FLUDTIME);
 	      }
 	    else
 	      {
 		sendto_one(sptr, ":%s NOTICE %s :FLUDTIME is currently %i",
-			   me.name, parv[0], flud_time);
+			   me.name, parv[0], FLUDTIME);
 	      }
 	    return 0;       
 	    break;
@@ -2778,8 +2767,8 @@ int   m_set(aClient *cptr,
 			       me.name, parv[0]);
 		    return 0;
 		  }       
-		flud_block = newval;
-		if(flud_block == 0)
+		FLUDBLOCK = newval;
+		if(FLUDBLOCK == 0)
 		  {
 		    sendto_realops("%s has disabled flud detection/protection",
 				   parv[0]);
@@ -2787,13 +2776,13 @@ int   m_set(aClient *cptr,
 		else
 		  {
 		    sendto_realops("%s has changed FLUDBLOCK to %i",
-				   parv[0],flud_block);
+				   parv[0],FLUDBLOCK);
 		  }
 	      }
 	    else
 	      {
 		sendto_one(sptr, ":%s NOTICE %s :FLUDBLOCK is currently %i",
-			   me.name, parv[0], flud_block);
+			   me.name, parv[0], FLUDBLOCK);
 	      }
 	    return 0;       
 	    break;
@@ -2810,18 +2799,18 @@ int   m_set(aClient *cptr,
 			       me.name, parv[0]);
 		    return 0;
 		  }       
-		drone_time = newval;
-		if(drone_time == 0)
+		DRONETIME = newval;
+		if(DRONETIME == 0)
 		  sendto_realops("%s has disabled the ANTI_DRONE_FLOOD code",
 				 parv[0]);
 		else
 		  sendto_realops("%s has changed DRONETIME to %i",
-				 parv[0], drone_time);
+				 parv[0], DRONETIME);
 	      }
 	    else
 	      {
 		sendto_one(sptr, ":%s NOTICE %s :DRONETIME is currently %i",
-			   me.name, parv[0], drone_time);
+			   me.name, parv[0], DRONETIME);
 	      }
 	    return 0;
 	    break;
@@ -2837,14 +2826,14 @@ int   m_set(aClient *cptr,
 			     me.name, parv[0]);
 		  return 0;
 		}       
-	      drone_count = newval;
+	      DRONECOUNT = newval;
 	      sendto_realops("%s has changed DRONECOUNT to %i",
-			     parv[0], drone_count);
+			     parv[0], DRONECOUNT);
 	    }
 	  else
 	    {
 	      sendto_one(sptr, ":%s NOTICE %s :DRONECOUNT is currently %i",
-			 me.name, parv[0], drone_count);
+			 me.name, parv[0], DRONECOUNT);
 	    }
 	  return 0;
 	  break;
@@ -2873,8 +2862,8 @@ int   m_set(aClient *cptr,
 		    }
 		  sendto_realops("%s has changed SPLITDELAY to %i",
 				 parv[0], newval);
-		  server_split_recovery_time = (newval*60);
-		  if(server_split_recovery_time == 0)
+		  SPLITDELAY = (newval*60);
+		  if(SPLITDELAY == 0)
 		    {
 		      cold_start = NO;
 		      if (server_was_split)
@@ -2895,7 +2884,7 @@ int   m_set(aClient *cptr,
 		  sendto_one(sptr, ":%s NOTICE %s :SPLITDELAY is currently %i",
 			     me.name,
 			     parv[0],
-			     server_split_recovery_time/60);
+			     SPLITDELAY/60);
 		}
 	  return 0;
 	  break;
@@ -2913,14 +2902,14 @@ int   m_set(aClient *cptr,
                 }
               sendto_realops("%s has changed SPLITNUM to %i",
 			     parv[0], newval);
-	      split_smallnet_size = newval;
+	      SPLITNUM = newval;
             }
 	  else
 	    {
 	      sendto_one(sptr, ":%s NOTICE %s :SPLITNUM is currently %i",
 			 me.name,
 			 parv[0],
-			 split_smallnet_size);
+			 SPLITNUM);
 	    }
 	  return 0;
 	  break;
@@ -2938,14 +2927,14 @@ int   m_set(aClient *cptr,
 		  }
 		sendto_realops("%s has changed SPLITUSERS to %i",
 			       parv[0], newval);
-		split_smallnet_users = newval;
+		SPLITUSERS = newval;
 	      }
 	    else
 	      {
 		sendto_one(sptr, ":%s NOTICE %s :SPLITUSERS is currently %i",
 			   me.name,
 			   parv[0],
-			   split_smallnet_users);
+			   SPLITUSERS);
 	      }
 	    return 0;
 	    break;
@@ -2970,16 +2959,16 @@ int   m_set(aClient *cptr,
 		  }
 
 		if(newval < MIN_SPAM_NUM)
-		  spam_num = MIN_SPAM_NUM;
+		  SPAMNUM = MIN_SPAM_NUM;
 		else
-		  spam_num = newval;
+		  SPAMNUM = newval;
 		sendto_realops("%s has changed SPAMNUM to %i",
-			       parv[0], spam_num);
+			       parv[0], SPAMNUM);
 	      }
 	    else
 	      {
 		sendto_one(sptr, ":%s NOTICE %s :SPAMNUM is currently %i",
-			   me.name, parv[0], spam_num);
+			   me.name, parv[0], SPAMNUM);
 	      }
 
 	    return 0;
@@ -2997,16 +2986,16 @@ int   m_set(aClient *cptr,
                   return 0;
                 }
               if(newval < MIN_SPAM_TIME)
-		spam_time = MIN_SPAM_TIME;
+		SPAMTIME = MIN_SPAM_TIME;
 	      else
-		spam_time = newval;
+		SPAMTIME = newval;
               sendto_realops("%s has changed SPAMTIME to %i",
-			     parv[0], spam_time);
+			     parv[0], SPAMTIME);
             }
           else
             {
               sendto_one(sptr, ":%s NOTICE %s :SPAMTIME is currently %i",
-                         me.name, parv[0], spam_time);
+                         me.name, parv[0], SPAMTIME);
             }
 	  return 0;
 	  break;
@@ -3027,21 +3016,21 @@ int   m_set(aClient *cptr,
 		{
 		  sendto_realops("%s has disabled ANTI_SPAMBOT_EXTRA",
 				 parv[0]);
-		  spambot_privmsg_count = 0;
+		  SPAMMSGS = 0;
 		  return 0;
 		}
 
               if(newval < PRIVMSG_POSSIBLE_SPAMBOT_COUNT)
-		spambot_privmsg_count = PRIVMSG_POSSIBLE_SPAMBOT_COUNT;
+		SPAMMSGS = PRIVMSG_POSSIBLE_SPAMBOT_COUNT;
 	      else
-		spambot_privmsg_count = newval;
+		SPAMMSGS = newval;
               sendto_realops("%s has changed SPAMMSGS to %i",
 			     parv[0], spambot_privmsg_count);
             }
           else
             {
               sendto_one(sptr, ":%s NOTICE %s :SPAMMSGS is currently %i",
-                         me.name, parv[0], spambot_privmsg_count);
+                         me.name, parv[0], SPAMMSGS);
             }
 	  return 0;
 	  break;
@@ -3176,7 +3165,6 @@ int	m_rehash(aClient *cptr,
 		 int parc,
 		 char *parv[])
 {
-  char  sparemsg[80];
   int found = NO;
 
 #ifndef	LOCOP_REHASH

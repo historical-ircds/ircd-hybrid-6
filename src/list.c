@@ -32,13 +32,12 @@ static char *rcs_version = "$Id$";
 #include "blalloc.h"
 
 extern int BlockHeapGarbageCollect(BlockHeap *);
+extern SetOptionsType GlobalSetOptions;
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
 	defined(NO_JOIN_ON_SPLIT)  || defined(NO_JOIN_ON_SPLIT_SIMPLE)
 extern int server_was_split;
 extern time_t server_split_time;
-extern int server_split_recovery_time;
-extern int split_smallnet_size;
 #endif
 
 char *currentfile;
@@ -351,7 +350,7 @@ void remove_client_from_list(aClient *cptr)
 	 * is deactivated with server_split_recovery_time == 0
 	 */
 
-	if(server_split_recovery_time && (Count.server < split_smallnet_size))
+	if(SPLITDELAY && (Count.server < SPLITNUM))
 	  {
 	    if (!server_was_split)
 	      {

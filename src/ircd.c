@@ -46,9 +46,6 @@ static char *rcs_version="$Id$";
 #include "mtrie_conf.h"
 #include "s_conf.h"
 
-#ifdef  IDLE_CHECK
-int	idle_time = MIN_IDLETIME;
-#endif
 #ifdef  REJECT_HOLD
 int reject_held_fds=0;
 #endif
@@ -67,6 +64,7 @@ aMessageFile *helpfile=(aMessageFile *)NULL;
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
 	defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
 extern time_t server_split_time;
+extern int server_was_split;
 #endif
 
 int cold_start=YES;	/* set if the server has just fired up */
@@ -89,26 +87,25 @@ aClient *serv_cptr_list=(aClient *)NULL;
 /* fdlist's */
 fdlist serv_fdlist;
 fdlist oper_fdlist;
-fdlist listen_fdlist;
 
 #ifndef NO_PRIORITY
 fdlist busycli_fdlist;	/* high-priority clients */
 #endif
 
-fdlist default_fdlist;	/* just the number of the entry */
-/*    */
+fdlist default_fdlist;  /* just the number of the entry */
 
-int	MAXCLIENTS = MAX_CLIENTS;  /* semi-configurable if QUOTE_SET is def*/
+SetOptionsType GlobalSetOptions;
+
 struct	Counter	Count;
 
 time_t	NOW;
 aClient me;			/* That's me */
 aClient *client;		/* Pointer to beginning of Client list */
+
 #ifdef  LOCKFILE
 extern  time_t  pending_kline_time;
 extern	struct pkl *pending_klines;
 extern  void do_pending_klines(void);
-
 #endif
 
 void	server_reboot();
@@ -127,17 +124,8 @@ extern  void read_oper_motd();		/* defined in s_serv.c */
 extern  void read_help();		/* defined in s_serv.c */
 extern  void sync_channels(time_t);	/* defined in channel.c */
 
-
-/* following 4 functions are for possible future use
- *
- */
-extern  void read_servers();		/* defined in s_bsd.c */
-extern	void read_opers();		/* defined in s_bsd.c */
-extern	void read_clients();		/* defined in s_bsd.c */
-extern	void read_unregistered();	/* defined in s_bsd.c */
-
 char	**myargv;
-int	portnum = -1;		    /* Server port number, listening this */
+int	portnum = -1;	              /* Server port number, listening this */
 char	*configfile = CONFIGFILE;	/* Server configuration file */
 
 #ifdef KPATH
@@ -174,9 +162,9 @@ extern	etext();
 
 VOIDSIG	s_monitor()
 {
-  static	int	mon = 0;
+  static int	mon = 0;
 #ifdef	POSIX_SIGNALS
-  struct	sigaction act;
+  struct sigaction act;
 #endif
 
   (void)moncontrol(mon);
@@ -219,7 +207,7 @@ static VOIDSIG s_rehash()
 #endif
 }
 
-void	restart(char *mesg)
+void restart(char *mesg)
 {
   static int was_here = NO; /* redundant due to restarting flag below */
 
@@ -303,14 +291,14 @@ void	server_reboot()
 */
 static	time_t	try_connections(time_t currenttime)
 {
-  aConfItem *aconf;
-  aClient *cptr;
-  aConfItem **pconf;
-  int	connecting, confrq;
+  aConfItem	*aconf;
+  aClient	*cptr;
+  aConfItem	**pconf;
+  int		connecting, confrq;
   time_t	next = 0;
   aClass	*cltmp;
-  aConfItem *con_conf = (aConfItem *)NULL;
-  int	con_class = 0;
+  aConfItem 	*con_conf = (aConfItem *)NULL;
+  int		con_class = 0;
 
   connecting = FALSE;
   Debug((DEBUG_NOTICE,"Connection check at   : %s",
@@ -437,9 +425,10 @@ static	time_t	check_pings(time_t currenttime)
   int		i;			/* used to index through fd/cptr's */
   time_t	oldest = 0;		/* next ping time */
   time_t	timeout;		/* found necessary ping time */
-  char *reason;				/* pointer to reason string */
-  int die_index=0;			/* index into list */
-  char ping_time_out_buffer[64];	/* blech that should be a define */
+  char		*reason;		/* pointer to reason string */
+  int		die_index=0;		/* index into list */
+  char		ping_time_out_buffer[64];   /* blech that should be a define */
+
 #if defined(IDLE_CHECK) && defined(SEND_FAKE_KILL_TO_CLIENT)
   int		fakekill=0;
 #endif /* IDLE_CHECK && SEND_FAKE_KILL_TO_CLIENT */
@@ -619,12 +608,12 @@ static	time_t	check_pings(time_t currenttime)
       if (IsPerson(cptr))
 	{
 	  if( !IsElined(cptr) &&
-	      idle_time && 
+	      IDLETIME && 
 #ifdef OPER_IDLE
 	      !IsAnOper(cptr) &&
 #endif /* OPER_IDLE */
 	      !IsIdlelined(cptr) &&
-	      ((timeofday - cptr->user->last) > idle_time))
+	      ((timeofday - cptr->user->last) > IDLETIME))
 	    {
 	      aConfItem *aconf;
 
@@ -909,15 +898,54 @@ int	main(int argc, char *argv[])
   client = &me;          /* Pointer to beginning of Client list */
   cold_start = YES;		/* set when server first starts up */
 
-
   if((timeofday = time(NULL)) == -1)
     {
       (void)fprintf(stderr,"ERROR: Clock Failure (%d)\n", errno);
       exit(errno);
     }
-
-  (void)memset( (void *)&Count, 0, sizeof(Count));
+  
+  memset( &Count, 0, sizeof(Count));
   Count.server = 1;	/* us */
+
+  /* This block here sets all global set options needed */
+  memset( &GlobalSetOptions, 0, sizeof(GlobalSetOptions));
+
+  MAXCLIENTS = MAX_CLIENTS;
+  AUTOCONN = 1;
+
+#ifdef FLUD
+  FLUDNUM = FLUD_NUM;
+  FLUDTIME = FLUD_TIME;
+  FLUDBLOCK = FLUD_BLOCK;
+#endif
+
+#ifdef IDLE_CHECK
+  IDLETIME = MIN_IDLETIME;
+#endif
+
+#ifdef ANTI_SPAMBOT
+  SPAMTIME = MIN_JOIN_LEAVE_TIME;
+  SPAMNUM = MAX_JOIN_LEAVE_COUNT;
+#endif
+
+#ifdef ANTI_SPAMBOT_EXTRA
+  SPAMMSGS = PRIVMSG_POSSIBLE_SPAMBOT_COUNT;
+#endif
+
+#ifdef ANTI_DRONE_FLOOD
+  DRONETIME = DEFAULT_DRONE_TIME;
+  DRONECOUNT = DEFAULT_DRONE_COUNT;
+#endif
+
+#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
+        defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
+ SPLITDELAY = (DEFAULT_SERVER_SPLIT_RECOVERY_TIME * 60);
+ SPLITNUM = SPLIT_SMALLNET_SIZE;
+ SPLITUSERS = SPLIT_SMALLNET_USER_SIZE;
+#endif
+
+ /* End of global set options */
+
 
 #ifdef REJECT_HOLD
   reject_held_fds = 0;
@@ -925,22 +953,28 @@ int	main(int argc, char *argv[])
 
 /* this code by mika@cs.caltech.edu */
 /* it is intended to keep the ircd from being swapped out. BSD swapping
+
    criteria do not match the requirements of ircd */
+
 #ifdef SETUID_ROOT
   if(plock(TXTLOCK)<0) fprintf(stderr,"could not plock...\n");
   if(setuid(IRCD_UID)<0)exit(-1); /* blah.. this should be done better */
 #endif
+
 #ifdef INITIAL_DBUFS
   dbuf_init();  /* set up some dbuf stuff to control paging */
 #endif
+
   sbrk0 = (char *)sbrk((size_t)0);
   uid = getuid();
   euid = geteuid();
+
 #ifdef	PROFIL
   (void)monstartup(0, etext);
   (void)moncontrol(1);
   (void)signal(SIGUSR1, s_monitor);
 #endif
+
 #ifdef	CHROOTDIR
   if (chdir(dpath))
     {
@@ -985,8 +1019,8 @@ int	main(int argc, char *argv[])
   */
   while (--argc > 0 && (*++argv)[0] == '-')
     {
-      char	*p = argv[0]+1;
-      int	flag = *p++;
+      char *p = argv[0]+1;
+      int  flag = *p++;
 
       if (flag == '\0' || *p == '\0')
        {
@@ -1137,17 +1171,6 @@ normal user.\n");
 	    } 
 #endif /*CHROOTDIR/UID/GID*/
 
-#if 0
-  /* didn't set debuglevel */
-  /* but asked for debugging output to tty */
-  if ((debuglevel < 0) &&  (bootopt & BOOT_TTY))
-    {
-      (void)fprintf(stderr,
-		    "you specified -t without -x. use -x <n>\n");
-      exit(-1);
-    }
-#endif
-
   if (argc > 0)
     return bad_command(); /* This should exit out */
 
@@ -1179,7 +1202,7 @@ normal user.\n");
   NOW = time(NULL);
   init_fdlist(&serv_fdlist);
   init_fdlist(&oper_fdlist);
-  init_fdlist(&listen_fdlist);
+  init_fdlist(&default_fdlist);
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
 	defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
@@ -1192,15 +1215,6 @@ normal user.\n");
 #ifndef NO_PRIORITY
   init_fdlist(&busycli_fdlist);
 #endif
-
-  init_fdlist(&default_fdlist);
-  {
-    register int i;
-    for (i=MAXCONNECTIONS+1 ; i>0 ; i--)
-      {
-	default_fdlist.entry[i] = i-1;
-      }
-  }
 
   if((timeofday = time(NULL)) == -1)
     {
@@ -1296,7 +1310,6 @@ normal user.\n");
   me.serv->up = me.name;
   me.lasttime = me.since = me.firsttime = NOW;
   (void)add_to_client_hash_table(me.name, &me);
-
 
   check_class();
   if (bootopt & BOOT_OPER)
@@ -1717,22 +1730,26 @@ time_t now;
 #define FDLISTCHKFREQ  2
 
   register aClient *cptr;
-  register int i,j;
+  register int i;
 
-  j = 0;
   for (i=highest_fd; i >=0; i--)
     {
+      busycli_fdlist.entry[i] = 0;
+
       if (!(cptr=local[i])) continue;
       if (IsServer(cptr) || IsListening(cptr) || IsOper(cptr))
 	{
-	  busycli_fdlist.entry[++j] = i;
+	  busycli_fdlist.entry[i] = 1;
 	  continue;
 	}
       if (cptr->receiveM == cptr->lastrecvM)
 	{
 	  cptr->priority += 2;	/* lower a bit */
 	  if (cptr->priority > 90) cptr->priority = 90;
-	  else if (BUSY_CLIENT(cptr)) busycli_fdlist.entry[++j] = i;
+	  else if (BUSY_CLIENT(cptr))
+	    {
+	      busycli_fdlist.entry[i] = 1;
+	    }
 	  continue;
 	}
       else
@@ -1742,12 +1759,14 @@ time_t now;
 	  if (cptr->priority < 0)
 	    {
 	      cptr->priority = 0;
-	      busycli_fdlist.entry[++j] = i;
+	      busycli_fdlist.entry[i] = 1;
 	    }
-	  else if (BUSY_CLIENT(cptr)) busycli_fdlist.entry[++j] = i;
+	  else if (BUSY_CLIENT(cptr))
+	    {
+	      busycli_fdlist.entry[i] = 1;
+	    }
 	}
     }
-  busycli_fdlist.last_entry = j; /* rest of the fdlist is garbage */
   return (now + FDLISTCHKFREQ + (lifesux + 1));
 }
 #endif

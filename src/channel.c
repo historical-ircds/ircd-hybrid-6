@@ -53,15 +53,14 @@ static char *rcs_version="$Id$";
 	defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
 int server_was_split=YES;
 time_t server_split_time;
-int server_split_recovery_time = (DEFAULT_SERVER_SPLIT_RECOVERY_TIME * 60);
-int split_smallnet_size = SPLIT_SMALLNET_SIZE;
-int split_smallnet_users = SPLIT_SMALLNET_USER_SIZE;
 #ifdef SPLIT_PONG
 int got_server_pong=NO;
 #endif /* SPLIT_PONG */
 static void check_still_split();
 #define USE_ALLOW_OP
 #endif
+
+extern SetOptionsType GlobalSetOptions;
 
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 aChannel *empty_channel_list=(aChannel*)NULL;
@@ -111,13 +110,6 @@ static	char	*PartFmt = ":%s PART %s";
 /*
  * some buffers for rebuilding channel/nick lists with ,'s
  */
-/*
- * hrmmm "char	nickbuf[BUFSIZE];" was never used. odd. removed
- * actually, it was only used if V28PlusOnly was defined,
- * which it never was.
- *
- * -Dianora
- */
 
 static	char	buf[BUFSIZE];
 static	char	modebuf[MODEBUFLEN], modebuf2[MODEBUFLEN];
@@ -126,10 +118,6 @@ static	char	parabuf[MODEBUFLEN], parabuf2[MODEBUFLEN];
 /* externally defined function */
 extern Link *find_channel_link(Link *,aChannel *);	/* defined in list.c */
 
-#ifdef ANTI_SPAMBOT
-extern int spam_num;	/* defined in s_serv.c */
-extern int spam_time;	/* defined in s_serv.c */
-#endif
 
 /*
  * return the length (>=0) of a chain of links.
@@ -2534,13 +2522,13 @@ static void clear_bans_exceptions(aClient *sptr, aChannel *chptr)
 
 static void check_still_split()
 {
-  if((server_split_time + server_split_recovery_time) < NOW)
+  if((server_split_time + SPLITDELAY) < NOW)
     {
-      if((Count.server >= split_smallnet_size) &&
+      if((Count.server >= SPLITNUM) &&
 #ifdef SPLIT_PONG
 	 (got_server_pong == YES) &&
 #endif
-	 (Count.total >= split_smallnet_users))
+	 (Count.total >= SPLITUSERS))
 	{
 	  /* server hasn't been split for a while.
 	   * -Dianora
@@ -2786,17 +2774,12 @@ int	m_join(aClient *cptr,
 				     parv[0], chptr->chname);
 	      remove_user_from_channel(sptr, chptr, 0);
 	    }
-/*
-  Added /quote set for SPAMBOT
 
-int spam_time = MIN_JOIN_LEAVE_TIME;
-int spam_num = MAX_JOIN_LEAVE_COUNT;
-*/
 #ifdef ANTI_SPAMBOT 	  /* Dianora */
 
 	  if( MyConnect(sptr) && !IsAnOper(sptr) )
 	    {
-	      if(spam_num && (sptr->join_leave_count >= spam_num))
+	      if(SPAMNUM && (sptr->join_leave_count >= SPAMNUM))
 		{
 		  sendto_ops_lev(SPY_LEV,
 				     "User %s (%s@%s) is a possible spambot",
@@ -2821,7 +2804,7 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 		    }
 		  else
 		    {
-		      if((NOW - (sptr->last_join_time)) < spam_time)
+		      if((NOW - (sptr->last_join_time)) < SPAMTIME)
 			{
 			  /* oh, its a possible spambot */
 			  sptr->join_leave_count++;
@@ -2886,7 +2869,7 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 #ifdef ANTI_SPAMBOT 	  /* Dianora */
           if(flags == 0)	/* if channel doesn't exist, don't penalize */
             successful_join_count++;
-          if( spam_num && (sptr->join_leave_count >= spam_num))
+          if( SPAMNUM && (sptr->join_leave_count >= SPAMNUM))
             { 
               /* Its already known as a possible spambot */
  
@@ -3107,7 +3090,7 @@ int	m_part(aClient *cptr,
 
       if (name && MyConnect(sptr) && !IsAnOper(sptr))
 	{
-	  if(spam_num && (sptr->join_leave_count >= spam_num))
+	  if(SPAMNUM && (sptr->join_leave_count >= SPAMNUM))
 	    {
 	      sendto_ops_lev(SPY_LEV,"User %s (%s@%s) is a possible spambot",
 			 sptr->name,
@@ -3131,7 +3114,7 @@ int	m_part(aClient *cptr,
 		}
 	      else
 		{
-		  if( (NOW - (sptr->last_join_time)) < spam_time)
+		  if( (NOW - (sptr->last_join_time)) < SPAMTIME)
 		    {
 		      /* oh, its a possible spambot */
 		      sptr->join_leave_count++;

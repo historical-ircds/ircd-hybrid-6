@@ -55,6 +55,8 @@ static char *rcs_version="$Id$";
 #include <strings.h>
 #endif
 
+extern SetOptionsType GlobalSetOptions;
+
 static int do_user (char *, aClient *, aClient*, char *, char *, char *,
                      char *);
 
@@ -65,10 +67,6 @@ static int tell_user_off(aClient *,char **);
 
 extern char motd_last_changed_date[];
 extern int send_motd(aClient *,aClient *,int, char **,aMessageFile *);
-
-#ifdef ANTI_SPAMBOT_EXTRA
-extern int spambot_privmsg_count;
-#endif
 
 #ifdef OPER_MOTD
 extern aMessageFile *opermotd;	/* defined in s_serv.c */
@@ -122,30 +120,17 @@ extern aConfItem *find_special_conf(char *,int); /* defined in s_conf.c */
 extern int find_q_line(char *,char *,char *); /* defined in s_conf.c */
 
 #ifdef FLUD
-int flud_num = FLUD_NUM;
-int flud_time = FLUD_TIME;
-int flud_block = FLUD_BLOCK;
 extern BlockHeap *free_fludbots;
 extern BlockHeap *free_Links;
 
-void announce_fluder(aClient *,aClient *,aChannel *,int );
+static void announce_fluder(aClient *,aClient *,aChannel *,int );
 struct fludbot *remove_fluder_reference(struct fludbot **,aClient *);
 Link *remove_fludee_reference(Link **,void *);
-int check_for_ctcp(char *);
+static int check_for_ctcp(char *);
 int check_for_fludblock(aClient *,aClient *,aChannel *,int);
 int check_for_flud(aClient *,aClient *,aChannel *,int);
 void free_fluders(aClient *,aChannel *);
 void free_fludees(aClient *);
-#endif
-
-#ifdef ANTI_SPAMBOT
-int spam_time = MIN_JOIN_LEAVE_TIME;
-int spam_num = MAX_JOIN_LEAVE_COUNT;
-#endif
-
-#ifdef ANTI_DRONE_FLOOD
-int drone_time = DEFAULT_DRONE_TIME;
-int drone_count = DEFAULT_DRONE_COUNT;
 #endif
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
@@ -439,10 +424,8 @@ static	int	register_user(aClient *cptr,
   aConfItem *aconf;
   char	*parv[3];
   static  char ubuf[12];
-  char	*p;
   short	oldstatus = sptr->status;
   anUser *user = sptr->user;
-  int 	i;
   char *reason;
 #ifdef BOTCHECK
   int	isbot;
@@ -1814,9 +1797,9 @@ static	int	m_message(aClient *cptr,
 	sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
 		   me.name, parv[0], nick);
 #ifdef ANTI_SPAMBOT_EXTRA
-      if( MyConnect(sptr) && spambot_privmsg_count &&
+      if( MyConnect(sptr) && SPAMMSGS &&
 	  ((sptr->person_privmsgs - sptr->channel_privmsgs)
-	   > spambot_privmsg_count) )
+	   > SPAMMSGS) )
 	{
 	  sendto_realops_lev(REJ_LEV,
 "Possible spambot %s [%s@%s] : privmsgs to clients %d privmsgs to channels %d",
@@ -1899,9 +1882,9 @@ static	int	m_message(aClient *cptr,
 				  parv[2]);
 	    }
 #ifdef ANTI_SPAMBOT_EXTRA
-	  if( MyConnect(sptr) && spambot_privmsg_count &&
+	  if( MyConnect(sptr) && SPAMMSGS &&
 	      ((sptr->person_privmsgs - sptr->channel_privmsgs)
-	       > spambot_privmsg_count) )
+	       > SPAMMSGS) )
 	    {
 	      sendto_realops_lev(REJ_LEV,
 "Possible spambot %s [%s@%s] : privmsgs to clients %d privmsgs to channels %d",
@@ -1948,9 +1931,9 @@ static	int	m_message(aClient *cptr,
 	    return 0;
 #endif
 #ifdef ANTI_DRONE_FLOOD
-      if(MyConnect(acptr) && IsClient(sptr) && !IsAnOper(sptr) && drone_time)
+      if(MyConnect(acptr) && IsClient(sptr) && !IsAnOper(sptr) && DRONETIME)
 	{
-	  if((acptr->first_received_message_time+drone_time) < NOW)
+	  if((acptr->first_received_message_time+DRONETIME) < NOW)
 	    {
 	      acptr->received_number_of_privmsgs=1;
 	      acptr->first_received_message_time = NOW;
@@ -1958,7 +1941,7 @@ static	int	m_message(aClient *cptr,
 	    }
 	  else
 	    {
-	      if(acptr->received_number_of_privmsgs > drone_count)
+	      if(acptr->received_number_of_privmsgs > DRONECOUNT)
 		{
 		  if(acptr->drone_noticed == 0) /* tiny FSM */
 		    {
@@ -2027,9 +2010,9 @@ static	int	m_message(aClient *cptr,
 #endif
 
 #ifdef ANTI_SPAMBOT_EXTRA
-      if( MyConnect(sptr) && spambot_privmsg_count &&
+      if( MyConnect(sptr) && SPAMMSGS &&
 	  ((sptr->person_privmsgs - sptr->channel_privmsgs)
-	   > spambot_privmsg_count) )
+	   > SPAMMSGS) )
 	{
 	  sendto_realops_lev(REJ_LEV,
 "Possible spambot %s [%s@%s] : privmsgs to clients %d privmsgs to channels %d",
@@ -4007,10 +3990,11 @@ static int rejecting_bot(aClient *sptr, int isbot,char **type_of_bot)
 
 #ifdef FLUD
 
-void announce_fluder(aClient *fluder,	/* fluder, client being fluded */
-		     aClient *cptr,
-		     aChannel *chptr,	/* channel being fluded */
-		     int type)		/* for future use */
+static void announce_fluder(
+			    aClient *fluder, /* fluder, client being fluded */
+			    aClient *cptr,
+			    aChannel *chptr,	/* channel being fluded */
+			    int type)		/* for future use */
 {
   char *fludee;
 
@@ -4088,8 +4072,9 @@ Link *remove_fludee_reference(Link **fludees,void *fludee)
 ** contained in the passed string.  This might seem easier than I am doing it,
 ** but a CTCP message can be changed together, even after a normal message.
 ** 
-** Unfortunately, this makes for a bit of extra processing in the server. */
-int check_for_ctcp(char *str)
+** Unfortunately, this makes for a bit of extra processing in the server.
+*/
+static int check_for_ctcp(char *str)
 {
   char *p = str;          
   while((p = strchr(p, 1)) != NULL)
@@ -4113,7 +4098,7 @@ int check_for_fludblock(aClient *fluder, /* fluder being fluded */
   int blocking;
 
   /* If it's disabled, we don't need to process all of this */
-  if(flud_block == 0)     
+  if(FLUDBLOCK == 0)     
     return 0;
  
   /* It's either got to be a client or a channel being fluded */
@@ -4129,9 +4114,9 @@ int check_for_fludblock(aClient *fluder, /* fluder being fluded */
   /* Are we blocking fluds at this moment? */
   time(&now);
   if(cptr)                
-    blocking = (cptr->fludblock > (now - flud_block));
+    blocking = (cptr->fludblock > (now - FLUDBLOCK));
   else
-    blocking = (chptr->fludblock > (now - flud_block));
+    blocking = (chptr->fludblock > (now - FLUDBLOCK));
   
   return(blocking);
 }
@@ -4149,7 +4134,7 @@ int check_for_flud(aClient *fluder,	/* fluder, client being fluded */
   Link *newfludee;
 
   /* If it's disabled, we don't need to process all of this */
-  if(flud_block == 0)
+  if(FLUDBLOCK == 0)
     return 0;
 
   /* It's either got to be a client or a channel being fluded */
@@ -4165,9 +4150,9 @@ int check_for_flud(aClient *fluder,	/* fluder, client being fluded */
   /* Are we blocking fluds at this moment? */
   time(&now);
   if(cptr)                
-    blocking = (cptr->fludblock > (now - flud_block));
+    blocking = (cptr->fludblock > (now - FLUDBLOCK));
   else
-    blocking = (chptr->fludblock > (now - flud_block));
+    blocking = (chptr->fludblock > (now - FLUDBLOCK));
         
   /* Collect the Garbage */
   if(!blocking)
@@ -4180,7 +4165,7 @@ int check_for_flud(aClient *fluder,	/* fluder, client being fluded */
       while(current)
 	{
 	  next = current->next;
-	  if(current->last_msg < (now - flud_time))
+	  if(current->last_msg < (now - FLUDTIME))
 	    {
 	      if(cptr)
 		remove_fludee_reference(&current->fluder->fludees,
@@ -4218,7 +4203,7 @@ int check_for_flud(aClient *fluder,	/* fluder, client being fluded */
 	current->count++;
 	found = 1;
       }
-      if(current->first_msg < (now - flud_time))
+      if(current->first_msg < (now - FLUDTIME))
 	count++;
       else    
 	count += current->count;
@@ -4275,7 +4260,7 @@ int check_for_flud(aClient *fluder,	/* fluder, client being fluded */
   /* Okay, if we are not blocking, we need to decide if it's time to
   ** begin doing so.  We already have a count of messages received in
   ** the last flud_time seconds */
-  if(!blocking && (count > flud_num))
+  if(!blocking && (count > FLUDNUM))
     {
       blocking = 1;   
       ircstp->is_flud++;

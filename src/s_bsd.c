@@ -80,7 +80,6 @@ extern fdlist serv_fdlist;
 #ifndef NO_PRIORITY
 extern fdlist busycli_fdlist;
 #endif
-
 extern fdlist default_fdlist;
 
 #ifndef IN_LOOPBACKNET
@@ -298,7 +297,7 @@ int	inetport(aClient *cptr, int port, u_long bind_addr)
   (void)listen(cptr->fd, HYBRID_SOMAXCONN);
 #endif
   local[cptr->fd] = cptr;
-
+  addto_fdlist(cptr->fd,&default_fdlist);
   return 0;
 }
 
@@ -571,7 +570,7 @@ static	int	check_init(aClient *cptr,char *sockn)
       cptr->hostp = NULL;
       strncpyzt(sockn, me.name, HOSTLEN);
     }
-  bcopy((char *)&sk.sin_addr, (char *)&cptr->ip,
+  (void)memcpy( (void *)&cptr->ip, (void *)&sk.sin_addr,
 	sizeof(struct in_addr));
   cptr->port = (int)(ntohs(sk.sin_port));
 
@@ -839,7 +838,7 @@ int	check_server(aClient *cptr,
   (void)attach_confs(cptr, name, CONF_HUB|CONF_LEAF);
   
   if ((c_conf->ipnum.s_addr == -1))
-    bcopy((char *)&cptr->ip, (char *)&c_conf->ipnum,
+    (void)memcpy((void *)&c_conf->ipnum, (void *)&cptr->ip, 
 	  sizeof(struct in_addr));
   get_sockhost(cptr, c_conf->host);
   
@@ -886,9 +885,6 @@ static	int completed_connection(aClient *cptr)
   sendto_one(cptr, "SERVER %s 1 :%s",
 	     my_name_for_link(me.name, n_conf), me.info);
 
-  /* Is this the right place to do this?  dunno... -Taner */
-  /* uh, identd on a server???? I know... its stupid -Dianora */
-
   return (IsDead(cptr)) ? -1 : 0;
 }
 
@@ -900,8 +896,6 @@ static	int completed_connection(aClient *cptr)
 void	close_connection(aClient *cptr)
 {
   aConfItem *aconf;
-  int	i,j;
-  int	empty = cptr->fd;
 
   if (IsServer(cptr))
     {
@@ -970,6 +964,7 @@ void	close_connection(aClient *cptr)
   
   if (cptr->authfd >= 0)
     {
+      delfrom_fdlist(cptr->authfd,&default_fdlist);
       (void)close(cptr->authfd);
       cptr->authfd = -1;
     }
@@ -986,6 +981,7 @@ void	close_connection(aClient *cptr)
       if (IsServer(cptr) || IsListening(cptr))
 	zip_free(cptr);
 #endif
+      delfrom_fdlist(cptr->fd,&default_fdlist);
       (void)close(cptr->fd);
       cptr->fd = -2;
       DBufClear(&cptr->sendQ);
@@ -1012,49 +1008,6 @@ void	close_connection(aClient *cptr)
   det_confs_butmask(cptr, 0);
   cptr->from = NULL; /* ...this should catch them! >:) --msa */
 
-  /*
-   * fd remap to keep local[i] filled at the bottom.
-   */
-  if (empty > 0)
-    /*
-     * We don't dup listening fds (IsMe())... - CS
-     */
-    if ((j = highest_fd) > (i = empty) &&
-	!IsLog(local[j]) && !IsMe(local[j]))
-      {
-	if (dup2(j,i) == -1)
-	  return;
-	local[i] = local[j];
-	local[i]->fd = i;
-	local[j] = NULL;
-	/* update server list */
-	if (IsServer(local[i])) {
-
-#ifndef NO_PRIORITY
-	  delfrom_fdlist(j,&busycli_fdlist);
-#endif
-	  delfrom_fdlist(j,&serv_fdlist);
-#ifndef NO_PRIORITY
-	  addto_fdlist(i,&busycli_fdlist);
-#endif
-	  addto_fdlist(i,&serv_fdlist);
-	}
-	/* update oper list */
-	if (IsAnOper(local[i]))
-	  {
-#ifndef NO_PRIORITY
- 	    delfrom_fdlist(j, &busycli_fdlist);
-#endif
-	    delfrom_fdlist(j, &oper_fdlist);
-#ifndef NO_PRIORITY
- 	    addto_fdlist(i, &busycli_fdlist);
-#endif
-	    addto_fdlist(i, &oper_fdlist);
-	  }
-	(void)close(j);
-	while (!local[highest_fd])
-	  highest_fd--;
-      }
   return;
 }
 #ifdef MAXBUFFERS
@@ -1277,6 +1230,7 @@ aClient	*add_connection(aClient *cptr, int fd)
 	{
 	  report_error("Failed in connecting to %s :%s", cptr);
 	  ircstp->is_ref++;
+	  delfrom_fdlist(fd,&default_fdlist);
 	  acptr->fd = -2;
 	  free_client(acptr);
 	  (void)close(fd);
@@ -1286,6 +1240,7 @@ aClient	*add_connection(aClient *cptr, int fd)
       if (aconf && IsIllegal(aconf))
 	{
 	  ircstp->is_ref++;
+	  delfrom_fdlist(fd,&default_fdlist);
 	  acptr->fd = -2;
 	  free_client(acptr);
 	  (void)close(fd);
@@ -1295,7 +1250,7 @@ aClient	*add_connection(aClient *cptr, int fd)
        * have something valid to put into error messages...
        */
       get_sockhost(acptr, (char *)inetntoa((char *)&addr.sin_addr));
-      bcopy ((char *)&addr.sin_addr, (char *)&acptr->ip,
+      (void)memcpy ( (void *)&acptr->ip, (void *)&addr.sin_addr,
 	     sizeof(struct in_addr));
       acptr->port = ntohs(addr.sin_port);
 
@@ -1490,37 +1445,6 @@ int read_packet(aClient *cptr, int msg_ready)
       return 1;
 }
 
-void read_servers()
-{
-  register aClient *cptr;
-
-  for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
-    {
-      (void)read_packet(cptr,1);
-    }
-}
-
-void read_opers()
-{
-  register aClient *cptr;
-
-  for (cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client)
-    {
-	(void)read_packet(cptr,1);
-    }
-}
-
-void read_clients()
-{
-  register aClient *cptr;
-
-  for (cptr = local_cptr_list; cptr; cptr = cptr->next_local_client)
-    {
-      (void)read_packet(cptr,1);
-    }
-}
-
-
 /*
  * Check all connections for new connections and input data that is to be
  * processed. Also check for connections with data queued and whether we can
@@ -1546,17 +1470,10 @@ void read_clients()
   u_long	usec = 0;
   int	res, length, fd;
   int	auth = 0;
-  register int i,j;
+  register int i;
   int rr;
   time_t	last_full_to_opers_notice = (time_t)0;
   aConfItem     *found_conf;
-
-  /* if it is called with NULL we check all active fd's */
-  if (!listp)
-    {
-      listp = &default_fdlist;
-      listp->last_entry = highest_fd+1; /* remember the 0th entry isnt used */
-    }
 
 #ifdef	pyr
   (void) gettimeofday(&nowt, NULL);
@@ -1565,13 +1482,22 @@ void read_clients()
   now = timeofday;
 #endif
 
+  /* if it is called with NULL we check all active fd's */
+  if(!listp)
+    {
+      listp = &default_fdlist;
+    }
+
   for (res = 0;;)
     {
       FD_ZERO(read_set);
       FD_ZERO(write_set);
 
-      for (i=listp->entry[j=1]; j<=listp->last_entry; i=listp->entry[++j])
+      for (i=0; i<=highest_fd; i++)
 	{
+	  if(!listp->entry[i])
+	    continue;
+
 	  if (!(cptr = local[i]))
 	    continue;
 	  if (IsLog(cptr))
@@ -1674,8 +1600,11 @@ void read_clients()
       FD_CLR(resfd, read_set);
     }
 
-  for (i=listp->entry[j=1]; j<=listp->last_entry; i=listp->entry[++j])
+  for (i=0; i<=highest_fd; i++)
     {
+      if(!listp->entry[i])
+	continue;
+
       if (!(cptr = local[i]))
 	continue;
   
@@ -1772,6 +1701,7 @@ void read_clients()
 	    /*
 	     * Use of add_connection (which never fails :) meLazy
 	     */
+	    addto_fdlist(fd, &default_fdlist);
 	    (void)add_connection(cptr, fd);
 	    nextping = timeofday;
 	    if (!cptr->acpt)
@@ -1945,7 +1875,6 @@ int	read_message(time_t delay, fdlist *listp)
   if (!listp)
     {
       listp = &default_fdlist;
-      listp->last_entry = highest_fd+1; /* remember the 0th entry isnt used */
     }
 
   for (res = 0;;)
@@ -1956,11 +1885,14 @@ int	read_message(time_t delay, fdlist *listp)
       res_pfd  = NULL;
       auth = 0;
 
-      for (i=listp->entry[j=1]; j<=listp->last_entry;
-	   i=listp->entry[++j])
+      for (i=0; j<=highest_fd;i++)
 	{
+	  if(!listp->entry[i])
+	    continue;
+
 	  if (!(cptr = local[i]))
 	    continue;
+	  if (!
 	  if (IsLog(cptr))
 	    continue;
 	  if (DoingAuth(cptr))
@@ -2250,7 +2182,7 @@ int	connect_server(aConfItem *aconf,
 		 hp, aconf, aconf->name, aconf->host));
 	  if (!hp)
 	    return 0;
-	  bcopy(hp->h_addr, (char *)&aconf->ipnum,
+	  (void)memcpy( (void *)&aconf->ipnum, (void *)hp->h_addr,
 		sizeof(struct in_addr));
 	}
     }
@@ -2293,6 +2225,8 @@ int	connect_server(aConfItem *aconf,
 	errno = ETIMEDOUT;
       return -1;
     }
+
+  addto_fdlist(cptr->fd, &default_fdlist);
 
   /* Attach config entries to client here rather than in
    * completed_connection. This to avoid null pointer references
@@ -2419,12 +2353,12 @@ static	struct	sockaddr *connect_inet(aConfItem *aconf,
 	  Debug((DEBUG_FATAL, "%s: unknown host", aconf->host));
 	  return NULL;
 	}
-      bcopy(hp->h_addr, (char *)&aconf->ipnum,
+      (void)memcpy((void *)&aconf->ipnum, (void *)hp->h_addr,
 	    sizeof(struct in_addr));
     }
-  bcopy((char *)&aconf->ipnum, (char *)&server.sin_addr,
+  (void)memcpy( (void *)&server.sin_addr, (void *)&aconf->ipnum,
 	sizeof(struct in_addr));
-  bcopy((char *)&aconf->ipnum, (char *)&cptr->ip,
+  (void)memcpy((void *)&cptr->ip, (void *)&aconf->ipnum,
 	sizeof(struct in_addr));
   server.sin_port = htons((aconf->port > 0) ? aconf->port : portnum);
   *lenp = sizeof(server);
@@ -2480,7 +2414,7 @@ static void do_dns_async()
 	aconf = ln.value.aconf;
 	if (hp && aconf)
 	  {
-	    bcopy(hp->h_addr, (char *)&aconf->ipnum,
+	    (void)memcpy((void *)&aconf->ipnum, (void *)hp->h_addr,
 		  sizeof(struct in_addr));
 	    (void)connect_server(aconf, NULL, hp);
 	  }
@@ -2491,7 +2425,7 @@ static void do_dns_async()
       case ASYNC_CONF :
 	aconf = ln.value.aconf;
 	if (hp && aconf)
-	  bcopy(hp->h_addr, (char *)&aconf->ipnum,
+	  (void)memcpy((void *)&aconf->ipnum, (void *)hp->h_addr,
 		sizeof(struct in_addr));
 	break;
       default :

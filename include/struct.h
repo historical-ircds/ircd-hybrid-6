@@ -1060,6 +1060,43 @@ extern unsigned long tsdms;
 #endif /* DEFAULT_SERVER_SPLIT_RECOVERY_TIME */
 #endif
 
+typedef struct
+{
+  int maxclients;	/* max clients allowed */
+  int autoconn;		/* autoconn enabled for all servers? */
+
+#ifdef IDLE_CHECK
+  int idletime;
+#endif
+
+#ifdef FLUD
+  int fludnum;
+  int fludtime;
+  int fludblock;
+#endif
+
+#ifdef ANTI_DRONE_FLOOD
+  int dronetime;
+  int dronecount;
+#endif
+
+#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
+	defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
+  time_t server_split_recovery_time;
+  int split_smallnet_size;
+  int split_smallnet_users;
+#endif
+
+#ifdef ANTI_SPAMBOT
+  int spam_num;
+  int spam_time;
+#endif
+
+#ifdef ANTI_SPAMBOT_EXTRA
+  int spambot_privmsg_count;
+#endif
+
+}SetOptionsType;
 
 #ifdef FLUD
 struct fludbot {
