@@ -270,25 +270,20 @@ int	m_info(aClient *cptr,
 #undef OUT3
 #undef OUT4
 
-#ifdef IDENTD_COMPLAIN
-#define OUT1 "IDENTD_COMPLAIN=1"
-#else
-#define OUT1 "IDENTD_COMPLAIN=0"
-#endif
 #ifdef IDLE_CHECK
-#define OUT2 " IDLE_CHECK=1"
+#define OUT1 "IDLE_CHECK=1"
 #else
-#define OUT2 " IDLE_CHECK=0"
+#define OUT1 "IDLE_CHECK=0"
 #endif
 #ifdef IDLE_FROM_MSG
-#define OUT3 " IDLE_FROM_MSG=1"
+#define OUT2 " IDLE_FROM_MSG=1"
 #else
-#define OUT3 " IDLE_FROM_MSG=0"
+#define OUT2 " IDLE_FROM_MSG=0"
 #endif
 #ifdef IGNORE_FIRST_CHAR
-#define OUT4 " IGNORE_FIRST_CHAR=1"
+#define OUT3 " IGNORE_FIRST_CHAR=1"
 #else
-#define OUT4 " IGNORE_FIRST_CHAR=0"
+#define OUT3 " IGNORE_FIRST_CHAR=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
                    me.name, parv[0], OUT1 OUT2 OUT3 OUT4);

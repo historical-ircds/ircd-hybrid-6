@@ -2536,10 +2536,6 @@ static aConfItem *find_tkline(char *host,char *user)
 	    {
 	      if(temporary_klines == kill_list_ptr)
 		{
-		  /* Its pointing to first one in link list*/
-		  /* so, bypass this one, remember bad things can happen
-		     if you try to use an already freed pointer.. */
-
 		  temporary_klines = last_list_ptr = tmp_list_ptr =
 		    kill_list_ptr->next;
 		}

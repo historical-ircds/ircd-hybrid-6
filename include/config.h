@@ -225,17 +225,6 @@
  */
 #undef RK_NOTICES
 
-/* ACKPATCH - no longer used - see new Y: line features in example.conf
- *
- * Anti Clones Kludge - restrict a domain to one connection per ip#
- * For this to work they should use the password 'ONE' in the I: line
- * Example, I:*@*.gnn.com:ONE:*@*.gnn.com:0:10
- * #define ACKPATCH
- * 
- * always enabled, and is done as a Y line in the connfreq
- */
-
-
 /* NO_MIXED_CASE - reject mixed case usernames
  * define this if you wish to reject usernames like: FuckYou which
  * don't have all one case
@@ -254,23 +243,6 @@
  */
 #undef NO_SPECIAL
 
-/* REJECT_IPHONE - reject I-phone clients
- * Define if you want to reject I-phoners
- * Can be handled using an X line, look at example.conf
- */
-
-/* CLIENT_NOTICES - no longer used - use umode +/- c
- *
- * Define this if you wish to see client connecting and exiting notices.
- * Always defined now. If you don't want to see them, /umode -c silly.
- *
- * NOTE NOTE NOTE
- * hybrid ircd will display the users IP# in square brackets
- * after original notice. I'm sorry if this breaks scripts, but
- * It also means a lot less I/O doing DNS spoof checking if you wish.
- * -Dianora
- */
-
 /* DLINES_IN_KPATH - put (/quote) DLINES in your KPATH file.
  * Define this if you want DLINES in your KPATH file.  Otherwise DLINES
  * will be added to the main ircd.conf
@@ -278,11 +250,6 @@
 #ifdef KPATH
 #undef DLINES_IN_KPATH
 #endif /* KPATH */
-
-/* NO_LOCAL_KLINE - restrict QUOTE KLINE to global opers
- * Define this if you don't want local opers using /QUOTE KLINE.
- */
-#undef NO_LOCAL_KLINE
 
 /* HIGHEST_CONNECTION - track highest connection count
  * Define this if you want to keep track of your max connections.
@@ -353,10 +320,6 @@
  */
 #define BOTCHECK
 
-/* IDENTD_COMPLAIN - yell at users that don't have identd installed
- */
-#undef IDENTD_COMPLAIN
-
 /* CLIENT_COUNT - keep a running count of Local & Global users
  *                also redefine the /USERS command
  */
@@ -367,9 +330,6 @@
 
 /* X_LINES_OPER_ONLY - Allow only local opers to see these stats
  *
- * B_LINES - ComStud's B-lines (bot exemption lines)
- * E_LINES - ComStud's E-lines (exception lines)
- * F_LINES - Taner's F-lines (super-exception lines)
  *  Any one with an F line can almost always get on the server, as
  *  some file descriptors are reserved for people with this F line
  *  especially useful for your opers
@@ -385,10 +345,6 @@
  * default here.
  */
 #define STATS_NOTICE
-
-/* LINKS_NOTICE - See a notice when a user does a /links
- * its always defined now
- */
 
 /* WHOIS_WAIT - minimum seconds between remote use of WHOIS before
  * max use count is reset

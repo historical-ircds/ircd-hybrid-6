@@ -170,19 +170,11 @@ int     m_kline(aClient *cptr,
   else
 #endif
     {
-#ifdef NO_LOCAL_KLINE
-      if (!MyClient(sptr) || !IsOper(sptr))
-	{
-	  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-	  return 0;
-	}
-#else
       if (!MyClient(sptr) || !IsAnOper(sptr))
 	{
 	  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 	  return 0;
 	}
-#endif
 
       if(!IsSetOperK(sptr))
 	{
@@ -198,10 +190,7 @@ int     m_kline(aClient *cptr,
 	}
 
 #ifdef SLAVE_SERVERS
-      if(MyConnect(sptr) && IsAnOper(sptr))
-	{
-	  sendto_slaves(NULL,"KLINE",sptr->name,parc,parv);
-	}
+      sendto_slaves(NULL,"KLINE",sptr->name,parc,parv);
 #endif
     }
 
@@ -806,11 +795,7 @@ int     m_dline(aClient *cptr,
   char buffer[1024];
   char *current_date;
 
-#ifdef NO_LOCAL_KLINE
-  if (!MyClient(sptr) || !IsOper(sptr))
-#else
   if (!MyClient(sptr) || !IsAnOper(sptr))
-#endif
     {
       sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
