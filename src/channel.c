@@ -590,6 +590,14 @@ static  int is_banned(aClient *cptr,aChannel *chptr)
         match(BANSTR(tmp), s2))
       break;
 
+  if (!tmp) {  /* check +d list */
+    for (tmp = chptr->denylist; tmp; tmp = tmp->next)
+      {
+        if (match(BANSTR(tmp), cptr->info))
+          break;
+      }
+  }
+
   if (tmp)
     {
       for (t2 = chptr->exceptlist; t2; t2 = t2->next)
@@ -608,15 +616,6 @@ static  int is_banned(aClient *cptr,aChannel *chptr)
             return CHFL_EXCEPTION;
           }
     }
-
-
-  if (!tmp) {  /* check +d list */
-    for (tmp = chptr->denylist; tmp; tmp = tmp->next)
-      {
-        if (match(BANSTR(tmp), cptr->info))
-          break;
-      }
-  }
 
   /* return CHFL_BAN for +b or +d match, we really dont need to be more
      specific */
