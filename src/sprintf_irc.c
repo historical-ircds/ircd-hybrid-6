@@ -449,9 +449,14 @@ vsprintf_irc(register char *str, register const char *format,
 
 int
 ircsprintf(register char *str, const char *format, ...)
-
 {
+        /*
+         * commented out due to weird warning on rh7.1/gcc 2.96
+         */
+        /*
         register va_list args;
+        */
+        va_list args;
         register int bytes;
 
         va_start(args, format);
