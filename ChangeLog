@@ -1,3 +1,7 @@
+*** 20011129_13 by wcampbel
+Updated dependencies
+
+
 *** 20011129_12 by androsyn
 Added mmap() goodness to blalloc.c
 
