@@ -757,18 +757,7 @@ static int register_user(aClient *cptr, aClient *sptr,
                                    reason,
                                    get_client_name(cptr, FALSE));
             }
-
-          if((find_q_line(nick, sptr->username, sptr->host)))
-            {
-              sendto_realops_flags(FLAGS_REJ,
-                                 "Quarantined nick [%s], dumping user %s",
-                                 nick,get_client_name(cptr, FALSE));
-      
-              ServerStats->is_ref++;      
-              return exit_client(cptr, sptr, &me, "quarantined nick");
-            }
-        }
-
+         }
 
       sendto_realops_flags(FLAGS_CCONN,
                          "Client connecting: %s (%s@%s) [%s] {%d}",
@@ -1409,15 +1398,15 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
       return 0;
     }
 
-  if(MyConnect(sptr) && !IsServer(sptr) &&
-     !IsAnOper(sptr) && sptr->user &&
+  if(MyConnect(sptr) && !IsServer(sptr) && !IsAnOper(sptr) &&
      find_q_line(nick, sptr->username, sptr->host)) 
     {
       sendto_realops_flags(FLAGS_REJ,
-                         "Quarantined nick [%s], dumping user %s",
+                         "Quarantined nick [%s] from user %s",
                          nick,get_client_name(cptr, FALSE));
-
-      return exit_client(cptr, sptr, &me, "quarantined nick");
+      sendto_one(sptr, form_str(ERR_ERRONEUSNICKNAME),
+                 me.name, parv[0], parv[1]);
+      return 0;
     }
 
   /*
