@@ -45,7 +45,8 @@ static  char    sender[HOSTLEN+1];
 static  int     cancel_clients (aClient *, aClient *, char *);
 static  void    remove_unknown (aClient *, char *, char *);
 
-static int do_numeric (int, struct Client *, struct Client *, int, char **);
+static int do_numeric (char [], struct Client *,
+                         struct Client *, int, char **);
 
 static struct Message *do_msg_tree(MESSAGE_TREE *, char *, struct Message *);
 static struct Message *tree_parse(char *);
@@ -176,8 +177,11 @@ aClient *find_person(char *name, aClient *cptr)
 int     parse(aClient *cptr, char *buffer, char *bufend)
 {
   aClient *from = cptr;
-  char *ch, *s;
-  int   i, numeric = 0, paramcount;
+  char  *ch;
+  char  *s;
+  int   i;
+  char  numeric[4];
+  int   paramcount;
   struct Message *mptr;
 
   Debug((DEBUG_DEBUG, "Parsing %s: %s",
@@ -274,8 +278,10 @@ int     parse(aClient *cptr, char *buffer, char *bufend)
       IsDigit(*ch) && IsDigit(*(ch + 1)) && IsDigit(*(ch + 2)) )
     {
       mptr = (struct Message *)NULL;
-      numeric = (*ch - '0') * 100 + (*(ch + 1) - '0') * 10
-        + (*(ch + 2) - '0');
+      numeric[0] = ch[0];
+      numeric[1] = ch[1];
+      numeric[2] = ch[2];
+      numeric[3] = '\0';
       paramcount = MAXPARA;
       ircstp->is_num++;
       s = ch + 3;       /* I know this is ' ' from above if */
@@ -728,7 +734,8 @@ static  void    remove_unknown(aClient *cptr,
 **      sending back a neat error message -- big danger of creating
 **      a ping pong error message...
 */
-static int     do_numeric(int numeric,
+static int     do_numeric(
+                   char numeric[],
                    aClient *cptr,
                    aClient *sptr,
                    int parc,
@@ -741,9 +748,11 @@ static int     do_numeric(int numeric,
 
   if (parc < 1 || !IsServer(sptr))
     return 0;
+
   /* Remap low number numerics. */
-  if (numeric < 100)
-    numeric += 100;
+  if(numeric[0] == '0')
+    numeric[0] = '1';
+
   /*
   ** Prepare the parameter portion of the message into 'buffer'.
   ** (Because the buffer is twice as large as the message buffer
@@ -778,20 +787,20 @@ static int     do_numeric(int numeric,
           ** - Avalon
           */
           if (!IsMe(acptr) && IsPerson(acptr))
-            sendto_prefix_one(acptr, sptr,":%s %d %s%s",
+            sendto_prefix_one(acptr, sptr,":%s %s %s%s",
                               parv[0], numeric, nick, buffer);
           else if (IsServer(acptr) && acptr->from != cptr)
-            sendto_prefix_one(acptr, sptr,":%s %d %s%s",
+            sendto_prefix_one(acptr, sptr,":%s %s %s%s",
                               parv[0], numeric, nick, buffer);
         }
       else if ((acptr = find_server(nick, (aClient *)NULL)))
         {
           if (!IsMe(acptr) && acptr->from != cptr)
-            sendto_prefix_one(acptr, sptr,":%s %d %s%s",
+            sendto_prefix_one(acptr, sptr,":%s %s %s%s",
                               parv[0], numeric, nick, buffer);
         }
       else if ((chptr = find_channel(nick, (aChannel *)NULL)))
-        sendto_channel_butone(cptr,sptr,chptr,":%s %d %s%s",
+        sendto_channel_butone(cptr,sptr,chptr,":%s %s %s%s",
                               parv[0],
                               numeric, chptr->chname, buffer);
     }
