@@ -868,7 +868,7 @@ walk_the_ip_Klines(struct Client *sptr, struct ip_subtree *tree,
   scan=tree->conf;
   for(scan=tree->conf;scan;scan=scan->next)
     {
-      if((scan->status & MASK) == NULL)
+      if((scan->status & MASK) == 0)
         continue;
 
       get_printable_conf(scan, &name, &host, &pass, &oper_reason,
