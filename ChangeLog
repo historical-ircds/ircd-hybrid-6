@@ -1,3 +1,15 @@
+leeh        2001/12/14 02:44:10 EST	(20011214_0)
+
+  Modified files:
+    src                  send.c 
+  Log:
+  - if IsServer(from) || !MyClient(to) dont build a !u@h into the prefix
+  
+  Revision  Changes    Path
+  1.110     +8 -5      ircd-hybrid-6/src/send.c
+
+
+
 db          2001/12/13 18:50:47 EST	(20011213_2)
 
   Modified files:
