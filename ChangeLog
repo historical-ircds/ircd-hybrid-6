@@ -1,3 +1,7 @@
+*** 20010102_1 by lusky
+backported latest h7 userhost
+
+
 *** 20001230_1 by lusky
 revved patchlevel to rc8
 hard DoS could cause restart due to clock lag (db)
