@@ -1,3 +1,28 @@
+lusky       2001/12/09 14:02:15 EST	(20011209_3)
+
+  Modified files:
+    .                    RELNOTES configure 
+    autoconf             acconfig.h configure.in 
+    include              config.h config.h.dist s_serv.h 
+                         setup.h.in 
+    src                  channel.c 
+  Log:
+  - NO_CREATE_ON_SPLIT allows users to join existing channels during a split
+  - removed unneeded OS check from configure
+  
+  Revision  Changes    Path
+  1.10      +3 -0      ircd-hybrid-6/RELNOTES
+  1.5       +1 -9      ircd-hybrid-6/autoconf/acconfig.h
+  1.27      +0 -7      ircd-hybrid-6/autoconf/configure.in
+  1.28      +0 -10     ircd-hybrid-6/configure
+  1.150     +8 -1      ircd-hybrid-6/include/config.h
+  1.129     +8 -1      ircd-hybrid-6/include/config.h.dist
+  1.15      +2 -2      ircd-hybrid-6/include/s_serv.h
+  1.15      +0 -3      ircd-hybrid-6/include/setup.h.in
+  1.226     +13 -0     ircd-hybrid-6/src/channel.c
+
+
+
 lusky       2001/12/09 13:17:00 EST	(20011209_2)
 
   Modified files:
