@@ -840,10 +840,6 @@ int	attach_conf(aClient *cptr,aConfItem *aconf)
    * not total in Y
    * -Dianora
    */
-  /* blah this code is not used at the moment, needs to be rewritten
-   * look at attach_iline()
-   * -Dianora
-   */
 #ifdef OLD_Y_LIMIT
   if ((aconf->status & (CONF_LOCOP | CONF_OPERATOR | CONF_CLIENT)) &&
     aconf->clients >= ConfMaxLinks(aconf) && ConfMaxLinks(aconf) > 0)
@@ -1724,6 +1720,9 @@ void initconf(int opt, FBFILE* file, int use_include)
   unsigned long ip;
   unsigned long ip_mask;
   int sendq = 0;
+  aClass *class0;
+
+  class0 = find_class(0);	/* which one is class 0 ? */
 
   while (fbgets(line, sizeof(line), file))
     {
@@ -1994,7 +1993,18 @@ void initconf(int opt, FBFILE* file, int use_include)
 	    }
 	  else
 	    {
-	      ClassPtr(aconf) = find_class(atoi(tmp));
+	      int classToFind;
+
+	      classToFind = atoi(tmp);
+
+	      ClassPtr(aconf) = find_class(classToFind);
+
+	      if(classToFind && (ClassPtr(aconf) == class0))
+		{
+		  sendto_realops(
+          		 "Warning *** Defaulting to class 0 for class %d",
+			 classToFind);
+		}
 	    }
 
 	  if(aconf->status & (CONF_LOCOP|CONF_OPERATOR))
