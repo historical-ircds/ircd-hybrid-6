@@ -100,8 +100,8 @@ void adns__procdgram(adns_state ads, const byte *dgram, int dglen,
     }
     if (qu) {
       /* We're definitely going to do something with this query now */
-      if (viatcp) LIST_UNLINK(ads->tcpw,qu);
-      else LIST_UNLINK(ads->udpw,qu);
+      if (viatcp) DLIST_UNLINK(ads->tcpw,qu);
+      else DLIST_UNLINK(ads->udpw,qu);
     }
   }
   
@@ -333,7 +333,7 @@ void adns__procdgram(adns_state ads, const byte *dgram, int dglen,
   /* This may have generated some child queries ... */
   if (qu->children.head) {
     qu->state= query_childw;
-    LIST_LINK_TAIL(ads->childw,qu);
+    DLIST_LINK_TAIL(ads->childw,qu);
     return;
   }
   adns__query_done(qu);

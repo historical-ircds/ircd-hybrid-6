@@ -449,7 +449,7 @@ static void icb_hostaddr(adns_query parent, adns_query child) {
   adns__transfer_interim(child, parent, rrp->addrs, rrp->naddrs*sizeof(adns_rr_addr));
 
   if (parent->children.head) {
-    LIST_LINK_TAIL(ads->childw,parent);
+    DLIST_LINK_TAIL(ads->childw,parent);
   } else {
     adns__query_done(parent);
   }
@@ -501,7 +501,7 @@ static adns_status pap_hostaddr(const parseinfo *pai, int *cbyte_io,
   if (st) return st;
 
   nqu->parent= pai->qu;
-  LIST_LINK_TAIL_PART(pai->qu->children,nqu,siblings.);
+  DLIST_LINK_TAIL_PART(pai->qu->children,nqu,siblings.);
 
   return adns_s_ok;
 }
@@ -704,7 +704,7 @@ static void icb_ptr(adns_query parent, adns_query child) {
 	adns__query_done(parent);
 	return;
       } else {
-	LIST_LINK_TAIL(ads->childw,parent);
+	DLIST_LINK_TAIL(ads->childw,parent);
 	return;
       }
     }
@@ -776,7 +776,7 @@ static adns_status pa_ptr(const parseinfo *pai, int dmstart, int max, void *data
   if (st) return st;
 
   nqu->parent= pai->qu;
-  LIST_LINK_TAIL_PART(pai->qu->children,nqu,siblings.);
+  DLIST_LINK_TAIL_PART(pai->qu->children,nqu,siblings.);
   return adns_s_ok;
 }
 

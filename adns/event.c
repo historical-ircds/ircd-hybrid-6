@@ -204,7 +204,7 @@ static void timeouts_queue(adns_state ads, int act,
       inter_maxtoabs(tv_io,tvbuf,now,qu->timeout);
     } else {
       if (!act) { inter_immed(tv_io,tvbuf); return; }
-      LIST_UNLINK(*queue,qu);
+      DLIST_UNLINK(*queue,qu);
       if (qu->state != query_tosend) {
 	adns__query_fail(qu,adns_s_timeout);
       } else {
@@ -228,7 +228,7 @@ static void tcp_events(adns_state ads, int act,
 	nqu= qu->next;
 	assert(qu->state == query_tcpw);
 	if (qu->retries > ads->nservers) {
-	  LIST_UNLINK(ads->tcpw,qu);
+	  DLIST_UNLINK(ads->tcpw,qu);
 	  adns__query_fail(qu,adns_s_allservfail);
 	}
       }
@@ -666,7 +666,7 @@ int adns__internal_check(adns_state ads,
   } else {
     if (qu->id>=0) return EAGAIN;
   }
-  LIST_UNLINK(ads->output,qu);
+  DLIST_UNLINK(ads->output,qu);
   *answer= qu->answer;
   if (context_r) *context_r= qu->ctx.ext;
   *query_io= qu;

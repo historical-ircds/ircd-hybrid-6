@@ -48,9 +48,9 @@ static adns_query query_alloc(adns_state ads, const typeinfo *typei,
   qu->ads= ads;
   qu->state= query_tosend;
   qu->back= qu->next= qu->parent= 0;
-  LIST_INIT(qu->children);
-  LINK_INIT(qu->siblings);
-  LIST_INIT(qu->allocations);
+  DLIST_INIT(qu->children);
+  DLINK_INIT(qu->siblings);
+  DLIST_INIT(qu->allocations);
   qu->interim_allocd= 0;
   qu->preserved_allocd= 0;
   qu->final_allocspace= 0;
@@ -334,7 +334,7 @@ static void *alloc_common(adns_query qu, size_t sz) {
   assert(!qu->final_allocspace);
   an= malloc(MEM_ROUND(MEM_ROUND(sizeof(*an)) + sz));
   if (!an) return 0;
-  LIST_LINK_TAIL(qu->allocations,an);
+  DLIST_LINK_TAIL(qu->allocations,an);
   return (byte*)an + MEM_ROUND(sizeof(*an));
 }
 
@@ -371,8 +371,8 @@ void adns__transfer_interim(adns_query from, adns_query to, void *block, size_t 
   assert(!to->final_allocspace);
   assert(!from->final_allocspace);
   
-  LIST_UNLINK(from->allocations,an);
-  LIST_LINK_TAIL(to->allocations,an);
+  DLIST_UNLINK(from->allocations,an);
+  DLIST_LINK_TAIL(to->allocations,an);
 
   sz= MEM_ROUND(sz);
   from->interim_allocd -= sz;
@@ -419,7 +419,7 @@ static void free_query_allocs(adns_query qu) {
 
   cancel_children(qu);
   for (an= qu->allocations.head; an; an= ann) { ann= an->next; free(an); }
-  LIST_INIT(qu->allocations);
+  DLIST_INIT(qu->allocations);
   adns__vbuf_free(&qu->vb);
   adns__vbuf_free(&qu->search_vb);
   free(qu->query_dgram);
@@ -431,19 +431,19 @@ void adns_cancel(adns_query qu) {
 
   ads= qu->ads;
   adns__consistency(ads,qu,cc_entex);
-  if (qu->parent) LIST_UNLINK_PART(qu->parent->children,qu,siblings.);
+  if (qu->parent) DLIST_UNLINK_PART(qu->parent->children,qu,siblings.);
   switch (qu->state) {
   case query_tosend:
-    LIST_UNLINK(ads->udpw,qu);
+    DLIST_UNLINK(ads->udpw,qu);
     break;
   case query_tcpw:
-    LIST_UNLINK(ads->tcpw,qu);
+    DLIST_UNLINK(ads->tcpw,qu);
     break;
   case query_childw:
-    LIST_UNLINK(ads->childw,qu);
+    DLIST_UNLINK(ads->childw,qu);
     break;
   case query_done:
-    LIST_UNLINK(ads->output,qu);
+    DLIST_UNLINK(ads->output,qu);
     break;
   default:
     abort();
@@ -530,15 +530,15 @@ void adns__query_done(adns_query qu) {
   ans->expires= qu->expires;
   parent= qu->parent;
   if (parent) {
-    LIST_UNLINK_PART(parent->children,qu,siblings.);
-    LIST_UNLINK(qu->ads->childw,parent);
+    DLIST_UNLINK_PART(parent->children,qu,siblings.);
+    DLIST_UNLINK(qu->ads->childw,parent);
     qu->ctx.callback(parent,qu);
     free_query_allocs(qu);
     free(qu->answer);
     free(qu);
   } else {
     makefinal_query(qu);
-    LIST_LINK_TAIL(qu->ads->output,qu);
+    DLIST_LINK_TAIL(qu->ads->output,qu);
     qu->state= query_done;
   }
 }

@@ -28,10 +28,10 @@
 #ifndef ADNS_DLIST_H_INCLUDED
 #define ADNS_DLIST_H_INCLUDED
 
-#define LIST_INIT(list) ((list).head= (list).tail= 0)
-#define LINK_INIT(link) ((link).next= (link).back= 0)
+#define DLIST_INIT(list) ((list).head= (list).tail= 0)
+#define DLINK_INIT(link) ((link).next= (link).back= 0)
 
-#define LIST_UNLINK_PART(list,node,part) \
+#define DLIST_UNLINK_PART(list,node,part) \
   do { \
     if ((node)->part back) (node)->part back->part next= (node)->part next; \
       else                                  (list).head= (node)->part next; \
@@ -39,7 +39,7 @@
       else                                  (list).tail= (node)->part back; \
   } while(0)
 
-#define LIST_LINK_TAIL_PART(list,node,part) \
+#define DLIST_LINK_TAIL_PART(list,node,part) \
   do { \
     (node)->part next= 0; \
     (node)->part back= (list).tail; \
@@ -47,7 +47,7 @@
     (list).tail= (node); \
   } while(0)
 
-#define LIST_UNLINK(list,node) LIST_UNLINK_PART(list,node,)
-#define LIST_LINK_TAIL(list,node) LIST_LINK_TAIL_PART(list,node,)
+#define DLIST_UNLINK(list,node) DLIST_UNLINK_PART(list,node,)
+#define DLIST_LINK_TAIL(list,node) DLIST_LINK_TAIL_PART(list,node,)
 
 #endif

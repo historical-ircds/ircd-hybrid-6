@@ -467,10 +467,10 @@ static int init_begin(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
   ads->iflags= flags;
   ads->diagfile= diagfile;
   ads->configerrno= 0;
-  LIST_INIT(ads->udpw);
-  LIST_INIT(ads->tcpw);
-  LIST_INIT(ads->childw);
-  LIST_INIT(ads->output);
+  DLIST_INIT(ads->udpw);
+  DLIST_INIT(ads->tcpw);
+  DLIST_INIT(ads->childw);
+  DLIST_INIT(ads->output);
   ads->forallnext= 0;
   ads->nextid= 0x311f;
   ads->udpsocket= ads->tcpsocket= -1;
