@@ -1,3 +1,8 @@
+*** 20010803_1 by leeh
+- extended the check in get_client_name to cover handshaking/connecting
+  servers
+
+
 *** 20010731_1 by lusky
 test commit to new repository
 
