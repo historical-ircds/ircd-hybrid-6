@@ -1,7 +1,8 @@
 +hybrid-6 (11/29/1998)
 - U: lines, server cluster lines.. see example.conf (Dianora)
 - applied a pile of fixes for alphas made by jailbird, Dustin Marquess
- (jailbird@alcatraz.fdf.net)- non chanops cannot see +e
+ (jailbird@alcatraz.fdf.net)
+- non chanops cannot see +e
 - removed ANTI_IP_SPOOF (Dianora)
 - redid semantics of LITTLE_I_LINES. Clients who are i lined
   can be opped, they can do everything a normal op can do,
@@ -36,6 +37,7 @@
 - disabled the ability to set a ban including a prefixed colon (Dianora)
 - added kline matching on ip (CIDR) you can now kline
   user@ip.ip.ip.ip/mask (Dianora/good)
+- d-line now recognizes CIDR notation as well (Dianora/good) 
 - added ANTI_SPAMBOT_EXTRA (read config.h) added heuristics to catch
   spambots (Dianora)
 - added ANTI_SPAM_EXIT_MESSAGE no quit message from client, if client
@@ -55,6 +57,7 @@
 - F lines replaced by > in front of username in I line
 - B lines replaced by & in front of username in I line
 - "^>&" can be combined with any combination of "+!-" characters (Dianora)
+- = as a prefix char will spoof that user see example.conf (Dianora)
 - will not allow any user with username including '!' '*' '?'
   or high bit/control characters to user the server (Dianora)
 - added LIMIT_UH code (Dianora)
@@ -62,9 +65,6 @@
 - use Count.local instead of sptr->fd in s_user for SET MAX (ThemBones)
 - reworked s_err.c/numeric.h (Dianora)
 - added hash debug on /quote hash (Dianora)
-- d-line hash, use a hash table for numeric ip's allows use of CIDR style
-  masks in /quote dlines i.e. "/quote dline 192.168.1.0/30 :test" (Dianora)
-- fix to ANTI_IP_SPOOF in s_user.c (jailbird@alcatraz.fdf.net)
 - report user doing /motd, removed STATS_FLAG (Dianora)
 - added delay between motd requests (Dianora)
 - fixed REJECT_HOLD code, fripping backwards if (Dianora)
@@ -74,6 +74,7 @@
 - added /quote set autoconn ALL 0/1 enable/disable autoconns
 - added /quote set autoconn servername 0/1 enable/disable this server
   or /quote set autoconn ALL 0/1 enable/disable all autoconns (Dianora)
+- removed ANTI_IP_SPOOF (Dianora)
 
 +hybrid-5.3 (6/13/98)
 * added NO_CHANOPS_WHEN_SPLIT code back in (Rodder/Dianora)
