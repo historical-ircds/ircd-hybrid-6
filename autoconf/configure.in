@@ -38,7 +38,7 @@ AC_PROG_GCC_TRADITIONAL
 dnl Check for zlib support (-lz) by looking for deflate().  Then check
 dnl for zlib 1.0.2 or higher by looking for zlibVersion().
 AC_CHECK_LIB(z, deflate)
-AC_CHECK_LIB(z, zlibVersion, , AC_MSG_WARN(zlib 1.0.2 or higher required for ZIPLINK support))
+AC_CHECK_FUNC(zlibVersion, , AC_MSG_WARN(zlib 1.0.2 or higher required for ZIPLINK support))
 
 dnl check for poll() call
 AC_CHECK_FUNC(poll, AC_DEFINE(USE_POLL),)
