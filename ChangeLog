@@ -1,3 +1,10 @@
+*** 20000621_1 by lusky
+revved patchlevel to rc1
+fixes for ip_ilines (db)
+fixes and notes for cygwin
+check for getopt.h in configure script
+
+
 *** 20000611_4 by lusky
 fixed README.FIRST
 
