@@ -1,3 +1,15 @@
+jdc         2001/12/08 02:22:28 EST	(20011208_11)
+
+  Modified files:
+    src                  ircd.c 
+  Log:
+  - More fixes for zlib version checking.
+  
+  Revision  Changes    Path
+  1.155     +15 -7     ircd-hybrid-6/src/ircd.c
+
+
+
 lusky       2001/12/08 02:06:20 EST	(20011208_10)
 
   Modified files:
