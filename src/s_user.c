@@ -1359,12 +1359,15 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
       return 0;
     }
 
-  if ((parc >= 7) && (!strchr(parv[6], '.')))
+  if ((parc >= 7) && (!strchr(parv[6], '.')) && (!strchr(parv[6], ':')))
     {
       /*
        * Ok, we got the right number of params, but there
        * isn't a single dot in the hostname, which is suspicious.
        * Don't fret about it just kill it. - ThemBones
+       */
+      /* IPv6 allows hostnames without .'s, so check if it
+       * has ":"'s also. --fl_
        */
       ts_warn("BAD HOSTNAME: %s[%s@%s] on %s (from %s)",
                      parv[0], parv[5], parv[6], parv[7], parv[0]);
