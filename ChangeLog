@@ -1,3 +1,9 @@
+*** 20010710_1 by jdc
+- Complete removal of encrypted link (CRYPTLINK) support; this includes
+  RSA authentication.
+
+
+
 *** 20010708_4 by db
 - reverted KSERVER changes. NOT DISCUSSED, NOT APPROVED
 
