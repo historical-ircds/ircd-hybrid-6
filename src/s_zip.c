@@ -89,7 +89,7 @@ int	zip_init(aClient *cptr)
   cptr->zip->in->data_type = Z_ASCII;
   if (inflateInit(cptr->zip->in) != Z_OK)
     {
-      cptr->zip->out = (char *)NULL;
+      cptr->zip->out = NULL;
       return -1;
     }
 
