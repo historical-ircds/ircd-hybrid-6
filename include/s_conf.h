@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.34  1999/07/23 02:45:39  db
+ * - include file fixes
+ *
  * Revision 1.33  1999/07/23 02:38:30  db
  * - more include file fixes
  *
@@ -207,9 +210,14 @@ typedef struct QlineItem {
 #define CONF_ME                 0x0040
 #define CONF_KILL               0x0080
 #define CONF_ADMIN              0x0100
-#ifdef  R_LINES
-#define CONF_RESTRICT           0x0200
-#endif
+/*
+ * R_LINES are no more
+ * -wnder
+ *
+ * #ifdef  R_LINES
+ * #define CONF_RESTRICT           0x0200
+ * #endif
+ */
 #define CONF_CLASS              0x0400
 #define CONF_LEAF               0x0800
 #define CONF_LISTEN_PORT        0x1000
