@@ -1,3 +1,8 @@
+*** 20010619_1 by wcampbel
+Updated the mkpasswd program (Adds an option to specify the length of a 
+randomly generated salt)
+
+
 *** 20010618_1 by db
 - missing arg to #ifndef HIDE_SERVERS_IPS
 
