@@ -2,6 +2,10 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b71   12-May-1999
+* corrected mtrie_conf.c problems
+* added stats o flags
+-Dianora
 
 version hybrid-6-b68   10-May-1999
 * corrected a few missing tests in mtrie_conf.c

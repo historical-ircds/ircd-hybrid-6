@@ -97,6 +97,8 @@ DOMAIN_LEVEL *trie_list=(DOMAIN_LEVEL *)NULL;
 DOMAIN_LEVEL *first_kline_trie_list=(DOMAIN_LEVEL *)NULL;
 int saved_stack_pointer;
 
+aConfItem *last_found_iline_aconf=(aConfItem *)NULL;
+
 aConfItem *unsortable_list_ilines = (aConfItem *)NULL;
 aConfItem *unsortable_list_klines = (aConfItem *)NULL;
 aConfItem *wild_card_ilines = (aConfItem *)NULL;
@@ -347,11 +349,15 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
   last_ptr = (DOMAIN_PIECE *)NULL;
   user = aconf->name;
 
-  if((user[0] == '*') && (user[1] == '\0') && *host_piece != '*')
+  if((user[0] == '*') && (user[1] == '\0') &&
+    (host_piece[0] != '*'))
     {
-      /* its empty, so add the given aconf, and return. done */
+  /* This is the case of *@*.some.host.tld */
+
       if(!(piece_ptr->wild_conf_ptr))
 	 {
+      /* its empty, so add the given aconf, and return. done */
+
 	   aconf->status |= flags;
 	   piece_ptr->wild_conf_ptr = aconf;
 	   piece_ptr->flags |= flags;
@@ -427,8 +433,7 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
       found_aconf=ptr->conf_ptr;
 
       if( (!matches(ptr->host_piece,host_piece)) &&
-	  (!matches(found_aconf->name,user)) &&
-	  (found_aconf->status & flags) )
+	  (!strcasecmp(found_aconf->name,user)) )
 	{
 	  found_aconf->status |= flags;
 	  piece_ptr->flags |= flags;
@@ -497,59 +502,57 @@ static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr, int flags,
 {
   DOMAIN_PIECE *ptr;
   aConfItem *aconf=(aConfItem *)NULL;
+  aConfItem *first_aconf=(aConfItem *)NULL;
   aConfItem *wild_aconf=(aConfItem *)NULL;
-  int match = NO;
 
   wild_aconf = piece_ptr->wild_conf_ptr;
 
   for(ptr=piece_ptr; ptr; ptr=ptr->next_piece)
     {
-      if(!ptr->conf_ptr)
-	continue;
-      aconf=ptr->conf_ptr;
-
-      if( (!matches(ptr->host_piece,host_piece)) &&
-	  (!matches(aconf->name,user)) &&
-	  (aconf->status & flags) )
+      if((aconf=ptr->conf_ptr))
 	{
-	  match = YES;
-	  if(aconf->flags & CONF_FLAGS_E_LINED)
-	    return(aconf);
+	  if( (!matches(ptr->host_piece,host_piece)) &&
+	      (aconf->status & flags) )
+	    {
+	      if(!strcasecmp(aconf->name,user))
+		first_aconf = aconf;
+	    }
 	}
     }
 
-  if(!match)
-    aconf = (aConfItem *)NULL;
-
-  if(!aconf)
-    return(wild_aconf);
-
-  /*
-   * ok. if there was an exact aconf found, if there
-   * is a "wild_aconf" i.e. *@... pattern
-   * if so, the exact aconf over-rules it if it has an E line
-   * and the wild_aconf is a K line
-   * if the exact aconf is a K line but the wild aconf is an E line
-   * then the wild aconf over-rules the K line aconf.
-   * finally, if there isn't an aconf, return the wild_aconf
-   * if there isn't a wild_aconf, but there is an aconf, return the aconf
-   *
-   * if neither is found, aconf, wild_aconf default to NULL and thats
-   * what will be returned.
-   *
-   * -Dianora
+  /* Propogate a kill "downwards" from *@*.host.tld if found,
+   * unless an aconf is found with an E line 
    */
-
   if(wild_aconf)
     {
-      if((wild_aconf->flags & CONF_FLAGS_E_LINED) &&
-	 (aconf->status & CONF_KILL))
-	return(wild_aconf);
-      else if((wild_aconf->status & CONF_KILL) &&
-	      (aconf->flags & CONF_FLAGS_E_LINED))
-	return(aconf);
+      if (wild_aconf->status & CONF_KILL)
+	{
+	  if(first_aconf && (first_aconf->status & CONF_ELINE))
+	    {
+	      return(first_aconf);
+	    }
+	  return(wild_aconf);
+	}
+      /* Ditto with E line.
+       * Propogate an E line "downwards" from *@*.host.tld if found.
+       */
+      else if(wild_aconf->status & CONF_ELINE)
+	{
+	  if(first_aconf && (first_aconf->status & CONF_KILL))
+	    {
+	      first_aconf->status &= ~CONF_KILL;
+	      first_aconf->status |= CONF_ELINE;
+	      return(first_aconf);
+	    }
+	  return(wild_aconf);
+	}
     }
-  return(aconf);
+  else /* its up to first_aconf, since wild_aconf is NULL */
+    {
+      return(first_aconf);
+    }
+
+  return((aConfItem *)NULL);
 }
 
 /* find_host_piece
@@ -603,7 +606,7 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 				     char *host_piece,char *user)
 {
   aConfItem *first_aconf=(aConfItem *)NULL;
-  aConfItem *second_aconf=(aConfItem *)NULL;
+  aConfItem *wild_aconf=(aConfItem *)NULL;
   aConfItem *aconf=(aConfItem *)NULL;
   DOMAIN_PIECE *ptr;
   DOMAIN_PIECE *pptr;
@@ -618,50 +621,60 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
       if(!match(ptr->host_piece,host_piece) && (ptr->flags & flags))
 	{
 	  first_aconf = (aConfItem *)NULL;
+	  wild_aconf = (aConfItem *)NULL;
+
 	  for(pptr = ptr; pptr; pptr=pptr->next_piece)
 	    {
-	      if(!first_aconf && pptr->conf_ptr)
+	      if(pptr->conf_ptr)
 		{
 		  aconf= pptr->conf_ptr;
 		  if( (!matches(pptr->host_piece,host_piece)) &&
-		      (!matches(aconf->name,user)) &&
 		      (aconf->status & flags) )
 		    {
-		      first_aconf = aconf;
+		      if(!matches(aconf->name,user))
+			first_aconf = aconf;
 		    }
 		}
-	    }
 
-	  /* special cased *@*.something
-	   * K-lines should match the username@*.something case first
-	   * an I line might include an E line
-	   * There should be only one *@*.something aconf in this list
-	   */
-
-	  for(pptr = ptr; pptr; pptr=pptr->next_piece)
-	    {
-	      if(pptr->wild_conf_ptr && (pptr->wild_conf_ptr->status & flags))
-		second_aconf = pptr->wild_conf_ptr;
+	      if(pptr->wild_conf_ptr &&
+		 (pptr->wild_conf_ptr->status & flags))
+		wild_aconf = pptr->wild_conf_ptr;
 	    }
 	}
     }
-
-  /* If I am looking for a client, I want to return the one thats 
-   * E lined if any. For k-lines, a kill is a kill is a kill.
+  
+  /* Propogate a kill "downwards" from *@*.host.tld if found,
+   * unless an aconf is found with an E line 
    */
-
-  if(flags & CONF_CLIENT)
+  if(wild_aconf)
     {
-      if(first_aconf && (first_aconf->status & CONF_ELINE))
-	return(first_aconf);
-      if(second_aconf && (second_aconf->status & CONF_ELINE))
-	return(second_aconf);
+      if (wild_aconf->status & CONF_KILL)
+	{
+	  if(first_aconf && (first_aconf->status & CONF_ELINE))
+	    {
+	      return(first_aconf);
+	    }
+	  return(wild_aconf);
+	}
+      /* Ditto with E line.
+       * Propogate an E line "downwards" from *@*.host.tld if found.
+       */
+      else if(wild_aconf->status & CONF_ELINE)
+	{
+	  if(first_aconf && (first_aconf->status & CONF_KILL))
+	    {
+	      first_aconf->status &= ~CONF_KILL;
+	      first_aconf->status |= CONF_ELINE;
+	      return(first_aconf);
+	    }
+	  return(wild_aconf);
+	}
     }
-
-  if(first_aconf)		/* default is the more focused match */
-    return(first_aconf);
-  else
-    return(second_aconf);	/* default is the less focused match */
+  else /* its up to first_aconf since wild_aconf is NULL */
+    {
+      return(first_aconf);
+    }
+  return((aConfItem *)NULL);
 }
 
 
@@ -707,6 +720,8 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
    * in the mtrie tree.
    */
 
+  last_found_iline_aconf = (aConfItem *)NULL;
+
 #ifdef USE_IP_I_LINE_FIRST
   /* 
    * See if there is a matching IP CIDR first and use it.
@@ -731,6 +746,9 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
       first_kline_trie_list = (DOMAIN_LEVEL *)NULL;
 
       iline_aconf = find_sub_mtrie(trie_list,host,user,CONF_CLIENT);
+
+      if(!iline_aconf)
+	iline_aconf = last_found_iline_aconf;
 
       /* If either an E line or K line is found, there is no need
        * to go any further. If there wasn't an I line found,
@@ -868,6 +886,8 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
  * side effects	-
  */
 
+
+
 static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
 				 char *host,char *user,int flags)
 {
@@ -877,7 +897,6 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
 
   cur_dns_piece = dns_stack[--stack_pointer];
 
-  /* Can never ever be too careful -Dianora */
   if(!cur_dns_piece)
     return((aConfItem *)NULL);
 
@@ -898,17 +917,15 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
     }
   else
     {
-      /* looking for CONF_CLIENT, so descend deeper */
+      aconf = find_wild_host_piece(cur_level,flags,cur_dns_piece,user);
+      if(aconf)
+	last_found_iline_aconf = aconf;
 
+      /* looking for CONF_CLIENT, so descend deeper */
       cur_piece = find_host_piece(cur_level,flags,cur_dns_piece,user);
+
       if(!cur_piece)
-	{
-	  aconf = find_wild_host_piece(cur_level,flags,cur_dns_piece,user);
-	  if(aconf)
-	    return(aconf);
-	  else
-	    return((aConfItem *)NULL);
-	}
+        return(aconf);
     }
 
   if((cur_piece->flags & CONF_KILL) && (!first_kline_trie_list))
@@ -921,23 +938,21 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
     return(find_user_piece(cur_piece,flags,cur_dns_piece,user));
 
   if(cur_piece->next_level)
-    cur_level = cur_piece->next_level;
+    {
+      cur_level = cur_piece->next_level;
+      return(find_sub_mtrie(cur_level,host,user,flags));
+    }
   else
     {
-      aconf = find_wild_host_piece(cur_level,flags,cur_dns_piece,user);
-
       if((aconf = find_user_piece(cur_piece,flags,cur_dns_piece,user)))
 	return(aconf);
-      else
-	{
-
-	  if(!cur_piece)
-	    return((aConfItem *)NULL);
-	  return(find_user_piece(cur_piece,flags,cur_dns_piece,user));
-	}
+      if((aconf = find_wild_host_piece(cur_level,flags,cur_dns_piece,user)))
+	return(aconf);
+      return(last_found_iline_aconf);
     }
 
-  return(find_sub_mtrie(cur_level,host,user,flags));
+  /* NOT REACHED */
+  return((aConfItem *)NULL);
 }
 
 

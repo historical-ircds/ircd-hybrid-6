@@ -3412,6 +3412,50 @@ int get_oper_flags(char *flags)
   Debug((DEBUG_DEBUG,"about to return int_flags %x",int_flags));
   return(int_flags);
 }
+/* get_oper_flags
+ *
+ * inputs	- flags as string
+ * output	- flags
+ * side effects -
+ *
+ * -Dianora
+ */
+
+char *oper_flags(int flags)
+{
+  static char flags_out[16];
+  char *flags_ptr;
+
+  flags_ptr = flags_out;
+  *flags_ptr = '\0';
+
+  Debug((DEBUG_DEBUG,"per_flags called flags = [%d]",flags));
+
+  if(flags & FLAGS_INVISIBLE)
+    *flags_ptr++ = 'i';
+  if(flags & FLAGS_WALLOP)
+    *flags_ptr++ = 'w';
+  if(flags & FLAGS_SERVNOTICE)
+    *flags_ptr++ = 's';
+  if(flags & FLAGS_CCONN)
+    *flags_ptr++ = 'c';
+  if(flags & FLAGS_REJ)
+    *flags_ptr++ = 'r';
+  if(flags & FLAGS_SKILL)
+    *flags_ptr++ = 'k';
+  if(flags & FLAGS_FULL)
+    *flags_ptr++ = 'f';
+  if(flags & FLAGS_SPY)
+    *flags_ptr++ = 'y';
+  if(flags & FLAGS_DEBUG)
+    *flags_ptr++ = 'd';
+  if(flags & FLAGS_NCHANGE)
+    *flags_ptr++ = 'n';
+  *flags_ptr = '\0';
+
+  Debug((DEBUG_DEBUG,"about to return flags_out %s",flags_out));
+  return(flags_out);
+}
 
 /*
  * host_is_legal_ip
