@@ -60,6 +60,7 @@ struct ConfItem
   time_t           hold;     /* Hold action until this time (calendar time) */
   struct Class*    c_class;     /* Class of connection */
   int              dns_pending; /* 1 if dns query pending, 0 otherwise */
+  struct DNSQuery* dns_query;
 };
 
 typedef struct QlineItem {
@@ -205,7 +206,7 @@ extern void             free_conf(struct ConfItem*);
 
 extern void             read_conf_files(int cold);
 
-extern struct DNSReply* conf_dns_lookup(struct ConfItem* aconf);
+extern void conf_dns_lookup(struct ConfItem* aconf);
 extern int              attach_conf(struct Client*, struct ConfItem *);
 extern int              attach_confs(struct Client* client, 
                                      const char* name, int statmask);

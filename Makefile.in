@@ -79,7 +79,7 @@ CFLAGS = -g -O2 -DNDEBUG
 
 
 SHELL=/bin/sh
-SUBDIRS=zlib src tools
+SUBDIRS=adns zlib src tools
 # ZSUBDIRS=zlib $(SUBDIRS)
 
 MAKE = make ${MFLAGS} 'CFLAGS=${CFLAGS}' 'INSTALL=${INSTALL}' 'LDFLAGS=${LDFLAGS}'

@@ -25,8 +25,9 @@
 #include <sys/types.h>
 #define INCLUDED_sys_types_h
 #endif
-
 #define READBUF_SIZE    16384   /* used in s_bsd *AND* s_zip.c ! */
+
+#include "res.h"
 
 struct Client;
 struct ConfItem;
@@ -43,7 +44,7 @@ extern void  add_connection(struct Listener*, int);
 extern int   check_client(struct Client*, char *,char **);
 extern void  close_connection(struct Client*);
 extern void  close_all_connections(void);
-extern int   connect_server(struct ConfItem*, struct Client*, struct DNSReply*);
+extern int   connect_server(struct ConfItem*, struct Client*, struct DNSQuery *);
 extern void  get_my_name(struct Client *, char *, int);
 extern void  init_netio(void);
 extern int   read_message (time_t, unsigned char);

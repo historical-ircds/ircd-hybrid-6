@@ -233,7 +233,7 @@ struct Client
   struct SLink*     confs;      /* Configuration record associated */
   struct in_addr    ip;         /* keep real ip# too */
   unsigned short    port;       /* and the remote port# too :-) */
-  struct DNSReply*  dns_reply;  /* result returned from resolver query */
+  struct DNSQuery*  dns_query;  /* result returned from resolver query */
 #ifdef ANTI_NICK_FLOOD
   time_t            last_nick_change;
   int               number_of_nick_changes;

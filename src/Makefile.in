@@ -16,6 +16,7 @@ CPPFLAGS = ${INCLUDES} @CPPFLAGS@
 #
 
 SRCS = \
+	adns.o \
 	blalloc.c \
 	channel.c \
 	class.c \
@@ -80,7 +81,6 @@ SRCS = \
 	numeric.c \
 	packet.c \
 	parse.c \
-	res.c \
 	restart.c \
 	s_auth.c \
 	s_bsd.c \
@@ -103,6 +103,7 @@ SRCS = \
 # Ultrix can't use gnu make????? feh --Bleep
 # 
 #OBJS = \
+#	adns.o \
 #	blalloc.o \
 #	channel.o \
 #	class.o \

@@ -179,13 +179,13 @@ void report_error(const char* text, const char* who, int error)
  * a non-null pointer, otherwise reply will be null.
  * if successful start the connection, otherwise notify opers
  */
-static void connect_dns_callback(void* vptr, struct DNSReply* reply)
+static void connect_dns_callback(void* vptr, adns_answer* reply)
 {
   struct ConfItem* aconf = (struct ConfItem*) vptr;
   aconf->dns_pending = 0;
-  if (reply) {
-    memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
-    connect_server(aconf, 0, reply);
+  if (reply && reply->status == adns_s_ok) {
+    aconf->ipnum.s_addr = reply->rrs.addr->addr.inet.sin_addr.s_addr;
+    connect_server(aconf, 0, NULL);
   }
   else
     sendto_realops("Connect to %s failed: host lookup", aconf->host);
@@ -505,7 +505,7 @@ static int connect_inet(struct ConfItem *aconf, struct Client *cptr)
  * it's considered an auto connect.
  */
 int connect_server(struct ConfItem* aconf, 
-                   struct Client* by, struct DNSReply* reply)
+                   struct Client* by, struct DNSQuery *reply)
 {
   struct Client* cptr;
 
@@ -551,20 +551,18 @@ int connect_server(struct ConfItem* aconf,
   if (INADDR_NONE == aconf->ipnum.s_addr) {
     assert(0 == reply);
     if ((aconf->ipnum.s_addr = inet_addr(aconf->host)) == INADDR_NONE) {
-      struct DNSQuery  query;
-      
-      query.vptr     = aconf;
-      query.callback = connect_dns_callback;
-      gethost_byname(aconf->host, &query);
+      struct DNSQuery  *query;
+      query = MyMalloc(sizeof(struct DNSQuery));
+      query->ptr     = aconf;
+      query->callback = connect_dns_callback;
+      adns_gethost(aconf->host, query);
 
       aconf->dns_pending = 1;
       return 0;
     }
   }
   cptr = make_client(NULL);
-  if (reply) 
-    ++reply->ref_count;
-  cptr->dns_reply = reply;
+  cptr->dns_query = reply;
   
   /*
    * Copy these in so we have something for error detection.
@@ -708,10 +706,6 @@ void close_connection(struct Client *cptr)
   else
     ServerStats->is_ni++;
   
-  if (cptr->dns_reply) {
-    --cptr->dns_reply->ref_count;
-    cptr->dns_reply = 0;
-  }
   if (-1 < cptr->fd) {
     flush_connections(cptr);
     local[cptr->fd] = NULL;
@@ -1232,7 +1226,6 @@ int read_message(time_t delay, unsigned char mask)
 
   static struct pollfd poll_fdarray[MAXCONNECTIONS];
   struct pollfd*       pfd = poll_fdarray;
-  struct pollfd*       res_pfd = NULL;
   int                  nbr_pfds = 0;
   time_t               delay2 = delay;
   u_long               usec = 0;
@@ -1250,16 +1243,8 @@ int read_message(time_t delay, unsigned char mask)
     nbr_pfds = 0;
     pfd      = poll_fdarray;
     pfd->fd  = -1;
-    res_pfd  = NULL;
     auth = 0;
 
-    /*
-     * set resolver descriptor
-     */
-    if (ResolverFileDescriptor >= 0) {
-      PFD_SETR(ResolverFileDescriptor);
-      res_pfd = pfd;
-    }
     /*
      * set auth descriptors
      */
@@ -1339,13 +1324,6 @@ int read_message(time_t delay, unsigned char mask)
     if (res > 5)
       restart("too many poll errors");
     sleep(10);
-  }
-  /*
-   * check resolver descriptor
-   */
-  if (res_pfd && (res_pfd->revents & (POLLREADFLAGS | POLLERRORS))) {
-    get_res();
-    --nfds;
   }
   /*
    * check auth descriptors

@@ -385,7 +385,6 @@ void count_memory(aClient *cptr,char *nick)
              me.name, RPL_STATSDEBUG, nick, dbuf_alloc_count, dbuf_allocated,
              dbuf_used_count, dbuf_used);
 
-  rm = cres_mem(cptr);
 
   count_scache(&number_servers_cached,&mem_servers_cached);
 

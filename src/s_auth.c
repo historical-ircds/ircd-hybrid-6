@@ -70,7 +70,8 @@ static struct {
   { "NOTICE AUTH :*** Got Ident response\r\n",             37 },
   { "NOTICE AUTH :*** No Ident response\r\n",              36 },
   { "NOTICE AUTH :*** Your forward and reverse DNS do not match, " \
-    "ignoring hostname.\r\n",                              80 }
+    "ignoring hostname.\r\n",                              80 },
+  { "NOTICE AUTH :*** Your hostname is too long, ignoring hostname\r\n ", 63 }
 };
 
 typedef enum {
@@ -81,7 +82,8 @@ typedef enum {
   REPORT_DO_ID,
   REPORT_FIN_ID,
   REPORT_FAIL_ID,
-  REPORT_IP_MISMATCH
+  REPORT_IP_MISMATCH,
+  REPORT_HOST_TOOLONG
 } ReportType;
 
 #define sendheader(c, r) \
@@ -171,45 +173,29 @@ static void release_auth_client(struct Client* client)
  * set the client on it's way to a connection completion, regardless
  * of success of failure
  */
-static void auth_dns_callback(void* vptr, struct DNSReply* reply)
+static void auth_dns_callback(void* vptr, adns_answer* reply)
 {
   struct AuthRequest* auth = (struct AuthRequest*) vptr;
 
   ClearDNSPending(auth);
-  if (reply)
-    {
-      struct hostent* hp = reply->hp;
-      int i;
-      /*
-       * Verify that the host to ip mapping is correct both ways and that
-       * the ip#(s) for the socket is listed for the host.
-       */
-      for (i = 0; hp->h_addr_list[i]; ++i)
-	{
-	  if (memcmp(hp->h_addr_list[i], (char*) &auth->client->ip,
-		     sizeof(struct in_addr)) == 0)
-	    break;
-	}
-      if (!hp->h_addr_list[i])
-	{
-	  sendheader(auth->client, REPORT_IP_MISMATCH);
-	}
-      else
-	{
-	  ++reply->ref_count;
-	  auth->client->dns_reply = reply;
-	  strncpy_irc(auth->client->host, hp->h_name, HOSTLEN);
-	  sendheader(auth->client, REPORT_FIN_DNS);
-	}
-    }
-  else
-    {
-      /*
-       * this should have already been done by s_bsd.c in add_connection
-       */
-      strcpy(auth->client->host, auth->client->sockhost);
-      sendheader(auth->client, REPORT_FAIL_DNS);
-    }
+  if (reply && (reply->status == adns_s_ok))
+  {
+      if(strlen(*reply->rrs.str) < HOSTLEN)
+      {
+        strcpy(auth->client->host, *reply->rrs.str);
+        sendheader(auth->client, REPORT_FIN_DNS);
+      } else {
+        sendheader(auth->client, REPORT_HOST_TOOLONG);
+      }
+  } else
+  {
+     strcpy(auth->client->host, auth->client->sockhost);
+     sendheader(auth->client, REPORT_FAIL_DNS);
+  }
+  MyFree(reply);
+  MyFree(auth->client->dns_query);
+    
+  auth->client->dns_query = NULL;
   auth->client->host[HOSTLEN] = '\0';
   if (!IsDoingAuth(auth))
     {
@@ -401,19 +387,19 @@ static char* GetValidIdent(char *buf)
  */
 void start_auth(struct Client* client)
 {
-  struct DNSQuery     query;
   struct AuthRequest* auth = 0;
 
   assert(0 != client);
 
   auth = make_auth_request(client);
 
-  query.vptr     = auth;
-  query.callback = auth_dns_callback;
+  client->dns_query = MyMalloc(sizeof(struct DNSQuery));
+  client->dns_query->ptr     = auth;
+  client->dns_query->callback = auth_dns_callback;
 
   sendheader(client, REPORT_DO_DNS);
 
-  gethost_byaddr((const char*) &client->ip, &query);
+  adns_getaddr(&client->ip, client->dns_query);
   SetDNSPending(auth);
 
   if (start_auth_query(auth))
@@ -447,7 +433,8 @@ void timeout_auth_queries(time_t now)
 	  sendheader(auth->client, REPORT_FAIL_ID);
 	  if (IsDNSPending(auth))
 	    {
-	      delete_resolver_queries(auth);
+	      delete_adns_queries(auth->client->dns_query);
+	      auth->client->dns_query->query = NULL;
 	      sendheader(auth->client, REPORT_FAIL_DNS);
 	    }
 	  log(L_INFO, "DNS/AUTH timeout %s",
@@ -464,7 +451,8 @@ void timeout_auth_queries(time_t now)
       auth_next = auth->next;
       if (auth->timeout < CurrentTime)
 	{
-	  delete_resolver_queries(auth);
+	  delete_adns_queries(auth->client->dns_query);
+	  auth->client->dns_query->query = NULL;
 	  sendheader(auth->client, REPORT_FAIL_DNS);
 	  log(L_INFO, "DNS timeout %s", get_client_name(auth->client, SHOW_IP));
 

@@ -8,6 +8,7 @@
 #include "fdlist.h"
 #include "client.h"  /* struct Client */
 #include "ircd.h"    /* GlobalSetOptions */
+#include "res.h"
 #include "s_bsd.h"   /* highest_fd */
 #include "config.h"  /* option settings */
 #include <string.h>

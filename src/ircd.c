@@ -51,6 +51,7 @@
 #include "send.h"
 #include "struct.h"
 #include "whowas.h"
+#include "blalloc.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -440,10 +441,7 @@ static time_t io_loop(time_t delay)
   */
   if (nextconnect && CurrentTime >= nextconnect)
     nextconnect = try_connections(CurrentTime);
-  /*
-   * DNS checks, use smaller of resolver delay or next ping
-   */
-  delay = IRCD_MIN(timeout_resolver(CurrentTime), nextping);
+
   /*
   ** take the smaller of the two 'timed' event times as
   ** the time of next event (stops us being late :) - avalon
@@ -527,6 +525,7 @@ static time_t io_loop(time_t delay)
   if (CurrentTime >= nextping) {
     nextping = check_pings(CurrentTime);
     timeout_auth_queries(CurrentTime);
+    timeout_adns();
   }
 
   if (dorehash && !LIFESUX)
@@ -544,7 +543,7 @@ static time_t io_loop(time_t delay)
 #ifndef NO_PRIORITY
   fdlist_check(CurrentTime);
 #endif
-
+  
   if(CurrentTime >= next_gc)
   {
      block_garbage_collect();
@@ -908,8 +907,10 @@ int main(int argc, char *argv[])
   log(L_NOTICE, "Server Ready");
 
   ServerRunning = 1;
-  while (ServerRunning)
+  while (ServerRunning) {
     delay = io_loop(delay);
+    do_adns_io();
+  }
   return 0;
 }
 

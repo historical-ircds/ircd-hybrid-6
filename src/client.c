@@ -199,9 +199,6 @@ void _free_client(struct Client* cptr)
     if (-1 < cptr->fd)
       close(cptr->fd);
 
-    if (cptr->dns_reply)
-      --cptr->dns_reply->ref_count;
-
     result = BlockHeapFree(localClientFreeList, cptr);
   }
   else
@@ -1057,10 +1054,10 @@ int check_registered(struct Client* client)
 void release_client_dns_reply(struct Client* client)
 {
   assert(0 != client);
-  if (client->dns_reply) {
-    --client->dns_reply->ref_count;
-    client->dns_reply = 0;
-  }
+//  if (client->dns_reply) {
+//    --client->dns_reply->ref_count;
+//    client->dns_reply = 0;
+//  }
 }
 
 /*
@@ -1140,7 +1137,7 @@ const char* get_client_host(struct Client* client)
 
   if (!MyConnect(client))
     return client->name;
-  if (!client->dns_reply)
+  if (!client->host)
     return get_client_name(client, FALSE);
   else
     {

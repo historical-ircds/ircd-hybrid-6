@@ -169,15 +169,8 @@ static int inetport(struct Listener* listener)
   port_sin.sin_port   = htons(listener->port);
 
   if (INADDR_ANY != listener->addr.s_addr) {
-    struct hostent* hp;
-    /*
-     * XXX - blocking call to gethostbyaddr
-     */
-    if ((hp = gethostbyaddr((char*) &listener->addr, 
-                            sizeof(struct sockaddr_in), AF_INET))) {
-      strncpy_irc(listener->vhost, hp->h_name, HOSTLEN);
-      listener->name = listener->vhost;
-    }
+    strncpy_irc(listener->vhost, inetntoa((char *)&listener->addr), HOSTLEN);
+    listener->name = listener->vhost;
   }
 
   if (bind(fd, (struct sockaddr*) &port_sin, sizeof(port_sin))) {

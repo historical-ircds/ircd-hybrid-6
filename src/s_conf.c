@@ -153,12 +153,12 @@ struct ConfItem        *include_list = ((struct ConfItem *)NULL);
  * a non-null pointer, otherwise hp will be null.
  * if successful save hp in the conf item it was called with
  */
-static void conf_dns_callback(void* vptr, struct DNSReply* reply)
+static void conf_dns_callback(void* vptr, adns_answer *reply)
 {
   struct ConfItem* aconf = (struct ConfItem*) vptr;
   aconf->dns_pending = 0;
-  if (reply)
-    memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
+  if (reply->status == adns_s_ok)
+    aconf->ipnum.s_addr = reply->rrs.addr->addr.inet.sin_addr.s_addr;
 }
 
 /*
@@ -166,18 +166,16 @@ static void conf_dns_callback(void* vptr, struct DNSReply* reply)
  * if the conf entry is currently doing a ns lookup do nothing, otherwise
  * if the lookup returns a null pointer, set the conf dns_pending flag
  */
-struct DNSReply* conf_dns_lookup(struct ConfItem* aconf)
+void conf_dns_lookup(struct ConfItem* aconf)
 {
-  struct DNSReply* dns_reply = 0;
   if (!aconf->dns_pending)
   {
-    struct DNSQuery query;
-    query.vptr     = aconf;
-    query.callback = conf_dns_callback;
-    gethost_byname(aconf->host, &query);
+    struct DNSQuery *query = MyMalloc(sizeof(struct DNSQuery));
+    query->ptr     = aconf;
+    query->callback = conf_dns_callback;
+    adns_gethost(aconf->host, query);
     aconf->dns_pending = 1;
   }
-  return dns_reply;
 }
 
 /*
@@ -225,7 +223,7 @@ void free_conf(struct ConfItem* aconf)
   assert(0 != aconf);
 
   if (aconf->dns_pending)
-    delete_resolver_queries(aconf);
+    delete_adns_queries(aconf->dns_query);
   MyFree(aconf->host);
   if (aconf->passwd)
     memset(aconf->passwd, 0, strlen(aconf->passwd));
@@ -2599,7 +2597,6 @@ static void do_include_conf(void)
  */
 static void lookup_confhost(struct ConfItem* aconf)
 {
-  struct DNSReply* dns_reply;
   unsigned long    ip;
   unsigned long    mask;
 
@@ -2618,9 +2615,8 @@ static void lookup_confhost(struct ConfItem* aconf)
     {
       aconf->ipnum.s_addr = htonl(ip);
     }
-  else if (0 != (dns_reply = conf_dns_lookup(aconf)))
-    memcpy(&aconf->ipnum, dns_reply->hp->h_addr, sizeof(struct in_addr));
-  
+  else 
+     conf_dns_lookup(aconf);
 }
 
 /*

@@ -359,7 +359,8 @@ int check_server(struct Client* cptr)
       return 0;
     }
   lp = cptr->confs;
-  if (cptr->dns_reply)
+#if 0  
+  if (cptr->dns_query)
     {
       int             i;
       struct hostent* hp   = cptr->dns_reply->hp;
@@ -390,6 +391,7 @@ int check_server(struct Client* cptr)
                                   cptr->username, CONF_NOCONNECT_SERVER);
         }
     }
+#endif
   /*
    * Check for C and N lines with the hostname portion the ip number
    * of the host the server runs on. This also checks the case where

@@ -22,7 +22,6 @@ AC_PROG_INSTALL
 dnl Checks for libraries.
 dnl Replace `main' with a function in -lnsl:
 AC_CHECK_LIB(nsl, gethostbyname)
-AC_CHECK_FUNC(res_mkquery,, AC_CHECK_LIB(resolv, res_mkquery))
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_FUNC(crypt,, AC_CHECK_LIB(descrypt, crypt,,AC_CHECK_LIB(crypt, crypt,,)))
 
@@ -180,5 +179,5 @@ case "$target" in
 *) AC_MSG_RESULT(nothing special required) ;;
 esac
 
-AC_OUTPUT(Makefile src/Makefile tools/Makefile zlib/Makefile)
+AC_OUTPUT(Makefile adns/Makefile src/Makefile tools/Makefile zlib/Makefile)
 
