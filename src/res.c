@@ -1093,7 +1093,22 @@ void get_res(void)
        * got a name and address response, client resolved
        */
       cp = make_cache(request);
-      (*request->query.callback)(request->query.vptr, &cp->reply);
+
+      /* if cp is NULL then don't try to use it...&cp->reply will be 0x2c
+       * in this case btw.
+       * make_cache can return NULL if hp->h_name and hp->h_addr_list[0]
+       * are NULL -Dianora
+       */
+
+      if(cp)
+        {        
+          (*request->query.callback)(request->query.vptr, &cp->reply);
+        }
+      else
+        {
+          (*request->query.callback)(request->query.vptr, 0 );
+        }
+
 #ifdef  DEBUG
       Debug((DEBUG_INFO,"get_res:cp=%#x request=%#x (made)",cp,request));
 #endif
