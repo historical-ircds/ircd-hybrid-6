@@ -1,6 +1,5 @@
 This file outlines the features that ircd-hybrid has for IRC Operators.
-- 09/27/97 - ThemBones (kraemer@u.washington.edu)
-- 01/04/98 - last update, Jake [WintrHawk] Khuon <khuon@GCtr.Net>
+$Id$
 
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -213,6 +212,8 @@ COMMAND         - USAGE and DESCRIPTION
                                 Traffic Mode.
 + SET           - SET <option> <value>
                   <option> can be one of the following:
+                    LOG       - Sets the Logging level for what is logged
+                                to ircd.log and syslog.
                     MAX       - Sets the number of max connections
                                 to <value>.  (This number cannot exceed
                                 HARD_FDLIMIT in config.h)

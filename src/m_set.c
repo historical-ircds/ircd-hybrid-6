@@ -552,6 +552,7 @@ int m_set(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
           if(parc > 2)
             {
               int newval = atoi(parv[2]);
+              const char *log_level_as_string;
 
               if(newval < L_WARN)
                 {
@@ -562,13 +563,15 @@ int m_set(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
               if(newval > L_DEBUG)
                 newval = L_DEBUG;
               set_log_level(newval); 
-              sendto_realops("%s has changed LOG level to %i",
-                             parv[0], newval);
+              log_level_as_string = get_log_level_as_string(newval);
+              sendto_realops("%s has changed LOG level to %i (%s)",
+                             parv[0], newval, log_level_as_string);
             }
           else
             {
-              sendto_one(sptr, ":%s NOTICE %s :LOG level is currently %i",
-                         me.name, parv[0], get_log_level());
+              sendto_one(sptr, ":%s NOTICE %s :LOG level is currently %i (%s)",
+                         me.name, parv[0], get_log_level(),
+                         get_log_level_as_string(get_log_level()));
             }
           return 0;
           break;
