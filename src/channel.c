@@ -704,6 +704,18 @@ int     can_send(aClient *cptr, aChannel *chptr)
   return 0;
 }
 
+int     user_channel_mode(aClient *cptr, aChannel *chptr)
+{
+  Link  *lp;
+
+  if (chptr)
+    if ((lp = find_user_link(chptr->members, cptr)))
+      return (lp->flags);
+  
+  return 0;
+}
+
+
 aChannel *find_channel(char *chname, aChannel *chptr)
 {
   return hash_find_channel(chname, chptr);

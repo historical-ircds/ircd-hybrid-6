@@ -86,6 +86,7 @@ extern  void    send_user_joins (struct Client *, struct Client *);
 extern  int     can_send (struct Client *, struct Channel *);
 extern  int     is_chan_op (struct Client *, struct Channel *);
 extern  int     has_voice (struct Client *, struct Channel *);
+extern  int     user_channel_mode(struct Client *, struct Channel *);
 extern  int     count_channels (struct Client *);
 extern  int     m_names(struct Client *, struct Client *,int, char **);
 extern  void    send_channel_modes (struct Client *, struct Channel *);

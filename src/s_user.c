@@ -2362,6 +2362,7 @@ int     m_whois(aClient *cptr,
   char  *p = NULL;
   int   found, len, mlen;
   static time_t last_used=0L;
+  int found_mode;
 
   if (parc < 2)
     {
@@ -2473,12 +2474,11 @@ int     m_whois(aClient *cptr,
                       *buf = '\0';
                       len = 0;
                     }
-		  /*
+
 		  found_mode = user_channel_mode(acptr, chptr);
-		  if(found_mode &  */
-                  if (is_chan_op(acptr, chptr))
+		  if(found_mode & CHFL_CHANOP)
                     *(buf + len++) = '@';
-                  else if (has_voice(acptr, chptr))
+                  else if (found_mode & CHFL_VOICE)
                     *(buf + len++) = '+';
                   if (len)
                     *(buf + len) = '\0';
@@ -2602,9 +2602,10 @@ int     m_whois(aClient *cptr,
                       *buf = '\0';
                       len = 0;
                     }
-                  if (is_chan_op(acptr, chptr))
+		  found_mode = user_channel_mode(acptr, chptr);
+                  if (found_mode & CHFL_CHANOP)
                     *(buf + len++) = '@';
-                  else if (has_voice(acptr, chptr))
+                  else if (found_mode & CHFL_VOICE)
                     *(buf + len++) = '+';
                   if (len)
                     *(buf + len) = '\0';
