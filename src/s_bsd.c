@@ -618,9 +618,8 @@ static        int        check_init(aClient *cptr,char *sockn)
  */
 int check_client(aClient *cptr,char *username,char **reason)
 {
-  static        char        sockname[HOSTLEN+1];
-  struct        hostent *hp = NULL;
-  int        i;
+  static char sockname[HOSTLEN+1];
+  int         i;
  
   ClearAccess(cptr);
   Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]",
@@ -629,27 +628,7 @@ int check_client(aClient *cptr,char *username,char **reason)
   if (check_init(cptr, sockname))
     return -2;
 
-  hp = cptr->hostp;
-  /*
-   * Verify that the host to ip mapping is correct both ways and that
-   * the ip#(s) for the socket is listed for the host.
-   */
-  if (hp)
-    {
-      for (i = 0; hp->h_addr_list[i]; i++)
-        if (!bcmp(hp->h_addr_list[i], (char *)&cptr->ip,
-                  sizeof(struct in_addr)))
-          break;
-
-      if (!hp->h_addr_list[i])
-        {
-          sendto_one(cptr, 
-            "NOTICE AUTH :*** Your forward and reverse DNS do not match, ignoring hostname.");
-          hp = NULL;
-        }
-    }
-
-  if ((i = attach_Iline(cptr, hp, sockname,username, reason)))
+  if ((i = attach_Iline(cptr, cptr->hostp, sockname,username, reason)))
     {
       Debug((DEBUG_DNS,"ch_cl: access denied: %s[%s]",
              cptr->name, sockname));
@@ -673,7 +652,7 @@ int check_client(aClient *cptr,char *username,char **reason)
  * -1 = Access denied
  * -2 = Bad socket.
  */
-int        check_server_init(aClient *cptr)
+int check_server_init(aClient *cptr)
 {
   char        *name;
   aConfItem *c_conf = NULL, *n_conf = NULL;
@@ -750,13 +729,18 @@ int check_server(aClient *cptr,
   if (check_init(cptr, sockname))
     return -2;
 
+  hp = (hp) ? hp : cptr->hostp;
   if (hp)
     {
+      /*
+       * XXX - this is already done for all connecting clients
+       */
       for (i = 0; hp->h_addr_list[i]; i++)
-        if (!bcmp(hp->h_addr_list[i], (char *)&cptr->ip,
-                  sizeof(struct in_addr)))
-          break;
-
+        {
+	  if (!bcmp(hp->h_addr_list[i], (char *)&cptr->ip,
+		    sizeof(struct in_addr)))
+	    break;
+        }
       if (!hp->h_addr_list[i])
         {
           sendto_realops_lev(DEBUG_LEV, "Server IP# Mismatch: %s != %s[%08x]",
@@ -765,15 +749,6 @@ int check_server(aClient *cptr,
           hp = NULL;
         }
     }
-  else if (cptr->hostp)
-    {
-      hp = cptr->hostp;
-      for (i = 0; hp->h_addr_list[i]; i++)
-        if (!bcmp(hp->h_addr_list[i], (char *)&cptr->ip,
-                  sizeof(struct in_addr)))
-          break;
-    }
-
   if (hp)
     {
       /*
@@ -826,15 +801,17 @@ int check_server(aClient *cptr,
                               cptr->username, CONF_NOCONNECT_SERVER);
     }
   else
-    for (i = 0; hp->h_addr_list[i]; i++)
-      {
-        if (!c_conf)
-          c_conf = find_conf_ip(lp, hp->h_addr_list[i],
-                                cptr->username, CONF_CONNECT_SERVER);
-        if (!n_conf)
-          n_conf = find_conf_ip(lp, hp->h_addr_list[i],
-                                cptr->username, CONF_NOCONNECT_SERVER);
-      }
+    {
+      for (i = 0; hp->h_addr_list[i]; i++)
+	{
+	  if (!c_conf)
+	    c_conf = find_conf_ip(lp, hp->h_addr_list[i],
+				  cptr->username, CONF_CONNECT_SERVER);
+	  if (!n_conf)
+	    n_conf = find_conf_ip(lp, hp->h_addr_list[i],
+				  cptr->username, CONF_NOCONNECT_SERVER);
+	}
+    }
   /*
    * detach all conf lines that got attached by attach_confs()
    */
