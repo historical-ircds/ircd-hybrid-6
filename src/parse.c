@@ -451,6 +451,7 @@ static struct Message *do_msg_tree(MESSAGE_TREE *mtree, char *prefix,
       assert(0);
       exit(1);
     }
+  return (0); 
 }
 
 /*

@@ -201,7 +201,7 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
         {
           char clean_host[2 * HOSTLEN + 4];
           sendto_one(sptr,"ERROR :Bogus server name (%s)", 
-                     clean_string(clean_host, host, 2 * HOSTLEN));
+                     clean_string(clean_host, (const unsigned char *) host, 2 * HOSTLEN));
           return exit_client(cptr, cptr, cptr, "Bogus server name");
         }
     }

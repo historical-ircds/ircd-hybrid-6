@@ -713,7 +713,7 @@ static void query_name(const char* name, int query_class,
 
   memset(buf, 0, sizeof(buf));
   if ((request_len = res_mkquery(QUERY, name, query_class, type, 
-                                 NULL, 0, NULL, buf, sizeof(buf))) > 0) {
+                                 NULL, 0, NULL, (u_char *) buf, sizeof(buf))) > 0) {
     HEADER* header = (HEADER*) buf;
 #ifndef LRAND48
     int            k = 0;
@@ -790,7 +790,7 @@ static int proc_answer(ResRQ* request, HEADER* header,
   assert(0 != buf);
   assert(0 != eob);
   
-  current = buf + sizeof(HEADER);
+  current = (unsigned char *) buf + sizeof(HEADER);
   hp = &(request->he.h);
   /*
    * lazy allocation of request->he.buf, we don't allocate a buffer
@@ -852,7 +852,7 @@ static int proc_answer(ResRQ* request, HEADER* header,
    * skip past queries
    */ 
   for (; header->qdcount > 0; --header->qdcount) {
-    if ((n = dn_skipname(current, eob)) < 0)
+    if ((n = dn_skipname(current, (u_char *) eob)) < 0)
       break;
     current += (size_t) n + QFIXEDSZ;
   }
@@ -860,7 +860,7 @@ static int proc_answer(ResRQ* request, HEADER* header,
    * process each answer sent to us blech.
    */
   while (header->ancount-- > 0 && (char *) current < eob && name < endp) {
-    n = dn_expand(buf, eob, current, hostbuf, sizeof(hostbuf));
+    n = dn_expand((u_char *) buf, (u_char *) eob, current, hostbuf, sizeof(hostbuf));
     if (n < 0) {
       /*
        * broken message
@@ -929,7 +929,7 @@ static int proc_answer(ResRQ* request, HEADER* header,
       ++answer_count;
       break;
     case T_PTR:
-      n = dn_expand(buf, eob, current, hostbuf, sizeof(hostbuf));
+      n = dn_expand((u_char *) buf, (u_char *) eob, current, hostbuf, sizeof(hostbuf));
       if (n < 0) {
         /*
          * broken message

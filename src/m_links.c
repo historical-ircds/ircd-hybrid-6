@@ -159,14 +159,14 @@ int m_links(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
     {
       sendto_realops_flags(FLAGS_SPY,
                          "BOGUS LINKS '%s' requested by %s (%s@%s) [%s]",
-                         clean_string(clean_mask, mask, 2 * HOSTLEN),
+                         clean_string(clean_mask, (const unsigned char *) mask, 2 * HOSTLEN),
                          sptr->name, sptr->username,
                          sptr->host, sptr->user->server);
       return 0;
     }
 
   if (*mask)       /* only necessary if there is a mask */
-    mask = collapse(clean_string(clean_mask, mask, 2 * HOSTLEN));
+    mask = collapse(clean_string(clean_mask, (const unsigned char *) mask, 2 * HOSTLEN));
 
   if (MyConnect(sptr))
     sendto_realops_flags(FLAGS_SPY,
