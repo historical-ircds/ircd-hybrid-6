@@ -60,10 +60,6 @@ aPendingLine *PendingLines = (aPendingLine *) NULL;
 extern aConfItem *find_special_conf(char *,int); /* defined in s_conf.c */
 #endif
 
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-extern char *small_file_date(time_t);  /* defined in s_misc.c */
-#endif
-
 /*
  * LockFile routines
  */
