@@ -197,7 +197,11 @@ int	attach_Iline(aClient *cptr,
       /*      (void)strncpy(user, cptr->username,sizeof(user)-1); */
     }
 
-  aconf = find_matching_mtrie_conf(host,username,ntohl(cptr->ip.s_addr));
+  if(cptr->flags & FLAGS_GOTID)
+    aconf = find_matching_mtrie_conf(host,cptr->username,
+				     ntohl(cptr->ip.s_addr));
+  else
+    aconf = find_matching_mtrie_conf(host,username,ntohl(cptr->ip.s_addr));
 
   if(aconf)
     {
