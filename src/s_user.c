@@ -909,8 +909,6 @@ static int register_user(aClient *cptr, aClient *sptr,
                      nick, sptr->hopcount+1, sptr->tsinfo, ubuf,
                      sptr->username, sptr->host, user->server,
                      sptr->info);
-  if (ubuf[1])
-    send_umode_out(cptr, sptr, 0);
   return 0;
 }
 
@@ -1881,7 +1879,7 @@ static int do_user(char* nick, aClient* cptr, aClient* sptr,
 
   user = make_user(sptr);
 
-  oflags = sptr->flags;
+  oflags = sptr->umodes;
 
   if (!MyConnect(sptr))
     {
@@ -1899,7 +1897,7 @@ static int do_user(char* nick, aClient* cptr, aClient* sptr,
           return 0;
         }
 #ifndef NO_DEFAULT_INVISIBLE
-      sptr->flags |= FLAGS_INVISIBLE;
+      sptr->umodes |= FLAGS_INVISIBLE;
 #endif
 
 #if 0
