@@ -69,6 +69,7 @@ char *infotext[] =
         "",
         "cbongo              Chris A. Bongaarts  cab@tc.umn.edu",
         "comstud             Chris Behrens       cbehrens@concentric.net",
+        "David-R             David Rientjes      rientjes@mail.whidbey.net",
         "Dianora             Diane Bruce         db@db.net",
 	"johan               Johannes Erdfelt    jerdfelt@eng.mindspring.net",
         "orabidoo            Roger Espel Llima   espel@unix.bigots.org",
