@@ -1,23 +1,21 @@
+ircd-hybrid-6 README
+--------------------
+$Id$
+
 If you don't read this first, we won't help you.
 :-)
 
 See the INSTALL document for info on configuring and compiling
 ircd-hybrid.
 
-IMPORTANT. if you are used to using "ONE" in the password field
-of I lines to limit clients to one per ip, hybrid-5 no longer does it
-that way. It now does it the same way CSr does it. The limit is set
-by the normally unused (for clients) confreq field in the corresponding
-Y line.
+IMPORTANT. I/K line handling has changed significantly.  There are also
+many new types of conf lines.  Please see RELNOTES and doc/example.conf
+for more information.  The default port is no longer specified in the M
+line, you must add a specific P line for it.
 
-TRANSLATION: You *MUST* fix your I and Y lines to be hybrid-5
-compatible before running hybrid-5.
+TRANSLATION: You *MUST* fix your conf before upgrading from hybrid-5.
 
 LOTS OF THINGS HAVE CHANGED IN CONFIG.H.  PLEASE READ THROUGH IT.
-
-NEW DEBUGGING MODE: if you run ircd with the -s flag, it will send
-errors that are normally syslogged to stderr.  This is very useful
-if you don't have syslogging set up and ircd won't run.
 
 There is now a mailing list for general discussion of Hybrid.  To subscribe
 to the Hybrid List, send email to hybrid-request@the-project.org with
@@ -25,5 +23,7 @@ the subject "subscribe".
 
 SOLARIS USERS: this code appears to tickle a bug in gcc and egcs ONLY
 on 64-bit Solaris7.  You must compile on a 32bit kernel, then you
-can run on 32bit or 64bit.  
+can run on 32bit or 64bit.  Compiling with SunPro C on 64bit Solaris
+appears to work fine.
+
 

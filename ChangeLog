@@ -8,8 +8,7 @@ bug in mtrie_conf.c causing ~ klines not to work
 major bug in s_conf.c to do with reading of kline.conf
 
 
-*** HYBRID CHANGELOG
-*** Newest entries at top
+*** Entries below this point were entered manually
 
 version hybrid-6-b90 02-Aug-1999
 * updated patchlevel in anticipation of snapshot release

@@ -1,11 +1,13 @@
-HOW TO BUILD:
--------------
-As of hybrid-4, the distribution uses gnu autoconf instead of the old
-Config script.  The Makefile has also been updated to include CFLAGS
-defines for popular modern OSes.
+ircd-hybrid-6 INSTALL
+---------------------
+$Id$
 
-0.  Read the ChangeLog file to find out about the exciting new
-features in this version.
+As of hybrid-4, the distribution uses gnu autoconf instead of the old
+Config script. 
+
+0.  Read the RELNOTES and ChangeLog files to find out about the
+exciting new features in this version.  Changes to ircd.conf are
+documented in doc/example.conf.
 
 1.  Run the configure script.  It will create include/setup.h and the
 Makefiles to match your system:
@@ -17,7 +19,9 @@ and "INIT_MAXCLIENTS" must be less than the maximum file descriptors
 per process allowed by your kernel, and must be <= FD_SETSIZE (usually
 defined in system includes, but may need to overridden in the Makefile.
 Note that the old OS definitions are gone, autoconf handles this now.
-Finally set the various PATH's to where you are going to stick this stuff.
+Finally set the various PATHs to where you are going to install the ircd.
+Do not install the ircd to "."--the install script is not designed to
+install ircd properly on top of the existing source tree.
 
 3.  "make" should build ircd.
 
@@ -27,15 +31,17 @@ in config.h.
 
 HOW TO GET HELP:
 ----------------
-Send Check or Money Order to...  just kidding!  You're on your own for
-support.  Try asking other ircd-hybrid admins on EFnet if you can't fix
-it yourself.  If you do fix anything, however, please send context
-diffs to ircd-hybrid@the-project.org so the fixes can be incorporated
-into the next release of ircd-hybrid.  If hybrid crashes on you,
-PLEASE CONTACT ircd-hybrid@the-project.org ASAP with a backtrace of
-the core.  The hybrid team can't fix bugs if no one tells us about them!
-
-There is now a mailing list for general discussion of Hybrid.  To subscribe
+Send Check or Money Order to...  just kidding!  Commerical support
+for ircd-hybrid is not available at this time.  There is now a
+mailing list for general discussion of Hybrid.  To subscribe
 to the Hybrid List, send email to hybrid-request@the-project.org with
 the subject "subscribe".
+
+If hybrid crashes on you, PLEASE CONTACT ircd-hybrid@the-project.org
+ASAP with a backtrace of the core.  The hybrid team can't fix bugs if
+no one tells us about them!
+
+If there is a new feature you would like to see in the next major
+release of ircd-hybrid, please post it to the public mailing list,
+hybrid@the-project.org.
 
