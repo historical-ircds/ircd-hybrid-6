@@ -87,6 +87,12 @@ extern	VOIDSIG	dummy();
 #define	NO_U_TYPES
 #endif
 
+#ifdef	OS_SOLARIS2
+extern	int	gethostname(char *, int);
+extern	long	random();
+extern	int	srandom(unsigned int);
+#endif /* OS_SOLARIS2 */
+
 #ifdef	NO_U_TYPES
 typedef	unsigned char	u_char;
 typedef	unsigned short	u_short;

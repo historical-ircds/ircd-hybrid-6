@@ -2153,7 +2153,7 @@ int	read_message(time_t delay)
   u_long	usec = 0;
   int		res, length, fd, newfd;
   int		auth, rr, rw;
-  register	int i,j;
+  register	int i;
   static aClient	*authclnts[MAXCONNECTIONS];
   char		errmsg[255];
   

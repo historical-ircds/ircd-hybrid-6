@@ -39,7 +39,8 @@ static char *rcs_version = "$Id$";
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
-#include "nameser.h"
+#include <utmp.h> /* old slackware utmp.h defines BYTE_ORDER */
+#include "nameser.h" /* and nameser.h checks to see if its defined */
 #include "resolv.h"
 
 #if defined(AIX) || defined(DYNIXPTX) || defined(SVR3)
@@ -47,7 +48,6 @@ static char *rcs_version = "$Id$";
 #endif
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <utmp.h>
 #include "h.h"
 #if defined( HAVE_STRING_H )
 #include <string.h>
@@ -5442,8 +5442,8 @@ int	m_trace(aClient *cptr,
 	  /* Only opers see users if there is a wildcard
 	   * but anyone can see all the opers.
 	   */
-	  if (IsAnOper(sptr) &&
-	      (MyClient(sptr) || !(dow && IsInvisible(acptr)))
+	  if ((IsAnOper(sptr) &&
+	      (MyClient(sptr) || !(dow && IsInvisible(acptr))))
 	      || !dow || IsAnOper(acptr))
 	    {
 	      if (IsAnOper(acptr))
