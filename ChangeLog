@@ -1,3 +1,9 @@
+*** 20001101_1 by lusky
+disallow DNS command from non-opers
+format string snafu in ts_warn()
+format string snafu in debug()
+
+
 *** 20001029_2 by lusky
 revved patchlevel for rc6
 added O_LINES_OPER_ONLY
