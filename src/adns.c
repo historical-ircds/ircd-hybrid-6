@@ -71,9 +71,7 @@ static void dns_cancel_all(void)
  */
 void restart_resolver(void)
 {
-  dns_cancel_all();
-  adns_finish(dns_state);
-  init_resolver();
+   adns__rereadconfig(dns_state);
 }
 
 /* void init_resolver(void)

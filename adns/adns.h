@@ -860,5 +860,5 @@ const char *adns_errtypeabbrev(adns_status st);
  * string XXX.  You MUST NOT call these functions with status values
  * not returned by the same adns library.
  */
-
+int adns__rereadconfig(adns_state);
 #endif
