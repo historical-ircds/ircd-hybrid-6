@@ -1,4 +1,10 @@
-/* fdlist.c   maintain lists of certain important fds */
+/* 
+ *
+ * fdlist.c   maintain lists of certain important fds 
+ *
+ *
+ * $Id$
+ */
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -6,9 +12,6 @@
 #include "config.h"
 #include "fdlist.h"
 
-#ifndef lint
-static char *rcs_version = "$Id$";
-#endif /* lint */
 
 void addto_fdlist(int fd,fdlist *listp)
 {

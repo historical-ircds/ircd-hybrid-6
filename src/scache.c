@@ -1,3 +1,8 @@
+/*
+ * scache.c
+ *
+ * $Id$
+ */
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -5,9 +10,6 @@
 #include "h.h"
 #include "send.h"
 
-#ifndef lint
-static char *rcs_version ="$Id$";
-#endif
 
 static int hash(char *);	/* keep it hidden here */
 

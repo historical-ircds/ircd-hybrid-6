@@ -414,9 +414,9 @@ void close_listeners()
 /*
  * init_sys
  */
-void        init_sys()
+void init_sys()
 {
-  int        fd;
+  int fd;
 
 #ifdef RLIMIT_FD_MAX
   struct rlimit limit;
@@ -426,17 +426,17 @@ void        init_sys()
 
       if (limit.rlim_max < MAXCONNECTIONS)
 	{
-	  (void)fprintf(stderr,"ircd fd table too big\n");
-	  (void)fprintf(stderr,"Hard Limit: %ld IRC max: %d\n",
+	  fprintf(stderr,"ircd fd table too big\n");
+	  fprintf(stderr,"Hard Limit: %ld IRC max: %d\n",
 			(long) limit.rlim_max, MAXCONNECTIONS);
-	  (void)fprintf(stderr,"Fix MAXCONNECTIONS\n");
+	  fprintf(stderr,"Fix MAXCONNECTIONS\n");
 	  exit(-1);
 	}
 
       limit.rlim_cur = limit.rlim_max; /* make soft limit the max */
       if (setrlimit(RLIMIT_FD_MAX, &limit) == -1)
         {
-          (void)fprintf(stderr,"error setting max fd's to %ld\n",
+          fprintf(stderr,"error setting max fd's to %ld\n",
                         (long) limit.rlim_cur);
           exit(-1);
         }
@@ -444,10 +444,9 @@ void        init_sys()
 #ifndef USE_POLL
       if( MAXCONNECTIONS > FD_SETSIZE )
         {
-          (void)fprintf(stderr,
-            "FD_SETSIZE = %d MAXCONNECTIONS = %d\n",FD_SETSIZE,
-            MAXCONNECTIONS);
-          (void)fprintf(stderr,
+          fprintf(stderr, "FD_SETSIZE = %d MAXCONNECTIONS = %d\n",
+                  FD_SETSIZE, MAXCONNECTIONS);
+          fprintf(stderr,
             "Make sure your kernel supports a larger FD_SETSIZE then recompile with -DFD_SETSIZE=%d\n",MAXCONNECTIONS);
           exit(-1);
         }
@@ -466,24 +465,24 @@ void        init_sys()
   fd_limit = setdtablesize(MAXCONNECTIONS + 1);
   if (fd_limit < MAXCONNECTIONS)
     {
-      (void)fprintf(stderr,"ircd fd table too big\n");
-      (void)fprintf(stderr,"Hard Limit: %d IRC max: %d\n",
+      fprintf(stderr,"ircd fd table too big\n");
+      fprintf(stderr,"Hard Limit: %d IRC max: %d\n",
                     fd_limit, MAXCONNECTIONS);
-      (void)fprintf(stderr,"Fix MAXCONNECTIONS\n");
+      fprintf(stderr,"Fix MAXCONNECTIONS\n");
       exit(-1);
     }
 #endif  /* !DYNIXPIX */
 #endif  /* sequent */
 #if defined(DYNIXPTX) || defined(SVR3)
-  char        logbuf[BUFSIZ];
+  char logbuf[BUFSIZ];
 
-  (void)setvbuf(stderr,logbuf,_IOLBF,sizeof(logbuf));
+  setvbuf(stderr, logbuf, _IOLBF, sizeof(logbuf));
 #else /* !(defined(HPUX) || defined(__CYGWIN__)) */
 # if defined(HPUX) || defined(__CYGWIN__)
-  (void)setvbuf(stderr, NULL, _IOLBF, 0);
+  setvbuf(stderr, NULL, _IOLBF, 0);
 # else
 #  if !defined(SOL20) && !defined(__EMX__)
-  (void)setlinebuf(stderr);
+  setlinebuf(stderr);
 #  endif
 # endif /* !(defined(HPUX) || defined(__CYGWIN__)) */
 #endif  /* !(defined(DYNIXPTX) || defined(SVR3)) */
@@ -495,7 +494,7 @@ void        init_sys()
 
   for (fd = 3; fd < MAXCONNECTIONS; fd++)
     {
-      (void)close(fd);
+      close(fd);
       local[fd] = NULL;
     }
   local[1] = NULL;
@@ -505,14 +504,13 @@ void        init_sys()
       init_resolver();
       return;
     }
-  (void)close(1);
+  close(1);
   if (!(bootopt & BOOT_DEBUG) && !(bootopt & BOOT_STDERR))
-    (void)close(2);
+    close(2);
 
 #ifndef __CYGWIN__
   if (((bootopt & BOOT_CONSOLE) || isatty(0)) &&
-      !(bootopt & (BOOT_INETD|BOOT_OPER)) &&
-      !(bootopt & BOOT_STDERR))
+      !(bootopt & (BOOT_OPER | BOOT_STDERR)))
     {
       int pid;
       if( (pid = fork()) < 0)
@@ -526,19 +524,19 @@ void        init_sys()
 #ifdef TIOCNOTTY
       if ((fd = open("/dev/tty", O_RDWR)) >= 0)
         {
-          (void)ioctl(fd, TIOCNOTTY, (char *)NULL);
-          (void)close(fd);
+          ioctl(fd, TIOCNOTTY, (char *)NULL);
+          close(fd);
         }
 #endif
 #if defined(HPUX) || defined(SOL20) || defined(DYNIXPTX) || \
     defined(_POSIX_SOURCE) || defined(SVR4)
-      (void)setsid();
+      setsid();
 #else
 # ifndef __EMX__
-    (void)setpgrp(0, (int)getpid());
+    setpgrp(0, (int)getpid());
 # endif /* __EMX__ */
 #endif
-    (void)close(0);        /* fd 0 opened by inetd */
+    close(0);        /* fd 0 opened by inetd */
     local[0] = NULL;
     }
 #endif /* __CYGWIN__ */

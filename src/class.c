@@ -15,13 +15,9 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ *   $Id$
  */
-
-#ifndef	lint
-static char sccsid[] = "@(#)class.c	1.4 28 Jun 1993 (C) 1990 Darren Reed";
-static char *rcs_version = "$Id$";
-#endif
-
 #include "class.h"
 #include "struct.h"
 #include "common.h"

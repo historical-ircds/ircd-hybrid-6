@@ -15,19 +15,14 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ *
+ * For documentation of the *global* functions implemented here,
+ * see the header file (dbuf.h).
+ *
+ *
+ * $Id$
  */
-
-/*
-** For documentation of the *global* functions implemented here,
-** see the header file (dbuf.h).
-**
-*/
-
-#ifndef lint
-static  char sccsid[] = "@(#)dbuf.c	2.16 20 Oct 1993 (C) 1990 Markku Savela";
-static char *rcs_version = "$Id$";
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include "struct.h"

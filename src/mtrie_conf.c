@@ -15,8 +15,8 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/*
+ *
+ *
  * mtrie_conf.c
  *
  * This is a modified trie, i.e. instead of a node for each character
@@ -43,8 +43,8 @@
  *
  * Diane Bruce -db (db@db.net)
  *
+ * $Id$
  */
-
 #include <string.h>
 	/* WHAT TO DO HERE?  guess we'll find out --ns */
 #undef STDLIBH
@@ -60,9 +60,6 @@
 #include "mtrie_conf.h"
 #include "dline_conf.h"
 
-#ifndef lint
-static char *rcs_version="$Id$";
-#endif /* lint */
 
 #define MAXPREFIX (HOSTLEN+USERLEN+15)
 

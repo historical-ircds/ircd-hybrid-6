@@ -17,16 +17,9 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ *   $Id$
  */
-
-#ifndef lint
-static  char sccsid[] = "@(#)s_numeric.c	2.12 07 Aug 1993 (C) 1988 University of Oulu, \
-Computing Center and Jarkko Oikarinen";
-
-static char *rcs_version = "$Id$";
-
-#endif
-
 #include "struct.h"
 #include "common.h"
 #include "sys.h" 

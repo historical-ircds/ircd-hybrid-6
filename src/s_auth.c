@@ -249,7 +249,7 @@ static int start_auth_query(struct AuthRequest* auth)
     ++ircstp->is_abad;
     return 0;
   }
-  if ((HARD_FDLIMIT - 10) < fd) {
+  if ((MAXCONNECTIONS - 10) < fd) {
     sendto_ops("Can't allocate fd for auth on %s",
                 get_client_name(auth->client, TRUE));
 

@@ -1,3 +1,9 @@
+/*
+ * ircsprintf.c
+ *
+ *
+ * $Id$
+ */
 #include <stdio.h>
 #include "struct.h"
 #include "sys.h"
@@ -9,9 +15,6 @@
 #include <varargs.h>
 #endif /* HAVE_STDARG_H */
 
-#ifndef lint
-static char *rcs_version = "$Id$";
-#endif
 
 #ifdef HAVE_STDARG_H
 

@@ -232,14 +232,14 @@ void	server_reboot()
   (void)closelog();
 #endif
   for (i = 3; i < MAXCONNECTIONS; i++)
-    (void)close(i);
-  if (!(bootopt & (BOOT_TTY|BOOT_DEBUG|BOOT_STDERR)))
-    (void)close(2);
-  (void)close(1);
+    close(i);
+  if (!(bootopt & (BOOT_TTY | BOOT_DEBUG | BOOT_STDERR)))
+    close(2);
+  close(1);
   if ((bootopt & BOOT_CONSOLE) || isatty(0))
-    (void)close(0);
-  if (!(bootopt & (BOOT_INETD|BOOT_OPER)))
-    (void)execv(MYNAME, myargv);
+    close(0);
+  if (!(bootopt & BOOT_OPER))
+    execv(MYNAME, myargv);
 #ifdef USE_SYSLOG
   /* Have to reopen since it has been closed above */
 
@@ -420,7 +420,7 @@ static	time_t	check_pings(time_t currenttime)
 
    for (i = 0; i <= highest_fd; i++)
     {
-      if (!(cptr = local[i]) || IsMe(cptr) || IsLog(cptr))
+      if (!(cptr = local[i]) || IsMe(cptr))
 	continue;		/* and go examine next fd/cptr */
       /*
       ** Note: No need to notify opers here. It's
@@ -999,9 +999,6 @@ int	main(int argc, char *argv[])
        }
       switch (flag)
 	{
-	case 'a':
-	  bootopt |= BOOT_AUTODIE;
-	  break;
 	case 'c':
 	  bootopt |= BOOT_CONSOLE;
 	  break;
@@ -1032,9 +1029,6 @@ int	main(int argc, char *argv[])
 #endif
 	case 'h':
 	  strncpyzt(me.name, p, sizeof(me.name));
-	  break;
-	case 'i':
-	  bootopt |= BOOT_INETD|BOOT_AUTODIE;
 	  break;
 	case 'p':
 	  if ((portarg = atoi(p)) > 0 )
@@ -1178,21 +1172,17 @@ normal user.\n");
   if (portnum < 0)
     portnum = PORTNUM;
   me.port = portnum;
-  (void)init_sys();
   me.flags = FLAGS_LISTEN;
-  if (bootopt & BOOT_INETD)
-    {
-      me.fd = 0;
-      local[0] = &me;
-      me.flags = FLAGS_LISTEN;
-    }
-  else
-    me.fd = -1;
+  me.fd = -1;
+
+  init_sys();
+
 
 #ifdef USE_SYSLOG
 #define SYSLOG_ME     "ircd"
   openlog(SYSLOG_ME, LOG_PID|LOG_NDELAY, LOG_FACILITY);
 #endif
+
   if ((file = openconf(ConfigFileEntry.configfile)) == 0)
     {
       Debug((DEBUG_FATAL, "Failed in reading configuration file %s",
@@ -1202,7 +1192,8 @@ normal user.\n");
       exit(-1);
     }
   initconf(bootopt, file, YES);
-  (void)do_include_conf();
+  do_include_conf();
+
 /* comstuds SEPARATE_QUOTE_KLINES_BY_DATE code */
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
   {
@@ -1235,16 +1226,6 @@ normal user.\n");
     initconf(0, file, NO);
 #endif
 #endif
-  if (bootopt & BOOT_INETD)
-    if (inetport(&me, 0, 0))
-    {
-      if (bootopt & BOOT_STDERR)
-        fprintf(stderr,"Couldn't bind to port passed from inetd\n");
-#ifdef USE_SYSLOG
-      (void)syslog(LOG_CRIT, "Couldn't bind to port passed from inetd\n");
-#endif
-      exit(1);
-    }
 
   aconf = find_me();
   strncpy(me.name, aconf->host, HOSTLEN);

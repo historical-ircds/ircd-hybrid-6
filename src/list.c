@@ -30,12 +30,6 @@
 #include "res.h"
 #include "class.h"
 #include "send.h"
-/* #include "s_conf.h"
-
-#ifndef INADDR_NONE
-#define INADDR_NONE ((unsigned int) 0xffffffff)
-#endif
-*/
 
 extern int BlockHeapGarbageCollect(BlockHeap *);
 extern SetOptionsType GlobalSetOptions;
@@ -373,7 +367,6 @@ void remove_client_from_list(aClient *cptr)
 	}
     }
   if (IsInvisible(cptr)) Count.invisi--;
-  checklist();
   if (cptr->prev)
     cptr->prev->next = cptr->next;
   else
