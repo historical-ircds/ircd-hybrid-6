@@ -1,3 +1,18 @@
+db          2001/12/14 21:42:06 EST	(20011215_0)
+
+  Modified files:
+    include              s_conf.h 
+    src                  m_kline.c s_conf.c 
+  Log:
+  - no need to store oper_reason at all, just write it out
+  
+  Revision  Changes    Path
+  1.62      +0 -1      ircd-hybrid-6/include/s_conf.h
+  1.72      +4 -8      ircd-hybrid-6/src/m_kline.c
+  1.232     +0 -3      ircd-hybrid-6/src/s_conf.c
+
+
+
 db          2001/12/14 11:56:39 EST	(20011214_2)
 
   Modified files:
