@@ -74,7 +74,7 @@ static void     clear_out_old_conf(void);
 static void     flush_deleted_I_P(void);
 
 #ifdef LIMIT_UH
-static  int     attach_iline(aClient *, struct ConfItem *,char *);
+static  int     attach_iline(aClient *, struct ConfItem *,const char *);
 #else
 static  int     attach_iline(aClient *, struct ConfItem *);
 #endif
@@ -120,8 +120,8 @@ static IP_ENTRY *ip_hash_table[IP_HASH_SIZE];
 static int hash_ip(unsigned long);
 
 #ifdef LIMIT_UH
-static IP_ENTRY *find_or_add_ip(aClient *,char *);
-static int count_users_on_this_ip(IP_ENTRY *,aClient *,char *);
+static IP_ENTRY *find_or_add_ip(aClient *,const char *);
+static int count_users_on_this_ip(IP_ENTRY *,aClient *,const char *);
 #else
 static IP_ENTRY *find_or_add_ip(aClient *);
 #endif
@@ -473,7 +473,7 @@ int attach_Iline(aClient* cptr, const char* username, char **preason)
  */
 
 #ifdef LIMIT_UH
-static int attach_iline(aClient *cptr, struct ConfItem *aconf,char *username)
+static int attach_iline(aClient *cptr, struct ConfItem *aconf, const char *username)
 #else
 static int attach_iline(aClient *cptr, struct ConfItem *aconf)
 #endif
@@ -494,8 +494,8 @@ static int attach_iline(aClient *cptr, struct ConfItem *aconf)
   ip_found->count++;
 
 #ifdef LIMIT_UH
-  if ((aconf->class->conFreq) && (ip_found->count_of_idented_users_on_this_ip
-                                  > aconf->class->conFreq))
+  if (ConfConFreq(aconf) && (ip_found->count_of_idented_users_on_this_ip
+                                  > ConfConFreq(aconf)))
     {
       if(!IsConfFlined(aconf))
         return -4; /* Already at maximum allowed ip#'s */
@@ -588,7 +588,7 @@ void clear_ip_hash_table()
 
 #ifdef LIMIT_UH
 static IP_ENTRY *
-find_or_add_ip(aClient *cptr,char *username)
+find_or_add_ip(aClient *cptr,const char *username)
 #else
 static IP_ENTRY *
 find_or_add_ip(aClient *cptr)
@@ -670,7 +670,7 @@ find_or_add_ip(aClient *cptr)
 
 #ifdef LIMIT_UH
 static int count_users_on_this_ip(IP_ENTRY *ip_list,
-                           aClient *this_client,char *username)
+                           aClient *this_client,const char *username)
 {
   int count=0;
   Link *ptr;
@@ -681,7 +681,7 @@ static int count_users_on_this_ip(IP_ENTRY *ip_list,
         {
           if (IsGotId(this_client))
             {
-              if(!irccmp(ptr->value.cptr->user->username,username))
+              if(!irccmp(ptr->value.cptr->username,username))
                   count++;
             }
           else
@@ -689,7 +689,7 @@ static int count_users_on_this_ip(IP_ENTRY *ip_list,
               if(this_client == ptr->value.cptr)
                 count++;
               else
-                if(ptr->value.cptr->user->username[0] == '~')
+                if(ptr->value.cptr->username[0] == '~')
                   count++;
             }
         }
