@@ -2050,7 +2050,7 @@ static	void	report_configured_links(aClient *sptr,int mask)
 	      c = 'c';
 
 	    /* Don't allow non opers to see actual ips */
-	    if(IsAnOper(sptr) && MyConnect(sptr))
+	    if(IsAnOper(sptr))
 	      sendto_one(sptr, rpl_str(p->rpl_stats), me.name,
 			 sptr->name, c,
 			 host,
