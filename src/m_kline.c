@@ -51,7 +51,6 @@ static char *rcs_version = "$Id$";
 #endif
 #include "dline_conf.h"
 #include "mtrie_conf.h"
-#include "fdlist.h"
 
 extern int rehashed;
 extern int dline_in_progress;	/* defined in ircd.c */

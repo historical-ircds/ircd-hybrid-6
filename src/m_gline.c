@@ -51,7 +51,6 @@ static char *rcs_version = "$Id$";
 #endif
 #include "dline_conf.h"
 #include "mtrie_conf.h"
-#include "fdlist.h"
 
 #ifdef GLINES
 char	*glinefile = GLINEFILE;
