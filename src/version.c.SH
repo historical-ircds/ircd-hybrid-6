@@ -48,10 +48,12 @@ $spitshell >version.c <<!SUB!THIS!
 
 #include "struct.h"
 #include "patchlevel.h"
+#include "serno.h"
 
 char *generation = "$generation";
 char *creation = "$creation";
 char *version = PATCHLEVEL;
+char *serno = SERIALNUM;
 
 char *infotext[] =
     {

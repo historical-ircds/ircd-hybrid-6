@@ -303,7 +303,7 @@ int	m_version(aClient *cptr,
      }
    else
      sendto_one(sptr, rpl_str(RPL_VERSION), me.name,
-		parv[0], version, debugmode, me.name, serveropts);
+		parv[0], version, serno, debugmode, me.name, serveropts);
 
   return 0;
 }

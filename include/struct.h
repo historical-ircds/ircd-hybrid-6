@@ -1019,7 +1019,7 @@ extern struct Capability captab[];
 
 /* misc variable externs */
 
-extern	char	*version, *infotext[];
+extern	char	*version, *serno, *infotext[];
 extern	char	*generation, *creation;
 
 /* misc defines */
