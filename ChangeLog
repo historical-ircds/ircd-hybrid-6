@@ -1,3 +1,16 @@
+leeh        2001/12/19 18:24:47 EST	(20011219_3)
+
+  Modified files:
+    src                  m_stats.c 
+  Log:
+  - dianes cleanups
+  - finished the HIDE_SPOOF_IPS code to cover stats L.
+  
+  Revision  Changes    Path
+  1.21      +30 -23    ircd-hybrid-6/src/m_stats.c
+
+
+
 leeh        2001/12/19 18:02:09 EST	(20011219_2)
 
   Modified files:
