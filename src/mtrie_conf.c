@@ -1279,10 +1279,14 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
           /* Non local opers do not need to know about
            * I lines that do spoofing 
            */
+#ifdef SPOOF_NOTICE
           if(!(MyConnect(sptr) && IsAnOper(sptr)) &&
              IsConfDoSpoofIp(found_conf))
             continue;
-
+#else
+	  if(IsConfDoSpoofIp(found_conf))
+	    continue;
+#endif
           get_printable_conf(found_conf, &name, &host, &pass, &user, &port );
 
           c = 'I';
