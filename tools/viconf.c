@@ -4,12 +4,15 @@
  * $Id$
  */
 #include <stdio.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <limits.h>
+#include <signal.h>
 #include "config.h"
-#include "sys.h"
+
 
 /* wait.h is in /include on solaris, likely on other SYSV machines as well
  * but wait.h is normally in /include/sys on BSD boxen,
@@ -108,15 +111,16 @@ int main(int argc, char *argv[])
 }
 
 /*
-LockedFile() (copied from m_kline.c in ircd)
- Determine if 'filename' is currently locked. If it is locked,
-there should be a filename.lock file which contains the current
-pid of the editing process. Make sure the pid is valid before
-giving up.
-
-Return: 1 if locked
-        0 if not
-*/
+ * LockedFile() (copied from m_kline.c in ircd)
+ * Determine if 'filename' is currently locked. If it is locked,
+ * there should be a filename.lock file which contains the current
+ * pid of the editing process. Make sure the pid is valid before
+ * giving up.
+ *
+ * Return: 1 if locked
+ *         -1 if couldn't unlock
+ *         0 if was able to lock
+ */
 
 
 
