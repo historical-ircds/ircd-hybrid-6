@@ -33,9 +33,6 @@
 
 #include "zlib.h"
 
-/*#include "cdefs.h"
-#include "bitypes.h"*/
-
 #if defined( HAVE_UNISTD_H )
 #include <unistd.h>
 #endif
