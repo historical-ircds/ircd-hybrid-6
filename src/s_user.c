@@ -554,11 +554,9 @@ static	int	register_user(aClient *cptr,
 				 "Unauthorized client connection",
 				 get_client_host(sptr),
 				 sptr->hostip);
-#if 0
 #ifdef USE_SYSLOG
 	    syslog(LOG_INFO,"%s from %s.",i == -3 ? "Too many connections" :
 		   "Unauthorized client connection", get_client_host(sptr));
-#endif
 #endif
 	    ircstp->is_ref++;
 	    return exit_client(cptr, sptr, &me, i == -3 ?
@@ -619,12 +617,13 @@ static	int	register_user(aClient *cptr,
 	  return exit_client(cptr, sptr, &me, "Invalid hostname");
 	}
 
-      if(bad_dns) {
-         sendto_one(sptr, ":%s NOTICE %s :*** Notice -- You have a bad character in your hostname",
-         me.name,cptr->name);
-         strcpy(user->host,sptr->hostip);
-	 strcpy(sptr->sockhost,sptr->hostip);
-      }
+      if(bad_dns)
+	{
+	  sendto_one(sptr, ":%s NOTICE %s :*** Notice -- You have a bad character in your hostname",
+		     me.name,cptr->name);
+	  strcpy(user->host,sptr->hostip);
+	  strcpy(sptr->sockhost,sptr->hostip);
+	}
 
       aconf = sptr->confs->value.aconf;
       if ((sptr->flags & FLAGS_DOID) && !(sptr->flags & FLAGS_GOTID))
@@ -1076,6 +1075,7 @@ static	int	register_user(aClient *cptr,
 	sendto_ops("New Max Local Clients: %d",
 		   Count.max_loc);
     }
+   }
   else
     strncpyzt(user->username, username, USERLEN+1);
 
@@ -1255,7 +1255,6 @@ static	int	register_user(aClient *cptr,
     send_umode_out(cptr, sptr, 0);
   
   return 0;
-    }
 }
 
 /*
@@ -1331,11 +1330,12 @@ int	m_nick(aClient *cptr,
 
   fromTS = (parc > 6);
   
-  if (MyConnect(sptr) && (s = (char *)strchr(parv[1], '~')))
+  if (MyClient(sptr) && (s = (char *)strchr(parv[1], '~')))
     *s = '\0';
   strncpyzt(nick, parv[1], NICKLEN+1);
 
-  if(!IsAnOper(sptr) && find_special_conf(nick,CONF_QUARANTINED_NICK)) 
+  if(MyClient(sptr) &&
+     !IsAnOper(sptr) && find_special_conf(nick,CONF_QUARANTINED_NICK)) 
     {
       sendto_realops("Quarantined nick [%s], dumping user %s",
 		     nick,get_client_name(cptr, FALSE));

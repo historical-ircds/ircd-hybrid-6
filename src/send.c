@@ -1786,22 +1786,25 @@ va_dcl
 #endif
         return;
 }
- 
+
+#ifdef SLAVE_SERVERS 
+extern aConfItem *u_conf;
+
 int sendto_slaves(char *message,
 		  aClient *cptr,
 		  aClient *sptr,
 		  int parc,
-		  char *parv)
+		  char *parv[])
   {
     aClient *acptr;
     aConfItem *aconf;
 
-    for(aconf = u_conf; aconf; aconf= conf->next)
+    for(aconf = u_conf; aconf; aconf= aconf->next)
       {
 	acptr = find_client(aconf->name, NULL);
 	if(acptr && IsServer(acptr))
 	  {
-	    if(argc > 2)
+	    if(parc > 2)
 	      sendto_one(acptr,":%s %s %s %s %s %s",me.name,
 			 aconf->name,
 			 message,
@@ -1818,3 +1821,4 @@ int sendto_slaves(char *message,
 	  }
       }
   }
+#endif

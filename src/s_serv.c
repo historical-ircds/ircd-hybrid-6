@@ -73,6 +73,8 @@ extern aClient *oper_cptr_list;
 extern aClient *serv_cptr_list;
 
 /* aConfItems */
+/* conf uline link list root */
+extern aConfItem *u_conf;
 /* conf xline link list root */
 extern aConfItem *x_conf;
 /* conf qline link list root */
@@ -2019,8 +2021,11 @@ static	void	report_specials(aClient *sptr,int flags,int numeric)
 
   if(flags & CONF_XLINE)
     this_conf = x_conf;
+  else if(flags & CONF_ULINE)
+    this_conf = u_conf;
   else if(flags & CONF_QUARANTINED_NICK)
     this_conf = q_conf;
+  else return;
 
   for (aconf = this_conf; aconf; aconf = aconf->next)
     if (aconf->status & flags)
@@ -2311,7 +2316,12 @@ int	m_stats(aClient *cptr,
       valid_stats++;
       break;
 
-    case 'U' : case 'u' :
+    case 'U' :
+      report_specials(sptr,CONF_ULINE,RPL_STATSULINE);
+      valid_stats++;
+      break;
+
+    case 'u' :
       {
 	register time_t now;
 	
@@ -3997,6 +4007,9 @@ int     m_kline(aClient *cptr,
 #ifdef SLAVE_SERVERS
   if(IsAnOper(sptr))
     sendto_slaves("KLINE",cptr,sptr,parc,parv);
+  if(IsServer(sptr))
+    sendto_realops("received kline from %s parc %d parv[0] %s %s %s",
+		   sptr->name,parc,parv[0],parv[1],parv[2]);
 #endif
 
   argv = parv[1];
@@ -5685,7 +5698,7 @@ int send_oper_motd(aClient *cptr,
   
   if (opermotd == (aMessageFile *)NULL)
     {
-      sendto_one(sptr, "%s NOTICE %s :No OPER MOTD", me.name, parv[0]);
+      sendto_one(sptr, ":%s NOTICE %s :No OPER MOTD", me.name, parv[0]);
       return 0;
     }
   sendto_one(sptr,":%s NOTICE %s :Start of OPER MOTD",

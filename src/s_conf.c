@@ -59,6 +59,9 @@ char	specific_virtual_host;
 
 static	int	lookup_confhost (aConfItem *);
 static  int     attach_iline(aClient *, aConfItem *);
+aConfItem *find_special_conf(char *, int );
+void clear_special_conf(aConfItem **);
+
 aConfItem *temporary_klines = (aConfItem *)NULL;
 
 static  char *set_conf_flags(aConfItem *,char *);
@@ -1124,6 +1127,8 @@ aConfItem *find_special_conf(char *to_find, int mask)
     this_conf = q_conf;
   else if(mask & CONF_XLINE)
     this_conf = x_conf;
+  else if(mask & CONF_ULINE)
+    this_conf = u_conf;
   else
     return((aConfItem *)NULL);
 
@@ -1142,6 +1147,25 @@ aConfItem *find_special_conf(char *to_find, int mask)
 	return aconf;
     }
   return((aConfItem *)NULL);
+}
+
+/*
+ * clear_special_conf
+ *
+ * - clears given special conf lines
+ */
+void clear_special_conf(aConfItem **this_conf)
+{
+  register aConfItem *aconf;
+  register aConfItem *next_aconf;
+
+  for (aconf = *this_conf; aconf; aconf = next_aconf)
+    {
+      next_aconf = aconf->next;
+      free_conf(aconf);
+    }
+  *this_conf = (aConfItem *)NULL;
+  return;
 }
 
 /*
@@ -1323,6 +1347,9 @@ int	rehash(aClient *cptr,aClient *sptr,int sig)
   clear_mtrie_conf_links();
 
   clear_dlines();
+  clear_special_conf(&q_conf);
+  clear_special_conf(&x_conf);
+  clear_special_conf(&u_conf);
 
   (void) initconf(0,fd,YES);
   do_include_conf();
@@ -1667,8 +1694,7 @@ int 	initconf(int opt, int fd,int use_include)
 #endif
 	case 'U': /* Uphost, ie. host where client reading */
 	case 'u': /* this should connect.                  */
-	  /* This is for client only, I must ignore this */
-	  /* ...U-line should be removed... --msa */
+	  aconf->status = CONF_ULINE;
 	  break;
 
 	case 'X': /* rejected gecos */
@@ -1909,6 +1935,15 @@ int 	initconf(int opt, int fd,int use_include)
 	  aconf->name = aconf->host;
 	  aconf->next = x_conf;
 	  x_conf = aconf;
+	}
+
+      if (aconf->status & CONF_ULINE)
+	{
+	  dontadd = 1;
+	  MyFree(aconf->name);
+	  aconf->name = aconf->host;
+	  aconf->next = u_conf;
+	  u_conf = aconf;
 	}
 
       if (aconf->status & CONF_QUARANTINED_NICK)
