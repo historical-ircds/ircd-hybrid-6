@@ -380,7 +380,6 @@ int main(int argc, char *argv[])
     exit(-1); /* blah.. this should be done better */
 #endif
 
-  dbuf_init();  /* set up some dbuf stuff to control paging */
 
   uid = getuid();
   euid = geteuid();
@@ -503,6 +502,7 @@ int main(int argc, char *argv[])
 
   initialize_message_files();
 
+  dbuf_init();  /* set up some dbuf stuff to control paging */
   clear_client_hash_table();
   clear_channel_hash_table();
   clear_scache_hash_table();    /* server cache name table */
