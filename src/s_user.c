@@ -1893,7 +1893,7 @@ int user_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
                   aClient *cur_cptr = oper_cptr_list;
 
                   fdlist_delete(sptr->fd, FDL_OPER | FDL_BUSY);
-                  
+                  detach_conf(sptr,sptr->confs->value.aconf);
                   sptr->flags2 &= ~(FLAGS2_OPER_GLOBAL_KILL|
                                     FLAGS2_OPER_REMOTE|
                                     FLAGS2_OPER_UNKLINE|

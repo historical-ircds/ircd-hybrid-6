@@ -104,7 +104,10 @@ int m_svinfo(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   time_t deltat;
   time_t theirtime;
 
-  if (!IsServer(sptr) || !MyConnect(sptr) || !DoesTS(sptr) || parc < 5)
+  if (MyConnect(sptr) && IsUnknown(sptr))
+    return exit_client(sptr, sptr, sptr, "Need SERVER before SVINFO");
+
+  if (!IsServer(sptr) || !MyConnect(sptr) || parc < 5)
     return 0;
 
   if (TS_CURRENT < atoi(parv[2]) || atoi(parv[1]) < TS_MIN)

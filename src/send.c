@@ -40,6 +40,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <time.h>
+#include <assert.h>
 
 #define NEWLINE "\r\n"
 
@@ -1174,67 +1175,65 @@ vsendto_prefix_one(register aClient *to, register aClient *from,
 
 {
   static char sender[HOSTLEN + NICKLEN + USERLEN + 5];
-  char *par;
+  char* par = 0;
   static char temp[1024];
 
-  par = va_arg(args, char *);
+  assert(0 != to);
+  assert(0 != from);
 
 /* Optimize by checking if (from && to) before everything */
-  if (to && from)
+  if (!MyClient(from) && IsPerson(to) && (to->from == from->from))
     {
-      if (!MyClient(from) && IsPerson(to) && (to->from == from->from))
+      if (IsServer(from))
         {
-          if (IsServer(from))
-            {
-              (void)ircsprintf(temp, pattern, par, args);
-              va_end(args);
-              
-              sendto_ops(
-                         "Send message (%s) to %s[%s] dropped from %s(Fake Dir)",
-                         temp, to->name, to->from->name, from->name);
-              return;
-            }
-
-          sendto_ops("Ghosted: %s[%s@%s] from %s[%s@%s] (%s)",
-                     to->name, to->username, to->host,
-                     from->name, from->username, from->host,
-                     to->from->name);
+          vsprintf_irc(temp, pattern, args);
           
-          sendto_serv_butone(NULL, ":%s KILL %s :%s (%s[%s@%s] Ghosted %s)",
-                             me.name, to->name, me.name, to->name,
-                             to->username, to->host, to->from->name);
-
-          to->flags |= FLAGS_KILLED;
-
-          (void)exit_client(NULL, to, &me, "Ghosted client");
-
-          if (IsPerson(from))
-            sendto_one(from, form_str(ERR_GHOSTEDCLIENT),
-                       me.name, from->name, to->name, to->username,
-                       to->host, to->from);
-          
+          sendto_ops(
+                     "Send message (%s) to %s[%s] dropped from %s(Fake Dir)",
+                     temp, to->name, to->from->name, from->name);
           return;
-        } /* if (!MyClient(from) && IsPerson(to) && (to->from == from->from)) */
-      
-      if (MyClient(to) && IsPerson(from) && !irccmp(par, from->name))
-        {
-          strcpy(sender, from->name);
-          
-          if (*from->username)
-            {
-              strcat(sender, "!");
-              strcat(sender, from->username);
-            }
+        }
 
-          if (*from->host)
-            {
-              strcat(sender, "@");
-              strcat(sender, from->host);
-            }
-          
-          par = sender;
-        } /* if (user) */
-    } /* if (from && to) */
+      sendto_ops("Ghosted: %s[%s@%s] from %s[%s@%s] (%s)",
+                 to->name, to->username, to->host,
+                 from->name, from->username, from->host,
+                 to->from->name);
+      
+      sendto_serv_butone(NULL, ":%s KILL %s :%s (%s[%s@%s] Ghosted %s)",
+                         me.name, to->name, me.name, to->name,
+                         to->username, to->host, to->from->name);
+
+      to->flags |= FLAGS_KILLED;
+
+      exit_client(NULL, to, &me, "Ghosted client");
+
+      if (IsPerson(from))
+        sendto_one(from, form_str(ERR_GHOSTEDCLIENT),
+                   me.name, from->name, to->name, to->username,
+                   to->host, to->from);
+      
+      return;
+    } /* if (!MyClient(from) && IsPerson(to) && (to->from == from->from)) */
+  
+  par = va_arg(args, char *);
+  if (MyClient(to) && IsPerson(from) && !irccmp(par, from->name))
+    {
+      strcpy(sender, from->name);
+      
+      if (*from->username)
+        {
+          strcat(sender, "!");
+          strcat(sender, from->username);
+        }
+
+      if (*from->host)
+        {
+          strcat(sender, "@");
+          strcat(sender, from->host);
+        }
+      
+      par = sender;
+    } /* if (user) */
 
   /*
    * Assume pattern is of the form: ":%s COMMAND ...",

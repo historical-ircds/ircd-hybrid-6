@@ -324,8 +324,14 @@ void accept_connection(struct Listener* listener)
    * be accepted until some old is closed first.
    */
   if (-1 == (fd = accept(listener->fd, (struct sockaddr*) &addr, &addrlen))) {
-    report_error("Error accepting connection %s:%s", 
+    /*
+     * slow down the whining to opers bit
+     */
+    if((last_oper_notice + 20) <= CurrentTime) {
+      report_error("Error accepting connection %s:%s", 
                  listener->name, errno);
+      last_oper_notice = CurrentTime;
+    }
     return;
   }
   /*
