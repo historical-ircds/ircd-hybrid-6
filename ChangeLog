@@ -1,3 +1,8 @@
+*** 20010925_1 by lusky
+- moved TS5 to main config section, enabled by default
+- revved patchlevel to 6.2
+
+
 *** 20010829_1 by lusky
 - Fix for messages_cust.tab dependencies (wc)
 - Fix for oper modes from conf (wc)
