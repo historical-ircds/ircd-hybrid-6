@@ -5,6 +5,7 @@ version hybrid-6-b83 12-Jun-1999
 * removed TIMED_KLINES entirely
 * fixed stupid in s_conf.c
 -Dianora
+* Don't send 479 errors for SJOIN to bogus channel
 	
 version hybrid-6-b82 12-Jun-1999
 * added more rudimentary block allocator debugging	
