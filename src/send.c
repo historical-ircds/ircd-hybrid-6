@@ -180,11 +180,11 @@ send_message(aClient *to, char *msg, int len)
                 if (to->flags2 & FLAGS2_ZIP)
                         msg = zip_buffer(to, msg, &len, 0);
 
-                if (len && dbuf_put(&to->sendQ, msg, len) < 0)
+                if (len && !dbuf_put(&to->sendQ, msg, len))
 
         #else /* ZIP_LINKS */
 
-                if (dbuf_put(&to->sendQ, msg, len) < 0)
+                if (!dbuf_put(&to->sendQ, msg, len))
 
         #endif /* ZIP_LINKS */
 
@@ -276,11 +276,11 @@ send_message(aClient *to, char *msg, int len)
                         if (to->flags2 & FLAGS2_ZIP)
                                 msg = zip_buffer(to, msg, &len, 0);
 
-                        if (len && dbuf_put(&to->sendQ,msg+rlen,len-rlen) < 0)
+                        if (len && !dbuf_put(&to->sendQ, msg + rlen, len - rlen))
 
                 #else /* ZIP_LINKS */
 
-                        if (dbuf_put(&to->sendQ,msg+rlen,len-rlen) < 0)
+                        if (!dbuf_put(&to->sendQ,msg+rlen,len-rlen))
 
                 #endif /* ZIP_LINKS */
 
@@ -307,105 +307,97 @@ send_message(aClient *to, char *msg, int len)
 **      when there is a chance the some output would be possible. This
 **      attempts to empty the send queue as far as possible...
 */
-int
-send_queued(aClient *to)
-
+int send_queued(aClient *to)
 {
-        char *msg;
-        int len, rlen;
+  char *msg;
+  int len, rlen;
 #ifdef ZIP_LINKS
-        int more = NO;
+  int more = NO;
 #endif
 
-        /*
-        ** Once socket is marked dead, we cannot start writing to it,
-        ** even if the error is removed...
-        */
-        if (IsDead(to))
-        {
-                /*
-                ** Actually, we should *NEVER* get here--something is
-                ** not working correct if send_queued is called for a
-                ** dead socket... --msa
-                */
-        #ifndef SENDQ_ALWAYS
-                return dead_link(to, "send_queued called for a DEADSOCKET:%s");
-        #else
-                return -1;
-        #endif
-        } /* if (IsDead(to)) */
+  /*
+  ** Once socket is marked dead, we cannot start writing to it,
+  ** even if the error is removed...
+  */
+  if (IsDead(to)) {
+    /*
+     * Actually, we should *NEVER* get here--something is
+     * not working correct if send_queued is called for a
+     * dead socket... --msa
+     */
+#ifndef SENDQ_ALWAYS
+    return dead_link(to, "send_queued called for a DEADSOCKET:%s");
+#else
+    return -1;
+#endif
+  } /* if (IsDead(to)) */
 
 #ifdef ZIP_LINKS
-        /*
-        ** Here, we must make sure than nothing will be left in to->zip->outbuf
-        ** This buffer needs to be compressed and sent if all the sendQ is sent
-        */
-        if ((to->flags2 & FLAGS2_ZIP) && to->zip->outcount)
-        {
-                if (DBufLength(&to->sendQ) > 0)
-                        more = 1;
-                else
-                {
-                        msg = zip_buffer(to, NULL, &len, 1);
+  /*
+  ** Here, we must make sure than nothing will be left in to->zip->outbuf
+  ** This buffer needs to be compressed and sent if all the sendQ is sent
+  */
+  if ((to->flags2 & FLAGS2_ZIP) && to->zip->outcount) {
+    if (DBufLength(&to->sendQ) > 0)
+      more = 1;
+    else {
+      msg = zip_buffer(to, NULL, &len, 1);
 
-                        if (len == -1)
-                                return dead_link(to, "fatal error in zip_buffer()");
+      if (len == -1)
+        return dead_link(to, "fatal error in zip_buffer()");
 
-                        if (dbuf_put(&to->sendQ, msg, len) < 0)
-                                return dead_link(to, "Buffer allocation error for %s");
-                }
-        } /* if ((to->flags2 & FLAGS2_ZIP) && to->zip->outcount) */
+      if (!dbuf_put(&to->sendQ, msg, len))
+        return dead_link(to, "Buffer allocation error for %s");
+    }
+  } /* if ((to->flags2 & FLAGS2_ZIP) && to->zip->outcount) */
 #endif /* ZIP_LINKS */
 
-        while (DBufLength(&to->sendQ) > 0)
-        {
-                msg = dbuf_map(&to->sendQ, &len);
+  while (DBufLength(&to->sendQ) > 0) {
+    msg = dbuf_map(&to->sendQ, &len);
 
-                /* Returns always len > 0 */
-                if ((rlen = deliver_it(to, msg, len)) < 0)
-                        return dead_link(to,"Write error to %s, closing link");
+    /* Returns always len > 0 */
+    if ((rlen = deliver_it(to, msg, len)) < 0)
+      return dead_link(to,"Write error to %s, closing link");
 
-                (void)dbuf_delete(&to->sendQ, rlen);
-                to->lastsq = DBufLength(&to->sendQ)/1024;
-    /* sendq is now empty.. if there a blocked list? */
+    dbuf_delete(&to->sendQ, rlen);
+    to->lastsq = DBufLength(&to->sendQ) / 1024;
+    /* 
+     * sendq is now empty.. if there a blocked list?
+     */
     if (IsSendqPopped(to) && (DBufLength(&to->sendQ) == 0)) {
-      char **parv;
+      char* parv[2];
+      char  param[HOSTLEN + 1];
       ClearSendqPop(to);
-      /*sendto_ops("LIST restarted at %d, %d for %s", to->listprogress,
-        to->listprogress2, to->name);*/
-      parv=(char**)malloc(sizeof(char**));
-      parv[0]=(char*)malloc(strlen(to->name)+1);
-      strcpy(parv[0], to->name);
-      (void)m_list(to, to, 1, parv);
-      free(parv[0]); free(parv);
+      parv[0] = param;
+      parv[1] = 0;
+      strcpy(param, to->name);
+      m_list(to, to, 1, parv);
     }
-                if (rlen < len)
-                {    
-                        /* ..or should I continue until rlen==0? */
-                        /* no... rlen==0 means the send returned EWOULDBLOCK... */
-                        break;
-                }
+    if (rlen < len) {    
+      /* ..or should I continue until rlen==0? */
+      /* no... rlen==0 means the send returned EWOULDBLOCK... */
+      break;
+    }
 
-        #ifdef ZIP_LINKS
-                if (DBufLength(&to->sendQ) == 0 && more)
-                {
-                        /*
-                        ** The sendQ is now empty, compress what's left
-                        ** uncompressed and try to send it too
-                        */
-                        more = 0;
-                        msg = zip_buffer(to, NULL, &len, 1);
+#ifdef ZIP_LINKS
+    if (DBufLength(&to->sendQ) == 0 && more) {
+      /*
+      ** The sendQ is now empty, compress what's left
+      ** uncompressed and try to send it too
+      */
+      more = 0;
+      msg = zip_buffer(to, NULL, &len, 1);
 
-                        if (len == -1)
-                                return dead_link(to, "fatal error in zip_buffer()");
+      if (len == -1)
+        return dead_link(to, "fatal error in zip_buffer()");
 
-                        if (dbuf_put(&to->sendQ, msg, len) < 0)
-                                return dead_link(to, "Buffer allocation error for %s");
-                } /* if (DBufLength(&to->sendQ) == 0 && more) */
-        #endif /* ZIP_LINKS */      
-        } /* while (DBufLength(&to->sendQ) > 0) */
+      if (!dbuf_put(&to->sendQ, msg, len))
+        return dead_link(to, "Buffer allocation error for %s");
+    } /* if (DBufLength(&to->sendQ) == 0 && more) */
+#endif /* ZIP_LINKS */      
+  } /* while (DBufLength(&to->sendQ) > 0) */
 
-        return (IsDead(to)) ? -1 : 0;
+  return (IsDead(to)) ? -1 : 0;
 } /* send_queued() */
 
 /*

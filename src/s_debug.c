@@ -207,14 +207,6 @@ void send_usage(aClient *cptr, char *nick)
              me.name, RPL_STATSDEBUG, nick, rus.ru_nsignals,
              rus.ru_nvcsw, rus.ru_nivcsw);
 
-  /* The counters that were here have been removed, 
-   * Bleep and I (Dianora) contend they weren't useful for
-   * even debugging.
-   */
-
-  sendto_one(cptr, ":%s %d %s :DBUF alloc %d blocks %d",
-             me.name, RPL_STATSDEBUG, nick, dbufalloc, dbufblocks);
-  return;
 }
 
 void count_memory(aClient *cptr,char *nick)
@@ -250,11 +242,14 @@ void count_memory(aClient *cptr,char *nick)
   u_long awm = 0;       /* memory used by aways */
   u_long wwm = 0;       /* whowas array memory used */
   u_long com = 0;       /* memory used by conf lines */
-  u_long db = 0;        /* memory used by dbufs */
-  u_long maxdb = 0;     /* max used by dbufs */
   u_long rm = 0;        /* res memory used */
   u_long mem_servers_cached; /* memory used by scache */
   u_long mem_ips_stored; /* memory used by ip address hash */
+
+  size_t dbuf_allocated          = 0;
+  size_t dbuf_used               = 0;
+  size_t dbuf_alloc_count        = 0;
+  size_t dbuf_used_count         = 0;
 
   size_t client_hash_table_size = 0;
   size_t channel_hash_table_size = 0;
@@ -345,6 +340,15 @@ void count_memory(aClient *cptr,char *nick)
   for (cltmp = ClassList; cltmp; cltmp = cltmp->next)
     cl++;
 
+  /*
+   * need to set dbuf_count here because we use a dbuf when we send
+   * the results. since sending the results results in a dbuf being used,
+   * the count would be wrong if we just used the globals
+   */
+  count_dbuf_memory(&dbuf_allocated, &dbuf_used);
+  dbuf_alloc_count = DBufCount;
+  dbuf_used_count  = DBufUsedCount;
+
   sendto_one(cptr, ":%s %d %s :Client Local %d(%d) Remote %d(%d)",
              me.name, RPL_STATSDEBUG, nick, lc, lcm, rc, rcm);
   sendto_one(cptr, ":%s %d %s :Users %d(%d) Invites %d(%d)",
@@ -389,11 +393,9 @@ void count_memory(aClient *cptr,char *nick)
              U_MAX, client_hash_table_size,
              CH_MAX, channel_hash_table_size);
 
-  db = dbufblocks * sizeof(dbufbuf);
-  maxdb = maxdbufblocks * sizeof(dbufbuf);
-  sendto_one(cptr, ":%s %d %s :Dbuf blocks %d(%d), Max %d(%d)",
-             me.name, RPL_STATSDEBUG, nick, dbufblocks, db,
-             maxdbufblocks, maxdb);
+  sendto_one(cptr, ":%s %d %s :Dbuf blocks allocated %d(%d), used %d(%d)",
+             me.name, RPL_STATSDEBUG, nick, dbuf_alloc_count, dbuf_allocated,
+             dbuf_used_count, dbuf_used);
 
   rm = cres_mem(cptr);
 
@@ -410,13 +412,14 @@ void count_memory(aClient *cptr,char *nick)
              number_ips_stored,
              mem_ips_stored);
 
-  tot = totww + totch + totcl + com + cl*sizeof(aClass) + db + rm;
+  tot = totww + totch + totcl + com + cl*sizeof(aClass) + dbuf_allocated + rm;
   tot += client_hash_table_size;
   tot += channel_hash_table_size;
 
   tot += mem_servers_cached;
   sendto_one(cptr, ":%s %d %s :Total: ww %d ch %d cl %d co %d db %d",
-             me.name, RPL_STATSDEBUG, nick, totww, totch, totcl, com, db);
+             me.name, RPL_STATSDEBUG, nick, totww, totch, totcl, com, 
+             dbuf_allocated);
 
 
   count_local_client_memory((int *)&local_client_memory_used,

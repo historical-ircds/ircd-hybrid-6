@@ -24,8 +24,7 @@ client.o: client.c ../include/client.h ../include/config.h \
  ../include/s_misc.h ../include/s_serv.h ../include/send.h \
  ../include/struct.h ../include/whowas.h
 dbuf.o: dbuf.c ../include/dbuf.h ../include/config.h \
- ../include/setup.h ../include/common.h ../include/irc_string.h \
- ../include/struct.h
+ ../include/setup.h ../include/common.h ../include/irc_string.h
 dline_conf.o: dline_conf.c ../include/dline_conf.h ../include/class.h \
  ../include/client.h ../include/config.h ../include/setup.h \
  ../include/ircd_defs.h ../include/dbuf.h ../include/common.h \
@@ -104,7 +103,8 @@ m_connect.o: m_connect.c ../include/m_commands.h ../include/config.h \
 m_die.o: m_die.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/irc_string.h \
- ../include/numeric.h ../include/send.h ../include/s_bsd.h
+ ../include/numeric.h ../include/s_bsd.h ../include/s_log.h \
+ ../include/send.h
 m_error.o: m_error.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/common.h ../include/ircd.h \
@@ -139,8 +139,8 @@ m_help.o: m_help.c ../include/m_commands.h ../include/config.h \
 m_kill.o: m_kill.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
- ../include/s_serv.h ../include/send.h ../include/whowas.h \
- ../include/irc_string.h
+ ../include/s_log.h ../include/s_serv.h ../include/send.h \
+ ../include/whowas.h ../include/irc_string.h
 m_kline.o: m_kline.c ../include/m_kline.h ../include/channel.h \
  ../include/config.h ../include/setup.h ../include/ircd_defs.h \
  ../include/class.h ../include/client.h ../include/dbuf.h \
@@ -148,7 +148,7 @@ m_kline.o: m_kline.c ../include/m_kline.h ../include/channel.h \
  ../include/ircd.h ../include/mtrie_conf.h ../include/numeric.h \
  ../include/s_conf.h ../include/fileio.h ../include/motd.h \
  ../include/s_log.h ../include/s_misc.h ../include/send.h \
- ../include/struct.h
+ ../include/struct.h ../include/hash.h
 m_links.o: m_links.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/irc_string.h ../include/ircd.h \
@@ -156,7 +156,9 @@ m_links.o: m_links.c ../include/m_commands.h ../include/config.h \
 m_locops.o: m_locops.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/irc_string.h \
- ../include/numeric.h ../include/send.h ../include/s_user.h
+ ../include/numeric.h ../include/send.h ../include/s_user.h \
+ ../include/s_conf.h ../include/fileio.h ../include/motd.h \
+ ../include/hash.h
 m_ltrace.o: m_ltrace.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/class.h ../include/client.h \
  ../include/ircd_defs.h ../include/dbuf.h ../include/common.h \
@@ -172,7 +174,7 @@ m_message.o: m_message.c ../include/m_commands.h ../include/config.h \
  ../include/dbuf.h ../include/flud.h ../include/ircd.h \
  ../include/numeric.h ../include/s_serv.h ../include/send.h \
  ../include/msg.h ../include/channel.h ../include/irc_string.h \
- ../include/hash.h
+ ../include/hash.h ../include/class.h
 m_mode.o: m_mode.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/channel.h ../include/ircd_defs.h \
  ../include/client.h ../include/dbuf.h ../include/hash.h \
@@ -415,7 +417,8 @@ send.o: send.c ../include/send.h ../include/config.h \
  ../include/common.h ../include/irc_string.h ../include/ircd.h \
  ../include/m_commands.h ../include/numeric.h ../include/s_bsd.h \
  ../include/s_serv.h ../include/s_zip.h ../zlib/zlib.h ../zlib/zconf.h \
- ../zlib/setup.h ../include/sprintf_irc.h ../include/struct.h
+ ../zlib/setup.h ../include/sprintf_irc.h ../include/struct.h \
+ ../include/s_conf.h ../include/fileio.h ../include/motd.h
 sprintf_irc.o: sprintf_irc.c ../include/sprintf_irc.h
 whowas.o: whowas.c ../include/whowas.h ../include/ircd_defs.h \
  ../include/config.h ../include/setup.h ../include/client.h \

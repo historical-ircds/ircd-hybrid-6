@@ -22,6 +22,10 @@
 #ifndef INCLUDED_config_h
 #include "config.h"
 #endif
+#ifndef INCLUDED_sys_types_h
+#include <sys/types.h>
+#define INCLUDED_sys_types_h
+#endif
 
 /*
 ** dbuf is a collection of functions which can be used to
@@ -30,29 +34,7 @@
 ** required [Actually, there is nothing that prevents
 ** this package maintaining the buffer on disk, either]
 */
-
-/*
-** And this 'dbufbuf' should never be referenced outside the
-** implementation of 'dbuf'--would be "hidden" if C had such
-** keyword...
-** If it was possible, this would compile to be exactly 1 memory
-** page in size. 2048 bytes seems to be the most common size, so
-** as long as a pointer is 4 bytes, we get 2032 bytes for buffer
-** data after we take away a bit for malloc to play with. -avalon
-*/
-
-#ifdef _4K_DBUFS
-# define DBUF_SIZE (4096 - sizeof(void*))
-#else
-# define DBUF_SIZE (2048 - sizeof(void*))
-#endif
-
-struct dbufbuf {
-  struct dbufbuf* next;  /* Next data buffer, NULL if this is last */
-  char            data[DBUF_SIZE];/* Actual data stored here */
-};
-
-typedef struct dbufbuf dbufbuf;
+struct DBufBuffer;
 
 /*
 ** These structure definitions are only here to be used
@@ -61,14 +43,14 @@ typedef struct dbufbuf dbufbuf;
 ** implementation of this package without changing the
 ** interface.
 */
-struct dbuf {
-  struct dbufbuf* head;  /* First data buffer, if length > 0 */
-  struct dbufbuf* tail; /* last data buffer, if length > 0 */
-  unsigned int    length; /* Current number of bytes stored */
-  unsigned int    offset; /* Offset to the first byte */
+struct DBuf {
+  struct DBufBuffer* head;   /* First data buffer, if length > 0 */
+  struct DBufBuffer* tail;   /* last data buffer, if length > 0 */
+  size_t             length; /* Current number of bytes stored */
 };
 
-typedef struct dbuf dbuf;
+extern int DBufCount;
+extern int DBufUsedCount;
 
 /*
 ** dbuf_put
@@ -79,10 +61,7 @@ typedef struct dbuf dbuf;
 **      returns > 0, if operation successfull
 **              < 0, if failed (due memory allocation problem)
 */
-int     dbuf_put (dbuf *, char *, int);
-                                        /* Dynamic buffer header */
-                                        /* Pointer to data to be stored */
-                                        /* Number of bytes to store */
+extern int dbuf_put(struct DBuf* dyn, const char* buf, size_t len);
 
 /*
 ** dbuf_get
@@ -99,10 +78,7 @@ int     dbuf_put (dbuf *, char *, int);
 **              Negative return values indicate some unspecified
 **              error condition, rather fatal...
 */
-int     dbuf_get ( dbuf *, char *, int);
-                                /* Dynamic buffer header */
-                                /* Pointer to buffer to receive the data */
-                                /* Max amount of bytes that can be received */
+extern size_t dbuf_get(struct DBuf* dbuf, char* buf, size_t len);
 
 /*
 ** dbuf_map, dbuf_delete
@@ -128,13 +104,12 @@ int     dbuf_get ( dbuf *, char *, int);
 **      Note:   delete can be used alone, there is no real binding
 **              between map and delete functions...
 */
-char *dbuf_map (dbuf *, int *);
-                                        /* Dynamic buffer header */
-                                        /* Return number of bytes accessible */
-
-int dbuf_delete (dbuf *, int);
-                                        /* Dynamic buffer header */
-                                        /* Number of bytes to delete */
+/*
+ * dyn - Dynamic buffer header
+ * len - Return number of bytes accessible 
+ */
+extern const char* dbuf_map(const struct DBuf* dyn, size_t* len);
+extern void        dbuf_delete(struct DBuf* dyn, size_t len);
 
 /*
 ** DBufLength
@@ -149,14 +124,10 @@ int dbuf_delete (dbuf *, int);
 **      Scratch the current content of the buffer. Release all
 **      allocated buffers and make it empty.
 */
-#define DBufClear(dyn)  dbuf_delete((dyn),DBufLength(dyn))
+#define DBufClear(dyn)  dbuf_delete((dyn), DBufLength(dyn))
 
-extern  int     dbuf_getmsg (dbuf *, char *, int);
-extern  void     dbuf_init(void);
-
-extern  int     dbufalloc;
-extern  int     dbufblocks;
-extern  int     maxdbufalloc;
-extern  int     maxdbufblocks;
+extern int  dbuf_getmsg(struct DBuf* dyn, char* buf, size_t len);
+extern void dbuf_init(void);
+extern void count_dbuf_memory(size_t* allocated, size_t* used);
 
 #endif /* INCLUDED_dbuf_h */

@@ -105,6 +105,7 @@ extern const unsigned int CharAttrs[];
 #define HOST_C    0x800
 #define NONEOS_C 0x1000
 #define SERV_C   0x2000
+#define EOL_C    0x4000
 
 #define IsHostChar(c)   (CharAttrs[(unsigned char)(c)] & HOST_C)
 #define IsUserChar(c)   (CharAttrs[(unsigned char)(c)] & USER_C)
@@ -129,5 +130,6 @@ extern const unsigned int CharAttrs[];
                                            (CNTRL_C | ALPHA_C | DIGIT_C)))
 
 #define IsNonEOS(c) (CharAttrs[(unsigned char)(c)] & NONEOS_C)
+#define IsEol(c) (CharAttrs[(unsigned char)(c)] & EOL_C)
 
 #endif /* INCLUDED_irc_string_h */

@@ -288,7 +288,7 @@ int set_non_blocking(int fd)
  *              work equally well whether blocking or non-blocking
  *              mode is used...
  */
-int deliver_it(aClient *cptr, char *str, int len)
+int deliver_it(aClient* cptr, const char* str, int len)
 {
   int   retval;
 
@@ -791,7 +791,6 @@ void add_connection(struct Listener* listener, int fd)
 static int parse_client_queued(struct Client* cptr)
 {
   int dolen  = 0;
-  int done   = 0;
 
   while (DBufLength(&cptr->recvQ) && !NoNewLine(cptr) &&
          ((cptr->status < STAT_UNKNOWN) || (cptr->since - CurrentTime < 10))) {
@@ -806,14 +805,11 @@ static int parse_client_queued(struct Client* cptr)
        */
       dolen = dbuf_get(&cptr->recvQ, readBuf, READBUF_SIZE);
 
-      if (dolen <= 0)
+      if (0 == dolen)
         break;
-      if ((done = dopacket(cptr, readBuf, dolen)))
-        return done;
-      break;
+      return dopacket(cptr, readBuf, dolen);
     }
     dolen = dbuf_getmsg(&cptr->recvQ, readBuf, READBUF_SIZE);
-
     /*
      * Devious looking...whats it do ? well..if a client
      * sends a *long* message without any CR or LF, then
@@ -822,18 +818,15 @@ static int parse_client_queued(struct Client* cptr)
      * deletes the rest of the buffer contents.
      * -avalon
      */
-    while (dolen <= 0) {
-      if (dolen < 0)
-        return exit_client(cptr, cptr, cptr, "dbuf_getmsg fail");
+    if (0 == dolen) {
       if (DBufLength(&cptr->recvQ) < 510) {
         cptr->flags |= FLAGS_NONL;
         break;
       }
-      dolen = dbuf_get(&cptr->recvQ, readBuf, 511);
-      if (dolen > 0 && DBufLength(&cptr->recvQ))
-        DBufClear(&cptr->recvQ);
+      DBufClear(&cptr->recvQ);
+      break;
     }
-    if (dolen > 0 && (dopacket(cptr, readBuf, dolen) == CLIENT_EXITED))
+    else if (CLIENT_EXITED == client_dopacket(cptr, readBuf, dolen))
       return CLIENT_EXITED;
   }
   return 1;
@@ -900,7 +893,7 @@ static int read_packet(struct Client *cptr)
      * it on the end of the receive queue and do it when its
      * turn comes around.
      */
-    if (dbuf_put(&cptr->recvQ, readBuf, length) < 0)
+    if (!dbuf_put(&cptr->recvQ, readBuf, length))
       return exit_client(cptr, cptr, cptr, "dbuf_put fail");
     
     if (IsPerson(cptr) &&
