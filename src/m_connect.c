@@ -172,8 +172,7 @@ int m_connect(struct Client* cptr, struct Client* sptr, int parc, char* parv[])
     {
       if ((port = atoi(parv[2])) <= 0)
         {
-          sendto_one(sptr,
-                     "NOTICE %s :Connect: Illegal port number",
+          sendto_one(sptr, "NOTICE %s :Connect: Illegal port number",
                      parv[0]);
           return 0;
         }
@@ -193,6 +192,7 @@ int m_connect(struct Client* cptr, struct Client* sptr, int parc, char* parv[])
                         ":%s WALLOPS :Remote CONNECT %s %s from %s",
                         me.name, parv[1], parv[2] ? parv[2] : "",
                         get_client_name(sptr, FALSE));
+
 #if defined(USE_SYSLOG) && defined(SYSLOG_CONNECT)
       syslog(LOG_DEBUG, "CONNECT From %s : %s %s", 
              parv[0], parv[1], parv[2] ? parv[2] : "");
@@ -200,12 +200,20 @@ int m_connect(struct Client* cptr, struct Client* sptr, int parc, char* parv[])
     }
 
   aconf->port = port;
+  /*
+   * at this point we should be calling connect_server with a valid
+   * C:line and a valid port in the C:line
+   */
   if (connect_server(aconf, sptr, 0))
      sendto_one(sptr, ":%s NOTICE %s :*** Connecting to %s[%s].%d",
                 me.name, parv[0], aconf->host, aconf->name, aconf->port);
   else
       sendto_one(sptr, ":%s NOTICE %s :*** Couldn't connect to %s.%d",
                  me.name, parv[0], aconf->host,aconf->port);
+  /*
+   * client is either connecting with all the data it needs or has been
+   * destroyed
+   */
   aconf->port = tmpport;
   return 0;
 }

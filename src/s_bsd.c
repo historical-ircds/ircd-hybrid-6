@@ -701,7 +701,8 @@ static int completed_connection(aClient *cptr)
 static int connect_inet(aConfItem *aconf, aClient *cptr)
 {
   static struct sockaddr_in sin;
-
+  assert(0 != aconf);
+  assert(0 != cptr);
   /*
    * Might as well get sockhost from here, the connection is attempted
    * with it so if it fails its useless.
@@ -751,28 +752,15 @@ static int connect_inet(aConfItem *aconf, aClient *cptr)
           return 0;
         }
     }
-  /*
-   * By this point we should know the IP# of the host listed in the
-   * conf line, whether as a result of the hostname lookup or the ip#
-   * being present instead. If we dont know it, then the connect fails.
-   */
-  if (IsDigit(*aconf->host) && INADDR_NONE == aconf->ipnum.s_addr)
-    aconf->ipnum.s_addr = inet_addr(aconf->host);
-
-  if (INADDR_NONE == aconf->ipnum.s_addr)
-    {
-      struct DNSReply* reply = cptr->dns_reply;
-      if (!reply)
-        {
-          Debug((DEBUG_FATAL, "%s: unknown host", aconf->host));
-          return 0;
-        }
-      memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
-    }
-
   sin.sin_addr.s_addr = aconf->ipnum.s_addr;
-  cptr->ip.s_addr     = aconf->ipnum.s_addr;
   sin.sin_port        = htons(aconf->port);
+  /*
+   * save connect info in client
+   */
+  cptr->ip.s_addr     = aconf->ipnum.s_addr;
+  cptr->port          = aconf->port;
+  strncpy_irc(cptr->sockhost, inetntoa((const char*) &cptr->ip.s_addr), 
+              HOSTIPLEN);
 
   if (!set_non_blocking(cptr->fd))
     report_error(NONB_ERROR_MSG, get_client_name(cptr, TRUE), errno);
@@ -796,13 +784,21 @@ static int connect_inet(aConfItem *aconf, aClient *cptr)
  * connect_server - start or complete a connection to another server
  * returns true (1) if successful, false (0) otherwise
  */
-int connect_server(aConfItem *aconf, aClient* by, struct DNSReply* reply)
+int connect_server(aConfItem* aconf, aClient* by, struct DNSReply* reply)
 {
   struct Client* cptr;
+
+  assert(0 != aconf);
+  if (aconf->dns_pending)
+    return 0;
 
   Debug((DEBUG_NOTICE,"Connect to %s[%s] @%s",
          aconf->user, aconf->host, inetntoa((char*)&aconf->ipnum)));
 
+  /*
+   * if this is coming from m_connect, we have just checked this
+   * NOTE: aconf should ALWAYS be a valid C:line
+   */
   if ((cptr = find_server(aconf->name)))
     {
       sendto_ops("Server %s already present from %s",
@@ -818,25 +814,26 @@ int connect_server(aConfItem *aconf, aClient* by, struct DNSReply* reply)
    * If we dont know the IP# for this host and it is a hostname and
    * not a ip# string, then try and find the appropriate host record.
    */
-  if (INADDR_NONE == aconf->ipnum.s_addr && !aconf->dns_pending)
-    {
-      if ((aconf->ipnum.s_addr = inet_addr(aconf->host)) == INADDR_NONE)
-        {
-          struct DNSQuery  query;
-          
-          query.vptr     = aconf;
-          query.callback = connect_dns_callback;
-          reply = gethost_byname(aconf->host, &query);
-          Debug((DEBUG_NOTICE, "co_sv: reply %x ac %x na %s ho %s",
-                 reply, aconf, aconf->name, aconf->host));
-          if (!reply) 
-            {
-              aconf->dns_pending = 1;
-              return 0;
-            }
-          memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
+  if (INADDR_NONE == aconf->ipnum.s_addr) {
+    if (reply)
+      memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
+    else {
+      if ((aconf->ipnum.s_addr = inet_addr(aconf->host)) == INADDR_NONE) {
+        struct DNSQuery  query;
+        
+        query.vptr     = aconf;
+        query.callback = connect_dns_callback;
+        reply = gethost_byname(aconf->host, &query);
+        Debug((DEBUG_NOTICE, "co_sv: reply %x ac %x na %s ho %s",
+               reply, aconf, aconf->name, aconf->host));
+        if (!reply) {
+          aconf->dns_pending = 1;
+          return 0;
         }
+        memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
+      }
     }
+  }
   cptr = make_client(NULL);
   if (reply) 
     ++reply->ref_count;
@@ -855,19 +852,15 @@ int connect_server(aConfItem *aconf, aClient* by, struct DNSReply* reply)
     free_client(cptr);
     return 0;
   }
-
-  /* Attach config entries to client here rather than in
+  /*
+   * NOTE: if we're here we have a valid C:Line and the client should
+   * have started the connection and stored the remote address/port and
+   * ip address name in itself
+   * 
+   * Attach config entries to client here rather than in
    * completed_connection. This to avoid null pointer references
-   * when name returned by gethostbyaddr matches no C lines
-   * (could happen in 2.6.1a when host and servername differ).
-   * No need to check access and do gethostbyaddr calls.
-   * There must at least be one as we got here C line...  meLazy
    */
-  attach_confs_host(cptr, aconf->host,
-                    CONF_NOCONNECT_SERVER | CONF_CONNECT_SERVER );
-
-  if (!find_conf_host(cptr->confs, aconf->host, CONF_NOCONNECT_SERVER) ||
-      !find_conf_host(cptr->confs, aconf->host, CONF_CONNECT_SERVER))
+  if (!attach_cn_lines(cptr, aconf->host))
     {
       sendto_ops("Host %s is not enabled for connecting:no C/N-line",
                  aconf->host);
@@ -879,7 +872,11 @@ int connect_server(aConfItem *aconf, aClient* by, struct DNSReply* reply)
       free_client(cptr);
       return 0;
     }
-  /*
+  /* 
+   * at this point we have a connection in progress and C/N lines
+   * attached to the client, the socket info should be saved in the
+   * client and it should either be resolved or have a valid address.
+   *
    * The socket has been connected or connect is in progress.
    */
   make_server(cptr);
@@ -903,6 +900,7 @@ int connect_server(aConfItem *aconf, aClient* by, struct DNSReply* reply)
   if (cptr->fd > highest_fd)
     highest_fd = cptr->fd;
   local[cptr->fd] = cptr;
+
   SetConnecting(cptr);
 
   add_client_to_list(cptr);
@@ -1082,7 +1080,7 @@ static int parse_client_queued(struct Client* cptr)
   int done   = 0;
 
   while (DBufLength(&cptr->recvQ) && !NoNewLine(cptr) &&
-	 ((cptr->status < STAT_UNKNOWN) || (cptr->since - CurrentTime < 10))) {
+         ((cptr->status < STAT_UNKNOWN) || (cptr->since - CurrentTime < 10))) {
     /*
      * If it has become registered as a Server
      * then skip the per-message parsing below.
@@ -1095,9 +1093,9 @@ static int parse_client_queued(struct Client* cptr)
       dolen = dbuf_get(&cptr->recvQ, readBuf, READBUF_SIZE);
 
       if (dolen <= 0)
-	break;
+        break;
       if ((done = dopacket(cptr, readBuf, dolen)))
-	return done;
+        return done;
       break;
     }
     dolen = dbuf_getmsg(&cptr->recvQ, readBuf, READBUF_SIZE);
@@ -1112,14 +1110,14 @@ static int parse_client_queued(struct Client* cptr)
      */
     while (dolen <= 0) {
       if (dolen < 0)
-	return exit_client(cptr, cptr, cptr, "dbuf_getmsg fail");
+        return exit_client(cptr, cptr, cptr, "dbuf_getmsg fail");
       if (DBufLength(&cptr->recvQ) < 510) {
-	cptr->flags |= FLAGS_NONL;
-	break;
+        cptr->flags |= FLAGS_NONL;
+        break;
       }
       dolen = dbuf_get(&cptr->recvQ, readBuf, 511);
       if (dolen > 0 && DBufLength(&cptr->recvQ))
-	DBufClear(&cptr->recvQ);
+        DBufClear(&cptr->recvQ);
     }
     if (dolen > 0 && (dopacket(cptr, readBuf, dolen) == CLIENT_EXITED))
       return CLIENT_EXITED;
@@ -1415,7 +1413,7 @@ int read_message(time_t delay, unsigned char mask)        /* mika */
       continue;
     if (IsDead(cptr)) {
        exit_client(cptr, cptr, &me,
-		    strerror(get_sockerr(cptr->fd)));
+                    strerror(get_sockerr(cptr->fd)));
        continue;
     }
     error_exit_client(cptr, length);

@@ -999,35 +999,43 @@ struct ConfItem *attach_confs(aClient *cptr,char *name,int statmask)
 }
 
 /*
- * Added for new access check    meLazy
+ * attach_cn_lines - find C/N lines and attach them to connecting client
+ * return true (1) if both are found, otherwise return false (0)
+ * called from connect_server
  */
-struct ConfItem *attach_confs_host(aClient *cptr,char *host,int statmask)
+int attach_cn_lines(aClient *cptr, const char* host)
 {
-  struct ConfItem *tmp;
-  struct ConfItem *first = NULL;
-  int        len = strlen(host);
-  
-  if (!host || len > HOSTLEN)
-    return( (struct ConfItem *)NULL);
+  struct ConfItem* tmp;
+  int              found_cline = 0;
+  int              found_nline = 0; 
+  assert(0 != cptr);
+  assert(0 != host);
 
-  for (tmp = ConfigItemList; tmp; tmp = tmp->next)
-    {
-      if ((tmp->status & statmask) && !IsIllegal(tmp) &&
-          (tmp->status & CONF_SERVER_MASK) == 0 &&
-          (!tmp->host || match(tmp->host, host)))
-        {
-          if (!attach_conf(cptr, tmp) && !first)
-            first = tmp;
-        }
-      else if ((tmp->status & statmask) && !IsIllegal(tmp) &&
-               (tmp->status & CONF_SERVER_MASK) &&
-               (tmp->host && irccmp(tmp->host, host) == 0))
-        {
-          if (!attach_conf(cptr, tmp) && !first)
-            first = tmp;
-        }
+  for (tmp = ConfigItemList; tmp; tmp = tmp->next) {
+    if (!IsIllegal(tmp)) {
+      /*
+       * look for matching C:line
+       */
+      if (!found_cline && CONF_CONNECT_SERVER == tmp->status && 
+          0 == irccmp(tmp->host, host)) {
+        attach_conf(cptr, tmp);
+        if (found_nline)
+          return 1;
+        found_cline = 1;
+      }
+      /*
+       * look for matching N:line
+       */
+      else if (!found_nline && CONF_NOCONNECT_SERVER == tmp->status &&
+               0 == irccmp(tmp->host, host)) {
+        attach_conf(cptr, tmp);
+        if (found_cline)
+          return 1;
+        found_nline = 1;
+      }
     }
-  return (first);
+  }
+  return 0;
 }
 
 /*
