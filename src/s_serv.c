@@ -1738,28 +1738,23 @@ int	m_info(aClient *cptr,
 #undef OUT3
 #undef OUT4
 
-#ifdef USE_FAST_FD_ISSET
-#define OUT1 "USE_FAST_FD_ISSET=1"
-#else
-#define OUT1 "USE_FAST_FD_ISSET=0"
-#endif
 #ifdef USE_IP_I_LINE_FIRST
-#define OUT2 "USE_IP_I_LINE_FIRST=1"
+#define OUT1 "USE_IP_I_LINE_FIRST=1"
 #else
-#define OUT2 "USE_IP_I_LINE_FIRST=0"
+#define OUT1 "USE_IP_I_LINE_FIRST=0"
 #endif
 #ifdef USE_SYSLOG
-#define OUT3 " USE_SYSLOG=1"
+#define OUT2 " USE_SYSLOG=1"
 #else
-#define OUT3 " USE_SYSLOG=0"
+#define OUT2 " USE_SYSLOG=0"
 #endif
 #ifdef USE_UH
-#define OUT4 " USE_UH=1"
+#define OUT3 " USE_UH=1"
 #else
-#define OUT4 " USE_UH=0"
+#define OUT3 " USE_UH=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
+		me.name, parv[0], OUT1 OUT2 OUT3 );
 
 #undef OUT1
 #undef OUT2
@@ -2103,7 +2098,7 @@ static	void	report_specials(aClient *sptr,int flags,int numeric)
   static	char	null[] = "<NULL>";
   aConfItem *this_conf;
   aConfItem *aconf;
-  char	*pass, *host;
+  char	*pass, *name;
 
   if(flags & CONF_XLINE)
     this_conf = x_conf;
@@ -2116,13 +2111,13 @@ static	void	report_specials(aClient *sptr,int flags,int numeric)
   for (aconf = this_conf; aconf; aconf = aconf->next)
     if (aconf->status & flags)
       {
-	host = BadPtr(aconf->host) ? null : aconf->host;
+	name = BadPtr(aconf->name) ? null : aconf->name;
 	pass = BadPtr(aconf->passwd) ? null : aconf->passwd;
 
 	sendto_one(sptr, rpl_str(numeric),
 		   me.name,
 		   sptr->name,
-		   host,
+		   name,
 		   pass);
 
       }

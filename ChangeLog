@@ -2,6 +2,10 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b50   24-Feb-1999
+* report_specials was showing aconf->host not aconf->user
+-Dianora
+	
 version hybrid-6-b49   19-Feb-1999
 * botch with POLL code fixed, forgot to test it on solaris after
   adding back fdlist code *sigh* 
