@@ -1,3 +1,7 @@
+*** 19990908_1 by lusky
+changed 302 reply back to -5 form to fix userhost
+
+
 *** 19990907_4 by lusky
 more dbuf fixes (th)
 check in send_message() that the descriptor is valid
