@@ -2925,7 +2925,8 @@ void report_temp_klines(aClient *sptr)
  * outputs	- NONE
  * side effects	- NONE
  */
-void show_temp_klines(aClient *sptr, struct ConfItem * tklist)
+void
+show_temp_klines(aClient *sptr, struct ConfItem * tklist)
 {
   struct ConfItem *kill_list_ptr;
   struct ConfItem *last_list_ptr;
@@ -2933,6 +2934,7 @@ void show_temp_klines(aClient *sptr, struct ConfItem * tklist)
   char *host;
   char *user;
   char *reason;
+  char *oper_reason;
   char *p;
 
   kill_list_ptr = last_list_ptr = tklist;
@@ -2980,19 +2982,19 @@ void show_temp_klines(aClient *sptr, struct ConfItem * tklist)
           else
             reason = "No Reason";
 
-          if(!IsAnOper(sptr))
-            {
-              if( (p = strchr(reason,'|')) )
-                *p = '\0';
+	  if(kill_list_ptr->oper_reason)
+	    oper_reason = kill_list_ptr->oper_reason;
+	  else
+	    oper_reason = "";
 
+          if(IsAnOper(sptr))
+            {
               sendto_one(sptr,form_str(RPL_STATSKLINE), me.name,
-                         sptr->name, 'k' , host, user, reason);
-              if(p)
-                *p = '|';
+                         sptr->name, 'k' , host, user, reason, oper_reason);
             }
           else
             sendto_one(sptr,form_str(RPL_STATSKLINE), me.name,
-                       sptr->name, 'k' , host, user, reason);
+                       sptr->name, 'k' , host, user, reason, "");
 
           last_list_ptr = kill_list_ptr;
           kill_list_ptr = kill_list_ptr->next;
