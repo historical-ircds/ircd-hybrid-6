@@ -115,8 +115,6 @@ typedef struct ip_entry
 
 static IP_ENTRY *ip_hash_table[IP_HASH_SIZE];
 
-extern void zap_Dlines();
-
 static int hash_ip(unsigned long);
 
 #ifdef LIMIT_UH
