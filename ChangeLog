@@ -1,3 +1,8 @@
+*** 20001118_1 by lusky
+changed a bunch of debugging sendto_ops to sendto_realops
+first fix for bogus hostnames from other ircds
+
+
 *** 20001110_1 by lusky
 updated rehash help message
 parser fix
