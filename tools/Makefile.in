@@ -2,8 +2,12 @@
 
 CC=@CC@
 RM=@RM@
-IRCDLIBS=@LIBS@
-INCLUDEDIR=-I../include -I../zlib
+
+SSL_LIBS     = @SSL_LIBS@
+SSL_INCLUDES = @SSL_INCLUDES@
+
+IRCDLIBS     = @LIBS@ $(SSL_LIBS)
+INCLUDEDIR   = -I../include -I../zlib $(SSL_INCLUDES)
 
 mkpasswd_SOURCES = mkpasswd.c
 mkpasswd_OBJECTS = mkpasswd.o

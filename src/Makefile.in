@@ -6,9 +6,12 @@ CC = @CC@
 RM = @RM@
 MKDEP = ${CC} -MM
 
-IRCDLIBS = @LIBS@ ../zlib/libz.a
+SSL_LIBS     = @SSL_LIBS@
+SSL_INCLUDES = @SSL_INCLUDES@
 
-INCLUDES = -I../include -I../zlib
+IRCDLIBS = @LIBS@ ../zlib/libz.a $(SSL_LIBS)
+
+INCLUDES = -I../include -I../zlib $(SSL_INCLUDES)
 CPPFLAGS = ${INCLUDES} @CPPFLAGS@
  
 # For developers
