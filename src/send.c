@@ -96,19 +96,11 @@ void	flush_connections(int fd)
   if (fd == me.fd)
     {
       for (i = highest_fd; i >= 0; i--)
-	if ( cptr = local[i])
-	  {
-	    if( (DBufLength(&cptr->sendQ) > 0) ||
-	        (cptr->flags2 & FLAGS2_ZIP) && (cptr->zip->outcount > 0))
-	      (void)send_queued(cptr);
-	  }
+	if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
+	  (void)send_queued(cptr);
     }
-  else if (fd >= 0 && (cptr = local[fd]))
-    {
-      if ((DBufLength(&cptr->sendQ) > 0) ||
-	  (cptr->flags2 & FLAGS2_ZIP) && (cptr->zip->outcount > 0))
-	(void)send_queued(cptr);
-    }
+  else if (fd >= 0 && (cptr = local[fd]) && DBufLength(&cptr->sendQ) > 0)
+    (void)send_queued(cptr);
 #endif
 }
 
@@ -162,9 +154,6 @@ Debug((DEBUG_DEBUG,"send_message() msg = %s", msg));
       */
       if (to->flags2 & FLAGS2_ZIP)
 	msg = zip_buffer(to, msg, &len, 0);
-
-
-Debug((DEBUG_DEBUG,"msg = zip_buffer in send_message() len = %d", len));
 
       if (len && dbuf_put(&to->sendQ, msg, len) < 0)
 #else /* ZIP_LINKS */
@@ -252,8 +241,6 @@ Debug((DEBUG_DEBUG,"msg = zip_buffer in send_message() len = %d", len));
 	  if (to->flags2 & FLAGS2_ZIP)
 	    msg = zip_buffer(to, msg, &len, 0);
 
-Debug((DEBUG_DEBUG,"msg = zip_buffer in send_message() len = %d", len));
-
 	  if (len && dbuf_put(&to->sendQ,msg+rlen,len-rlen) < 0)
 #else /* ZIP_LINKS */
           if (dbuf_put(&to->sendQ,msg+rlen,len-rlen) < 0)
@@ -310,8 +297,6 @@ int	send_queued(aClient *to)
   */
   if ((to->flags2 & FLAGS2_ZIP) && to->zip->outcount)
     {
-Debug((DEBUG_DEBUG,"send_queued() FLAGS2_ZIP && to->zip->outcount"));
-
       if (DBufLength(&to->sendQ) > 0)
 	  more = 1;
       else

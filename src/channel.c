@@ -909,6 +909,12 @@ static	int	errsent(int err, int *errs)
  * rewritten to remove +h/+c/z 
  * in spirit with the one pass idea, I've re-written how "imnspt"
  * handling was done
+ *
+ * I've also left some "remnants" of the +h code in for possible
+ * later addition.
+ * For example, isok could be replaced witout half ops, with ischop() or
+ * chan_op depending.
+ *
  * -Dianora
  */
 
@@ -1426,6 +1432,9 @@ static  void     set_mode(aClient *cptr,
 		break;
 	      else
 		done_i = YES;
+
+	      if ( opcnt >= MAXMODEPARAMS)
+		break;
 	    }
 
 	  if(whatt == MODE_ADD)
@@ -1465,6 +1474,9 @@ static  void     set_mode(aClient *cptr,
 		break;
 	      else
 		done_m = YES;
+
+	      if ( opcnt >= MAXMODEPARAMS)
+		break;
 	    }
 
 	  if(whatt == MODE_ADD)
@@ -1504,6 +1516,9 @@ static  void     set_mode(aClient *cptr,
 		break;
 	      else
 		done_n = YES;
+
+	      if ( opcnt >= MAXMODEPARAMS)
+		break;
 	    }
 
 	  if(whatt == MODE_ADD)
@@ -1543,6 +1558,9 @@ static  void     set_mode(aClient *cptr,
 		break;
 	      else
 		done_s_or_p = YES;
+
+	      if ( opcnt >= MAXMODEPARAMS)
+		break;
 	    }
 
 	  if(whatt == MODE_ADD)
@@ -1593,6 +1611,9 @@ static  void     set_mode(aClient *cptr,
 		break;
 	      else
 		done_s_or_p = YES;
+
+	      if ( opcnt >= MAXMODEPARAMS)
+		break;
 	    }
 
 	  if(whatt == MODE_ADD)
@@ -1641,6 +1662,9 @@ static  void     set_mode(aClient *cptr,
 		break;
 	      else
 		done_t = YES;
+
+	      if ( opcnt >= MAXMODEPARAMS)
+		break;
 	    }
 
 	  if(whatt == MODE_ADD)
@@ -3580,7 +3604,7 @@ int	m_sjoin(aClient *cptr,
 	      strcat(parabuf, l->value.cptr->name);
 	      strcat(parabuf, " ");
 	      pargs++;
-	      if (pargs >= (MAXMODEPARAMS-2))
+	      if (pargs >= MAXMODEPARAMS)
 		{
 		  *mbuf = '\0';
 		  sjoin_sendit(cptr, sptr, chptr,
@@ -3602,7 +3626,7 @@ int	m_sjoin(aClient *cptr,
 	      strcat(parabuf, l->value.cptr->name);
 	      strcat(parabuf, " ");
 	      pargs++;
-	      if (pargs >= (MAXMODEPARAMS-2))
+	      if (pargs >= MAXMODEPARAMS)
 		{
 		  *mbuf = '\0';
 		  sjoin_sendit(cptr, sptr, chptr,
@@ -3680,7 +3704,7 @@ int	m_sjoin(aClient *cptr,
 	  strcat(parabuf, s);
 	  strcat(parabuf, " ");
 	  pargs++;
-	  if (pargs >= (MAXMODEPARAMS-2))
+	  if (pargs >= MAXMODEPARAMS)
 	    {
 	      *mbuf = '\0';
 	      sjoin_sendit(cptr, sptr, chptr, parv[0]);
@@ -3696,7 +3720,7 @@ int	m_sjoin(aClient *cptr,
 	  strcat(parabuf, s);
 	  strcat(parabuf, " ");
 	  pargs++;
-	  if (pargs >= (MAXMODEPARAMS-2))
+	  if (pargs >= MAXMODEPARAMS)
 	    {
 	      *mbuf = '\0';
 	      sjoin_sendit(cptr, sptr, chptr, parv[0]);

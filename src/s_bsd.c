@@ -111,7 +111,7 @@ char	specific_virtual_host;
 #if defined(MAXBUFFERS) && !defined(SEQUENT)
 static	char	*readbuf;
 #else
-static	char	readbuf[8192];
+static	char	readbuf[READBUF_SIZE];
 #endif
 
 /*
@@ -385,6 +385,8 @@ void	close_listeners()
   /*
    * close all 'extra' listening ports we have and unlink the file
    * name if it was a unix socket.
+   ***
+   * unix domain sockets are no longer supported in hybrid -Dianora
    */
   for (i = highest_fd; i >= 0; i--)
     {
@@ -923,6 +925,7 @@ static	int completed_connection(aClient *cptr)
     }
   
   send_capabilities(cptr, (c_conf->flags & CONF_FLAGS_ZIP_LINK));
+
   sendto_one(cptr, "SERVER %s 1 :%s",
 	     my_name_for_link(me.name, n_conf), me.info);
 
@@ -1018,6 +1021,14 @@ void	close_connection(aClient *cptr)
     {
       flush_connections(cptr->fd);
       local[cptr->fd] = NULL;
+#ifdef ZIP_LINKS
+	/*
+	** the connection might have zip data (even if
+       	** FLAGS2_ZIP is not set)
+	*/
+      if (IsServer(cptr) || IsListening(cptr))
+	zip_free(cptr);
+#endif
       (void)close(cptr->fd);
       cptr->fd = -2;
       DBufClear(&cptr->sendQ);
@@ -1078,37 +1089,6 @@ static	void	set_sock_opts(int fd, aClient *cptr)
   if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0)
     report_error("setsockopt(SO_REUSEADDR) %s:%s", cptr);
 #endif
-
-#undef TRY_LOW_WATER
-#ifdef TRY_LOW_WATER
-  /* DEBUG */
-  opt = 1024;
-  if (setsockopt(fd, SOL_SOCKET, SO_SNDLOWAT, (char *)&opt, sizeof(opt)) < 0)
-    report_error("setsockopt(SO_SNDLOWAT) %s:%s", cptr);
-
-  /* DEBUG */
-  send_timeout.tv_sec = 0;
-  send_timeout.tv_usec = 1;
-
-  if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (char *)&send_timeout,
-		 sizeof(send_timeout)) < 0)
-    report_error("setsockopt(SO_SNDLOWAT) %s:%s", cptr);
- 
- opt = 32;
-  if (setsockopt(fd, SOL_SOCKET, SO_RCVLOWAT, (char *)&opt, sizeof(opt)) < 0)
-    report_error("setsockopt(SO_RCVLOWAT) %s:%s", cptr);
-
-  /* DEBUG */
-  receive_timeout.tv_sec = 3;
-  receive_timeout.tv_usec = 0;
-
-  if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char *)&receive_timeout,
-                 sizeof(receive_timeout)) < 0)
-    report_error("setsockopt(SO_RCVLOWAT) %s:%s", cptr);
-
-
-#endif
-
 #if  defined(SO_DEBUG) && defined(DEBUGMODE) && 0
 /* Solaris with SO_DEBUG writes to syslog by default */
 #if !defined(SOL20) || defined(USE_SYSLOG)
@@ -1127,6 +1107,13 @@ static	void	set_sock_opts(int fd, aClient *cptr)
   if (rcvbufmax==0)
     {
       int optlen;
+#ifdef ZIP_LINKS
+      rcvbufmax = READBUF_SIZE;  /* the zlib part needs buffers to be at least
+				    this big to make things fit, and not bigger
+				    for interoperatibility...  anyway 16k is
+				    not a bad value  -orabidoo
+				  */
+#else
       optlen = sizeof(rcvbufmax);
       getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &rcvbufmax,
 		 &optlen);
@@ -1134,6 +1121,7 @@ static	void	set_sock_opts(int fd, aClient *cptr)
 		  (char *) (char *)&rcvbufmax, optlen) >= 0)) rcvbufmax+=1024;
       getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &rcvbufmax,
 		 &optlen);
+#endif
       readbuf = (char *)malloc(rcvbufmax * sizeof(char));
     }
   if (IsServer(cptr))
@@ -1326,7 +1314,6 @@ aClient	*add_connection(aClient *cptr, int fd)
 	  return NULL;
 	}
 #ifdef SHOW_HEADERS
-      /*      send(fd, REPORT_DO_DNS, R_do_dns, 0); */
       sendheader(acptr, REPORT_DO_DNS, R_do_dns);
 #endif
       lin.flags = ASYNC_CLIENT;
@@ -1338,10 +1325,7 @@ aClient	*add_connection(aClient *cptr, int fd)
 	SetDNS(acptr);
 #ifdef SHOW_HEADERS
       else
-	{
-	  sendheader(acptr, REPORT_FIN_DNSC, R_fin_dnsc);
-	  /* send(fd, REPORT_FIN_DNSC, R_fin_dnsc, 0); */
-	}
+	sendheader(acptr, REPORT_FIN_DNSC, R_fin_dnsc);
 #endif
       nextdnscheck = 1;
     }
@@ -1358,11 +1342,9 @@ aClient	*add_connection(aClient *cptr, int fd)
   add_client_to_list(acptr);
   set_non_blocking(acptr->fd, acptr);
   set_sock_opts(acptr->fd, acptr);
-
 #ifdef DO_IDENTD
   start_auth(acptr);
 #endif
-
   return acptr;
 }
 
@@ -1467,6 +1449,9 @@ int read_packet(aClient *cptr, int msg_ready)
 	    */
 	    if (IsServer(cptr))
 	      {
+		/* This is actually useful, but it needs the ZIP_FIRST
+		** kludge or it will break zipped links  -orabidoo
+		*/
 
 #if defined(MAXBUFFERS) && !defined(SEQUENT)
 		dolen = dbuf_get(&cptr->recvQ, readbuf,
@@ -1663,7 +1648,11 @@ int read_packet(aClient *cptr, int msg_ready)
 	    }
 	}
 
-      if (DBufLength(&cptr->sendQ) || IsConnecting(cptr))
+      if (DBufLength(&cptr->sendQ) || IsConnecting(cptr)
+#ifdef ZIP_LINKS
+	  || ((cptr->flags2 & FLAGS2_ZIP) && (cptr->zip->outcount > 0))
+#endif
+	  )
 #ifndef	pyr
 #ifdef USE_FAST_FD_ISSET
 	default_write_set->fds_bits[fd_offset] |= fd_mask;
@@ -2225,7 +2214,11 @@ int	read_message(time_t delay)
 		PFD_SETR(i);
 	    }
 	  
-	  if (DBufLength(&cptr->sendQ) || IsConnecting(cptr))
+	  if (DBufLength(&cptr->sendQ) || IsConnecting(cptr)
+#ifdef ZIP_LINKS
+	      || ((cptr->flags2 & FLAGS2_ZIP) && (cptr->zip->outcount > 0))
+#endif
+	      )
 	    PFD_SETW(i);
 	}
 

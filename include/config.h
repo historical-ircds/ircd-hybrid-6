@@ -1097,10 +1097,6 @@ error CLIENT_FLOOD undefined.
 #define ANTI_SPAMBOT
 #endif
 
-/* DEBUG_LINKLIST code or not */
-
-#define DEBUG_LINKLIST
-
 #define REPORT_DLINE_TO_USER
 
 #define CONFIG_H_LEVEL_5_2

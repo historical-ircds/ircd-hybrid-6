@@ -28,6 +28,7 @@
 
 #define ChannelExists(n)	(find_channel(n, NullChn) != NullChn)
 
-#define	MAXMODEPARAMS	6
+/* Maximum mode changes allowed per client, per server is different */
+#define	MAXMODEPARAMS	4
 
 #endif

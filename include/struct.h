@@ -539,8 +539,11 @@ struct	Server
 struct Client
 {
   struct	Client *next,*prev, *hnext, *idhnext;
+
+/* QS */
+
   struct	Client *lnext;	/* Used for Server->servers/users */
-  struct	Client *lprev;	/* Used for server->servers/users */
+  struct	Client *lprev;	/* Used for Server->servers/users */
 
 /* LINKLIST */
 

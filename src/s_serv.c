@@ -788,6 +788,8 @@ int	m_server(aClient *cptr,
 
       add_client_to_list(acptr);
       (void)add_to_client_hash_table(acptr->name, acptr);
+      acptr->servptr = sptr;
+      add_client_to_llist(&(acptr->servptr->serv->servers), acptr);
 
       /*
       ** Old sendto_serv_but_one() call removed because we now
@@ -808,6 +810,7 @@ int	m_server(aClient *cptr,
 	  if (matches(my_name_for_link(me.name, aconf),
 		      acptr->name) == 0)
 	    continue;
+
 	  sendto_one(bcptr, ":%s SERVER %s %d :%s",
 		     parv[0], acptr->name, hop+1, acptr->info);
 	}
@@ -1013,6 +1016,8 @@ int	m_server_estab(aClient *cptr)
   **	code is more neat this way...  --msa
   */
   SetServer(cptr);
+  cptr->servptr = &me;
+  add_client_to_llist(&(me.serv->servers), cptr);
 
   Count.server++;
   Count.myserver++;
@@ -1054,6 +1059,7 @@ int	m_server_estab(aClient *cptr)
     {
       if (acptr == cptr)
 	continue;
+
       if ((aconf = acptr->serv->nline) &&
 	  !matches(my_name_for_link(me.name, aconf), cptr->name))
 	continue;
@@ -3039,9 +3045,6 @@ int   m_set(aClient *cptr,
 	    char *parv[])
 {
   char *command;
-#ifdef DEBUG_LINKLIST
-  aClient *acptr;
-#endif
 
   if (!MyClient(sptr) || !IsAnOper(sptr))
     {
@@ -3107,31 +3110,6 @@ int   m_set(aClient *cptr,
 	      return 0;
 	    }
 	}
-      /* DEBUG*/
-#ifdef DEBUG_LINKLIST
-      else if(!strncasecmp(command,"LINKLIST",7))
-	{
-	  sendto_realops("local_cptr_list");
-	  for(acptr=local_cptr_list;acptr;acptr=acptr->next_local_client)
-	    {
-	      sendto_realops("local client>%s",
-			     get_client_name(acptr,FALSE));
-	    }
-	  sendto_realops("oper_cptr_list");
-
-	  for(acptr=oper_cptr_list;acptr;acptr=acptr->next_oper_client)
-	    {
-	      sendto_realops("oper>%s",
-			     get_client_name(acptr,FALSE));
-	    }
-	  sendto_realops("serv_cptr_list");
-	  acptr = serv_cptr_list;
-	  for(acptr=serv_cptr_list;acptr;acptr=acptr->next_server_client)
-	    {
-	      sendto_realops("server name >%s",acptr->name);
-	    }
-	}
-#endif
 #ifdef IDLE_CHECK
       else if(!strncasecmp(command, "IDLETIME", 8))
 	{

@@ -541,9 +541,10 @@ static	int	register_user(aClient *cptr,
 #endif
 	      }
 	    else
-              sendto_realops_lev(CCONN_LEV, "%s from %s.",
+              sendto_realops_lev(CCONN_LEV, "%s from %s [%s].",
 				 "Unauthorized client connection",
-				 get_client_host(sptr));
+				 get_client_host(sptr),
+				 inetntoa((char *)&sptr->ip));
 #if 0
 #ifdef USE_SYSLOG
 	    syslog(LOG_INFO,"%s from %s.",i == -3 ? "Too many connections" :
@@ -1052,6 +1053,19 @@ static	int	register_user(aClient *cptr,
 		strncpyzt(user->username, username, USERLEN+1);
 
 	      SetClient(sptr);
+
+	      sptr->servptr = find_server(user->server, NULL);
+	      if (!sptr->servptr)
+		{
+		  sendto_ops("Ghost killed: %s on invalid server %s",
+			     sptr->name, sptr->user->server);
+		  sendto_one(cptr,":%s KILL %s: %s (Ghosted, %s doesn't exist)",
+			     me.name, sptr->name, me.name, user->server);
+		  sptr->flags |= FLAGS_KILLED;
+		  return exit_client(NULL, sptr, &me, "Ghost");
+		}
+	      add_client_to_llist(&(sptr->servptr->serv->users), sptr);
+
 /* Increment our total user count here */
 	      if (++Count.total > Count.max_tot)
 		Count.max_tot = Count.total;

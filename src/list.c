@@ -158,14 +158,21 @@ aClient	*make_client(aClient *from)
       cptr->from = cptr; /* 'from' of local client is self! */
 
       /* commenting out unnecessary assigns, but leaving them
-       	 for documentation. REMEMBER the fripping struct is already
-	 zeroed up above =DUH= 
-	 -Dianora 
-	 */
+       * for documentation. REMEMBER the fripping struct is already
+       * zeroed up above =DUH= 
+       * -Dianora 
+       */
 
       /* cptr->next = NULL; */
       /* cptr->prev = NULL; */
       /* cptr->hnext = NULL; */
+      /* cptr->user = NULL; */
+      /* cptr->serv = NULL; */
+      /* cptr->lnext = NULL; */
+      /* cptr->lprev = NULL; */
+#ifdef ZIP_LINKS
+      /* cptr->zip = NULL; */
+#endif
       /* cptr->user = NULL; */
       /* cptr->serv = NULL; */
       cptr->status = STAT_UNKNOWN;
@@ -192,6 +199,9 @@ aClient	*make_client(aClient *from)
       /* cptr->next = NULL; */
       /* cptr->prev = NULL; */
       /* cptr->hnext = NULL; */
+      /* cptr->idhnext = NULL; */
+      /* cptr->lnext = NULL; */
+      /* cptr->lprev = NULL; */
       /* cptr->user = NULL; */
       /* cptr->serv = NULL; */
       cptr->status = STAT_UNKNOWN;
@@ -262,9 +272,18 @@ aServer	*make_server(aClient *cptr)
   if (!serv)
     {
       serv = (aServer *)MyMalloc(sizeof(aServer));
-      serv->user = NULL;
-      *serv->by = '\0';
-      serv->up = (char *)NULL;
+      bzero((char *)serv, sizeof(aServer));
+
+      /* The commented out lines before are
+       * for documentation purposes only
+       * as they are zeroed by bzero above
+       */
+      /*      serv->user = NULL; */
+      /*      serv->users = NULL; */
+      /*      serv->servers = NULL; */
+      /*      *serv->by = '\0'; */
+      /*      serv->up = (char *)NULL; */
+
       cptr->serv = serv;
     }
   return cptr->serv;
@@ -514,4 +533,35 @@ void block_garbage_collect()
 #ifdef FLUD
   BlockHeapGarbageCollect(free_fludbots);
 #endif /* FLUD */
+}
+
+/* Functions taken from +CSr31, paranoified to check that the client
+** isn't on a llist already when adding, and is there when removing -orabidoo
+*/
+void add_client_to_llist(aClient **bucket, aClient *client)
+{
+  if (!client->lprev && !client->lnext)
+    {
+      client->lprev = (aClient *)NULL;
+      if ((client->lnext = *bucket) != (aClient *)NULL)
+	client->lnext->lprev = client;
+      *bucket = client;
+    }
+}
+
+void    del_client_from_llist(aClient **bucket, aClient *client)
+{
+  if (client->lprev)
+    {
+      client->lprev->lnext = client->lnext;
+    }
+  else if (*bucket == client)
+    {
+      *bucket = client->lnext;
+    }
+  if (client->lnext)
+    {
+      client->lnext->lprev = client->lprev;
+    }
+  client->lnext = client->lprev = (aClient *)NULL;
 }
