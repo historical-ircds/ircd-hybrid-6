@@ -23,7 +23,8 @@ Usermodes: (* designates that the umode is oper only)
        * +d     - Can see server debug messages.
        * +n     - Can see client nick changes.
        * +b     - Can see possible bot warnings.
-       * +x     - Can see new server introduction messages.
+       * +x     - Can see new server introduction and server split
+                  messages.
 
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -44,15 +45,12 @@ COMMAND         - USAGE and DESCRIPTION
 
   STATS         - STATS <letter> [server|nick]
                   Queries server [server] (or your own server if no
-                  server parameter is given) for info corresponing to
+                  server parameter is given) for info corresponding to
                   <letter>.
                   LETTER (* = Oper only.)
                   ------ (^ = Can be configured to be oper only.)
                     c - Shows C/N lines
-                  ^ b - Shows B lines (Obsolete)
                   ^ d - Shows D lines
-                  ^ e - Shows E lines (Obsolete)
-                  ^ f - Shows F lines (Obsolete)
                     g - Shows G lines
                     h - Shows H/L lines
                   ^ i - Shows I lines
@@ -63,16 +61,15 @@ COMMAND         - USAGE and DESCRIPTION
                     m - Shows commands and their usage
                   ^ o - Shows O/o lines
                   ^ P - Shows configured ports
-                    p - Shows opers connected and their idle times (disabled
-                              if LTRACE option is enabled - see below)
-                  * q - Shows quaranteened nicks
+                    p - Shows opers connected and their idle times
+                  * q - Shows quarantined nicks
                     r - Shows resource usage by ircd (only in DEBUGMODE)
                   * s - Shows the server cache
                   * t - Shows generic server stats
                     U - Shows U lines
                     u - Shows server uptime
-                    v - Shows connected servers and their idle times
-                    x - Shows X lines
+                  * v - Shows connected servers and their idle times
+                  * x - Shows X lines
                   * y - Shows Y lines
                   * z - Shows memory stats
                     ? - Shows connected servers and sendq info about them
@@ -81,7 +78,7 @@ COMMAND         - USAGE and DESCRIPTION
                   When [server_B] is used, CONNECT asks [server_B] to
                   connect to <server_A>.  Global Opers only.
 
-                  When [server_B] is not used, CONNECT trys to connect
+                  When [server_B] is not used, CONNECT tries to connect
                   your server to <server_A>.  Local and Global Opers.
 
                   When [port] is used, the connection will be attempted

@@ -394,8 +394,7 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
     case 'Q' : case 'q' :
       if(!IsAnOper(sptr))
-        sendto_one(sptr,":%s NOTICE %s :This server does not support Q lines",
-                   me.name, parv[0]);
+          sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       else
         {
           report_qlines(sptr);
@@ -446,6 +445,12 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       }
 
     case 'v' : case 'V' :
+      if (!IsAnOper(sptr))
+        {
+          ignore_request++;
+          valid_stats++;
+          break;
+        }
       show_servers(sptr);
       valid_stats++;
       break;

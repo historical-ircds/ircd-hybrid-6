@@ -1,7 +1,7 @@
 $Id$
 
   The hybrid team is a group of ircd coders who were frustrated
-with the instability and all-out "dirtiness" of the efnet ircd's
+with the instability and all-out "dirtiness" of the EFnet ircd's
 available. "hybrid" is the name for the collective efforts of a group
 of people, all of us.
  
@@ -17,7 +17,7 @@ Finally speed enhancements and other enhancements have been made to this
 ircd, and continue to be made to this ircd.
  
   That is not to say that there are still not bugs; there are always bugs.
-But we review eachother's work on this project, and are open to publically
+But we review each other's work on this project, and are open to publicly
 submittable bug reports.
  
 The core team as, of this major release:
@@ -38,6 +38,7 @@ CBongo, Chris Bongaarts <cab@tc.umn.edu>
 comstud, Chris Behrens <cbehrens@concentric.net>
 echo, Adam J. Durana <adam@caca.com>
 FlashMan, Craig A. Huegen <chuegen@quadrunner.com>
+Hwy101, Walter Campbell <wcampbel@botbay.net>
 jailbird, Dustin Marquess <jailbird@alcatraz.fdf.net>
 johan, Johannes Erdfelt <jerdfelt@eng.mindspring.net>
 koitsu/k9, Jeremy Chadwick <jdc@best.net>
@@ -57,7 +58,7 @@ Chris Portman       Keith Fralick       Jon Mischo
 Sam Noble           Taner Halicioglu    Darren Reed
 Markku Savela       Greg Lindahl        Jarkko Oikarinen
 Armin Gruner        Matthew Green       Chuck Kane
-Matt Lyle           Vesa Ruokonen       Nicolas PIOCH
+Matt Lyle           Vesa Ruokonen       Nicolas Pioch
 Stellan Klebom      Dan Goodwin         Mike Bolotski
 Ian Frechette       Markku Jarvinen     Kimmo Suominen
 Jeff Trim           Vijay Subramaniam   Karl Kleinpaste

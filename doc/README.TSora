@@ -144,7 +144,7 @@ Explanations:
   newer.
 
   When talking to a non-TS server, we need to behave exactly like one
-  because it expects us to. When talkign to a TS server, we don't kill
+  because it expects us to. When talking to a TS server, we don't kill
   the nicks it's introducing, as we know it'll be smart enough to do it
   itself when seeing our own introduced nick.
 
@@ -279,7 +279,7 @@ Explanations:
   and the received description, what the correct modes for a channel 
   are, and deop its own users if necessary. With this protocol, there is 
   *never* the need to reverse and bounce back a mode change. This is
-  both faster and more bandwith-effective.
+  both faster and more bandwidth-effective.
 
   The end goal is to have a protocol will eventually protect channels 
   against hacked ops, while minimizing the impact on a mixed-server net. 
@@ -315,7 +315,7 @@ Explanations:
   in sync (and since it can only be kicking someone who also was on the 
   younger side), while a deop does not matter (and will be ignored by 
   the first server on the other side), and an opping *needs* to be 
-  discareded to avoid hacked ops.
+  discarded to avoid hacked ops.
 
   The main property of timestamped channel descriptions that makes them 
   a very stable protocol even with lag and splits, is that they leave a 

@@ -2,12 +2,14 @@ $Id$
 
 A directory of support programs for ircd.
 
-mkpasswd - makes password for O lines
-
-start_ircd.c - start program for fbsd and bsd/os systems
+encspeed     - tests the speed of the encryption for cryptlinks
+install_ircd - internal script used for make install
 ircd_start.c - start program for solaris
-
-klineParse.c  -cleans out redundant klines
-
-viconf - edit your conf file without having to chdir su etc. etc.
-         also locks the file if file locking is used.
+klineParse.c - cleans out redundant klines
+mkconf       - a simple but effective script to edit ircd.conf lines
+mkkeypair    - generates public and private keys for encrypted server links
+mkpasswd     - makes password for O lines
+start_ircd.c - start program for fbsd and bsd/os systems
+untabify     - a script used by the developers
+viconf       - edit your conf file without having to chdir su etc. etc.
+               also locks the file if file locking is used.

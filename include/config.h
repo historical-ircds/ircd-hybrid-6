@@ -52,20 +52,22 @@
  */
 
 #define HARD_FDLIMIT_   256
-#define INIT_MAXCLIENTS 200
-
-#if defined(__CYGWIN__)
-#undef HARD_FDLIMIT_
-#define HARD_FDLIMIT_   25
-#undef INIT_MAXCLIENTS
-#define INIT_MAXCLIENTS 20
-#endif /* __CYGWIN__ */
+#define INIT_MAXCLIENTS 180
 
 /*
- * This is how many 'buffer connections' we allow... 
+ * This is how many 'buffer connections' we allow...
  * Remember, MAX_BUFFER + MAX_CLIENTS can't exceed HARD_FDLIMIT :)
  */
 #define MAX_BUFFER      60
+
+#if defined(__CYGWIN__)
+#undef HARD_FDLIMIT_
+#define HARD_FDLIMIT_   64
+#undef INIT_MAXCLIENTS
+#define INIT_MAXCLIENTS 20
+#undef MAX_BUFFER
+#define MAX_BUFFER      10
+#endif /* __CYGWIN__ */
 
 /* NICKNAMEHISTORYLENGTH - size of WHOWAS array
  * this defines the length of the nickname history.  each time a user changes
@@ -192,8 +194,8 @@
  *
  * These need to be defined if you want to use SYSLOG logging, too.
  */
-#define FNAME_USERLOG "/home/hybrid6/ircd/users" /* */
-#define FNAME_OPERLOG "/home/hybrid6/ircd/opers" /* */
+#define FNAME_USERLOG "/usr/local/ircd/users"
+#define FNAME_OPERLOG "/usr/local/ircd/opers"
 
 /* RFC1035_ANAL
  * Defining this causes ircd to reject hostnames with non-compliant chars.
@@ -241,11 +243,6 @@
  */
 #define FAILED_OPER_NOTICE
 
-/* CLIENT_SERVER - Don't be so fascist about idle clients ;)
- * changes behaviour of HTM code to make clients lag less.
- */  
-#define CLIENT_SERVER
-
 /* SHOW_FAILED_OPER_ID - if FAILED_OPER_NOTICE is defined, also notify when
  * a client fails to oper because of a identity mismatch (wrong host or nick)
  */
@@ -255,6 +252,11 @@
  * attempted passwd
  */
 #undef SHOW_FAILED_OPER_PASSWD
+
+/* CLIENT_SERVER - Don't be so fascist about idle clients ;)
+ * changes behaviour of HTM code to make clients lag less.
+ */
+#define CLIENT_SERVER
 
 /* BAN_INFO - Shows you who and when someone did a ban
  */
@@ -293,12 +295,6 @@
  * Your opers can be hit with retalitation... Or if your opers use
  * scripts that stick an ID into the comment field. etc. It's up to you
  * whether you want to use it or not.
- *
- * I have rewritten a portion of the k-line processing making it faster
- * unfortuantely, using KLINE_WITH_REASON would slow down this
- * processing slightly.. how much I can't say. For very few clients
- * being KLINED very little difference, but you have been forewarned
- *
  */
 #define KLINE_WITH_REASON
 
@@ -325,6 +321,14 @@
  *  Any one with an F line can almost always get on the server, as
  *  some file descriptors are reserved for people with this F line
  *  especially useful for your opers
+ *
+ *  Note that B, E, and F lines are no longer explicit lines in the
+ *  ircd.conf file, but rather flags in the I line.  The
+ *  B/E/F_LINES_OPER_ONLY defines block non-opers from seeing I: lines
+ *  with those flags
+ *
+ *  P_LINES_OPER_ONLY blocks STATS P (Capital P, NOT lower case p) from
+ *  non-opers, denying them permission to see configured ports
  */
 #define B_LINES_OPER_ONLY
 #define E_LINES_OPER_ONLY
@@ -332,13 +336,12 @@
 #undef  I_LINES_OPER_ONLY
 #undef  K_LINES_OPER_ONLY
 #undef  O_LINES_OPER_ONLY
-#undef  P_LINES_OPER_ONLY
+#define P_LINES_OPER_ONLY
 
 /* SPOOF_NOTICE - See a notice when a user connects with a
  * spoofed I: line
  * err, this also will now not show spoofed i-lines to opers who
  * /stats i.
-#define SPOOF_FREEFORM
  */
 #define SPOOF_NOTICE
 
@@ -352,18 +355,25 @@
 
 /* STATS_NOTICE - See a notice when a user does a /stats
  *
- * This is left on by default.
- * Members of the development team were split on supporting the
- * default here.
+ * This is a violation of privacy.  Arguments for this have been
+ * seeing STATS p requests, look below for the answer to that
+ * argument.
  */
-#define STATS_NOTICE
+#undef STATS_NOTICE
+
+/* STATS_P_NOTICE - See STATS p requests only, when STATS_NOTICE
+ * is undefined.  This allows opers to see requests by users for
+ * assistance, while not violating their privacy by spying on other
+ * STATS requests.
+ */
+#define STATS_P_NOTICE
 
 /* WHOIS_NOTICE - Shows a notice to an oper when a user does a
  * /whois on them
  * Why do opers need this at all? Its an invasion of privacy. bah.
  * you don't need this. -Dianora
  */
-#define WHOIS_NOTICE
+#undef WHOIS_NOTICE
 
 /* WHOIS_WAIT - minimum seconds between remote use of WHOIS before
  * max use count is reset
@@ -386,6 +396,7 @@
 
 /* If you are an admin that does not think operwall/wallops
  * should be used instead of a channel, define this.
+ * Undefine PACE_WALLOPS to disable
  */
 #define PACE_WALLOPS
 #define WALLOPS_WAIT 10 
@@ -409,6 +420,7 @@
  * THIS.
  */
 #undef TRUE_NO_OPER_FLOOD
+
 #undef CRYPT_LINKS             /* allow encrypted server-server links */
 #define CRYPT_LINKS_CNPREFIX '@'
 #define CRYPT_LINKS_PRIVATEKEYFILE "private.key"
@@ -420,7 +432,12 @@
  */
 #define SHOW_INVISIBLE_LUSERS
 
-#define ZIP_LINKS               /* compress server-to-server links */
+/* ZIP_LINKS - Compress server-to-server links
+ * Use c: lines in the conf to specify a zipped connection.
+ *
+ * Note that you may have to increase your sendQ size between server
+ * if you have problems during particularly heavy bursts
+#define ZIP_LINKS
 
 /* NO_DEFAULT_INVISIBLE - clients not +i by default
  * When defined, your users will not automatically be attributed with user
@@ -445,29 +462,10 @@
 
 /* MAXIMUM LINKS - max links for class 0 if no Y: line configured
  *
- * This define is useful for leaf nodes and gateways. It keeps you from
- * connecting to too many places. It works by keeping you from
- * connecting to more than "n" nodes which you have C:blah::blah:6667
- * lines for.
- *
- * Note that any number of nodes can still connect to you. This only
- * limits the number that you actively reach out to connect to.
- *
- * Leaf nodes are nodes which are on the edge of the tree. If you want
- * to have a backup link, then sometimes you end up connected to both
- * your primary and backup, routing traffic between them. To prevent
- * this, #define MAXIMUM_LINKS 1 and set up both primary and
- * secondary with C:blah::blah:6667 lines. THEY SHOULD NOT TRY TO
- * CONNECT TO YOU, YOU SHOULD CONNECT TO THEM.
- *
- * Gateways such as the server which connects Australia to the US can
- * do a similar thing. Put the American nodes you want to connect to
- * in with C:blah::blah:6667 lines, and the Australian nodes with
- * C:blah::blah lines. Have the Americans put you in with C:blah::blah
- * lines. Then you will only connect to one of the Americans.
- *
  * This value is only used if you don't have server classes defined, and
  * a server is in class 0 (the default class if none is set).
+ *
+ * The Hybrid team STRONGLY recommends configuring proper Y: lines
  *
  */
 #define MAXIMUM_LINKS 1
@@ -478,7 +476,7 @@
  * to a leaf which just has 1 server (typically the uplink). Define this
  * correctly for performance reasons.
  */
-#define  HUB
+#undef  HUB
 
 /* CMDLINE_CONFIG - allow conf-file to be specified on command line
  * NOTE: defining CMDLINE_CONFIG and installing ircd SUID or SGID is a MAJOR
@@ -491,7 +489,7 @@
  * options are:
  *   L_CRIT, L_ERROR, L_WARN, L_NOTICE, L_TRACE, L_INFO, L_DEBUG
  */
-#define INIT_LOG_LEVEL L_DEBUG
+#define INIT_LOG_LEVEL L_NOTICE
 
 /* USE_LOGFILE - log errors and such to LPATH
  * If you wish to have the server send 'vital' messages about server
@@ -553,7 +551,7 @@
 /* MAXSENDQLENGTH - Max amount of internal send buffering
  * Max amount of internal send buffering when socket is stuck (bytes)
  */
-#define MAXSENDQLENGTH 7050000    /* Recommended value: 7050000 for efnet */
+#define MAXSENDQLENGTH 9000000    /* Recommended value: 9000000 for efnet */
 
 /*  BUFFERPOOL - the maximum size of the total of all sendq's.
  *  Recommended value is 4 times MAXSENDQLENGTH.
@@ -592,6 +590,8 @@
  * PRESERVE_CHANNEL_ON_SPLIT, NO_JOIN_ON_SPLIT_SIMPLE
  *
  * choose =one= only
+ *
+ * For small networks, admins can disable all four.
  */
 
 /* NO_CHANOPS_WHEN_SPLIT
@@ -607,7 +607,7 @@
  * When this is defined, users will not be allowed to join channels
  * while the server is split.
  */
-#undef NO_JOIN_ON_SPLIT_SIMPLE
+#define NO_JOIN_ON_SPLIT_SIMPLE
 
 /*
  * NO_JOIN_ON_SPLIT
@@ -630,10 +630,10 @@
 
 /*
  * SPLIT_SMALLNET_SIZE defines what constitutes a split from 
- * the net. for a leaf, 2 is fine. If the number of servers seen
- * on the net gets less than 2, a split is deemed to have happened.
+ * the net. for a leaf, 5 is fine. If the number of servers seen
+ * on the net gets less than 5, a split is deemed to have happened.
  */
-#define SPLIT_SMALLNET_SIZE 2
+#define SPLIT_SMALLNET_SIZE 5
 
 /*
  * SPLIT_SMALLNET_USER_SIZE defines how many global users on the
@@ -643,7 +643,7 @@
  * number of users seen on net > SPLIT_SMALLNET_USER_SIZE start
  * counting down the SERVER_SPLIT_RECOVERY_TIME
  */
-#define SPLIT_SMALLNET_USER_SIZE 10000
+#define SPLIT_SMALLNET_USER_SIZE 15000
 
 /*
  * SPLIT_PONG will send a PING to a server after the connect burst.
@@ -681,11 +681,6 @@
  * /quote set idletime
  *
  * -Dianora
- *
- * IDLE_IGNORE will prevent the server from idle'ing clients connected from
- * the listed IP#s.  This should probably be moved into a .conf file entry
- * at some point in the future.
- * It has been. add '<' to I line prefix
  *
  * OPER_IDLE allows operators to remain idle when they idle
  * beyond the idle limit
@@ -750,7 +745,7 @@
 
 /* INITIAL_DBUFS - how many dbufs to preallocate
  */
-#define INITIAL_DBUFS 1000 /* preallocate 4 megs of dbufs */ 
+#define INITIAL_DBUFS 4000 /* preallocate 16 megs of dbufs */ 
 
 /* MAXBUFFERS - increase socket buffers
  *
@@ -759,22 +754,14 @@
  */
 #define MAXBUFFERS
 
-/* PORTNUM - default port where ircd resides
- * Port where ircd resides. NOTE: This *MUST* be greater than 1024 if you
- * plan to run ircd under any other uid than root.
+/* PORTNUM - default port that ircd uses to connect to remote servers, if
+ * a port is not specified in the M: line.
  */
 #define PORTNUM 6667
 
 /* MAXCONNECTIONS - don't touch - change the HARD_FDLIMIT_ instead
  * Maximum number of network connections your server will allow.  This should
  * never exceed max. number of open file descrpitors and wont increase this.
- * Should remain LOW as possible. Most sites will usually have under 30 or so
- * connections. A busy hub or server may need this to be as high as 50 or 60.
- * Making it over 100 decreases any performance boost gained from it being low.
- * if you have a lot of server connections, it may be worth splitting the load
- * over 2 or more servers.
- * 1 server = 1 connection, 1 user = 1 connection.
- * This should be at *least* 3: 1 listen port, 1 dns port + 1 client
  */
 /* change the HARD_FDLIMIT_ instead */
 #define MAXCONNECTIONS  HARD_FDLIMIT
@@ -789,28 +776,33 @@
  * PINGFREQUENCY seconds, then the server will attempt to check for
  * an active link with a PING message. If no reply is received within
  * (PINGFREQUENCY * 2) seconds, then the connection will be closed.
+ *
+ * This only specifies the default for class 0, only used for lines
+ * not specifying a class, or specifying an invalid class
  */
 #define PINGFREQUENCY    120    /* Recommended value: 120 */
 
 /* CONNECTFREQUENCY - time to wait before auto-reconencting
  * If the connection to to uphost is down, then attempt to reconnect every 
  * CONNECTFREQUENCY  seconds.
+ *
+ * This only specifies the default for class 0
  */
 #define CONNECTFREQUENCY 600    /* Recommended value: 600 */
 
-/* HANGONGOODLINK and HANGONGOODLINK
- * Often net breaks for a short time and it's useful to try to
+/* HANGONGOODLINK and HANGONRETRYDELAY
+ * Often the net breaks for a short time and it's useful to try to
  * establishing the same connection again faster than CONNECTFREQUENCY
  * would allow. But, to keep trying on bad connection, we require
  * that connection has been open for certain minimum time
  * (HANGONGOODLINK) and we give the net few seconds to steady
  * (HANGONRETRYDELAY). This latter has to be long enough that the
  * other end of the connection has time to notice it broke too.
- * 1997/09/18 recommended values by ThemBones for modern Efnet
+ * 1997/09/18 recommended values by ThemBones for modern EFnet
  */
 
-#define HANGONRETRYDELAY 60     /* Recommended value: 30-60 seconds */
 #define HANGONGOODLINK 3600     /* Recommended value: 30-60 minutes */
+#define HANGONRETRYDELAY 60     /* Recommended value: 30-60 seconds */
 
 /* WRITEWAITDELAY - Number of seconds to wait for write to
  * complete if stuck.
@@ -834,7 +826,7 @@
 /* MAXCHANNELSPERUSER -
  * Max number of channels a user is allowed to join.
  */
-#define MAXCHANNELSPERUSER  10  /* Recommended value: 10 */
+#define MAXCHANNELSPERUSER  20  /* Recommended value: 20 */
 
 /* SENDQ_ALWAYS - should always be defined.
  * SendQ-Always causes the server to put all outbound data into the sendq and
@@ -977,7 +969,7 @@
  * to make your client server very sluggish.
  * You usually shouldn't need this. -Dianora
 */
-#define DEBUGMODE               /* define DEBUGMODE to enable debugging mode.*/
+#undef DEBUGMODE               /* define DEBUGMODE to enable debugging mode.*/
 
 /*
  * viconf option, if USE_RCS is defined, viconf will use rcs "ci"
@@ -1018,11 +1010,6 @@
  */
 #undef SETUID_ROOT
  
-/* SUN_GSO_BUG support removed
- *
- * if you still have a machine with this bug, it doesn't belong on EFnet
- */
-
 /* CHROOTDIR - chroot() before reading conf
  * Define for value added security if you are paranoid.
  * All files you access must be in the directory you define as DPATH.

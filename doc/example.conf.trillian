@@ -76,11 +76,11 @@ A:Boston University CS Department:Main Client Server:Helen Rose <hrose@cs.bu.edu
 #
 # Y: [SUGGESTED]. These lines define connection classes. Connection
 # classes allow you to fine-tune your client and server connections. It is
-# suggested that clients and servers be placed in seperate classes, and if
+# suggested that clients and servers be placed in separate classes, and if
 # you have lots of server connections (if you do have lots of servers you
 # shouldn't be reading this file :-) each set of servers (defined
 # arbitrarily by you) should have its own class. If you have clients
-# coming in from lots of different sites, you may want to seperate them
+# coming in from lots of different sites, you may want to separate them
 # out into classes. For instance, you may want to put local users in one
 # class, with remote users in another class.
 #
@@ -103,7 +103,7 @@ A:Boston University CS Department:Main Client Server:Helen Rose <hrose@cs.bu.edu
 Y:1:90:0:20:100000
 #
 ##
-## in the case of hybrid and Csr servers, the connect-frequency
+## in the case of hybrid and CSr servers, the connect-frequency
 ## field is now used as a count of number of clients to allow per IP
 ## (or in the case of CSr the number of clients per IP or clients per
 ## idented host; soon to be in Hybrid as well :-) )
@@ -342,16 +342,16 @@ H:*::cs-ftp.bu.edu
 H:*.mit.edu::irc-2.mit.edu
 #
 # P: [OPTIONAL]. This field allows the server to listen on various ports
-# (other than 6667) for connections. Any internet domain port that is
+# (other than 6667) for connections. Any Internet domain port that is
 # below 1024 means the ircd has to be run from inetd. The server can
-# listen to ports in the UNIX domain or the internet domain. If you wish
+# listen to ports in the UNIX domain or the Internet domain. If you wish
 # to create a port in the UNIX domain you must compile with UNIXPORT
 # defined in include/config.h. If you are permitting connections to a
-# seperate port, you can control access to that port by the host field.
+# separate port, you can control access to that port by the host field.
 #
 # The fields are as follows::
 # P:hostmask or UNIX socket file:*:*:port number
-# for example, an internet domain socket on port 6665 for South African
+# for example, an Internet domain socket on port 6665 for South African
 # users: 
 P:*.za:*:*:6665
 #

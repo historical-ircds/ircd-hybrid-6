@@ -1,0 +1,95 @@
+# Y: Line Reference Guide (In Constant Progress)
+# Walter Campbell (hwy101@kabel.pp.ru)
+# This document is freely redistributable copyrighted material
+# 
+# The structure of this document allows for pasting or including into an 
+# ircd.conf (or suitable .include'ed conf file) for easier reference.
+
+# Y lines define the classes that are used in C, N, I, and O lines
+# NOTE:  The sendQ values provided here are for smaller networks.
+#        You MUST increase them on a large network
+
+# for servers:
+# Y:class number:ping timing:connection frequency:maximum links:sendQ length
+# the ping timing MUST be the same on both sides of a server link
+# If splits happen even when there is little lag, increase the sendQ
+
+# for clients:
+# Y:class number:ping timing:clone:maximum users in this class:sendQ length
+# The "frequency field" determins how many users from the same IP are allowed
+# on the server, therefore limiting clones.  Leave it blank or set it to
+# 0 to disable this restriction
+# NOTE that on some ircd's, the match is on the user@host and not the IP
+# address.  (Also note that non-idented users from the same IP count as
+# clones)
+# If the client has problems with ping timeouts, increase the ping timing
+# If the client likes to flood, reduce their sendQ
+# The best option in all these cases is to create special classes with 
+# I: lines to force them into the class
+# NEVER define a class less than 0 and avoid defining a class of 0
+# RECOMMENDED (IMHO REQUIRED) (The ircd defines class 0, which is VERY
+#             restrictive.  By defining Y lines, you open the server up)
+
+# Class 1 is used for normal users, sets a max of 100 and a ping time of 
+# 90 seconds, and a sendQ of 100,000 bytes, meaning they can have 100,000
+# bytes of data in their sendQ before being disconnected.
+# The user will also only be allowed to have 4 connections from the host
+Y:1:90:4:100:100000
+
+# Class 2 is the default server class, sets a ping time of 90 seconds and
+# a max sendQ of 600,000 bytes.  If the C line for a server is an 
+# auto-connecting C line (described below), then it will attempt to connect
+# every 300 seconds.  The 20 means that only 20 server links are permitted
+Y:2:90:300:20:600000
+
+# Class 100 is for Opers.  Opers should be in a different class so that they 
+# are not subject to normal user's limits and can have higher sendQ and ping
+# timings if desired
+Y:100:90:0:20:100000
+
+# This is an example of a "lagged user" connection line.  Anyone set to use 
+# this class will have a higher ping timing and sendQ so that they MIGHT be
+# disconnected less often.  Limit the number of users as they should use
+# a server that is closer to them
+Y:5:180:4:20:200000
+
+# This is an example of a "bad boy (or girl)" class.  Anyone set to this 
+# class will have less sendQ to prevent flooding and only be permitted to 
+# have 2 connections to the irc server.  Only allow 10 "bad guys/gals" on
+# at once.
+Y:20:90:2:10:50000
+
+# This is an example of a "privilaged user" class, who is permitted to have
+# many more connections, more sendQ, and a longer ping timing
+Y:50:120:0:50:300000
+
+# This example is for a "preferred server" described below in the C/N
+# Lines.  Autoconnecting C lines will choose the highest numbered class first
+Y:3:90:300:20:600000
+
+# Leaf servers should only connect to one server at a time
+# Setting the maximum to 1 will prevent the leaf server from attempting
+# to establish a connection with more than one server at once
+Y:4:90:300:1:600000
+
+# Thus we have class 1 for normal users, 2, 3 and 4 for servers, 100 for opers
+# 5 for "lagged users", 20 for "bad boys/girls", and 50 for privilaged users
+
+# Note that we set the oper class to the highest number.  When you sucessfully
+# issue the OPER command, you will be placed into the oper class only if it is
+# a higher class number than the class the user is currently in.  We may also
+# wish to reorganize the numbers of the other user classes so that they are 
+# numbered in order from the lowest privilage to the highest.
+
+# Also note that the IRCD type used has an influence on what limits you set.
+# Most IRCD's have the limit apply per I: line.  Hybrid and Bahamut with the
+# OLD_Y_LIMIT #undef'ed will set the limits in the Y line.  According to the
+# information available for those options, closed I: line servers will benefit
+# more from the old behavior, while more open servers benefit from the new
+# bahavior.  Consult your config.h for more details.  
+
+# A problem I have seen lately is when people set the class in the O: lines
+# to 0 or to an invalid class (which will default to 0).  The issue was that
+# the user could only OPER once from the same mask.  By making sure all 
+# C/N/O/I lines point to valid, properly configured classes, you will prevent
+# many issues with the server.  

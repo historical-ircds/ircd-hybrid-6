@@ -146,5 +146,10 @@ else
    $INSTALL_SH -c tools/viconf${EXESUFFIX} ${DPATH}viconf${EXESUFFIX};
 fi
 
+# install ircd.8
+dir_make ${DPATH}man8
+echo installing ircd.8 as ${DPATH}man8/ircd.8
+$INSTALL_SH -c doc/ircd.8 ${DPATH}man8/ircd.8
+
 # finished.
 echo install complete!

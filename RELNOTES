@@ -9,7 +9,7 @@ The code should compile and run on any modern UNIX operating system that
 supports POSIX.1 and ANSI-C. We know the code builds cleanly on BSD,
 Solaris, and Linux. If it fails to work for you, or works on another
 platform not listed here, let us know. We won't make any guarantees
-about changing much to support anything wierd, but if including a
+about changing much to support anything weird, but if including a
 standard header clears up a problem we'll probably do that.  This code
 is known to _not_ compile on AIX.
 
@@ -40,10 +40,9 @@ Command line options for this version:
 Minimal logging is enabled by default, for the alpha/beta release it is
 set to L_DEBUG in s_log.c by default, this can be changed to other
 levels if the log gets too noisy (it shouldn't). Look at the log level
-constants in s_log.h for allowable values. A SET option will be
-available in the future for setting the value in real time. If you
-define USE_SYSLOG in your config ircd will log to both the ircd.log file
-and syslog.
+constants in s_log.h for allowable values. A SET option is available
+for setting the value in real time. If you define USE_SYSLOG in your
+config ircd will log to both the ircd.log file and syslog.
 
 Authentication and DNS lookups are handled a bit differently now,
 clients are completely ignored until both auth and dns have completed.
