@@ -1,3 +1,8 @@
+*** 20010611_2 by leeh
+- do CHANMODE_E a different way.. we can *always* support them, just 
+  ignoring clients doing mode +e, (not -e) and exempts on join..
+
+
 *** 20010611_1 by leeh
 - moved the "not approved on efnet section" up to where people
   will actually see it.. it was ok when it was just glines, but its
