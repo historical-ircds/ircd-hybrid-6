@@ -25,11 +25,7 @@
 #include "res.h"
 #include "send.h"
 
-#ifdef HAVE_STDARG_H
 #include <stdarg.h>
-#else
-#include <varargs.h>
-#endif /* HAVE_STDARG_H */
 
 extern	void	count_whowas_memory(int *, u_long *);
 extern  void    count_ip_hash(int *,u_long *);	  /* defined in s_conf.c */
@@ -163,21 +159,8 @@ char	serveropts[] = {
 #if defined(DNS_DEBUG) || defined(DEBUGMODE)
 static	char	debugbuf[1024];
 
-#ifdef HAVE_STDARG_H
-
 void
 debug(int level, char *format, ...)
-
-#else
-
-void
-debug(level, format, va_alist)
-
-int level;
-char *format;
-va_dcl
-
-#endif /* HAVE_STDARG_H */
 
 {
 	va_list args;

@@ -35,10 +35,6 @@ dnl Check for stdarg.h - if we can't find it, fall back
 dnl on varargs.h. If varargs.h is missing as well, halt
 dnl configure
 
-AC_CHECK_HEADER(stdarg.h, AC_DEFINE(HAVE_STDARG_H),
-  AC_CHECK_HEADER(varargs.h,,
-    AC_MSG_ERROR(*** Neither stdarg.h nor varargs.h could be found - you must have one of these headers in order to compile ircd-hybrid ***)))
-
 dnl Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
 AC_CHECK_FUNCS(index strerror strtoken strtok inet_addr inet_ntoa inet_netof inet_aton)

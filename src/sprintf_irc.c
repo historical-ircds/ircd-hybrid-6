@@ -23,27 +23,12 @@
 #include "send.h"
 #include "common.h"
 #include "sys.h"
-#include "sprintf_irc.h"
-
-#ifdef HAVE_STDARG_H
 
 #include <stdarg.h>
 
-#else
-
-/*
- * If stdarg.h is not present, varargs.h MUST be present, or
- * configure would have halted with an error.
- * -wnder
- */
-
-#include <varargs.h>
-
-#endif /* HAVE_STDARG_H */
-
 static char *rcs_version = "$Id$";
 
-static const char atoi_tab[4000] = {
+const char atoi_tab[4000] = {
     '0','0','0',0, '0','0','1',0, '0','0','2',0, '0','0','3',0, '0','0','4',0,
     '0','0','5',0, '0','0','6',0, '0','0','7',0, '0','0','8',0, '0','0','9',0,
     '0','1','0',0, '0','1','1',0, '0','1','2',0, '0','1','3',0, '0','1','4',0,
@@ -466,27 +451,14 @@ vsprintf_irc(register char *str, register const char *format,
 	return (bytes);
 } /* vsprintf_irc() */
 
-#ifdef HAVE_STDARG_H
-
 int
 ircsprintf(register char *str, const char *format, ...)
-
-#else
-
-int
-ircsprintf(str, format, va_alist)
-
-register char *str;
-const char *format;
-va_dcl
-
-#endif /* HAVE_STDARG_H */
 
 {
 	register va_list args;
 	register int bytes;
 
-	MyVaStart(args, format);
+	va_start(args, format);
 
 	bytes = vsprintf_irc(str, format, args);
 
