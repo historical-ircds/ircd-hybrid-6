@@ -29,6 +29,7 @@
 #include "dline_conf.h"
 #include "numeric.h"
 #include "h.h"
+#include "list.h"
 #include "mtrie_conf.h"
 #include "s_bsd.h"
 #include "channel.h"

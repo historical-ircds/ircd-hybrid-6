@@ -37,6 +37,7 @@
 #include "whowas.h"
 #include "listener.h"
 #include "s_user.h"
+#include "list.h"
 #ifdef FLUD
 #include "blalloc.h"
 #endif /* FLUD */

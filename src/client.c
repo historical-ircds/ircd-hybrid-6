@@ -30,6 +30,7 @@
 #include "common.h"
 #include "numeric.h"
 #include "h.h"
+#include "list.h"
 #include "fdlist.h"
 #include "s_bsd.h"
 #include "send.h"

@@ -41,6 +41,7 @@
 #include "numeric.h"
 #include "channel.h"
 #include "h.h"
+#include "list.h"
 #include "send.h"
 #include "hash.h"
 #include "whowas.h"

@@ -67,7 +67,7 @@ extern  int     debuglevel;
 extern  int     debugtty;
 extern  char*   debugmode;
 
-extern void     outofmemory(void);               /* list.c */
+
 extern  time_t  check_fdlists (time_t);
 
 extern struct Client* find_chasing (struct Client *, char *, int *);
@@ -109,21 +109,6 @@ extern  int     parse (struct Client *, char *, char *);
 extern  void    init_tree_parse (struct Message *);
 
 extern  int     do_numeric (int, struct Client *, struct Client *, int, char **);
-extern  int     hunt_server (struct Client *,struct Client *,char *,int,int,char **);
-extern  struct Client   *next_client (struct Client *, char *);
-extern  struct Client   *next_client_double (struct Client *, char *);
-
-/* stuff in list.c */
-extern  void    _free_link (struct SLink *);
-extern  void    _free_user (struct User *, struct Client *);
-extern  struct SLink    *make_link (void);
-extern  struct User     *make_user (struct Client *);
-extern  struct Class* make_class(void);
-extern  struct Server   *make_server (struct Client *);
-extern  struct SLink    *find_user_link (struct SLink *, struct Client *);
-extern  void    initlists (void);
-extern  void    block_garbage_collect(void);    /* list.c */
-extern  void    block_destroy(void);            /* list.c */
 
 extern  int     dopacket (struct Client *, char *, int);
 
