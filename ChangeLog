@@ -1,3 +1,19 @@
+lusky       2001/12/08 15:48:19 EST	(20011208_21)
+
+  Modified files:
+    .                    README.FIRST 
+    include              config.h config.h.dist 
+  Log:
+  - Added Cygwin back to the supported list
+  - Removed old Cygwin hack in config.h
+  
+  Revision  Changes    Path
+  1.13      +3 -3      ircd-hybrid-6/README.FIRST
+  1.149     +0 -9      ircd-hybrid-6/include/config.h
+  1.128     +0 -9      ircd-hybrid-6/include/config.h.dist
+
+
+
 db          2001/12/08 13:33:05 EST	(20011208_20)
 
   Modified files:
