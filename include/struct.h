@@ -464,7 +464,6 @@ extern struct Capability captab[];
 
 #define	BadPtr(x) (!(x) || (*(x) == '\0'))
 
-#define	isvalid(c) (((c) >= 'A' && (c) <= '~') || isdigit(c) || (c) == '-')
 
 /* used in SetMode() in channel.c and m_umode() in s_msg.c */
 

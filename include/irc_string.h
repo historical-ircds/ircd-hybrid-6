@@ -78,48 +78,38 @@ extern void* MyRealloc(void* p, size_t size);
 /*
  * character macros
  */
-extern unsigned char tolowertab[];
-#undef tolower
-#define tolower(c) (tolowertab[(unsigned char)(c)])
+extern unsigned char ToLowerTab[];
+#define ToLower(c) (ToLowerTab[(unsigned char)(c)])
 
-extern unsigned char touppertab[];
+extern unsigned char ToUpperTab[];
+#define ToUpper(c) (ToUpperTab[(unsigned char)(c)])
 
-#undef toupper
-#define toupper(c) (touppertab[(unsigned char)(c)])
+extern unsigned int CharAttrs[];
 
-#undef isalpha
-#undef isdigit
-#undef isxdigit
-#undef isalnum
-#undef isprint
-#undef isascii
-#undef isgraph
-#undef ispunct
-#undef islower
-#undef isupper
-#undef isspace
-#undef iscntrl
-extern unsigned char char_atribs[];
+#define PRINT_C 0x01
+#define CNTRL_C 0x02
+#define ALPHA_C 0x04
+#define PUNCT_C 0x08
+#define DIGIT_C 0x10
+#define SPACE_C 0x20
+#define NICK_C  0x40
+#define CHAN_C  0x80
 
-#define PRINT 1
-#define CNTRL 2
-#define ALPHA 4
-#define PUNCT 8
-#define DIGIT 16
-#define SPACE 32
-#define	iscntrl(c) (char_atribs[(unsigned char)(c)]&CNTRL)
-#define isalpha(c) (char_atribs[(unsigned char)(c)]&ALPHA)
-#define isspace(c) (char_atribs[(unsigned char)(c)]&SPACE)
-#define islower(c) ((char_atribs[(unsigned char)(c)]&ALPHA) && ((unsigned char)(c) > 0x5f))
-#define isupper(c) ((char_atribs[(unsigned char)(c)]&ALPHA) && ((unsigned char)(c) < 0x60))
-#define isdigit(c) (char_atribs[(unsigned char)(c)]&DIGIT)
-#define	isxdigit(c) (isdigit(c) || 'a' <= (c) && (c) <= 'f' || \
+#define	IsNickChar(c) (CharAttrs[(unsigned char)(c)]  & NICK_C)
+#define	IsCntrl(c) (CharAttrs[(unsigned char)(c)]  & CNTRL_C)
+#define IsAlpha(c) (CharAttrs[(unsigned char)(c)]  & ALPHA_C)
+#define IsSpace(c) (CharAttrs[(unsigned char)(c)]  & SPACE_C)
+#define IsLower(c) (IsAlpha((c)) && ((unsigned char)(c) > 0x5f))
+#define IsUpper(c) (IsAlpha((c)) && ((unsigned char)(c) < 0x60))
+#define IsDigit(c) (CharAttrs[(unsigned char)(c)] & DIGIT_C)
+#define	IsXDigit(c) (IsDigit(c) || 'a' <= (c) && (c) <= 'f' || \
 	'A' <= (c) && (c) <= 'F')
-#define isalnum(c) (char_atribs[(unsigned char)(c)]&(DIGIT|ALPHA))
-#define isprint(c) (char_atribs[(unsigned char)(c)]&PRINT)
-#define isascii(c) ((unsigned char)(c) >= 0 && (unsigned char)(c) <= 0x7f)
-#define isgraph(c) ((char_atribs[(unsigned char)(c)]&PRINT) && ((unsigned char)(c) != 0x32))
-#define ispunct(c) (!(char_atribs[(unsigned char)(c)]&(CNTRL|ALPHA|DIGIT)))
+#define IsAlNum(c) (CharAttrs[(unsigned char)(c)] & (DIGIT_C | ALPHA_C))
+#define IsPrint(c) (CharAttrs[(unsigned char)(c)] & PRINT_C)
+#define IsAscii(c) ((unsigned char)(c) >= 0 && (unsigned char)(c) <= 0x7f)
+#define IsGraph(c) (IsPrint((c)) && ((unsigned char)(c) != 0x32))
+#define IsPunct(c) (!(CharAttrs[(unsigned char)(c)] & \
+                                           (CNTRL_C | ALPHA_C | DIGIT_C)))
 
 
 #endif /* INCLUDED_irc_string_h */

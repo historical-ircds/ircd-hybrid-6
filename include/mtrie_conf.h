@@ -1,19 +1,22 @@
 /* $Id$ */
+#ifndef INCLUDED_mtrie_conf_h
+#define INCLUDED_mtrie_conf_h
+
 /* This one is my trademark no? -db */
 #ifndef FOREVER
 #define FOREVER for(;;)
 #endif
 
-#ifndef __mtrie_conf_h__
-#define __mtrie_conf_h__
+struct ConfItem;
+struct Client;
 
-#include "struct.h"
-
-extern void add_mtrie_conf_entry(aConfItem *,int);
-extern aConfItem *find_matching_mtrie_conf(char *,char *,unsigned long);
-extern void report_mtrie_conf_links(aClient *,int);
+extern void       add_mtrie_conf_entry(struct ConfItem *,int);
+extern struct ConfItem* find_matching_mtrie_conf(const char* host,
+                                           const char* user, 
+                                           unsigned long ip);
+extern void report_mtrie_conf_links(struct Client *,int);
 extern void clear_mtrie_conf_links(void);
-extern void report_matching_host_klines(aClient *,char *);
+extern void report_matching_host_klines(struct Client *,char *);
 
 
 /* As ircd only allow 63 characters in a hostname, 100 is more than enough */
@@ -50,15 +53,17 @@ extern void report_matching_host_klines(aClient *,char *);
 typedef struct domain_piece
 {
   char *host_piece;
-  aConfItem *conf_ptr;
-  aConfItem *wild_conf_ptr;
+  struct ConfItem *conf_ptr;
+  struct ConfItem *wild_conf_ptr;
   int flags;		/* E_type I_type K_type */
   struct domain_piece *next_piece;
   struct domain_level *next_level;
-}DOMAIN_PIECE;
+} DOMAIN_PIECE;
 
 typedef struct domain_level
 {
   struct domain_piece *piece_list[MAX_PIECE_LIST];
-}DOMAIN_LEVEL;
-#endif
+} DOMAIN_LEVEL;
+
+#endif /* INCLUDED_mtrie_conf_h */
+

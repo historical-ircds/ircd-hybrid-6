@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.22  1999/07/18 17:50:52  db
+ * - more header cleanups
+ *
  * Revision 1.21  1999/07/18 17:27:02  db
  * - a few more header cleanups
  * - motd.c included channel.h, no need
@@ -239,7 +242,9 @@ extern char *oper_privs_as_string(struct Client *, int);
 extern int rehash_dump(struct Client *);
 extern int find_q_line(char*, char*, char *);
 extern struct ConfItem* find_special_conf(char *,int );
-extern struct ConfItem* find_is_klined(char*, char *,unsigned long);
+extern struct ConfItem* find_is_klined(const char* host, 
+                                       const char* name,
+                                       unsigned long ip);
 extern void   GetPrintableaConfItem(struct ConfItem *,
 				    char **, char **, char **,
 				    char **, int *);

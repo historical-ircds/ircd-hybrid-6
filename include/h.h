@@ -27,8 +27,9 @@
  */
 #ifndef INCLUDED_h_h
 #define INCLUDED_h_h
-#ifndef INCLUDED_mtrie_conf_h
-#include "mtrie_conf.h"
+#ifndef INCLUDED_sys_types_h
+#include <sys/types.h>
+#define INCLUDED_sys_types_h
 #endif
 #ifndef INCLUDED_fdlist_h
 #include "fdlist.h"
@@ -40,6 +41,8 @@ struct ConfItem;
 struct User;
 struct stats;
 struct SLink;
+struct Message;
+struct Server;
 
 /* 
  * GLOBAL - global variables
@@ -68,20 +71,21 @@ extern  int     debuglevel;
 extern  int     portnum;
 extern  int     debugtty;
 extern  int     maxusersperchannel;
+extern	char*   debugmode;
+extern char*    configfile;
+extern char*    sbrk0;
 
 
 extern void     outofmemory(void);               /* list.c */
 extern	time_t	check_fdlists (time_t);
 extern	void	flush_server_connections(void);
 
-extern  struct Client *find_chasing (struct Client *, char *, int *);
+extern struct Client* find_chasing (struct Client *, char *, int *);
 extern struct Client* find_client(const char* name, struct Client* client);
-extern	struct Client	*find_name (char *, struct Client *);
-extern	struct Client	*find_person (char *, struct Client *);
+extern struct Client* find_name (char *, struct Client *);
+extern struct Client* find_person (char *, struct Client *);
 extern struct Client* find_server(const char* name, struct Client* dflt_client);
-extern	struct Client	*find_userhost (char *, char *, struct Client *, int *);
-
-extern struct ConfItem *find_is_klined(char*, char *,unsigned long);
+extern struct Client* find_userhost (char *, char *, struct Client *, int *);
 
 /* hash d lines */
 extern struct ConfItem *find_dkill(struct Client *cptr);
@@ -106,7 +110,6 @@ extern void        count_scache(int *,unsigned long *);
 extern void        list_scache(struct Client *, struct Client *,int, char **);
 
 extern void     dummy(int signo);
-extern	char	*debugmode, *configfile, *sbrk0;
 
 extern	char*   getfield(char *);
 extern  char    *form_str (int);
@@ -157,7 +160,7 @@ extern	void	_free_user (struct User *, struct Client *);
 extern	struct SLink	*make_link (void);
 extern	struct User	*make_user (struct Client *);
 extern	struct Class* make_class(void);
-extern	aServer	*make_server (struct Client *);
+extern	struct Server	*make_server (struct Client *);
 extern	struct SLink	*find_user_link (struct SLink *, struct Client *);
 extern	void	checklist (void);
 extern	void	initlists (void);

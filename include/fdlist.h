@@ -5,9 +5,12 @@
  */
 #ifndef _IRCD_DOG3_FDLIST
 #define _IRCD_DOG3_FDLIST
+#ifndef INCLUDED_config_h
+#include "config.h"       /* MAXCONNECTIONS */
+#endif
 
 struct FDList {
-  unsigned char entry [MAXCONNECTIONS+2];
+  unsigned char entry[MAXCONNECTIONS + 2];
 };
 
 extern struct FDList serv_fdlist;

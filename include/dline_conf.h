@@ -1,25 +1,23 @@
 /* dline_conf.h  -- lets muse over dlines, shall we? */
+#ifndef INCLUDED_dline_conf_h
+#define INCLUDED_dline_conf_h
 
-#ifndef __dline_conf_h__
-#define __dline_conf_h__
+struct Client;
+struct ConfItem;
 
 extern void clear_Dline_table();
 extern void zap_Dlines();
-extern void add_Dline(aConfItem *conf_ptr);
-extern void add_ip_Kline(aConfItem *conf_ptr);
+extern void add_Dline(struct ConfItem *conf_ptr);
+extern void add_ip_Kline(struct ConfItem *conf_ptr);
 
-extern void add_dline(aConfItem *conf_ptr);
+extern void add_dline(struct ConfItem *conf_ptr);
 
-extern aConfItem *match_Dline(unsigned long ip);
-extern aConfItem *match_ip_Kline(unsigned long ip, char *);
+extern struct ConfItem *match_Dline(unsigned long ip);
+extern struct ConfItem* match_ip_Kline(unsigned long ip, const char* name);
 
-extern void report_dlines(aClient *sptr);
-extern void report_ip_Klines(aClient *sptr);
-#endif
+extern void report_dlines(struct Client *sptr);
+extern void report_ip_Klines(struct Client *sptr);
 
-
-
-
-
+#endif /* INCLUDED_dline_conf_h */
 
 
