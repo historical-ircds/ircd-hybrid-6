@@ -378,6 +378,12 @@ void add_Dline(aConfItem *conf_ptr)
   struct ip_subtree *node;
 
   host_ip = conf_ptr->ip;
+
+  if( conf_ptr->ip_mask == 0L )
+    {
+      conf_ptr->ip_mask = 0xFFFFFFFFL;
+    }
+
   host_mask = conf_ptr->ip_mask;
 
   /* resolve ambiguities, duplicates, etc. */
@@ -440,12 +446,24 @@ aConfItem *match_Dline(unsigned long ip)
   for(scan=node->conf;scan;scan=scan->next)
     {
       if(!(scan->flags & CONF_FLAGS_E_LINED))
-        continue;
+         continue;
 
       if (scan->ip == (ip & scan->ip_mask))
         return (scan);   /* exception found */
     }
-  return node->conf;  /* no exceptions, return the D-line */
+  if( node->conf )
+    {
+      struct ConfItem *conf_ptr;
+      conf_ptr = node->conf;
+      if ( (conf_ptr->ip & conf_ptr->ip_mask) ==
+           (ip           & conf_ptr->ip_mask) )
+        {
+          return(conf_ptr);
+	}
+      else
+        return NULL;
+    }
+   return NULL;
 }
 
 /*
@@ -461,6 +479,12 @@ void add_ip_Kline(aConfItem *conf_ptr)
   struct ip_subtree *node;
 
   host_ip = conf_ptr->ip;
+
+  if( conf_ptr->ip_mask == 0L )
+    {
+      conf_ptr->ip_mask = 0xFFFFFFFFL;
+    }
+  
   host_mask = conf_ptr->ip_mask;
 
   /* resolve ambiguities, duplicates, etc. */

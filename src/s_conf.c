@@ -3245,8 +3245,27 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
       given_name = parv[1];
       if(!(p = strchr(given_name,'@')))
         {
-          sendto_one(sptr, ":%s NOTICE %s :usage: user@host[,ip]",
+          ip = 0L;
+          if(is_address(given_name,&ip,&host_mask))
+            {
+              aconf = match_Dline(ip);
+              if( aconf )
+                {
+                  get_printable_conf(aconf, &name, &host, &pass, &user, &port);
+                  sendto_one(sptr, 
+                         ":%s NOTICE %s :D-line host [%s] pass [%s]",
+                         me.name, parv[0], 
+                         host,
+                         pass);
+                }
+              else
+                sendto_one(sptr, ":%s NOTICE %s :No aconf found",
+                         me.name, parv[0]);
+            }
+          else	  
+          sendto_one(sptr, ":%s NOTICE %s :usage: user@host|ip",
                      me.name, parv[0]);
+
           return 0;
         }
 
@@ -3300,7 +3319,7 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
                    me.name, parv[0]);
     }
   else
-    sendto_one(sptr, ":%s NOTICE %s :usage: user@host,ip",
+    sendto_one(sptr, ":%s NOTICE %s :usage: user@host|ip",
                me.name, parv[0]);
   return 0;
 }
