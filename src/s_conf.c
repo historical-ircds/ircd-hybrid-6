@@ -1429,35 +1429,41 @@ int	rehash_dump(aClient *sptr,char *parv0)
 	{
 	  
 	  (void)sprintf(result_buf,"C:%s:%s:%s::%d\n",
-			aconf->host,aconf->passwd,aconf->name,
+			aconf->host,aconf->passwd,
+			aconf->name,
 			class_ptr->class);
 	  fbputs(result_buf, out);
 	}
       else if(aconf->status == CONF_NOCONNECT_SERVER)
 	{
 	  (void)sprintf(result_buf,"N:%s:%s:%s::%d\n",
-			aconf->host,aconf->passwd,aconf->name,
+			aconf->host,name,aconf->passwd,
+			aconf->name,
 			class_ptr->class);
 	  fbputs(result_buf, out);
 	}
       else if(aconf->status == CONF_OPERATOR)
 	{
-	  (void)sprintf(result_buf,"O:%s:%s:%s::%d\n",
-			aconf->host,aconf->passwd,aconf->name,
+	  (void)sprintf(result_buf,"O:%s@%s:%s:%s::%d\n",
+			aconf->user,aconf->host,
+			aconf->passwd,
+			aconf->name,
 			class_ptr->class);
 	  fbputs(result_buf, out);
 	}
       else if(aconf->status == CONF_LOCOP)
 	{
-	  (void)sprintf(result_buf,"o:%s:%s:%s::%d\n",
-			aconf->host,aconf->passwd,aconf->name,
+	  (void)sprintf(result_buf,"o:%s@%s:%s:%s::%d\n",
+			aconf->user,aconf->host,
+			aconf->passwd,
+			aconf->name,
 			class_ptr->class);
 	  fbputs(result_buf, out);
 	}
       else if(aconf->status == CONF_ADMIN)
 	{
 	  (void)sprintf(result_buf,"A:%s:%s:%s::\n",
-			aconf->host,aconf->passwd,aconf->name);
+			aconf->user,aconf->passwd,aconf->name);
 	  fbputs(result_buf, out);
 	}
     }
