@@ -24,8 +24,13 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software Foundation,
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
+ *
+ * $Id$
  */
 
+#include "fileio.h"
+#include "s_log.h"
+#include "memory.h"
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -35,24 +40,21 @@
 #include <arpa/inet.h>
 
 #include "internal.h"
-
+#include "irc_string.h"
 /* Core diagnostic functions */
 
+#define LOG_BUFSIZE 2000
+
+#if 0
 void adns__vdiag(adns_state ads, const char *pfx, adns_initflags prevent,
-		 int serv, adns_query qu, const char *fmt, va_list al) {
+		 int serv, adns_query qu, const char *fmt, va_list al)
+{
+
+/* Fix this to log to the ircd log interface */
+#if 0
   const char *bef, *aft;
   vbuf vb;
   
-  if (!ads->diagfile ||
-      (!(ads->iflags & adns_if_debug) && (!prevent || (ads->iflags & prevent))))
-    return;
-
-  if (ads->iflags & adns_if_logpid) {
-    fprintf(ads->diagfile,"adns%s [%ld]: ",pfx,(long)getpid());
-  } else {
-    fprintf(ads->diagfile,"adns%s: ",pfx);
-  }
-
   vfprintf(ads->diagfile,fmt,al);
 
   bef= " (";
@@ -72,35 +74,58 @@ void adns__vdiag(adns_state ads, const char *pfx, adns_initflags prevent,
   }
   
   if (serv>=0) {
-    fprintf(ads->diagfile,"%sNS=%s",bef,inet_ntoa(ads->servers[serv].addr));
+    fprintf(ads->diagfile,"%sNS=%s",bef,inetntoa((unsigned char *)&ads->servers[serv].addr));
     bef=", "; aft=")\n";
   }
 
   fputs(aft,ads->diagfile);
+#endif
 }
+#endif
 
 void adns__debug(adns_state ads, int serv, adns_query qu, const char *fmt, ...) {
+  char    buf[LOG_BUFSIZE];
   va_list al;
 
   va_start(al,fmt);
+  vsprintf(buf, fmt, al);
+#if 0
   adns__vdiag(ads," debug",0,serv,qu,fmt,al);
+#endif
   va_end(al);
+
+  /* redundant calls to vsprintf() but what can you do,
+   * when you live in a shoe?
+   */
+  log(L_DEBUG, "%s", buf);
 }
 
 void adns__warn(adns_state ads, int serv, adns_query qu, const char *fmt, ...) {
+  char    buf[LOG_BUFSIZE];
   va_list al;
 
   va_start(al,fmt);
+  vsprintf(buf, fmt, al);
+#if 0
   adns__vdiag(ads," warning",adns_if_noerrprint|adns_if_noserverwarn,serv,qu,fmt,al);
+#endif
   va_end(al);
+
+  log(L_WARN, "%s", buf);
 }
 
 void adns__diag(adns_state ads, int serv, adns_query qu, const char *fmt, ...) {
+  char    buf[LOG_BUFSIZE];
   va_list al;
 
   va_start(al,fmt);
+  vsprintf(buf, fmt, al);
+#if 0
   adns__vdiag(ads,"",adns_if_noerrprint,serv,qu,fmt,al);
+#endif
   va_end(al);
+
+  log(L_DEBUG, "%s", buf);
 }
 
 /* vbuf functions */
@@ -113,18 +138,18 @@ int adns__vbuf_ensure(vbuf *vb, int want) {
   void *nb;
   
   if (vb->avail >= want) return 1;
-  nb= realloc(vb->buf,want); if (!nb) return 0;
+  nb= MyRealloc(vb->buf,want); if (!nb) return 0;
   vb->buf= nb;
   vb->avail= want;
   return 1;
 }
   
-void adns__vbuf_appendq(vbuf *vb, const byte *data, int len) {
-  memcpy(vb->buf+vb->used,data,len);
+void adns__vbuf_appendq(vbuf *vb, const byte *ddata, int len) {
+  memcpy(vb->buf+vb->used,ddata,len);
   vb->used+= len;
 }
 
-int adns__vbuf_append(vbuf *vb, const byte *data, int len) {
+int adns__vbuf_append(vbuf *vb, const byte *ddata, int len) {
   int newlen;
   void *nb;
 
@@ -132,24 +157,24 @@ int adns__vbuf_append(vbuf *vb, const byte *data, int len) {
   if (vb->avail < newlen) {
     if (newlen<20) newlen= 20;
     newlen <<= 1;
-    nb= realloc(vb->buf,newlen);
-    if (!nb) { newlen= vb->used+len; nb= realloc(vb->buf,newlen); }
+    nb= MyRealloc(vb->buf,newlen);
+    if (!nb) { newlen= vb->used+len; nb= MyRealloc(vb->buf,newlen); }
     if (!nb) return 0;
     vb->buf= nb;
     vb->avail= newlen;
   }
-  adns__vbuf_appendq(vb,data,len);
+  adns__vbuf_appendq(vb,ddata,len);
   return 1;
 }
 
-int adns__vbuf_appendstr(vbuf *vb, const char *data) {
+int adns__vbuf_appendstr(vbuf *vb, const char *ddata) {
   int l;
-  l= strlen(data);
-  return adns__vbuf_append(vb,data,l);
+  l= strlen(ddata);
+  return adns__vbuf_append(vb,(const byte *)ddata,l);
 }
 
 void adns__vbuf_free(vbuf *vb) {
-  free(vb->buf);
+  MyFree(vb->buf);
   adns__vbuf_init(vb);
 }
 
@@ -168,15 +193,15 @@ const char *adns__diag_domain(adns_state ads, int serv, adns_query qu,
     if (!(adns__vbuf_appendstr(vb,"<bad format... ") &&
 	  adns__vbuf_appendstr(vb,adns_strerror(st)) &&
 	  adns__vbuf_appendstr(vb,">") &&
-	  adns__vbuf_append(vb,"",1))) {
+	  adns__vbuf_append(vb,(const byte *)"",1))) {
       return "<cannot report bad format... out of memory>";
     }
   }
   if (!vb->used) {
     adns__vbuf_appendstr(vb,"<truncated ...>");
-    adns__vbuf_append(vb,"",1);
+    adns__vbuf_append(vb,(const byte *)"",1);
   }
-  return vb->buf;
+  return (const char *)vb->buf;
 }
 
 adns_status adns_rr_info(adns_rrtype type,
@@ -199,10 +224,10 @@ adns_status adns_rr_info(adns_rrtype type,
   adns__vbuf_init(&vb);
   st= typei->convstring(&vb,datap);
   if (st) goto x_freevb;
-  if (!adns__vbuf_append(&vb,"",1)) { st= adns_s_nomemory; goto x_freevb; }
-  assert(strlen(vb.buf) == vb.used-1);
-  *data_r= realloc(vb.buf,vb.used);
-  if (!*data_r) *data_r= vb.buf;
+  if (!adns__vbuf_append(&vb,(const byte *)"",1)) { st= adns_s_nomemory; goto x_freevb; }
+  assert(strlen((const char *)vb.buf) == vb.used-1);
+  *data_r= MyRealloc(vb.buf,vb.used);
+  if (!*data_r) *data_r= (char *)vb.buf;
   return adns_s_ok;
 
  x_freevb:
@@ -315,46 +340,18 @@ const char *adns_errtypeabbrev(adns_status st) {
 void adns__isort(void *array, int nobjs, int sz, void *tempbuf,
 		 int (*needswap)(void *context, const void *a, const void *b),
 		 void *context) {
-  byte *data= array;
+  byte *ddata= array;
   int i, place;
 
   for (i=0; i<nobjs; i++) {
     for (place= i;
-	 place>0 && needswap(context, data + (place-1)*sz, data + i*sz);
+	 place>0 && needswap(context, ddata + (place-1)*sz, ddata + i*sz);
 	 place--);
     if (place != i) {
-      memcpy(tempbuf, data + i*sz, sz);
-      memmove(data + (place+1)*sz, data + place*sz, (i-place)*sz);
-      memcpy(data + place*sz, tempbuf, sz);
+      memcpy(tempbuf, ddata + i*sz, sz);
+      memmove(ddata + (place+1)*sz, ddata + place*sz, (i-place)*sz);
+      memcpy(ddata + place*sz, tempbuf, sz);
     }
   }
 }
 
-/* SIGPIPE protection. */
-
-void adns__sigpipe_protect(adns_state ads) {
-  sigset_t toblock;
-  struct sigaction sa;
-  int r;
-
-  if (ads->iflags & adns_if_nosigpipe) return;
-
-  sigfillset(&toblock);
-  sigdelset(&toblock,SIGPIPE);
-
-  sa.sa_handler= SIG_IGN;
-  sigfillset(&sa.sa_mask);
-  sa.sa_flags= 0;
-  
-  r= sigprocmask(SIG_SETMASK,&toblock,&ads->stdsigmask); assert(!r);
-  r= sigaction(SIGPIPE,&sa,&ads->stdsigpipe); assert(!r);
-}
-
-void adns__sigpipe_unprotect(adns_state ads) {
-  int r;
-
-  if (ads->iflags & adns_if_nosigpipe) return;
-
-  r= sigaction(SIGPIPE,&ads->stdsigpipe,0); assert(!r);
-  r= sigprocmask(SIG_SETMASK,&ads->stdsigmask,0); assert(!r);
-}

@@ -42,8 +42,8 @@ static adns_query query_alloc(adns_state ads, const typeinfo *typei,
   /* Allocate a virgin query and return it. */
   adns_query qu;
   
-  qu= malloc(sizeof(*qu));  if (!qu) return 0;
-  qu->answer= malloc(sizeof(*qu->answer));  if (!qu->answer) { free(qu); return 0; }
+  qu= MyMalloc(sizeof(*qu));  if (!qu) return 0;
+  qu->answer= MyMalloc(sizeof(*qu->answer));  if (!qu->answer) { MyFree(qu); return 0; }
   
   qu->ads= ads;
   qu->state= query_tosend;
@@ -97,7 +97,7 @@ static void query_submit(adns_state ads, adns_query qu,
   qu->vb= *qumsg_vb;
   adns__vbuf_init(qumsg_vb);
 
-  qu->query_dgram= malloc(qu->vb.used);
+  qu->query_dgram= MyMalloc(qu->vb.used);
   if (!qu->query_dgram) { adns__query_fail(qu,adns_s_nomemory); return; }
   
   qu->id= id;
@@ -176,7 +176,7 @@ void adns__search_next(adns_state ads, adns_query qu, struct timeval now) {
     }
   }
 
-  free(qu->query_dgram);
+  MyFree(qu->query_dgram);
   qu->query_dgram= 0; qu->query_dglen= 0;
 
   query_simple(ads,qu, qu->search_vb.buf, qu->search_vb.used, qu->typei, qu->flags, now);
@@ -286,7 +286,7 @@ int adns_submit_reverse_any(adns_state ads,
 
   lreq= strlen(zone) + 4*4 + 1;
   if (lreq > sizeof(shortbuf)) {
-    buf= malloc(strlen(zone) + 4*4 + 1);
+    buf= MyMalloc(strlen(zone) + 4*4 + 1);
     if (!buf) return errno;
     buf_free= buf;
   } else {
@@ -296,7 +296,7 @@ int adns_submit_reverse_any(adns_state ads,
   sprintf(buf, "%d.%d.%d.%d.%s", iaddr[3], iaddr[2], iaddr[1], iaddr[0], zone);
 
   r= adns_submit(ads,buf,type,flags,context,query_r);
-  free(buf_free);
+  MyFree(buf_free);
   return r;
 }
 
@@ -332,7 +332,7 @@ static void *alloc_common(adns_query qu, size_t sz) {
 
   if (!sz) return qu; /* Any old pointer will do */
   assert(!qu->final_allocspace);
-  an= malloc(MEM_ROUND(MEM_ROUND(sizeof(*an)) + sz));
+  an= MyMalloc(MEM_ROUND(MEM_ROUND(sizeof(*an)) + sz));
   if (!an) return 0;
   DLIST_LINK_TAIL(qu->allocations,an);
   return (byte*)an + MEM_ROUND(sizeof(*an));
@@ -418,11 +418,11 @@ static void free_query_allocs(adns_query qu) {
   allocnode *an, *ann;
 
   cancel_children(qu);
-  for (an= qu->allocations.head; an; an= ann) { ann= an->next; free(an); }
+  for (an= qu->allocations.head; an; an= ann) { ann= an->next; MyFree(an); }
   DLIST_INIT(qu->allocations);
   adns__vbuf_free(&qu->vb);
   adns__vbuf_free(&qu->search_vb);
-  free(qu->query_dgram);
+  MyFree(qu->query_dgram);
   qu->query_dgram= 0;
 }
 
@@ -449,8 +449,8 @@ void adns_cancel(adns_query qu) {
     abort();
   }
   free_query_allocs(qu);
-  free(qu->answer);
-  free(qu);
+  MyFree(qu->answer);
+  MyFree(qu);
   adns__consistency(ads,0,cc_entex);
 }
 
@@ -470,7 +470,7 @@ static void makefinal_query(adns_query qu) {
   ans= qu->answer;
 
   if (qu->interim_allocd) {
-    ans= realloc(qu->answer, MEM_ROUND(MEM_ROUND(sizeof(*ans)) + qu->interim_allocd));
+    ans= MyRealloc(qu->answer, MEM_ROUND(MEM_ROUND(sizeof(*ans)) + qu->interim_allocd));
     if (!ans) goto x_nomem;
     qu->answer= ans;
   }
@@ -534,8 +534,8 @@ void adns__query_done(adns_query qu) {
     DLIST_UNLINK(qu->ads->childw,parent);
     qu->ctx.callback(parent,qu);
     free_query_allocs(qu);
-    free(qu->answer);
-    free(qu);
+    MyFree(qu->answer);
+    MyFree(qu);
   } else {
     makefinal_query(qu);
     DLIST_LINK_TAIL(qu->ads->output,qu);

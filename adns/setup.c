@@ -69,8 +69,8 @@ static void addserver(adns_state ads, struct in_addr addr) {
 }
 
 static void freesearchlist(adns_state ads) {
-  if (ads->nsearchlist) free(*ads->searchlist);
-  free(ads->searchlist);
+  if (ads->nsearchlist) MyFree(*ads->searchlist);
+  MyFree(ads->searchlist);
 }
 
 static void saveerr(adns_state ads, int en) {
@@ -132,8 +132,8 @@ static void ccf_search(adns_state ads, const char *fn, int lno, const char *buf)
   tl= 0;
   while (nextword(&bufp,&word,&l)) { count++; tl += l+1; }
 
-  newptrs= malloc(sizeof(char*)*count);  if (!newptrs) { saveerr(ads,errno); return; }
-  newchars= malloc(tl);  if (!newchars) { saveerr(ads,errno); free(newptrs); return; }
+  newptrs= MyMalloc(sizeof(char*)*count);  if (!newptrs) { saveerr(ads,errno); return; }
+  newchars= MyMalloc(tl);  if (!newchars) { saveerr(ads,errno); MyFree(newptrs); return; }
 
   bufp= buf;
   pp= newptrs;
@@ -468,7 +468,7 @@ int adns__setnonblock(adns_state ads, int fd) {
 static int init_begin(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
   adns_state ads;
   
-  ads= malloc(sizeof(*ads)); if (!ads) return errno;
+  ads= MyMalloc(sizeof(*ads)); if (!ads) return errno;
 
   ads->iflags= flags;
   ads->diagfile= diagfile;
@@ -517,16 +517,16 @@ static int init_finish(adns_state ads) {
  x_closeudp:
   close(ads->udpsocket);
  x_free:
-  free(ads);
+  MyFree(ads);
   return r;
 }
 
 static void init_abort(adns_state ads) {
   if (ads->nsearchlist) {
-    free(ads->searchlist[0]);
-    free(ads->searchlist);
+    MyFree(ads->searchlist[0]);
+    MyFree(ads->searchlist);
   }
-  free(ads);
+  MyFree(ads);
 }
 
 int adns_init(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
@@ -605,7 +605,7 @@ void adns_finish(adns_state ads) {
   adns__vbuf_free(&ads->tcpsend);
   adns__vbuf_free(&ads->tcprecv);
   freesearchlist(ads);
-  free(ads);
+  MyFree(ads);
 }
 
 void adns_forallqueries_begin(adns_state ads) {

@@ -59,7 +59,7 @@
 
 #include "config.h"
 #include <stdio.h>
-
+#include "irc_string.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/select.h>

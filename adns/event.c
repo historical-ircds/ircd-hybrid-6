@@ -670,7 +670,7 @@ int adns__internal_check(adns_state ads,
   *answer= qu->answer;
   if (context_r) *context_r= qu->ctx.ext;
   *query_io= qu;
-  free(qu);
+  MyFree(qu);
   return 0;
 }
 
