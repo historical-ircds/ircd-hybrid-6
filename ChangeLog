@@ -1,3 +1,10 @@
+*** 20010701_2 by greg
+Commiting the equivalent of what I backed out, without the static
+change that fucked up the entire tree.
+
+Question, does this mean we'll now send back 'invalid mode char', to +d's?
+
+
 *** 20010701_1 by greg
 Backing out some commit diane did about +d, it borked the -6 tree.
 
