@@ -280,7 +280,10 @@ static	int	send_message(aClient *to, char *msg, int len)
 int	send_queued(aClient *to)
 {
   char	*msg;
-  int	len, rlen, more = NO;
+  int	len, rlen;
+#ifdef ZIP_LINKS
+  int	more = NO;
+#endif
 
   /*
   ** Once socket is marked dead, we cannot start writing to it,

@@ -1,6 +1,10 @@
-
 *** HYBRID CHANGELOG
 *** Newest entries at top
+
+version hybrid-6-b73   15-May-1999
+* attempt to workaround 64bit Solaris gcc-2.8.1 bug
+* more compile cleanup for obscure config options
+-Rodder
 
 version hybrid-6-b72   15-May-1999
 * don't allow SJOIN to & local channels.	

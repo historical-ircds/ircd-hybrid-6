@@ -297,7 +297,9 @@ struct Message msgtab[] = {
   { MSG_GLINE,   m_gline,    0, MAXPARA, 1, 0, 0, 0L },
   { MSG_HASH,    m_hash,     0, MAXPARA, 1, 0, 0, 0L },
   { MSG_DNS,     m_dns,      0, MAXPARA, 1, 0, 0, 0L },
+#if defined(OPER_REHASH) || defined(LOCOP_REHASH)
   { MSG_REHASH,  m_rehash,   0, MAXPARA, 1, 0, 0, 0L },
+#endif
 #if defined(OPER_RESTART) || defined(LOCOP_RESTART)
   { MSG_RESTART, m_restart,  0, MAXPARA, 1, 0, 0, 0L },
 #endif

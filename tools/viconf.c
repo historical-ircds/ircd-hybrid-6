@@ -108,4 +108,5 @@ int main(int argc, char *argv[])
 #else
   printf("LOCKFILE not defined in config.h\n");
 #endif
+  return 0;
 }

@@ -4100,17 +4100,19 @@ int     m_gline(aClient *cptr,
 		int parc,
 		char *parv[])
 {
-  char buffer[512];
   char *oper_name;		/* nick of oper requesting GLINE */
   char *oper_username;		/* username of oper requesting GLINE */
   char *oper_host;		/* hostname of oper requesting GLINE */
   char *oper_server;		/* server of oper requesting GLINE */
   char *user, *host;		/* user and host of GLINE "victim" */
   char *reason;			/* reason for "victims" demise */
+#ifdef GLINES
+  char buffer[512];
   char *current_date;
   char tempuser[USERLEN+2];
   char temphost[HOSTLEN+1];
   aConfItem *aconf;
+#endif
 
   if(!IsServer(sptr)) /* allow remote opers to apply g lines */
     {

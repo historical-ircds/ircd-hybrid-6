@@ -101,7 +101,7 @@ struct	Counter	Count;
 
 time_t	NOW;
 aClient me;			/* That's me */
-aClient *client = &me;		/* Pointer to beginning of Client list */
+aClient *client;		/* Pointer to beginning of Client list */
 #ifdef  LOCKFILE
 extern  time_t  pending_kline_time;
 extern	struct pkl *pending_klines;
@@ -920,6 +920,7 @@ int	main(int argc, char *argv[])
 
   aConfItem *aconf;
 
+  client = &me;          /* Pointer to beginning of Client list */
   cold_start = YES;		/* set when server first starts up */
 
   if((timeofday = time(NULL)) == -1)
