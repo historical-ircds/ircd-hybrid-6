@@ -1,3 +1,15 @@
+db          2001/12/10 01:29:30 EST	(20011210_2)
+
+  Modified files:
+    src                  m_kline.c 
+  Log:
+  - fixed core on tklines ooops
+  
+  Revision  Changes    Path
+  1.67      +2 -1      ircd-hybrid-6/src/m_kline.c
+
+
+
 jdc         2001/12/09 21:56:36 EST	(20011210_1)
 
   Modified files:
