@@ -1,63 +1,28 @@
 /*
  * irc2.7.2/ircd/res.h (C)opyright 1992 Darren Reed.
+ *
+ * $Id$
  */
-#ifndef	__res_include__
-#define	__res_include__
+#ifndef	INCLUDED_res_h
+#define INCLUDED_res_h
 
-#define	RES_INITLIST	1
-#define	RES_CALLINIT	2
-#define RES_INITSOCK	4
-#define RES_INITDEBG	8
-#define RES_INITCACH    16
+#ifndef INCLUDED_sys_types_h
+#include <sys/types.h>       /* time_t */
+#define INCLUDED_sys_types_h
+#endif
 
-#define MAXPACKET	1024
-#define MAXALIASES	35
-#define MAXADDRS	35
+#ifndef INCLUDED_struct_h
+#include "struct.h"
+#endif
 
-#define	AR_TTL		600	/* TTL in seconds for dns cache entries */
+extern struct hostent* get_res(char *);
+extern struct hostent* gethost_byaddr(char *, Link *);
+extern struct hostent* gethost_byname(char *, Link *);
+extern void            flush_cache(void);
+extern int	       init_resolver(void);
+extern time_t	       timeout_query_list(time_t);
+extern time_t	       expire_cache(time_t);
+extern void            del_queries(char *);
+extern void	       add_local_domain (char *, int);
 
-struct	hent {
-	char	*h_name;	/* official name of host */
-	char	*h_aliases[MAXALIASES];	/* alias list */
-	int	h_addrtype;	/* host address type */
-	int	h_length;	/* length of address */
-	/* list of addresses from name server */
-	struct	in_addr	h_addr_list[MAXADDRS];
-#define	h_addr	h_addr_list[0]	/* address, for backward compatiblity */
-};
-
-typedef	struct	reslist {
-	int	id;
-	int	sent;	/* number of requests sent */
-	int	srch;
-	time_t	ttl;
-	char	type;
-	char	retries; /* retry counter */
-	char	sends;	/* number of sends (>1 means resent) */
-	char	resend;	/* send flag. 0 == dont resend */
-	time_t	sentat;
-	time_t	timeout;
-	struct	in_addr	addr;
-	char	*name;
-	struct	reslist	*next;
-	Link	cinfo;
-	struct	hent he;
-	} ResRQ;
-
-typedef	struct	cache {
-	time_t	expireat;
-	time_t	ttl;
-	struct	hostent	he;
-	struct	cache	*hname_next, *hnum_next, *list_next;
-	} aCache;
-
-typedef struct	cachetable {
-	aCache	*num_list;
-	aCache	*name_list;
-	} CacheTable;
-
-#define ARES_CACSIZE	307
-
-#define	MAXCACHED	281
-
-#endif /* __res_include__ */
+#endif /* INCLUDED_res_h */

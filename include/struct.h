@@ -19,9 +19,8 @@
  *
  * $Id$
  */
-
-#ifndef	__struct_include__
-#define __struct_include__
+#ifndef	INCLUDED_struct_h
+#define INCLUDED_struct_h
 
 #include "config.h"
 #if !defined(CONFIG_H_LEVEL_6)
@@ -31,7 +30,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <netinet/in.h>
-#include <netdb.h>
+/* #include <netdb.h> */
 #if defined( HAVE_STDDEF_H )
 # include <stddef.h>
 #endif
@@ -1102,4 +1101,4 @@ typedef struct gline_pending
 #define GLINE_PENDING_EXPIRE 600
 #endif
 
-#endif /* __struct_include__ */
+#endif /* INCLUDED_struct_h */

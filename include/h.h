@@ -147,10 +147,9 @@ extern	void	ircsprintf ();
 extern	int	dbufalloc, dbufblocks, debuglevel, errno, h_errno;
 extern	int	maxdbufalloc, maxdbufblocks;
 extern	int	highest_fd, debuglevel, portnum, debugtty, maxusersperchannel;
-extern	int	readcalls, udpfd, resfd;
+extern	int	readcalls;
 extern	aClient	*add_connection (aClient *, int);
 extern	int	add_listener (aConfItem *);
-extern	void	add_local_domain (char *, int);
 extern	int	check_client (aClient *,char *,char **);
 extern	int	check_server (aClient *, struct hostent *,
 				    aConfItem *, aConfItem *, int);
@@ -296,14 +295,6 @@ extern  void    GetPrintableaConfItem(aConfItem *, char **, char **, char **,
 				      char **, int *);
 extern	void	report_classes (aClient *);
 
-extern	struct	hostent	*get_res (char *);
-extern	struct	hostent	*gethost_byaddr (char *, Link *);
-extern	struct	hostent	*gethost_byname (char *, Link *);
-extern	void	flush_cache (void);
-extern	int	init_resolver (int);
-extern	time_t	timeout_query_list (time_t);
-extern	time_t	expire_cache (time_t);
-extern	void    del_queries (char *);
 
 extern  int     zip_init (aClient *);
 extern  void    zip_free (aClient *);
