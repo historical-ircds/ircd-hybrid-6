@@ -1436,9 +1436,11 @@ static char *set_conf_flags(aConfItem *aconf,char *tmp)
 	case '>':	/* can exceed max connects */
 	  aconf->flags |= CONF_FLAGS_F_LINED;
 	  break;
+#ifdef IDLE_CHECK
 	case '<':	/* can idle */
 	  aconf->flags |= CONF_FLAGS_IDLE_LINED;
 	  break;
+#endif
 	default:
 	  return tmp;
 	}

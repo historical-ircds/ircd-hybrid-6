@@ -56,9 +56,12 @@ time_t server_split_time;
 int server_split_recovery_time = (DEFAULT_SERVER_SPLIT_RECOVERY_TIME * 60);
 int split_smallnet_size = SPLIT_SMALLNET_SIZE;
 static void check_still_split();
+#define USE_ALLOW_OP
+#endif
+
+#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 aChannel *empty_channel_list=(aChannel*)NULL;
 void remove_empty_channels();
-#define USE_ALLOW_OP
 #endif
 
 extern int cold_start;	/* defined in ircd.c */
@@ -2396,7 +2399,9 @@ static void check_still_split()
 	   */
 	  server_was_split = NO;
 	  cold_start = NO;
+#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 	  remove_empty_channels();
+#endif
 	}
       else
 	{
@@ -2405,7 +2410,9 @@ static void check_still_split()
 	}
     }
 }
+#endif
 
+#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 /*
  * remove_empty_channels
  *
