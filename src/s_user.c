@@ -794,7 +794,7 @@ static int register_user(aClient *cptr, aClient *sptr,
     {
       sendto_ops("Ghost killed: %s on invalid server %s",
                  sptr->name, sptr->user->server);
-      sendto_one(cptr,":%s KILL %s: %s (Ghosted, %s doesn't exist)",
+      sendto_one(cptr,":%s KILL %s :%s (Ghosted, %s doesn't exist)",
                  me.name, sptr->name, me.name, user->server);
       sptr->flags |= FLAGS_KILLED;
       return exit_client(NULL, sptr, &me, "Ghost");
