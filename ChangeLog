@@ -1,3 +1,8 @@
+*** 20000626_1 by lusky
+revved patchlevel to rc2
+added db's I-line patch that was supposed to have been in rc1
+
+
 *** 20000621_2 by lusky
 more cygwin install fixes
 
