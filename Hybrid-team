@@ -22,6 +22,7 @@ submittable bug reports.
  
 The core team as, of this major release:
  
+AndroSyn      Aaron Sethman      <androsyn@ratbox.org>
 cosine        Patrick Alken      <wnder@uwns.underworld.net>
 Dianora       Diane Bruce        <db@db.net>
 larne         Edward Brocklesby  <ejb@leguin.org.uk>
@@ -35,7 +36,6 @@ xyst          Greg Prosser       <gnp@arrogant.org>
 The following people have contributed blood, sweat, and/or code to
 this release of hybrid, in nick alphabetical order:
  
-AndroSyn      Aaron Sethman      <androsyn@ratbox.org>
 ArielIL       Ariel Biener       <ariel@fireball.tau.ac.il>
 A1kmm         Andrew Miller      <a1kmm@mware.virtualave.net>
 Bleep         Thomas Helvey      <tomh@inxpress.net>
