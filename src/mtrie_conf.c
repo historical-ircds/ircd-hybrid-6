@@ -574,6 +574,9 @@ static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
   DOMAIN_PIECE *ptr;
   DOMAIN_PIECE *piece_ptr;
   int index;
+
+  if(!level_ptr)
+    return((DOMAIN_PIECE *)NULL);
   
   index = *host_piece&(MAX_PIECE_LIST-1);
   piece_ptr = level_ptr->piece_list[index];
