@@ -1,3 +1,15 @@
+db          2001/12/10 21:09:17 EST	(20011211_1)
+
+  Modified files:
+    src                  ircd.c 
+  Log:
+  - we are ALL sick of being asked what "NOFILE" is
+  
+  Revision  Changes    Path
+  1.159     +0 -1      ircd-hybrid-6/src/ircd.c
+
+
+
 db          2001/12/10 21:05:38 EST	(20011211_0)
 
   Modified files:
