@@ -1,3 +1,12 @@
+*** 20010704_2 by jdc
+- src/m_cryptlink.c
+    * Woohoo!  Found the bug in question; old code was sending the old
+      method (eg. "CRYPTLINK AUTH CAST/128/128") when it shouldn't have
+      been printing keysize at all.  Now prints "CRYPTLINK AUTH CAST/128"
+      like it should.  :-)
+
+
+
 *** 20010704_1 by jdc
 The Monster Update(tm) for hybrid-6 and cryptlinks.
 
