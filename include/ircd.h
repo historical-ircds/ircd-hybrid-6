@@ -143,4 +143,9 @@ extern int reject_held_fds;
 
 extern size_t   get_maxrss(void);
 
+/* 1800 == half an hour
+ * if clock set back more than this lenght of time
+ * complain
+ */
+#define MAX_SETBACK_TIME 1800
 #endif

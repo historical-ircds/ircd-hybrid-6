@@ -803,8 +803,16 @@ void channel_modes(struct Client *cptr, char *mbuf, char *pbuf, struct Channel *
   *mbuf++ = '+';
   if (chptr->mode.mode & MODE_SECRET)
     *mbuf++ = 's';
+
+  /* bug found by "is" ejb@debian.org */
+#ifdef OLD_P_S
   else if (chptr->mode.mode & MODE_PRIVATE)
     *mbuf++ = 'p';
+#else
+  if (chptr->mode.mode & MODE_PRIVATE)
+    *mbuf++ = 'p';
+#endif
+
   if (chptr->mode.mode & MODE_MODERATED)
     *mbuf++ = 'm';
   if (chptr->mode.mode & MODE_TOPICLIMIT)

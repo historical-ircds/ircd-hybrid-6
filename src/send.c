@@ -626,7 +626,6 @@ sendto_channel_type(aClient *one, aClient *from, aChannel *chptr,
         }
       } /* for (lp = chptr->members; lp; lp = lp->next) */
 
-      va_end(args);
 } /* sendto_channel_type() */
 
 
