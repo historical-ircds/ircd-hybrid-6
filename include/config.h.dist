@@ -767,9 +767,8 @@
  * username not the ip. i.e. if you limit the connect frequency line
  * to 1, that allows only 1 username to connect instead of 1 client per ip
  * i.e. you can have 10 clients all with different usernames, but each user
- * can only connect once. This is only useful if you only allow identd
- * from that host. (The code strips non identd '~' as it stands)
- * Its a tad slower then the ip limited code.
+ * can only connect once. Each non-idented client counts as the same user
+ * i.e. ~a and ~b result in a count of two.
  *
  */
 #undef LIMIT_UH

@@ -59,7 +59,11 @@ char	specific_virtual_host;
 /* internally defined functions */
 
 static	int	lookup_confhost (aConfItem *);
+#ifdef LIMIT_UH
+static  int     attach_iline(aClient *, aConfItem *,char *);
+#else
 static  int     attach_iline(aClient *, aConfItem *);
+#endif
 aConfItem *find_special_conf(char *, int );
 void clear_special_conf(aConfItem **);
 static aConfItem *find_tkline(char *,char *);
@@ -97,9 +101,13 @@ extern void zap_Dlines();
 static int hash_ip(unsigned long);
 
 #ifdef LIMIT_UH
-static IP_ENTRY *find_or_add_ip(aClient *);
+static IP_ENTRY *find_or_add_ip(aClient *,char *);
 #else
-static IP_ENTRY *find_or_add_ip(unsigned long);
+static IP_ENTRY *find_or_add_ip(aClient *);
+#endif
+
+#ifdef LIMIT_UH
+static int count_users_on_this_ip(IP_ENTRY *,aClient *,char *);
 #endif
 
 /* externally defined routines */
@@ -170,8 +178,9 @@ int	attach_Iline(aClient *cptr,
   register aConfItem *tkline_conf;
   register char *hname;
   /*  static	char	user[USERLEN+3]; */
-  static	char	host[HOSTLEN+3];
-  static	char	fullname[HOSTLEN+1];
+  char	host[HOSTLEN+3];
+  char	fullname[HOSTLEN+1];
+  char	non_ident[USERLEN+1];
 
   *host = '\0';
 
@@ -211,7 +220,6 @@ int	attach_Iline(aClient *cptr,
     }
   else
     {
-      char non_ident[USERLEN+1];
       non_ident[0] = '~';
       strncpy(&non_ident[1],username, USERLEN-1);
       non_ident[USERLEN] = '\0';
@@ -251,7 +259,12 @@ int	attach_Iline(aClient *cptr,
 	  else
 	    strncpyzt(cptr->sockhost,host,sizeof(cptr->sockhost));
 
+#ifdef LIMIT_UH
+	  return(attach_iline(cptr,aconf,username));
+#else
 	  return(attach_iline(cptr,aconf));
+#endif
+
 	}
       else if(aconf->status & CONF_KILL)
 	{
@@ -275,9 +288,15 @@ int	attach_Iline(aClient *cptr,
  * - Dianora
  */
 
+#ifdef LIMIT_UH
+static int attach_iline(
+		 aClient *cptr,
+		 aConfItem *aconf,char *username)
+#else
 static int attach_iline(
 		 aClient *cptr,
 		 aConfItem *aconf)
+#endif
 {
   IP_ENTRY *ip_found;
 
@@ -287,17 +306,15 @@ static int attach_iline(
   /* if LIMIT_UH is set, limit clients by idented usernames not by ip */
 
 #ifdef LIMIT_UH
+  ip_found = find_or_add_ip(cptr,username);
+#else
   ip_found = find_or_add_ip(cptr);
+#endif
+
   /* too tired FIX later */
   /*  SetIpHash(cptr); */
   cptr->flags |= FLAGS_IPHASH;
   ip_found->count++;
-#else
-  ip_found = find_or_add_ip(cptr->ip.s_addr);
-  /*  SetIpHash(cptr); */
-  cptr->flags |= FLAGS_IPHASH;
-  ip_found->count++;
-#endif
 
 #ifdef LIMIT_UH
   if ((aconf->class->conFreq) && (ip_found->count_of_idented_users_on_this_ip
@@ -327,12 +344,6 @@ static int attach_iline(
     }
 #endif
 
-#if 0
-  /* What exactly is this crap? */
-  if(IsLimitIp(aconf) && (ip_found->count > 1))
-    return -4; /* Already at maximum allowed ip#'s */
-#endif
-  
   return ( attach_conf(cptr, aconf) );
 }
 
@@ -388,11 +399,8 @@ void clear_ip_hash_table()
 /* 
  * find_or_add_ip()
  *
- * ifdef LIMIT_UH
  * inputs		- cptr
- * else
- * inputs		- unsigned long IP address value
- * endif
+ *			- name
  *
  * output		- pointer to an IP_ENTRY element
  * side effects	-
@@ -402,13 +410,13 @@ void clear_ip_hash_table()
  */
 
 #ifdef LIMIT_UH
-static IP_ENTRY *find_or_add_ip(aClient *cptr)
+static IP_ENTRY *find_or_add_ip(aClient *cptr,char *username)
 #else
-static IP_ENTRY *find_or_add_ip(unsigned long ip_in)
+static IP_ENTRY *find_or_add_ip(aClient *cptr)
 #endif
 {
-#ifdef LIMIT_UH
   unsigned long ip_in=cptr->ip.s_addr;	
+#ifdef LIMIT_UH
   Link *old_link;
   Link *new_link;
 #endif
@@ -417,8 +425,7 @@ static IP_ENTRY *find_or_add_ip(unsigned long ip_in)
   IP_ENTRY *ptr, *newptr;
 
   newptr = (IP_ENTRY *)NULL;
-  ptr = ip_hash_table[hash_index = hash_ip(ip_in)];
-  while(ptr)
+  for(ptr = ip_hash_table[hash_index = hash_ip(ip_in)]; ptr; ptr = ptr->next )
     {
       if(ptr->ip == ip_in)
 	{
@@ -428,12 +435,10 @@ static IP_ENTRY *find_or_add_ip(unsigned long ip_in)
 	  new_link->next = ptr->ptr_clients_on_this_ip;
 	  ptr->ptr_clients_on_this_ip = new_link;
 	  ptr->count_of_idented_users_on_this_ip =
-	    count_users_on_this_ip(ptr,cptr);
+	    count_users_on_this_ip(ptr,cptr,username);
 #endif
 	  return(ptr);
 	}
-      else
-	ptr = ptr->next;
     }
 
   if ( (ptr = ip_hash_table[hash_index]) != (IP_ENTRY *)NULL )
@@ -486,45 +491,30 @@ static IP_ENTRY *find_or_add_ip(unsigned long ip_in)
 }
 
 #ifdef LIMIT_UH
-int count_users_on_this_ip(IP_ENTRY *ip_list,aClient *this_client)
+static int count_users_on_this_ip(IP_ENTRY *ip_list,
+			   aClient *this_client,char *username)
 {
-  char *my_user_name;
   int count=0;
   Link *ptr;
-
-  if( (ptr = ip_list->ptr_clients_on_this_ip) == (Link *)NULL)
-    return(0);
   
-  if(this_client->user)
-    {
-      my_user_name = this_client->user->username;
-      if(*my_user_name == '~')
-	my_user_name++;
-    }
-  else
-    {
-      /* nasty shouldn't happen, but this is better than coring */
-      sendto_ops("s_conf.c count_users_on_this_ip my_user_name->user NULL");
-      sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
-      return 0;
-    }
-
-  while(ptr)
+  for( ptr = ip_list->ptr_clients_on_this_ip; ptr; ptr = ptr->next )
     {
       if(ptr->value.cptr->user)
 	{
-	  if(ptr->value.cptr->user->username[0] == '~')
+	  if(this_client->flags & FLAGS_GOTID)
 	    {
-	      if(!strcasecmp(ptr->value.cptr->user->username+1,my_user_name))
+	      if(!strcasecmp(ptr->value.cptr->user->username,username))
 		  count++;
 	    }
 	  else
 	    {
-	      if(!strcasecmp(ptr->value.cptr->user->username,my_user_name))
+	      if(this_client == ptr->value.cptr)
+		count++;
+	      else
+		if(ptr->value.cptr->user->username[0] == '~')
 		  count++;
 	    }
 	}
-      ptr = ptr->next;
     }
   return(count);
 }

@@ -2,6 +2,10 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b67   9-May-1999
+* fixed broken LIMIT_UH code
+-Dianora
+	
 version hybrid-6-b66   8-May-1999
 * Added TESTLINE looks for given user@host,ip returns info
   on any found I line or K line for that user.
