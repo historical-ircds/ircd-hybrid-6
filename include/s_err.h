@@ -244,7 +244,7 @@ static	char *	replies[] = {
 /* 217 RPL_STATSQLINE, */	":%s 217 %s %s %s %s@%s",
 /* 218 RPL_STATSYLINE, */	":%s 218 %s %c %d %d %d %d %lu",
 /* 219 RPL_ENDOFSTATS, */	":%s 219 %s %c :End of /STATS report",
-/* 220 */	 (char *)NULL,
+/* 220 RPL_STATSPLINE, */	":%s 220 %s %c %d %d %d %d",
 /* 221 RPL_UMODEIS, */		":%s 221 %s %s",
 /* 222 */	(char *)NULL,
 /* 223 */       (char *)NULL,

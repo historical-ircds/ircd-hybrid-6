@@ -43,6 +43,7 @@
 #include "send.h"
 #include "hash.h"
 #include "s_debug.h"
+#include "listener.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -106,6 +107,7 @@ extern void count_memory(aClient *,char *); /* defined in s_debug.c */
 /* Local function prototypes */
 static void show_servers(aClient *);
 static void show_opers(aClient *); 
+static void show_ports(aClient *); 
 static void set_autoconn(aClient *,char *,char *,int);
 static void report_specials(aClient *,int,int);
 extern void report_qlines(aClient *);
@@ -1652,7 +1654,11 @@ int	m_stats(aClient *cptr,
       valid_stats++;
       break;
 
-    case 'p' : case 'P' :
+    case 'P' :
+      show_ports(sptr);
+      break;
+
+    case 'p' :
       show_opers(sptr);
       valid_stats++;
       break;
@@ -3931,4 +3937,27 @@ static void show_servers(aClient *cptr)
 
   sendto_one(cptr, ":%s %d %s :%d Server%s", me.name, RPL_STATSDEBUG,
              cptr->name, j, (j==1) ? "" : "s");
+}
+
+/*
+ * show_ports
+ * inputs	- pointer to client to show ports to
+ * output	- none
+ * side effects - show ports
+ */
+
+static void show_ports(aClient *sptr)
+{
+  struct Listener* listener = 0;
+
+  for (listener = ListenerPollList; listener; listener = listener->next)
+    {
+      sendto_one(sptr, form_str(RPL_STATSPLINE),
+		 me.name,
+		 sptr->name,
+		 'P',
+		 listener->port,
+		 listener->ref_count,
+		 listener->active);
+    }
 }

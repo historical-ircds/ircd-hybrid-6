@@ -152,6 +152,12 @@
 #define RPL_STATSQLINE       217
 #define RPL_STATSYLINE       218
 #define RPL_ENDOFSTATS       219
+/* note ircu uses 217 for STATSPLINE frip. conflict
+ * as RPL_STATSQLINE was used in old 2.8 for Q line 
+ * I'm going to steal 220 for now *sigh*
+ * -Dianora
+ */
+#define RPL_STATSPLINE       220
 
 #define RPL_UMODEIS          221
 
