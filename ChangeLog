@@ -1,3 +1,20 @@
+wcampbel    2001/12/07 23:12:41 EST	(20011208_5)
+
+  Modified files:
+    .                    INSTALL RELNOTES 
+  Removed files:
+    .                    README.HYBRID6.2-CHANGES 
+  Log:
+  Merged README.HYBRID6.2-CHANGES into RELNOTES, and removed references
+  to README.HYBRID6.2-CHANGES from INSTALL.
+  
+  Revision  Changes    Path
+  1.12      +1 -2      ircd-hybrid-6/INSTALL
+  1.2       +0 -86     ircd-hybrid-6/README.HYBRID6.2-CHANGES (dead)
+  1.9       +90 -3     ircd-hybrid-6/RELNOTES
+
+
+
 db          2001/12/07 21:38:19 EST	(20011208_4)
 
   Modified files:
