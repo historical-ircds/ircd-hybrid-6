@@ -60,7 +60,6 @@
 extern int rehashed;
 extern int dline_in_progress;	/* defined in ircd.c */
 int bad_tld(char *);
-extern int safe_write(aClient *, char *, int, char *);
 extern char *smalldate(time_t);		/* defined in s_misc.c */
 
 extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
@@ -88,11 +87,11 @@ extern char *small_file_date(time_t);  /* defined in s_misc.c */
  */
 static aPendingLine *AddPending();
 static void DelPending(aPendingLine *);
-static int LockedFile(char *);
-static void WritePendingLines(char *);
-static void WriteKline(char *, aClient *, aClient *,
+static int LockedFile(const char *);
+static void WritePendingLines(const char *);
+static void WriteKline(const char *, aClient *, aClient *,
                        char *, char *, char *, char *);
-static void WriteDline(char *, aClient *,
+static void WriteDline(const char *, aClient *,
                        char *, char *, char *);
 
 /*
@@ -150,7 +149,7 @@ Return: 1 if locked
 */
 
 static int
-LockedFile(char *filename)
+LockedFile(const char *filename)
 
 {
 	char lockpath[PATH_MAX + 1];
@@ -206,7 +205,7 @@ LockedFile(char *filename)
 } /* LockedFile() */
 
 static void
-WritePendingLines(char *filename)
+WritePendingLines(const char *filename)
 
 {
 	aPendingLine *ptmp;
@@ -251,7 +250,7 @@ WriteKline()
 */
 
 static void
-WriteKline(char *filename, aClient *sptr, aClient *rcptr,
+WriteKline(const char *filename, aClient *sptr, aClient *rcptr,
            char *user, char *host, char *reason, char *when)
 
 {
@@ -320,7 +319,7 @@ WriteDline()
 */
 
 static void
-WriteDline(char *filename, aClient *sptr,
+WriteDline(const char *filename, aClient *sptr,
            char *host, char *reason, char *when)
 
 {
@@ -396,7 +395,7 @@ m_kline(aClient *cptr,
   char *argv;
   unsigned long ip;
   unsigned long ip_mask;
-  char *kconf; /* kline conf file */
+  const char *kconf; /* kline conf file */
 
 #ifdef SLAVE_SERVERS
   char *slave_oper;
@@ -967,7 +966,7 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
   aConfItem *aconf;
   char buffer[1024];
   char *current_date;
-  char *dconf;
+  const char *dconf;
 
   if (!MyClient(sptr) || !IsAnOper(sptr))
     {
