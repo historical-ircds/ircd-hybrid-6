@@ -3,5 +3,4 @@
 
 struct Client;
 
-extern int deliver_it( struct Client *, char *, int );
 #endif

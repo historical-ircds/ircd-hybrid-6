@@ -50,7 +50,8 @@ extern int   read_message (time_t timeout, unsigned char mask);
 extern void  report_error(const char* message, const char* who, int error);
 extern int   set_non_blocking(int fd);
 extern int   set_sock_buffers(int fd, int size);
-extern int   send_queued(struct Client*);
+extern int   send_queued(struct Client* client);
+extern int   deliver_it(struct Client* client, char* buf, int len);
 
 #endif /* INCLUDED_s_bsd_h */
 
