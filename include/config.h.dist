@@ -516,6 +516,12 @@
 #undef	LOCOP_RESTART
 #undef	LOCOP_DIE
 
+/*
+ * OPER_UMODES LOCAOP_UMODES - set these to be the initial umodes when OPER'ing
+ */
+#define OPER_UMODES   (FLAGS_OPER|FLAGS_WALLOP|FLAGS_SERVNOTICE|FLAGS_OPERWALL)
+#define LOCOP_UMODES   (FLAGS_LOCOP|FLAGS_WALLOP|FLAGS_SERVNOTICE)
+
 /* MAXIMUM LINKS - max links for class 0 if no Y: line configured
  *
  * This define is useful for leaf nodes and gateways. It keeps you from
@@ -1009,7 +1015,7 @@
  * -Dianora
  */
 #define ANTI_SPAMBOT_EXTRA
-#define PRIVMSG_POSSIBLE_SPAMBOT_COUNT	3
+#define PRIVMSG_POSSIBLE_SPAMBOT_COUNT	50
 
 #ifdef HUB
 #undef FLUD
