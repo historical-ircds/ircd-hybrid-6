@@ -413,15 +413,12 @@ static	int do_nick_name(char *nick)
 **	   nick from local user or kill him/her...
 */
 
-#define MAX_REASON 80
-
 static int register_user(aClient *cptr, aClient *sptr, 
                          char *nick, char *username)
 {
   aConfItem*  aconf;
   char*       parv[3];
   static char ubuf[12];
-  short	      oldstatus = sptr->status;
   anUser*     user = sptr->user;
   char*       reason;
   char        tmpstr2[512];

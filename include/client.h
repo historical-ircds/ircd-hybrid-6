@@ -358,9 +358,6 @@ struct Client
   short	            status;	/* Client type */
   char	            nicksent;
   unsigned char     local_flag; /* if this is 1 this client is local */
-#ifdef BOTCHECK
-  unsigned char     isbot;	/* non 0 if its a type of bot */
-#endif
 
   /*
    * client->name is the unique name for a client nick or host
@@ -397,6 +394,9 @@ struct Client
    * these fields, if (from != self).
    */
   int	            count;	 /* Amount of data in buffer */
+#ifdef BOTCHECK
+  unsigned char     isbot;	/* non 0 if its a type of bot */
+#endif
 #ifdef FLUD
   time_t            fludblock;
   struct fludbot*   fluders;
