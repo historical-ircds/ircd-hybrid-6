@@ -1,3 +1,12 @@
+*** 19990811_1 by lusky
+fake direction bug fix to send.c (th)
+throttle accept errors in listener.c
+oper motd rehash bug fix from perly
+ensure that SERVER must come before SVINFO (jl)
+unneed stropt.h include in s_bsd.c
+neglected to detach_conf for umode -o (jl)
+
+
 *** 19990810_1 by lusky
 revved patchlevel to b96
 fixed bug with NO_JOIN_ON_SPLIT on a coldstart
