@@ -1,3 +1,8 @@
+*** 19990904_1 by lusky
+major fixes to dbuf code (th)
+bumped patchlevel to b103
+
+
 *** 19990902_1 by lusky
 added check for '#' in username and hostname of /quote kline
 
