@@ -28,6 +28,7 @@
 #include "m_commands.h"
 #include "client.h"
 #include "common.h"
+#include "flud.h"
 #include "hash.h"
 #include "irc_string.h"
 #include "ircd.h"

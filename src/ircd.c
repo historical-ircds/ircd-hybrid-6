@@ -275,7 +275,7 @@ static void init_sys(int boot_daemon)
  *      This is called when the commandline is not acceptable.
  *      Give error message and exit without starting anything.
  */
-static void bad_command()
+static void bad_command(void)
 {
   fprintf(stderr, 
           "Usage: ircd [-d dlinefile] [-f configfile] [-h servername] "

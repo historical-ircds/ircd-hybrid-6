@@ -92,7 +92,6 @@ extern  struct  Channel *channel;
 /* Maximum mode changes allowed per client, per server is different */
 #define MAXMODEPARAMS   4
 
-extern void sync_channels();
 extern struct Channel* find_channel (char *, struct Channel *);
 extern struct SLink*   find_channel_link(struct SLink *, struct Channel *);
 extern void    remove_user_from_channel(struct Client *,struct Channel *,int);

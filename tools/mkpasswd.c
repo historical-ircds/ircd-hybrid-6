@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <crypt.h>
 
 #define FLAG_MD5     0x00000001
 #define FLAG_DES     0x00000002
@@ -19,19 +20,14 @@
 #define FLAG_PASS    0x00000008
 #define FLAG_LENGTH  0x00000010
 
-extern char *getpass();
-extern char *crypt();
 
-
-char *make_des_salt();
+char *make_des_salt(void);
 char *make_md5_salt(int);
 char *make_md5_salt_para(char *);
-void usage();
+void usage(void);
 static char saltChars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./";
 
-int main(argc, argv)
-int argc;
-char *argv[];
+int main(int argc, char *argv[])
 {
   char *plaintext = NULL;
   extern char *optarg;
@@ -105,7 +101,7 @@ char *argv[];
   return 0;
 }
 
-char *make_des_salt()
+char *make_des_salt(void)
 {
   static char salt[3];
   char* saltptr=salt;
@@ -149,7 +145,7 @@ char *make_md5_salt(int length)
   return saltptr;
 }
 
-void usage()
+void usage(void)
 {
   printf("mkpasswd [-m|-d] [-l saltlength] [-s salt] [-p plaintext]\n");
   printf("-m Generate an MD5 password\n");

@@ -37,6 +37,9 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#ifdef CRYPT_OPER_PASSWORD
+#include <crypt.h>
+#endif /* CRYPT_OPER_PASSWORD */
 
 
 /*
@@ -106,9 +109,6 @@ int m_oper(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
   struct ConfItem *aconf;
   char  *name, *password, *encr;
-#ifdef CRYPT_OPER_PASSWORD
-  extern        char *crypt();
-#endif /* CRYPT_OPER_PASSWORD */
   char *operprivs;
   static char buf[BUFSIZE];
 

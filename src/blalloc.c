@@ -23,7 +23,7 @@ int         BH_CurrentLine = 0;   /* GLOBAL used for BlockHeap debugging */
 
 static int newblock(BlockHeap *bh);
 
-extern void outofmemory();      /* defined in list.c */
+extern void outofmemory(void);      /* defined in list.c */
 
 /* ************************************************************************ */
 /* FUNCTION DOCUMENTATION:                                                  */

@@ -149,7 +149,7 @@ unsigned int hash_channel_name(const char* name)
  *
  * Nullify the hashtable and its contents so it is completely empty.
  */
-static void clear_client_hash_table()
+static void clear_client_hash_table(void)
 {
 #ifdef        DEBUGMODE
   clhits = 0;
@@ -161,7 +161,7 @@ static void clear_client_hash_table()
   memset(clientTable, 0, sizeof(struct HashEntry) * U_MAX);
 }
 
-static void clear_channel_hash_table()
+static void clear_channel_hash_table(void)
 {
 #ifdef        DEBUGMODE
   chmiss = 0;

@@ -108,7 +108,7 @@ void dbuf_init()
  * dbuf_alloc - allocates a struct DBufBuffer structure either from 
  * dbufFreeList or create a new one.
  */
-static struct DBufBuffer* dbuf_alloc()
+static struct DBufBuffer* dbuf_alloc(void)
 {
   struct DBufBuffer* db = dbufFreeList;
 

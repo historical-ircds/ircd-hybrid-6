@@ -1021,11 +1021,6 @@
 #define NEED_SPLITCODE
 #endif
 
-#ifdef FLUD
-void    free_fluders();
-void    free_fludees();
-#endif /* FLUD */
-
 #ifdef ANTI_SPAMBOT
 #define MIN_SPAM_NUM 5
 #define MIN_SPAM_TIME 60

@@ -9,8 +9,8 @@
 struct Client;
 struct ConfItem;
 
-extern void clear_Dline_table();
-extern void zap_Dlines();
+extern void clear_Dline_table(void);
+extern void zap_Dlines(void);
 extern void add_Dline(struct ConfItem *);
 extern void add_ip_Kline(struct ConfItem *);
 extern void add_ip_Eline(struct ConfItem *);

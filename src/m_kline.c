@@ -66,7 +66,7 @@ extern aConfItem *find_special_conf(char *,int); /* defined in s_conf.c */
 /*
  * LockFile routines
  */
-static aPendingLine *AddPending();
+static aPendingLine *AddPending(void);
 static void DelPending(aPendingLine *);
 static int LockedFile(const char *);
 static void WritePendingLines(const char *);
@@ -82,7 +82,7 @@ AddPending()
 */
 
 static aPendingLine *
-AddPending()
+AddPending(void)
 
 {
   aPendingLine *temp;

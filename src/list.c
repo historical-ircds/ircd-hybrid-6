@@ -66,7 +66,7 @@
 
 #define USERS_PREALLOCATE 1024
 
-void    outofmemory();
+void    outofmemory(void);
 
 /* for Wohali's block allocator */
 BlockHeap *free_Links;
