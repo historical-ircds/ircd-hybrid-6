@@ -697,6 +697,12 @@
  */
 #define LITTLE_I_LINES
 
+/* ----------------- not approved on EFnet section --------------------
+ *
+ * if you are an efnet admin, some of these are not officially supported, so
+ * you may want to undef some -- fl_
+ */
+
 /* TS5
  * This will mean the oldest version of a channel will always remain after a
  * split, whereas TS3 behaviour was to allow any TS in an opless channel.
@@ -706,18 +712,12 @@
  *
  * See doc/ts5.txt for more details
  */
-#define TS5 
+#undef  TS5 
 
 /* TS5_ONLY
  * This will disallow TS3 servers from linking
  */
 #undef  TS5_ONLY
-
-/* ----------------- not approved on EFnet section --------------------
- *
- * if you are an efnet admin, some of these are not officially supported, so
- * you may want to undef some -- fl_
- */
 
 /* GLINES - global Kline-like bans
  * Define this if you want GLINE support
