@@ -1725,8 +1725,13 @@ int	m_info(aClient *cptr,
 #else
 #define OUT2 " WHOIS_NOTICE=0"
 #endif
+#ifdef ZIP_LINKS
+#define OUT3 " ZIP_LINKS=1"
+#else
+#define OUT3 " ZIP_LINKS=0"
+#endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2);
+		me.name, parv[0], OUT1 OUT2 OUT3);
 
 #undef OUT1
 #undef OUT2

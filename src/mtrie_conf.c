@@ -1641,14 +1641,11 @@ void add_to_ip_ilines(aConfItem *aconf)
 
 static aConfItem *find_matching_ip_i_line(unsigned long host_ip)
 {
-  unsigned long host_ip_host_order;
   aConfItem *aconf;
-
-  host_ip_host_order = ntohl(host_ip);
 
   for( aconf = ip_i_lines; aconf; aconf = aconf->next)
     {
-      if((host_ip_host_order & aconf->ip_mask) == aconf->ip)
+      if((host_ip & aconf->ip_mask) == aconf->ip)
 	return(aconf);
     }
   return((aConfItem *)NULL);
