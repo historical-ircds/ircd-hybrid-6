@@ -3407,6 +3407,13 @@ int	m_list(aClient *cptr,
 **	parv[0] = sender prefix
 **	parv[1] = channel
 */
+/*
+ * Modified to report possible names abuse
+ * drastically modified to not show all names, just names
+ * on given channel names.
+ *
+ * -Dianora
+ */
 /* maximum names para to show to opers when abuse occurs */
 #define TRUNCATED_NAMES 20
 
@@ -3434,6 +3441,14 @@ int	m_names( aClient *cptr,
   /* And throw away non local names requests that do get here -Dianora */
   if(!MyConnect(sptr))
     return 0;
+
+  /*
+   * names is called by m_join() when client joins a channel,
+   * hence I cannot easily rate limit it.. perhaps that won't
+   * be necessary now that remote names is prohibited.
+   *
+   * -Dianora
+   */
 
   mlen = strlen(me.name) + NICKLEN + 7;
 
@@ -3470,129 +3485,89 @@ int	m_names( aClient *cptr,
       if (s)
 	*s = '\0';
       clean_channelname((unsigned char *)para);
-      ch2ptr = find_channel(para, (aChannel *)NULL);
+      chptr = find_channel(para, (aChannel *)NULL);
+    }
+  else
+    {
+      sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
+		 "NAMES");
+      return(1);
     }
 
-  *buf = '\0';
-  
-  /* 
-   * First, do all visible channels (public and the one user self is)
-   */
-
-  for (chptr = channel; chptr; chptr = chptr->nextch)
+  /* If no channel found, report it and return */
+  if (!chptr)
     {
-      if ((chptr != ch2ptr) && !BadPtr(para))
-	continue; /* -- wanted a specific channel */
-      if (!MyConnect(sptr) && BadPtr(para))
-	continue;
-      if (!ShowChannel(sptr, chptr))
-	continue; /* -- users on this are not listed */
-      
-      /* Find users on same channel (defined by chptr) */
-
-      (void)strcpy(buf, "* ");
-      len = strlen(chptr->chname);
-      (void)strcpy(buf + 2, chptr->chname);
-      (void)strcpy(buf + 2 + len, " :");
-
-      if (PubChannel(chptr))
-	*buf = '=';
-      else if (SecretChannel(chptr))
-	*buf = '@';
-      idx = len + 4;
-      flag = 1;
-      for (lp = chptr->members; lp; lp = lp->next)
-	{
-	  c2ptr = lp->value.cptr;
-	  if (IsInvisible(c2ptr) && !IsMember(sptr,chptr))
-	    continue;
-	  if (lp->flags & CHFL_CHANOP)
-	    {
-	      (void)strcat(buf, "@");
-	      idx++;
-	    }
-	  else if (lp->flags & CHFL_VOICE)
-	    {
-	      (void)strcat(buf, "+");
-	      idx++;
-	    }
-	  (void)strncat(buf, c2ptr->name, NICKLEN);
-	  idx += strlen(c2ptr->name) + 1;
-	  flag = 1;
-	  (void)strcat(buf," ");
-	  if (mlen + idx + NICKLEN > BUFSIZE - 3)
-	    {
-	      sendto_one(sptr, rpl_str(RPL_NAMREPLY),
-			 me.name, parv[0], buf);
-	      (void)strncpy(buf, "* ", 3);
-	      (void)strncpy(buf+2, chptr->chname, len + 1);
-	      (void)strcat(buf, " :");
-	      if (PubChannel(chptr))
-		*buf = '=';
-	      else if (SecretChannel(chptr))
-		*buf = '@';
-	      idx = len + 4;
-	      flag = 0;
-	    }
-	}
-      if (flag)
-	sendto_one(sptr, rpl_str(RPL_NAMREPLY),
-		   me.name, parv[0], buf);
+      sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
+		 para);
+      return 1;
     }
-  if (!BadPtr(para))
+
+  /* Just do the channel name given */
+  if (!ShowChannel(sptr, chptr))
     {
+      /* -- users on these are not listed, and sptr is not on the channel */
       sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name, parv[0],
 		 para);
       return(1);
     }
 
-  /* Second, do all non-public, non-secret channels in one big sweep */
+  /* Find users on same channel (defined by chptr) */
+  buf[0] = '*';
+  buf[1] = ' ';
+  buf[2] = '\0';
+  len = strlen(chptr->chname);
+  (void)strcpy(buf + 2, chptr->chname);
+  (void)strcpy(buf + 2 + len, " :");
 
-  (void)strncpy(buf, "* * :", 6);
-  idx = 5;
-  flag = 0;
-  for (c2ptr = client; c2ptr; c2ptr = c2ptr->next)
+  if (PubChannel(chptr))
+    *buf = '=';
+  else if (SecretChannel(chptr))
+    *buf = '@';
+  idx = len + 4;
+
+  for (lp = chptr->members; lp; lp = lp->next)
     {
-      aChannel *ch3ptr;
-      int	showflag = 0, secret = 0;
-
-      if (!IsPerson(c2ptr) || IsInvisible(c2ptr))
+      c2ptr = lp->value.cptr;
+      if (IsInvisible(c2ptr) && !IsMember(sptr,chptr))
 	continue;
-      lp = c2ptr->user->channel;
-      /*
-       * dont show a client if they are on a secret channel or
-       * they are on a channel sptr is on since they have already
-       * been show earlier. -avalon
-       */
-      while (lp)
+      if (lp->flags & CHFL_CHANOP)
 	{
-	  ch3ptr = lp->value.chptr;
-	  if (PubChannel(ch3ptr) || IsMember(sptr, ch3ptr))
-	    showflag = 1;
-	  if (SecretChannel(ch3ptr))
-	    secret = 1;
-	  lp = lp->next;
+	  (void)strcat(buf, "@");
+	  idx++;
 	}
-      if (showflag) /* have we already shown them ? */
-	continue;
-      if (secret) /* on any secret channels ? */
-	continue;
+      else if (lp->flags & CHFL_VOICE)
+	{
+	  (void)strcat(buf, "+");
+	  idx++;
+	}
       (void)strncat(buf, c2ptr->name, NICKLEN);
       idx += strlen(c2ptr->name) + 1;
-      (void)strcat(buf," ");
       flag = 1;
+      (void)strcat(buf," ");
       if (mlen + idx + NICKLEN > BUFSIZE - 3)
 	{
 	  sendto_one(sptr, rpl_str(RPL_NAMREPLY),
 		     me.name, parv[0], buf);
-	  (void)strncpy(buf, "* * :", 6);
-	  idx = 5;
+	  buf[0] = '*';
+	  buf[1] = ' ';
+	  buf[2] = '\0';
+	  (void)strncpy(buf+2, chptr->chname, len + 1);
+	  (void)strcat(buf, " :");
+	  if (PubChannel(chptr))
+	    *buf = '=';
+	  else if (SecretChannel(chptr))
+	    *buf = '@';
+	  idx = len + 4;
 	  flag = 0;
 	}
     }
+
   if (flag)
-    sendto_one(sptr, rpl_str(RPL_NAMREPLY), me.name, parv[0], buf);
-  sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name, parv[0], "*");
+    sendto_one(sptr, rpl_str(RPL_NAMREPLY),
+	       me.name, parv[0], buf);
+
+  sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name, parv[0],
+	     para);
   return(1);
 }
 
