@@ -67,7 +67,7 @@ char *infotext[] =
         "The following people have contributed to this release of hybrid",
         "in nick alphabetical order:",
         "",
-        "cbongo              Chris A. Bongaarts  cab@tc.umn.edu",
+        "CBongo              Chris Bongaarts     cab@tc.umn.edu",
         "comstud             Chris Behrens       cbehrens@concentric.net",
         "David-R             David Rientjes      rientjes@mail.whidbey.net",
         "Dianora             Diane Bruce         db@db.net",
