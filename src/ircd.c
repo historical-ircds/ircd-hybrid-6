@@ -44,10 +44,7 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <sys/socket.h>
-
-#undef RUSAGE_SELF 0
-#undef RUSAGE_CHILDREN /* hack for old slackware */
-#define RUSAGE_CHILDREN -1
+# include <sys/resource.h>
 
 #ifdef  REJECT_HOLD
 int reject_held_fds=0;
@@ -122,7 +119,8 @@ int	portnum = -1;	              /* Server port number, listening this */
 int	debuglevel = -1;		/* Server debug level */
 int	bootopt = 0;			/* Server boot option flags */
 char	*debugmode = "";		/*  -"-    -"-   -"-  */
-char	*sbrk0;				/* initial sbrk(0) */
+struct  rusage startup_usage;
+struct  rusage current_usage;
 static	int	dorehash = 0;
 int     rehashed = YES;
 int     dline_in_progress = NO;	/* killing off matching D lines ? */
@@ -189,13 +187,14 @@ void restart(char *mesg)
   was_here = YES;
 
 #ifdef	USE_SYSLOG
-  (void)syslog(LOG_WARNING, "Restarting Server because: %s, sbrk(0)-etext: %ld",
-     mesg,(u_long)sbrk((size_t)0)-(u_long)sbrk0);
+  (void)syslog(LOG_WARNING, "Restarting Server because: %s, memory data limit: %ld",
+     mesg, current_usage.ru_idrss - startup_usage.ru_idrss);
 #endif
   if (bootopt & BOOT_STDERR)
     {
-      fprintf(stderr, "Restarting Server because: %s, sbrk(0)-etext: %ld\n",
-        mesg,(u_long)sbrk((size_t)0)-(u_long)sbrk0);
+      fprintf(stderr, "Restarting Server because: %s, memory: %ld\n",
+	      mesg,
+	      startup_usage.ru_idrss);
     }
   server_reboot();
 }
@@ -220,8 +219,10 @@ void	server_reboot()
 {
   int	i;
   
-  sendto_ops("Aieeeee!!!  Restarting server... sbrk(0)-etext: %d",
-	(u_long)sbrk((size_t)0)-(u_long)sbrk0);
+  (void)getrusage(RUSAGE_SELF,&current_usage);
+
+  sendto_ops("Aieeeee!!!  Restarting server... current data-startup data: %d",
+	current_usage.ru_idrss, startup_usage.ru_idrss);
 
   Debug((DEBUG_NOTICE,"Restarting server..."));
   flush_connections(me.fd);
@@ -870,7 +871,8 @@ int	main(int argc, char *argv[])
   dbuf_init();  /* set up some dbuf stuff to control paging */
 #endif
 
-  sbrk0 = (char *)sbrk((size_t)0);
+  (void)getrusage(RUSAGE_SELF, &startup_usage);
+
   uid = getuid();
   euid = geteuid();
 
