@@ -1064,6 +1064,8 @@ typedef struct
 {
   int maxclients;	/* max clients allowed */
   int autoconn;		/* autoconn enabled for all servers? */
+  int noisy_htm;        /* noisy htm or not ? */
+  int lifesux;
 
 #ifdef IDLE_CHECK
   int idletime;

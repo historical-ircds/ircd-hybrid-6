@@ -149,7 +149,6 @@ static	int	dorehash = 0;
 static	char	*dpath = DPATH;
 int     rehashed = YES;
 int     dline_in_progress = NO;	/* killing off matching D lines ? */
-int     noisy_htm=NOISY_HTM;	/* Is high traffic mode noisy or not? */
 time_t	nextconnect = 1;	/* time for next try_connections call */
 time_t	nextping = 1;		/* same as above for check_pings() */
 time_t	nextdnscheck = 0;	/* next time to poll dns to force timeouts */
@@ -880,7 +879,6 @@ static	int	bad_command()
 #define LOADCFREQ 5	/* every 5s */
 #define LOADRECV 40	/* 40k/s */
 
-int lifesux = 1;
 int LRV = LOADRECV;
 time_t LCF = LOADCFREQ;
 float currlife = 0.0;
@@ -910,6 +908,7 @@ int	main(int argc, char *argv[])
   memset( &GlobalSetOptions, 0, sizeof(GlobalSetOptions));
 
   MAXCLIENTS = MAX_CLIENTS;
+  NOISYHTM = NOISY_HTM;
   AUTOCONN = 1;
 
 #ifdef FLUD
@@ -1395,7 +1394,7 @@ time_t io_loop(time_t delay)
       currlife = (float)(me.receiveK - lastrecvK)/(float)LCF;
       if ((me.receiveK - lrv) > lastrecvK )
 	{
-	  if (!lifesux)
+	  if (!LIFESUX)
 	    {
 /* In the original +th code Taner had
 
@@ -1415,9 +1414,9 @@ time_t io_loop(time_t delay)
    -Dianora
 
 */
-	      lifesux = 1;
+	      LIFESUX = 1;
 
-	      if(noisy_htm)
+	      if(NOISYHTM)
 		{
 		  (void)sprintf(to_send, 
 			"Entering high-traffic mode - (%.1fk/s > %dk/s)",
@@ -1427,13 +1426,13 @@ time_t io_loop(time_t delay)
 	    }
 	  else
 	    {
-	      lifesux++;		/* Ok, life really sucks! */
+	      LIFESUX++;		/* Ok, life really sucks! */
 	      LCF += 2;			/* Wait even longer */
-              if(noisy_htm) 
+              if(NOISYHTM) 
 		{
 		  (void)sprintf(to_send,
 			"Still high-traffic mode %d%s (%d delay): %.1fk/s",
-				lifesux, (lifesux & 0x04) ? " (TURBO)" : "",
+				LIFESUX, (LIFESUX & 0x04) ? " (TURBO)" : "",
 				(int)LCF, (float)currlife);
 		  sendto_ops(to_send);
 		}
@@ -1442,10 +1441,10 @@ time_t io_loop(time_t delay)
       else
 	{
 	  LCF = LOADCFREQ;
-	  if (lifesux)
+	  if (LIFESUX)
 	    {
-	      lifesux = 0;
-              if(noisy_htm)
+	      LIFESUX = 0;
+              if(NOISYHTM)
 	        sendto_ops("Resuming standard operation . . . .");
 	    }
 	}
@@ -1510,10 +1509,10 @@ time_t io_loop(time_t delay)
 #ifndef NO_PRIORITY
   (void)read_message(0, &serv_fdlist);
   (void)read_message(1, &busycli_fdlist);
-  if (lifesux)
+  if (LIFESUX)
     {
       (void)read_message(1, &serv_fdlist);
-      if (lifesux & 0x4)
+      if (LIFESUX & 0x4)
 	{	/* life really sucks */
 	  (void)read_message(1, &busycli_fdlist);
 	  (void)read_message(1, &serv_fdlist);
@@ -1541,10 +1540,10 @@ time_t io_loop(time_t delay)
   {
     static time_t lasttime=0;
 #ifdef CLIENT_SERVER
-    if (!lifesux || (lasttime + lifesux) < timeofday)
+    if (!LIFESUX || (lasttime + LIFESUX) < timeofday)
       {
 #else
-    if ((lasttime + (lifesux + 1)) < timeofday)
+    if ((lasttime + (LIFESUX + 1)) < timeofday)
       {
 #endif
 	(void)read_message(delay, NULL); /*  check everything! */
@@ -1565,10 +1564,10 @@ time_t io_loop(time_t delay)
   ** ping times) --msa
   */
 
-  if ((timeofday >= nextping))	/* && !lifesux ) */
+  if ((timeofday >= nextping))	/* && !LIFESUX ) */
     nextping = check_pings(timeofday);
 
-  if (dorehash && !lifesux)
+  if (dorehash && !LIFESUX)
     {
       (void)rehash(&me, &me, 1);
       dorehash = 0;
@@ -1717,9 +1716,9 @@ time_t check_fdlists(now)
 time_t now;
 {
 #ifdef CLIENT_SERVER
-#define BUSY_CLIENT(x)	(((x)->priority < 55) || (!lifesux && ((x)->priority < 75)))
+#define BUSY_CLIENT(x)	(((x)->priority < 55) || (!LIFESUX && ((x)->priority < 75)))
 #else
-#define BUSY_CLIENT(x)	(((x)->priority < 40) || (!lifesux && ((x)->priority < 60)))
+#define BUSY_CLIENT(x)	(((x)->priority < 40) || (!LIFESUX && ((x)->priority < 60)))
 #endif
 #define FDLISTCHKFREQ  2
 
@@ -1761,7 +1760,7 @@ time_t now;
 	    }
 	}
     }
-  return (now + FDLISTCHKFREQ + (lifesux + 1));
+  return (now + FDLISTCHKFREQ + (LIFESUX + 1));
 }
 #endif
 

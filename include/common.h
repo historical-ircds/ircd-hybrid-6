@@ -120,6 +120,8 @@ extern struct SLink *find_user_link(/* struct SLink *, struct Client * */);
 
 
 #define MAXCLIENTS GlobalSetOptions.maxclients
+#define NOISYHTM   GlobalSetOptions.noisy_htm
+#define LIFESUX    GlobalSetOptions.lifesux
 #define AUTOCONN   GlobalSetOptions.autoconn
 #define IDLETIME   GlobalSetOptions.idletime
 #define FLUDNUM    GlobalSetOptions.fludnum

@@ -94,7 +94,6 @@ extern void remove_empty_channels();	/* defined in channel.c */
 
 extern int cold_start;		/* defined in ircd.c */
 extern fdlist serv_fdlist;
-extern int lifesux;		/* defined in ircd.c */
 extern int rehashed;		/* defined in ircd.c */
 extern int dline_in_progress;	/* defined in ircd.c */
 
@@ -3082,7 +3081,7 @@ int   m_htm(aClient *cptr,
 #define LOADCFREQ 5
   char *command;
 
-  extern int lifesux, LRV, LCF, noisy_htm;  /* in ircd.c */
+  extern int LRV, LCF;  /* in ircd.c */
   extern float currlife;
   
   if (!MyClient(sptr) || !IsOper(sptr))
@@ -3092,8 +3091,8 @@ int   m_htm(aClient *cptr,
     }
   sendto_one(sptr,
 	":%s NOTICE %s :HTM is %s(%d), %s. Max rate = %dk/s. Current = %.1fk/s",
-          me.name, parv[0], lifesux ? "ON" : "OFF", lifesux,
-	  noisy_htm ? "NOISY" : "QUIET",
+          me.name, parv[0], LIFESUX ? "ON" : "OFF", LIFESUX,
+	  NOISYHTM ? "NOISY" : "QUIET",
 	  LRV, currlife);
   if (parc > 1)
     {
@@ -3123,7 +3122,7 @@ int   m_htm(aClient *cptr,
 	{
           if (!strcasecmp(command,"ON"))
 	    {
-              lifesux = 1;
+              LIFESUX = 1;
               sendto_one(sptr, ":%s NOTICE %s :HTM is now ON.", me.name, parv[0]);
               sendto_ops("Entering high-traffic mode: Forced by %s!%s@%s",
 			 parv[0], sptr->user->username, sptr->sockhost);
@@ -3131,7 +3130,7 @@ int   m_htm(aClient *cptr,
 	    }
 	  else if (!strcasecmp(command,"OFF"))
 	    {
-              lifesux = 0;
+              LIFESUX = 0;
 	      LCF = LOADCFREQ;
               sendto_one(sptr, ":%s NOTICE %s :HTM is now OFF.", me.name, parv[0]);
               sendto_ops("Resuming standard operation: Forced by %s!%s@%s",
@@ -3140,12 +3139,12 @@ int   m_htm(aClient *cptr,
           else if (!strcasecmp(command,"QUIET"))
             {
 	      sendto_ops("HTM is now QUIET");
-              noisy_htm = NO;
+              NOISYHTM = NO;
             }
           else if (!strcasecmp(command,"NOISY"))
             {
 	      sendto_ops("HTM is now NOISY");
-              noisy_htm = YES;
+              NOISYHTM = YES;
             }
 	  else
 	    sendto_one(sptr,
@@ -3489,7 +3488,7 @@ int	m_trace(aClient *cptr,
       return 0;
     }
 
-  if (dow && lifesux && !IsOper(sptr))
+  if (dow && LIFESUX && !IsOper(sptr))
     {
       sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,parv[0]);
       return 0;
@@ -3715,7 +3714,7 @@ int	m_ltrace(aClient *cptr,
   for (i = 0; i < MAXCONNECTIONS; i++)
     link_s[i] = 0, link_u[i] = 0;
                         
-  if (dow && lifesux && !IsOper(sptr))
+  if (dow && LIFESUX && !IsOper(sptr))
     {
       sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,parv[0]);
       return 0;
