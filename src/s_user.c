@@ -37,6 +37,7 @@
 
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <assert.h>
 #ifdef FLUD
 #include "blalloc.h"
 #endif /* FLUD */
@@ -422,6 +423,9 @@ static int register_user(aClient *cptr, aClient *sptr,
 #endif
   char        tmpstr2[512];
 
+  assert(0 != sptr);
+  assert(sptr->username != username);
+
   user->last = timeofday;
   parv[0] = sptr->name;
   parv[1] = parv[2] = NULL;
@@ -495,7 +499,7 @@ static int register_user(aClient *cptr, aClient *sptr,
 		if (IsNeedId(sptr))
 		  {
 		    *sptr->username = '~';
-		    strncpy(&sptr->username[1], username, USERLEN);
+		    strncpy(&sptr->username[1], username, USERLEN - 1);
 		  }
 	        else
 	          strncpy(sptr->username, username, USERLEN);
@@ -543,18 +547,18 @@ static int register_user(aClient *cptr, aClient *sptr,
 	      sendto_one(sptr,
  ":%s NOTICE %s :*** Notice -- You need to install identd to use this server",
                          me.name, cptr->name);
-		  return exit_client(cptr, sptr, &me, "Install identd");
+               return exit_client(cptr, sptr, &me, "Install identd");
 	     }
 	   if (IsNoTilde(aconf))
 	     {
-	        strncpyzt(sptr->username, username, USERLEN + 1);
+	        strncpy(sptr->username, username, USERLEN);
              }
            else
              {
                 *sptr->username = '~';
                 strncpy(&sptr->username[1], username, USERLEN - 1);
-                sptr->username[USERLEN] = '\0';
              }
+             sptr->username[USERLEN] = '\0';
 	}
 
       /* password check */
@@ -566,7 +570,7 @@ static int register_user(aClient *cptr, aClient *sptr,
 		     me.name, parv[0]);
 	  return exit_client(cptr, sptr, &me, "Bad Password");
 	}
-      memset((void *)sptr->passwd,0, sizeof(sptr->passwd));
+      memset(sptr->passwd,0, sizeof(sptr->passwd));
 
       /* report if user has &^>= etc. and set flags as needed in sptr */
       report_and_set_user_flags(sptr, aconf);
@@ -1141,7 +1145,7 @@ int	m_nick(aClient *cptr,
 				 me.name, parv[0], me.name,
 				 get_client_name(cptr, FALSE),
 				 parv[0],
-				 sptr->user ? sptr->username : "",
+				 sptr->username,
 				 sptr->user ? sptr->user->server :
 				 cptr->name);
 	      sptr->flags |= FLAGS_KILLED;
@@ -1428,9 +1432,8 @@ int	m_nick(aClient *cptr,
     }
   else
     {
-      sameuser = irccmp(acptr->username,
-		       sptr->username) == 0 &&
-	irccmp(acptr->host, sptr->host) == 0;
+      sameuser = irccmp(acptr->username, sptr->username) == 0 &&
+	         irccmp(acptr->host, sptr->host) == 0;
       if ((sameuser && newts < acptr->tsinfo) ||
 	  (!sameuser && newts > acptr->tsinfo))
 	{
@@ -1602,10 +1605,13 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
       
 
       /* This had to be copied here to avoid problems.. */
-      (void)strcpy(sptr->name, nick);
+      strcpy(sptr->name, nick);
       sptr->tsinfo = timeofday;
       if (sptr->user)
 	{
+          char buf[USERLEN + 1];
+          strncpy(buf, sptr->username, USERLEN);
+          buf[USERLEN] = '\0';
 	  /*
 	  ** USER already received, now we have NICK.
 	  ** *NOTE* For servers "NICK" *must* precede the
@@ -1614,8 +1620,7 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
 	  ** may reject the client and call exit_client for it
 	  ** --must test this and exit m_nick too!!!
 	  */
-	    if (register_user(cptr, sptr, nick, sptr->username)
-		== FLUSH_BUFFER)
+	    if (register_user(cptr, sptr, nick, buf) == FLUSH_BUFFER)
 	      return FLUSH_BUFFER;
 	}
     }
@@ -1625,8 +1630,8 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
   */
   if (sptr->name[0])
     (void)del_from_client_hash_table(sptr->name, sptr);
-  (void)strcpy(sptr->name, nick);
-  (void)add_to_client_hash_table(nick, sptr);
+  strcpy(sptr->name, nick);
+  add_to_client_hash_table(nick, sptr);
 
   return 0;
 }
@@ -2595,15 +2600,15 @@ int	m_whois(aClient *cptr,
 **	parv[3] = server host name (used only from other servers)
 **	parv[4] = users real name info
 */
-int	m_user(aClient *cptr,
-	       aClient *sptr,
-	       int parc,
-	       char *parv[])
+int m_user(aClient* cptr, aClient* sptr, int parc, char *parv[])
 {
 #define	UFLAGS	(FLAGS_INVISIBLE|FLAGS_WALLOP|FLAGS_SERVNOTICE)
-  char	*username, *host, *server, *realname;
+  char* username;
+  char* host;
+  char* server;
+  char* realname;
  
-  if (parc > 2 && (username = (char *)strchr(parv[1],'@')))
+  if (parc > 2 && (username = strchr(parv[1],'@')))
     *username = '\0'; 
   if (parc < 5 || *parv[1] == '\0' || *parv[2] == '\0' ||
       *parv[3] == '\0' || *parv[4] == '\0')
@@ -2631,14 +2636,17 @@ int	m_user(aClient *cptr,
 /*
 ** do_user
 */
-static int do_user(char *nick, aClient *cptr, aClient *sptr,
-		   char *username, char *host, char *server, char *realname)
+static int do_user(char* nick, aClient* cptr, aClient* sptr,
+		   char* username, char *host, char *server, char *realname)
 {
-  anUser* user;
+  unsigned int oflags;
+  struct User* user;
 
-  long oflags;
+  assert(0 != sptr);
+  assert(sptr->username != username);
 
   user = make_user(sptr);
+
   oflags = sptr->flags;
 
   if (!MyConnect(sptr))
@@ -2653,8 +2661,7 @@ static int do_user(char *nick, aClient *cptr, aClient *sptr,
     {
       if (!IsUnknown(sptr))
 	{
-	  sendto_one(sptr, err_str(ERR_ALREADYREGISTRED),
-		     me.name, nick);
+	  sendto_one(sptr, err_str(ERR_ALREADYREGISTRED), me.name, nick);
 	  return 0;
 	}
 #ifndef	NO_DEFAULT_INVISIBLE
