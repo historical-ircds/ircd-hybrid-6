@@ -1,3 +1,15 @@
+androsyn    2002/08/02 17:57:53 EDT	(20020802_0)
+
+  Modified files:
+    src                  channel.c 
+  Log:
+  Change knock disable to work with +p and not +s.
+  
+  Revision  Changes    Path
+  1.234     +2 -2      ircd-hybrid-6/src/channel.c
+
+
+
 androsyn    2002/07/11 20:04:08 EDT	(20020712_0)
 
   Modified files:
