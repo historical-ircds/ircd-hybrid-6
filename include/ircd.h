@@ -82,39 +82,67 @@ struct Counter {
 };
 
 extern struct SetOptions GlobalSetOptions;  /* defined in ircd.c */
+/*
+ * XXX - ACK!!!
+ */
+/*
+ * ZZZ - These can go away slowly as they are rewritten.
+ * calm down Tom.
+ * heh :) --Bleep
+ *
+ */
+#define AUTOCONN   GlobalSetOptions.autoconn
+#define DRONECOUNT GlobalSetOptions.dronecount
+#define DRONETIME  GlobalSetOptions.dronetime
+#define FLUDBLOCK  GlobalSetOptions.fludblock
+#define FLUDNUM    GlobalSetOptions.fludnum
+#define FLUDTIME   GlobalSetOptions.fludtime
+#define IDLETIME   GlobalSetOptions.idletime
+#define LIFESUX    GlobalSetOptions.lifesux
+#define MAXCLIENTS GlobalSetOptions.maxclients
+#define NOISYHTM   GlobalSetOptions.noisy_htm
+#define SPAMNUM    GlobalSetOptions.spam_num
+#define SPAMTIME   GlobalSetOptions.spam_time
+#define SPLITDELAY GlobalSetOptions.server_split_recovery_time
+#define SPLITNUM   GlobalSetOptions.split_smallnet_size
+#define SPLITUSERS GlobalSetOptions.split_smallnet_users
 
-extern void     report_error_on_tty(const char* message);
-extern  int           debuglevel;
-extern  int           debugtty;
-extern  char*         debugmode;
-extern struct Counter Count;
-extern time_t         nextconnect;
-extern time_t         nextping;
-extern time_t         CurrentTime;
-extern size_t         InitialVMTop;
-extern struct Client* GlobalClientList;
-extern struct Client  me;
-extern struct Client* local[];
+
+extern char*          debugmode;
+extern int            debuglevel;
+extern int            debugtty;
+extern char*          creation;
+extern char*          generation;
+extern char*          infotext[];
+extern char*          serno;
+extern char*          version;
+extern const char     serveropts[];
+extern int            LRV;
 extern int            bootopt;
 extern int            cold_start;
+extern int            dline_in_progress;
 extern int            dorehash;
-extern char*          version;
-extern char*          serno;
-extern char*          infotext[];
-extern char*          generation;
-extern char*          creation;
-extern const char     serveropts[];
+extern int            rehashed;
+extern float          currlife;
+extern size_t         InitialVMTop;
+extern struct Client  me;
+extern struct Client* GlobalClientList;
+extern struct Client* local[];
+extern struct Counter Count;
+extern time_t         CurrentTime;
+extern time_t         LCF;
+extern time_t         nextconnect;
+extern time_t         nextping;
 
 
-extern struct Client* serv_cptr_list;
 extern struct Client* local_cptr_list;
 extern struct Client* oper_cptr_list;
+extern struct Client* serv_cptr_list;
 
 #ifdef REJECT_HOLD
 extern int reject_held_fds;
 #endif
 
-extern int rehashed;
-extern int dline_in_progress;
+extern void     report_error_on_tty(const char* message);
 
 #endif

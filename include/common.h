@@ -20,10 +20,7 @@
  */
 #ifndef INCLUDED_common_h
 #define INCLUDED_common_h
-#ifndef INCLUDED_sys_types_h
-#include <sys/types.h>
-#define INCLUDED_sys_types_h
-#endif
+
 
 #ifndef NULL
 #define NULL 0
@@ -59,17 +56,13 @@
 #define IRCD_MAX(a, b)  ((a) > (b) ? (a) : (b))
 #define IRCD_MIN(a, b)  ((a) < (b) ? (a) : (b))
 
-/*
- * irc_string.h contains character comparison and conversion macros and
- * string functions
- */
-#ifndef INCLUDED_irc_string_h
-#include "irc_string.h"
+#if 0
+extern struct SLink *find_user_link(/* struct SLink *, struct Client * */);
 #endif
 
-extern struct SLink *find_user_link(/* struct SLink *, struct Client * */);
-
-/* argh where should this go? */
+/* 
+ * argh where should this go? who uses it? ;-)
+ */
 
 typedef struct
 {
@@ -77,30 +70,5 @@ typedef struct
   char letter;
 } FLAG_ITEM;
 
-
-/*
- * XXX - ACK!!!
- */
-/*
- * ZZZ - These can go away slowly as they are rewritten.
- * calm down Tom.
- * heh :) --Bleep
- *
- */
-#define MAXCLIENTS GlobalSetOptions.maxclients
-#define NOISYHTM   GlobalSetOptions.noisy_htm
-#define LIFESUX    GlobalSetOptions.lifesux
-#define AUTOCONN   GlobalSetOptions.autoconn
-#define IDLETIME   GlobalSetOptions.idletime
-#define FLUDNUM    GlobalSetOptions.fludnum
-#define FLUDTIME   GlobalSetOptions.fludtime
-#define FLUDBLOCK  GlobalSetOptions.fludblock
-#define DRONETIME  GlobalSetOptions.dronetime
-#define DRONECOUNT GlobalSetOptions.dronecount
-#define SPLITDELAY GlobalSetOptions.server_split_recovery_time
-#define SPLITNUM   GlobalSetOptions.split_smallnet_size
-#define SPLITUSERS GlobalSetOptions.split_smallnet_users
-#define SPAMNUM    GlobalSetOptions.spam_num
-#define SPAMTIME   GlobalSetOptions.spam_time
 
 #endif /* INCLUDED_common_h */

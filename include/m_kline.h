@@ -18,17 +18,24 @@
  *
  * $Id$
  */
+#ifndef INCLUDED_m_kline_h
+#define INCLUDED_m_kline_h
 
-typedef struct PKDlines
+struct Client;
+
+struct PKDlines
 {
-        struct PKDlines *next;
-        aClient *sptr, *rcptr;
-        char *user; /* username of K/D lined user */
-        char *host; /* hostname of K/D lined user */
-        char *reason; /* reason they are K/D lined */
-        char *when; /* when the K/D line was set */
-        int type;
-} aPendingLine;
+  struct PKDlines* next;
+  struct Client*   sptr;
+  struct Client*   rcptr;
+  char*            user; /* username of K/D lined user */
+  char*            host; /* hostname of K/D lined user */
+  char*            reason; /* reason they are K/D lined */
+  char*            when; /* when the K/D line was set */
+  int              type;
+};
+
+typedef struct PKDlines aPendingLine;
 
 /*
  * This number represents the number of non-wildcard characters
@@ -38,3 +45,5 @@ typedef struct PKDlines
  */
 
 #define NONWILDCHARS 4
+
+#endif /* INCLUDED_m_kline_h */

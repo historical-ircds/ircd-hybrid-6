@@ -96,6 +96,7 @@ extern int         hunt_server(struct Client* cptr, struct Client* sptr,
 extern const char* my_name_for_link(const char* name, struct ConfItem* conf);
 extern void        send_capabilities(struct Client* client, int use_zip);
 extern int         server_estab(struct Client* cptr);
+extern void        set_autoconn(struct Client *,char *,char *,int);
 extern const char* show_capabilities(struct Client* client);
 extern void        show_servers(struct Client *);
 extern time_t      try_connections(time_t currenttime);

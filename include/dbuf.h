@@ -17,9 +17,11 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /* $Id$ */
-
-#ifndef __dbuf_include__
-#define __dbuf_include__
+#ifndef INCLUDED_dbuf_h
+#define INCLUDED_dbuf_h
+#ifndef INCLUDED_config_h
+#include "config.h"
+#endif
 
 /*
 ** dbuf is a collection of functions which can be used to
@@ -30,32 +32,6 @@
 */
 
 /*
-** These structure definitions are only here to be used
-** as a whole, *DO NOT EVER REFER TO THESE FIELDS INSIDE
-** THE STRUCTURES*! It must be possible to change the internal
-** implementation of this package without changing the
-** interface.
-*/
-#if !defined(_SEQUENT_)
-typedef struct dbuf
-    {
-        u_int   length; /* Current number of bytes stored */
-        u_int   offset; /* Offset to the first byte */
-        struct  dbufbuf *head;  /* First data buffer, if length > 0 */
-        /* added by mnystrom@mit.edu: */
-        struct  dbufbuf *tail; /* last data buffer, if length > 0 */
-    } dbuf;
-#else
-typedef struct dbuf
-    {
-        uint   length; /* Current number of bytes stored */
-        uint   offset; /* Offset to the first byte */
-        struct  dbufbuf *head;  /* First data buffer, if length > 0 */
-        /* added by mnystrom@mit.edu: */
-        struct  dbufbuf *tail; /* last data buffer, if length > 0 */
-    } dbuf;
-#endif
-/*
 ** And this 'dbufbuf' should never be referenced outside the
 ** implementation of 'dbuf'--would be "hidden" if C had such
 ** keyword...
@@ -65,19 +41,34 @@ typedef struct dbuf
 ** data after we take away a bit for malloc to play with. -avalon
 */
 
-#define POINTER_SIZE 4  /* 4-byte pointers... */
-
 #ifdef _4K_DBUFS
-# define DBUF_SIZE 4096-POINTER_SIZE
+# define DBUF_SIZE (4096 - sizeof(void*))
 #else
-# define DBUF_SIZE 2048-POINTER_SIZE
+# define DBUF_SIZE (2048 - sizeof(void*))
 #endif
 
-typedef struct dbufbuf
-    {
-        struct  dbufbuf *next;  /* Next data buffer, NULL if this is last */
-        char    data[DBUF_SIZE];/* Actual data stored here */
- } dbufbuf;
+struct dbufbuf {
+  struct dbufbuf* next;  /* Next data buffer, NULL if this is last */
+  char            data[DBUF_SIZE];/* Actual data stored here */
+};
+
+typedef struct dbufbuf dbufbuf;
+
+/*
+** These structure definitions are only here to be used
+** as a whole, *DO NOT EVER REFER TO THESE FIELDS INSIDE
+** THE STRUCTURES*! It must be possible to change the internal
+** implementation of this package without changing the
+** interface.
+*/
+struct dbuf {
+  struct dbufbuf* head;  /* First data buffer, if length > 0 */
+  struct dbufbuf* tail; /* last data buffer, if length > 0 */
+  unsigned int    length; /* Current number of bytes stored */
+  unsigned int    offset; /* Offset to the first byte */
+};
+
+typedef struct dbuf dbuf;
 
 /*
 ** dbuf_put
@@ -168,4 +159,4 @@ extern  int     dbufblocks;
 extern  int     maxdbufalloc;
 extern  int     maxdbufblocks;
 
-#endif /* __dbuf_include__ */
+#endif /* INCLUDED_dbuf_h */
