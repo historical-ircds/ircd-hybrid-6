@@ -30,23 +30,26 @@ struct Client;
 struct ConfItem;
 struct hostent;
 struct FDList;
+struct DNSReply;
 
 extern	int	highest_fd;
 extern	int	readcalls;
-extern	void    add_connection(struct Client *, int);
-extern	int	add_listener (struct ConfItem *);
-extern	int	check_client (struct Client *,char *,char **);
-extern	int	check_server (struct Client *, struct hostent *,
-				    struct ConfItem *, struct ConfItem *, int);
+extern	void    add_connection(struct Client* client, int);
+extern	int	add_listener (struct ConfItem* listener_conf);
+extern	int	check_client (struct Client* client, char *,char **);
+extern	int	check_server (struct Client* client, 
+                              struct DNSReply* dns_reply,
+			      struct ConfItem* c_line, 
+                              struct ConfItem* n_line, int);
 extern	int	check_server_init (struct Client *);
 extern	void	close_connection (struct Client *);
 extern	void	close_listeners ();
-extern	int	connect_server (struct ConfItem *, struct Client *, struct hostent *);
+extern	int	connect_server(struct ConfItem* conf, struct Client* cptr, 
+                               struct DNSReply* dns_reply);
 extern	void	get_my_name (struct Client *, char *, int);
 extern	int	get_sockerr (struct Client *);
 extern	int	inetport (struct Client *, int, unsigned long);
-extern	void	init_sys ();
-extern  void    remove_hostent_references(const struct hostent* hp);
+extern	void	init_sys();
 extern	int	read_message (time_t, struct FDList*);
 extern	void	report_error (char *, struct Client *);
 extern	void	set_non_blocking (int, struct Client *);

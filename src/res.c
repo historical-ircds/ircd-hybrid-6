@@ -158,12 +158,13 @@ typedef struct reslist {
 } ResRQ;
 
 typedef struct cache {
-  struct cache*  hname_next;
-  struct cache*  hnum_next;
-  struct cache*  list_next;
-  time_t         expireat;
-  time_t         ttl;
-  aHostent       he;
+  struct cache*   hname_next;
+  struct cache*   hnum_next;
+  struct cache*   list_next;
+  time_t          expireat;
+  time_t          ttl;
+  struct Hostent  he;
+  struct DNSReply reply;
 } aCache;
 
 typedef struct cachetable {
@@ -472,7 +473,7 @@ static time_t expire_cache(time_t now)
 
   for (cp = cacheTop; cp; cp = cp2) {
     cp2 = cp->list_next;
-    if (now >= cp->expireat) {
+    if (cp->expireat < now) {
       cainfo.ca_expires++;
       rem_cache(cp);
     }
@@ -567,7 +568,7 @@ static ResRQ* find_id(int id)
 /*
  * gethost_byname - get host address from name
  */
-struct hostent* gethost_byname(const char* name, 
+struct DNSReply* gethost_byname(const char* name, 
                                const struct DNSQuery* query)
 {
   aCache* cp;
@@ -575,7 +576,7 @@ struct hostent* gethost_byname(const char* name,
 
   ++reinfo.re_na_look;
   if ((cp = find_cache_name(name)))
-    return &(cp->he.h);
+    return &(cp->reply);
 
   do_query_name(query, name, NULL);
   nextDNSCheck = 1;
@@ -585,8 +586,8 @@ struct hostent* gethost_byname(const char* name,
 /*
  * gethost_byaddr - get host name from address
  */
-struct hostent* gethost_byaddr(const char* addr,
-                               const struct DNSQuery* query)
+struct DNSReply* gethost_byaddr(const char* addr,
+                                const struct DNSQuery* query)
 {
   aCache *cp;
 
@@ -594,7 +595,7 @@ struct hostent* gethost_byaddr(const char* addr,
 
   ++reinfo.re_nu_look;
   if ((cp = find_cache_number(NULL, addr)))
-    return &(cp->he.h);
+    return &(cp->reply);
 
   do_query_number(query, (const struct in_addr*) addr, NULL);
   nextDNSCheck = 1;
@@ -990,7 +991,7 @@ void get_res(void)
 #endif
   if (answer_count) {
     if (request->type == T_PTR) {
-      struct hostent* hp = NULL;
+      struct DNSReply* reply = NULL;
       
       Debug((DEBUG_DNS, "relookup %s <-> %s",
              request->he.h.h_name, inetntoa((char*) &request->he.h.h_addr)));
@@ -1000,8 +1001,8 @@ void get_res(void)
        * type we automatically gain the use of the cache with no
        * extra kludges.
        */
-      hp = gethost_byname(request->he.h.h_name, &request->query);
-      if (0 == hp) {
+      reply = gethost_byname(request->he.h.h_name, &request->query);
+      if (0 == reply) {
         /*
          * If name wasn't found, a request has been queued and it will
          * be the last one queued.  This is rather nasty way to keep
@@ -1013,7 +1014,7 @@ void get_res(void)
         memcpy(&requestListTail->he.h, &request->he.h, sizeof(struct hostent));
       }
       else
-        (*request->query.callback)(request->query.vptr, hp);
+        (*request->query.callback)(request->query.vptr, reply);
       rem_request(request);
     }
     else {
@@ -1021,7 +1022,7 @@ void get_res(void)
        * got a name and address response, client resolved
        */
       cp = make_cache(request);
-      (*request->query.callback)(request->query.vptr, &cp->he.h);
+      (*request->query.callback)(request->query.vptr, &cp->reply);
 #ifdef  DEBUG
       Debug((DEBUG_INFO,"get_res:cp=%#x request=%#x (made)",cp,request));
 #endif
@@ -1487,6 +1488,7 @@ static aCache* make_cache(ResRQ* request)
   cp = (aCache*) MyMalloc(sizeof(aCache));
   memset(cp, 0, sizeof(aCache));
   dup_hostent(&cp->he, hp);
+  cp->reply.hp = &cp->he.h;
 
   if (request->ttl < 600) {
     ++reinfo.re_shortttl;
@@ -1512,18 +1514,14 @@ static void rem_cache(aCache* ocp)
   struct hostent* hp;
   assert(0 != ocp);
 
+  if (0 < ocp->reply.ref_count)
+    return;
   hp = &ocp->he.h;
 
 #ifdef  DEBUG
   Debug((DEBUG_DNS, "rem_cache: ocp %#x hp %#x l_n %#x aliases %#x",
          ocp, hp, ocp->list_next, hp->h_aliases));
 #endif
-  /*
-   * Cleanup any references to this structure by destroying the
-   * pointer.
-   */
-  remove_hostent_references(hp);
-
   /*
    * remove cache entry from linked list
    */
@@ -1534,9 +1532,11 @@ static void rem_cache(aCache* ocp)
     }
   }
   /*
+   * XXX - memory leak!!!?
    * remove cache entry from hashed name lists
    */
-  if (NULL == hp->h_name)
+  assert(0 != hp->h_name);
+  if (hp->h_name)
     return;
   hashv = hash_name(hp->h_name);
 
@@ -1554,7 +1554,11 @@ static void rem_cache(aCache* ocp)
    * remove cache entry from hashed number list
    */
   hashv = hash_number(hp->h_addr);
-  if( hashv < 0 )
+  /*
+   * XXX - memory leak!!!?
+   */
+  assert(-1 < hashv);
+  if (hashv < 0)
     return;
 #ifdef  DEBUG
   Debug((DEBUG_DEBUG,"rem_cache: h_addr %s hashv %d next %#x first %#x",

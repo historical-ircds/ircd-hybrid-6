@@ -93,7 +93,8 @@ extern fdlist default_fdlist;
 #endif
 
 #if defined(MAXBUFFERS) && !defined(SEQUENT)
-int rcvbufmax = 0, sndbufmax = 0;
+int rcvbufmax = 0;
+int sndbufmax = 0;
 #endif
 #ifdef MAXBUFFERS
 void        reset_sock_opts (int, int);
@@ -106,21 +107,22 @@ extern aClient *local_cptr_list;/* defined in ircd.c */
 extern aClient *oper_cptr_list; /* defined in ircd.c */
 
 
-aClient        *local[MAXCONNECTIONS];
+aClient*       local[MAXCONNECTIONS];
 
-int        highest_fd = 0;
-time_t        timeofday;
-static        struct        sockaddr_in        mysk;
+int            highest_fd = 0;
+time_t         timeofday;
+static struct sockaddr_in mysk;
 
-static        struct        sockaddr *connect_inet (aConfItem *, aClient *, int *);
-static        int        completed_connection (aClient *);
-static        int        check_init (aClient *, char *);
-static        void        do_dns_async (void), set_sock_opts (int, aClient *);
+static struct sockaddr* connect_inet(aConfItem *, aClient *, int *);
+static int        completed_connection (aClient *);
+static int        check_init (aClient *, char *);
+static void       do_dns_async(void);
+static void       set_sock_opts (int, aClient *);
 
 #if defined(MAXBUFFERS) && !defined(SEQUENT)
-static        char        *readbuf;
+static char*    readbuf;
 #else
-static        char        readbuf[READBUF_SIZE];
+static char     readbuf[READBUF_SIZE];
 #endif
 
 /*
@@ -199,33 +201,18 @@ void        report_error(char *text,aClient *cptr)
 }
 
 /*
- * remove_hostent_references - remove local client references to hp
- * scan the local client list for clients that are using the hostent
- * if found, set the clients copy to 0
- */
-void remove_hostent_references(const struct hostent* hp)
-{
-  int i;
-  aClient* cptr;
-  for (i = highest_fd; i > -1; --i) {
-    if ((cptr = local[i]) && (cptr->hostp == hp))
-      cptr->hostp = NULL;
-  }
-}
-
-/*
  * connect_dns_callback - called when resolver query finishes
- * if the query resulted in a successful search, hp will contain
- * a non-null pointer, otherwise hp will be null.
+ * if the query resulted in a successful search, reply will contain
+ * a non-null pointer, otherwise reply will be null.
  * if successful start the connection, otherwise notify opers
  */
-static void connect_dns_callback(void* vptr, struct hostent* hp)
+static void connect_dns_callback(void* vptr, struct DNSReply* reply)
 {
   aConfItem* aconf = (aConfItem*) vptr;
   aconf->dns_pending = 0;
-  if (hp) {
-    memcpy(&aconf->ipnum, hp->h_addr, sizeof(struct in_addr));
-    connect_server(aconf, NULL, hp);
+  if (reply) {
+    memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
+    connect_server(aconf, NULL, reply);
   }
   else
     sendto_ops("Connect to %s failed: host lookup", aconf->host);
@@ -238,14 +225,12 @@ static void connect_dns_callback(void* vptr, struct hostent* hp)
  * 'port' and listen to it.  Returns the fd of the
  * socket created or -1 on error.
  */
-int        inetport(aClient *cptr, int port, u_long bind_addr)
+int inetport(aClient *cptr, int port, u_long bind_addr)
 {
   static struct sockaddr_in server;
   int len = sizeof(server);
-  struct hostent *hp;
 
-
-  (void)strcpy(cptr->name, me.name);
+  strcpy(cptr->name, me.name);
 
   /*
    * At first, open a new socket
@@ -278,14 +263,15 @@ int        inetport(aClient *cptr, int port, u_long bind_addr)
    */
   if (port)
     {
-      memset((void *) &server, 0, sizeof(server));
+      memset(&server, 0, sizeof(server));
       server.sin_family = AF_INET;
 
       if (bind_addr)
         {
+          struct hostent* hp;
           server.sin_addr.s_addr = bind_addr;
-          if ( (hp = gethostbyaddr((char *)&bind_addr, sizeof(bind_addr),
-            AF_INET)) )
+          if ((hp = gethostbyaddr((char*)&bind_addr, 
+                                  sizeof(bind_addr), AF_INET)))
               strncpyzt(cptr->sockhost, hp->h_name, HOSTLEN);
           else
               strncpyzt(cptr->sockhost, inetntoa((char *)&bind_addr), HOSTLEN);
@@ -310,7 +296,7 @@ int        inetport(aClient *cptr, int port, u_long bind_addr)
                sizeof(server)) == -1)
         {
           report_error("binding stream socket %s:%s", cptr);
-          (void)close(cptr->fd);
+          close(cptr->fd);
           return -1;
         }
     }
@@ -330,9 +316,9 @@ int        inetport(aClient *cptr, int port, u_long bind_addr)
 */
 
 #ifdef SOMAXCONN
-  (void)listen(cptr->fd, SOMAXCONN);
+  listen(cptr->fd, SOMAXCONN);
 #else
-  (void)listen(cptr->fd, HYBRID_SOMAXCONN);
+  listen(cptr->fd, HYBRID_SOMAXCONN);
 #endif
   local[cptr->fd] = cptr;
   addto_fdlist(cptr->fd,&default_fdlist);
@@ -576,10 +562,10 @@ void        write_pidfile()
  * from either the server's sockhost (if client fd is a tty or localhost)
  * or from the ip# converted into a string. 0 = success, -1 = fail.
  */
-static        int        check_init(aClient *cptr,char *sockn)
+static int check_init(aClient* cptr, char* sockn)
 {
-  struct        sockaddr_in sk;
-  int        len = sizeof(struct sockaddr_in);
+  struct sockaddr_in sk;
+  int                len = sizeof(struct sockaddr_in);
 
   /* If descriptor is a tty, special checking... */
   /* IT can't EVER be a tty */
@@ -589,15 +575,18 @@ static        int        check_init(aClient *cptr,char *sockn)
       report_error("connect failure: %s %s", cptr);
       return -1;
     }
-  (void)strcpy(sockn, (char *)inetntoa((char *)&sk.sin_addr));
+  strcpy(sockn, inetntoa((char*)&sk.sin_addr));
+
   if (inet_netof(sk.sin_addr) == IN_LOOPBACKNET)
     {
-      cptr->hostp = NULL;
+      if (cptr->dns_reply) {
+        --cptr->dns_reply->ref_count;
+        cptr->dns_reply = NULL;
+      }
       strncpyzt(sockn, me.name, HOSTLEN);
     }
-  (void)memcpy( (void *)&cptr->ip, (void *)&sk.sin_addr,
-        sizeof(struct in_addr));
-  cptr->port = (int)(ntohs(sk.sin_port));
+  memcpy(&cptr->ip, &sk.sin_addr, sizeof(struct in_addr));
+  cptr->port = ntohs(sk.sin_port);
 
   return 0;
 }
@@ -618,8 +607,9 @@ static        int        check_init(aClient *cptr,char *sockn)
  */
 int check_client(aClient *cptr,char *username,char **reason)
 {
-  static char sockname[HOSTLEN+1];
-  int         i;
+  static char     sockname[HOSTLEN + 1];
+  int             i;
+  struct hostent* hp = 0;
  
   ClearAccess(cptr);
   Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]",
@@ -628,7 +618,10 @@ int check_client(aClient *cptr,char *username,char **reason)
   if (check_init(cptr, sockname))
     return -2;
 
-  if ((i = attach_Iline(cptr, cptr->hostp, sockname,username, reason)))
+  if (cptr->dns_reply)
+    hp = cptr->dns_reply->hp;
+
+  if ((i = attach_Iline(cptr, hp, sockname, username, reason)))
     {
       Debug((DEBUG_DNS,"ch_cl: access denied: %s[%s]",
              cptr->name, sockname));
@@ -654,10 +647,11 @@ int check_client(aClient *cptr,char *username,char **reason)
  */
 int check_server_init(aClient *cptr)
 {
-  char        *name;
-  aConfItem *c_conf = NULL, *n_conf = NULL;
-  struct        hostent        *hp = NULL;
-  Link        *lp;
+  char*            name;
+  struct ConfItem* c_conf    = NULL;
+  struct ConfItem* n_conf    = NULL;
+  struct DNSReply* dns_reply = NULL;
+  struct SLink*    lp;
 
   name = cptr->name;
   Debug((DEBUG_DNS, "sv_cl: check access for %s[%s]",
@@ -692,7 +686,7 @@ int check_server_init(aClient *cptr)
   ** real name, then check with it as the host. Use gethostbyname()
   ** to check for servername as hostname.
   */
-  if (!cptr->hostp)
+  if (!cptr->dns_reply)
     {
       aConfItem *aconf;
 
@@ -708,28 +702,32 @@ int check_server_init(aClient *cptr)
           */
           ClearAccess(cptr);
           Debug((DEBUG_DNS,"sv_ci:cache lookup (%s)",aconf->host));
-          hp = conf_dns_lookup(aconf);
+          dns_reply = conf_dns_lookup(aconf);
         }
     }
-  return check_server(cptr, hp, c_conf, n_conf, 0);
+  return check_server(cptr, dns_reply, c_conf, n_conf, 0);
 }
 
 int check_server(aClient *cptr,
-                 struct hostent *hp,
+                 struct DNSReply* dns_reply,
                  aConfItem *c_conf,
                  aConfItem *n_conf,
                  int estab)
 {
-  char        *name;
-  char        sockname[HOSTLEN+1];
-  Link        *lp = cptr->confs;
-  int        i;
+  char*           name;
+  char            sockname[HOSTLEN + 1];
+  Link*           lp = cptr->confs;
+  int             i;
+  struct hostent* hp;
 
   ClearAccess(cptr);
   if (check_init(cptr, sockname))
     return -2;
 
-  hp = (hp) ? hp : cptr->hostp;
+  hp = (dns_reply) ? dns_reply->hp : 0;
+  if (!hp && cptr->dns_reply)
+    hp = cptr->dns_reply->hp;
+
   if (hp)
     {
       /*
@@ -737,8 +735,8 @@ int check_server(aClient *cptr,
        */
       for (i = 0; hp->h_addr_list[i]; i++)
         {
-	  if (!bcmp(hp->h_addr_list[i], (char *)&cptr->ip,
-		    sizeof(struct in_addr)))
+	  if (0 == memcmp(hp->h_addr_list[i], (char*)&cptr->ip,
+		          sizeof(struct in_addr)))
 	    break;
         }
       if (!hp->h_addr_list[i])
@@ -755,7 +753,7 @@ int check_server(aClient *cptr,
        * if we are missing a C or N line from above, search for
        * it under all known hostnames we have for this ip#.
        */
-      for (i=0,name = hp->h_name; name ; name = hp->h_aliases[i++])
+      for (i = 0, name = hp->h_name; name; name = hp->h_aliases[i++])
         {
           Debug((DEBUG_DNS, "sv_cl: gethostbyaddr: %s->%s",
                  sockname, name));
@@ -794,10 +792,10 @@ int check_server(aClient *cptr,
   if (!hp)
     {
       if (!c_conf)
-        c_conf = find_conf_ip(lp, (char *)&cptr->ip,
+        c_conf = find_conf_ip(lp, (char*)&cptr->ip,
                               cptr->username, CONF_CONNECT_SERVER);
       if (!n_conf)
-        n_conf = find_conf_ip(lp, (char *)&cptr->ip,
+        n_conf = find_conf_ip(lp, (char*)&cptr->ip,
                               cptr->username, CONF_NOCONNECT_SERVER);
     }
   else
@@ -830,13 +828,13 @@ int check_server(aClient *cptr,
   /*
    * attach the C and N lines to the client structure for later use.
    */
-  (void)attach_conf(cptr, n_conf);
-  (void)attach_conf(cptr, c_conf);
-  (void)attach_confs(cptr, name, CONF_HUB|CONF_LEAF);
+  attach_conf(cptr, n_conf);
+  attach_conf(cptr, c_conf);
+  attach_confs(cptr, name, CONF_HUB | CONF_LEAF);
   
-  if ((c_conf->ipnum.s_addr == -1))
-    (void)memcpy((void *)&c_conf->ipnum, (void *)&cptr->ip, 
-          sizeof(struct in_addr));
+  if (c_conf->ipnum.s_addr == INADDR_NONE)
+    memcpy(&c_conf->ipnum, &cptr->ip, sizeof(struct in_addr));
+
   set_client_sockhost(cptr, c_conf->host);
   
   Debug((DEBUG_DNS,"sv_cl: access ok: %s[%s]",
@@ -955,6 +953,10 @@ void close_connection(aClient *cptr)
         nextconnect = aconf->hold;
     }
 
+  if (cptr->dns_reply) {
+    --cptr->dns_reply->ref_count;
+    cptr->dns_reply = 0;
+  }
   if (cptr->fd >= 0)
     {
       flush_connections(cptr->fd);
@@ -968,7 +970,7 @@ void close_connection(aClient *cptr)
         zip_free(cptr);
 #endif
       delfrom_fdlist(cptr->fd,&default_fdlist);
-      (void)close(cptr->fd);
+      close(cptr->fd);
       cptr->fd = -2;
       DBufClear(&cptr->sendQ);
       DBufClear(&cptr->recvQ);
@@ -1977,11 +1979,13 @@ int read_message(time_t delay, fdlist *listp)
 /*
  * connect_server
  */
-int connect_server(aConfItem *aconf, aClient *by, struct hostent *hp)
+int connect_server(aConfItem *aconf, aClient* by, struct DNSReply* reply)
 {
-  struct sockaddr *svp;
-  aClient *cptr, *c2ptr;
-  int        errtmp, len;
+  struct sockaddr* svp;
+  aClient*         cptr;
+  aClient*         c2ptr;
+  int              errtmp;
+  int              len;
 
   Debug((DEBUG_NOTICE,"Connect to %s[%s] @%s",
          aconf->user, aconf->host, inetntoa((char*)&aconf->ipnum)));
@@ -2006,23 +2010,23 @@ int connect_server(aConfItem *aconf, aClient *by, struct hostent *hp)
     {
       if ((aconf->ipnum.s_addr = inet_addr(aconf->host)) == INADDR_NONE)
         {
-          struct DNSQuery query;
+          struct DNSQuery  query;
           
           query.vptr     = aconf;
           query.callback = connect_dns_callback;
-          hp = gethost_byname(aconf->host, &query);
-          Debug((DEBUG_NOTICE, "co_sv: hp %x ac %x na %s ho %s",
-                 hp, aconf, aconf->name, aconf->host));
-          if (!hp) 
+          reply = gethost_byname(aconf->host, &query);
+          Debug((DEBUG_NOTICE, "co_sv: reply %x ac %x na %s ho %s",
+                 reply, aconf, aconf->name, aconf->host));
+          if (!reply) 
             {
               aconf->dns_pending = 1;
               return 0;
             }
-          memcpy(&aconf->ipnum, hp->h_addr, sizeof(struct in_addr));
+          memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
         }
     }
   cptr = make_client(NULL);
-  cptr->hostp = hp;
+  cptr->dns_reply = reply;
   /*
    * Copy these in so we have something for error detection.
    */
@@ -2034,16 +2038,18 @@ int connect_server(aConfItem *aconf, aClient *by, struct hostent *hp)
     {
       if (cptr->fd != -1)
         {
-          (void)close(cptr->fd);
+          close(cptr->fd);
         }
       cptr->fd = -2;
+      cptr->dns_reply = 0;
       free_client(cptr);
       return -1;
     }
 
   set_non_blocking(cptr->fd, cptr);
   set_sock_opts(cptr->fd, cptr);
-  (void)signal(SIGALRM, dummy);
+  signal(SIGALRM, dummy);
+
   if (connect(cptr->fd, svp, len) < 0 && errno != EINPROGRESS)
     {
       errtmp = errno; /* other system calls may eat errno */
@@ -2054,6 +2060,7 @@ int connect_server(aConfItem *aconf, aClient *by, struct hostent *hp)
                    me.name, by->name, cptr);
       (void)close(cptr->fd);
       cptr->fd = -2;
+      cptr->dns_reply = 0;
       free_client(cptr);
       errno = errtmp;
       if (errno == EINTR)
@@ -2070,8 +2077,8 @@ int connect_server(aConfItem *aconf, aClient *by, struct hostent *hp)
    * No need to check access and do gethostbyaddr calls.
    * There must at least be one as we got here C line...  meLazy
    */
-  (void)attach_confs_host(cptr, aconf->host,
-          CONF_NOCONNECT_SERVER | CONF_CONNECT_SERVER );
+  attach_confs_host(cptr, aconf->host,
+                    CONF_NOCONNECT_SERVER | CONF_CONNECT_SERVER );
 
   if (!find_conf_host(cptr->confs, aconf->host, CONF_NOCONNECT_SERVER) ||
       !find_conf_host(cptr->confs, aconf->host, CONF_CONNECT_SERVER))
@@ -2083,8 +2090,9 @@ int connect_server(aConfItem *aconf, aClient *by, struct hostent *hp)
                    ":%s NOTICE %s :Connect to host %s failed.",
                    me.name, by->name, cptr);
       det_confs_butmask(cptr, 0);
-      (void)close(cptr->fd);
+      close(cptr->fd);
       cptr->fd = -2;
+      cptr->dns_reply = 0;
       free_client(cptr);
       return(-1);
     }
@@ -2094,14 +2102,14 @@ int connect_server(aConfItem *aconf, aClient *by, struct hostent *hp)
   (void)make_server(cptr);
   if (by && IsPerson(by))
     {
-      (void)strcpy(cptr->serv->by, by->name);
+      strcpy(cptr->serv->by, by->name);
       if (cptr->serv->user) free_user(cptr->serv->user, NULL);
       cptr->serv->user = by->user;
       by->user->refcnt++;
     } 
   else
     {
-      (void)strcpy(cptr->serv->by, "AutoConn.");
+      strcpy(cptr->serv->by, "AutoConn.");
       if (cptr->serv->user) free_user(cptr->serv->user, NULL);
       cptr->serv->user = NULL;
     }
@@ -2115,6 +2123,13 @@ int connect_server(aConfItem *aconf, aClient *by, struct hostent *hp)
   set_client_sockhost(cptr, aconf->host);
   add_client_to_list(cptr);
   nextping = timeofday;
+  /*
+   * only bump the reply ref count if we get to the end so we don't have
+   * to worry about checking it if an error occurs during the connect
+   */
+  if (cptr->dns_reply)
+    ++cptr->dns_reply->ref_count;
+
   return 0;
 }
 
@@ -2122,7 +2137,6 @@ static struct sockaddr* connect_inet(aConfItem *aconf, aClient *cptr,
                                      int *lenp)
 {
   static struct sockaddr_in server;
-  struct        hostent     *hp;
 
   /*
    * Might as well get sockhost from here, the connection is attempted
@@ -2181,19 +2195,19 @@ static struct sockaddr* connect_inet(aConfItem *aconf, aClient *cptr,
     aconf->ipnum.s_addr = inet_addr(aconf->host);
   if (INADDR_NONE == aconf->ipnum.s_addr)
     {
-      hp = cptr->hostp;
-      if (!hp)
+      struct DNSReply* reply = cptr->dns_reply;
+      if (!reply)
         {
           Debug((DEBUG_FATAL, "%s: unknown host", aconf->host));
           return NULL;
         }
-      memcpy(&aconf->ipnum, hp->h_addr, sizeof(struct in_addr));
+      memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
     }
   server.sin_addr.s_addr = aconf->ipnum.s_addr;
   cptr->ip.s_addr = aconf->ipnum.s_addr;
   server.sin_port = htons((aconf->port > 0) ? aconf->port : portnum);
   *lenp = sizeof(server);
-  return        (struct sockaddr *)&server;
+  return (struct sockaddr*) &server;
 }
 
 /*

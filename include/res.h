@@ -14,18 +14,23 @@
 struct Client;
 struct hostent;
 
+struct DNSReply {
+  struct hostent* hp;        /* hostent struct  */
+  int             ref_count; /* reference count */
+};
+
 struct DNSQuery {
   void* vptr;               /* pointer used by callback to identify request */
-  void (*callback)(void* , struct hostent* );  /* callback to call */
+  void (*callback)(void* vptr, struct DNSReply* reply); /* callback to call */
 };
 
 extern int ResolverFileDescriptor;  /* GLOBAL - file descriptor (s_bsd.c) */
 
 extern void get_res(void);
-extern struct hostent* gethost_byname(const char* name, 
-                                      const struct DNSQuery* req);
-extern struct hostent* gethost_byaddr(const char* name, 
-                                      const struct DNSQuery* req);
+extern struct DNSReply* gethost_byname(const char* name, 
+                                       const struct DNSQuery* req);
+extern struct DNSReply* gethost_byaddr(const char* name, 
+                                       const struct DNSQuery* req);
 extern void            flush_cache(void);
 extern int	       init_resolver(void);
 extern void            restart_resolver(void);

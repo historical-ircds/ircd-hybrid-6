@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.6  1999/07/08 23:04:06  db
+ * - fixed goof in s_conf.h
+ *
  * Revision 1.5  1999/07/08 22:46:22  db
  * - changes to centralize config.h ircd config files to one struct
  *
@@ -56,6 +59,8 @@
 
 struct Client;
 struct SLink;
+struct DNSReply;
+struct hostent;
 
 struct ConfItem
 {
@@ -140,7 +145,7 @@ extern void             free_conf(struct ConfItem*);
 
 extern FBFILE*          openconf(char* filename);
 extern void             initconf(int, FBFILE*, int);
-extern struct hostent*  conf_dns_lookup(struct ConfItem* aconf);
+extern struct DNSReply* conf_dns_lookup(struct ConfItem* aconf);
 extern int              attach_conf(struct Client*, struct ConfItem *);
 extern struct ConfItem* attach_confs(struct Client*, char *, int);
 extern struct ConfItem* attach_confs_host(struct Client*, char *, int);

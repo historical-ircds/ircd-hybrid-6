@@ -350,8 +350,7 @@ static	time_t	try_connections(time_t currenttime)
 	}
       else
 	{
-	  if (connect_server(con_conf, (aClient *)NULL,
-			     (struct hostent *)NULL) == 0)
+	  if (connect_server(con_conf, 0, 0) == 0)
 	    sendto_ops("Connection to %s[%s] activated.",
 		       con_conf->name, con_conf->host);
 	}
