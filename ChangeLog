@@ -1,3 +1,8 @@
+*** 19991210_1 by lusky
+revved patchlevel to b116
+fix for quote dline's being treated as /8's (db)
+
+
 *** 19991208_1 by lusky
 revved patchlevel to b115
 DNS coring problem is fixed!! (db)
