@@ -80,6 +80,7 @@ static	int     is_banned (aClient *, aChannel *);
 static	void	set_mode (aClient *, aClient *, aChannel *, int, char **);
 static	void	sub1_from_channel (aChannel *);
 
+
 int	check_channel_name(const char* name);
 void	del_invite (aClient *, aChannel *);
 

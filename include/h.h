@@ -144,6 +144,7 @@ extern	int	hunt_server (struct Client *,struct Client *,char *,int,int,char **);
 extern	struct Client	*next_client (struct Client *, char *);
 extern	struct Client	*next_client_double (struct Client *, char *);
 
+/* s_user.c */
 extern	int	m_umode (struct Client *, struct Client *, int, char **);
 extern	int	m_names (struct Client *, struct Client *, int, char **);
 extern	int	m_server_estab (struct Client *);
@@ -151,6 +152,7 @@ extern	void	send_umode (struct Client *, struct Client *, int, int, char *);
 extern	void	send_umode_out (struct Client*, struct Client *, int);
 
 
+/* stuff in list.c */
 extern	void	_free_link (struct SLink *);
 extern	void	_free_user (struct User *, struct Client *);
 extern	struct SLink	*make_link (void);
@@ -158,15 +160,10 @@ extern	struct User	*make_user (struct Client *);
 extern	struct Class* make_class(void);
 extern	struct Server	*make_server (struct Client *);
 extern	struct SLink	*find_user_link (struct SLink *, struct Client *);
-extern	void	checklist (void);
 extern	void	initlists (void);
 extern  void	block_garbage_collect(void);	/* list.c */
 extern  void	block_destroy(void);		/* list.c */
 
-extern int     zip_init (struct Client *);
-extern void    zip_free (struct Client *);
-extern char    *unzip_packet (struct Client *, char *, int *);
-extern char    *zip_buffer (struct Client *, char *, int *, int);
 
 extern	int	dopacket (struct Client *, char *, int);
 

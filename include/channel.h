@@ -43,5 +43,6 @@ extern	int	can_send (aClient *, aChannel *);
 extern	int	is_chan_op (aClient *, aChannel *);
 extern	int	has_voice (aClient *, aChannel *);
 extern	int	count_channels (aClient *);
+extern  int     m_names(aClient *, aClient *,int, char **);
 
 #endif

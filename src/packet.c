@@ -23,6 +23,7 @@
 #include "struct.h"
 #include "common.h"
 #include "msg.h"
+#include "s_zip.h"
 #include "h.h"
  
 /*
