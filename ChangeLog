@@ -1,3 +1,9 @@
+*** 20010624_1 by db
+- upped config.h level from6 to 6.1 CONFIG_H_LEVEL_6_1
+  there are enough differences
+
+
+
 *** 20010620_1 by db
 - umm just a bit too severe on the IP hiding, showing 255.255.255.255
   for everything breaks vbots on tcm's.
