@@ -2724,7 +2724,11 @@ static int do_user(char *nick,
     return register_user(cptr, sptr, sptr->name, username);
   else
     {
-      strncpy(sptr->user->username, username, USERLEN);
+      if (IsGotId(sptr))
+	strncpy(sptr->user->username, sptr->username, USERLEN);
+      else
+	strncpy(sptr->user->username, username, USERLEN);
+
       sptr->user->username[USERLEN] = '\0';
     }
   return 0;
