@@ -1289,7 +1289,7 @@ sendto_realops(const char *pattern, ...)
 
   vsendto_realops(pattern, args);
 
-  va_end(vl);
+  va_end(args);
 } /* sendto_realops() */
 
 /*
