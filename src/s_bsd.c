@@ -47,6 +47,7 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/file.h>
+#define BSD_COMP          /* needed on Solaris for FIONBIO */
 #include <sys/ioctl.h>
 #include <sys/resource.h>
 #include <sys/param.h>    /* NOFILE */
