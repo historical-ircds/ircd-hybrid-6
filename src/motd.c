@@ -23,7 +23,6 @@
  *   $Id$
  */
 
-#include "channel.h"
 #include "h.h"
 #include "s_bsd.h"
 #include "fileio.h"

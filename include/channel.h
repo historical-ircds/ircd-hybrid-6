@@ -19,6 +19,9 @@
 
 #ifndef	__channel_include__
 #define __channel_include__
+
+struct Channel;
+
 #define CREATE 1	/* whether a channel should be
 			   created or just tested for existance */
 
@@ -32,7 +35,7 @@
 #define	MAXMODEPARAMS	4
 
 extern void sync_channels();
-extern	aChannel *find_channel (char *, aChannel *);
+extern	struct Channel *find_channel (char *, struct Channel *);
 extern	void	remove_user_from_channel (aClient *, aChannel *,int);
 extern	void	del_invite (aClient *, aChannel *);
 extern	void	send_user_joins (aClient *, aClient *);

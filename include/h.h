@@ -66,7 +66,6 @@ extern	aClient	*find_userhost (char *, char *, aClient *, int *);
 extern aConfItem *find_is_klined(char*, char *,unsigned long);
 
 /* hash d lines */
-unsigned long host_name_to_ip(char *, unsigned long *);
 extern aConfItem *find_dkill(aClient *cptr);
 
 extern  void	add_temp_kline(aConfItem *);

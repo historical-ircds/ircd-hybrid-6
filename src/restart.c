@@ -1,6 +1,7 @@
 #include "common.h"
 #include "h.h"
 #include "send.h"
+#include "restart.h"
 
 #include <signal.h>
 
@@ -34,7 +35,7 @@ void restart(char *mesg)
   server_reboot();
 }
 
-void s_restart()
+void s_restart(void)
 {
   static int restarting = 0;
 
@@ -50,7 +51,7 @@ void s_restart()
     }
 }
 
-void server_reboot()
+void server_reboot(void)
 {
   int i;
   
@@ -82,7 +83,7 @@ void server_reboot()
   exit(-1);
 }
 
-void s_die()  
+void s_die(void)  
 {
   flush_connections(me.fd);
 #ifdef  USE_SYSLOG
@@ -121,10 +122,10 @@ void	 setup_signals()
   sigemptyset(&act.sa_mask);
   sigaddset(&act.sa_mask, SIGHUP);
   sigaction(SIGHUP, &act, NULL);
-  act.sa_handler = s_restart;
+  act.sa_handler = (void *)s_restart;
   sigaddset(&act.sa_mask, SIGINT);
   sigaction(SIGINT, &act, NULL);
-  act.sa_handler = s_die;
+  act.sa_handler = (void *)s_die;
   sigaddset(&act.sa_mask, SIGTERM);
   sigaction(SIGTERM, &act, NULL);
 
