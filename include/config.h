@@ -705,6 +705,12 @@
  */
 #undef  IGNORE_BOGUS_TS
 
+/* LITTLE_I_LINE support
+ * clients with a little i instead of an I in their I line
+ * can be chanopped, but cannot chanop anyone else.
+ */
+#undef LITTLE_I_LINES
+
 /* GLINES - global Kline-like bans
  * Define this if you want GLINE support
  * when this is defined, 3 completely different opers from

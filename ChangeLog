@@ -1,19 +1,14 @@
-*** 20011024_4 by wcampbel
+*** 20011024_3 by wcampbel
 Misc doc cleanups (approved by Diane)
 
 
-*** 20011024_3 by db
+*** 20011024_2 by db
 - removed NO_CHANOPS_ON_SPLIT
 
 
 
-*** 20011024_2 by wcampbel
+*** 20011024_1 by wcampbel
 Corrected two pieces of information in example.conf
-
-
-*** 20011024_1 by db
-- rip LITTLE_I_LINES out
-
 
 
 *** 20011019_1 by db

@@ -125,6 +125,10 @@ typedef struct QlineItem {
 #define CONF_FLAGS_ZIP_LINK             0x0800
 #define CONF_FLAGS_SPOOF_IP             0x1000
 
+#ifdef LITTLE_I_LINES
+#define CONF_FLAGS_LITTLE_I_LINE        0x8000
+#endif
+
 
 /* Macros for aConfItem */
 
@@ -144,6 +148,9 @@ typedef struct QlineItem {
 
 #define IsConfDoIdentd(x)       ((x)->flags & CONF_FLAGS_DO_IDENTD)
 #define IsConfDoSpoofIp(x)      ((x)->flags & CONF_FLAGS_SPOOF_IP)
+#ifdef LITTLE_I_LINES
+#define IsConfLittleI(x)        ((x)->flags & CONF_FLAGS_LITTLE_I_LINE)
+#endif
 
 /* port definitions for Opers */
 
