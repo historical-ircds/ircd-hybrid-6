@@ -176,11 +176,6 @@ struct SLink
 
 /* misc variable externs */
 
-/* misc defines */
-
-#define UTMP            "/etc/utmp"
-#define COMMA           ","
-
 #ifdef ORATIMING
 /* Timing stuff (for performance measurements): compile with -DORATIMING
    and put a TMRESET where you want the counter of time spent set to 0,
