@@ -64,6 +64,8 @@ static void recurse_send_quits(aClient *, aClient *, aClient *, char *, char *);
 static void remove_dependents (aClient *, aClient *, aClient *, char *, char *);
 char *show_capabilities(aClient *);
 
+extern char *oper_privs(aClient *, int);	/* defined in s_conf.c */
+
 static	char	*months[] = {
 	"January",	"February",	"March",	"April",
 	"May",	        "June",	        "July",	        "August",
@@ -1128,12 +1130,25 @@ void show_opers(aClient *cptr,char *name)
   for(cptr2 = oper_cptr_list; cptr2; cptr2 = cptr2->next_oper_client)
     {
       j++;
-      sendto_one(cptr, ":%s %d %s :%s [%c] (%s@%s) Idle: %d",
-		 me.name, RPL_STATSDEBUG, name,
-		 cptr2->name,
-		 IsAnOper(cptr2)?'O':'o',
-		 cptr2->user->username, cptr2->user->host,
-		 timeofday - cptr2->user->last);
+      if (MyClient(cptr) && IsAnOper(cptr))
+	{
+	  sendto_one(cptr, ":%s %d %s :[%c][%s] %s (%s@%s) Idle: %d",
+		     me.name, RPL_STATSDEBUG, name,
+		     IsOper(cptr2) ? 'O' : 'o',
+		     oper_privs(cptr2,cptr2->confs->value.aconf->port),
+		     cptr2->name,
+		     cptr2->user->username, cptr2->user->host,
+		     timeofday - cptr2->user->last);
+	}
+      else
+	{
+	  sendto_one(cptr, ":%s %d %s :[%c] %s (%s@%s) Idle: %d",
+		     me.name, RPL_STATSDEBUG, name,
+		     IsOper(cptr2) ? 'O' : 'o',
+		     cptr2->name,
+		     cptr2->user->username, cptr2->user->host,
+		     timeofday - cptr2->user->last);
+	}
     }
 
   sendto_one(cptr, ":%s %d %s :%d OPER%s", me.name, RPL_STATSDEBUG,
