@@ -126,9 +126,9 @@ extern char *oper_privs(aClient *,int);	/* defined in s_conf.c */
 extern void outofmemory(void);		/* defined in list.c */
 extern void s_die(void);		/* defined in ircd.c as VOIDSIG */
 extern int match(char *,char *);	/* defined in match.c */
-extern void show_opers(aClient *,char *);
-extern void show_servers(aClient *,char *);
-extern void count_memory(aClient *,char *);
+extern void show_opers(aClient *,char *);   /* defined in s_misc.c */
+extern void show_servers(aClient *,char *); /* defined in s_misc.c */
+extern void count_memory(aClient *,char *); /* defined in s_debug.c */
 
 /* Local function prototypes */
 static int isnumber(char *);	/* return 0 if not, else return number */
@@ -136,6 +136,7 @@ static char *cluster(char *);
 static void set_autoconn(aClient *,char *,char *,int);
 static void report_specials(aClient *,int,int);
 static int bad_tld(char *);
+static void show_ports(aClient *,char *);
 
 int send_motd(aClient *,aClient *,int, char **,aMessageFile *); 
 static int safe_write(aClient *,char *,char *,int,char *);
@@ -2262,9 +2263,13 @@ int	m_stats(aClient *cptr,
       valid_stats++;
       break;
 
-    case 'p' : case 'P' :
+    case 'p' :
       show_opers(sptr, parv[0]);
       valid_stats++;
+      break;
+
+    case 'P' :
+      show_ports(sptr, parv[0]);
       break;
 
     case 'Q' : case 'q' :
@@ -2362,6 +2367,19 @@ int	m_stats(aClient *cptr,
 		       sptr->name, sptr->user->username, sptr->user->host,
 		       sptr->user->server);
   return 0;
+}
+
+static void show_ports(aClient *cptr,char *name)
+{
+  register aConfItem *aconf;
+
+  sendto_one(cptr,":%s NOTICE %s : %d",me.name,name,me.port);  
+
+  for(aconf=conf;aconf;aconf=aconf->next)
+    {
+      if(aconf->status & CONF_LISTEN_PORT)
+	sendto_one(cptr,":%s NOTICE %s : %d",me.name,name,aconf->port);
+    }
 }
 
 /*

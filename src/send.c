@@ -43,7 +43,11 @@ extern aClient *serv_cptr_list;
 static	char	sendbuf[2048];
 static	int	send_message (aClient *, char *, int);
 
+#ifdef USE_SENTALONG
 static	int	sentalong[MAXCONNECTIONS];
+#else
+static unsigned long current_serial=0L;
+#endif
 
 int format(char *,char *,char *,char *,char *,char *,char *,char *,
 	char *,char *,char *,char *,char *,char *);
@@ -430,7 +434,12 @@ va_dcl
   va_start(vl);
 # endif
 
+#ifdef USE_SENTALONG
   memset((void *)sentalong, 0, sizeof(sentalong));
+#else
+  current_serial++;
+#endif
+
   for (lp = chptr->members; lp; lp = lp->next)
     {
       acptr = lp->value.cptr;
@@ -445,13 +454,21 @@ va_dcl
 	  sendto_prefix_one(acptr, from, pattern, p1, p2,
 			    p3, p4, p5, p6, p7, p8);
 # endif
+#ifdef USE_SENTALONG
 	  sentalong[i] = 1;
+#else
+	  acptr->serial_number = current_serial;
+#endif
 	}
       else
 	{
 	  /* Now check whether a message has been sent to this
 	   * remote link already */
+#ifdef USE_SENTALONG
 	  if (sentalong[i] == 0)
+#else
+          if(acptr->serial_number != current_serial)
+#endif
 	    {
 # ifdef	USE_VARARGS
 	      sendto_prefix_one(acptr, from, pattern, vl);
@@ -460,7 +477,11 @@ va_dcl
 				p1, p2, p3, p4,
 				p5, p6, p7, p8);
 # endif
+#ifdef USE_SENTALONG
 	      sentalong[i] = 1;
+#else
+	      acptr->serial_number = current_serial;
+#endif
 	    }
 	}
     }
@@ -497,7 +518,12 @@ va_dcl
   va_start(vl);
 # endif
 
+#ifdef USE_SENTALONG
   memset((void *)sentalong,0,sizeof(sentalong));
+#else
+  current_serial++;
+#endif
+
   for (lp = chptr->members; lp; lp = lp->next)
     {
       if (!(lp->flags & type))
@@ -514,13 +540,21 @@ va_dcl
 	  sendto_prefix_one(acptr, from, pattern, p1, p2,
 			    p3, p4, p5, p6, p7, p8);
 # endif
+#ifdef USE_SENTALONG
 	  sentalong[i] = 1;
+#else
+	  acptr->serial_number = current_serial;
+#endif
 	}
       else
 	{
 	  /* Now check whether a message has been sent to this
 	   * remote link already */
+#ifdef USE_SENTALONG
 	  if (sentalong[i] == 0)
+#else
+	  if (acptr->serial_number != current_serial)
+#endif
 	    {
 # ifdef	USE_VARARGS
 	      sendto_prefix_one(acptr, from, pattern, vl);
@@ -529,7 +563,11 @@ va_dcl
 				p1, p2, p3, p4,
 				p5, p6, p7, p8);
 # endif
+#ifdef USE_SENTALONG
 	      sentalong[i] = 1;
+#else
+	      acptr->serial_number = current_serial;
+#endif
 	    }
 	}
     }
@@ -604,17 +642,31 @@ va_dcl
 # ifdef	USE_VARARGS
   va_start(vl);
 # endif
+
+#ifdef USE_SENTALONG
   memset((void *)sentalong,0,sizeof(sentalong));
+
   if (user->fd >= 0)
     sentalong[user->fd] = 1;
+#else
+  current_serial++;
+  user->serial_number = current_serial;
+#endif
+
   if (user->user)
     for (channels=user->user->channel;channels;channels=channels->next)
       for(users=channels->value.chptr->members;users;users=users->next)
 	{
 	  cptr = users->value.cptr;
+#ifdef USE_SENTALONG
 	  if (!MyConnect(cptr) || sentalong[cptr->fd])
 	    continue;
 	  sentalong[cptr->fd]++;
+#else
+	  if (!MyConnect(cptr) || (cptr->serial_number == current_serial))
+	    continue;
+	  cptr->serial_number = current_serial;
+#endif
 # ifdef	USE_VARARGS
 	  sendto_prefix_one(cptr, user, pattern, vl);
 # else
@@ -693,12 +745,19 @@ va_dcl
   register    Link    *lp;
   register    aClient *acptr;
   register    int     i;
+#ifdef USE_SENTALONG
   int	sentalong[MAXCONNECTIONS];
+#endif
 
 # ifdef USE_VARARGS
   va_start(vl);
 # endif
+#ifdef USE_SENTALONG
   memset((void *)sentalong,0,sizeof(sentalong));
+#else
+  current_serial++;
+#endif
+
   for (lp = chptr->members; lp; lp = lp->next)
     {
       acptr = lp->value.cptr;
@@ -709,7 +768,11 @@ va_dcl
 	{
 	  /* Now check whether a message has been sent to this
 	   * remote link already */
+#ifdef USE_SENTALONG
 	  if (sentalong[i] == 0)
+#else
+	  if (acptr->serial_number != current_serial)
+#endif
 	    {
 # ifdef USE_VARARGS
 	      sendto_prefix_one(acptr, from, pattern, vl);
@@ -718,7 +781,11 @@ va_dcl
 				p1, p2, p3, p4,
 				p5, p6, p7, p8);
 # endif
+#ifdef USE_SENTALONG
 	      sentalong[i] = 1;
+#else
+	      acptr->serial_number = current_serial;
+#endif
 	    }
 	}
     }
@@ -1148,7 +1215,13 @@ va_dcl
 #ifdef	USE_VARARGS
   va_start(vl);
 #endif
+
+#ifdef USE_SENTALONG
   memset((void *)sentalong,0,sizeof(sentalong));
+#else
+  current_serial++;
+#endif
+
   for (cptr = client; cptr; cptr = cptr->next)
     {
       if (!SendWallops(cptr))
@@ -1159,11 +1232,20 @@ va_dcl
 */
       i = cptr->from->fd;	/* find connection oper is on */
 
+#ifdef USE_SENTALONG
       if (sentalong[i])	/* sent message along it already ? */
 	continue;
+#else
+      if (cptr->serial_number == current_serial)
+	continue;
+#endif
       if (cptr->from == one)
 	continue;	/* ...was the one I should skip */
+#ifdef USE_SENTALONG
       sentalong[i] = 1;
+#else
+      cptr->serial_number = current_serial;
+#endif
 # ifdef	USE_VARARGS
       sendto_prefix_one(cptr->from, from, pattern, vl);
     }
@@ -1202,7 +1284,12 @@ va_dcl
 #ifdef  USE_VARARGS
   va_start(vl);
 #endif
+#ifdef USE_SENTALONG
   memset((void *)sentalong,0,sizeof(sentalong));
+#else
+  current_serial++;
+#endif
+
   for (cptr = client; cptr; cptr = cptr->next)
     {
       if (!SendWallops(cptr))
@@ -1214,11 +1301,21 @@ va_dcl
 	  !(IsServer(from) || IsMe(from)))
 	continue;
       i = cptr->from->fd;     /* find connection oper is on */
+#ifdef USE_SENTALONG
       if (sentalong[i])       /* sent message along it already ? */
 	continue;
+#else
+      if (cptr->serial_number == current_serial)
+	continue;
+#endif
       if (cptr->from == one)
 	continue;       /* ...was the one I should skip */
+#ifdef USE_SENTALONG
       sentalong[i] = 1;
+#else
+      cptr->serial_number = current_serial;
+#endif
+
 # ifdef USE_VARARGS
       sendto_prefix_one(cptr->from, from, pattern, vl);
     }

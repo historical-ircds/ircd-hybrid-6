@@ -557,6 +557,10 @@ struct Client
   struct        Client *next_server_client;
   struct        Client *next_oper_client;
 
+#ifndef USE_SENTALONG
+  unsigned long serial_number;
+#endif
+
   anUser	*user;		/* ...defined, if this is a User */
   aServer	*serv;		/* ...defined, if this is a server */
   struct Client *servptr;	/* Points to server this Client is on */

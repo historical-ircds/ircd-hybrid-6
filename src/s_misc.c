@@ -1101,10 +1101,19 @@ void show_opers(aClient *cptr,char *name)
 	     name, j, (j==1) ? "" : "s");
 }
 
+/*
+ * show_servers
+ *
+ * inputs	- aClient pointer to client to show server list to
+ *		- name of client
+ * output	- NONE
+ * side effects	-
+ */
+
 void show_servers(aClient *cptr,char *name)
 {
-  Reg aClient	*cptr2;
-  Reg int j=0;
+  register aClient *cptr2;
+  register int j=0;		/* used to count servers */
 
   for(cptr2 = serv_cptr_list; cptr2; cptr2 = cptr2->next_server_client)
     {
