@@ -558,8 +558,10 @@ static int register_user(aClient *cptr, aClient *sptr,
 
         case I_LINE_FULL:
         case I_LINE_FULL2:
-          sendto_realops_flags(FLAGS_FULL, "%s for %s.",
-                               "I-line is full", get_client_host(sptr));
+          sendto_realops_flags(FLAGS_FULL, "%s for %s (%s).",
+                               "I-line is full",
+                               get_client_host(sptr),
+                               inetntoa((char*) &sptr->ip));
           log(L_INFO,"Too many connections from %s.", get_client_host(sptr));
           ServerStats->is_ref++;
           return exit_client(cptr, sptr, &me, 

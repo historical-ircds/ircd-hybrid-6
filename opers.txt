@@ -49,26 +49,31 @@ COMMAND         - USAGE and DESCRIPTION
                   LETTER (* = Oper only.)
                   ------ (^ = Can be configured to be oper only.)
                     c - Shows C/N lines
-                  ^ b - Shows B lines
+                  ^ b - Shows B lines (Obselete)
                   ^ d - Shows D lines
-                  ^ e - Shows E lines
-                  ^ f - Shows F lines
+                  ^ e - Shows E lines (Obselete)
+                  ^ f - Shows F lines (Obselete)
                     g - Shows G lines
                     h - Shows H/L lines
-                    i - Shows I lines
+                  ^ i - Shows I lines
                     K - Shows K lines (or matched klines)
                     k - Shows temporary K lines (or matched temp klines)
                     L - Shows IP and generic info about [nick]
                     l - Shows hostname and generic info about [nick]
                     m - Shows commands and their usage
-                    o - Shows O/o lines
+                  ^ o - Shows O/o lines
+                  ^ P - Shows configured ports
                     p - Shows opers connected and their idle times (disabled
                               if LTRACE option is enabled - see below)
+                  * q - Shows quaranteened nicks
                     r - Shows resource usage by ircd (only in DEBUGMODE)
+                  * s - Shows the server cache
                   * t - Shows generic server stats
+                    U - Shows U lines
                     u - Shows server uptime
                     v - Shows connected servers and their idle times
-                    y - Shows Y lines
+                    x - Shows X lines
+                  * y - Shows Y lines
                   * z - Shows memory stats
                     ? - Shows connected servers and sendq info about them
 
@@ -121,9 +126,7 @@ COMMAND         - USAGE and DESCRIPTION
                   the O-line is active.  Useful for just showing pertinent
                   info of a specific server.  Note however that if the
                   target server is not running this option then you will
-                  still receive a normal trace output.  Server with this
-                  option remove "STATS p" funtionality since the two are
-                  basically redundant.
+                  still receive a normal trace output.
 
   REHASH        - REHASH [option]
                   When no [option] is given, ircd will re-read the
@@ -139,6 +142,7 @@ COMMAND         - USAGE and DESCRIPTION
                     GC      - Performs garbage collecting of excess
                               memory.
                     MOTD    - Re-reads MOTD file
+                    OMOTD   - Re-reads Oper MOTD file
                     HELP    - Re-reads this HELP file
                     DLINES  - Re-hashes D-lines
 

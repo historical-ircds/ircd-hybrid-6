@@ -219,7 +219,7 @@ int m_rehash(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 #else
 #define OUT "rehash one of :DNS TKLINES GC HELP MOTD OMOTD DUMP"
 #endif
-          sendto_one(sptr,":%s NOTICE %s : " OUT,me.name,sptr->name);
+          sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, OUT);
           return(0);
         }
     }
