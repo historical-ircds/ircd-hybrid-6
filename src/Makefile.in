@@ -32,16 +32,21 @@ SRCS = \
 	ircd_signal.c \
 	list.c \
 	listener.c \
+	m_away.c \
 	m_capab.c \
 	m_connect.c \
 	m_error.c \
 	m_gline.c \
 	m_info.c \
+	m_ison.c \
 	m_help.c \
 	m_kline.c \
 	m_links.c \
 	m_lusers.c \
+	m_oper.c \
 	m_pass.c \
+	m_ping.c \
+	m_pong.c \
 	m_server.c \
 	m_squit.c \
 	m_stats.c \

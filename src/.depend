@@ -70,6 +70,10 @@ listener.o: listener.c ../include/listener.h ../include/ircd_defs.h \
  ../include/numeric.h ../include/s_bsd.h ../include/s_conf.h \
  ../include/fileio.h ../include/motd.h ../include/s_misc.h \
  ../include/send.h ../include/struct.h
+m_away.o: m_away.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
+ ../include/s_serv.h ../include/send.h
 m_capab.o: m_capab.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/irc_string.h ../include/s_serv.h
@@ -91,17 +95,21 @@ m_gline.o: m_gline.c ../include/config.h ../include/setup.h \
  ../include/send.h ../include/ircd.h ../include/scache.h \
  ../include/dline_conf.h ../include/mtrie_conf.h ../include/m_kline.h \
  ../include/m_gline.h
-m_help.o: m_help.c ../include/m_commands.h ../include/config.h \
- ../include/setup.h ../include/client.h ../include/ircd_defs.h \
- ../include/dbuf.h ../include/ircd.h ../include/motd.h \
- ../include/msg.h ../include/numeric.h ../include/send.h \
- ../include/s_conf.h ../include/fileio.h
 m_info.o: m_info.c ../include/m_info.h ../include/config.h \
  ../include/setup.h ../include/channel.h ../include/ircd_defs.h \
  ../include/common.h ../include/irc_string.h ../include/ircd.h \
  ../include/numeric.h ../include/s_serv.h ../include/s_user.h \
  ../include/send.h ../include/struct.h ../include/client.h \
  ../include/dbuf.h
+m_ison.o: m_ison.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
+ ../include/s_serv.h ../include/send.h ../include/irc_string.h
+m_help.o: m_help.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/ircd.h ../include/motd.h \
+ ../include/msg.h ../include/numeric.h ../include/send.h \
+ ../include/s_conf.h ../include/fileio.h
 m_kline.o: m_kline.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../include/client.h \
  ../include/dbuf.h ../include/common.h ../include/irc_string.h \
@@ -117,10 +125,24 @@ m_lusers.o: m_lusers.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
  ../include/s_serv.h ../include/s_user.h ../include/send.h
+m_oper.o: m_oper.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/ircd.h ../include/numeric.h \
+ ../include/s_serv.h ../include/send.h ../include/fdlist.h \
+ ../include/s_conf.h ../include/fileio.h ../include/ircd_defs.h \
+ ../include/motd.h ../include/struct.h ../include/client.h \
+ ../include/dbuf.h ../include/irc_string.h
 m_pass.o: m_pass.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/irc_string.h ../include/send.h \
  ../include/numeric.h ../include/ircd.h
+m_ping.o: m_ping.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
+ ../include/send.h ../include/irc_string.h
+m_pong.o: m_pong.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
+ ../include/send.h ../include/channel.h ../include/irc_string.h
 m_server.o: m_server.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/common.h ../include/irc_string.h \

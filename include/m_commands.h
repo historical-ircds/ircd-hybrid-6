@@ -86,7 +86,6 @@ extern int m_umode(struct Client *,struct Client *,int,char **);
 extern int m_close(struct Client *,struct Client *,int,char **);
 
 extern int m_whowas(struct Client *,struct Client *,int,char **);
-extern int m_usrip(struct Client *,struct Client *,int,char **);
 extern int m_userhost(struct Client *,struct Client *,int,char **);
 extern int m_ison(struct Client *,struct Client *,int,char **);
 extern int m_svinfo(struct Client *,struct Client *,int,char **);

@@ -206,7 +206,6 @@ struct Message msgtab[] = {
    */
   { MSG_ISON,    m_ison,     0, 1,       1, 0, 1, 0L },
 #endif /* !IDLE_FROM_MSG */
-  { MSG_USRIP,   m_usrip,    0, 1,       1, 0, 0, 0L },
   { MSG_SERVER,  m_server,   0, MAXPARA, 1, 1, 0, 0L },
   { MSG_SQUIT,   m_squit,    0, MAXPARA, 1, 0, 0, 0L },
   { MSG_WHOIS,   m_whois,    0, MAXPARA, 1, 0, 0, 0L },
