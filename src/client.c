@@ -1624,6 +1624,8 @@ const char* comment        /* Reason for the exit */
                     {
                       ts_warn("Dependent server %s not on llist!?", 
                                      acptr->name);
+                      log(L_CRIT, "Depend server %s not on llist!?",
+                              acptr->name);
                       exit_one_client(NULL, acptr, &me, me.name);
                     }
                 }

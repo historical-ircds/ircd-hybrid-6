@@ -530,7 +530,10 @@ vsendto_one_prefix(aClient *to, const char *prefix,
       return;
     }
 
+  va_start(args);
   vsprintf_irc(temp_sendbuf, pattern+4, args );
+  va_end(args);
+
   len = ircsprintf(sendbuf, ":%s %s", prefix , temp_sendbuf );
 
   /*
