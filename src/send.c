@@ -540,8 +540,11 @@ va_dcl
 # ifdef	USE_VARARGS
 	  sendto_prefix_one(acptr, from, pattern, vl);
 # else
+	  /*	  sendto_prefix_one(acptr, from, pattern, p1, p2,
+			    p3, p4, p5, p6, p7, p8); */
+
 	  sendto_prefix_one(acptr, from, pattern, p1, p2,
-			    p3, p4, p5, p6, p7, p8);
+			    lp.value.cptr.name, p4, p5, p6, p7, p8);
 # endif
 #ifdef USE_SENTALONG
 	  sentalong[i] = 1;
@@ -562,9 +565,11 @@ va_dcl
 # ifdef	USE_VARARGS
 	      sendto_prefix_one(acptr, from, pattern, vl);
 # else
-	      sendto_prefix_one(acptr, from, pattern,
+	      /*	      sendto_prefix_one(acptr, from, pattern,
 				p1, p2, p3, p4,
-				p5, p6, p7, p8);
+				p5, p6, p7, p8); */
+	      sendto_prefix_one(acptr, from, pattern, p1, p2,
+				lp.value.cptr.name, p4, p5, p6, p7, p8);
 # endif
 #ifdef USE_SENTALONG
 	      sentalong[i] = 1;

@@ -1569,23 +1569,18 @@ int	m_info(aClient *cptr,
 #else
 #define OUT1 "REJECT_HOLD=0 "
 #endif
-#ifdef REJECT_IPHONE
-#define OUT2 " REJECT_IPHONE=1"
-#else
-#define OUT2 " REJECT_IPHONE=0"
-#endif
 #ifdef RFC1035_ANAL
-#define OUT3 " RFC1035_ANAL=1"
+#define OUT2 " RFC1035_ANAL=1"
 #else
-#define OUT3 " RFC1035_ANAL=0"
+#define OUT2 " RFC1035_ANAL=0"
 #endif
 #ifdef RK_NOTICES
-#define OUT4 " RK_NOTICES=1"
+#define OUT3 " RK_NOTICES=1"
 #else
-#define OUT4 " RK_NOTICES=0"
+#define OUT3 " RK_NOTICES=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3 OUT4 );
+		me.name, parv[0], OUT1 OUT2 OUT3 );
 
 #undef OUT1
 #undef OUT2

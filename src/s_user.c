@@ -2116,6 +2116,9 @@ static	int	m_message(aClient *cptr,
       return 0;
     }
 
+  /*
+  ** channel msg ?
+  */
   if (IsPerson(sptr) && (chptr = find_channel(nick, NullChn)))
     {
 #ifdef	IDLE_CHECK
