@@ -1,3 +1,8 @@
+*** 20000609_1 by lusky
+misc cosmetic typo fixes (tv)
+fixes for DEBUGMODE (tv)
+
+
 *** 20000608_2 by lusky
 FLAGS_LOCOP was missing from ALL_UMODES, preventing +O from being displayed
   in a user's mode.
