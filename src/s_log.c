@@ -68,7 +68,7 @@ static int open_log(const char* filename)
 
 void close_log(void)
 {
-  if (-1 == logFile) {
+  if (-1 < logFile) {
     close(logFile);
     logFile = -1;
   }
@@ -111,6 +111,12 @@ void init_log(void)
 #ifdef USE_SYSLOG
   openlog("ircd", LOG_PID | LOG_NDELAY, LOG_FACILITY);
 #endif
+}
+
+void set_log_level(int level)
+{
+  if (L_ERROR < level && level <= L_DEBUG)
+    logLevel = level;
 }
 
 
