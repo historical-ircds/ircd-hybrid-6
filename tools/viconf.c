@@ -28,10 +28,12 @@
 #include <sys/wait.h>
 #endif
 
+static int LockedFile(char *filename);
+static char lockpath[PATH_MAX + 1];
+
 
 int main(int argc, char *argv[])
 {
-#ifdef LOCKFILE
   int fd;
   char s[20], *ed, *p, *filename = MPATH;
 
@@ -50,14 +52,11 @@ int main(int argc, char *argv[])
     filename = KPATH;
 #endif /* KPATH */
 
-  /* create exclusive lock */
-  if((fd = open(LOCKFILE, O_WRONLY|O_CREAT|O_EXCL, 0666)) < 0) {
-    fprintf(stderr, "ircd config file locked\n");
-    exit(1);
-  }
-  sprintf(s, "%d\n", (int) getpid());
-  write(fd, s, strlen(s));
-  close(fd);
+  if(LockedFile(filename))
+    {
+      fprintf(stderr,"Cant' lock %s\n", filename);
+      exit(errno);
+    }
 
 #ifdef USE_RCS
   switch(fork())
@@ -105,10 +104,80 @@ int main(int argc, char *argv[])
     }
 #endif
 
-  unlink(LOCKFILE);
-  return 0;
-#else
-  printf("LOCKFILE not defined in config.h\n");
-#endif
+  unlink(lockpath);
   return 0;
 }
+
+/*
+LockedFile() (copied from m_kline.c in ircd)
+ Determine if 'filename' is currently locked. If it is locked,
+there should be a filename.lock file which contains the current
+pid of the editing process. Make sure the pid is valid before
+giving up.
+
+Return: 1 if locked
+        0 if not
+*/
+
+
+
+static int
+LockedFile(char *filename)
+
+{
+
+  char buffer[1024];
+  FILE *fileptr;
+  int killret;
+  int fd;
+
+  if (!filename)
+    return (0);
+  
+  sprintf(lockpath, "%s.lock", filename);
+  
+  if ((fileptr = fopen(lockpath, "r")) != (FILE *) NULL)
+    {
+      if (fgets(buffer, sizeof(buffer) - 1, fileptr))
+	{
+	  /*
+	   * If it is a valid lockfile, 'buffer' should now
+	   * contain the pid number of the editing process.
+	   * Send the pid a SIGCHLD to see if it is a valid
+	   * pid - it could be a remnant left over from a
+	   * crashed editor or system reboot etc.
+	   */
+      
+	  killret = kill(atoi(buffer), SIGCHLD);
+	  if (killret == 0)
+	    {
+	      fclose(fileptr);
+	      return (1);
+	    }
+
+	  /*
+	   * killret must be -1, which indicates an error (most
+	   * likely ESRCH - No such process), so it is ok to
+	   * proceed writing klines.
+	   */
+	}
+      fclose(fileptr);
+    }
+
+  /*
+   * Delete the outdated lock file
+   */
+  unlink(lockpath);
+
+  /* create exclusive lock */
+  if((fd = open(lockpath, O_WRONLY|O_CREAT|O_EXCL, 0666)) < 0)
+    {
+      fprintf(stderr, "ircd config file locked\n");
+      return (-1);
+    }
+
+  fileptr = fdopen(fd,"w");
+  fprintf(fileptr,"%d\n",getpid());
+  fclose(fileptr);
+  return (0);
+} /* LockedFile() */
