@@ -1,3 +1,7 @@
+*** 20001011_1 by lusky
+fix for *@*.foo.com I:lines being broken by a user@host.foo.com I:lines
+
+
 *** 20001005_3 by lusky
 added CVS Id tags to numerous files
 brought Hybrid-team and version.c.SH
