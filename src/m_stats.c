@@ -328,7 +328,17 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       report_mtrie_conf_links(sptr, CONF_CLIENT);
       valid_stats++;
       break;
-
+#ifdef JUPE_CHANNEL
+    case 'J' : case 'j' :
+      if (!IsAnOper(sptr)) {
+	ignore_request++;
+	valid_stats++;
+	break;
+      }
+      report_juped_channels(sptr);
+      valid_stats++;
+      break;
+#endif
     case 'k' :
 #ifdef K_LINES_OPER_ONLY
       if (!IsAnOper(sptr)) 

@@ -110,8 +110,9 @@ extern int     check_channel_name(const char* name);
 extern void    channel_modes(struct Client *, char *, char *, struct Channel*);
 extern void    set_channel_mode(struct Client *, struct Client *, 
                                 struct Channel *, int, char **);
-
-
+#ifdef JUPE_CHANNEL
+extern void report_juped_channels(struct Client *);
+#endif
 
 /* this should eliminate a lot of ifdef's in the main code... -orabidoo */
 #ifdef BAN_INFO
