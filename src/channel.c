@@ -71,10 +71,12 @@ aChannel *channel = NullChn;
 static  void    add_invite (aClient *, aChannel *);
 static  int     add_banid (aClient *, aChannel *, char *);
 static  int     add_exceptid(aClient *, aChannel *, char *);
+static  int     add_denyid(aClient *, aChannel *, char *);
 static  int     can_join (aClient *, aChannel *, char *,int *);
 static  void    channel_modes (aClient *, char *, char *, aChannel *);
 static  int     del_banid (aChannel *, char *);
 static  int     del_exceptid (aChannel *, char *);
+static  int     del_denyid (aChannel *, char *);
 static  void    clear_bans_exceptions(aClient *,aChannel *);
 static  int     is_banned (aClient *, aChannel *);
 static  void    set_mode (aClient *, aClient *, aChannel *, int, char **);
@@ -356,6 +358,77 @@ static  int     add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
   return 0;
 }
 
+
+/*
+ * Ban functions to work with mode +b
+ */
+/* add_denyid - add an id to be banned to the channel  (belongs to cptr) */
+
+static  int     add_denyid(aClient *cptr, aChannel *chptr, char *banid)
+{
+  Link  *ban;
+  int   cnt = 0;
+
+  /* trust servers */
+  if(!IsServer(cptr))
+    {
+      for (ban = chptr->denylist; ban; ban = ban->next)
+	{
+	  if (MyClient(cptr) && (++cnt >= MAXBANS))
+	    {
+	      sendto_one(cptr, form_str(ERR_BANLISTFULL),
+                   me.name, cptr->name,
+                   chptr->chname, banid);
+	      return -1;
+	    }
+	}
+    }
+
+  ban = make_link();
+  memset(ban, 0, sizeof(Link));
+  ban->flags = CHFL_DENY;
+  ban->next = chptr->denylist;
+
+#ifdef BAN_INFO
+
+  ban->value.banptr = (aBan *)MyMalloc(sizeof(aBan));
+  ban->value.banptr->banstr = (char *)MyMalloc(strlen(banid)+1);
+  (void)strcpy(ban->value.banptr->banstr, banid);
+
+#ifdef USE_UH
+  if (IsPerson(cptr))
+    {
+      ban->value.banptr->who =
+        (char *)MyMalloc(strlen(cptr->name)+
+                         strlen(cptr->username)+
+                         strlen(cptr->host)+3);
+      ircsprintf(ban->value.banptr->who, "%s!%s@%s",
+                 cptr->name, cptr->username, cptr->host);
+    }
+  else
+    {
+#endif
+      ban->value.banptr->who = (char *)MyMalloc(strlen(cptr->name)+1);
+      (void)strcpy(ban->value.banptr->who, cptr->name);
+#ifdef USE_UH
+    }
+#endif
+
+  ban->value.banptr->when = timeofday;
+
+#else
+
+  ban->value.cp = (char *)MyMalloc(strlen(banid)+1);
+  (void)strcpy(ban->value.cp, banid);
+
+#endif  /* #ifdef BAN_INFO */
+
+  chptr->denylist = ban;
+  return 0;
+}
+
+
+
 /*
  *
  * "del_banid - delete an id belonging to cptr
@@ -421,6 +494,44 @@ static  int     del_exceptid(aChannel *chptr, char *eid)
       }
   return 0;
 }
+
+/*
+ *
+ * "del_denyid - delete an id belonging to cptr
+ * if banid is null, deleteall banids belonging to cptr."
+ *
+ * from orabidoo
+ */
+static  int     del_denyid(aChannel *chptr, char *banid)
+{
+  register Link **ban;
+  register Link *tmp;
+
+  if (!banid)
+    return -1;
+  for (ban = &(chptr->denylist); *ban; ban = &((*ban)->next))
+#ifdef BAN_INFO
+    if (irccmp(banid, (*ban)->value.banptr->banstr)==0)
+#else
+      if (irccmp(banid, (*ban)->value.cp)==0)
+#endif
+        {
+          tmp = *ban;
+          *ban = tmp->next;
+#ifdef BAN_INFO
+          MyFree(tmp->value.banptr->banstr);
+          MyFree(tmp->value.banptr->who);
+          MyFree(tmp->value.banptr);
+#else
+          MyFree(tmp->value.cp);
+#endif
+          free_link(tmp);
+          break;
+        }
+  return 0;
+}
+
+
 
 /*
  * del_matching_exception - delete an exception matching this user
@@ -1592,6 +1703,108 @@ static  void     set_mode(aClient *cptr,
           opcnt++;
 
           break;
+
+        case 'd':
+          if (whatt == MODE_QUERY || parc-- <= 0)
+            {
+              if (!MyClient(sptr))
+                break;
+
+              if (errsent(SM_ERR_RPL_B, &errors_sent))
+                break;
+#ifdef BAN_INFO
+              for (lp = chptr->denylist; lp; lp = lp->next)
+                sendto_one(cptr, form_str(RPL_BANLIST),
+                           me.name, cptr->name,
+                           chptr->chname,
+                           lp->value.banptr->banstr,
+                           lp->value.banptr->who,
+                           lp->value.banptr->when);
+#else 
+              for (lp = chptr->denylist; lp; lp = lp->next)
+                sendto_one(cptr, form_str(RPL_BANLIST),
+                           me.name, cptr->name,
+                           chptr->chname,
+                           lp->value.cp);
+#endif
+              sendto_one(sptr, form_str(RPL_ENDOFBANLIST),
+                         me.name, sptr->name, 
+                         chptr->chname);
+              break;
+            }
+
+          if(MyClient(sptr))
+            chptr->keep_their_modes = YES;
+          else if(!chptr->keep_their_modes)
+            {
+              parc--;
+              parv++;
+              break;
+            }
+
+          arg = check_string(*parv++); 
+
+          if (MyClient(sptr) && opcnt >= MAXMODEPARAMS)
+            break;
+
+          if (!isok)
+            {
+              if (!errsent(SM_ERR_NOOPS, &errors_sent) && MyClient(sptr))
+                sendto_one(sptr, form_str(ERR_CHANOPRIVSNEEDED),
+                           me.name, sptr->name, 
+                           chptr->chname);
+              break;
+            }
+
+
+          /* Ignore colon at beginning of ban string.
+           * Unfortunately, I can't ignore all such strings,
+           * because otherwise the channel could get desynced.
+           * I can at least, stop local clients from placing a ban
+           * with a leading colon.
+           *
+           * Roger uses check_string() combined with an earlier test
+           * in his TS4 code. The problem is, this means on a mixed net
+           * one can't =remove= a colon prefixed ban if set from
+           * an older server.
+           * His code is more efficient though ;-/ Perhaps
+           * when we've all upgraded this code can be moved up.
+           *
+           * -Dianora
+           */
+
+          /* user-friendly ban mask generation, taken
+          ** from Undernet's ircd  -orabidoo
+          */
+          if (MyClient(sptr))
+            {
+              if( (*arg == ':') && (whatt & MODE_ADD) )
+                {
+                  parc--;
+                  parv++;
+                  break;
+                }
+            }
+
+          tmp = strlen(arg);
+          if (len + tmp + 2 >= MODEBUFLEN)
+            break;
+
+          if (!(((whatt & MODE_ADD) && !add_denyid(sptr, chptr, arg)) ||
+                ((whatt & MODE_DEL) && !del_denyid(chptr, arg))))
+            break;
+
+          *mbufw++ = plus;
+          *mbufw++ = 'd';
+          strcpy(pbufw, arg);
+          pbufw += strlen(pbufw);
+          *pbufw++ = ' ';
+          len += tmp + 1;
+          opcnt++;
+
+          break;
+
+
 
         case 'l':
           if (whatt == MODE_QUERY)
