@@ -172,19 +172,6 @@
 #define FNAME_USERLOG "/usr/local/ircd/users" /* */
 #define FNAME_OPERLOG "/usr/local/ircd/opers" /* */
 
-/* FOLLOW_IDENT_RFC
- * 
- * From RFC 1413, "The Identification Protocol is not intended as an
- * authorization or access control protocol ... The use of the information
- * returned by this protocol for other than auditing is strongly discouraged."
- * 
- * Defining this allows all users to set whatever username they wish, despite
- * what may be discovered by ident.  While we may get a valid ident response
- * with a different username than submitted by the client, this option will
- * cause the ident response to be discarded.
- */
-#undef FOLLOW_IDENT_RFC 
-
 /* RFC1035_ANAL
  * Defining this causes ircd to reject hostnames with non-compliant chars.
  * undef'ing it will allow hostnames with _ or / to connect

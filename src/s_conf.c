@@ -2939,7 +2939,8 @@ int get_oper_flags(char *flags)
   Debug((DEBUG_DEBUG,"about to return int_flags %x",int_flags));
   return(int_flags);
 }
-/* get_oper_flags
+
+/* oper_flags
  *
  * inputs	- flags as string
  * output	- flags
