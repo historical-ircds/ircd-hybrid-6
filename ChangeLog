@@ -1,3 +1,10 @@
+*** 20010727_3 by jdc
+- src/s_serv.c: show_capabilities():
+    Removed the trailing space during link-time or anything involving
+    listing capabilities.  Also added error check for links without
+    caps.
+
+
 *** 20010727_2 by leeh
 - added a warning about the NO_HACK_OPS code, it needs to be network
   wide or not defined
