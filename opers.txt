@@ -55,7 +55,6 @@ COMMAND         - USAGE and DESCRIPTION
                   * g - Shows G lines
                   ^ h - Shows H/L lines
                   ^ i - Shows I lines
-                  * j - Shows locally juped channels (+j)
                   ^ K - Shows K lines (or matched klines)
                   ^ k - Shows temporary K lines (or matched temp klines)
                     L - Shows IP and generic info about [nick]
@@ -64,7 +63,8 @@ COMMAND         - USAGE and DESCRIPTION
                   ^ o - Shows O/o lines
                   ^ P - Shows configured ports
                     p - Shows opers connected and their idle times
-                  * q - Shows quarantined nicks
+                  * Q - Shows quarantined nicks and channels (from conf)
+                  * q - Shows locally juped channels (mode +j)
                   * r - Shows resource usage by ircd
                   * s - Shows the server cache
                   * t - Shows generic server stats
