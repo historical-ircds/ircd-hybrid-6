@@ -49,13 +49,13 @@ COMMAND         - USAGE and DESCRIPTION
                   <letter>.
                   LETTER (* = Oper only.)
                   ------ (^ = Can be configured to be oper only.)
-                    c - Shows C/N lines
-                  ^ d - Shows D lines
-                    g - Shows G lines
-                    h - Shows H/L lines
+                  ^ c - Shows C/N lines
+                  * d - Shows D lines
+                  * g - Shows G lines
+                  ^ h - Shows H/L lines
                   ^ i - Shows I lines
-                    K - Shows K lines (or matched klines)
-                    k - Shows temporary K lines (or matched temp klines)
+                  ^ K - Shows K lines (or matched klines)
+                  ^ k - Shows temporary K lines (or matched temp klines)
                     L - Shows IP and generic info about [nick]
                     l - Shows hostname and generic info about [nick]
                     m - Shows commands and their usage
@@ -63,10 +63,10 @@ COMMAND         - USAGE and DESCRIPTION
                   ^ P - Shows configured ports
                     p - Shows opers connected and their idle times
                   * q - Shows quarantined nicks
-                    r - Shows resource usage by ircd (only in DEBUGMODE)
+                  * r - Shows resource usage by ircd
                   * s - Shows the server cache
                   * t - Shows generic server stats
-                    U - Shows U lines
+                  * U - Shows U lines
                     u - Shows server uptime
                   * v - Shows connected servers and their idle times
                   * x - Shows X lines
