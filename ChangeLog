@@ -1,3 +1,8 @@
+*** 20000201_1 by lusky
+fixed UMR in poll code (th)
+revved patchlevel to b121
+
+
 *** 20000131_2 by lusky
 revved patchlevel to b120
 dropped TS_MAX_DELTA default to 300 seconds
