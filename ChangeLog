@@ -1,3 +1,15 @@
+androsyn    2002/01/30 18:55:44 EST	(20020130_0)
+
+  Modified files:
+    src                  ircd.c 
+  Log:
+  Stop ircd from running as root.
+  
+  Revision  Changes    Path
+  1.162     +6 -0      ircd-hybrid-6/src/ircd.c
+
+
+
 androsyn    2002/01/27 23:36:55 EST	(20020128_2)
 
   Modified files:
