@@ -1,3 +1,7 @@
+*** 20010708_1 by a1kmm
+- Remove P-lines when they are not in use on rehash.
+
+
 *** 20010705_5 by greg
 - reverted ppath changes .. oops
 
