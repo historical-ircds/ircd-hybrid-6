@@ -65,6 +65,10 @@ aMessageFile *amotd=(aMessageFile *)NULL;
 #endif
 aMessageFile *helpfile=(aMessageFile *)NULL;	
 
+#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
+	defined(NO_JOIN_ON_SPLIT)
+extern time_t server_split_time;
+#endif
 
 #ifdef SETUID_ROOT
 #include <sys/lock.h>
@@ -1083,6 +1087,12 @@ normal user.\n");
   initstats();
   init_tree_parse(msgtab);
   NOW = time(NULL);
+
+#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
+	defined(NO_JOIN_ON_SPLIT)
+  server_split_time = NOW;
+#endif
+
   open_debugfile();
   NOW = time(NULL);
 

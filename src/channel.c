@@ -34,7 +34,7 @@ static char *rcs_version="$Id$";
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
 	defined(NO_JOIN_ON_SPLIT)
-int server_was_split=NO;
+int server_was_split=YES;
 time_t server_split_time;
 int server_split_recovery_time = (DEFAULT_SERVER_SPLIT_RECOVERY_TIME * 60);
 #define USE_ALLOW_OP
@@ -1798,6 +1798,15 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key)
 	{
 	  if((server_split_time + server_split_recovery_time) < NOW)
 	    {
+	      if(Count.server > SPLIT_SMALLNET_SIZE)
+		server_was_split = NO;
+	      else
+		{
+		  server_split_time = NOW; /* still split */
+		}
+	    }
+	  else
+	    {
 	      server_was_split = NO;
 	      chptr->mode.mode &= ~MODE_SPLIT;
 	      if(chptr->users == 0)
@@ -1974,7 +1983,7 @@ static	void	sub1_from_channel(aChannel *chptr)
   if (--chptr->users <= 0)
     {
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-      if(!(chptr->locally_created) && (Count.myserver == 0))
+      if(!(chptr->locally_created) && (Count.myserver < SPLIT_SMALLNET_SIZE))
 	{
 	  chptr->mode.mode |= MODE_SPLIT;
 	  /*
@@ -2337,7 +2346,20 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 	  if((*name != '&')
 	     && server_was_split && server_split_recovery_time)
 	    {
-	      allow_op = NO;
+	      if( (server_split_time + server_split_recovery_time) < NOW)
+		{
+		  if(Count.server > SPLIT_SMALLNET_SIZE)
+		    server_was_split = NO;
+		  else
+		    {
+		      server_split_time = NO; /* still split */
+		      allow_op = NO;
+		    }
+		}
+	      else
+		{
+		  allow_op = NO;
+		}
 
 	      if(!IsRestricted(sptr) && (flags == CHFL_CHANOP))
 		sendto_one(sptr,":%s NOTICE %s :*** Notice -- Due to a network split, you can not obtain channel operator status in a new channel at this time.",

@@ -802,15 +802,6 @@ int	m_server(aClient *cptr,
       SetServer(acptr);
 
       Count.server++;
-#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-      defined(NO_JOIN_ON_SPLIT)
-
-	if(server_was_split && (Count.server >= SPLIT_SMALLNET_SIZE))
-	  {
-	    if((server_split_time + server_split_recovery_time) < NOW)
-	      server_was_split = NO;
-	  }
-#endif
 
       add_client_to_list(acptr);
       (void)add_to_client_hash_table(acptr->name, acptr);
@@ -1046,15 +1037,6 @@ int	m_server_estab(aClient *cptr)
   add_client_to_llist(&(me.serv->servers), cptr);
 
   Count.server++;
-#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-      defined(NO_JOIN_ON_SPLIT)
-
-	if(server_was_split && (Count.server >= SPLIT_SMALLNET_SIZE))
-	  {
-	    if((server_split_time + server_split_recovery_time) < NOW)
-	      server_was_split = NO;
-	  }
-#endif
   Count.myserver++;
 
 #ifdef MAXBUFFERS
