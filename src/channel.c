@@ -1052,7 +1052,7 @@ static  void     set_mode(aClient *cptr,
 		{
 		  if(!errsent(SM_ERR_NOTONCHANNEL, &errors_sent))
 		    sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
-			       me.name, sptr, chptr->chname);
+			       me.name, sptr->name, chptr->chname);
 		  /* eat the parameter */
 		  parc--;
 		  parv++;
@@ -1958,19 +1958,20 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key)
     }
 #endif
 
+  if (is_banned(sptr, chptr))
+    return (ERR_BANNEDFROMCHAN);
+  if (chptr->mode.mode & MODE_INVITEONLY)
+    {
+      for (lp = sptr->user->invited; lp; lp = lp->next)
+	if (lp->value.chptr == chptr)
+	  break;
+      if (!lp)
+	return (ERR_INVITEONLYCHAN);
+    }
+
   if (*chptr->mode.key && (BadPtr(key) || mycmp(chptr->mode.key, key)))
     return (ERR_BADCHANNELKEY);
 
-  for (lp = sptr->user->invited; lp; lp = lp->next)
-    if (lp->value.chptr == chptr)
-      return 0;
-
-  if (is_banned(sptr, chptr))
-    return (ERR_BANNEDFROMCHAN);
-
-  if (chptr->mode.mode & MODE_INVITEONLY)
-    return (ERR_INVITEONLYCHAN);
-  
   if (chptr->mode.limit && chptr->users >= chptr->mode.limit)
     return (ERR_CHANNELISFULL);
 

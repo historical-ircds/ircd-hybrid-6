@@ -1931,6 +1931,13 @@ static	int	m_message(aClient *cptr,
 
   /*  nick = strtoken(&p, parv[1], ",");*/
   nick = parv[1];
+  p = strchr(nick,',');
+  if(p)
+    {
+      sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
+		     me.name, parv[0], cmd);
+      return -1;
+    }
 
 #ifdef EXTRA_BOT_NOTICES
   if (MyConnect(sptr)) /* don't check for remote bots */

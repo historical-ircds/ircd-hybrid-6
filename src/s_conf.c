@@ -218,7 +218,7 @@ int	attach_Iline(aClient *cptr,
 				       ntohl(cptr->ip.s_addr));
       if(aconf && !IsConfElined(aconf))
 	{
-	  if(tkline_conf = find_tkline(host,username))
+	  if(tkline_conf = find_tkline(host,non_ident))
 	    aconf = tkline_conf;
 	}
     }

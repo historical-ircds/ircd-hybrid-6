@@ -4208,8 +4208,10 @@ int     m_kline(aClient *cptr,
   char temphost[HOSTLEN+1];
   aConfItem *aconf;
   int temporary_kline_time=0;	/* -Dianora */
+  int wild_user;		/* does user part match everything? */
   time_t temporary_kline_time_seconds=0;
   char *argv;
+
 #ifdef SLAVE_SERVERS
   char *slave_oper;
 #endif
@@ -4399,8 +4401,9 @@ int     m_kline(aClient *cptr,
   else
     reason = "No reason";
 
-  if (!matches(user, "akjhfkahfasfjd") &&
-                !matches(host, "ldksjfl.kss...kdjfd.jfklsjf"))
+  wild_user = !matches(user, "akjhfkahfasfjd");
+
+  if (wild_user && !matches(host, "ldksjfl.kss...kdjfd.jfklsjf"))
     {
 #ifdef SLAVE_SERVERS
       if(!IsServer(sptr))
@@ -4411,7 +4414,7 @@ int     m_kline(aClient *cptr,
       return 0;
     }
       
-  if (bad_tld(host))
+  if (wild_user && bad_tld(host))
     {
 #ifdef SLAVE_SERVERS
       if(!IsServer(sptr))
@@ -4435,9 +4438,10 @@ int     m_kline(aClient *cptr,
 
   /*
    * what to do if host is a legal ip, and its a temporary kline ?
+   * Don't do the CIDR conversion for now of course.
    */
 
-  if(host_is_legal_ip(host))
+  if(!temporary_kline_time && host_is_legal_ip(host))
      {
        ip_kline = YES;
        strncpy(cidr_form_host,host,32);
@@ -4889,7 +4893,7 @@ K:bar:No reason (1997/08/30 14.56):foo
 	  char *found_user;
 	  char *found_comment;
 
-	  strncpy(buff,buf,BUFSIZ);	/* extra paranoia */
+	  strncpy(buff,buf,BUFSIZE);	/* extra paranoia */
 
 	  p = strchr(buff,'\n');
 	  if(p)
@@ -4952,7 +4956,7 @@ K:bar:No reason (1997/08/30 14.56):foo
 	  char *found_user;
 	  char *found_host;
 
-	  strcpy(buff,buf);
+	  strncpy(buff,buf,BUFSIZE);
 /*
 #Dianora!db@ts2-11.ottawa.net K'd: foo@bar:No reason
 K:bar:No reason (1997/08/30 14.56):foo
