@@ -97,6 +97,10 @@ void	reset_sock_opts (int, int);
 #endif
 
 extern int spare_fd;	/* defined in ircd.c */
+extern aClient *serv_cptr_list;	/* defined in ircd.c */
+extern aClient *local_cptr_list;/* defined in ircd.c */
+extern aClient *oper_cptr_list; /* defined in ircd.c */
+
 
 aClient	*local[MAXCONNECTIONS];
 
@@ -1383,20 +1387,12 @@ aClient	*add_connection(aClient *cptr, int fd)
 ** any flooding >:-) -avalon
 */
 
-#ifndef USE_POLL
-static	int	read_packet(aClient *cptr,fd_set *rfd)
-#else /* USE_POLL */
 int read_packet(aClient *cptr, int msg_ready)
-#endif
 {
   Reg	int	dolen = 0, length = 0, done;
 
-#ifdef USE_POLL
-  if (msg_ready &&
-#else
-      if (FD_ISSET(cptr->fd, rfd) &&
-#endif
-	  !(IsPerson(cptr) && DBufLength(&cptr->recvQ) > 6090))
+  if ( /* msg_ready && */
+      !(IsPerson(cptr) && DBufLength(&cptr->recvQ) > 6090))
       {
 	errno = 0;
 
@@ -1531,6 +1527,36 @@ int read_packet(aClient *cptr, int msg_ready)
 }
 
 
+void read_servers()
+{
+  register aClient *cptr;
+
+  for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
+    {
+      (void)read_packet(cptr,1);
+    }
+}
+
+void read_opers()
+{
+  register aClient *cptr;
+
+  for (cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client)
+    {
+	(void)read_packet(cptr,1);
+    }
+}
+
+void read_clients()
+{
+  register aClient *cptr;
+
+  for (cptr = local_cptr_list; cptr; cptr = cptr->next_local_client)
+    {
+      (void)read_packet(cptr,1);
+    }
+}
+
   /*
     USE_FAST_FD_ISSET
 
@@ -1581,6 +1607,7 @@ int read_packet(aClient *cptr, int msg_ready)
   int  auth = 0;
   int	res, length, fd;
   register int i;
+  int rr;
 #ifdef USE_FAST_FD_ISSET
   int fd_mask;
   int fd_offset;
@@ -1596,6 +1623,7 @@ int read_packet(aClient *cptr, int msg_ready)
 
   FD_ZERO(default_read_set);
   FD_ZERO(default_write_set);
+
 
 #ifdef USE_FAST_FD_ISSET
   fd_mask = 1;
@@ -2001,13 +2029,14 @@ int read_packet(aClient *cptr, int msg_ready)
 	    }
 	}
       length = 1;	/* for fall through case */
+      rr = 0;
 #ifdef USE_FAST_FD_ISSET
       if (!NoNewLine(cptr) || 
-	  (read_set->fds_bits[fd_offset] & fd_mask))
-	  length = read_packet(cptr, read_set);
+	  (rr = (read_set->fds_bits[fd_offset] & fd_mask)) )
+	  length = read_packet(cptr, rr);
 #else
-      if (!NoNewLine(cptr) || FD_ISSET(i, read_set))
-          length = read_packet(cptr, read_set);
+      if (!NoNewLine(cptr) || (rr = FD_ISSET(i, read_set)) )
+          length = read_packet(cptr, rr);
 #endif
 #ifdef DEBUGMODE
        readcalls++;
@@ -2379,6 +2408,7 @@ int	read_message(time_t delay)
 	    }
 	}
       length = 1;     /* for fall through case */
+      rr = 0;
       if (!NoNewLine(cptr) || rr)
           length = read_packet(cptr, rr);
 #ifdef DEBUGMODE

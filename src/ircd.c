@@ -116,6 +116,9 @@ extern  void read_oper_motd();		/* defined in s_serv.c */
 #endif
 extern  void read_help();		/* defined in s_serv.c */
 extern  void sync_channels(time_t);	/* defined in channel.c */
+extern  void read_servers();		/* defined in s_bsd.c */
+extern	void read_opers();		/* defined in s_bsd.c */
+extern	void read_clients();		/* defined in s_bsd.c */
 
 char	**myargv;
 int	portnum = -1;		    /* Server port number, listening this */
@@ -800,6 +803,8 @@ static	int	bad_command()
 #define LOADCFREQ 5	/* every 5s */
 #define LOADRECV 40	/* 40k/s */
 
+int do_read_clients = 0;
+int do_read_message = 0;
 int lifesux = 1;
 int LRV = LOADRECV;
 time_t LCF = LOADCFREQ;
@@ -1417,8 +1422,25 @@ time_t io_loop(time_t delay)
   Debug((DEBUG_DEBUG,"read_message call at: %s %d",
 	 myctime(NOW), NOW));
 
-  (void)read_message(delay); /* check everything! */
-	
+  (void)read_servers();
+  (void)read_opers();
+
+  if (do_read_clients)
+  {
+	(void)read_clients();
+	do_read_clients = 0;
+  }
+  else
+	do_read_clients = 1;
+
+  if (do_read_message == 5)	/* only call every 5 loops */
+  {
+  	read_message(delay);
+	do_read_message = 0;
+  }
+  else
+	do_read_message++;
+
   /*
   ** ...perhaps should not do these loops every time,
   ** but only if there is some chance of something
