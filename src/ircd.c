@@ -1363,29 +1363,11 @@ time_t io_loop(time_t delay)
     {
       lrv = LRV * LCF;
       lasttime = timeofday;
-      currlife = (float)(me.receiveK - lastrecvK)/(float)LCF;
-      if ((me.receiveK - lrv) > lastrecvK )
+      currlife = (float)((long)me.receiveK - lastrecvK)/(float)LCF;
+      if (((long)me.receiveK - lrv) > lastrecvK )
 	{
 	  if (!LIFESUX)
 	    {
-/* In the original +th code Taner had
-
-              LCF << 1;  / * add hysteresis * /
-
-   which does nothing...
-   so, the hybrid team changed it to
-
-	      LCF <<= 1;  / * add hysteresis * /
-
-   suddenly, there were reports of clients mysteriously just dropping
-   off... Neither rodder or I can see why it makes a difference, but
-   lets try it this way...
-
-   The original dog3 code, does not have an LCF variable
-
-   -Dianora
-
-*/
 	      LIFESUX = 1;
 
 	      if(NOISYHTM)
@@ -1404,7 +1386,9 @@ time_t io_loop(time_t delay)
 		{
 		  (void)sprintf(to_send,
 			"Still high-traffic mode %d%s (%d delay): %.1fk/s",
-				LIFESUX, (LIFESUX & 0x04) ? " (TURBO)" : "",
+				LIFESUX,
+				(LIFESUX & 0x04) ?
+				" (TURBO)" : "",
 				(int)LCF, (float)currlife);
 		  sendto_ops(to_send);
 		}
@@ -1420,7 +1404,7 @@ time_t io_loop(time_t delay)
 	        sendto_ops("Resuming standard operation . . . .");
 	    }
 	}
-      lastrecvK = me.receiveK;
+      lastrecvK = (long)me.receiveK;
     }
 
   /*
@@ -1505,7 +1489,8 @@ time_t io_loop(time_t delay)
   {
     static time_t lasttime=0;
 #ifdef CLIENT_SERVER
-    if (!LIFESUX || (lasttime + LIFESUX) < timeofday)
+    if (!LIFESUX || (lasttime + LIFESUX)
+	< timeofday)
       {
 #else
     if ((lasttime + (LIFESUX + 1)) < timeofday)
