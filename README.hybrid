@@ -1,4 +1,9 @@
-+hybrid-6 (October 12,1998)
++hybrid-6 (November 13,1998)
+- removed ANTI_IP_SPOOF (Dianora)
+- redid semantics of LITTLE_I_LINES. Clients who are i lined
+  can be opped, they can do everything a normal op can do,
+  but cannot op anyone else (Dianora)
+- removed REJECT_IPHONE code and refined X line code (Dianora)
 - fixed bad dns problem (kalt)
 - fixed m_topic (Dianora)
 - fixed m_motd oper notice in the wrong place (Dianora)

@@ -1174,7 +1174,7 @@ static	void	set_sock_opts(int fd, aClient *cptr)
       if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&opt, sizeof(opt)) < 0)
 	report_error("setsockopt(SO_SNDBUF) %s:%s", cptr);
 #endif
-#if defined(IP_OPTIONS) && defined(IPPROTO_IP) && !defined(SUN_GSO_BUG)
+#if defined(IP_OPTIONS) && defined(IPPROTO_IP)
         {
 # if defined(MAXBUFFERS) && !defined(SEQUENT)
 	  char	*s = readbuf, *t = readbuf + (rcvbufmax*sizeof(char))/ 2;

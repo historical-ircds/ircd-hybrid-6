@@ -20,7 +20,12 @@
 RM=@RM@
 
 # Default CFLAGS
-CFLAGS= -g -O2 -D"FD_SETSIZE=1024"
+
+# You may need to define the FD_SETSIZE in order to overrule
+# the system one.
+
+#CFLAGS= -g -O2 -D"FD_SETSIZE=1024"
+CFLAGS= -g -O2
 ZCFLAGS= -g -O3
 #
 # What I used on FreeBSD 2.1.7 with kernel compiled for 4096 descriptors

@@ -40,12 +40,6 @@ int server_split_recovery_time = (DEFAULT_SERVER_SPLIT_RECOVERY_TIME * 60);
 #define USE_ALLOW_OP
 #endif
 
-#ifdef LITTLE_I_LINES
-#ifndef USE_ALLOW_OP
-#define USE_ALLOW_OP
-#endif
-#endif
-
 aChannel *channel = NullChn;
 
 static	void	add_invite (aClient *, aChannel *);
@@ -903,6 +897,7 @@ static	int	errsent(int err, int *errs)
 #define SM_ERR_RPL_B		0x00000010
 #define SM_ERR_RPL_E		0x00000020
 #define SM_ERR_NOTONCHANNEL	0x00000040	/* Not on channel */
+#define SM_ERR_RESTRICTED	0x00000080	/* Restricted chanop */
 
 /*
 ** Apply the mode changes passed in parv to chptr, sending any error
@@ -1025,15 +1020,37 @@ static  void     set_mode(aClient *cptr,
 
 	case 'o' :
 	case 'v' :
-	  if (MyClient(sptr) && !IsMember(sptr, chptr))
+	  if (MyClient(sptr))
 	    {
-	      if(!errsent(SM_ERR_NOTONCHANNEL, &errors_sent))
-		 sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
-			    me.name, sptr, chptr->chname);
-	      /* eat the parameter */
-	      parc--;
-	      parv++;
-	      break;
+	      if(!IsMember(sptr, chptr))
+		{
+		  if(!errsent(SM_ERR_NOTONCHANNEL, &errors_sent))
+		    sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
+			       me.name, sptr, chptr->chname);
+		  /* eat the parameter */
+		  parc--;
+		  parv++;
+		  break;
+		}
+#ifdef LITTLE_I_LINES
+	      else
+		{
+		  if(IsRestricted(sptr) && (whatt == MODE_ADD))
+		    {
+		      if(!errsent(SM_ERR_RESTRICTED, &errors_sent))
+			{
+			  sendto_one(sptr,
+	    ":%s NOTICE %s :*** Notice -- You are restricted and cannot chanop others",
+				 me.name,
+				 sptr->name);
+			}
+		      /* eat the parameter */
+		      parc--;
+		      parv++;
+		      break;
+		    }
+		}
+#endif
 	    }
 	  if (whatt == MODE_QUERY)
 	    break;
@@ -1071,25 +1088,6 @@ static  void     set_mode(aClient *cptr,
 	    the_mode = MODE_CHANOP;
 	  else if (c == 'v')
 	    the_mode = MODE_VOICE;
-
-/* I'm still letting i:lined people get half-ops, which makes i:lines
- * less brutal and possibly more useful  -orabidoo
- */
-#ifdef LITTLE_I_LINES
-	  if (MyClient(who) && !IsAnOper(who) && isok && (c == 'o') && 
-	      IsRestricted(who))
-	    {
-	      sendto_one(who, ":%s NOTICE %s :*** Notice -- %s attempted to chanop you. You are restricted and cannot be chanopped",
-			 me.name,
-			 who->name,
-			 sptr->name);
-	      sendto_one(sptr, ":%s NOTICE %s :*** Notice -- %s is restricted and cannot be chanopped",
-			 me.name,
-			 sptr->name,
-			 who->name);
-	      break;
-	    }
-#endif
 
 	  if (isdeop && (c == 'o') && whatt == MODE_ADD)
 	    set_deopped(who, chptr, the_mode);
@@ -2332,15 +2330,6 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 	    }
 #endif
 
-#ifdef LITTLE_I_LINES
-	  if(!IsAnOper(sptr) && IsRestricted(sptr))
-	    {
-	      allow_op = NO;
-		  sendto_one(sptr, ":%s NOTICE %s :*** Notice -- You are restricted and cannot be chanopped",
-			     me.name,
-			     sptr->name);
-	    }
-#endif
 	  if ((sptr->user->joined >= MAXCHANNELSPERUSER) &&
 	     (!IsAnOper(sptr) || (sptr->user->joined >= MAXCHANNELSPERUSER*3)))
 	    {

@@ -47,8 +47,17 @@
 /***************** MAKE SURE THIS IS CORRECT!!!!!!!!! **************/
 /* ONLY EDIT "HARD_FDLIMIT_" and "INIT_MAXCLIENTS" */
 
-#define HARD_FDLIMIT_   512
-#define INIT_MAXCLIENTS 400
+/* You may also need to hand edit the Makefile to increase
+ * the value of FD_SETSIZE 
+ */
+
+/* These ultra low values pretty much guarantee the server will
+ * come up initially, then you can increase these values to fit your
+ * system limits. If you know what you are doing, increase them now
+ */
+
+#define HARD_FDLIMIT_   256
+#define INIT_MAXCLIENTS 200
 
 /*
  * This is how many 'buffer connections' we allow... 
@@ -62,15 +71,6 @@
 /*******************************************************************/
 
 #include "defs.h"
-
-/* Also define this for SunOS 4.1.4_DBE */
-
-#undef SUNDBE			
-
-#ifdef SUNDBE
-#define FD_SETSIZE HARD_FDLIMIT_
-#define NOFILE HARD_FDLIMIT_
-#endif /* SUNDBE */
 
 /* USE_FAST_FD_ISSET - experimental! - crawl inside of FD_ISSET macro
  * This one is experimental, though it works on SUNOS and freebsd
@@ -210,7 +210,7 @@
  * messages, define this.  Otherwise leave it undef'd for plain ole
  * boring messages.
  */
-#undef CUSTOM_ERR
+#define CUSTOM_ERR
 
 /* FAILED_OPER_NOTICE - send a notice to all opers when someone
  * tries to /oper and uses an incorrect password.
@@ -219,8 +219,8 @@
 
 /* CLIENT_SERVER - Don't be so fascist about idle clients ;)
  * changes behaviour of HTM code to make clients lag less.
+ * Not necessary any more
  */
-#define CLIENT_SERVER
 
 /* RK_NOTICES - Show notices when rline/kline'd connections are denied.
  * This generates a TON of crap, I reccomend leaving it undef'd. 
@@ -258,8 +258,8 @@
 
 /* REJECT_IPHONE - reject I-phone clients
  * Define if you want to reject I-phoners
+ * Can be handled using an X line, look at example.conf
  */
-#define REJECT_IPHONE
 
 /* CLIENT_NOTICES - no longer used - use umode +/- c
  *
@@ -572,10 +572,10 @@
  * To use m4 as a preprocessor on the ircd.conf file, define M4_PREPROC.
  * The server will then call m4 each time it reads the ircd.conf file,
  * reading m4 output as the server's ircd.conf file.
- * m4 support is being moved into viconf.c
- * m4 will be run on ircd.conf.m4 producing ircd.conf
+ *
+ * m4 support has been removed, The .include directive (see example.conf)
+ * takes care of what the m4 support was mostly used for. 
  */
-#undef	M4_PREPROC
 
 /* USE_SYSLOG - log errors and such to syslog()
  * If you wish to have the server send 'vital' messages about server
@@ -660,6 +660,13 @@
  * should be YES or NO
  */
 #define NOISY_HTM YES
+
+/*
+ * LITTLE_I_LINE support
+ * clients with a little i instead of an I in their I line
+ * can be chanopped, but cannot chanop anyone else.
+ */
+#define LITTLE_I_LINES
 
 /*
  * define ONE of NO_CHANOPS_ON_SPLIT, NO_JOIN_ON_SPLIT or
@@ -982,17 +989,10 @@
 */
 #define HYBRID_SOMAXCONN 25
 
-/* ANTI_IP_SPOOF - protects against TCP sequence guessing attacks
- * Define this if you want the server to send a random ping at USER or NICK
- * to defeat IP sequence spoofers. Note, this will stop _some_ very few
- * clients from using the server. MIRC/IRCII clients are fine with this though
- *
- * N.B. This code would be totally unnecessary if you get
- * the proper anti-sequence prediction patches from your OS vendor,
- * but if you absolutely need this until you do, here it is.
- *
+/* ANTI_IP_SPOOF removed. everyone has upgraded their OS,
+ * and I don't like bloat
+ * Dianora
  */
-#undef ANTI_IP_SPOOF
 
 /* DEBUGMODE is used mostly for internal development, it is likely
  * to make your client server very sluggish.
@@ -1040,15 +1040,10 @@
  */
 #undef SETUID_ROOT
  
-/* SUN_GSO_BUG
- *
- * Recommended when ircd is run on SunOS host which hasn't got
- * kernel patch for getsockopt() bug applied. The patch is known
- * as Sun patch 100804-03 for SunOS 4.1.x.
+/* SUN_GSO_BUG support removed
  *
  * if you still have a machine with this bug, it doesn't belong on EFnet
  */
-#undef SUN_GSO_BUG
 
 /* CHROOTDIR - chroot() before reading conf
  * Define for value added security if you are paranoid.
@@ -1123,6 +1118,6 @@ error CLIENT_FLOOD undefined.
 
 #define REPORT_DLINE_TO_USER
 
-#define CONFIG_H_LEVEL_5_2
+#define CONFIG_H_LEVEL_6
 
 #endif /* __config_include__ */

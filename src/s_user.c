@@ -989,7 +989,7 @@ static	int	register_user(aClient *cptr,
 		  }
 #endif /* NO_SPECIAL */
 		 } /* usernames different */
-}
+  }
 #endif /* NO_MIXED_CASE || NO_SPECIAL */
 
   /* 
@@ -1034,233 +1034,228 @@ static	int	register_user(aClient *cptr,
       }
   }
 
-#ifdef REJECT_IPHONE
-                if (!matches("* vc:*", sptr->info))
-		  {
-		    ircstp->is_ref++;
-		    sendto_realops_lev(REJ_LEV,
-				       "Rejecting IPhone user: (%s!%s@%s)",
-				       nick, user->username, user->host);
-                    return exit_client(cptr, sptr, &me, "No IPhone users");
-		   }
-#endif /* REJECT_IPHONE */
+  if(!IsAnOper(sptr) && (aconf = find_conf_name(sptr->info,CONF_XLINE)) )
+    {
+      char *reason;
+      if(aconf->passwd)
+	reason = aconf->passwd;
+      else
+	reason = "NONE";
 
-		sendto_realops_lev(CCONN_LEV,
-				   "Client connecting: %s (%s@%s) [%s] {%d}",
-				   nick,
-				   user->username,
-				   user->host,
-				   sptr->hostip,
-				   get_client_class(sptr));
-		if ((++Count.local) > Count.max_loc)
-		  {
-		    Count.max_loc = Count.local;
-		    if (!(Count.max_loc % 10))
-		      sendto_ops("New Max Local Clients: %d",
-				 Count.max_loc);
-		  }
-		}
-	      else
-		strncpyzt(user->username, username, USERLEN+1);
+      if(aconf->port)
+	{
+	  ircstp->is_ref++;
+	  sendto_realops_lev(REJ_LEV,"X-line Rejecting [%s] [%s], user %s",
+			     sptr->info,
+			     reason,
+			     get_client_name(cptr, FALSE));
+      
+	  return exit_client(cptr, sptr, &me, "Bad user info");
+	}
+      else
+	sendto_realops_lev(REJ_LEV,"X-line Warning [%s] [%s], user %s",
+			   sptr->info,
+			   reason,
+			   get_client_name(cptr, FALSE));
+      
+    }
 
-	      SetClient(sptr);
+  sendto_realops_lev(CCONN_LEV,
+		     "Client connecting: %s (%s@%s) [%s] {%d}",
+		     nick,
+		     user->username,
+		     user->host,
+		     sptr->hostip,
+		     get_client_class(sptr));
 
-	      sptr->servptr = find_server(user->server, NULL);
-	      if (!sptr->servptr)
-		{
-		  sendto_ops("Ghost killed: %s on invalid server %s",
-			     sptr->name, sptr->user->server);
-		  sendto_one(cptr,":%s KILL %s: %s (Ghosted, %s doesn't exist)",
-			     me.name, sptr->name, me.name, user->server);
-		  sptr->flags |= FLAGS_KILLED;
-		  return exit_client(NULL, sptr, &me, "Ghost");
-		}
-	      add_client_to_llist(&(sptr->servptr->serv->users), sptr);
+  if ((++Count.local) > Count.max_loc)
+    {
+      Count.max_loc = Count.local;
+      if (!(Count.max_loc % 10))
+	sendto_ops("New Max Local Clients: %d",
+		   Count.max_loc);
+    }
+  else
+    strncpyzt(user->username, username, USERLEN+1);
+
+  SetClient(sptr);
+
+  sptr->servptr = find_server(user->server, NULL);
+  if (!sptr->servptr)
+    {
+      sendto_ops("Ghost killed: %s on invalid server %s",
+		 sptr->name, sptr->user->server);
+      sendto_one(cptr,":%s KILL %s: %s (Ghosted, %s doesn't exist)",
+		 me.name, sptr->name, me.name, user->server);
+      sptr->flags |= FLAGS_KILLED;
+      return exit_client(NULL, sptr, &me, "Ghost");
+    }
+  add_client_to_llist(&(sptr->servptr->serv->users), sptr);
 
 /* Increment our total user count here */
-	      if (++Count.total > Count.max_tot)
-		Count.max_tot = Count.total;
+  if (++Count.total > Count.max_tot)
+    Count.max_tot = Count.total;
 
-	      if (MyConnect(sptr))
-		{
+  if (MyConnect(sptr))
+    {
 #ifdef MAXBUFFERS
 /* Let's try changing the socket options for the client here...
  * -Taner
  */
-		  reset_sock_opts(sptr->fd, 0);
-/* End sock_opt hack */
+      reset_sock_opts(sptr->fd, 0);
+      /* End sock_opt hack */
 #endif
-		  sendto_one(sptr, rpl_str(RPL_WELCOME), me.name, nick, nick);
-		  /* This is a duplicate of the NOTICE but see below...*/
-		  sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
-			     get_client_name(&me, FALSE), version);
-
-		  /*
-		  ** Don't mess with this one - IRCII needs it! -Avalon
-		  */
-		  sendto_one(sptr,
-			     "NOTICE %s :*** Your host is %s, running version %s",
-			     nick, get_client_name(&me, FALSE), version);
-
-		  sendto_one(sptr, rpl_str(RPL_CREATED),me.name,nick,creation);
-		  sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, parv[0],
-			     me.name, version);
-		  (void)show_lusers(sptr, sptr, 1, parv);
-
-		  sendto_one(sptr,"NOTICE %s :*** Notice -- motd was last changed at %s",
-			     nick, motd_last_changed_date);
+      sendto_one(sptr, rpl_str(RPL_WELCOME), me.name, nick, nick);
+      /* This is a duplicate of the NOTICE but see below...*/
+      sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
+		 get_client_name(&me, FALSE), version);
+      
+      /*
+      ** Don't mess with this one - IRCII needs it! -Avalon
+      */
+      sendto_one(sptr,
+		 "NOTICE %s :*** Your host is %s, running version %s",
+		 nick, get_client_name(&me, FALSE), version);
+      
+      sendto_one(sptr, rpl_str(RPL_CREATED),me.name,nick,creation);
+      sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, parv[0],
+		 me.name, version);
+      (void)show_lusers(sptr, sptr, 1, parv);
+      
+      sendto_one(sptr,"NOTICE %s :*** Notice -- motd was last changed at %s",
+		 nick, motd_last_changed_date);
 #ifdef SHORT_MOTD
-		  sendto_one(sptr,
-		  "NOTICE %s :*** Notice -- Please read the motd if you haven't read it",
-			     nick);
-		  
-		  sendto_one(sptr, rpl_str(RPL_MOTDSTART),
-			     me.name, parv[0], me.name);
-		  
-		  sendto_one(sptr,
-			     rpl_str(RPL_MOTD),
-			     me.name, parv[0],
-			     "*** This is the short motd ***"
-			     );
+      sendto_one(sptr,
+		 "NOTICE %s :*** Notice -- Please read the motd if you haven't read it",
+		 nick);
+      
+      sendto_one(sptr, rpl_str(RPL_MOTDSTART),
+		 me.name, parv[0], me.name);
+      
+      sendto_one(sptr,
+		 rpl_str(RPL_MOTD),
+		 nme.name, parv[0],
+		 "*** This is the short motd ***"
+		 );
 
-		  sendto_one(sptr, rpl_str(RPL_ENDOFMOTD),
-			     me.name, parv[0]);
+      sendto_one(sptr, rpl_str(RPL_ENDOFMOTD),
+		 me.name, parv[0]);
 #else
-		  (void)send_motd(sptr, sptr, 1, parv,motd);
+      (void)send_motd(sptr, sptr, 1, parv,motd);
 #endif
 #ifdef LITTLE_I_LINES
-		  if(sptr->confs)
-		    {
-		      aConfItem *aconf;
-
-		      aconf = sptr->confs->value.aconf;
-		      if(
-			 SetRestricted(sptr);
-		      sendto_one(sptr,"NOTICE %s :*** Notice -- You are in a restricted access mode",nick);
-		      sendto_one(sptr,"NOTICE %s :*** Notice -- You can not be chanopped",nick);
-		    }
-#endif
-		  nextping = timeofday;
-#ifdef ANTI_SPAMBOT_EXTRA
-	      if(strstr(sptr->info,"http:") || strstr(sptr->info,"www."))
-		{
-		  sendto_realops("Possible spambot %s [%s@%s] : [gecos: %s]",
-					 nick, sptr->user->username,
-					 sptr->user->host,sptr->info);
-	        }
+      if(sptr->confs && sptr->confs->value.aconf &&
+	 (sptr->confs->value.aconf->flags
+	  & CONF_FLAGS_LITTLE_I_LINE))
+	{
+	  SetRestricted(sptr);
+	  sendto_one(sptr,"NOTICE %s :*** Notice -- You are in a restricted access mode",nick);
+	  sendto_one(sptr,"NOTICE %s :*** Notice -- You can not chanop others",nick);
+	}
 #endif
 
-	      if(!IsAnOper(sptr) && find_conf_name(sptr->info,CONF_XLINE))
-		{
-		  sendto_realops("Bad user info [%s], dumping user %s",
-				 sptr->info,get_client_name(cptr, FALSE));
-
-		  return exit_client(cptr, sptr, &me, "Bad user info");
-
-		}
+      nextping = timeofday;
 
 #if defined(EXTRA_BOT_NOTICES) && defined(BOT_GCOS_WARN)
-
-		  sprintf(botgecos, "/msg %s hello", nick);
-		  if ((strcasecmp(sptr->info, botgecos)==0)
-		      || (!matches("/msg * hello", sptr->info)))
-		    {
-		      sendto_realops_lev(REJ_LEV,
-		"EggDrop signon alarm activated: %s [%s@%s] : [gecos: %s]",
-		       nick, sptr->user->username,
-					 sptr->user->host, sptr->info);
-		    }
-
-		  sprintf(botgecos, "/msg %s help", nick);
-		  if ((strcasecmp(sptr->info, botgecos)==0) ||
-		      (!matches("/msg * help", sptr->info)))
-		    {
-		      sendto_realops_lev(REJ_LEV,
-		"Generic bot signon alarm activated: %s [%s@%s] : [gecos: %s]",
-			nick, sptr->user->username,
-					 sptr->user->host, sptr->info);
-		    }
+      sprintf(botgecos, "/msg %s hello", nick);
+      if ((strcasecmp(sptr->info, botgecos)==0)
+	  || (!matches("/msg * hello", sptr->info)))
+	{
+	  sendto_realops_lev(REJ_LEV,
+			     "EggDrop signon alarm activated: %s [%s@%s] : [gecos: %s]",
+			     nick, sptr->user->username,
+			     sptr->user->host, sptr->info);
+	}
+      
+      sprintf(botgecos, "/msg %s help", nick);
+      if ((strcasecmp(sptr->info, botgecos)==0) ||
+	  (!matches("/msg * help", sptr->info)))
+	{
+	  sendto_realops_lev(REJ_LEV,
+			     "Generic bot signon alarm activated: %s [%s@%s] : [gecos: %s]",
+			     nick, sptr->user->username,
+			     sptr->user->host, sptr->info);
+	}
 #endif /* EXTRA_BOT_NOTICES && BOT_GCOS_WARN */
-
-		}
-       else if (IsServer(cptr))
-	 {
-	   aClient *acptr;
-	   if ((acptr = find_server(user->server, NULL)) &&
-	       acptr->from != sptr->from)
-	     {
-	       sendto_realops_lev(DEBUG_LEV, 
-				  "Bad User [%s] :%s USER %s@%s %s, != %s[%s]",
-				  cptr->name, nick, user->username,
-				  user->host, user->server,
-				  acptr->name, acptr->from->name);
-	       sendto_one(cptr,
-		   ":%s KILL %s :%s (%s != %s[%s] USER from wrong direction)",
-			  me.name, sptr->name, me.name, user->server,
-			  acptr->from->name, acptr->from->sockhost);
-	       sptr->flags |= FLAGS_KILLED;
-	       return exit_client(sptr, sptr, &me,
-				  "USER server wrong direction");
-
-	     }
-	   /*
-	    * Super GhostDetect:
-	    *	If we can't find the server the user is supposed to be on,
-	    * then simply blow the user away.	-Taner
-	    */
-	   if (!acptr)
-	     {
-	       sendto_one(cptr,
-			  ":%s KILL %s :%s GHOST (no server %s on the net)",
-			  me.name,
-			  sptr->name, me.name, user->server);
-	       sendto_realops("No server %s for user %s[%s@%s] from %s",
-			      user->server,
-			      sptr->name, user->username,
-			      user->host, sptr->from->name);
-	       sptr->flags |= FLAGS_KILLED;
-	       return exit_client(sptr, sptr, &me, "Ghosted Client");
-	     }
-	 }
-	send_umode(NULL, sptr, 0, SEND_UMODES, ubuf);
-	if (!*ubuf)
-	  {
-	    ubuf[0] = '+';
-	    ubuf[1] = '\0';
-	  }
-
-        /* LINKLIST */
-        /* add to local client link list -Dianora */
-	/* I really want to move this add to link list
-	 * inside the if (MyConnect(sptr)) up above
-	 * but I also want to make sure its really good and registered
-	 * local client
-	 * -Dianora
-	 */
-	/*
-	 * double link list only for clients, traversing
-	 * a small link list for opers/servers isn't a big deal
-	 * but it is for clients -Dianora
-	 */
-
-	if (MyConnect(sptr))
-	  {
-	    if(local_cptr_list)
-	      local_cptr_list->previous_local_client = sptr;
-	    sptr->previous_local_client = (aClient *)NULL;
-	    sptr->next_local_client = local_cptr_list;
-	    local_cptr_list = sptr;
-	  }
- 
-	sendto_serv_butone(cptr, "NICK %s %d %ld %s %s %s %s :%s",
-			   nick, sptr->hopcount+1, sptr->tsinfo, ubuf,
-			   user->username, user->host, user->server,
-			   sptr->info);
-	if (ubuf[1])
-		 send_umode_out(cptr, sptr, 0);
-
-	return 0;
     }
+  else if (IsServer(cptr))
+    {
+      aClient *acptr;
+      if ((acptr = find_server(user->server, NULL)) &&
+	  acptr->from != sptr->from)
+	{
+	  sendto_realops_lev(DEBUG_LEV, 
+			     "Bad User [%s] :%s USER %s@%s %s, != %s[%s]",
+			     cptr->name, nick, user->username,
+			     user->host, user->server,
+			     acptr->name, acptr->from->name);
+	  sendto_one(cptr,
+		     ":%s KILL %s :%s (%s != %s[%s] USER from wrong direction)",
+		     me.name, sptr->name, me.name, user->server,
+		     acptr->from->name, acptr->from->sockhost);
+	  sptr->flags |= FLAGS_KILLED;
+	  return exit_client(sptr, sptr, &me,
+			     "USER server wrong direction");
+	  
+	}
+      /*
+       * Super GhostDetect:
+       *	If we can't find the server the user is supposed to be on,
+       * then simply blow the user away.	-Taner
+       */
+      if (!acptr)
+	{
+	  sendto_one(cptr,
+		     ":%s KILL %s :%s GHOST (no server %s on the net)",
+		     me.name,
+			  sptr->name, me.name, user->server);
+	  sendto_realops("No server %s for user %s[%s@%s] from %s",
+			       user->server,
+			  sptr->name, user->username,
+			  user->host, sptr->from->name);
+	  sptr->flags |= FLAGS_KILLED;
+	  return exit_client(sptr, sptr, &me, "Ghosted Client");
+	}
+    }
+
+  send_umode(NULL, sptr, 0, SEND_UMODES, ubuf);
+  if (!*ubuf)
+    {
+      ubuf[0] = '+';
+      ubuf[1] = '\0';
+    }
+  
+  /* LINKLIST 
+   * add to local client link list -Dianora
+   * I really want to move this add to link list
+   * inside the if (MyConnect(sptr)) up above
+   * but I also want to make sure its really good and registered
+   * local client
+   *
+   * double link list only for clients, traversing
+   * a small link list for opers/servers isn't a big deal
+   * but it is for clients -Dianora
+   */
+
+  if (MyConnect(sptr))
+    {
+      if(local_cptr_list)
+	local_cptr_list->previous_local_client = sptr;
+      sptr->previous_local_client = (aClient *)NULL;
+      sptr->next_local_client = local_cptr_list;
+      local_cptr_list = sptr;
+    }
+  
+  sendto_serv_butone(cptr, "NICK %s %d %ld %s %s %s %s :%s",
+		     nick, sptr->hopcount+1, sptr->tsinfo, ubuf,
+		     user->username, user->host, user->server,
+		     sptr->info);
+  if (ubuf[1])
+    send_umode_out(cptr, sptr, 0);
+  
+  return 0;
+    }
+}
 
 /*
 ** m_nick
@@ -1780,9 +1775,6 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
 	{
 	  sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
 	  if (sptr->user)
-#ifdef ANTI_IP_SPOOF
-	  if ((!MyConnect(sptr)) || (sptr->flags & FLAGS_GOT_ANTI_SPOOF_PING))
-#endif
 	    {
 	      add_history(sptr,1);
 	      
@@ -1809,20 +1801,6 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
 	  ** may reject the client and call exit_client for it
 	  ** --must test this and exit m_nick too!!!
 	  */
-/* anti ip sequence prediction spoof code 
-   it needs a good going over by someone else, but it
-   works... -Dianora
-*/
-#ifdef ANTI_IP_SPOOF
-	  if(MyConnect(sptr))
-	    {
-	      (void)strcpy(sptr->name,nick);
-              sptr->random_ping = my_rand();
-              sendto_one(sptr, "PING :%d", sptr->random_ping);
-              sptr->flags |= FLAGS_PINGSENT;
-	    }
-          else
-#endif
 	    if (register_user(cptr, sptr, nick, sptr->user->username)
 		== FLUSH_BUFFER)
 	      return FLUSH_BUFFER;
@@ -2481,6 +2459,11 @@ int	m_whois(aClient *cptr,
       return 0;
     }
 
+  if (hunt_server(cptr,sptr,":%s WHOIS %s :%s", 1,parc,parv) !=
+      HUNTED_ISME)
+    return 0;
+  parv[1] = parv[2];
+
   if (parc > 2)
     {
       if(!IsAnOper(sptr))
@@ -2494,11 +2477,6 @@ int	m_whois(aClient *cptr,
 	  else
 	    last_used = NOW;
 	}
-
-      if (hunt_server(cptr,sptr,":%s WHOIS %s :%s", 1,parc,parv) !=
-	  HUNTED_ISME)
-	return 0;
-      parv[1] = parv[2];
     }
 
   for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)
@@ -2523,12 +2501,14 @@ int	m_whois(aClient *cptr,
       if(!wilds)
 	{
 	  acptr = hash_find_client(nick,(aClient *)NULL);
-	  if(!acptr || !IsPerson(acptr))
+	  if(!acptr)
 	    {
 	      sendto_one(sptr, err_str(ERR_NOSUCHNICK),
 			 me.name, parv[0], nick);
 	      continue;
 	    }
+	  if(!IsPerson(acptr))
+	    continue;
 
           user = acptr->user ? acptr->user : &UnknownUser;
 	  name = (!*acptr->name) ? "?" : acptr->name;
@@ -2823,20 +2803,6 @@ static int do_user(char *nick,
     }
   strncpyzt(sptr->info, realname, sizeof(sptr->info));
 
-#ifdef ANTI_IP_SPOOF
-  user->last = timeofday;
-  if(MyConnect(sptr))
-     {
-       strncpyzt(sptr->user->username, username, USERLEN+1);
-       if (sptr->name[0]) /* NICK already received, now I have USER... */
-	 {
-	   sptr->random_ping = my_rand();
-	   sendto_one(sptr, "PING :%d", sptr->random_ping);
-	   sptr->flags |= FLAGS_PINGSENT;
-	 }
-       return 0;
-     }
-#endif
   if (sptr->name[0]) /* NICK already received, now I have USER... */
     return register_user(cptr, sptr, sptr->name, username);
   else
@@ -3259,34 +3225,6 @@ int	m_pong(aClient *cptr,
   destination = parv[2];
   cptr->flags &= ~FLAGS_PINGSENT;
   sptr->flags &= ~FLAGS_PINGSENT;
-
-#ifdef ANTI_IP_SPOOF
-  /* ANTI_IP_SPOOF delays the registration of a local client until after we
-     have received a response from a PING containing a random integer.  When
-     we receive the resulting PONG, then we register the client.
-  */
-
-  if(MyConnect(sptr) && !IsRegisteredUser(sptr) && sptr->random_ping) {
-      unsigned long received_random_ping;
-      received_random_ping = (unsigned long)atol(origin);
-
-      if(received_random_ping) {
-          /* Ensure that aClient has a user and a nick (redundant) */
-          if((sptr->user) && (sptr->name[0])) {
-              if(received_random_ping == sptr->random_ping) {
-		  if(register_user(cptr, sptr, sptr->name,
-				    sptr->user->username) == FLUSH_BUFFER)
-		    return FLUSH_BUFFER;
-                  return 0;
-              } else {
-                  ircstp->is_ipspoof++;
-		  return exit_client(cptr,sptr,&me,
-                      "Wrong random PONG response");
-              }
-	  }
-      }
-  }
-#endif
 
   /* Now attempt to route the PONG, comstud pointed out routable PING
      is used for SPING.  routable PING should also probably be left in
