@@ -593,7 +593,7 @@ int crypt_decrypt(struct Client * cptr, const char * Data, int Length) {
 
   if (cptr->crypt->flags & CRYPTFLAG_DECRYPT) {
     if (Length) {
-      return cptr->crypt->OutCipher->decrypt(cptr, (char *) Data, Length);
+      return cptr->crypt->InCipher->decrypt(cptr, (char *) Data, Length);
     } else {
       return CRYPT_DECRYPTED;
     }
