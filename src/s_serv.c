@@ -83,7 +83,7 @@ extern aConfItem *x_conf;
 extern aConfItem *q_conf;
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-	defined(NO_JOIN_ON_SPLIT)
+	defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
 extern int server_was_split;		/* defined in channel.c */
 extern time_t server_split_time;	/* defined in channel.c */
 extern int server_split_recovery_time;	/* defined in channel.c */
@@ -1257,7 +1257,8 @@ int	m_server_estab(aClient *cptr)
 #endif /* ZIP_LINKS */
 
 #if defined(SPLIT_PONG) && (defined(NO_CHANOPS_WHEN_SPLIT) || \
-	defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT))
+	defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)) \
+	|| defined(NO_JOIN_ON_SPLIT_SIMPLE)
   sendto_one(cptr, "PING :%s", me.name);
   if (server_was_split)
     got_server_pong = NO;
@@ -1622,18 +1623,23 @@ int	m_info(aClient *cptr,
 #else
 #define OUT1 "NO_JOIN_ON_SPLIT=0"
 #endif
-#ifdef NO_LOCAL_KLINE
-#define OUT2 " NO_LOCAL_KLINE=1"
+#ifdef NO_JOIN_ON_SPLIT_SIMPLE
+#define OUT2 "NO_JOIN_ON_SPLIT_SIMPLE=1"
 #else
-#define OUT2 " NO_LOCAL_KLINE=0"
+#define OUT2 "NO_JOIN_ON_SPLIT_SIMPLE=0"
+#endif 
+#ifdef NO_LOCAL_KLINE
+#define OUT3 " NO_LOCAL_KLINE=1"
+#else
+#define OUT3 " NO_LOCAL_KLINE=0"
 #endif
 #ifdef NO_MIXED_CASE
-#define OUT3 " NO_MIXED_CASE=1"
+#define OUT4 " NO_MIXED_CASE=1"
 #else
-#define OUT3 " NO_MIXED_CASE=0"
+#define OUT4 " NO_MIXED_CASE=0"
 #endif
         sendto_one(sptr, rpl_str(RPL_INFO),
-                   me.name, parv[0], OUT1 OUT2 OUT3 );
+                   me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
 #undef OUT1
 #undef OUT2
 #undef OUT3
@@ -1907,7 +1913,7 @@ int	m_info(aClient *cptr,
 #endif
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-        defined(NO_JOIN_ON_SPLIT)
+        defined(NO_JOIN_ON_SPLIT)  || defined(NO_JOIN_ON_SPLIT_SIMPLE)
 	ircsprintf(outstr,"DEFAULT_SERVER_SPLIT_RECOVERY_TIME=%d",
                   DEFAULT_SERVER_SPLIT_RECOVERY_TIME);
         sendto_one(sptr, rpl_str(RPL_INFO),
@@ -2003,7 +2009,7 @@ int	m_info(aClient *cptr,
 #endif
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-        defined(NO_JOIN_ON_SPLIT)
+        defined(NO_JOIN_ON_SPLIT)  || defined(NO_JOIN_ON_SPLIT_SIMPLE)
 
         ircsprintf(outstr,"SPLIT_SMALLNET_SIZE=%d SPLIT_SMALLNET_USER_SIZE=%d",
                    SPLIT_SMALLNET_SIZE,SPLIT_SMALLNET_USER_SIZE) ;
@@ -3565,7 +3571,7 @@ int   m_set(aClient *cptr,
 	}
 #endif
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-	defined(NO_JOIN_ON_SPLIT)
+	defined(NO_JOIN_ON_SPLIT)  || defined(NO_JOIN_ON_SPLIT_SIMPLE)
       else if(!strcasecmp(command, "SPLITDELAY"))
 	{
           if(parc > 2)
@@ -3589,7 +3595,11 @@ int   m_set(aClient *cptr,
 	      if(server_split_recovery_time == 0)
 		{
 		  cold_start = NO;
-		  server_was_split = NO;
+		  if (server_was_split)
+		    {
+		      server_was_split = NO;
+		      sendto_ops("split-mode deactived by manual override");
+		    }
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 		  remove_empty_channels();
 #endif
@@ -3776,7 +3786,7 @@ int   m_set(aClient *cptr,
 		 me.name, parv[0]);
 #endif
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-      defined(NO_JOIN_ON_SPLIT)
+      defined(NO_JOIN_ON_SPLIT)  || defined(NO_JOIN_ON_SPLIT_SIMPLE)
 	sendto_one(sptr, ":%s NOTICE %s :Options: SPLITNUM SPLITUSERS SPLITDELAY",
 		   me.name, parv[0]);
 #endif

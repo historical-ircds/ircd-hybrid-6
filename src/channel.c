@@ -50,7 +50,7 @@ static char *rcs_version="$Id$";
 #include "h.h"
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-	defined(NO_JOIN_ON_SPLIT)
+	defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
 int server_was_split=YES;
 time_t server_split_time;
 int server_split_recovery_time = (DEFAULT_SERVER_SPLIT_RECOVERY_TIME * 60);
@@ -2367,7 +2367,7 @@ static void clear_bans_exceptions(aClient *sptr, aChannel *chptr)
 
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-	defined(NO_JOIN_ON_SPLIT)
+	defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
 
 /*
  * check_still_split()
@@ -2396,6 +2396,7 @@ static void check_still_split()
 	   * -Dianora
 	   */
 	  server_was_split = NO;
+	  sendto_ops("Net Rejoined, split-mode deactivated");
 	  cold_start = NO;
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 	  remove_empty_channels();
@@ -2534,7 +2535,7 @@ int	m_join(aClient *cptr,
 
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-	defined(NO_JOIN_ON_SPLIT)
+	defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
 
   /* Check to see if the timer has timed out, and if so, see if
    * there are a decent number of servers now connected 
@@ -2542,7 +2543,8 @@ int	m_join(aClient *cptr,
    * -Dianora
    */
 
-  check_still_split();
+  if (server_was_split)
+    check_still_split();
 
 #endif
 
@@ -2566,6 +2568,17 @@ int	m_join(aClient *cptr,
 		       me.name, parv[0], name);
 	  continue;
 	}
+
+
+#ifdef NO_JOIN_ON_SPLIT_SIMPLE
+      if (server_was_split && MyClient(sptr) 
+          && (*name != '&') && !IsAnOper(sptr))
+        {
+              sendto_one(sptr, err_str(ERR_UNAVAILRESOURCE),
+                         me.name, parv[0], name);
+              continue;
+        }
+#endif /* NO_JOIN_ON_SPLIT_SIMPLE */
 
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
       /* If from a cold start, there were never any channels

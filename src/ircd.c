@@ -63,7 +63,7 @@ aMessageFile *amotd=(aMessageFile *)NULL;
 aMessageFile *helpfile=(aMessageFile *)NULL;	
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-	defined(NO_JOIN_ON_SPLIT)
+	defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
 extern time_t server_split_time;
 #endif
 
@@ -1204,7 +1204,7 @@ normal user.\n");
   init_fdlist(&listen_fdlist);
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-	defined(NO_JOIN_ON_SPLIT)
+	defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
   server_split_time = NOW;
 #endif
 

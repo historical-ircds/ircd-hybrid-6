@@ -689,8 +689,8 @@
 #define LITTLE_I_LINES
 
 /*
- * define ONE of NO_CHANOPS_ON_SPLIT, NO_JOIN_ON_SPLIT or
- * PRESERVE_CHANNEL_ON_SPLIT
+ * define ONE of NO_CHANOPS_ON_SPLIT, NO_JOIN_ON_SPLIT
+ * PRESERVE_CHANNEL_ON_SPLIT, NO_JOIN_ON_SPLIT_SIMPLE
  *
  * choose =one= only
  */
@@ -702,11 +702,20 @@
  */
 #define NO_CHANOPS_WHEN_SPLIT
 
+/* 
+ * NO_JOIN_ON_SPLIT_SIMPLE
+ * 
+ * When this is defined, users will not be allowed to join channels
+ * while the server is split.
+ */
+#undef NO_JOIN_ON_SPLIT_SIMPLE
+
 /*
  * NO_JOIN_ON_SPLIT
  *
  * When this is defined, users will not be allowed to join channels
  * that were present before a split.
+ * THIS IS BROKEN - DO NOT USE ON PRODUCTION SERVER --Rodder
  */
 #undef NO_JOIN_ON_SPLIT
 
@@ -716,6 +725,7 @@
  * When this is defined, channel modes are preserved when this
  * server is split from net until rejoin. i.e. if the channel
  * was +i before this server split, it remains +i during the split
+ * THIS IS BROKEN - DO NOT USE ON PRODUCTION SERVER --Rodder
  */
 #undef PRESERVE_CHANNEL_ON_SPLIT
 

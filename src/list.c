@@ -34,7 +34,7 @@ static char *rcs_version = "$Id$";
 extern int BlockHeapGarbageCollect(BlockHeap *);
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-	defined(NO_JOIN_ON_SPLIT)
+	defined(NO_JOIN_ON_SPLIT)  || defined(NO_JOIN_ON_SPLIT_SIMPLE)
 extern int server_was_split;
 extern time_t server_split_time;
 extern int server_split_recovery_time;
@@ -342,11 +342,15 @@ void remove_client_from_list(aClient *cptr)
       Count.server--;
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-      defined(NO_JOIN_ON_SPLIT)
+      defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
 
 	if(Count.server < split_smallnet_size)
 	  {
-	    server_was_split = YES;
+	    if (!server_was_split)
+	      {
+	        sendto_ops("Netsplit detected, split-mode activated");
+	        server_was_split = YES;
+	      }
 	    server_split_time = NOW;
 	  }
 #endif

@@ -23,3 +23,7 @@ There is now a mailing list for general discussion of Hybrid.  To subscribe
 to the Hybrid List, send email to hybrid-request@the-project.org with
 the subject "subscribe".
 
+SOLARIS USERS: this code appears to tickle a bug in gcc and egcs ONLY
+on 64-bit Solaris7.  You must compile on a 32bit kernel, then you
+can run on 32bit or 64bit.  
+

@@ -2,6 +2,17 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b58   17-Apr-1999
+* SOLARIS7 64bit USERS: this code appears to tickle a bug in gcc and egcs
+  ONLY on 64-bit Solaris7.  You must compile on a 32bit kernel, then you
+  can run the ircd binary on 32bit or 64bit.  Or reinstall your ircd
+  machine as 32bit.  Or buy SunPro C.
+* Created NO_JOIN_ON_SPLIT_SIMPLE.  Totally disables the JOIN command
+  for non-opers while split.  Doesn't care if the channel existed "before"
+  or not.
+* server notices are sent to +s clients when entering or leaving "split-mode"
+-Rodder
+
 version hybrid-6-b57   28-Mar-1999
 * integrated ChangeLog with README.hybrid
 * updated Hybrid-team and version.c.SH to reflect the current core team
