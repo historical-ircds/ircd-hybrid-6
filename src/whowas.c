@@ -63,12 +63,6 @@ void add_history(aClient* cptr, int online)
   aWhowas* who = &WHOWAS[whowas_next];
 
   assert(0 != cptr);
-  /*
-   * XXX - can these be checked at compile time instead??
-   */
-  assert(sizeof(cptr->username) == sizeof(who->username));
-  assert(sizeof(cptr->host)     == sizeof(who->hostname));
-  assert(sizeof(cptr->info)     == sizeof(who->realname));
 
   if (who->hashv != -1)
     {
