@@ -77,18 +77,19 @@ extern  char*   debugmode;
 extern struct Counter Count;
 extern time_t nextconnect;
 extern time_t nextping;
-extern time_t CurrentTime;
+extern time_t         CurrentTime;
+extern size_t         InitialVMTop;
 extern struct Client* GlobalClientList;
 extern struct Client  me;
 extern struct Client* local[];
-extern int    bootopt;
-extern int    cold_start;
-extern int    dorehash;
+extern int            bootopt;
+extern int            cold_start;
+extern int            dorehash;
 
 
-extern struct Client*           serv_cptr_list;
-extern struct Client*           local_cptr_list;
-extern struct Client*           oper_cptr_list;
+extern struct Client* serv_cptr_list;
+extern struct Client* local_cptr_list;
+extern struct Client* oper_cptr_list;
 
 #ifdef REJECT_HOLD
 extern int reject_held_fds;

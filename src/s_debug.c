@@ -155,9 +155,9 @@ void debug(int level, char *format, ...)
 } /* debug() */
 
 /*
- * get_maxrss - get the operating systems notion of the resident set size
+ * get_vm_top - get the operating systems notion of the resident set size
  */
-size_t get_maxrss(void)
+size_t get_vm_top(void)
 {
   /*
    * NOTE: sbrk is not part of the ANSI C library or the POSIX.1 standard
@@ -171,6 +171,14 @@ size_t get_maxrss(void)
    */
   void* vptr = sbrk(0);
   return (size_t) vptr;
+}
+
+/*
+ * get_maxrss - get the operating systems notion of the resident set size
+ */
+size_t get_maxrss(void)
+{
+  return get_vm_top() - InitialVMTop;
 }
 
 /*
@@ -202,9 +210,13 @@ void send_usage(aClient *cptr, char *nick)
       return;
     }
   secs = rus.ru_utime.tv_sec + rus.ru_stime.tv_sec;
-  rup = CurrentTime - me.since;
-  if (secs == 0)
+  if (0 == secs)
     secs = 1;
+
+  rup = (CurrentTime - me.since) * hzz;
+  if (0 == rup)
+    rup = 1;
+
 
   sendto_one(cptr,
              ":%s %d %s :CPU Secs %d:%d User %d:%d System %d:%d",
@@ -213,8 +225,8 @@ void send_usage(aClient *cptr, char *nick)
              rus.ru_stime.tv_sec/60, rus.ru_stime.tv_sec%60);
   sendto_one(cptr, ":%s %d %s :RSS %d ShMem %d Data %d Stack %d",
              me.name, RPL_STATSDEBUG, nick, rus.ru_maxrss,
-             rus.ru_ixrss / (rup * hzz), rus.ru_idrss / (rup * hzz),
-             rus.ru_isrss / (rup * hzz));
+             rus.ru_ixrss / rup, rus.ru_idrss / rup,
+             rus.ru_isrss / rup);
   sendto_one(cptr, ":%s %d %s :Swaps %d Reclaims %d Faults %d",
              me.name, RPL_STATSDEBUG, nick, rus.ru_nswap,
              rus.ru_minflt, rus.ru_majflt);

@@ -46,6 +46,7 @@
 #include "scache.h"
 #include "s_misc.h"
 #include "s_zip.h"
+#include "s_debug.h"
 
 #include <string.h>
 #include <errno.h>
@@ -85,6 +86,7 @@ struct  Counter Count;
 
 time_t  CurrentTime;            /* GLOBAL - current system timestamp */
 int     ServerRunning;          /* GLOBAL - server execution state */
+size_t  InitialVMTop;           /* GLOBAL - top of virtual memory at init */
 aClient me;                     /* That's me */
 
 aClient* GlobalClientList = 0;  /* Pointer to beginning of Client list */
@@ -690,19 +692,28 @@ int main(int argc, char *argv[])
   time_t      delay = 0;
   aConfItem*  aconf;
 
-  ServerRunning = 0;
-  memset(&me, 0, sizeof(me));
-  GlobalClientList = &me;       /* Pointer to beginning of Client list */
-  cold_start = YES;             /* set when server first starts up */
-
+  /*
+   * save server boot time right away, so getrusage works correctly
+   */
   if ((CurrentTime = time(NULL)) == -1)
     {
       fprintf(stderr,"ERROR: Clock Failure (%d)\n", errno);
       exit(errno);
     }
-  
+
+  ServerRunning = 0;
+  memset(&me, 0, sizeof(me));
+  GlobalClientList = &me;       /* Pointer to beginning of Client list */
+  cold_start = YES;             /* set when server first starts up */
+
   memset(&Count, 0, sizeof(Count));
   Count.server = 1;     /* us */
+
+  /* 
+   * set InitialVMTop before we allocate any memory
+   * XXX - we should fork *before* we allocate any memory
+   */
+  InitialVMTop = get_vm_top();
 
   initialize_global_set_options();
 
@@ -938,6 +949,7 @@ int main(int argc, char *argv[])
   fdlist_init();
   open_debugfile();
 
+#if 0
   if ((CurrentTime = time(NULL)) == -1)
     {
 #ifdef USE_SYSLOG
@@ -945,7 +957,7 @@ int main(int argc, char *argv[])
 #endif
       sendto_ops("Clock Failure (%d), TS can be corrupted", errno);
     }
-
+#endif
 
   init_sys();
 
