@@ -676,17 +676,17 @@ aConfItem *match_ip_Kline(unsigned long ip,char *name)
   for( scan=node->conf; scan; scan=scan->next)
     {
       if (scan->flags & CONF_FLAGS_E_LINED)  /* Eline */
-	if (!match(scan->user,name)) return scan; /* instant win! */
+	if (match(scan->user,name)) return scan; /* instant win! */
 
       if (scan->status & CONF_KILL)  /* Kline */
-	if (!match(scan->user,name))
+	if (match(scan->user,name))
 	  {
 	    winnertype='K'; winner=scan;
 	    continue;
 	  }
 
       if (scan->status & CONF_CLIENT) /* Iline */
-	if (!match(scan->user,name)) /* name jives */
+	if (match(scan->user,name)) /* name jives */
 	  if (winnertype=='I') /* we might be able to beat the champ */
             {
 	      if (winner && (scan->ip_mask <= winner->ip_mask))

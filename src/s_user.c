@@ -229,7 +229,7 @@ aClient *next_client(aClient *next,	/* First client to check */
     return next;
   for ( ; next; next = next->next)
     {
-      if (!match(ch,next->name)) break;
+      if (match(ch,next->name)) break;
     }
   return next;
 }
@@ -249,7 +249,7 @@ aClient *next_client_double(aClient *next,	/* First client to check */
     return next;
   for ( ; next; next = next->next)
     {
-      if (!match(ch,next->name) || !match(next->name,ch))
+      if (match(ch,next->name) || match(next->name,ch))
 	break;
     }
   return next;
@@ -290,8 +290,8 @@ int	hunt_server(aClient *cptr,
   ** Assume it's me, if no server
   */
   if (parc <= server || BadPtr(parv[server]) ||
-      match(me.name, parv[server]) == 0 ||
-      match(parv[server], me.name) == 0)
+      match(me.name, parv[server]) ||
+      match(parv[server], me.name))
     return (HUNTED_ISME);
   /*
   ** These are to pickup matches that would cause the following
@@ -349,7 +349,7 @@ int	hunt_server(aClient *cptr,
     {
       if (IsMe(acptr) || MyClient(acptr))
 	return HUNTED_ISME;
-      if (match(acptr->name, parv[server]))
+      if (!match(acptr->name, parv[server]))
 	parv[server] = acptr->name;
       sendto_one(acptr, command, parv[0],
 		 parv[1], parv[2], parv[3], parv[4],
@@ -1257,7 +1257,7 @@ static	int	register_user(aClient *cptr,
 #if defined(EXTRA_BOT_NOTICES) && defined(BOT_GCOS_WARN)
       sprintf(botgecos, "/msg %s hello", nick);
       if ((strcasecmp(sptr->info, botgecos)==0)
-	  || (!match("/msg * hello", sptr->info)))
+	  || (match("/msg * hello", sptr->info)))
 	{
 	  sendto_realops_lev(REJ_LEV,
 			     "EggDrop signon alarm activated: %s [%s@%s] : [gecos: %s]",
@@ -1267,7 +1267,7 @@ static	int	register_user(aClient *cptr,
       
       sprintf(botgecos, "/msg %s help", nick);
       if ((strcasecmp(sptr->info, botgecos)==0) ||
-	  (!match("/msg * help", sptr->info)))
+	  (match("/msg * help", sptr->info)))
 	{
 	  sendto_realops_lev(REJ_LEV,
 			     "Generic bot signon alarm activated: %s [%s@%s] : [gecos: %s]",
@@ -2051,7 +2051,7 @@ static	int	m_message(aClient *cptr,
 			   sptr->user->host, nick);
       
       /* EggDrop finder by desynched */
-      if (!match("h?4x0r?", nick))
+      if (match("h?4x0r?", nick))
 	sendto_realops_lev(REJ_LEV,
 			   "EggDrop alarm #2 activated: %s [%s@%s] : [/msg %s]",
 			   parv[0], sptr->user->username,
@@ -2660,11 +2660,11 @@ int	m_who(aClient *cptr,
 	showperson = 1;
       if (showperson &&
 	  (!mask ||
-	   !match(mask, acptr->name) ||
-	   !match(mask, acptr->user->username) ||
-	   !match(mask, acptr->user->host) ||
-	   !match(mask, acptr->user->server) ||
-	   !match(mask, acptr->info)))
+	   match(mask, acptr->name) ||
+	   match(mask, acptr->user->username) ||
+	   match(mask, acptr->user->host) ||
+	   match(mask, acptr->user->server) ||
+	   match(mask, acptr->info)))
 	{
 	  do_who(sptr, acptr, ch2ptr, NULL);
 	  if (!--maxmatches)

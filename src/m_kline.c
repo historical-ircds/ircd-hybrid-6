@@ -333,9 +333,9 @@ int     m_kline(aClient *cptr,
   else
     reason = "No reason";
 
-  wild_user = !match(user, "akjhfkahfasfjd");
+  wild_user = match(user, "akjhfkahfasfjd");
 
-  if (wild_user && !match(host, "ldksjfl.kss...kdjfd.jfklsjf"))
+  if (wild_user && match(host, "ldksjfl.kss...kdjfd.jfklsjf"))
     {
 #ifdef SLAVE_SERVERS
       if(!IsServer(sptr))

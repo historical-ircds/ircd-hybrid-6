@@ -181,8 +181,8 @@ int     m_gline(aClient *cptr,
 
       reason = parv[2];
 
-      if (!match(user, "akjhfkahfasfjd") &&
-                !match(host, "ldksjfl.kss...kdjfd.jfklsjf"))
+      if (match(user, "akjhfkahfasfjd") &&
+                match(host, "ldksjfl.kss...kdjfd.jfklsjf"))
 	{
 	  if(MyClient(sptr))
 	    sendto_one(sptr, ":%s NOTICE %s :Can't G-Line *@*", me.name,

@@ -242,7 +242,7 @@ static	int	add_banid(aClient *cptr, aChannel *chptr, char *banid)
        * ban covers current ones, since it may cover other
        * things too -wd
        */
-      else if (!match(BANSTR(ban), banid))
+      else if (match(BANSTR(ban), banid))
 	return -1;
     }
 
@@ -321,7 +321,7 @@ static	int	add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
 		     chptr->chname, eid);
 	  return -1;
 	}
-      else if (!match(BANSTR(ex), eid))
+      else if (match(BANSTR(ex), eid))
 	return -1;
     }
 
@@ -468,8 +468,8 @@ static void del_matching_exception(aClient *cptr,aChannel *chptr)
     {
       tmp = *ex;
 
-      if ((match(BANSTR(tmp), s) == 0) ||
-	  (match(BANSTR(tmp), s2) == 0) )
+      if (match(BANSTR(tmp), s) ||
+	  match(BANSTR(tmp), s2) )
 	{
 
 	  /* code needed here to send -e to channel.
@@ -532,15 +532,15 @@ static	int is_banned(aClient *cptr,aChannel *chptr)
 			   inetntoa((char *)&cptr->ip));
 
   for (tmp = chptr->banlist; tmp; tmp = tmp->next)
-    if ((match(BANSTR(tmp), s) == 0) ||
-	(match(BANSTR(tmp), s2) == 0) )
+    if (match(BANSTR(tmp), s) ||
+	match(BANSTR(tmp), s2))
       break;
 
   if (tmp)
     {
       for (t2 = chptr->exceptlist; t2; t2 = t2->next)
-	if ((match(BANSTR(t2), s) == 0) ||
-	    (match(BANSTR(t2), s2) == 0))
+	if (match(BANSTR(t2), s) ||
+	    match(BANSTR(t2), s2))
 	  {
 #if 0
 	    /* I think a message sent to channel
@@ -4090,7 +4090,7 @@ void	send_user_joins(aClient *cptr, aClient *user)
       if (*chptr->chname == '&')
 	continue;
       if ((mask = strchr(chptr->chname, ':')))
-	if (match(++mask, cptr->name))
+	if (!match(++mask, cptr->name))
 	  continue;
       clen = strlen(chptr->chname);
       if (clen > (size_t) BUFSIZE - 7 - len)

@@ -810,8 +810,7 @@ int	m_server(aClient *cptr,
 	      return exit_client(cptr, cptr, cptr,
 				 "Lost N line");
 	    }
-	  if (match(my_name_for_link(me.name, aconf),
-		      acptr->name) == 0)
+	  if (match(my_name_for_link(me.name, aconf), acptr->name))
 	    continue;
 
 	  sendto_one(bcptr, ":%s SERVER %s %d :%s",
@@ -968,7 +967,7 @@ int	m_server_estab(aClient *cptr)
     {
       Debug((DEBUG_INFO, "Check Usernames [%s]vs[%s]",
 	     aconf->user, cptr->username));
-      if (match(aconf->user, cptr->username))
+      if (!match(aconf->user, cptr->username))
 	{
 	  ircstp->is_ref++;
 	  sendto_ops("Username mismatch [%s]v[%s] : %s",
@@ -1065,7 +1064,7 @@ int	m_server_estab(aClient *cptr)
 	continue;
 
       if ((aconf = acptr->serv->nline) &&
-	  !match(my_name_for_link(me.name, aconf), cptr->name))
+	  match(my_name_for_link(me.name, aconf), cptr->name))
 	continue;
       if (split)
 	{
@@ -1115,8 +1114,7 @@ int	m_server_estab(aClient *cptr)
 	continue;
       if (IsServer(acptr))
 	{
-	  if (match(my_name_for_link(me.name, aconf),
-		      acptr->name) == 0)
+	  if (match(my_name_for_link(me.name, aconf), acptr->name))
 	    continue;
 	  split = (MyConnect(acptr) &&
 		   irccmp(acptr->name, acptr->sockhost));
@@ -1318,7 +1316,7 @@ int	m_links(aClient *cptr,
     {
       if (!IsServer(acptr) && !IsMe(acptr))
 	continue;
-      if (!BadPtr(mask) && match(mask, acptr->name))
+      if (!BadPtr(mask) && !match(mask, acptr->name))
 	continue;
       if(IsAnOper(sptr))
 	 sendto_one(sptr, form_str(RPL_LINKS),
@@ -1541,7 +1539,7 @@ int	m_stats(aClient *cptr,
       name = parv[2];
       if (!irccmp(name, me.name))
 	doall = 2;
-      else if (match(name, me.name) == 0)
+      else if (match(name, me.name))
 	doall = 1;
       if (strchr(name, '*') || strchr(name, '?'))
 	wilds = 1;
@@ -1571,7 +1569,7 @@ int	m_stats(aClient *cptr,
 	      !(MyConnect(sptr) && IsOper(sptr)) &&
 	      !IsAnOper(acptr) && (acptr != sptr))
 	    continue;
-	  if (!doall && wilds && match(name, acptr->name))
+	  if (!doall && wilds && !match(name, acptr->name))
 	    continue;
 	  if (!(doall || wilds) && irccmp(name, acptr->name))
 	    continue;
@@ -2007,12 +2005,12 @@ int show_lusers(aClient *cptr,
 	    {
 	      if (!IsServer(acptr) && acptr->user)
 	        {
-		  if (match(parv[1], acptr->user->server)!=0)
+		  if (!match(parv[1], acptr->user->server))
 		  continue;
 	        } 
 	      else
 	 	{
-	          if (match(parv[1], acptr->name)!=0)
+	          if (!match(parv[1], acptr->name))
 		  continue;
 		}
 	    }
@@ -2214,7 +2212,7 @@ int	m_connect(aClient *cptr,
 
   for (aconf = conf; aconf; aconf = aconf->next)
     if ((aconf->status == CONF_CONNECT_SERVER) &&
-	match(parv[1], aconf->name) == 0)
+	match(parv[1], aconf->name))
       break;
 
   /* Checked first servernames, then try hostnames. */
@@ -2223,7 +2221,7 @@ int	m_connect(aClient *cptr,
       for (aconf = conf; aconf; aconf = aconf->next)
 	{
 	  if ((aconf->status == CONF_CONNECT_SERVER) &&
-	      (match(parv[1], aconf->host) == 0 ))
+	      match(parv[1], aconf->host))
 	    {
 	      break;
 	    }
@@ -3425,7 +3423,7 @@ int	m_trace(aClient *cptr,
 		       sptr->user->server);
 
 
-  doall = (parv[1] && (parc > 1)) ? !match(tname, me.name): TRUE;
+  doall = (parv[1] && (parc > 1)) ? match(tname, me.name): TRUE;
   wilds = !parv[1] || strchr(tname, '*') || strchr(tname, '?');
   dow = wilds || doall;
   
@@ -3520,7 +3518,7 @@ int	m_trace(aClient *cptr,
 	  !(MyConnect(sptr) && IsAnOper(sptr)) &&
 	  !IsAnOper(acptr) && (acptr != sptr))
 	continue;
-      if (!doall && wilds && match(tname, acptr->name))
+      if (!doall && wilds && !match(tname, acptr->name))
 	continue;
       if (!dow && irccmp(tname, acptr->name))
 	continue;
@@ -3692,7 +3690,7 @@ int	m_ltrace(aClient *cptr,
 		       sptr->user->server);
 
 
-  doall = (parv[1] && (parc > 1)) ? !match(tname, me.name): TRUE;
+  doall = (parv[1] && (parc > 1)) ? match(tname, me.name): TRUE;
   wilds = !parv[1] || index(tname, '*') || index(tname, '?');
   dow = wilds || doall;
   
@@ -3726,7 +3724,7 @@ int	m_ltrace(aClient *cptr,
 	  !(MyConnect(sptr) && IsAnOper(sptr)) &&
 	  !IsAnOper(acptr) && (acptr != sptr))
 	continue;
-      if (!doall && wilds && match(tname, acptr->name))
+      if (!doall && wilds && !match(tname, acptr->name))
 	continue;
       if (!dow && irccmp(tname, acptr->name))
 	continue;

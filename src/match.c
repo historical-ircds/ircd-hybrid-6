@@ -41,8 +41,8 @@ static char *rcs_version = "$Id$";
 **  mask (which can contain wild cards: '*' - match any
 **  number of chars, '?' - match any single character.
 **
-**	return	0, if match
-**		1, if no match
+**	return	1, if match
+**		0, if no match
 */
 /*
 ** match()
@@ -58,6 +58,10 @@ static char *rcs_version = "$Id$";
  * also has the added benefit of making match reentrant. :)
  * Added asserts, mask and name cannot be null.
  * Changed ma and na to unsigned to get rid of casting.
+ *
+ * NOTICE: match is now a boolean operation, not a lexical comparison
+ * if a line matches a mask, true (1) is returned, otherwise false (0)
+ * is returned.
  */
 int match(const char *mask, const char *name)
 {
@@ -72,7 +76,7 @@ int match(const char *mask, const char *name)
 
   while (1) {
     if (calls++ > MAX_CALLS)
-      return 1;
+      return 0;
     if (*m == '*') {
       /*
        * XXX - shouldn't need to spin here, the mask should have been
@@ -87,13 +91,13 @@ int match(const char *mask, const char *name)
 
     if (!*m) {
       if (!*n)
-        return 0;
+        return 1;
       for (m--; (m > (const unsigned char*) mask) && (*m == '?'); m--)
         ;
       if ((*m == '*') && (m > (const unsigned char*) mask))
-        return 0;
-      if (!wild)
         return 1;
+      if (!wild)
+        return 0;
       m = ma;
       n = ++na;
     }
@@ -104,11 +108,11 @@ int match(const char *mask, const char *name)
        */
       while (*m == '*')
         m++;
-      return (*m != 0);
+      return (*m == 0);
     }
     if (tolower(*m) != tolower(*n) && *m != '?') {
       if (!wild)
-        return 1;
+        return 0;
       m = ma;
       n = ++na;
     }

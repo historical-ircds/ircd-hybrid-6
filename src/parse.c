@@ -102,7 +102,7 @@ aClient *find_userhost(char *user,
       {
 	if (!MyClient(c2ptr)) /* implies mine and a user */
 	  continue;
-	if ((!host || !match(host, c2ptr->user->host)) &&
+	if ((!host || match(host, c2ptr->user->host)) &&
 	    irccmp(user, c2ptr->user->username) == 0)
 	  {
 	    (*count)++;
@@ -155,10 +155,10 @@ aClient *find_name(char *name, aClient *cptr)
     {
       if (!IsServer(c2ptr) && !IsMe(c2ptr))
 	continue;
-      if (match(name, c2ptr->name) == 0)
+      if (match(name, c2ptr->name))
 	break;
       if (strchr(c2ptr->name, '*'))
-	if (match(c2ptr->name, name) == 0)
+	if (match(c2ptr->name, name))
 	  break;
     }
   return (c2ptr ? c2ptr : cptr);
@@ -229,7 +229,7 @@ int	parse(aClient *cptr, char *buffer, char *bufend)
       if (*sender && IsServer(cptr))
 	{
 	  from = find_client(sender, (aClient *) NULL);
-	  if (!from || match(from->name, sender))
+	  if (!from || !match(from->name, sender))
 	    from = find_server(sender, (aClient *)NULL);
 
 	  else if (!from && strchr(sender, '@'))

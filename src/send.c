@@ -948,12 +948,12 @@ va_dcl
 ** addition -- Armin, 8jun90 (gruner@informatik.tu-muenchen.de)
 */
 
-static	int	match_it(aClient *one, char *mask,int what)
+static int match_it(const aClient *one, const char *mask, int what)
 {
   if(what == MATCH_HOST)
-    return (match(mask, one->user->host)==0);
+    return match(mask, one->user->host);
   else
-    return (match(mask, one->user->server)==0);
+    return match(mask, one->user->server);
 }
 
 /*
@@ -1904,7 +1904,7 @@ int sendto_slaves(aClient *one,
 
 	for(aconf = u_conf; aconf; aconf= aconf->next)
 	  {
-	    if (!match(acptr->name,aconf->name))
+	    if (match(acptr->name,aconf->name))
 	      {
 		if(parc > 3)
 		  sendto_one(acptr,":%s %s %s %s %s :%s",

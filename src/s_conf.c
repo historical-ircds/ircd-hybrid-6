@@ -927,7 +927,7 @@ aConfItem *attach_confs(aClient *cptr,char *name,int statmask)
     {
       if ((tmp->status & statmask) && !IsIllegal(tmp) &&
 	  ((tmp->status & (CONF_SERVER_MASK|CONF_HUB)) == 0) &&
-	  tmp->name && !match(tmp->name, name))
+	  tmp->name && match(tmp->name, name))
 	{
 	  if (!attach_conf(cptr, tmp) && !first)
 	    first = tmp;
@@ -959,7 +959,7 @@ aConfItem *attach_confs_host(aClient *cptr,char *host,int statmask)
     {
       if ((tmp->status & statmask) && !IsIllegal(tmp) &&
 	  (tmp->status & CONF_SERVER_MASK) == 0 &&
-	  (!tmp->host || match(tmp->host, host) == 0))
+	  (!tmp->host || match(tmp->host, host)))
 	{
 	  if (!attach_conf(cptr, tmp) && !first)
 	    first = tmp;
@@ -995,7 +995,7 @@ aConfItem *find_conf_exact(char *name,
       ** socket host) matches *either* host or name field
       ** of the configuration.
       */
-      if (match(tmp->host, host) || match(tmp->user,user)
+      if (!match(tmp->host, host) || !match(tmp->user,user)
 	  || strcasecmp(tmp->name,name) )
 	continue;
       if (tmp->status & (CONF_OPERATOR|CONF_LOCOP))
@@ -1026,7 +1026,7 @@ aConfItem *find_conf_name(char *name,int statmask)
   for (tmp = conf; tmp; tmp = tmp->next)
     {
       if ((tmp->status & statmask) &&
-	  (!tmp->name || match(tmp->name, name) == 0))
+	  (!tmp->name || match(tmp->name, name)))
 	return tmp;
     }
   return((aConfItem *)NULL);
@@ -1047,7 +1047,7 @@ aConfItem *find_conf(Link *lp,char *name,int statmask)
 	  (((tmp->status & (CONF_SERVER_MASK|CONF_HUB)) &&
 	    tmp->name && !irccmp(tmp->name, name)) ||
 	   ((tmp->status & (CONF_SERVER_MASK|CONF_HUB)) == 0 &&
-	    tmp->name && !match(tmp->name, name))))
+	    tmp->name && match(tmp->name, name))))
 	return tmp;
     }
   return((aConfItem *) NULL);
@@ -1068,7 +1068,7 @@ aConfItem *find_conf_host(Link *lp, char *host,int statmask)
       tmp = lp->value.aconf;
       if (tmp->status & statmask &&
 	  (!(tmp->status & CONF_SERVER_MASK || tmp->host) ||
-	   (tmp->host && !match(tmp->host, host))))
+	   (tmp->host && match(tmp->host, host))))
 	return tmp;
     }
   return ((aConfItem *)NULL);
@@ -1090,7 +1090,7 @@ aConfItem *find_conf_ip(Link *lp,char *ip,char *user, int statmask)
       if (!(tmp->status & statmask))
 	continue;
 
-      if (match(tmp->user, user))
+      if (!match(tmp->user, user))
 	{
 	  continue;
 	}
@@ -1170,7 +1170,7 @@ aConfItem *find_special_conf(char *to_find, int mask)
       if (BadPtr(aconf->name))
 	  continue;
 
-      if(!match(aconf->name,to_find))
+      if(match(aconf->name,to_find))
 	return aconf;
 
     }
@@ -1192,13 +1192,13 @@ int find_q_line(char *nickToFind,char *user,char *host)
       if (BadPtr(qp->name))
 	  continue;
 
-      if(!match(qp->name,nickToFind))
+      if(match(qp->name,nickToFind))
 	{
 	  if(qp->confList)
 	    {
 	      for(aconf=qp->confList;aconf;aconf=aconf->next)
 		{
-		  if(!match(aconf->user,user) && !match(aconf->host,host))
+		  if(match(aconf->user,user) && match(aconf->host,host))
 		    return NO;
 		}
 	    }
@@ -2569,9 +2569,9 @@ static aConfItem *find_tkline(char *host,char *name)
 	  else
 	    {
 	      if( (kill_list_ptr->name
-		   && (!name || !match(kill_list_ptr->name, name)))
+		   && (!name || match(kill_list_ptr->name, name)))
 		  && (kill_list_ptr->host
-		      && (!host || !match(kill_list_ptr->host,host))))
+		      && (!host || match(kill_list_ptr->host,host))))
 		return(kill_list_ptr);
               last_list_ptr = kill_list_ptr;
               kill_list_ptr = kill_list_ptr->next;
@@ -2580,7 +2580,7 @@ static aConfItem *find_tkline(char *host,char *name)
     }
 
   /*
-      if (tmp->name && (!name || !match(tmp->name, name)))
+      if (tmp->name && (!name || match(tmp->name, name)))
 	if(tmp->passwd)
 	  {
 	    if(check_time_interval(tmp->passwd))
@@ -2738,9 +2738,9 @@ aConfItem *find_is_glined(char *host,char *name)
 	    }
 	  else
 	    {
-	      if( (kill_list_ptr->name && (!name || !match(kill_list_ptr->name,
+	      if( (kill_list_ptr->name && (!name || match(kill_list_ptr->name,
                  name))) && (kill_list_ptr->host &&
-                   (!host || !match(kill_list_ptr->host,host))))
+                   (!host || match(kill_list_ptr->host,host))))
 		return(kill_list_ptr);
               last_list_ptr = kill_list_ptr;
               kill_list_ptr = kill_list_ptr->next;
