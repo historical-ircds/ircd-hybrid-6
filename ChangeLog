@@ -1,3 +1,20 @@
+lusky       2002/01/03 23:01:01 EST	(20020104_0)
+
+  Modified files:
+    include              config.h config.h.dist patchlevel.h 
+                         setup.h.in 
+  Log:
+  - refuse to compile if ZIP_LINKS is defined and we can't find zlib
+  - revved patchlevel to 6.3rc5
+  
+  Revision  Changes    Path
+  1.152     +4 -0      ircd-hybrid-6/include/config.h
+  1.131     +7 -3      ircd-hybrid-6/include/config.h.dist
+  1.149     +1 -1      ircd-hybrid-6/include/patchlevel.h
+  1.16      +6 -6      ircd-hybrid-6/include/setup.h.in
+
+
+
 db          2001/12/30 02:50:34 EST	(20011230_2)
 
   Modified files:
