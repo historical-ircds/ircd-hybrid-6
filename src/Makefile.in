@@ -4,7 +4,7 @@ IRCDLIBS=@LIBS@ ../zlib/libz.a
 INCLUDEDIR=-I../include -I../zlib
 
 SRC_1 = bsd.c channel.c class.c dbuf.c mtrie_conf.c
-SRC_2 = hash.c inet_addr.c ircd.c ircsprintf.c dline_conf.c
+SRC_2 = hash.c ircd.c ircsprintf.c dline_conf.c
 SRC_3 = list.c match.c packet.c parse.c res.c s_zip.c fdlist.c
 SRC_4 = s_auth.c s_bsd.c s_conf.c s_debug.c s_err.c s_misc.c s_numeric.c
 SRC_5 = s_serv.c m_info.c m_kline.c m_gline.c m_unkline.c
@@ -15,7 +15,7 @@ SRC_7 = fileio.c
 # just make sure OBJ's match SRC's (pointed out by Ian)
 # 
 OBJ_1 = bsd.o channel.o class.o dbuf.o mtrie_conf.o
-OBJ_2 = hash.o inet_addr.o ircd.o ircsprintf.o dline_conf.o
+OBJ_2 = hash.o ircd.o ircsprintf.o dline_conf.o
 OBJ_3 = list.o match.o packet.o parse.o res.o s_zip.o fdlist.o
 OBJ_4 = s_auth.o s_bsd.o s_conf.o s_debug.o s_err.o s_misc.o s_numeric.o
 OBJ_5 = s_serv.o m_info.o m_kline.o m_gline.o m_unkline.o
@@ -97,11 +97,6 @@ hash.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
 hash.o: ../include/class.h ../include/dbuf.h ../include/common.h
 hash.o: ../include/sys.h ../include/numeric.h ../include/msg.h ../include/h.h
 hash.o: ../include/mtrie_conf.h ../include/fdlist.h
-inet_addr.o: ../include/setup.h ../include/struct.h ../include/config.h
-inet_addr.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h
-inet_addr.o: ../include/hash.h ../include/class.h ../include/dbuf.h
-inet_addr.o: ../include/common.h ../include/sys.h ../include/nameser.h
-inet_addr.o: ../include/resolv.h
 ircd.o: ../include/struct.h ../include/config.h ../include/setup.h
 ircd.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
 ircd.o: ../include/class.h ../include/dbuf.h ../include/common.h
