@@ -32,7 +32,6 @@
 #include "s_misc.h"
 #include "send.h"
 #include "ircd.h"
-#include "s_err.h"
 #include "scache.h"
 #include "dline_conf.h"
 #include "mtrie_conf.h"

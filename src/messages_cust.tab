@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, src/s_err.c
+ *   IRC - Internet Relay Chat, ircd/s_err.c
  *   Copyright (C) 1992 Darren Reed
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -16,22 +16,13 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
+ * $Id$
  *
- *      I kind of modernized this code a bit. -Dianora
- *
- *   $Id$
  */
-#include "struct.h"
-#include "numeric.h"
-#include "irc_string.h"
+/* 
+ * jive replies originally from mr_bill - mrbill@mrbill.net (Bill Bradford) 
+ */
 
-#ifdef CUSTOM_ERR            /* ZZZZ ick */
-#define INCLUDE_CUSTOM_ERR
-#endif
-#include "s_err.h"
-#undef INCLUDE_CUSTOM_ERR
-
-#ifndef CUSTOM_ERR
 static  char *  replies[] = {
 /* 000 */       (char *)NULL,
 /* 001  RPL_WELCOME, */ ":%s 001 %s :Welcome to the Internet Relay Network %s",
@@ -250,7 +241,7 @@ static  char *  replies[] = {
 /* 214 RPL_STATSNLINE, */       ":%s 214 %s %c %s * %s %d %d",
 /* 215 RPL_STATSILINE, */       ":%s 215 %s %c %s * %s@%s %d %d",
 /* 216 RPL_STATSKLINE, */       ":%s 216 %s %c %s %s %s",
-/* 217 RPL_STATSQLINE, */       ":%s 217 %s %c %s %s@%s",
+/* 217 RPL_STATSQLINE, */       ":%s 217 %s %s %s %s@%s",
 /* 218 RPL_STATSYLINE, */       ":%s 218 %s %c %d %d %d %d %lu",
 /* 219 RPL_ENDOFSTATS, */       ":%s 219 %s %c :End of /STATS report",
 /* 220 RPL_STATSPLINE, */       ":%s 220 %s %c %d %s %d :%s",
@@ -275,7 +266,7 @@ static  char *  replies[] = {
 /* 239 */       (char *)NULL,
 /* 240 */       (char *)NULL,
 /* 241 RPL_STATSLLINE, */       ":%s 241 %s %c %s * %s %d %d",
-/* 242 RPL_STATSUPTIME,*/       ":%s 242 %s :Server Up %d days, %d:%02d:%02d",
+/* 242 RPL_STATSUPTIME,*/       ":%s 242 %s :Dianora hasn't messed with the server code now in %d days, %d:%02d:%02d",
 /* 243 RPL_STATSOLINE, */       ":%s 243 %s %c %s@%s * %s %s %d %s",
 /* 244 RPL_STATSHLINE, */       ":%s 244 %s %c %s * %s %d %d", 
 /* 245 RPL_STATSSLINE, */       ":%s 245 %s %c %s * %s %d %d", 
@@ -288,7 +279,7 @@ static  char *  replies[] = {
                     ":%s 250 %s :Highest connection count: %d (%d clients)",
 /* 251 RPL_LUSERCLIENT, */
                 ":%s 251 %s :There are %d users and %d invisible on %d servers",
-/* 252 RPL_LUSEROP, */          ":%s 252 %s %d :IRC Operators online",
+/* 252 RPL_LUSEROP, */          ":%s 252 %s %d :Smurf Targets (IRC Operators) online",
 /* 253 RPL_LUSERUNKNOWN, */     ":%s 253 %s %d :unknown connection(s)",
 /* 254 RPL_LUSERCHANNELS, */    ":%s 254 %s %d :channels formed",
 /* 255 RPL_LUSERME, */          ":%s 255 %s :I have %d clients and %d servers",
@@ -299,8 +290,8 @@ static  char *  replies[] = {
 /* 260 */       (char *)NULL,
 /* 261 RPL_TRACELOG, */         ":%s 261 %s File %s %d",
 /* 262 RPL_ENDOFTRACE, */       ":%s 262 %s %s :End of TRACE",
-/* 263 RPL_LOAD2HI, */          
-":%s 263 %s :Server load is temporarily too heavy. Please wait a while and try again.",
+/* 263 RPL_LOAD2HI, */
+":%s 263 %s :Hold your horses... the server load is temporarily too heavy. Try again later, ok?",
 /* 264 */       (char *)NULL,
 /* 265 RPL_LOCALUSERS, */       ":%s 265 %s :Current local  users: %d  Max: %d",
 /* 266 RPL_GLOBALUSERS, */      ":%s 266 %s :Current global users: %d  Max: %d",
@@ -337,20 +328,20 @@ static  char *  replies[] = {
 /* 296 */       (char *)NULL,
 /* 298 */       (char *)NULL,
 /* 299 */       (char *)NULL,
-/* 300 RPL_NONE, */      (char *)NULL,
-/* 301 RPL_AWAY, */      ":%s 301 %s %s :%s",
-/* 302 RPL_USERHOST, */  ":%s 302 %s :",
+/* 300 RPL_NONE, */     (char *)NULL,
+/* 301 RPL_AWAY, */     ":%s 301 %s %s :%s",
+/* 302 RPL_USERHOST, */ ":%s 302 %s :",
 /* 303 RPL_ISON, */     ":%s 303 %s :",
 /* 304 RPL_TEXT, */      (char *)NULL,
-/* 305 RPL_UNAWAY, */   ":%s 305 %s :You are no longer marked as being away",
-/* 306 RPL_NOWAWAY, */  ":%s 306 %s :You have been marked as being away",
+/* 305 RPL_UNAWAY, */   ":%s 305 %s :OK, you're not /away anymore. Did you have fun?",
+/* 306 RPL_NOWAWAY, */  ":%s 306 %s :OK, you're /away now. Hurry back!",
 /* 307 */       (char *)NULL,
 /* 308 */       (char *)NULL,
 /* 309 */       (char *)NULL,
 /* 310 */       (char *)NULL,
 /* 311 RPL_WHOISUSER, */        ":%s 311 %s %s %s %s * :%s",
 /* 312 RPL_WHOISSERVER, */      ":%s 312 %s %s %s :%s",
-/* 313 RPL_WHOISOPERATOR, */    ":%s 313 %s %s :is an IRC Operator",
+/* 313 RPL_WHOISOPERATOR, */    ":%s 313 %s %s :is a Smurf Target (IRC Operator)",
 /* 314 RPL_WHOWASUSER, */       ":%s 314 %s %s %s %s * :%s",
 /* 315 RPL_ENDOFWHO, */         ":%s 315 %s %s :End of /WHO list.",
 /* 316 RPL_WHOISCHANOP, */      (char *)NULL,
@@ -430,8 +421,8 @@ static  char *  replies[] = {
 /* 378 */       (char *)NULL,
 /* 379 */       (char *)NULL,
 /* 380 */       (char *)NULL,
-/* 381 RPL_YOUREOPER, */        ":%s 381 %s :You have entered... the Twilight Zone!.",
-/* 382 RPL_REHASHING, */        ":%s 382 %s %s :Rehashing",
+/* 381 RPL_YOUREOPER, */        ":%s 381 %s :You are now one bad motherfucker - Go /kill someone.",
+/* 382 RPL_REHASHING, */        ":%s 382 %s %s :it slices, dices, and even reloads config files! Rehashing config file, mang.",
 /* 383 */       (char *)NULL,
 /* 384 RPL_MYPORTIS, */         ":%s 384 %s %d :Port to local server is\r\n",
 /* 385 RPL_NOTOPERANYMORE, */   (char *)NULL,
@@ -515,7 +506,7 @@ static  char *  replies[] = {
 /* 461 ERR_NEEDMOREPARAMS, */   ":%s 461 %s %s :Not enough parameters",
 /* 462 ERR_ALREADYREGISTRED, */ ":%s 462 %s :You may not reregister",
 /* 463 ERR_NOPERMFORHOST, */    ":%s 463 %s :Your host isn't among the privileged",
-/* 464 ERR_PASSWDMISMATCH, */   ":%s 464 %s :Password Incorrect",
+/* 464 ERR_PASSWDMISMATCH, */   ":%s 464 %s :BZZT!! Wrong password, homez. Are you sure you know what you're doing??",
 /* 465 ERR_YOUREBANNEDCREEP, */ ":%s 465 %s :You are banned from this server- %s",
 /* 466 ERR_YOUWILLBEBANNED, */  (char *)NULL,
 /* 467 ERR_KEYSET, */           ":%s 467 %s %s :Channel key already set",
@@ -535,9 +526,9 @@ static  char *  replies[] = {
 /* 480 ERR_JUPEDCHAN, */
                 ":%s 480 %s %s :Cannot join channel (locally juped)",
 /* 481 ERR_NOPRIVILEGES, */
-                ":%s 481 %s :Permission Denied- You're not an IRC operator",
-/* 482 ERR_CHANOPRIVSNEEDED, */ ":%s 482 %s %s :You're not channel operator",
-/* 483 ERR_CANTKILLSERVER, */   ":%s 483 %s :You cant kill a server!",
+                ":%s 481 %s :I don't THINK so, homez... you ain't got what it takes. (IRC operator)",
+/* 482 ERR_CHANOPRIVSNEEDED, */ ":%s 482 %s %s :You can't do that thing, when you don't have that swing (You're not channel operator)",
+/* 483 ERR_CANTKILLSERVER, */    ":%s 483 %s :Don't be an idiot - you cant kill a SERVER, fool.",
 /* 484 */       (char *)NULL,
 /* 485 */       (char *)NULL,
 /* 486 */       (char *)NULL,
@@ -545,7 +536,7 @@ static  char *  replies[] = {
 /* 488 */       (char *)NULL,
 /* 489 */       (char *)NULL,
 /* 490 */       (char *)NULL,
-/* 491 ERR_NOOPERHOST, */       ":%s 491 %s :Only few of mere mortals may try to enter the twilight zone",
+/* 491 ERR_NOOPERHOST, */       ":%s 491 %s :Sorry, you just don't have what it takes to be an IRC Operator here.",
 /* 492 */       (char *)NULL,
 /* 493 */       (char *)NULL,
 /* 494 */       (char *)NULL,
@@ -561,42 +552,5 @@ static  char *  replies[] = {
 /* 504 LAST ERR_LAST_ERR_MSG, */        ":%s 504 %s :Last Error Message",
                 (char *)NULL
 };
-#endif /* CUSTOM_ERR */
-
-/*
- * The observant will note that err_str and rpl_str
- * could be replaced by one function now. 
- * -Dianora
- * ok. ;-)
- */
-
-static  char    numbuff[512];  /* ZZZ There is no reason this has to
-                                * be so large
-                                */
-
-char* form_str(int numeric)
-{
-  char *nptr;
-
-  if ( (numeric < 0) || (numeric > ERR_LAST_ERR_MSG))
-    {
-      (void)ircsprintf(numbuff,
-                       ":%%s %d %%s :INTERNAL ERROR: BAD NUMERIC! %d",
-                       numeric, numeric);
-      return(numbuff);
-    }
-
-  if (!(nptr = replies[numeric]))
-    {
-      (void)ircsprintf(numbuff,
-                       ":%%s %d %%s :NO ERROR FOR NUMERIC ERROR %d",
-                       numeric, numeric);
-      return(numbuff);
-    }
-  else
-    return(nptr);
-}
-
-
 
 

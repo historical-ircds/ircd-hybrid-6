@@ -30,7 +30,6 @@
 #include "s_conf.h"
 #include "class.h"
 #include "send.h"
-#include "s_err.h"
 #include "s_conf.h"
 #include "numeric.h"
 #include "client.h"

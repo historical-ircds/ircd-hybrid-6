@@ -47,6 +47,7 @@ SRCS = \
 	match.c \
 	motd.c \
 	mtrie_conf.c \
+	numeric.c \
 	packet.c \
 	parse.c \
 	res.c \
@@ -55,7 +56,6 @@ SRCS = \
 	s_bsd.c \
 	s_conf.c \
 	s_debug.c \
-	s_err.c \
 	s_misc.c \
 	s_serv.c \
 	s_user.c \
@@ -100,6 +100,7 @@ SRCS = \
 #	match.o \
 #	motd.o \
 #	mtrie_conf.o \
+#	numeric.o \
 #	packet.o \
 #	parse.o \
 #	res.o \
@@ -107,7 +108,6 @@ SRCS = \
 #	s_bsd.o \
 #	s_conf.o \
 #	s_debug.o \
-#	s_err.o \
 #	s_misc.o \
 #	s_numeric.o \
 #       sprintf_irc.o \

@@ -53,7 +53,6 @@
 #include "class.h"
 #include "ircd.h"
 #include "send.h"
-#include "s_err.h"
 #include "dline_conf.h"
 
 #include <string.h>

@@ -47,7 +47,6 @@
 #include "s_bsd.h"
 #include "s_conf.h"
 #include "s_debug.h"
-#include "s_err.h"
 #include "s_misc.h"
 #include "s_user.h"
 #include "s_zip.h"

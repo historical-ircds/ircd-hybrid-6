@@ -28,7 +28,6 @@
 #include "irc_string.h"
 #include "ircd.h"
 #include "numeric.h"
-#include "s_err.h"
 #include "send.h"
 
 #include <assert.h>

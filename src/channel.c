@@ -46,7 +46,6 @@
 #include "hash.h"
 #include "whowas.h"
 #include "s_user.h"
-#include "s_err.h"
 #include "s_serv.h"       /* captab */
 #include "irc_string.h"
 

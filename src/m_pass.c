@@ -27,7 +27,6 @@
 #include "irc_string.h"  /* strncpy_irc */
 #include "send.h"        /* sendto_one */
 #include "numeric.h"     /* ERR_xxx */
-#include "s_err.h"       /* form_str */
 #include "ircd.h"        /* me */
 
 /*

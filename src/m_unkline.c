@@ -33,10 +33,8 @@
 #include "dline_conf.h"
 #include "mtrie_conf.h"
 #include "fileio.h"
-#include "s_err.h"
 #include "ircd.h"
 #include "s_misc.h"
-#include "s_err.h"
 
 #include <time.h>
 #include <string.h>

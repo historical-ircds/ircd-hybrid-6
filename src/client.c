@@ -34,7 +34,6 @@
 #include "res.h"
 #include "s_bsd.h"
 #include "s_conf.h"
-#include "s_err.h"
 #include "s_misc.h"
 #include "s_serv.h"
 #include "send.h"

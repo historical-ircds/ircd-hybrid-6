@@ -35,8 +35,6 @@
 #include "channel.h"
 #include "hash.h"
 #include "send.h"
-#include "s_err.h"
-#include "s_err.h"
 #include "res.h"    /* gethost_byname, gethost_byaddr */
 
 #include <string.h>

@@ -8,7 +8,6 @@
 #include "common.h"
 #include "numeric.h"
 #include "class.h"
-#include "s_err.h"
 #include "ircd.h"
 #include "s_conf.h"
 #include "send.h"

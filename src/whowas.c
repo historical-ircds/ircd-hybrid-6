@@ -27,7 +27,6 @@
 #include "send.h"
 #include "hash.h"
 #include "s_user.h"
-#include "s_err.h"
 #include "s_serv.h"
 
 #include <assert.h>
