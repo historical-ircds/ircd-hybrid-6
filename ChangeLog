@@ -1,3 +1,7 @@
+*** 20010805_7 by leeh
+- dont allow duplicate IP klines
+
+
 *** 20010805_6 by leeh
 - fixed unkline to remove tkline ips
 
