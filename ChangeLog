@@ -1,3 +1,8 @@
+*** 19991013_3 by lusky
+added display of logLevel as a string in /set log (db)
+updated opers.txt to include set log
+
+
 *** 19991013_2 by lusky
 backported set log from -7, really needs to be here
 
