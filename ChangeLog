@@ -1,3 +1,15 @@
+lusky       2001/12/09 14:06:06 EST	(20011209_4)
+
+  Modified files:
+    src                  channel.c 
+  Log:
+  - minor NO_CREATE_ON_SPLIT cleanup
+  
+  Revision  Changes    Path
+  1.227     +4 -3      ircd-hybrid-6/src/channel.c
+
+
+
 lusky       2001/12/09 14:02:15 EST	(20011209_3)
 
   Modified files:
