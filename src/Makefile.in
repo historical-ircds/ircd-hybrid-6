@@ -212,5 +212,7 @@ clean:
 distclean: clean
 	${RM} -f Makefile version.c.last
 
+numeric.o:	messages_cust.tab
+
 include .depend
 

@@ -178,37 +178,6 @@ int m_oper(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
     {
       int old = (sptr->umodes & ALL_UMODES);
       
-      if (aconf->status == CONF_LOCOP)
-        {
-          SetLocOp(sptr);
-          if((int)aconf->hold)
-            {
-              sptr->umodes |= ((int)aconf->hold & ALL_UMODES); 
-              sendto_one(sptr, ":%s NOTICE %s :*** Oper flags set from conf",
-                         me.name,parv[0]);
-            }
-          else
-            {
-              sptr->umodes |= (LOCOP_UMODES);
-            }
-        }
-      else
-        {
-          SetOper(sptr);
-          if((int)aconf->hold)
-            {
-              sptr->umodes |= ((int)aconf->hold & ALL_UMODES); 
-              if( !IsSetOperN(sptr) )
-                sptr->umodes &= ~FLAGS_NCHANGE;
-              
-              sendto_one(sptr, ":%s NOTICE %s :*** Oper flags set from conf",
-                         me.name,parv[0]);
-            }
-          else
-            {
-              sptr->umodes |= (OPER_UMODES);
-            }
-        }
       SetIPHidden(sptr);
       Count.oper++;
 
@@ -228,6 +197,38 @@ int m_oper(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
         }
       else
         operprivs = "";
+
+      if (aconf->status == CONF_LOCOP)
+        {
+          SetLocOp(sptr);
+          if((int)aconf->hold)
+            {
+              sptr->umodes |= ((int)aconf->hold & ALL_UMODES);
+              sendto_one(sptr, ":%s NOTICE %s :*** Oper flags set from conf",
+                         me.name,parv[0]);
+            }
+          else
+            {
+              sptr->umodes |= (LOCOP_UMODES);
+            }
+        }
+      else
+        {
+          SetOper(sptr);
+          if((int)aconf->hold)
+            {
+              sptr->umodes |= ((int)aconf->hold & ALL_UMODES);
+              if( !IsSetOperN(sptr) )
+                sptr->umodes &= ~FLAGS_NCHANGE;
+
+              sendto_one(sptr, ":%s NOTICE %s :*** Oper flags set from conf",
+                         me.name,parv[0]);
+            }
+          else
+            {
+              sptr->umodes |= (OPER_UMODES);
+            }
+        }
 
       fdlist_add(sptr->fd, FDL_OPER | FDL_BUSY);
 #ifdef CUSTOM_ERR

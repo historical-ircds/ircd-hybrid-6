@@ -719,6 +719,12 @@
  */
 #undef  TS5_ONLY
 
+/* Ignore bogus timestamps from other servers. Yes this will desync
+ * the network, but it will allow chanops to resync with a valid non TS 0
+ */
+#undef  IGNORE_BOGUS_TS
+
+
 /* GLINES - global Kline-like bans
  * Define this if you want GLINE support
  * when this is defined, 3 completely different opers from
@@ -739,11 +745,6 @@
  * so its #undef'd by default.
  */
 #undef  NO_FAKE_GLINES
-
-/* Ignore bogus timestamps from other servers. Yes this will desync
- * the network, but it will allow chanops to resync with a valid non TS 0
- */
-#define IGNORE_BOGUS_TS
 
 /* CHANMODE_E
  * /mode #channel +e allows you to add exceptions to bans.
