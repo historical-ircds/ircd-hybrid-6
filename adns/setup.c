@@ -1,4 +1,8 @@
 /*
+ * setup.c: $Id$
+ *  
+ */
+/*
  * setup.c
  * - configuration file parsing
  * - management of global state

@@ -1,4 +1,8 @@
 /*
+ * dlist.h: $Id$
+ *  
+ */
+/*
  * dlist.h
  * - macros for handling doubly linked lists
  */

@@ -1,4 +1,8 @@
 /*
+ * parse.c: $Id$
+ *  
+ */
+/*
  * parse.c
  * - parsing assistance functions (mainly for domains inside datagrams)
  */

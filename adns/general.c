@@ -1,4 +1,8 @@
 /*
+ * general.c: $Id$
+ *  
+ */
+/*
  * general.c
  * - diagnostic functions
  * - vbuf handling

@@ -1,4 +1,8 @@
 /*
+ * adns.h: $Id$
+ *  
+ */
+/*
  * adns.h
  * - adns user-visible API (single-threaded, without any locking)
  */

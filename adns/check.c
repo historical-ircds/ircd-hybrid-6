@@ -1,4 +1,8 @@
 /*
+ * check.c: $Id$
+ *  
+ */
+/*
  * check.c
  * - consistency checks
  */

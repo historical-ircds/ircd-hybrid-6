@@ -1,4 +1,8 @@
 /*
+ * query.c: $Id$
+ *  
+ */
+/*
  * query.c
  * - overall query management (allocation, completion)
  * - per-query memory management

@@ -1,4 +1,8 @@
 /*
+ * types.c: $Id$
+ *  
+ */
+/*
  * types.c
  * - RR-type-specific code, and the machinery to call it
  */

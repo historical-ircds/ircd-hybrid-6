@@ -1,4 +1,8 @@
 /*
+ * internal.h: $Id$
+ *  
+ */
+/*
  * internal.h
  * - declarations of private objects with external linkage (adns__*)
  * - definitons of internal macros

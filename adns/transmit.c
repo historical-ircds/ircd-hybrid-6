@@ -1,4 +1,8 @@
 /*
+ * transmit.c: $Id$
+ *  
+ */
+/*
  * transmit.c
  * - construct queries
  * - send queries
