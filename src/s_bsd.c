@@ -592,8 +592,8 @@ int connect_server(struct ConfItem* aconf,
    */
   if (!attach_cn_lines(cptr, aconf->name, aconf->host))
     {
-      sendto_realops("Host %s is not enabled for connecting:no C/N-line",
-                 aconf->host);
+      sendto_realops("Server %s is not enabled for connecting: no C/N-line",
+                 aconf->name);
       if (by && IsPerson(by) && !MyClient(by))
         sendto_one(by, ":%s NOTICE %s :Connect to host %s failed.",
                    me.name, by->name, cptr);
