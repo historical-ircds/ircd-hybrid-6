@@ -1879,7 +1879,7 @@ fi
 
         if test "X$ac_cv_lib_crypto_RSA_free" = "Xyes"; then
             cf_openssl_ciphers=''
-            for ac_func in EVP_bf_cfb
+            for ac_func in BF_cfb64_encrypt
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
 echo "configure:1886: checking for $ac_func" >&5
@@ -1934,7 +1934,7 @@ else
 fi
 done
 
-            for ac_func in EVP_cast5_cfb
+            for ac_func in CAST_cfb64_encrypt
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
 echo "configure:1941: checking for $ac_func" >&5
@@ -1989,7 +1989,7 @@ else
 fi
 done
 
-            for ac_func in EVP_idea_cfb
+            for ac_func in idea_cfb64_encrypt
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
 echo "configure:1996: checking for $ac_func" >&5
@@ -2044,7 +2044,7 @@ else
 fi
 done
 
-            for ac_func in EVP_rc5_32_12_16_cfb
+            for ac_func in RC5_32_cfb64_encrypt
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
 echo "configure:2051: checking for $ac_func" >&5
@@ -2099,7 +2099,7 @@ else
 fi
 done
 
-            for ac_func in EVP_des_ede3_cfb
+            for ac_func in des_ede3_cfb64_encrypt
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
 echo "configure:2106: checking for $ac_func" >&5
@@ -2154,7 +2154,7 @@ else
 fi
 done
 
-            for ac_func in EVP_des_cfb
+            for ac_func in des_cfb64_encrypt
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
 echo "configure:2161: checking for $ac_func" >&5

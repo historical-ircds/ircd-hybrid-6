@@ -131,17 +131,17 @@ int main(void) {
         AC_CHECK_LIB(crypto, RSA_free)
         if test "X$ac_cv_lib_crypto_RSA_free" = "Xyes"; then
             cf_openssl_ciphers=''
-            AC_CHECK_FUNCS(EVP_bf_cfb,
+            AC_CHECK_FUNCS(BF_cfb64_encrypt,
                 cf_openssl_ciphers="${cf_openssl_ciphers}BF/256 BF/128 ")
-            AC_CHECK_FUNCS(EVP_cast5_cfb,
+            AC_CHECK_FUNCS(CAST_cfb64_encrypt,
                 cf_openssl_ciphers="${cf_openssl_ciphers}CAST/128 ")
-            AC_CHECK_FUNCS(EVP_idea_cfb,
+            AC_CHECK_FUNCS(idea_cfb64_encrypt,
                 cf_openssl_ciphers="${cf_openssl_ciphers}IDEA/128 ")
-            AC_CHECK_FUNCS(EVP_rc5_32_12_16_cfb,
+            AC_CHECK_FUNCS(RC5_32_cfb64_encrypt,
                 cf_openssl_ciphers="${cf_openssl_ciphers}RC5.16/128 RC5.12/128 RC5.8/128 ")
-            AC_CHECK_FUNCS(EVP_des_ede3_cfb,
+            AC_CHECK_FUNCS(des_ede3_cfb64_encrypt,
                 cf_openssl_ciphers="${cf_openssl_ciphers}3DES/168 ")
-            AC_CHECK_FUNCS(EVP_des_cfb,
+            AC_CHECK_FUNCS(des_cfb64_encrypt,
                 cf_openssl_ciphers="${cf_openssl_ciphers}DES/56 ")
         fi
         CPPFLAGS="$save_CPPFLAGS"
