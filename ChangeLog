@@ -1,3 +1,10 @@
+*** 20010721_1 by jdc
+- src/s_bsd.c: connect_server(): "Host x.x.x.x is not enabled" message
+  changed to use aconf->name not aconf->host; "Host" also changed to
+  "Server".
+
+
+
 *** 20010718_1 by bill
 
 - fixed small oopsie in setting chptr->juped
