@@ -1,3 +1,7 @@
+*** 20010727_1 by leeh
+- finished off the NO_HACK_OPS code
+
+
 *** 20010726_2 by leeh
 - added #define HIDE_ERROR_MESSAGES, as when we receive an error from a 
   server, theyll sometimes send their IP along with it..
