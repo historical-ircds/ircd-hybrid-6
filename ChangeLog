@@ -1,3 +1,25 @@
+jdc         2001/12/08 00:10:27 EST	(20011208_6)
+
+  Modified files:
+    include              ircd.h 
+    src                  ircd.c m_ltrace.c m_trace.c m_version.c 
+                         s_user.c version.c.SH 
+    tools                start_ircd.c 
+  Log:
+  - Fix for zlib.h "version" conflict.
+  
+  Revision  Changes    Path
+  1.20      +2 -2      ircd-hybrid-6/include/ircd.h
+  1.153     +2 -2      ircd-hybrid-6/src/ircd.c
+  1.9       +4 -4      ircd-hybrid-6/src/m_ltrace.c
+  1.10      +4 -4      ircd-hybrid-6/src/m_trace.c
+  1.8       +2 -2      ircd-hybrid-6/src/m_version.c
+  1.241     +4 -4      ircd-hybrid-6/src/s_user.c
+  1.25      +3 -3      ircd-hybrid-6/src/version.c.SH
+  1.2       +2 -1      ircd-hybrid-6/tools/start_ircd.c
+
+
+
 wcampbel    2001/12/07 23:12:41 EST	(20011208_5)
 
   Modified files:
