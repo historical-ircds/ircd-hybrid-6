@@ -22,10 +22,6 @@
 # define RPL_TOPICWHOTIME 333
 #endif
 
-#ifdef HIGHEST_CONNECTION
-# define RPL_STATSCONN 250
-#endif
-
 /*
  * -- Avalon -- 1 Sep 1992
  *
@@ -173,7 +169,7 @@
 #define RPL_STATSXLINE	     247
 #define	RPL_STATSULINE       248
 #define	RPL_STATSDEBUG	     249
-
+#define RPL_STATSCONN        250
 #define	RPL_LUSERCLIENT      251
 #define RPL_LUSEROP          252
 #define	RPL_LUSERUNKNOWN     253

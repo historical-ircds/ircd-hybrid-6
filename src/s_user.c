@@ -59,6 +59,7 @@ static int do_user (char *, aClient *, aClient*, char *, char *, char *,
                      char *);
 
 int    botwarn (char *, char *, char *, char *);
+static int valid_username( anUser *);
 
 extern char motd_last_changed_date[];
 extern int send_motd(aClient *,aClient *,int, char **,aMessageFile *);
@@ -710,11 +711,6 @@ static	int	register_user(aClient *cptr,
 	  char *reason;
 	  reason = aconf->passwd ? aconf->passwd : "G-lined";
 
-#ifdef RK_NOTICES
-	  sendto_realops("G-lined %s@%s. for %s",sptr->user->username,
-			 sptr->sockhost,reason);
-#endif
-
 	  /* Ok...read note about REJECT_HOLD above -Dianora
 	   */
 
@@ -755,18 +751,6 @@ static	int	register_user(aClient *cptr,
 	}
 #endif	/* GLINES */
 
-#ifdef R_LINES
-      if (find_restrict(sptr))
-	{
-#ifdef RK_NOTICES
-	  sendto_realops("R-lined %s@%s.",sptr->user->username,
-			 sptr->sockhost);
-#endif
-	  ircstp->is_ref++;
-	  return exit_client(cptr, sptr, &me , "R-lined");
-	}
-#endif
-
 #ifdef BOTCHECK
       if (IsBlined(cptr))
 	isbot = botwarn(bottemp, sptr->name, 
@@ -790,34 +774,13 @@ static	int	register_user(aClient *cptr,
 #endif /* BOTCHECK */
           ((Count.local + 1) >= (MAXCLIENTS+MAX_BUFFER))) ||
             (((Count.local +1) >= (MAXCLIENTS - 5)) && !(IsFlined(sptr))))
-/*
-	  (sptr->fd >= (MAXCLIENTS+MAX_BUFFER))) ||
-             ((sptr->fd >= (MAXCLIENTS - 5)) && !(IsFlined(sptr))))
-*/
-
-    {
-      sendto_realops_lev(FULL_LEV, "Too many clients, rejecting %s[%s].",
-			 nick, sptr->sockhost);
-      ircstp->is_ref++;
-      return exit_client(cptr, sptr, &me,
-			 "Sorry, server is full - try later");
-    }
-
-
-      /* USER * xdfdx xdfjx :* */
-      /* anti clone.c catcher, it will have to be updated as they catch on
-      * *sigh* -Dianora
-      */
-      /* They caught on, historical interest only */
-#if 0
-  if(!strcmp(user->host,"xdfdx"))
-    {
-      sendto_realops_lev(REJ_LEV,"Rejecting clone.c Bot: %s",
-			 get_client_name(sptr,FALSE));
-      ircstp->is_ref++;
-      return exit_client(cptr, sptr, sptr, "clone.c detected, rejected.");
-    }
-#endif
+	{
+	  sendto_realops_lev(FULL_LEV, "Too many clients, rejecting %s[%s].",
+			     nick, sptr->sockhost);
+	  ircstp->is_ref++;
+	  return exit_client(cptr, sptr, &me,
+			     "Sorry, server is full - try later");
+	}
 
 #ifdef ANTI_SPAMBOT
       /* It appears, this is catching normal clients */
@@ -871,188 +834,17 @@ static	int	register_user(aClient *cptr,
 
   if (oldstatus == STAT_MASTER && MyConnect(sptr))
     (void)m_oper(&me, sptr, 1, parv);
-#if defined(NO_MIXED_CASE) || defined(NO_SPECIAL)
-  {
-    char *tmpstr;
-    u_char c, cc;
-    int lower, upper, special;
-		
-    lower = upper = special = cc = 0;
 
-/* check for "@" in identd reply -Taner */
-    if ((strchr(user->username,'@') != NULL) || (strchr(username,'@') != NULL))
-      {
-	sendto_realops_lev(REJ_LEV,
-			   "Illegal \"@\" in username: %s (%s)",
-			   get_client_name(sptr,FALSE),username);
-	ircstp->is_ref++;
-	(void)ircsprintf(tmpstr2,"Invalid username [%s] - '@' is not allowed!",
-		   username);
-	return exit_client(cptr, sptr, sptr , tmpstr2);
-      }
-
-    /*
-     * First check user->username...
-     */
-#ifdef IGNORE_FIRST_CHAR
-    tmpstr = (user->username[0] == '~' ? &user->username[2] :
-	      &user->username[1]);
-    /*
-     * Ok, we don't want to TOTALLY ignore the first character.
-     * We should at least check it for control characters, etc
-     * - ThemBones
-     */
-    cc = (user->username[0] == '~' ? user->username[1] :
-	  user->username[0]);
-    if ((!isalnum(cc) && !strchr(" -_.",cc)) || (cc > 127))
-	  special++;
-#else
-    tmpstr = (user->username[0] == '~' ? &user->username[1] :
-	      user->username);
-#endif /* IGNORE_FIRST_CHAR */
-
-    while(*tmpstr)
-      {
-	c = *(tmpstr++);
-	if (islower(c))
-	  {
-	    lower++;
-	    continue;
-	  }
-	if (isupper(c))
-	  {
-	    upper++;
-	    continue;
-	  }
-	if ((!isalnum(c) && !strchr(" -_.", c)) || (c > 127))
-	  special++;
-      }
-#ifdef NO_MIXED_CASE
-    if (lower && upper)
-      {
-	sendto_realops_lev(REJ_LEV,"Invalid username: %s (%s@%s)",
-			   nick, user->username, user->host);
-	ircstp->is_ref++;
-	(void)ircsprintf(tmpstr2, "Invalid username [%s]", user->username);
-	return exit_client(cptr, sptr, &me, tmpstr2);
-      }
-#endif /* NO_MIXED_CASE */
-#ifdef NO_SPECIAL
-	if (special)
-	  {
-	    sendto_realops_lev(REJ_LEV,"Invalid username: %s (%s@%s)",
-			       nick, user->username, user->host);
-	    ircstp->is_ref++;
-	    (void)ircsprintf(tmpstr2, "Invalid username [%s]",
+  if ( !valid_username(user) )
+    {
+      sendto_realops_lev(REJ_LEV,"Invalid username: %s (%s@%s)",
+			 nick, user->username, user->host);
+      ircstp->is_ref++;
+      (void)ircsprintf(tmpstr2, "Invalid username [%s]",
 		       user->username);
-	    return exit_client(cptr, sptr, &me, tmpstr2);
-	  }
-#endif /* NO_SPECIAL */
-	    
-	    /*
-	     * Ok, now check the username they provided, if different
-	     */
-	    lower = upper = special = cc = 0;
-	    
-	    if (strcmp(user->username, username))
-	      {
-	      
-#ifdef IGNORE_FIRST_CHAR
-                tmpstr = (username[0] == '~' ? &username[2] : &username[1]);
-		/* Ok, we don't want to TOTALLY ignore the first character.
-		 * We should at least check it for control charcters, etc
-		 * -ThemBones
-		 */
-		cc = (username[0] == '~' ? username[1] : username[0]);
-		
-		if ((!isalnum(cc) && !strchr(" -_.",cc)) || (cc > 127))
-		  special++;
-#else
-                tmpstr = (username[0] == '~' ? &username[1] : username);
-#endif /* IGNORE_FIRST_CHAR */
-                while(*tmpstr)
-                  {
-                    c = *(tmpstr++);
-                    if (islower(c))
-		      {
-			lower++;
-			continue;
-		      }
-                    if (isupper(c))
-		      {
-			upper++;
-			continue;
-		      }
-                    if ((!isalnum(c) && !strchr(" -_.", c)) || (c > 127))
-                      special++;
-                  }
-#ifdef NO_MIXED_CASE
-                if (lower && upper)
-                  {
-                    sendto_realops_lev(REJ_LEV,"Invalid username: %s (%s@%s)",
-				       nick, username, user->host);
-                    ircstp->is_ref++;
-		    (void)ircsprintf(tmpstr2, "Invalid username [%s]",
-			       username);
-                    return exit_client(cptr, sptr, &me, tmpstr2);
-                  }
-#endif /* NO_MIXED_CASE */
-#ifdef NO_SPECIAL
-                if (special)
-                  {
-                    sendto_realops_lev(REJ_LEV,"Invalid username: %s (%s@%s)",
-				       nick, username, user->host);
-                    ircstp->is_ref++;
-		    (void)ircsprintf(tmpstr2, "Invalid username [%s]",
-			       username);
-                    return exit_client(cptr, sptr, &me, tmpstr2);
-		  }
-#endif /* NO_SPECIAL */
-		 } /* usernames different */
-  }
-#endif /* NO_MIXED_CASE || NO_SPECIAL */
+      return exit_client(cptr, sptr, &me, tmpstr2);
+    }
 
-  /* 
-   * Absolutely always reject any '*' '!' '?' in an user name
-   * reject any odd control characters names.
-   */
-
-  {
-    unsigned char *p;
-    p = (unsigned char *) user->username;
-
-    while(*p)
-      {
-	if( (*p > 127) || (*p <= ' ') || 
-	    (*p == '*') || (*p == '?') || (*p == '!'))
-	  {
-	    sendto_realops_lev(REJ_LEV,"Invalid username: %s (%s@%s)",
-			       nick, user->username, user->host);
-	    ircstp->is_ref++;
-	    (void)ircsprintf(tmpstr2, "Invalid username [%s]",
-			     user->username);
-	    return exit_client(cptr, sptr, &me, tmpstr2);
-	  }
-
-	p++;
-      }
-    /* 
-     * reject single character usernames which aren't alphabetic 
-     * i.e. reject jokers who have '-@somehost' or '.@somehost'
-     *
-     * -Dianora
-     */
-
-    if((user->username[1] == '\0') && !isalpha(user->username[0]))
-      {
-	sendto_realops_lev(REJ_LEV,"Invalid username: %s (%s@%s)",
-			   nick, user->username, user->host);
-	ircstp->is_ref++;
-	(void)ircsprintf(tmpstr2, "Invalid username [%s]",
-			 user->username);
-	return exit_client(cptr, sptr, &me, tmpstr2);
-      }
-  }
 
   if(!IsAnOper(sptr) && (aconf = find_special_conf(sptr->info,CONF_XLINE)) )
     {
@@ -1294,6 +1086,48 @@ static	int	register_user(aClient *cptr,
   if (ubuf[1])
     send_umode_out(cptr, sptr, 0);
   return 0;
+}
+
+/* valid_username
+ *
+ * Inputs	- pointer to user
+ * Output	- YES if valid, NO if not
+ * Side effects	- NONE
+ */
+
+/* 
+ * Absolutely always reject any '*' '!' '?' '@' in an user name
+ * reject any odd control characters names.
+ */
+
+static int valid_username( anUser *user )
+{
+  unsigned char *p;
+
+  p = (unsigned char *) user->username;
+
+  while(*p)
+    {
+      if( (*p > 127) || (*p <= ' ') || 
+	  (*p == '*') || (*p == '?') || (*p == '!') || (*p == '@') )
+	{
+	  return ( NO );
+	}
+
+      p++;
+    }
+
+  /* 
+   * reject single character usernames which aren't alphabetic 
+   * i.e. reject jokers who have '-@somehost' or '.@somehost'
+   *
+   * -Dianora
+   */
+  
+  if((user->username[1] == '\0') && !isalpha(user->username[0]))
+    {
+      return ( NO );
+    }
 }
 
 /*

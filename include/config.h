@@ -107,6 +107,14 @@
 #define OPER_MOTD
 #define OMOTD   "opers.motd"
 
+/* DLINES_IN_KPATH - put (/quote) DLINES in your KPATH file.
+ * Define this if you want DLINES in your KPATH file.  Otherwise DLINES
+ * will be added to the main ircd.conf
+ */
+#ifdef KPATH
+#undef DLINES_IN_KPATH
+#endif /* KPATH */
+
 /* TS_MAX_DELTA and TS_WARN_DELTA -  allowed delta for TS when another
  * server connects.
  *
@@ -215,47 +223,6 @@
  */
 #undef SHOW_FAILED_OPER_PASSWD
 
-/* CLIENT_SERVER - Don't be so fascist about idle clients ;)
- * changes behaviour of HTM code to make clients lag less.
- * Not necessary any more
- */
-
-/* RK_NOTICES - Show notices when rline/kline'd connections are denied.
- * This generates a TON of crap, I reccomend leaving it undef'd. 
- */
-#undef RK_NOTICES
-
-/* NO_MIXED_CASE - reject mixed case usernames
- * define this if you wish to reject usernames like: FuckYou which
- * don't have all one case
- */
-#undef NO_MIXED_CASE
-
-/* IGNORE_FIRST_CHAR -
- * define this for NO_MIXED_CASE if you wish to ignore the first character
- */
-#define IGNORE_FIRST_CHAR
-
-/* NO_SPECIAL - reject usernames containing strange chars
- * define this if you want no "special" characters in usernames.
- * A character is "special" if it's not "a-z", "A-Z", "0-9", ".", "-",
- * and "_"
- */
-#undef NO_SPECIAL
-
-/* DLINES_IN_KPATH - put (/quote) DLINES in your KPATH file.
- * Define this if you want DLINES in your KPATH file.  Otherwise DLINES
- * will be added to the main ircd.conf
- */
-#ifdef KPATH
-#undef DLINES_IN_KPATH
-#endif /* KPATH */
-
-/* HIGHEST_CONNECTION - track highest connection count
- * Define this if you want to keep track of your max connections.
- */
-#define HIGHEST_CONNECTION
-
 /* BAN_INFO - Shows you who and when someone did a ban
  */
 #define BAN_INFO
@@ -320,14 +287,6 @@
  */
 #define BOTCHECK
 
-/* CLIENT_COUNT - keep a running count of Local & Global users
- *                also redefine the /USERS command
- */
-#define CLIENT_COUNT
-#ifdef CLIENT_COUNT
-#undef HIGHEST_CONNECTION
-#endif
-
 /* X_LINES_OPER_ONLY - Allow only local opers to see these stats
  *
  *  Any one with an F line can almost always get on the server, as
@@ -345,6 +304,13 @@
  * default here.
  */
 #define STATS_NOTICE
+
+/* WHOIS_NOTICE - Shows a notice to an oper when a user does a
+ * /whois on them
+ * Why do opers need this at all? Its an invasion of privacy. bah.
+ * you don't need this. -Dianora
+ */
+#undef WHOIS_NOTICE
 
 /* WHOIS_WAIT - minimum seconds between remote use of WHOIS before
  * max use count is reset
@@ -377,13 +343,6 @@
 #if defined(BOT_GCOS_WARN) && !defined(EXTRA_BOT_NOTICES)
 #define EXTRA_BOT_NOTICES
 #endif
-
-/* WHOIS_NOTICE - Shows a notice to an oper when a user does a
- * /whois on them
- * Why do opers need this at all? Its an invasion of privacy. bah.
- * you don't need this. -Dianora
- */
-#undef WHOIS_NOTICE
 
 /* SHOW_HEADERS - Shows messages like "looking up hostname" 
  */

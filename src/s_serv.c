@@ -100,9 +100,7 @@ extern int rehashed;		/* defined in ircd.c */
 extern int dline_in_progress;	/* defined in ircd.c */
 extern int autoconn;		/* defined in ircd.c */
 
-#ifdef HIGHEST_CONNECTION
 int     max_connection_count = 1, max_client_count = 1;
-#endif
 
 #ifdef ANTI_SPAMBOT_EXTRA
 int spambot_privmsg_count = PRIVMSG_POSSIBLE_SPAMBOT_COUNT;
@@ -1752,10 +1750,8 @@ int	m_stats(aClient *cptr,
 	now = timeofday - me.since;
 	sendto_one(sptr, form_str(RPL_STATSUPTIME), me.name, parv[0],
 		   now/86400, (now/3600)%24, (now/60)%60, now%60);
-#ifdef HIGHEST_CONNECTION
 	sendto_one(sptr, form_str(RPL_STATSCONN), me.name, parv[0],
 		   max_connection_count, max_client_count);
-#endif
 	valid_stats++;
 	break;
       }
@@ -1824,7 +1820,6 @@ int	m_users(aClient *cptr,
 		int parc,
 		char *parv[])
 {
-#ifdef CLIENT_COUNT
   if (hunt_server(cptr,sptr,":%s USERS :%s",1,parc,parv) == HUNTED_ISME)
     {
       /* No one uses this any more... so lets remap it..   -Taner */
@@ -1833,7 +1828,6 @@ int	m_users(aClient *cptr,
       sendto_one(sptr, form_str(RPL_GLOBALUSERS), me.name, parv[0],
 		 Count.total, Count.max_tot);
     }
-#endif /* CLIENT_COUNT */
   return 0;
 }
 
@@ -2125,13 +2119,11 @@ int show_lusers(aClient *cptr,
 	       me.name, parv[0], Count.chan);
   sendto_one(sptr, form_str(RPL_LUSERME),
 	     me.name, parv[0], m_client, m_server);
-#ifdef CLIENT_COUNT
   sendto_one(sptr, form_str(RPL_LOCALUSERS), me.name, parv[0],
 	     Count.local, Count.max_loc);
   sendto_one(sptr, form_str(RPL_GLOBALUSERS), me.name, parv[0],
 	     Count.total, Count.max_tot);
-#else
-#ifdef HIGHEST_CONNECTION
+
   sendto_one(sptr, form_str(RPL_STATSCONN), me.name, parv[0],
 	     max_connection_count, max_client_count);
   if (m_client > max_client_count)
@@ -2144,8 +2136,7 @@ int show_lusers(aClient *cptr,
 		   "New highest connections: %d (%d clients)",
 		   max_connection_count, max_client_count);
     }
-#endif /* HIGHEST_CONNECTION */
-#endif /* CLIENT_COUNT */
+
   return 0;
 }
 

@@ -150,23 +150,18 @@ int	m_info(aClient *cptr,
 #else
 #define OUT1 "CHROOTDIR=0"
 #endif
-#ifdef CLIENT_COUNT
-#define OUT2 " CLIENT_COUNT=1"
-#else
-#define OUT2 " CLIENT_COUNT=0"
-#endif
 #ifdef CLIENT_FLOOD
-#define OUT3 " CLIENT_FLOOD=1"
+#define OUT2 " CLIENT_FLOOD=1"
 #else
-#define OUT3 " CLIENT_FLOOD=0"
+#define OUT2 " CLIENT_FLOOD=0"
 #endif
 #ifdef CMDLINE_CONFIG
-#define OUT4 " CMDLINE_CONFIG=1"
+#define OUT3 " CMDLINE_CONFIG=1"
 #else
-#define OUT4 " CMDLINE_CONFIG=0"
+#define OUT3 " CMDLINE_CONFIG=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-                   me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
 #undef OUT1
 #undef OUT2
 #undef OUT3
@@ -253,18 +248,13 @@ int	m_info(aClient *cptr,
 #else
 #define OUT2 " GLINES=0"
 #endif
-#ifdef HIGHEST_CONNECTION
-#define OUT3 " HIGHEST_CONNECTION=1"
-#else
-#define OUT3 " HIGHEST_CONNECTION=0"
-#endif
 #ifdef HUB
-#define OUT4 " HUB=1"
+#define OUT3 " HUB=1"
 #else
-#define OUT4 " HUB=0"
+#define OUT3 " HUB=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-                   me.name, parv[0], OUT1 OUT2 OUT3 OUT4 );
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
 #undef OUT1
 #undef OUT2
 #undef OUT3
@@ -470,13 +460,8 @@ int	m_info(aClient *cptr,
 #else
 #define OUT2 " RFC1035_ANAL=0"
 #endif
-#ifdef RK_NOTICES
-#define OUT3 " RK_NOTICES=1"
-#else
-#define OUT3 " RK_NOTICES=0"
-#endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-                   me.name, parv[0], OUT1 OUT2 OUT3 );
+                   me.name, parv[0], OUT1 OUT2 );
 
 #undef OUT1
 #undef OUT2
