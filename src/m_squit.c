@@ -141,7 +141,7 @@ int m_squit(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       if (acptr && IsMe(acptr))
         {
           acptr = cptr;
-          server = cptr->host;
+          server = cptr->name;
         }
     }
   else
