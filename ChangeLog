@@ -1,3 +1,19 @@
+greg        2001/12/20 00:38:00 EST	(20011220_0)
+
+  Modified files:
+    src                  m_version.c 
+  Log:
+  - trivial MyClient(sptr) before sending a 005 on a VERSION
+    (don't send 005 replies remotely, in other words)
+  
+  Reviewed by:    trivial -- but review anyways
+  Obtained from:  walter
+  
+  Revision  Changes    Path
+  1.10      +3 -2      ircd-hybrid-6/src/m_version.c
+
+
+
 leeh        2001/12/19 18:24:47 EST	(20011219_3)
 
   Modified files:
