@@ -1335,7 +1335,7 @@ int	m_nick(aClient *cptr,
     *s = '\0';
   strncpyzt(nick, parv[1], NICKLEN+1);
 
-  if(!IsAnOper(sptr) && find_special_conf(sptr->info,CONF_QUARANTINED_NICK)) 
+  if(!IsAnOper(sptr) && find_special_conf(nick,CONF_QUARANTINED_NICK)) 
     {
       sendto_realops("Quarantined nick [%s], dumping user %s",
 		     nick,get_client_name(cptr, FALSE));

@@ -3994,6 +3994,11 @@ int     m_kline(aClient *cptr,
       return 0;
     }
 
+#ifdef SLAVE_SERVERS
+  if(IsAnOper(sptr))
+    sendto_slaves("KLINE",cptr,sptr,parc,parv);
+#endif
+
   argv = parv[1];
 
   if( (temporary_kline_time = isnumber(argv)) )

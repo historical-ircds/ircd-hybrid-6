@@ -132,6 +132,8 @@ aConfItem	*conf = ((aConfItem *)NULL);
 aConfItem	*x_conf = ((aConfItem *)NULL);
 /* conf qline link list root */
 aConfItem	*q_conf = ((aConfItem *)NULL);
+/* conf uline link list root */
+aConfItem	*u_conf = ((aConfItem *)NULL);
 
 /* keep track of .include files to hash in */
 aConfItem	*include_list = ((aConfItem *)NULL);

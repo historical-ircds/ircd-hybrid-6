@@ -1876,18 +1876,13 @@ int read_packet(aClient *cptr, int msg_ready)
 	  if (find_dline(addr.sin_addr))
 	    {
 	      ircstp->is_ref++;
-	      /* Can't use orabidoo's sendheader here
-	       * and if I'm sending a D line to a server,
-	       * well it can't connect anyway
-	       * -Dianora
-	       */
 #ifdef REPORT_DLINE_TO_USER
 	      /* Can't use orabidoo's sendheader here
 	       * and if I'm sending a D line to a server,
 	       * well it can't connect anyway
 	       * -Dianora
 	       */
-	      send(fd, REPORT_DLINED, strlen(REPORT_DLINED), 0);
+	      send(fd, REPORT_DLINED, sizeof(REPORT_DLINED)-1, 0);
 #endif
 
 	      (void)close(fd);

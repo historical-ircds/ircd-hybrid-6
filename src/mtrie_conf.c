@@ -595,7 +595,6 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
   aConfItem *iline_aconf_unsortable=(aConfItem *)NULL;
   aConfItem *iline_aconf=(aConfItem *)NULL;
   aConfItem *kline_aconf=(aConfItem *)NULL;
-  aConfItem *ip_iline_aconf=(aConfItem *)NULL;
   char tokenized_host[HOSTLEN+1];
   int top_of_stack;
 
@@ -678,9 +677,7 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
 
   if(ip && !iline_aconf)
     {
-      ip_iline_aconf = find_matching_ip_i_line(ip);
-      if(ip_iline_aconf)
-	iline_aconf = ip_iline_aconf;
+      iline_aconf = find_matching_ip_i_line(ip);
     }
 
   /* If there is no I line, there is no point checking for a K line now
