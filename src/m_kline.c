@@ -774,12 +774,20 @@ m_kline(struct Client *cptr,
       rehashed = YES;
       dline_in_progress = NO;
       nextping = CurrentTime;
-      sendto_realops("%s added temporary %d min. K-Line for [%s@%s] [%s|%s]",
-		     parv[0],
-		     temporary_kline_time,
-		     user,
-		     host,
-		     reason, oper_reason);
+      if (oper_reason != NULL)
+	sendto_realops("%s added temporary %d min. K-Line for [%s@%s] [%s|%s]",
+		       parv[0],
+		       temporary_kline_time,
+		       user,
+		       host,
+		       reason, oper_reason);
+      else
+	sendto_realops("%s added temporary %d min. K-Line for [%s@%s] [%s]",
+		       parv[0],
+		       temporary_kline_time,
+		       user,
+		       host,
+		       reason);
       return 0;
     }
   else
