@@ -753,7 +753,7 @@ void report_glines(aClient *sptr)
                 reason = "No Reason";
 
               sendto_one(sptr,form_str(RPL_STATSKLINE), me.name,
-                         sptr->name, 'G' , host, name, reason, "");
+                         sptr->name, 'G' , host, name, reason);
 
               last_list_ptr = kill_list_ptr;
               kill_list_ptr = kill_list_ptr->next;

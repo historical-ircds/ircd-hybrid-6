@@ -2999,7 +2999,7 @@ show_temp_klines(aClient *sptr, struct ConfItem * tklist)
             reason = "No Reason";
 
 	  sendto_one(sptr,form_str(RPL_STATSKLINE), me.name,
-                       sptr->name, 'k' , host, user, reason, "");
+                       sptr->name, 'k' , host, user, reason);
 
           last_list_ptr = kill_list_ptr;
           kill_list_ptr = kill_list_ptr->next;
