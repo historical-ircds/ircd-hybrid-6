@@ -1,3 +1,8 @@
+*** 19990927_1 by lusky
+This patch corrects a case where a normal user can oper themselves (db)
+also corrects a possible core due to a bogus H or L line. (neph)
+
+
 *** 19990911_1 by lusky
 another bogus fd check in send.c
 
