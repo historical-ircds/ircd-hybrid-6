@@ -173,8 +173,8 @@ struct DNSReply* conf_dns_lookup(struct ConfItem* aconf)
     struct DNSQuery query;
     query.vptr     = aconf;
     query.callback = conf_dns_callback;
-    if (0 == (dns_reply = gethost_byname(aconf->host, &query)))
-      aconf->dns_pending = 1;
+    gethost_byname(aconf->host, &query);
+    aconf->dns_pending = 1;
   }
   return dns_reply;
 }

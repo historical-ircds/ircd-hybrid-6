@@ -413,15 +413,8 @@ void start_auth(struct Client* client)
 
   sendheader(client, REPORT_DO_DNS);
 
-  client->dns_reply = gethost_byaddr((const char*) &client->ip, &query);
-  if (client->dns_reply)
-    {
-      ++client->dns_reply->ref_count;
-      strncpy_irc(client->host, client->dns_reply->hp->h_name, HOSTLEN);
-      sendheader(client, REPORT_FIN_DNSC);
-    }
-  else
-    SetDNSPending(auth);
+  gethost_byaddr((const char*) &client->ip, &query);
+  SetDNSPending(auth);
 
   if (start_auth_query(auth))
     link_auth_request(auth, &AuthPollList);

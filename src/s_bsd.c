@@ -555,13 +555,10 @@ int connect_server(struct ConfItem* aconf,
       
       query.vptr     = aconf;
       query.callback = connect_dns_callback;
-      reply = gethost_byname(aconf->host, &query);
+      gethost_byname(aconf->host, &query);
 
-      if (!reply) {
-        aconf->dns_pending = 1;
-        return 0;
-      }
-      memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
+      aconf->dns_pending = 1;
+      return 0;
     }
   }
   cptr = make_client(NULL);
