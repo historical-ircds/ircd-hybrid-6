@@ -308,6 +308,7 @@ extern const char* form_str(int);
 #define ERR_NICKNAMEINUSE    433
 #define ERR_NICKCOLLISION    436
 #define ERR_UNAVAILRESOURCE  437
+#define ERR_NICKTOOFAST	     438	/* We did it first Undernet! ;) db */
 
 #define ERR_USERNOTINCHANNEL 441
 #define ERR_NOTONCHANNEL     442

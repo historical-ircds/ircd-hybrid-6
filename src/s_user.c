@@ -1244,10 +1244,8 @@ static int nickkilldone(aClient *cptr, aClient *sptr, int parc,
           else
             {
               sendto_one(sptr,
-                         ":%s NOTICE %s :*** Notice -- Too many nick changes wait %d seconds before trying to change it again.",
-                         me.name,
-                         sptr->name,
-                         MAX_NICK_TIME);
+                         form_str(ERR_NICKTOOFAST),
+			 me.name, sptr->name, sptr->name, nick, MAX_NICK_TIME);
               return 0;
             }
 #endif
