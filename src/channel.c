@@ -3059,12 +3059,14 @@ int	m_knock(aClient *cptr,
 
     /* bit of paranoid, be a shame if it cored for this -Dianora */
     if(sptr->user)
-      sprintf(message,"KNOCK: %s (%s [%s@%s] has asked for an invite)",
-	      chptr->chname,
-	      sptr->name,
-	      sptr->user->username,
-	      sptr->user->host);
-    sendto_channel_type_notice(cptr, chptr, MODE_CHANOP, message);
+      {
+	ircsprintf(message,"KNOCK: %s (%s [%s@%s] has asked for an invite)",
+		   chptr->chname,
+		   sptr->name,
+		   sptr->user->username,
+		   sptr->user->host);
+	sendto_channel_type_notice(cptr, chptr, MODE_CHANOP, message);
+      }
 
     /* There is a problem with the code fragment below...
      * The problem is, s_user.c checks to see if the sender
@@ -3282,23 +3284,35 @@ int	m_invite(aClient *cptr,
       if (chptr && (chptr->mode.mode & MODE_INVITEONLY)
 	  && !(chptr->mode.mode & MODE_PRIVATE))
 	{ 
-	  /*
 	  char message[300];
+
+	  /*
 	  sprintf(message, "INVITE: %s (%s invited %s)", chptr->chname, sptr->name, acptr->name);
 	  sendto_channel_type_notice(cptr, chptr, MODE_CHANOP,
 				     message);
 				     */
 	  /* bit of paranoia, be a shame if it cored for this -Dianora */
 	  if(acptr->user)
-	    sendto_channel_type(cptr, sptr, chptr, MODE_CHANOP,
-		      ":%s PRIVMSG @%s :INVITE: %s (%s invited %s [%s@%s])",
-				parv[0],
-				chptr->chname,
+	    {
+	      (void)ircsprintf(message,
+		      ":INVITE: %s (%s invited %s [%s@%s])",
 				chptr->chname,
 				sptr->name,
 				acptr->name,
 				acptr->user->username,
 				acptr->user->host);
+
+	      /* Note the horrible kludge here of "PRIVMSG"
+	       * in the arguments, this is to ensure that p4 in 
+	       * sendto_channel_type() in send.c is the message payload
+	       * for non CHW type servers
+	       * -Dianora
+	       */
+	      sendto_channel_type(cptr, sptr, chptr, MODE_CHANOP,
+				  ":%s %s @%s :%s",
+				  parv[0], "PRIVMSG", chptr->chname,
+				  message);
+	    }
 	}
     }
 

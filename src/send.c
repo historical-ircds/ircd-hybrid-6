@@ -568,10 +568,16 @@ va_dcl
 #ifdef USE_VARARGS
 #error "Broken in send.c"
 #else
-	      sendto_prefix_one(acptr, from, pattern,
-			       p1, p2,
-			       lp->value.cptr->name,
-			       p4, p5, p6, p7, p8);
+	      /* kludge in a built in chan wall for older servers */
+
+	      sendto_prefix_one(acptr, from,
+				":%s NOTICE %s :%s",
+				p1,
+				/* ignore p2, replace with NOTICE */
+				/* ignore p3, replace with username */
+				lp->value.cptr->name,
+				/* p4 is message "payload" */
+				p4);
 #endif
 	    }
 	  else
