@@ -19,9 +19,9 @@
  *   $Id$
  */
 #include "struct.h"
-#include "h.h"
 #include "send.h"
 #include "irc_string.h"
+#include "s_bsd.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -65,7 +65,7 @@
  * -Dianora
  */
 
-#define	UNZIP_BUFFER_SIZE	6*ZIP_BUFFER_SIZE
+#define	UNZIP_BUFFER_SIZE	6 * ZIP_BUFFER_SIZE
 
 /* buffers */
 static	char	unzipbuf[UNZIP_BUFFER_SIZE];

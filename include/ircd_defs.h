@@ -56,7 +56,6 @@
 #define	USERHOST_REPLYLEN	(NICKLEN+HOSTLEN+USERLEN+5)
 #define MAX_DATE_STRING 32      /* maximum string length for a date string */
 
-#define READBUF_SIZE    16384	/* used in s_bsd *AND* s_zip.c ! */
 
 /* 
  * Macros everyone uses :/ moved here from sys.h

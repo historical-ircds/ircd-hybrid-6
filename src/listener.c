@@ -169,7 +169,7 @@ static int inetport(struct Listener* listener)
    * XXX - this should always work, performance will suck if it doesn't
    */
   if (!set_non_blocking(fd))
-    report_error(NB_ERROR_MESSAGE, get_listener_name(listener), errno);
+    report_error(NONB_ERROR_MSG, get_listener_name(listener), errno);
 
   listener->fd = fd;
 

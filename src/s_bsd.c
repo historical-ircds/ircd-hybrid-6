@@ -90,39 +90,27 @@ extern fdlist busycli_fdlist;
 #endif
 extern fdlist default_fdlist;
 
-#if defined(MAXBUFFERS)
-int rcvbufmax = 0;
-int sndbufmax = 0;
-#endif
-#ifdef MAXBUFFERS
-void        reset_sock_opts (int, int);
-#endif
-
-// extern int                specific_virtual_host;   /* defined in s_conf.c */
-extern struct sockaddr_in vserv;     /* defined in s_conf.c */
+extern struct sockaddr_in vserv;               /* defined in s_conf.c */
 extern aClient*           serv_cptr_list;      /* defined in ircd.c */
 extern aClient*           local_cptr_list;     /* defined in ircd.c */
 extern aClient*           oper_cptr_list;      /* defined in ircd.c */
 
-const char* const NB_ERROR_MESSAGE = "set_non_blocking failed for %s:%s"; 
+const char* const NONB_ERROR_MSG   = "set_non_blocking failed for %s:%s"; 
+const char* const OPT_ERROR_MSG    = "disable_sock_options failed for %s:%s";
+const char* const SETBUF_ERROR_MSG = "set_sock_buffers failed for server %s:%s";
 
 aClient*       local[MAXCONNECTIONS];
 
 int            highest_fd = 0;
 time_t         timeofday;
-static struct sockaddr_in mysk;
 
-static struct sockaddr* connect_inet(aConfItem *, aClient *, int *);
+static struct sockaddr_in mysk;
+static char               readBuf[READBUF_SIZE];
+
 static int        completed_connection (aClient *);
 static int        check_init (aClient *, char *);
 static void       do_dns_async(void);
-static void       set_sock_opts (int, aClient *);
 
-#if defined(MAXBUFFERS) && !defined(SEQUENT)
-static char*    readbuf;
-#else
-static char     readbuf[READBUF_SIZE];
-#endif
 
 /*
  * Try and find the correct name to use with getrlimit() for setting the max.
@@ -153,7 +141,7 @@ static char     readbuf[READBUF_SIZE];
 static int get_sockerr(int fd)
 {
   int errtmp = errno;
-#ifdef  SO_ERROR
+#ifdef SO_ERROR
   int err = 0;
   int len = sizeof(err);
 
@@ -216,7 +204,7 @@ static void connect_dns_callback(void* vptr, struct DNSReply* reply)
   aconf->dns_pending = 0;
   if (reply) {
     memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
-    connect_server(aconf, NULL, reply);
+    connect_server(aconf, 0, reply);
   }
   else
     sendto_ops("Connect to %s failed: host lookup", aconf->host);
@@ -239,6 +227,69 @@ static void do_dns_async()
   }  while ((bytes > 0) && (packets < 10)); 
 }
 
+/*
+ * set_sock_buffers - set send and receive buffers for socket
+ * returns true (1) if successful, false (0) otherwise
+ */
+int set_sock_buffers(int fd, int size)
+{
+  if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char*) &size, sizeof(size)) ||
+      setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char*) &size, sizeof(size)))
+    return 0;
+  return 1;
+}
+
+/*
+ * disable_sock_options - if remote has any socket options set, disable them 
+ * returns true (1) if successful, false (0) otherwise
+ */
+static int disable_sock_options(int fd)
+{
+#if defined(IP_OPTIONS) && defined(IPPROTO_IP)
+  if (setsockopt(fd, IPPROTO_IP, IP_OPTIONS, NULL, 0))
+    return 0;
+#endif
+  return 1;
+}
+
+/*
+ * set_non_blocking - Set the client connection into non-blocking mode. 
+ * If your system doesn't support this, you're screwed, ircd will run like
+ * crap.
+ * returns true (1) if successful, false (0) otherwise
+ */
+int set_non_blocking(int fd)
+{
+  /*
+   * NOTE: consult ALL your relevant manual pages *BEFORE* changing
+   * these ioctl's.  There are quite a few variations on them,
+   * as can be seen by the PCS one.  They are *NOT* all the same.
+   * Heed this well. - Avalon.
+   */
+  /* This portion of code might also apply to NeXT.  -LynX */
+#ifdef NBLOCK_SYSV
+  int res = 1;
+
+  if (ioctl(fd, FIONBIO, &res) == -1)
+    return 0;
+
+#else /* !NBLOCK_SYSV */
+  int nonb = 0;
+  int res;
+
+#ifdef NBLOCK_POSIX
+  nonb |= O_NONBLOCK;
+#endif
+#ifdef NBLOCK_BSD
+  nonb |= O_NDELAY;
+#endif
+
+  res = fcntl(fd, F_GETFL, 0);
+  if (-1 == res || fcntl(fd, F_SETFL, res | nonb) == -1)
+    return 0;
+#endif /* !NBLOCK_SYSV */
+  return 1;
+}
 
 
 /*
@@ -424,81 +475,8 @@ int check_client(aClient *cptr,char *username,char **reason)
   return 0;
 }
 
-/*
- * check_server_init(), check_server()
- *        check access for a server given its name (passed in cptr struct).
- *        Must check for all C/N lines which have a name which matches the
- *        name given and a host which matches. A host alias which is the
- *        same as the server name is also acceptable in the host field of a
- *        C/N line.
- *  0 = Success
- * -1 = Access denied
- * -2 = Bad socket.
- */
-int check_server_init(aClient *cptr)
-{
-  char*            name;
-  struct ConfItem* c_conf    = NULL;
-  struct ConfItem* n_conf    = NULL;
-  struct DNSReply* dns_reply = NULL;
-  struct SLink*    lp;
-
-  name = cptr->name;
-  Debug((DEBUG_DNS, "sv_cl: check access for %s[%s]", name, cptr->host));
-
-  if (IsUnknown(cptr) && !attach_confs(cptr, name, CONF_CONNECT_SERVER |
-                                       CONF_NOCONNECT_SERVER ))
-    {
-      Debug((DEBUG_DNS,"No C/N lines for %s", name));
-      return -1;
-    }
-  lp = cptr->confs;
-  /*
-   * We initiated this connection so the client should have a C and N
-   * line already attached after passing through the connect_server()
-   * function earlier.
-   */
-  if (IsConnecting(cptr) || IsHandshake(cptr))
-    {
-      c_conf = find_conf(lp, name, CONF_CONNECT_SERVER);
-      n_conf = find_conf(lp, name, CONF_NOCONNECT_SERVER);
-      if (!c_conf || !n_conf)
-        {
-          sendto_realops_flags(FLAGS_DEBUG, "Connecting Error: %s[%s]", name,
-                             cptr->host);
-          det_confs_butmask(cptr, 0);
-          return -1;
-        }
-    }
-  /*
-  ** If the servername is a hostname, either an alias (CNAME) or
-  ** real name, then check with it as the host. Use gethostbyname()
-  ** to check for servername as hostname.
-  */
-  if (!cptr->dns_reply)
-    {
-      aConfItem *aconf;
-
-      aconf = count_cnlines(lp);
-      if (aconf)
-        {
-          /*
-          ** Do a lookup for the CONF line *only* and not
-          ** the server connection else we get stuck in a
-          ** nasty state since it takes a SERVER message to
-          ** get us here and we cant interrupt that very
-          ** well.
-          */
-          ClearAccess(cptr);
-          Debug((DEBUG_DNS,"sv_ci:cache lookup (%s)",aconf->host));
-          dns_reply = conf_dns_lookup(aconf);
-        }
-    }
-  return check_server(cptr, dns_reply, c_conf, n_conf, 0);
-}
-
-int check_server(aClient* cptr, struct DNSReply* dns_reply,
-                 aConfItem *c_conf, aConfItem *n_conf, int estab)
+static int check_server(aClient* cptr, struct DNSReply* dns_reply,
+                        aConfItem *c_conf, aConfItem *n_conf)
 {
   char*           name;
   char            sockname[HOSTLEN + 1];
@@ -618,22 +596,90 @@ int check_server(aClient* cptr, struct DNSReply* dns_reply,
   attach_confs(cptr, name, CONF_HUB | CONF_LEAF);
   
   if (c_conf->ipnum.s_addr == INADDR_NONE)
-    memcpy(&c_conf->ipnum, &cptr->ip, sizeof(struct in_addr));
+    c_conf->ipnum.s_addr = cptr->ip.s_addr;
 
   strncpy_irc(cptr->host, c_conf->host, HOSTLEN);
-  
   Debug((DEBUG_DNS,"sv_cl: access ok: %s[%s]", name, cptr->host));
-  if (estab)
-    return m_server_estab(cptr);
+
   return 0;
 }
 
 /*
- * completed_connection
- *        Complete non-blocking connect()-sequence. Check access and
- *        terminate connection, if trouble detected.
+ * check_server_init, check_server
+ *        check access for a server given its name (passed in cptr struct).
+ *        Must check for all C/N lines which have a name which matches the
+ *        name given and a host which matches. A host alias which is the
+ *        same as the server name is also acceptable in the host field of a
+ *        C/N line.
+ *  0 = Success
+ * -1 = Access denied
+ * -2 = Bad socket.
+ */
+int check_server_init(aClient *cptr)
+{
+  char*            name;
+  struct ConfItem* c_conf    = NULL;
+  struct ConfItem* n_conf    = NULL;
+  struct DNSReply* dns_reply = NULL;
+  struct SLink*    lp;
+
+  name = cptr->name;
+  Debug((DEBUG_DNS, "sv_cl: check access for %s[%s]", name, cptr->host));
+
+  if (IsUnknown(cptr) && 
+      !attach_confs(cptr, name, CONF_CONNECT_SERVER | CONF_NOCONNECT_SERVER ))
+    {
+      Debug((DEBUG_DNS,"No C/N lines for %s", name));
+      return -1;
+    }
+  lp = cptr->confs;
+  /*
+   * We initiated this connection so the client should have a C and N
+   * line already attached after passing through the connect_server()
+   * function earlier.
+   */
+  if (IsConnecting(cptr) || IsHandshake(cptr))
+    {
+      c_conf = find_conf(lp, name, CONF_CONNECT_SERVER);
+      n_conf = find_conf(lp, name, CONF_NOCONNECT_SERVER);
+      if (!c_conf || !n_conf)
+        {
+          sendto_realops_flags(FLAGS_DEBUG, "Connecting Error: %s[%s]", name,
+                             cptr->host);
+          det_confs_butmask(cptr, 0);
+          return -1;
+        }
+    }
+  /*
+  ** If the servername is a hostname, either an alias (CNAME) or
+  ** real name, then check with it as the host. Use gethostbyname()
+  ** to check for servername as hostname.
+  */
+  if (!cptr->dns_reply)
+    {
+      aConfItem* aconf = count_cnlines(lp);
+      if (aconf)
+        {
+          /*
+          ** Do a lookup for the CONF line *only* and not
+          ** the server connection else we get stuck in a
+          ** nasty state since it takes a SERVER message to
+          ** get us here and we cant interrupt that very
+          ** well.
+          */
+          ClearAccess(cptr);
+          Debug((DEBUG_DNS,"sv_ci:cache lookup (%s)",aconf->host));
+          dns_reply = conf_dns_lookup(aconf);
+        }
+    }
+  return check_server(cptr, dns_reply, c_conf, n_conf);
+}
+
+/*
+ * completed_connection - Complete non-blocking connect-sequence. 
+ * Check access and terminate connection, if trouble detected.
  *
- *        Return        TRUE, if successfully completed
+ * Return         TRUE, if successfully completed
  *                FALSE, if failed and ClientExit
  */
 static int completed_connection(aClient *cptr)
@@ -665,6 +711,224 @@ static int completed_connection(aClient *cptr)
              my_name_for_link(me.name, n_conf), me.info);
 
   return (IsDead(cptr)) ? -1 : 0;
+}
+
+/*
+ * connect_inet - open a socket and connect to another server
+ * returns true (1) if successful, false (0) otherwise
+ */
+static int connect_inet(aConfItem *aconf, aClient *cptr)
+{
+  static struct sockaddr_in sin;
+
+  /*
+   * Might as well get sockhost from here, the connection is attempted
+   * with it so if it fails its useless.
+   */
+  cptr->fd = socket(AF_INET, SOCK_STREAM, 0);
+
+  if (cptr->fd == -1)
+    {
+      report_error("opening stream socket to server %s:%s", cptr->name, errno);
+      return 0;
+    }
+
+  if (cptr->fd >= (HARD_FDLIMIT - 10))
+    {
+      sendto_realops("No more connections allowed (%s)", cptr->name);
+      return 0;
+    }
+
+  mysk.sin_port   = 0;
+  mysk.sin_family = AF_INET;
+
+  memset(&sin, 0, sizeof(sin));
+  sin.sin_family  = AF_INET;
+
+  /*
+   * Bind to a local IP# (with unknown port - let unix decide) so
+   * we have some chance of knowing the IP# that gets used for a host
+   * with more than one IP#.
+   */
+  /* No we don't bind it, not all OS's can handle connecting with
+     an already bound socket, different ip# might occur anyway
+     leading to a freezing select() on this side for some time.
+     */
+  if (specific_virtual_host)
+    {
+      mysk.sin_addr = vserv.sin_addr;
+
+      /*
+      ** No, we do bind it if we have virtual host support. If we don't
+      ** explicitly bind it, it will default to IN_ADDR_ANY and we lose
+      ** due to the other server not allowing our base IP --smg
+      */        
+      if (bind(cptr->fd, (struct sockaddr*) &mysk, sizeof(mysk)))
+        {
+          report_error("error binding to local port for %s:%s", 
+                       cptr->name, errno);
+          return 0;
+        }
+    }
+  /*
+   * By this point we should know the IP# of the host listed in the
+   * conf line, whether as a result of the hostname lookup or the ip#
+   * being present instead. If we dont know it, then the connect fails.
+   */
+  if (IsDigit(*aconf->host) && INADDR_NONE == aconf->ipnum.s_addr)
+    aconf->ipnum.s_addr = inet_addr(aconf->host);
+
+  if (INADDR_NONE == aconf->ipnum.s_addr)
+    {
+      struct DNSReply* reply = cptr->dns_reply;
+      if (!reply)
+        {
+          Debug((DEBUG_FATAL, "%s: unknown host", aconf->host));
+          return 0;
+        }
+      memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
+    }
+
+  sin.sin_addr.s_addr = aconf->ipnum.s_addr;
+  cptr->ip.s_addr     = aconf->ipnum.s_addr;
+  sin.sin_port        = htons(aconf->port);
+
+  if (!set_non_blocking(cptr->fd))
+    report_error(NONB_ERROR_MSG, get_client_name(cptr, TRUE), errno);
+
+  if (!set_sock_buffers(cptr->fd, READBUF_SIZE))
+    report_error(SETBUF_ERROR_MSG, get_client_name(cptr, TRUE), errno);
+
+  if (connect(cptr->fd, (const struct sockaddr*) &sin, sizeof(sin)) && 
+      errno != EINPROGRESS)
+    {
+      int errtmp = errno; /* other system calls may eat errno */
+      report_error("Connect to host %s failed: %s",
+                   get_client_name(cptr, TRUE), errno);
+      errno = errtmp;
+      return 0;
+    }
+  return 1;
+}
+
+/*
+ * connect_server - start or complete a connection to another server
+ * returns true (1) if successful, false (0) otherwise
+ */
+int connect_server(aConfItem *aconf, aClient* by, struct DNSReply* reply)
+{
+  struct Client* cptr;
+
+  Debug((DEBUG_NOTICE,"Connect to %s[%s] @%s",
+         aconf->user, aconf->host, inetntoa((char*)&aconf->ipnum)));
+
+  if ((cptr = find_server(aconf->name, NULL)))
+    {
+      sendto_ops("Server %s already present from %s",
+                 aconf->name, get_client_name(cptr, TRUE));
+      if (by && IsPerson(by) && !MyClient(by))
+        sendto_one(by, ":%s NOTICE %s :Server %s already present from %s",
+                   me.name, by->name, aconf->name,
+                   get_client_name(cptr, TRUE));
+      return 0;
+    }
+
+  /*
+   * If we dont know the IP# for this host and it is a hostname and
+   * not a ip# string, then try and find the appropriate host record.
+   */
+  if (INADDR_NONE == aconf->ipnum.s_addr && !aconf->dns_pending)
+    {
+      if ((aconf->ipnum.s_addr = inet_addr(aconf->host)) == INADDR_NONE)
+        {
+          struct DNSQuery  query;
+          
+          query.vptr     = aconf;
+          query.callback = connect_dns_callback;
+          reply = gethost_byname(aconf->host, &query);
+          Debug((DEBUG_NOTICE, "co_sv: reply %x ac %x na %s ho %s",
+                 reply, aconf, aconf->name, aconf->host));
+          if (!reply) 
+            {
+              aconf->dns_pending = 1;
+              return 0;
+            }
+          memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
+        }
+    }
+  cptr = make_client(NULL);
+  if (reply) 
+    ++reply->ref_count;
+  cptr->dns_reply = reply;
+  
+  /*
+   * Copy these in so we have something for error detection.
+   */
+  strncpy_irc(cptr->name, aconf->name, HOSTLEN);
+  strncpy_irc(cptr->host, aconf->host, HOSTLEN);
+
+  if (!connect_inet(aconf, cptr)) {
+    if (by && IsPerson(by) && !MyClient(by))
+      sendto_one(by, ":%s NOTICE %s :Connect to host %s failed.",
+                 me.name, by->name, cptr);
+    free_client(cptr);
+    return 0;
+  }
+
+  /* Attach config entries to client here rather than in
+   * completed_connection. This to avoid null pointer references
+   * when name returned by gethostbyaddr matches no C lines
+   * (could happen in 2.6.1a when host and servername differ).
+   * No need to check access and do gethostbyaddr calls.
+   * There must at least be one as we got here C line...  meLazy
+   */
+  attach_confs_host(cptr, aconf->host,
+                    CONF_NOCONNECT_SERVER | CONF_CONNECT_SERVER );
+
+  if (!find_conf_host(cptr->confs, aconf->host, CONF_NOCONNECT_SERVER) ||
+      !find_conf_host(cptr->confs, aconf->host, CONF_CONNECT_SERVER))
+    {
+      sendto_ops("Host %s is not enabled for connecting:no C/N-line",
+                 aconf->host);
+      if (by && IsPerson(by) && !MyClient(by))
+        sendto_one(by, ":%s NOTICE %s :Connect to host %s failed.",
+                   me.name, by->name, cptr);
+      det_confs_butmask(cptr, 0);
+
+      free_client(cptr);
+      return 0;
+    }
+  /*
+   * The socket has been connected or connect is in progress.
+   */
+  make_server(cptr);
+  if (by && IsPerson(by))
+    {
+      strcpy(cptr->serv->by, by->name);
+      if (cptr->serv->user) 
+        free_user(cptr->serv->user, NULL);
+      cptr->serv->user = by->user;
+      by->user->refcnt++;
+    } 
+  else
+    {
+      strcpy(cptr->serv->by, "AutoConn.");
+      if (cptr->serv->user)
+        free_user(cptr->serv->user, NULL);
+      cptr->serv->user = NULL;
+    }
+  cptr->serv->up = me.name;
+
+  if (cptr->fd > highest_fd)
+    highest_fd = cptr->fd;
+  local[cptr->fd] = cptr;
+  SetConnecting(cptr);
+
+  add_client_to_list(cptr);
+  addto_fdlist(cptr->fd, &default_fdlist);
+  nextping = timeofday;
+
+  return 1;
 }
 
 /*
@@ -779,187 +1043,6 @@ void close_connection(aClient *cptr)
   cptr->from = NULL; /* ...this should catch them! >:) --msa */
 }
 
-#ifdef MAXBUFFERS
-/*
- * reset_sock_opts
- *  type =  0 = client, 1 = server
- */
-/*
- * If there is a failure on setsockopt, that shouldn't go to all realops
- * only ones that care. logically, its to do with connecting clients
- * so, putting it on CCONN_LEV seems logical to me - Dianora
- */
-void        reset_sock_opts(int fd,int type)
-{
-#define CLIENT_BUFFER_SIZE        4096
-#define SEND_BUF_SIZE                2048
-  int opt;
-  opt = type ? rcvbufmax : CLIENT_BUFFER_SIZE;
-
-  if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&opt, sizeof(opt)) < 0)
-    sendto_realops_flags(FLAGS_CCONN,
-                       "REsetsockopt(SO_RCVBUF) for fd %d (%s) failed", fd, type ? "server" : "client");
-  opt = type ? (SEND_BUF_SIZE*4) : SEND_BUF_SIZE;
-
-  if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&opt, sizeof(opt)) < 0)
-    sendto_realops_flags(FLAGS_CCONN,
-                       "REsetsockopt(SO_SNDBUF) for fd %d (%s) failed", fd, type ? "server" : "client");
-}
-#endif /* MAXBUFFERS */
-
-/*
-** set_sock_opts
-*/
-static void set_sock_opts(int fd, aClient *cptr)
-{
-  int        opt;
-
-#if 0
-#ifdef SO_REUSEADDR
-  opt = 1;
-  if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0)
-    report_error("setsockopt(SO_REUSEADDR) %s:%s", 
-                  get_client_name(cptr, TRUE), errno);
-#endif
-#endif /* 0 */
-
-#ifdef SO_RCVBUF
-# if defined(MAXBUFFERS) && !defined(SEQUENT)
-  if (rcvbufmax==0)
-    {
-#ifdef ZIP_LINKS
-      rcvbufmax = READBUF_SIZE;  /* the zlib part needs buffers to be at least
-                                    this big to make things fit, and not bigger
-                                    for interoperatibility...  anyway 16k is
-                                    not a bad value  -orabidoo
-                                  */
-#else
-      int optlen;
-      optlen = sizeof(rcvbufmax);
-      getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &rcvbufmax,
-                 &optlen);
-      /*
-       * XXX - ACK!!!
-       */
-      while ((rcvbufmax < 16385) &&
-             (setsockopt(fd, SOL_SOCKET, SO_RCVBUF,
-                         (char*) &rcvbufmax, optlen) >= 0)) 
-        rcvbufmax += 1024;
-      getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char*) &rcvbufmax, &optlen);
-#endif
-      readbuf = (char*) MyMalloc(rcvbufmax);
-    }
-  if (IsServer(cptr))
-    opt = rcvbufmax;
-  else
-    opt = 4096;
-# else
-    opt = 8192;
-# endif
-    if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char*) &opt, sizeof(opt)) < 0)
-      report_error("setsockopt(SO_RCVBUF) %s:%s", 
-                   get_client_name(cptr, TRUE), errno);
-#endif
-#ifdef SO_SNDBUF
-# ifdef _SEQUENT_
-/* seems that Sequent freezes up if the receving buffer is a different size
- * to the sending buffer (maybe a tcp window problem too).
- */
-    opt = 8192;
-# else
-#  if defined(MAXBUFFERS) && !defined(SEQUENT)
-    if (sndbufmax==0)
-      {
-        int optlen;
-        optlen = sizeof(sndbufmax);
-        getsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *) &sndbufmax,
-                   &optlen);
-        while((sndbufmax<16385)&&(setsockopt(fd, SOL_SOCKET, SO_SNDBUF,
-                       (char *) &sndbufmax, optlen) >= 0)) sndbufmax+=1024;
-        getsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *) &sndbufmax,
-                   &optlen);
-      }
-    if (IsServer(cptr))
-      opt = sndbufmax;
-    else
-      opt = 4096;
-#  else
-      opt = 8192;
-#  endif
-# endif
-      if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&opt, sizeof(opt)) < 0)
-        report_error("setsockopt(SO_SNDBUF) %s:%s", 
-                     get_client_name(cptr, TRUE), errno);
-#endif
-#if defined(IP_OPTIONS) && defined(IPPROTO_IP)
-        {
-# if defined(MAXBUFFERS) && !defined(SEQUENT)
-          char* s = readbuf;
-          char* t = readbuf + rcvbufmax / 2;
-          opt = (rcvbufmax*sizeof(char))/8;
-# else
-          char* s = readbuf;
-          char* t = readbuf + sizeof(readbuf) / 2;
-          opt = sizeof(readbuf) / 8;
-# endif
-          if (getsockopt(fd, IPPROTO_IP, IP_OPTIONS, t, &opt) < 0)
-            report_error("getsockopt(IP_OPTIONS) %s:%s", 
-                         get_client_name(cptr, TRUE), errno);
-          else if (opt > 0)
-            {
-              for (*readbuf = '\0'; opt > 0; opt--, s+= 3)
-                ircsprintf(s, "%02.2x:", *t++);
-              *s = '\0';
-              sendto_realops("Connection %s using IP opts: (%s)",
-                             get_client_name(cptr, TRUE), readbuf);
-            }
-          if (setsockopt(fd, IPPROTO_IP, IP_OPTIONS, (char *)NULL, 0) < 0)
-            report_error("setsockopt(IP_OPTIONS) %s:%s", 
-                         get_client_name(cptr, TRUE), errno);
-        }
-#endif
-}
-
-
-
-/*
- * set_non_blocking - Set the client connection into non-blocking mode. 
- * If your system doesn't support this, you're screwed, ircd will run like
- * molasis in January. Returns true (1) on success, false (0) otherwise
- */
-int set_non_blocking(int fd)
-{
-  /*
-   * NOTE: consult ALL your relevant manual pages *BEFORE* changing
-   * these ioctl's.  There are quite a few variations on them,
-   * as can be seen by the PCS one.  They are *NOT* all the same.
-   * Heed this well. - Avalon.
-   */
-  /* This portion of code might also apply to NeXT.  -LynX */
-#ifdef NBLOCK_SYSV
-  int res = 1;
-
-  if (ioctl(fd, FIONBIO, &res) == -1)
-    return 0;
-
-#else /* !NBLOCK_SYSV */
-  int nonb = 0;
-  int res;
-
-#ifdef NBLOCK_POSIX
-  nonb |= O_NONBLOCK;
-#endif
-#ifdef NBLOCK_BSD
-  nonb |= O_NDELAY;
-#endif
-
-  res = fcntl(fd, F_GETFL, 0);
-  if (-1 == res || fcntl(fd, F_SETFL, res | nonb) == -1)
-    return 0;
-#endif /* !NBLOCK_SYSV */
-  return 1;
-}
-
 /*
  * add_connection - creates a client which has just connected to us on 
  * the given fd. The sockhost field is initialized with the ip# of the host.
@@ -992,7 +1075,8 @@ void add_connection(struct Listener* listener, int fd)
    * copy address to 'sockhost' as a string, copy it to host too
    * so we have something valid to put into error messages...
    */
-  strncpy_irc(new_client->sockhost, inetntoa((char*) &addr.sin_addr), HOSTIPLEN);
+  strncpy_irc(new_client->sockhost, 
+              inetntoa((char*) &addr.sin_addr), HOSTIPLEN);
   strcpy(new_client->host, new_client->sockhost);
   new_client->ip.s_addr = addr.sin_addr.s_addr;
   new_client->port      = ntohs(addr.sin_port);
@@ -1002,8 +1086,9 @@ void add_connection(struct Listener* listener, int fd)
   ++listener->ref_count;
 
   if (!set_non_blocking(new_client->fd))
-    report_error(NB_ERROR_MESSAGE, get_client_name(new_client, TRUE), errno);
-  set_sock_opts(new_client->fd, new_client);
+    report_error(NONB_ERROR_MSG, get_client_name(new_client, TRUE), errno);
+  if (!disable_sock_options(new_client->fd))
+    report_error(OPT_ERROR_MSG, get_client_name(new_client, TRUE), errno);
   start_auth(new_client);
 }
 
@@ -1021,19 +1106,21 @@ int read_packet(aClient *cptr, int msg_ready)
 {
   int        dolen = 0, length = 0, done;
 
-  if (  msg_ready &&
+  if (msg_ready &&
       !(IsPerson(cptr) && DBufLength(&cptr->recvQ) > 6090))
       {
         errno = 0;
 
-#if defined(MAXBUFFERS) && !defined(SEQUENT)
+#if 0
+        /*
+         * XXX - no client read should ever be more than the defualt
+         * buffer size, on most systems this will be 4096 bytes
+         */
         if (IsPerson(cptr))
-          length = recv(cptr->fd, readbuf, 8192*sizeof(char), 0);
+          length = recv(cptr->fd, readBuf, 8192, 0);
         else
-          length = recv(cptr->fd, readbuf, rcvbufmax*sizeof(char), 0);
-#else
-        length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
 #endif
+          length = recv(cptr->fd, readBuf, READBUF_SIZE, 0);
 
         
 #ifdef REJECT_HOLD
@@ -1071,7 +1158,7 @@ int read_packet(aClient *cptr, int msg_ready)
       
       {
         if (length > 0)
-          if ((done = dopacket(cptr, readbuf, length)))
+          if ((done = dopacket(cptr, readBuf, length)))
             return done;
       }
       else
@@ -1081,7 +1168,7 @@ int read_packet(aClient *cptr, int msg_ready)
         ** it on the end of the receive queue and do it when its
         ** turn comes around.
         */
-        if (dbuf_put(&cptr->recvQ, readbuf, length) < 0)
+        if (dbuf_put(&cptr->recvQ, readBuf, length) < 0)
           return exit_client(cptr, cptr, cptr, "dbuf_put fail");
         
         if (IsPerson(cptr) &&
@@ -1105,26 +1192,16 @@ int read_packet(aClient *cptr, int msg_ready)
                 ** kludge or it will break zipped links  -orabidoo
                 */
 
-#if defined(MAXBUFFERS) && !defined(SEQUENT)
-                dolen = dbuf_get(&cptr->recvQ, readbuf,
-                                 rcvbufmax*sizeof(char));
-#else
-                dolen = dbuf_get(&cptr->recvQ, readbuf,
-                                 sizeof(readbuf));
-#endif
+                dolen = dbuf_get(&cptr->recvQ, readBuf, READBUF_SIZE);
+
                 if (dolen <= 0)
                   break;
-                if ((done = dopacket(cptr, readbuf, dolen)))
+                if ((done = dopacket(cptr, readBuf, dolen)))
                   return done;
                 break;
               }
-#if defined(MAXBUFFERS) && !defined(SEQUENT)
-            dolen = dbuf_getmsg(&cptr->recvQ, readbuf,
-                                rcvbufmax*sizeof(char));
-#else
-            dolen = dbuf_getmsg(&cptr->recvQ, readbuf,
-                                sizeof(readbuf));
-#endif
+            dolen = dbuf_getmsg(&cptr->recvQ, readBuf, READBUF_SIZE);
+
             /*
             ** Devious looking...whats it do ? well..if a client
             ** sends a *long* message without any CR or LF, then
@@ -1143,13 +1220,13 @@ int read_packet(aClient *cptr, int msg_ready)
                     cptr->flags |= FLAGS_NONL;
                     break;
                   }
-                dolen = dbuf_get(&cptr->recvQ, readbuf, 511);
+                dolen = dbuf_get(&cptr->recvQ, readBuf, 511);
                 if (dolen > 0 && DBufLength(&cptr->recvQ))
                   DBufClear(&cptr->recvQ);
               }
       
             if (dolen > 0 &&
-                (dopacket(cptr, readbuf, dolen) == FLUSH_BUFFER))
+                (dopacket(cptr, readBuf, dolen) == FLUSH_BUFFER))
               return FLUSH_BUFFER;
           }
       }
@@ -1705,230 +1782,4 @@ int read_message(time_t delay, fdlist *listp)
 }
 
 #endif /* USE_POLL */
-
-/*
- * connect_server
- */
-int connect_server(aConfItem *aconf, aClient* by, struct DNSReply* reply)
-{
-  struct sockaddr* svp;
-  aClient*         cptr;
-  aClient*         c2ptr;
-  int              errtmp;
-  int              len;
-
-  Debug((DEBUG_NOTICE,"Connect to %s[%s] @%s",
-         aconf->user, aconf->host, inetntoa((char*)&aconf->ipnum)));
-
-  if ((c2ptr = find_server(aconf->name, NULL)))
-    {
-      sendto_ops("Server %s already present from %s",
-                 aconf->name, get_client_name(c2ptr, TRUE));
-      if (by && IsPerson(by) && !MyClient(by))
-        sendto_one(by,
-                   ":%s NOTICE %s :Server %s already present from %s",
-                   me.name, by->name, aconf->name,
-                   get_client_name(c2ptr, TRUE));
-      return -1;
-    }
-
-  /*
-   * If we dont know the IP# for this host and it is a hostname and
-   * not a ip# string, then try and find the appropriate host record.
-   */
-  if (INADDR_NONE == aconf->ipnum.s_addr && !aconf->dns_pending)
-    {
-      if ((aconf->ipnum.s_addr = inet_addr(aconf->host)) == INADDR_NONE)
-        {
-          struct DNSQuery  query;
-          
-          query.vptr     = aconf;
-          query.callback = connect_dns_callback;
-          reply = gethost_byname(aconf->host, &query);
-          Debug((DEBUG_NOTICE, "co_sv: reply %x ac %x na %s ho %s",
-                 reply, aconf, aconf->name, aconf->host));
-          if (!reply) 
-            {
-              aconf->dns_pending = 1;
-              return 0;
-            }
-          memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
-        }
-    }
-  cptr = make_client(NULL);
-  if (reply)
-    ++reply->ref_count;
-  cptr->dns_reply = reply;
-  
-  /*
-   * Copy these in so we have something for error detection.
-   */
-  strncpy_irc(cptr->name, aconf->name, HOSTLEN);
-  strncpy_irc(cptr->host, aconf->host, HOSTLEN);
-  svp = connect_inet(aconf, cptr, &len);
-
-  if (!svp)
-    {
-      free_client(cptr);
-      return -1;
-    }
-
-  if (!set_non_blocking(cptr->fd))
-    report_error(NB_ERROR_MESSAGE, get_client_name(cptr, TRUE), errno);
-
-  set_sock_opts(cptr->fd, cptr);
-  signal(SIGALRM, dummy);
-
-  if (connect(cptr->fd, svp, len) < 0 && errno != EINPROGRESS)
-    {
-      errtmp = errno; /* other system calls may eat errno */
-      report_error("Connect to host %s failed: %s",
-                   get_client_name(cptr, TRUE), errno);
-      if (by && IsPerson(by) && !MyClient(by))
-        sendto_one(by,
-                   ":%s NOTICE %s :Connect to host %s failed.",
-                   me.name, by->name, cptr);
-
-      free_client(cptr);
-      errno = errtmp;
-      if (errno == EINTR)
-        errno = ETIMEDOUT;
-      return -1;
-    }
-
-
-  /* Attach config entries to client here rather than in
-   * completed_connection. This to avoid null pointer references
-   * when name returned by gethostbyaddr matches no C lines
-   * (could happen in 2.6.1a when host and servername differ).
-   * No need to check access and do gethostbyaddr calls.
-   * There must at least be one as we got here C line...  meLazy
-   */
-  attach_confs_host(cptr, aconf->host,
-                    CONF_NOCONNECT_SERVER | CONF_CONNECT_SERVER );
-
-  if (!find_conf_host(cptr->confs, aconf->host, CONF_NOCONNECT_SERVER) ||
-      !find_conf_host(cptr->confs, aconf->host, CONF_CONNECT_SERVER))
-    {
-      sendto_ops("Host %s is not enabled for connecting:no C/N-line",
-                 aconf->host);
-      if (by && IsPerson(by) && !MyClient(by))
-        sendto_one(by,
-                   ":%s NOTICE %s :Connect to host %s failed.",
-                   me.name, by->name, cptr);
-      det_confs_butmask(cptr, 0);
-
-      free_client(cptr);
-      return -1;
-    }
-  /*
-  ** The socket has been connected or connect is in progress.
-  */
-  make_server(cptr);
-  if (by && IsPerson(by))
-    {
-      strcpy(cptr->serv->by, by->name);
-      if (cptr->serv->user) free_user(cptr->serv->user, NULL);
-      cptr->serv->user = by->user;
-      by->user->refcnt++;
-    } 
-  else
-    {
-      strcpy(cptr->serv->by, "AutoConn.");
-      if (cptr->serv->user) free_user(cptr->serv->user, NULL);
-      cptr->serv->user = NULL;
-    }
-  cptr->serv->up = me.name;
-  strncpy_irc(cptr->host, aconf->host, HOSTLEN);
-
-  if (cptr->fd > highest_fd)
-    highest_fd = cptr->fd;
-  local[cptr->fd] = cptr;
-  SetConnecting(cptr);
-
-  add_client_to_list(cptr);
-  addto_fdlist(cptr->fd, &default_fdlist);
-  nextping = timeofday;
-
-  return 0;
-}
-
-static struct sockaddr* connect_inet(aConfItem *aconf, aClient *cptr,
-                                     int *lenp)
-{
-  static struct sockaddr_in server;
-
-  /*
-   * Might as well get sockhost from here, the connection is attempted
-   * with it so if it fails its useless.
-   */
-  cptr->fd = socket(AF_INET, SOCK_STREAM, 0);
-
-  if (cptr->fd == -1)
-    {
-      report_error("opening stream socket to server %s:%s", 
-                   cptr->name, errno);
-      return NULL;
-    }
-
-  if (cptr->fd >= (HARD_FDLIMIT - 10))
-    {
-      sendto_realops("No more connections allowed (%s)", cptr->name);
-      return NULL;
-    }
-
-  mysk.sin_port = 0;
-  mysk.sin_family = AF_INET;
-  memset(&server, 0, sizeof(server));
-  server.sin_family = AF_INET;
-  strncpy_irc(cptr->host, aconf->host, HOSTLEN);
-
-  /*
-   * Bind to a local IP# (with unknown port - let unix decide) so
-   * we have some chance of knowing the IP# that gets used for a host
-   * with more than one IP#.
-   */
-  /* No we don't bind it, not all OS's can handle connecting with
-     an already bound socket, different ip# might occur anyway
-     leading to a freezing select() on this side for some time.
-     */
-  if (specific_virtual_host)
-    {
-      mysk.sin_addr = vserv.sin_addr;
-
-      /*
-      ** No, we do bind it if we have virtual host support. If we don't
-      ** explicitly bind it, it will default to IN_ADDR_ANY and we lose
-      ** due to the other server not allowing our base IP --smg
-      */        
-      if (bind(cptr->fd, (struct sockaddr *)&mysk, sizeof(mysk)) == -1)
-        {
-          report_error("error binding to local port for %s:%s", 
-                       cptr->name, errno);
-          return NULL;
-        }
-    }
-  /*
-   * By this point we should know the IP# of the host listed in the
-   * conf line, whether as a result of the hostname lookup or the ip#
-   * being present instead. If we dont know it, then the connect fails.
-   */
-  if (IsDigit(*aconf->host) && INADDR_NONE == aconf->ipnum.s_addr)
-    aconf->ipnum.s_addr = inet_addr(aconf->host);
-  if (INADDR_NONE == aconf->ipnum.s_addr)
-    {
-      struct DNSReply* reply = cptr->dns_reply;
-      if (!reply)
-        {
-          Debug((DEBUG_FATAL, "%s: unknown host", aconf->host));
-          return NULL;
-        }
-      memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
-    }
-  server.sin_addr.s_addr = aconf->ipnum.s_addr;
-  cptr->ip.s_addr        = aconf->ipnum.s_addr;
-  server.sin_port        = htons(aconf->port);
-  *lenp                  = sizeof(server);
-  return (struct sockaddr*) &server;
-}
 

@@ -263,9 +263,11 @@ static int start_auth_query(struct AuthRequest* auth)
   }
 
   sendheader(auth->client, REPORT_DO_ID);
-  if (!set_non_blocking(fd))
-    report_error(NB_ERROR_MESSAGE, get_client_name(auth->client, TRUE), errno);
-
+  if (!set_non_blocking(fd)) {
+    report_error(NONB_ERROR_MSG, get_client_name(auth->client, TRUE), errno);
+    close(fd);
+    return 0;
+  }
 
   /* 
    * get the local address of the client and bind to that to
@@ -290,20 +292,17 @@ static int start_auth_query(struct AuthRequest* auth)
   sock.sin_port = htons(113);
   sock.sin_family = AF_INET;
 
-  alarm(4);
   if (connect(fd, (struct sockaddr*) &sock, sizeof(sock)) == -1) {
     if (errno != EINPROGRESS) {
       ircstp->is_abad++;
       /*
        * No error report from this...
        */
-      alarm(0);
       close(fd);
       sendheader(auth->client, REPORT_FAIL_ID);
       return 0;
     }
   }
-  alarm(0);
 
   auth->fd = fd;
 

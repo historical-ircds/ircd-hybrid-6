@@ -48,6 +48,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <time.h>
 
 /* external variables */
@@ -92,9 +93,6 @@ extern aConfItem *temporary_klines;	/* defined in s_conf.c */
 extern aConfItem *find_special_conf(char *,int); /* defined in s_conf.c */
 
 /* external functions */
-#ifdef MAXBUFFERS
-extern	void	reset_sock_opts();
-#endif
 extern char *smalldate(time_t);		/* defined in s_misc.c */
 extern char *show_capabilities(aClient *); /* defined in s_misc.c */
 
@@ -556,14 +554,14 @@ int m_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
       d = clean_host;
       while(*s)
 	{
-	  if(*s < ' ') /* Is it a control character? */
+	  if (*s < ' ') /* Is it a control character? */
 	    {
 	      bogus_server = 1;
 	      *d++ = '^';
 	      *d++ = (*s + 0x40); /* turn it into a printable */
 	      s++;
 	    }
-	  else if(*s > '~')
+	  else if (*s > '~')
 	    {
 	      bogus_server = 1;
 	      *d++ = '.';
@@ -580,8 +578,7 @@ int m_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
       if( (!found_dot) || bogus_server )
 	{
-	  sendto_one(sptr,"ERROR :Bogus server name (%s)",
-		     clean_host);
+	  sendto_one(sptr,"ERROR :Bogus server name (%s)", clean_host);
 	  return exit_client(cptr, cptr, cptr, "Bogus server name");
 	}
     }
@@ -653,7 +650,7 @@ int m_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
       strcpy(nbuf, get_client_name(bcptr, TRUE));
       sendto_ops("Link %s cancelled, server %s reintroduced by %s",
 		nbuf, host, get_client_name(cptr, TRUE));
-      (void) exit_client(bcptr, bcptr, &me, "Server Exists");
+      exit_client(bcptr, bcptr, &me, "Server Exists");
     }
 
   /* The following if statement would be nice to remove
@@ -969,13 +966,11 @@ int m_server_estab(aClient *cptr)
   Count.server++;
   Count.myserver++;
 
-#ifdef MAXBUFFERS
-/*
- * let's try to bump up server sock_opts...
- * -Taner
- */
-  reset_sock_opts(cptr->fd, 1);
-#endif /* MAXBUFFERS */
+  /*
+   * XXX - this should be in s_bsd
+   */
+  if (!set_sock_buffers(cptr->fd, READBUF_SIZE))
+    report_error(SETBUF_ERROR_MSG, get_client_name(cptr, TRUE), errno);
 
   /* LINKLIST */
   /* add to server link list -Dianora */
@@ -995,12 +990,12 @@ int m_server_estab(aClient *cptr)
   sendto_ops("Link with %s established: (%s) link",
 	     inpath,show_capabilities(cptr));
 
-  (void)add_to_client_hash_table(cptr->name, cptr);
+  add_to_client_hash_table(cptr->name, cptr);
   /* doesnt duplicate cptr->serv if allocated this struct already */
-  (void)make_server(cptr);
+  make_server(cptr);
   cptr->serv->up = me.name;
   /* add it to scache */
-  (void)find_or_add(cptr->name);
+  find_or_add(cptr->name);
   
   cptr->serv->nline = aconf;
   cptr->flags2 |= FLAGS2_CBURST;
@@ -2112,14 +2107,12 @@ int show_lusers(aClient *cptr,
 **	parv[2] = port number
 **	parv[3] = remote server
 */
-int	m_connect(aClient *cptr,
-		  aClient *sptr,
-		  int parc,
-		  char *parv[])
+int m_connect(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-  int	port, tmpport, retval;
-  aConfItem *aconf;
-  aClient *acptr;
+  int        port;
+  int        tmpport;
+  aConfItem* aconf;
+  aClient*   acptr;
 
   if (!IsPrivileged(sptr))
     {
@@ -2217,26 +2210,12 @@ int	m_connect(aClient *cptr,
     }
 
   aconf->port = port;
-  switch (retval = connect_server(aconf, sptr, NULL))
-    {
-    case 0:
-      sendto_one(sptr,
-		 ":%s NOTICE %s :*** Connecting to %s[%s].%d",
-		 me.name, parv[0], aconf->host, aconf->name, aconf->port);
-      break;
-    case -1:
+  if (connect_server(aconf, sptr, 0))
+     sendto_one(sptr, ":%s NOTICE %s :*** Connecting to %s[%s].%d",
+		me.name, parv[0], aconf->host, aconf->name, aconf->port);
+  else
       sendto_one(sptr, ":%s NOTICE %s :*** Couldn't connect to %s.%d",
 		 me.name, parv[0], aconf->host,aconf->port);
-      break;
-    case -2:
-      sendto_one(sptr, ":%s NOTICE %s :*** Host %s is unknown.",
-		 me.name, parv[0], aconf->host);
-      break;
-    default:
-      sendto_one(sptr,
-		 ":%s NOTICE %s :*** Connection to %s failed: %s",
-		 me.name, parv[0], aconf->host, strerror(retval));
-    }
   aconf->port = tmpport;
   return 0;
 }

@@ -26,6 +26,8 @@
 #define INCLUDED_sys_types_h
 #endif
 
+#define READBUF_SIZE    16384	/* used in s_bsd *AND* s_zip.c ! */
+
 struct Client;
 struct ConfItem;
 struct hostent;
@@ -35,24 +37,21 @@ struct Listener;
 
 extern int   highest_fd;
 extern int   readcalls;
-extern const char* const NB_ERROR_MESSAGE; 
+extern const char* const NONB_ERROR_MSG; 
+extern const char* const SETBUF_ERROR_MSG;
 
 extern void  add_connection(struct Listener* listener, int fd);
-extern int   check_client (struct Client* client, char *,char **);
-extern int   check_server (struct Client* client, 
-                           struct DNSReply* dns_reply,
-                           struct ConfItem* c_line, 
-                           struct ConfItem* n_line, int);
-extern int   check_server_init (struct Client *);
-extern void  close_connection (struct Client *);
+extern int   check_client(struct Client* client, char *,char **);
+extern int   check_server_init(struct Client* server);
+extern void  close_connection(struct Client* client);
 extern int   connect_server(struct ConfItem* conf, struct Client* cptr, 
                             struct DNSReply* dns_reply);
-extern void  get_my_name (struct Client *, char *, int);
+extern void  get_my_name(struct Client *, char *, int);
 extern void  init_sys();
 extern int   read_message (time_t, struct FDList*);
 extern void  report_error(const char* message, const char* who, int error);
-/* extern int   get_sockerr(int fd);  */
-extern int  set_non_blocking(int fd);
+extern int   set_non_blocking(int fd);
+extern int   set_sock_buffers(int fd, int size);
 
 
 #endif /* INCLUDED_s_bsd_h */
