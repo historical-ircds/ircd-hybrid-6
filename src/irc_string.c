@@ -58,10 +58,10 @@ const char* myctime(time_t value)
 char* strncpy_irc(char* s1, const char* s2, size_t n)
 {
   register char* endp = s1 + n;
-  char* s = s1;
-  while (s1 < endp && (*s1++ = *s2++))
+  register char* s = s1;
+  while (s < endp && (*s++ = *s2++))
     ;
-  return s;
+  return s1;
 }
 
 /*

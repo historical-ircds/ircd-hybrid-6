@@ -79,7 +79,7 @@ static	int     is_banned (aClient *, aChannel *);
 static	void	set_mode (aClient *, aClient *, aChannel *, int, char **);
 static	void	sub1_from_channel (aChannel *);
 
-int	clean_channelname(unsigned char *, aClient *);
+int	check_channel_name(const char* name);
 void	del_invite (aClient *, aChannel *);
 
 /* static functions used in set_mode */
@@ -910,7 +910,7 @@ int	m_mode(aClient *cptr,
 	   * unless it looks like a channel name 
 	   */
 
-	  if(clean_channelname((unsigned char *)parv[1],sptr))
+	  if(!check_channel_name(parv[1]))
 	    { 
 	      sendto_one(sptr, form_str(ERR_BADCHANNAME),
 			 me.name, parv[0], (unsigned char *)parv[1]);
@@ -2099,46 +2099,25 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key, int *flags)
 }
 
 /*
-** Remove bells and commas from channel name
-*/
-
-int	clean_channelname(unsigned char *name, aClient *sptr)
+ * check_channel_name - check channel name for invalid characters
+ * return true (1) if name ok, false (0) otherwise
+ */
+int check_channel_name(const char* name)
 {
-  unsigned char *cn;
+  assert(0 != name);
   
-  for (cn = name; *cn; cn++)
-    /*
-     * Find bad characters and remove them, also check for
-     * characters in the '\0' -> ' ' range, but +127   -Taner
-     */
-    if (*cn == '\007' || *cn == ' ' || *cn == ',' || 
-        (MyClient(sptr) && (*cn > 127) && (*cn <= 160)))
-      {
-	return 1;
-#if 0
-	*cn = '\0';
-	/* pathological case only on longest channel name.
-	** If not dealt with here, causes desynced channel ops
-	** since ChannelExists() doesn't see the same channel
-	** as one being joined. cute bug. Oct 11 1997, Dianora/comstud
-	*/
-
-	if(strlen((char *) name) >  CHANNELLEN) /* same thing is done in get_channel()*/
-	name[CHANNELLEN] = '\0';
-
-	return;
-#endif /* 0 */
-      }
-  return 0;
+  for ( ; *name; ++name) {
+    if (!IsChanChar(*name))
+      return 0;
+  }
+  return 1;
 }
 
 /*
 **  Get Channel block for chname (and allocate a new channel
 **  block, if it didn't exist before).
 */
-static	aChannel *get_channel(aClient *cptr,
-			      char *chname,
-			      int flag)
+static aChannel* get_channel(aClient *cptr, char *chname, int flag)
 {
   aChannel *chptr;
   int	len;
@@ -2706,10 +2685,10 @@ int	m_join(aClient *cptr,
   for (i = 0, name = strtoken(&p, parv[1], ","); name;
        name = strtoken(&p, (char *)NULL, ","))
     {
-      if (clean_channelname((unsigned char *)name, sptr))
+      if (!check_channel_name(name))
         {
           sendto_one(sptr, form_str(ERR_BADCHANNAME),
-                       me.name, parv[0], (unsigned char *)name);
+                       me.name, parv[0], (unsigned char*) name);
           continue;
         }
       if (*name == '&' && !MyConnect(sptr))
@@ -3634,7 +3613,7 @@ int	m_invite(aClient *cptr,
       return 0;
     }
 
-  if (clean_channelname((unsigned char *)parv[2],sptr))
+  if (!check_channel_name(parv[2]))
     { 
       sendto_one(sptr, form_str(ERR_BADCHANNAME),
                  me.name, parv[0], (unsigned char *)parv[2]);
@@ -3926,14 +3905,14 @@ int	m_names( aClient *cptr,
       s = strchr(para, ',');
       if (s)
 	*s = '\0';
-      if (clean_channelname((unsigned char *)para,sptr))
+      if (!check_channel_name(para))
     	{ 
           sendto_one(sptr, form_str(ERR_BADCHANNAME),
                      me.name, parv[0], (unsigned char *)para);
           return 0;
         }
 
-      ch2ptr = find_channel(para, (aChannel *)NULL);
+      ch2ptr = find_channel(para, NULL);
     }
 
   *buf = '\0';
@@ -4159,7 +4138,7 @@ int	m_sjoin(aClient *cptr,
   if (!IsChannelName(parv[2]))
     return 0;
 
-  if(clean_channelname((unsigned char *)parv[2],sptr))
+  if (!check_channel_name(parv[2]))
      { 
        return 0;
      }
