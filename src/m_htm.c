@@ -118,7 +118,7 @@ int m_htm(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
               int new_value = atoi(parv[2]);
               if (new_value < 10)
                 {
-                  sendto_one(sptr, ":%s NOTICE %s :Cannot set LRV < 10!\002",
+                  sendto_one(sptr, ":%s NOTICE %s :Cannot set LRV < 10!",
                              me.name, parv[0]);
                 }
               else
