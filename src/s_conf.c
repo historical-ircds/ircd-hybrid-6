@@ -127,8 +127,9 @@ static GLINE_PENDING *pending_glines;
 
 /* general conf items link list root */
 aConfItem	*conf = ((aConfItem *)NULL);
-/* i line link list root */
-aConfItem	*iconf = ((aConfItem *)NULL);
+
+/* keep track of .include files to hash in */
+aConfItem	*include_list = ((aConfItem *)NULL);
 
 #ifdef LOCKFILE 
 extern void do_pending_klines(void);
@@ -1283,7 +1284,9 @@ int	rehash(aClient *cptr,aClient *sptr,int sig)
 
   clear_dlines();
 
-  (void) initconf(0,fd);
+  (void) initconf(0,fd,YES);
+  do_include_conf();
+
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
   {
     char timebuffer[20];
@@ -1296,14 +1299,14 @@ int	rehash(aClient *cptr,aClient *sptr,int sig)
     if ((fd = openconf(filenamebuf)) == -1)
       sendto_ops("Can't open %s file klines could be missing!",filenamebuf);
     else
-      (void)initconf(0,fd);
+      (void)initconf(0,fd,NO);
   }
 #else
 #ifdef KLINEFILE
   if ((fd = openconf(klinefile)) == -1)
     sendto_ops("Can't open %s file klines could be missing!",klinefile);
   else
-    (void) initconf(0,fd);
+    (void) initconf(0,fd,NO);
 #endif
 #endif
   close_listeners();
@@ -1394,7 +1397,7 @@ static char *set_conf_flags(aConfItem *aconf,char *tmp)
 
 #define MAXCONFLINKS 150
 
-int 	initconf(int opt, int fd)
+int 	initconf(int opt, int fd,int use_include)
 {
   static	char	quotes[9][2] = {{'b', '\b'}, {'f', '\f'}, {'n', '\n'},
 					{'r', '\r'}, {'t', '\t'}, {'v', '\v'},
@@ -1405,8 +1408,8 @@ int 	initconf(int opt, int fd)
   char	line[512];
   int	ccount = 0, ncount = 0;
   u_long vaddr;
-
   aConfItem *aconf = NULL;
+  aConfItem *include_conf = NULL;
 
   (void)dgets(-1, NULL, 0); /* make sure buffer is at empty pos */
   while ((i = dgets(fd, line, sizeof(line) - 1)) > 0)
@@ -1466,6 +1469,39 @@ int 	initconf(int opt, int fd)
       if (!*line || line[0] == '#' || line[0] == '\n' ||
 	  line[0] == ' ' || line[0] == '\t')
 	continue;
+
+      /* Horrible kludge to do .include "filename" */
+
+      if(use_include && (line[0] == '.'))
+	{
+	  char *filename;
+	  char *back;
+
+	  if(!strncasecmp(line+1,"include ",8))
+	    {
+	      filename = strchr(line+8,'"');
+	      if(filename)
+		filename++;
+	      else
+		{
+		  Debug((DEBUG_ERROR, "Bad config line: %s", line));
+		  continue;
+		}
+
+	      back = strchr(filename,'"');
+	      if(back)
+		*back = '\0';
+	      else
+		{
+		  Debug((DEBUG_ERROR, "Bad config line: %s", line));
+		  continue;
+		}
+	      include_conf = make_conf();
+	      DupString(include_conf->name,filename);
+	      include_conf->next = include_list;
+	      include_list = include_conf;
+	    }
+	}
 
       /* Could we test if it's conf line at all?	-Vesa */
       if (line[1] != ':')
@@ -1854,6 +1890,38 @@ int 	initconf(int opt, int fd)
       exit(-1);
     }
   return 0;
+}
+
+/*
+ * do_include_conf()
+ *
+ * inputs	- NONE
+ * output	- NONE
+ * side effect	-
+ * hash in any .include conf files listed in the conf file
+ * I do them =after= the conf file is read in, because dgets
+ * is non re-entrant. This has the side effect of ordering
+ * things a bit differently then one might expect.
+ * -Dianora
+ */
+
+do_include_conf()
+{
+  int fd;
+  aConfItem *nextinclude;
+
+  for( ; include_list; include_list = nextinclude )
+    {
+      nextinclude = include_list->next;
+      if ((fd = openconf(include_list->name)) == -1)
+	sendto_ops("Can't open %s include file",include_list->name);
+      else
+	{
+	  sendto_ops("Hashing in %s include file",include_list->name);
+	  initconf(0,fd,NO);
+	}
+      free_conf(include_list);
+    }
 }
 
 /*

@@ -1085,7 +1085,8 @@ normal user.\n");
 		   configfile);
       exit(-1);
     }
-  (void)initconf(bootopt,fd);
+  (void)initconf(bootopt,fd,YES);
+  (void)do_include_conf();
 
 /* comstuds SEPARATE_QUOTE_KLINES_BY_DATE code */
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
@@ -1104,7 +1105,7 @@ normal user.\n");
 		     filename);
       }
     else
-      (void)initconf(0,fd);
+      (void)initconf(0,fd,NO);
   }
 #else
 #ifdef KPATH
@@ -1116,7 +1117,7 @@ normal user.\n");
 		   klinefile);
     }
   else
-    (void)initconf(0,fd);
+    (void)initconf(0,fd,NO);
 #endif
 #endif
   if (!(bootopt & BOOT_INETD))
@@ -1168,6 +1169,7 @@ normal user.\n");
   me.serv->up = me.name;
   me.lasttime = me.since = me.firsttime = NOW;
   (void)add_to_client_hash_table(me.name, &me);
+
 
   check_class();
   if (bootopt & BOOT_OPER)
