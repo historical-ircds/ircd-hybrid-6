@@ -1,3 +1,9 @@
+*** 20010609_4 by db
+submitted by Walter Campbell
+- igore of bogus TS should be in version string
+
+
+
 *** 20010609_3 by jdc
 * Removal of cipher priority information for config.h.  This isn't
   applicable anymore.
