@@ -633,9 +633,8 @@ static int cryptlink_serv(struct Client *cptr, struct Client *sptr,
     return exit_client(cptr, cptr, cptr,
                        "Couldn't generate session key authentication");
   }
-  sendto_one(cptr, "CRYPTLINK AUTH %s/%i %s",
-             cptr->crypt->OutCipher->name,
-             cptr->crypt->OutCipher->keysize, tmp);
+  sendto_one(cptr, "CRYPTLINK AUTH %s %s",
+             cptr->crypt->OutCipher->name, tmp);
 
   send_queued(cptr);
   cptr->crypt->flags |= CRYPTFLAG_ENCRYPT;
