@@ -2532,6 +2532,10 @@ int	m_whois(aClient *cptr,
     {
       if((last_used + PACE_WAIT) > NOW)
         {
+	  /* Unfortunately, returning anything to a non local
+	   * request =might= increase sendq to be usable in a split hack
+	   * Sorry gang ;-( - Dianora
+	   */
           return 0;
         }
       else
@@ -2540,7 +2544,19 @@ int	m_whois(aClient *cptr,
         }
     }
 
-  for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)
+  /* Multiple whois from remote hosts, can be used
+   * to flood a server off. One could argue that multiple whois on
+   * local server could remain. Lets think about that, for now
+   * removing it totally. 
+   * -Dianora 
+   */
+
+  /*  for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL) */
+  nick = parv[1];
+  p = strchr(parv[1],',');
+  if(p)
+    *p = '\0';
+
     {
       int	invis, showperson, member, wilds;
       found = 0;
@@ -2551,7 +2567,8 @@ int	m_whois(aClient *cptr,
       ** requests with wildcards.
       */
       if (!MyConnect(sptr) && wilds)
-	continue;
+	return 0;
+      /*	continue; */
 
       /* If the nick doesn't have any wild cards in it,
        * then just pick it up from the hash table
@@ -2565,10 +2582,16 @@ int	m_whois(aClient *cptr,
 	    {
 	      sendto_one(sptr, err_str(ERR_NOSUCHNICK),
 			 me.name, parv[0], nick);
-	      continue;
+	      return 0;
+	      /*	      continue; */
 	    }
 	  if(!IsPerson(acptr))
-	    continue;
+	    {
+	      sendto_one(sptr, rpl_str(RPL_ENDOFWHOIS),
+			 me.name, parv[0], parv[1]);
+	      return 0;
+	    }
+	    /*	    continue; */
 
           user = acptr->user ? acptr->user : &UnknownUser;
 	  name = (!*acptr->name) ? "?" : acptr->name;
@@ -2642,9 +2665,12 @@ int	m_whois(aClient *cptr,
 		       me.name, parv[0], name,
 		       timeofday - user->last,
 		       acptr->firsttime);
-	    
-	  continue;
+	  sendto_one(sptr, rpl_str(RPL_ENDOFWHOIS), me.name, parv[0], parv[1]);
+	  return 0;
+	  /*	  continue; */
 	}
+
+      /* wild is true so here we go */
 
       for (acptr = client; (acptr = next_client(acptr, nick));
 	   acptr = acptr->next)
@@ -2769,8 +2795,10 @@ int	m_whois(aClient *cptr,
       if (!found)
 	sendto_one(sptr, err_str(ERR_NOSUCHNICK),
 		   me.name, parv[0], nick);
+      /*
       if (p)
 	p[-1] = ',';
+	*/
     }
   sendto_one(sptr, rpl_str(RPL_ENDOFWHOIS), me.name, parv[0], parv[1]);
   

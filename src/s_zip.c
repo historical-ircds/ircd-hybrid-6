@@ -58,14 +58,13 @@ static  char rcsid[] = "@(#)$Id$";
 */
 
 /*
- * On an hybrid test net, we achieved better than that,
- * blowing up the unzipbuf! original was 4, and that should
- * be sufficient for any real net
+ * On an hybrid test net, we kept filling up unzipbuf
+ * original was 4*ZIP_BUFFER_SIZE
  *
  * -Dianora
  */
 
-#define	UNZIP_BUFFER_SIZE	8*ZIP_BUFFER_SIZE
+#define	UNZIP_BUFFER_SIZE	6*ZIP_BUFFER_SIZE
 
 /* buffers */
 static	char	unzipbuf[UNZIP_BUFFER_SIZE];
@@ -127,7 +126,7 @@ void	zip_free(aClient *cptr)
 
 /*
 ** unzip_packet
-** 	Unzip the content of cptr->zip->inbuf and of the buffer,
+** 	Unzip the buffer,
 **	put anything left in cptr->zip->inbuf, update cptr->zip->incount
 **
 **	will return the uncompressed buffer, length will be updated.
@@ -137,76 +136,91 @@ char *	unzip_packet(aClient *cptr, char *buffer, int *length)
 {
   Reg	z_stream *zin = cptr->zip->in;
   int	r;
+  char  *p;
 
-  if (cptr->zip->incount + *length > ZIP_BUFFER_SIZE) /* sanity check */
+  if(cptr->zip->incount)
     {
-      sendto_realops("Failed sanity test in unzip_packet cptr->zip->incount %d *length %d", 
-		     cptr->zip->incount,*length);
-
-      /* This one should never occur but if it ever did
-       * this is the logical course of action
+      /* There was a "chunk" of uncompressed data without a newline
+       * left over from last unzip_packet. So pick that up, and unzip
+       * some more data. Note, buffer parameter isn't used in this case.
        * -Dianora
        */
-      *length = -1;
-      return NULL;
+      memcpy((void *)unzipbuf,(void *)cptr->zip->inbuf,cptr->zip->incount);
+      zin->avail_out = UNZIP_BUFFER_SIZE - cptr->zip->incount;
+      zin->next_out = unzipbuf + cptr->zip->incount;
+      cptr->zip->incount = 0;
+      cptr->zip->inbuf[0] = '\0'; /* again unnecessary but nice for debugger */
+    }
+  else
+    {
+      /* Start unzipping this buffer, if I fill up output buffer,
+       * then snag whatever uncompressed incomplete chunk I have at
+       * the top of the uncompressed buffer, save it for next pass.
+       * -Dianora
+       */
+
+      zin->next_in = buffer;
+      zin->avail_in = *length;
+      zin->next_out = unzipbuf;
+      zin->avail_out = UNZIP_BUFFER_SIZE;
     }
 
-  /* put everything in zipbuf */
-  memcpy((void *)zipbuf,(void *)cptr->zip->inbuf, cptr->zip->incount);
-  memcpy((void *)zipbuf + cptr->zip->incount, (void *)buffer, *length );
-
-  zin->next_in = zipbuf;
-  zin->avail_in = cptr->zip->incount + *length;
-  zin->next_out = unzipbuf;
-  zin->avail_out = UNZIP_BUFFER_SIZE;
-  switch (r = inflate(zin, Z_PARTIAL_FLUSH))
+  switch (r = inflate(zin, Z_NO_FLUSH))
     {
     case Z_OK:
       if (zin->avail_in)
 	{
-	  /* There is something suspicious about this code fragment.
-	   * If there is anything left to inflate, then was the output
-	   * buffer filled up? That should be reported, as then there
-	   * is a "stray" bit of uncompressed data that should be 
-	   * kept for next call. That would mean an other buffer
-	   * in the zin struct perhaps or in cptr itself...
-	   * i.e. for the partially left over uncompressed data
-	   * Or, just ensure that the input stream really is only one
-	   * compressed block?
-	   * 
-	   * For now, flag the error, and abort.
-	   * (Thanks gang for the help finding this one)
-	   *
-	   * Actually, the entire code fragment is totally bogus grrr
-	   * as there is still uncompressed data sitting in the unzipbuf
-	   * that will be lost on next call. I'll just commit this
-	   * working code for now.
-	   *
-	   * -Dianora
-	   */
+	  cptr->zip->incount = 0;
 
-	  if((unsigned long)zin->next_out >=
-	     ((unsigned long)unzipbuf+(unsigned long)UNZIP_BUFFER_SIZE))
+	  if(zin->avail_out == 0)
 	    {
+	      /* ok, filled up output buffer, complain about it, but go on.
+	       * I need to find any incomplete "chunk" at the top of
+	       * the uncompressed output buffer, and save it for next call.
+	       * -Dianora
+	       */
 	      sendto_realops("Overflowed unzipbuf increase UNZIP_BUFFER_SIZE");
+	      /*
 	      *length = -1;
 	      return NULL;
+	      */
+	      /* Scan from the top of output, look for a complete
+	       * "chunk" N.B. there should be a check for p hitting
+	       * the bottom of the unzip buffer.
+	       * -Dianora
+	       */
+	      for(p = zin->next_out;;p >= unzipbuf)
+		{
+		  if((*p == '\r') || (*p == '\n'))
+		    break;
+		  zin->avail_out++;
+		  p--;
+		  cptr->zip->incount++;
+		}
+	      /* A little sanity test never hurts -Dianora */
+	      if(p == unzipbuf)
+		{
+		  cptr->zip->incount = 0;
+		  cptr->zip->inbuf[0] = '\0';	/* only for debugger */
+		  *length = -1;
+		  return NULL;
+		}
+	      /* Ok, stuff this "chunk" into inbuf for next call -Dianora */
+	      p++;
+	      cptr->zip->incount--;
+	      memcpy((void *)cptr->zip->inbuf,(void *)p,cptr->zip->incount);
+	      *length = UNZIP_BUFFER_SIZE - zin->avail_out;
+	      return unzipbuf;
 	    }
-
-	  /* put the leftover in cptr->zip->inbuf */
-	  memcpy((void *)cptr->zip->inbuf,(void *)zin->next_in,
-		 zin->avail_in); 
-	  memcpy((void *)cptr->zip->inbuf,(void *)p, new_avail);
-	  cptr->zip->incount = zin->avail_in;
 	}
 
       *length = UNZIP_BUFFER_SIZE - zin->avail_out;
       return unzipbuf;
 
-    case Z_BUF_ERROR: /*no progress possible or output buffer too small*/
+    case Z_BUF_ERROR:
       if (zin->avail_out == 0)
 	{
-	  sendto_ops("inflate() returned Z_BUF_ERROR: %s",
+	  sendto_realops("inflate() returned Z_BUF_ERROR: %s",
 		      (zin->msg) ? zin->msg : "?");
 	  *length = -1;
 	}
@@ -229,7 +243,7 @@ char *	unzip_packet(aClient *cptr, char *buffer, int *length)
 
     default: /* error ! */
       /* should probably mark link as dead or something... */
-      sendto_ops("inflate() error(%d): %s", r,
+      sendto_realops("inflate() error(%d): %s", r,
 		  (zin->msg) ? zin->msg : "?");
       *length = -1; /* report error condition */
       break;
@@ -257,11 +271,8 @@ char *	zip_buffer(aClient *cptr, char *buffer, int *length, int flush)
   if (buffer)
     {
       /* concatenate buffer in cptr->zip->outbuf */
-      /* bcopy(buffer, cptr->zip->outbuf + cptr->zip->outcount,*length); */
-
       memcpy((void *)cptr->zip->outbuf + cptr->zip->outcount, (void *)buffer,
 	     *length );
-
       cptr->zip->outcount += *length;
     }
   *length = 0;
@@ -282,14 +293,14 @@ char *	zip_buffer(aClient *cptr, char *buffer, int *length, int flush)
       if (zout->avail_in)
 	{
 	  /* can this occur?? I hope not... */
-	  sendto_ops("deflate() didn't process all available data!");
+	  sendto_realops("deflate() didn't process all available data!");
 	}
       cptr->zip->outcount = 0;
       *length = ZIP_BUFFER_SIZE - zout->avail_out;
       return zipbuf;
 
     default: /* error ! */
-      sendto_ops("deflate() error(%d): %s", r, (zout->msg) ? zout->msg : "?");
+      sendto_realops("deflate() error(%d): %s", r, (zout->msg) ? zout->msg : "?");
       *length = -1;
       break;
     }

@@ -1071,17 +1071,26 @@ void	close_connection(aClient *cptr)
  * reset_sock_opts
  *  type =  0 = client, 1 = server
  */
+/*
+ * If there is a failure on setsockopt, that shouldn't go to all realops
+ * only ones that care. logically, its to do with connecting clients
+ * so, putting it on CCONN_LEV seems logical to me - Dianora
+ */
 void	reset_sock_opts(int fd,int type)
 {
 #define CLIENT_BUFFER_SIZE	4096
 #define SEND_BUF_SIZE		2048
   int opt;
   opt = type ? rcvbufmax : CLIENT_BUFFER_SIZE;
+
   if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&opt, sizeof(opt)) < 0)
-    sendto_realops("REsetsockopt(SO_RCVBUF) for fd %d (%s) failed", fd, type ? "server" : "client");
+    sendto_realops_lev(CCONN_LEV,
+		       "REsetsockopt(SO_RCVBUF) for fd %d (%s) failed", fd, type ? "server" : "client");
   opt = type ? (SEND_BUF_SIZE*4) : SEND_BUF_SIZE;
+
   if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&opt, sizeof(opt)) < 0)
-    sendto_realops("REsetsockopt(SO_SNDBUF) for fd %d (%s) failed", fd, type ? "server" : "client");
+    sendto_realops_lev(CCONN_LEV,
+		       "REsetsockopt(SO_SNDBUF) for fd %d (%s) failed", fd, type ? "server" : "client");
 }
 #endif /* MAXBUFFERS */
 
