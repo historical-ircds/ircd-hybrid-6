@@ -98,6 +98,8 @@ int     max_connection_count = 1, max_client_count = 1;
 
 extern SetOptionsType GlobalSetOptions; /* defined in ircd.c */
 
+extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
+
 extern aConfItem *temporary_klines;	/* defined in s_conf.c */
 extern aConfItem *find_special_conf(char *,int); /* defined in s_conf.c */
 
@@ -1880,7 +1882,7 @@ int	m_help(aClient *cptr,
         }
     }
 
-  if ( !IsAnOper(sptr) || (helpfile == (aMessageFile *)NULL))
+  if ( !IsAnOper(sptr) || (ConfigFileEntry.helpfile == (aMessageFile *)NULL))
     {
       for (i = 0; msgtab[i].cmd; i++)
 	sendto_one(sptr,":%s NOTICE %s :%s",
@@ -1888,7 +1890,8 @@ int	m_help(aClient *cptr,
       return 0;
     }
 
-  for(helpfile_ptr = helpfile; helpfile_ptr; helpfile_ptr = helpfile_ptr->next)
+  for(helpfile_ptr = ConfigFileEntry.helpfile;
+      helpfile_ptr; helpfile_ptr = helpfile_ptr->next)
     {
       sendto_one(sptr,
 		 ":%s NOTICE %s :%s",
@@ -3213,7 +3216,8 @@ int	m_rehash(aClient *cptr,
 	}
       else if(irccmp(parv[1],"dlines") == 0)
 	{
-	  sendto_one(sptr, form_str(RPL_REHASHING), me.name, parv[0], configfile);
+	  sendto_one(sptr, form_str(RPL_REHASHING), me.name, parv[0],
+		     ConfigFileEntry.configfile);
           /* this does a full rehash right now, so report it as such */
 #ifdef CUSTOM_ERR
 	  sendto_ops("%s is rehashing dlines from server config file while whistling innocently",
@@ -3251,7 +3255,8 @@ int	m_rehash(aClient *cptr,
     }
   else
     {
-      sendto_one(sptr, form_str(RPL_REHASHING), me.name, parv[0], configfile);
+      sendto_one(sptr, form_str(RPL_REHASHING), me.name, parv[0],
+		 ConfigFileEntry.configfile);
 #ifdef CUSTOM_ERR
       sendto_ops("%s is rehashing server config file while whistling innocently",
 #else
@@ -3781,7 +3786,7 @@ int	m_motd(aClient *cptr,
 	       int parc,
 	       char *parv[])
 {
-  aMessageFile *motd_ptr=motd;
+  aMessageFile *motd_ptr=ConfigFileEntry.motd;
   static time_t last_used=0L;
 
   if(!IsAnOper(sptr))
@@ -3804,7 +3809,7 @@ int	m_motd(aClient *cptr,
 #ifdef AMOTD
   if(IsLocal(sptr) && (parc > 1) && (*parv[1] == 'A'))
     {
-      motd_ptr = amotd;
+      motd_ptr = ConfigFileEntry.amotd;
       parc--;
     }
 #endif
@@ -3834,7 +3839,7 @@ int send_motd(aClient *cptr,
 {
   aMessageFile *temp;
 
-  if (motd == (aMessageFile *)NULL)
+  if (ConfigFileEntry.motd == (aMessageFile *)NULL)
     {
       sendto_one(sptr, form_str(ERR_NOMOTD), me.name, parv[0]);
       return 0;
@@ -3843,7 +3848,7 @@ int send_motd(aClient *cptr,
 
   sendto_one(sptr,":%s NOTICE %s :%s",me.name,parv[0],motd_last_changed_date);
 
-  temp = motd;
+  temp = ConfigFileEntry.motd;
   while(temp)
     {
       sendto_one(sptr,
@@ -3874,7 +3879,7 @@ int send_oper_motd(aClient *cptr,
 {
   aMessageFile *temp;
   
-  if (opermotd == (aMessageFile *)NULL)
+  if (ConfigFileEntry.opermotd == (aMessageFile *)NULL)
     {
       sendto_one(sptr, ":%s NOTICE %s :No OPER MOTD", me.name, parv[0]);
       return 0;
@@ -3883,7 +3888,7 @@ int send_oper_motd(aClient *cptr,
 	     me.name,parv[0]);
 
   sendto_one(sptr,":%s NOTICE %s :%s",me.name,parv[0],
-	     oper_motd_last_changed_date);
+	     ConfigFileEntry.oper_motd_last_changed_date);
 
   temp = motd;
   while(temp)
@@ -3905,14 +3910,14 @@ void read_motd()
   struct stat sb;
   struct tm *motd_tm;
 
-  if(read_message_file(MOTD,&motd) < 0)
+  if(read_message_file(MOTD,&ConfigFileEntry.motd) < 0)
     return;
 
   stat(MOTD, &sb);
   motd_tm = localtime(&sb.st_mtime);
 
   if (motd_tm)
-    (void)sprintf(motd_last_changed_date,
+    (void)sprintf(ConfigFileEntry.motd_last_changed_date,
 		  "%d/%d/%d %02d:%02d",
 		  motd_tm->tm_mday,
 		  motd_tm->tm_mon + 1,
@@ -3927,14 +3932,14 @@ void read_oper_motd()
   struct stat	sb;
   struct tm *motd_tm;
 
-  if(read_message_file(OMOTD,&opermotd) < 0)
+  if(read_message_file(OMOTD,&ConfigFileEntry.opermotd) < 0)
     return;
 
   stat(OMOTD, &sb);
   motd_tm = localtime(&sb.st_mtime);
 
   if (motd_tm)
-    (void)sprintf(oper_motd_last_changed_date,
+    (void)sprintf(ConfigFileEntry.oper_motd_last_changed_date,
 		  "%d/%d/%d %02d:%02d",
 		  motd_tm->tm_mday,
 		  motd_tm->tm_mon + 1,
@@ -3955,14 +3960,14 @@ void read_amotd()
   struct tm *motd_tm;
   struct stat	sb;
 
-  if(read_message_file(AMOTD,&amotd) < 0)
+  if(read_message_file(AMOTD,&ConfigFileEntry.amotd) < 0)
     return;
 
   stat(AMOTD, &sb);
   motd_tm = localtime(&sb.st_mtime);
 
   if (motd_tm)
-    (void)sprintf(amotd_last_changed_date,
+    (void)sprintf(ConfigFileEntry.amotd_last_changed_date,
 		  "%d/%d/%d %d:%02d",
 		  motd_tm->tm_mday,
 		  motd_tm->tm_mon + 1,
@@ -4025,7 +4030,7 @@ int read_message_file(char *filename,aMessageFile **ptr)
  */
 void	read_help()
 {
-  (void)read_message_file(HELPFILE,&helpfile);
+  (void)read_message_file(HELPFILE,&ConfigFileEntry.helpfile);
 }
 
 /*

@@ -59,6 +59,8 @@ static char *rcs_version = "$Id$";
 extern int rehashed;
 extern aConfItem *temporary_klines;	/* defined in s_conf.c */
 extern int dline_in_progress;	/* defined in ircd.c */
+extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
+
 int bad_tld(char *);
 extern int safe_write(aClient *,char *,char *,int,char *);
 extern char *smalldate(time_t);		/* defined in s_misc.c */
@@ -101,7 +103,7 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
   int   error_on_write = NO;
   mode_t oldumask;
 
-  ircsprintf(temppath, "%s.tmp", klinefile);
+  ircsprintf(temppath, "%s.tmp", ConfigFileEntry.klinefile);
   
   if (check_registered(sptr))
     {
@@ -182,7 +184,7 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
   if(lock_kline_file() < 0 )
     {
       sendto_one(sptr,":%s NOTICE %s :%s is locked try again in a few minutes",
-	me.name,parv[0],klinefile);
+	me.name,parv[0],ConfigFileEntry.klinefile);
       return -1;
     }
 #endif
@@ -190,10 +192,10 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
   tmptr = localtime(&NOW);
   strftime(timebuffer, MAX_DATE_STRING, "%Y%m%d", tmptr);
-  (void)sprintf(filenamebuf, "%s.%s", klinefile, timebuffer);
+  (void)sprintf(filenamebuf, "%s.%s", ConfigFileEntry.klinefile, timebuffer);
   filename = filenamebuf;
 #else
-  filename = klinefile;
+  filename = ConfigFileEntry.klinefile;
 #endif			
 
   if( (in = fbopen(filename, "r")) == 0)

@@ -63,6 +63,8 @@ int bad_tld(char *);
 extern int safe_write(aClient *,char *,char *,int,char *);
 extern char *smalldate(time_t);		/* defined in s_misc.c */
 
+extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
+
 /* Local function prototypes */
 static int isnumber(char *);	/* return 0 if not, else return number */
 static char *cluster(char *);
@@ -457,7 +459,7 @@ int     m_kline(aClient *cptr,
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
   timebuffer = small_file_date(NOW);
 
-  (void)sprintf(filenamebuf, "%s.%s", klinefile, timebuffer);
+  (void)sprintf(filenamebuf, "%s.%s", ConfigFileEntry.klinefile, timebuffer);
   filename = filenamebuf;
        
 #ifdef SLAVE_SERVERS
@@ -466,7 +468,7 @@ int     m_kline(aClient *cptr,
     sendto_one(sptr, ":%s NOTICE %s :Added K-Line [%s@%s] to %s",
 	       me.name, parv[0], user, host, filenamebuf);
 #else
-  filename = klinefile;
+  filename = ConfigFileEntry.klinefile;
 
 #ifdef KPATH
 #ifdef SLAVE_SERVERS
@@ -1034,10 +1036,10 @@ int     m_dline(aClient *cptr,
 
 #else /* LOCKFILE - MDP */
 
-  if ((out = open(dlinefile, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
+  if ((out = open(ConfigFileEntry.dlinefile, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
     {
       sendto_one(sptr, ":%s NOTICE %s :Problem opening %s ",
-		 me.name, parv[0], dlinefile);
+		 me.name, parv[0], ConfigFileEntry.dlinefile);
       return 0;
     }
 
@@ -1046,7 +1048,7 @@ int     m_dline(aClient *cptr,
 		   sptr->user->host, host,
 		   reason, current_date);
 
-  if (safe_write(sptr,parv[0],dlinefile,out,buffer))
+  if (safe_write(sptr,parv[0],ConfigFileEntry.dlinefile,out,buffer))
     return 0;
 
   (void)ircsprintf(buffer, "D:%s:%s (%s)\n",
@@ -1054,7 +1056,7 @@ int     m_dline(aClient *cptr,
 		   reason,
 		   current_date);
 
-  if (safe_write(sptr,parv[0],dlinefile,out,buffer))
+  if (safe_write(sptr,parv[0],ConfigFileEntry.dlinefile,out,buffer))
     return 0;
 
   (void)close(out);
@@ -1072,7 +1074,7 @@ int lock_kline_file()
   /* Create Lockfile */
   if((fd = open(LOCKFILE, O_WRONLY|O_CREAT|O_EXCL, 0644)) < 0)
     {
-      sendto_realops("%s is locked, klines pending",klinefile);
+      sendto_realops("%s is locked, klines pending",ConfigFileEntry.klinefile);
       pending_kline_time = time(NULL);
       return(-1);
     }
@@ -1092,7 +1094,7 @@ void do_pending_klines()
   /* Create Lockfile */
   if((fd = open(LOCKFILE, O_WRONLY|O_CREAT|O_EXCL, 0644)) < 0)
     {
-      sendto_realops("%s is locked, klines pending",klinefile);
+      sendto_realops("%s is locked, klines pending",ConfigFileEntry.klinefile);
       pending_kline_time = time(NULL);
       return;
     }
@@ -1101,10 +1103,11 @@ void do_pending_klines()
   close(fd);
   
   /* Open klinefile */   
-  if ((fd = open(klinefile, O_WRONLY|O_APPEND|O_CREAT,0644))==-1)
+  if ((fd = open(ConfigFileEntry.klinefile,
+		 O_WRONLY|O_APPEND|O_CREAT,0644))==-1)
     {
       sendto_realops("Pending klines cannot be written, cannot open %s",
-                 klinefile);
+                 ConfigFileEntry.klinefile);
       unlink(LOCKFILE);
       return; 
     }

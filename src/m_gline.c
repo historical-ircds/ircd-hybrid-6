@@ -56,11 +56,12 @@ static char *rcs_version = "$Id$";
 #include "mtrie_conf.h"
 
 #ifdef GLINES
-char	*glinefile = GLINEFILE;
 
 /* external variables */
 extern int rehashed;		/* defined in ircd.c */
 extern int dline_in_progress;	/* defined in ircd.c */
+
+extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 
 /* internal variables */
 static  aConfItem *glines = (aConfItem *)NULL;
@@ -343,7 +344,8 @@ static void log_gline_request(
   struct tm *tmptr;
   int out;
 
-  (void)sprintf(filenamebuf, "%s.%s", glinefile, small_file_date((time_t)0));
+  (void)sprintf(filenamebuf, "%s.%s", 
+		ConfigFileEntry.glinefile, small_file_date((time_t)0));
   if ((out = open(filenamebuf, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
     {
       sendto_realops("*** Problem opening %s",filenamebuf);
@@ -390,7 +392,8 @@ static void log_gline(
   struct tm *tmptr;
   int out;
 
-  (void)sprintf(filenamebuf, "%s.%s", glinefile, small_file_date((time_t) 0));
+  (void)sprintf(filenamebuf, "%s.%s", 
+		ConfigFileEntry.glinefile, small_file_date((time_t) 0));
   if ((out = open(filenamebuf, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
     {
       return;

@@ -87,8 +87,6 @@ typedef	struct	SLink	Link;
 typedef	struct	SMode	Mode;
 typedef struct  Zdata   aZdata;
 
-typedef struct	MessageFileItem aMessageFile;
-
 /*
 ** flags for bootup options (command line flags)
 */
@@ -138,11 +136,6 @@ struct	Counter	{
 	int	max_tot;	/* MAX global clients */
 };
 
-struct  MessageFileItem
-{
-  char	line[MESSAGELINELEN];
-  struct MessageFileItem *next;
-};
 
 /*
   lets speed this up...

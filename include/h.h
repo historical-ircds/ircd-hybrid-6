@@ -32,14 +32,6 @@
 
 struct Class;
 
-extern aMessageFile	*motd;
-#ifdef AMOTD
-extern aMessageFile	*amotd;
-#endif
-extern struct tm	*motd_tm;
-
-extern aMessageFile	*helpfile;
-
 extern int lifesux;
 extern fdlist serv_fdlist;
 extern fdlist busycli_fdlist;

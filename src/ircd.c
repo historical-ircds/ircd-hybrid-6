@@ -50,17 +50,6 @@
 int reject_held_fds=0;
 #endif
 
-#ifdef OPER_MOTD
-aMessageFile *opermotd=(aMessageFile *)NULL;
-extern char oper_motd_last_changed_date[];
-#endif
-aMessageFile *motd=(aMessageFile *)NULL;
-extern char motd_last_changed_date[];
-#ifdef AMOTD
-aMessageFile *amotd=(aMessageFile *)NULL;
-#endif
-aMessageFile *helpfile=(aMessageFile *)NULL;	
-
 #ifdef NEED_SPLITCODE
 extern time_t server_split_time;
 extern int server_was_split;
@@ -93,7 +82,11 @@ fdlist busycli_fdlist;	/* high-priority clients */
 
 fdlist default_fdlist;
 
+/* /quote set variables */
 SetOptionsType GlobalSetOptions;
+
+/* config.h config file paths etc */
+ConfigFileEntryType ConfigFileEntry; 
 
 struct	Counter	Count;
 
@@ -125,28 +118,12 @@ extern  void sync_channels(time_t);	/* defined in channel.c */
 
 char	**myargv;
 int	portnum = -1;	              /* Server port number, listening this */
-char	*configfile = CONFIGFILE;	/* Server configuration file */
-
-#ifdef KPATH
-char    *klinefile = KLINEFILE;         /* Server kline file */
-
-#ifdef DLINES_IN_KPATH
-char    *dlinefile = KLINEFILE;
-#else
-char    *dlinefile = CONFIGFILE;
-#endif
-
-#else
-char    *klinefile = CONFIGFILE;
-char    *dlinefile = CONFIGFILE;
-#endif
 
 int	debuglevel = -1;		/* Server debug level */
 int	bootopt = 0;			/* Server boot option flags */
 char	*debugmode = "";		/*  -"-    -"-   -"-  */
 char	*sbrk0;				/* initial sbrk(0) */
 static	int	dorehash = 0;
-static	char	*dpath = DPATH;
 int     rehashed = YES;
 int     dline_in_progress = NO;	/* killing off matching D lines ? */
 time_t	nextconnect = 1;	/* time for next try_connections call */
@@ -941,12 +918,35 @@ int	main(int argc, char *argv[])
   (void)signal(SIGUSR1, s_monitor);
 #endif
 
+  ConfigFileEntry.dpath = DPATH;
+
+  ConfigFileEntry.configfile = CONFIGFILE;	/* Server configuration file */
+
+#ifdef KPATH
+  ConfigFileEntry.klinefile = KLINEFILE;         /* Server kline file */
+
+#ifdef DLINES_IN_KPATH
+  ConfigFileEntry.dlinefile = KLINEFILE;
+#else
+  ConfigFileEntry.dlinefile = CONFIGFILE;
+#endif
+
+#else
+   ConfigFileEntry.klinefile = CONFIGFILE;
+   ConfigFileEntry.dlinefile = CONFIGFILE;
+#endif
+
+#ifdef GLINES
+   ConfigFileEntry.glinefile = GLINEFILE;
+#endif
+
 #ifdef	CHROOTDIR
-  if (chdir(dpath))
+  if (chdir(DPATH))
     {
-      perror("chdir");
+      perror("chdir " DPATH );
       exit(-1);
     }
+
   if (chroot(DPATH))
     {
       (void)fprintf(stderr,"ERROR:  Cannot chdir/chroot\n");
@@ -1013,7 +1013,7 @@ int	main(int argc, char *argv[])
 	  break;
 	case 'd' :
 	  (void)setuid((uid_t)uid);
-	  dpath = p;
+	  ConfigFileEntry.dpath = p;
 	  break;
 	case 'o': /* Per user local daemon... */
 	  (void)setuid((uid_t)uid);
@@ -1022,13 +1022,13 @@ int	main(int argc, char *argv[])
 #ifdef CMDLINE_CONFIG
 	case 'f':
 	  (void)setuid((uid_t)uid);
-	  configfile = p;
+	  ConfigFileEntry.configfile = p;
 	  break;
 
 #ifdef KPATH
 	case 'k':
 	  (void)setuid((uid_t)uid);
-	  klinefile = p;
+	  ConfigFileEntry.klinefile = p;
 	  break;
 #endif
 
@@ -1057,7 +1057,7 @@ int	main(int argc, char *argv[])
 #else
 		       zlib_version,
 #endif
-		       dpath);
+		       ConfigFileEntry.dpath);
 	  exit(0);
 	case 'x':
 #ifdef	DEBUGMODE
@@ -1079,7 +1079,7 @@ int	main(int argc, char *argv[])
     }
 
 #ifndef	CHROOT
-  if (chdir(dpath))
+  if (chdir(ConfigFileEntry.dpath))
     {
       perror("chdir");
       exit(-1);
@@ -1141,14 +1141,14 @@ normal user.\n");
     return bad_command(); /* This should exit out */
 
 #ifdef OPER_MOTD
-  oper_motd_last_changed_date[0] = '\0';
-  opermotd = (aMessageFile *)NULL;
+  ConfigFileEntry.oper_motd_last_changed_date[0] = '\0';
+  ConfigFileEntry.opermotd = (aMessageFile *)NULL;
   read_oper_motd();
 #endif 
-  motd = (aMessageFile *)NULL;
-  helpfile = (aMessageFile *)NULL;
+  ConfigFileEntry.motd = (aMessageFile *)NULL;
+  ConfigFileEntry.helpfile = (aMessageFile *)NULL;
 
-  motd_last_changed_date[0] = '\0';
+  ConfigFileEntry.motd_last_changed_date[0] = '\0';
 
   read_motd();
 #ifdef AMOTD
@@ -1203,12 +1203,12 @@ normal user.\n");
 #define SYSLOG_ME     "ircd"
   openlog(SYSLOG_ME, LOG_PID|LOG_NDELAY, LOG_FACILITY);
 #endif
-  if ((file = openconf(configfile)) == 0)
+  if ((file = openconf(ConfigFileEntry.configfile)) == 0)
     {
       Debug((DEBUG_FATAL, "Failed in reading configuration file %s",
-	     configfile));
+	     ConfigFileEntry.configfile));
       (void)printf("Couldn't open configuration file %s\n",
-		   configfile);
+		   ConfigFileEntry.configfile);
       exit(-1);
     }
   initconf(bootopt, file, YES);
@@ -1221,7 +1221,7 @@ normal user.\n");
 
     tmptr = localtime(&NOW);
     (void)strftime(timebuffer, 20, "%Y%m%d", tmptr);
-    ircsprintf(filename, "%s.%s", klinefile, timebuffer);
+    ircsprintf(filename, "%s.%s", ConfigFileEntry.klinefile, timebuffer);
     if ((file = openconf(filename)) == 0)
       {
 	Debug((DEBUG_ERROR,"Failed reading kline file %s",
@@ -1234,12 +1234,12 @@ normal user.\n");
   }
 #else
 #ifdef KPATH
-  if ((file = openconf(klinefile)) == 0)
+  if ((file = openconf(ConfigFileEntry.klinefile)) == 0)
     {
       Debug((DEBUG_ERROR,"Failed reading kline file %s",
-	     klinefile));
+	     ConfigFileEntry.klinefile));
       (void)printf("Couldn't open kline file %s\n",
-		   klinefile);
+		   ConfigFileEntry.klinefile);
     }
   else
     initconf(0, file, NO);

@@ -43,6 +43,8 @@
 #include <assert.h>
 extern int rehashed;
 
+extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
+
 #include "res.h"    /* gethost_byname, gethost_byaddr */
 
 #ifndef INADDR_NONE
@@ -1557,9 +1559,10 @@ int rehash(aClient *cptr,aClient *sptr,int sig)
 #endif
     }
 
-  if ((file = openconf(configfile)) == 0)
+  if ((file = openconf(ConfigFileEntry.configfile)) == 0)
     {
-      sendto_ops("Can't open %s file aborting rehash!",configfile);
+      sendto_ops("Can't open %s file aborting rehash!",
+		 ConfigFileEntry.configfile);
       return -1;
     }
 
@@ -1649,7 +1652,7 @@ int rehash(aClient *cptr,aClient *sptr,int sig)
     struct tm *tmptr;
     tmptr = localtime(&NOW);
     (void)strftime(timebuffer, 20, "%Y%m%d", tmptr);
-    ircsprintf(filenamebuf, "%s.%s", klinefile, timebuffer);
+    ircsprintf(filenamebuf, "%s.%s", ConfigFileEntry.klinefile, timebuffer);
 
     if ((file = openconf(filenamebuf)) == 0)
       sendto_ops("Can't open %s file klines could be missing!",filenamebuf);
@@ -1658,8 +1661,9 @@ int rehash(aClient *cptr,aClient *sptr,int sig)
   }
 #else
 #ifdef KLINEFILE
-  if ((file = openconf(klinefile)) == 0)
-    sendto_ops("Can't open %s file klines could be missing!",klinefile);
+  if ((file = openconf(ConfigFileEntry.klinefile)) == 0)
+    sendto_ops("Can't open %s file klines could be missing!",
+	       ConfigFileEntry.klinefile);
   else
     initconf(0, file, NO);
 #endif

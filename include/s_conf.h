@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.4  1999/07/04 09:00:48  tomh
+ * more cleanup, only call delete_resolver_queries when there are outstanding requests
+ *
  * Revision 1.3  1999/07/03 20:24:20  tomh
  * clean up class macros, includes
  *
@@ -43,6 +46,9 @@
 #ifndef INCLUDED_netinet_in_h
 #include <netinet/in.h>         /* in_addr */
 #define INCLUDED_netinet_in_h
+#endif
+#ifndef INCLUDED_ircd_defs_h
+#include "ircd_defs.h"
 #endif
 
 struct Client;
@@ -149,6 +155,39 @@ extern struct ConfItem* find_conf_host (struct SLink *, char *, int);
 extern struct ConfItem* find_conf_ip (struct SLink *, char *, char *, int);
 extern struct ConfItem* find_conf_name (char *, int);
 extern struct ConfItem* find_kill (struct Client *);
+
+typedef struct
+{
+  char	line[MESSAGELINELEN];
+  struct MessageFileItem *next;
+}aMessageFile;
+
+typedef struct
+{
+  char *dpath;		/* DPATH if set from command line */
+  char *configfile;
+  char *klinefile;
+  char *dlinefile;
+
+#ifdef GLINES
+  char	*glinefile;
+#endif
+
+#ifdef OPER_MOTD
+  aMessageFile *opermotd;
+  char oper_motd_last_changed_date[MAX_DATE_STRING];
+#endif
+
+  aMessageFile *motd;
+  char motd_last_changed_date[MAX_DATE_STRING];
+
+#ifdef AMOTD
+  aMessageFile *amotd;
+#endif
+
+  aMessageFile *helpfile;
+
+}ConfigFileEntryType;
 
 
 #endif /* INCLUDED_s_conf_h */
