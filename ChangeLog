@@ -1,3 +1,9 @@
+*** 20010609_3 by jdc
+* Removal of cipher priority information for config.h.  This isn't
+  applicable anymore.
+
+
+
 *** 20010609_2 by jdc
 * Forgot to remove one extra line due to previous debugging session
   with Hwy.  Line 452 needed to be deleted.  Oops.
