@@ -2,6 +2,11 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b49   19-Feb-1999
+* botch with POLL code fixed, forgot to test it on solaris after
+  adding back fdlist code *sigh* 
+-Dianora
+	
 version hybrid-6-b48   19-Feb-1999
 * allow all opers to see stats c IP's
 * added two more examples to Q lines, crush and cwush

@@ -508,8 +508,10 @@ void	init_sys()
 # endif
 #endif
 
+#ifndef USE_POLL
   read_set = &readset;
   write_set = &writeset;
+#endif
 
   for (fd = 3; fd < MAXCONNECTIONS; fd++)
     {
@@ -1972,7 +1974,7 @@ void read_clients()
 		pfd->events = 0;                \
 	}
 
-int	read_message(time_t delay)
+int	read_message(time_t delay, fdlist *listp)
 {
   Reg	aClient *cptr;
   Reg	int     nfds;
@@ -1986,7 +1988,7 @@ int	read_message(time_t delay)
   u_long	usec = 0;
   int		res, length, fd, newfd;
   int		auth, rr, rw;
-  register	int i;
+  register	int i,j;
   static aClient	*authclnts[MAXCONNECTIONS];
   char		errmsg[255];
 
