@@ -1314,20 +1314,22 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
       }
       for (i = 0; i <= highest_fd; i++)
         {
-          if(!listp->entry[i])
+          if (!listp->entry[i])
             continue;
 
           if (!(cptr = local[i]))
             continue;
 
-          if (!IsMe(cptr))
+          /*
+           * anything that IsMe should NEVER be in the local client array
+           */
+          assert(!IsMe(cptr));
+
+          if (DBufLength(&cptr->recvQ) && delay2 > 2)
+            delay2 = 1;
+          if (DBufLength(&cptr->recvQ) < 4088)        
             {
-              if (DBufLength(&cptr->recvQ) && delay2 > 2)
-                delay2 = 1;
-              if (DBufLength(&cptr->recvQ) < 4088)        
-                {
-                  FD_SET(i, read_set);
-                }
+               FD_SET(i, read_set);
             }
 
           if (DBufLength(&cptr->sendQ) || IsConnecting(cptr)
@@ -1349,7 +1351,7 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
 
       nfds = select(MAXCONNECTIONS, read_set, write_set, 0, &wait);
 
-      if((timeofday = time(NULL)) == -1)
+      if ((timeofday = time(NULL)) == -1)
         {
 #ifdef USE_SYSLOG
           syslog(LOG_WARNING, "Clock Failure (%d), TS can be corrupted", errno);
@@ -1403,13 +1405,10 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
   }
 
   for (i = 0; i <= highest_fd; i++) {
-    if(!listp->entry[i])
+    if (!listp->entry[i])
       continue;
 
     if (!(cptr = local[i]))
-      continue;
-
-    if (IsMe(cptr))
       continue;
 
     /*
@@ -1601,12 +1600,15 @@ int read_message(time_t delay, fdlist *listp)
       if (!(cptr = local[i]))
         continue;
 
-      if (!IsMe(cptr)) {
-        if (DBufLength(&cptr->recvQ) && delay2 > 2)
-          delay2 = 1;
-        if (DBufLength(&cptr->recvQ) < 4088)
-          PFD_SETR(i);
-      }
+     /*
+      * anything that IsMe should NEVER be in the local client array
+      */
+      assert(!IsMe(cptr));
+      if (DBufLength(&cptr->recvQ) && delay2 > 2)
+        delay2 = 1;
+
+      if (DBufLength(&cptr->recvQ) < 4088)
+        PFD_SETR(i);
       
       if (DBufLength(&cptr->sendQ) || IsConnecting(cptr)
 #ifdef ZIP_LINKS
@@ -1692,8 +1694,7 @@ int read_message(time_t delay, fdlist *listp)
         }
       if (!(cptr = local[fd]))
         continue;
-      if (IsMe(cptr))
-        continue;
+
       if (rw)
         {
           int     write_err = 0;
