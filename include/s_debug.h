@@ -1,7 +1,5 @@
-#ifndef INCLUDED_s_debug_h
-#define INCLUDED_s_debug_h
 /************************************************************************
- *   IRC - Internet Relay Chat, include/s_conf.h
+ *   IRC - Internet Relay Chat, include/s_debug.h
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
  *
@@ -18,32 +16,12 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ *   $Id$
  */
+#ifndef INCLUDED_s_debug_h
+#define INCLUDED_s_debug_h
 
-/*
- * $Id$
- *
- * $Log$
- * Revision 1.5  1999/07/24 21:10:45  tomh
- * attempt to fix memory usage reporting for sbrk calls, still needs work??
- *
- * Revision 1.4  1999/07/23 07:02:42  tomh
- * remove sbrk, replace with get_maxrss
- *
- * Revision 1.3  1999/07/23 02:38:30  db
- * - more include file fixes
- *
- * Revision 1.2  1999/07/21 05:20:52  db
- * - you guessed it, more cleanups. removed undefined function that had
- *   a prototype in h.h cool
- *
- * Revision 1.1  1999/07/16 02:40:34  db
- * - removed #ifdef HAVE_GET_RUSAGE, it still needs to be removed from configure
- * - removed some debug counters that weren't terribly useful
- * - always enabled stats r even without DEBUGMODE
- * - moved prototype for send_usage() into s_debug.h
- *
- */
 #ifndef INCLUDED_sys_types_h
 #include <sys/types.h>       /* size_t */
 #define INCLUDED_sys_types_h
@@ -51,10 +29,25 @@
 
 struct Client;
 
+/*
+ * defined debugging levels
+ */
+#define DEBUG_FATAL  0
+#define DEBUG_ERROR  1  /* report_error() and other errors that are found */
+#define DEBUG_NOTICE 3
+#define DEBUG_DNS    4  /* used by all DNS related routines - a *lot* */
+#define DEBUG_INFO   5  /* general usful info */
+#define DEBUG_NUM    6  /* numerics */
+#define DEBUG_SEND   7  /* everything that is sent out */
+#define DEBUG_DEBUG  8  /* anything to do with debugging, ie unimportant :) */
+#define DEBUG_MALLOC 9  /* malloc/free calls */
+#define DEBUG_LIST  10  /* debug list use */
+
+
 extern void send_usage(struct Client*, char *);
 extern void count_memory (struct Client *, char *);
 
-extern	void	debug(int, char *, ...);
+extern void debug(int, char *, ...);
 
 #endif /* INCLUDED_s_debug_h */
 

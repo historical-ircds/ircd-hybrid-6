@@ -86,6 +86,7 @@ SRCS = \
 	s_bsd.c \
 	s_conf.c \
 	s_debug.c \
+	s_log.c \
 	s_misc.c \
 	s_serv.c \
 	s_stats.c \
@@ -164,6 +165,7 @@ SRCS = \
 #	s_bsd.o \
 #	s_conf.o \
 #	s_debug.o \
+#	s_log.o \
 #	s_misc.o \
 #	s_numeric.o \
 #	s_serv.o \
