@@ -60,7 +60,7 @@ extern	char	*canonize (char *);
 extern	time_t	check_fdlists (time_t);
 extern	void	flush_server_connections(void);
 extern	aChannel *find_channel (char *, aChannel *);
-extern	void	remove_user_from_channel (aClient *, aChannel *);
+extern	void	remove_user_from_channel (aClient *, aChannel *,int);
 extern	void	del_invite (aClient *, aChannel *);
 extern	void	send_user_joins (aClient *, aClient *);
 extern	int	can_send (aClient *, aChannel *);

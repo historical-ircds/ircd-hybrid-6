@@ -75,12 +75,12 @@ aChannel *channel = NullChn;
 static	void	add_invite (aClient *, aChannel *);
 static	int	add_banid (aClient *, aChannel *, char *);
 static	int	add_exceptid(aClient *, aChannel *, char *);
-static	int	can_join (aClient *, aChannel *, char *);
+static	int	can_join (aClient *, aChannel *, char *,int *);
 static	void	channel_modes (aClient *, char *, char *, aChannel *);
 static	int	del_banid (aChannel *, char *);
 static	int	del_exceptid (aChannel *, char *);
 static  void	clear_bans_exceptions(aClient *,aChannel *);
-static	Link	*is_banned (aClient *, aChannel *);
+static	int     is_banned (aClient *, aChannel *);
 static	void	set_mode (aClient *, aClient *, aChannel *, int, char **);
 static	void	sub1_from_channel (aChannel *);
 
@@ -438,7 +438,76 @@ static	int	del_exceptid(aChannel *chptr, char *eid)
 }
 
 /*
- * is_banned - returns a pointer to the ban structure if banned else NULL
+ * del_matching_exception - delete an exception matching this user
+ *
+ * The idea is, if a +e client gets kicked for any reason
+ * remove the matching exception for this client.
+ * This will immediately stop channel "chatter" with scripts
+ * that kick on matching ban. It will also stop apparent "desyncs."
+ * It's not the long term answer, but it will tide us over.
+ *
+ * modified from orabidoo - Dianora
+ */
+static void del_matching_exception(aClient *cptr,aChannel *chptr)
+{
+  register Link **ex;
+  register Link *tmp;
+  char	s[NICKLEN+USERLEN+HOSTLEN+6];
+  char  *s2;
+
+  if (!IsPerson(cptr))
+    return;
+
+  strcpy(s,make_nick_user_host(cptr->name, cptr->user->username,
+			       cptr->user->host));
+  s2 = make_nick_user_host(cptr->name, cptr->user->username,
+			   cptr->hostip);
+
+  for (ex = &(chptr->exceptlist); *ex; ex = &((*ex)->next))
+    {
+      tmp = *ex;
+
+      if ((match(BANSTR(tmp), s) == 0) ||
+	  (match(BANSTR(tmp), s2) == 0) )
+	{
+
+	  /* code needed here to send -e to channel.
+	   * I will not propogate the removal,
+	   * This will lead to desyncs of e modes,
+	   * but its not going to be any worse then it is now.
+	   *
+	   * Kickee gets to see the -e removal by the server
+	   * since they have not yet been removed from the channel.
+	   * I don't think thats a biggie.
+	   *
+	   * -Dianora
+	   */
+
+	  sendto_channel_butserv(chptr,
+				 &me,
+				 ":%s MODE %s -e %s", 
+				 me.name,
+				 chptr->chname,
+				 BANSTR(tmp));
+
+	  *ex = tmp->next;
+#ifdef BAN_INFO
+	  MyFree(tmp->value.banptr->banstr);
+	  MyFree(tmp->value.banptr->who);
+	  MyFree(tmp->value.banptr);
+#else
+	  MyFree(tmp->value.cp);
+#endif
+	  free_link(tmp);
+	  return;
+	}
+    }
+}
+
+/*
+ * is_banned -  returns an int 0 if not banned,
+ *              CHFL_BAN if banned,
+ *	 	CHFL_EXCEPTION if they have a ban exception
  *
  * IP_BAN_ALL from comstud
  * always on...
@@ -446,7 +515,7 @@ static	int	del_exceptid(aChannel *chptr, char *eid)
  * +e code from orabidoo
  */
 
-static	Link	*is_banned(aClient *cptr,aChannel *chptr)
+static	int is_banned(aClient *cptr,aChannel *chptr)
 {
   register Link	*tmp;
   register Link *t2;
@@ -454,7 +523,7 @@ static	Link	*is_banned(aClient *cptr,aChannel *chptr)
   char  *s2;
 
   if (!IsPerson(cptr))
-    return ((Link *)NULL);
+    return (0);
 
   strcpy(s,make_nick_user_host(cptr->name, cptr->user->username,
 			       cptr->user->host));
@@ -471,9 +540,20 @@ static	Link	*is_banned(aClient *cptr,aChannel *chptr)
       for (t2 = chptr->exceptlist; t2; t2 = t2->next)
 	if ((match(BANSTR(t2), s) == 0) ||
 	    (match(BANSTR(t2), s2) == 0))
-	  return NULL;
+	  {
+#if 0
+	    /* I think a message sent to channel
+	     * about the ban exception might be in order?
+	     */
+	    sendto_channel_type(cptr, sptr, chptr, type,
+				":%s %s %s :%s",
+				parv[0], cmd, nick,
+				"*** Banned but have an ban exception");
+#endif
+	    return CHFL_EXCEPTION;
+	  }
     }
-  return (tmp);
+  return ((tmp?CHFL_BAN:0));
 }
 
 /*
@@ -520,7 +600,7 @@ static	void	add_user_to_channel(aChannel *chptr, aClient *who, int flags)
     }
 }
 
-void	remove_user_from_channel(aClient *sptr,aChannel *chptr)
+void	remove_user_from_channel(aClient *sptr,aChannel *chptr,int was_kicked)
 {
   Reg	Link	**curr;
   Reg	Link	*tmp;
@@ -528,6 +608,14 @@ void	remove_user_from_channel(aClient *sptr,aChannel *chptr)
   for (curr = &chptr->members; (tmp = *curr); curr = &tmp->next)
     if (tmp->value.cptr == sptr)
       {
+	/* User was kicked, but had an exception.
+	 * so, to reduce chatter I'll remove any
+	 * matching exception now.
+	 */
+	if(was_kicked && (tmp->flags & CHFL_EXCEPTION))
+	  {
+	    del_matching_exception(sptr,chptr);
+	  }
 	*curr = tmp->next;
 	free_link(tmp);
 	break;
@@ -1973,9 +2061,10 @@ static  void     set_mode(aClient *cptr,
   return;
 }
 
-static	int	can_join(aClient *sptr, aChannel *chptr, char *key)
+static	int	can_join(aClient *sptr, aChannel *chptr, char *key, int *flags)
 {
   Reg	Link	*lp;
+  int ban_or_exception;
 
 #ifdef JUPE_CHANNEL
   if( chptr->mode.mode & MODE_JUPED )
@@ -1990,8 +2079,11 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key)
     }
 #endif
 
-  if (is_banned(sptr, chptr))
+  if ( (ban_or_exception = is_banned(sptr, chptr)) == CHFL_BAN)
     return (ERR_BANNEDFROMCHAN);
+  else
+    *flags |= ban_or_exception;	/* Mark this client as "charmed" */
+
   if (chptr->mode.mode & MODE_INVITEONLY)
     {
       for (lp = sptr->user->invited; lp; lp = lp->next)
@@ -2678,7 +2770,7 @@ int	m_join(aClient *cptr,
 	      chptr = lp->value.chptr;
 	      sendto_channel_butserv(chptr, sptr, PartFmt,
 				     parv[0], chptr->chname);
-	      remove_user_from_channel(sptr, chptr);
+	      remove_user_from_channel(sptr, chptr, 0);
 	    }
 /*
   Added /quote set for SPAMBOT
@@ -2739,9 +2831,8 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 	   /*	  flags = (ChannelExists(name)) ? 0 : CHFL_CHANOP; */
 
 	  /* To save a redundant hash table lookup later on */
-
-	   chptr = find_channel(name, NullChn);
-	   if(chptr)
+	   
+	   if((chptr = find_channel(name, NullChn)))
 	     flags = 0;
 	   else
 	     flags = CHFL_CHANOP;
@@ -2859,7 +2950,13 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 	  continue;
 	}
 
-      if (MyConnect(sptr) && (i = can_join(sptr, chptr, key)))
+      /*
+       * can_join checks for +i key, bans.
+       * If a ban is found but an exception to the ban was found
+       * flags will have CHFL_EXCEPTION set
+       */
+
+      if (MyConnect(sptr) && (i = can_join(sptr, chptr, key, &flags)))
 	{
 	  sendto_one(sptr,
 		     ":%s %d %s %s :Sorry, cannot join channel.",
@@ -2880,14 +2977,14 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
       if(allow_op)
 	add_user_to_channel(chptr, sptr, flags);
       else
-	add_user_to_channel(chptr, sptr, 0);
+	add_user_to_channel(chptr, sptr, flags & CHFL_EXCEPTION);
 #else
       add_user_to_channel(chptr, sptr, flags);
 #endif
       /*
       **  Set timestamp if appropriate, and propagate
       */
-      if (MyClient(sptr) && flags == CHFL_CHANOP)
+      if (MyClient(sptr) && (flags & CHFL_CHANOP) )
 	{
 	  chptr->channelts = timeofday;
 #ifdef USE_ALLOW_OP
@@ -3038,7 +3135,7 @@ int	m_part(aClient *cptr,
       sendto_match_servs(chptr, cptr, PartFmt, parv[0], name);
 	    
       sendto_channel_butserv(chptr, sptr, PartFmt, parv[0], name);
-      remove_user_from_channel(sptr, chptr);
+      remove_user_from_channel(sptr, chptr, 0);
       name = strtoken(&p, (char *)NULL, ",");
     }
   return 0;
@@ -3191,7 +3288,7 @@ int	m_kick(aClient *cptr,
 			 ":%s KICK %s %s :%s",
 			 parv[0], name,
 			 who->name, comment);
-      remove_user_from_channel(who, chptr);
+      remove_user_from_channel(who, chptr, 1);
     }
   else
     sendto_one(sptr, err_str(ERR_USERNOTINCHANNEL),
@@ -3277,7 +3374,8 @@ int	m_knock(aClient *cptr,
     }
 
   /* don't allow a knock if the user is banned, or the channel is secret */
-  if ((chptr->mode.mode & MODE_SECRET) || is_banned(sptr, chptr))
+  if ((chptr->mode.mode & MODE_SECRET) || 
+      (is_banned(sptr, chptr) == CHFL_BAN) )
     {
       sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN), me.name, parv[0],
 		 name);

@@ -855,7 +855,7 @@ static	void	exit_one_client(aClient *cptr,
 				   sptr->name, comment);
 
 	  while ((lp = sptr->user->channel))
-	    remove_user_from_channel(sptr,lp->value.chptr);
+	    remove_user_from_channel(sptr,lp->value.chptr,0);
 	  
 	  /* Clean up invitefield */
 	  while ((lp = sptr->user->invited))

@@ -38,7 +38,7 @@ extern aClient *local_cptr_list;
 extern aClient *oper_cptr_list;
 extern aClient *serv_cptr_list;
 
-#define	NEWLINE	"\n"
+#define	NEWLINE	"\r\n"
 
 static	char	sendbuf[2048];
 static	int	send_message (aClient *, char *, int);
@@ -405,12 +405,36 @@ va_dcl
       return;
     }
 
+  /* from rfc1459
+
+   IRC messages are always lines of characters terminated with a CR-LF
+   (Carriage Return - Line Feed) pair, and these messages shall not
+   exceed 512 characters in length, counting all characters including
+   the trailing CR-LF. Thus, there are 510 characters maximum allowed
+   for the command and its parameters.  There is no provision for
+   continuation message lines.  See section 7 for more details about
+   current implementations.
+
+   */
+
 #ifdef USE_VARARGS
   (void)strcat(sendbuf, NEWLINE);
-  sendbuf[511] = '\n';
-  sendbuf[512] = '\0';
   len = strlen(sendbuf);
-#endif /* use_varargs */
+#else
+  /* Satisfy RFC, all sends should be \r \n */
+  sendbuf[len++] = '\r';
+  sendbuf[len++] = '\n';
+  sendbuf[len] = '\0';
+#endif
+
+  if(len > 512)	/* procrustean solution */
+    {
+      sendbuf[510] = '\r';
+      sendbuf[511] = '\n';
+      sendbuf[512] = '\0';
+      len = 512;
+    }
+
   (void)send_message(to, sendbuf, len);
 }
 
@@ -1557,10 +1581,10 @@ int format(char *outp,char *formp,char *in0p,char *in1p,char *in2p,
 	char *in3p,char *in4p,char *in5p,char *in6p,char *in7p,
 	char *in8p,char *in9p,char *in10p,char *in11p)
 {
-/* rp for Reading, wp for Writing, fp for the Format string */
-char *inp[12]; /* we could hack this if we know the format of the stack */
-register char *rp,*fp,*wp;
-register char f;
+  /* rp for Reading, wp for Writing, fp for the Format string */
+  char *inp[12]; /* we could hack this if we know the format of the stack */
+  register char *rp,*fp,*wp;
+  register char f;
   register int i=0;
 
   inp[0]=in0p; inp[1]=in1p; inp[2]=in2p; inp[3]=in3p; inp[4]=in4p;
@@ -1610,8 +1634,6 @@ register char f;
 				in4p,in5p,in6p,in7p,in8p,
 				in9p,in10p,in11p);
 		  /* *blink */
-		  strcat(outp,NEWLINE);
-		  outp[511] = '\n'; outp[512]= '\0';
 		  return strlen(outp);
 		}
 	      /* leading 0's are suppressed unlike ircsprintf() - Dianora */
@@ -1643,8 +1665,6 @@ register char f;
 		  (void)sprintf(outp,formp,in0p,in1p,in2p,in3p,
 				in4p,in5p,in6p,in7p,in8p,
 				in9p,in10p,in11p);
-		  strcat(outp,NEWLINE);
-		  outp[511] = '\n'; outp[512]= '\0';
 		  return strlen(outp);
 		}
 
@@ -1665,20 +1685,14 @@ register char f;
 	    (void)sprintf(outp,formp,in0p,in1p,in2p,in3p,
 			  in4p,in5p,in6p,in7p,in8p,
 			  in9p,in10p,in11p);
-	    strcat(outp,NEWLINE);
-	    outp[511] = '\n'; outp[512]= '\0';
 	    return strlen(outp);
 	    break;
 	  }
     }
-  *(wp++) = '\n';
+
   *wp = '\0'; /* leaves wp pointing to the terminating NULL in the string */
-  {
-    register int len;
-    if ((len = wp-outp) >= 511) len = 512;
-    outp[511] = '\n'; outp[512] = '\0';
-    return len;
-  }
+
+  return (wp-outp);
 }
 
  /*

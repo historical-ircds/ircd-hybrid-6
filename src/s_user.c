@@ -4353,7 +4353,7 @@ void announce_fluder(aClient *fluder,	/* fluder, client being fluded */
 
 
 /* This is really just a "convenience" function.  I can only keep three or
-** four levels of pointer dereferencing straight in my head.  This remove
+** four levels of pointer dereferencing straight in my head.  This removes
 ** an entry in a fluders list.  Use this when working on a fludees list :) */
 struct fludbot *remove_fluder_reference(struct fludbot **fluders,
 					aClient *fluder)

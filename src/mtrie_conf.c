@@ -531,7 +531,6 @@ static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr, int flags,
 	    {
 	      return(first_aconf);
 	    }
-	  return(wild_aconf);
 	}
       /* Ditto with E line.
        * Propogate an E line "downwards" from *@*.host.tld if found.
@@ -544,15 +543,11 @@ static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr, int flags,
 	      first_aconf->status |= CONF_ELINE;
 	      return(first_aconf);
 	    }
-	  return(wild_aconf);
 	}
+      return(wild_aconf);
     }
-  else /* its up to first_aconf, since wild_aconf is NULL */
-    {
-      return(first_aconf);
-    }
-
-  return((aConfItem *)NULL);
+  /* its up to first_aconf, since wild_aconf is NULL */
+  return(first_aconf);
 }
 
 /* find_host_piece
@@ -654,27 +649,24 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 	    {
 	      return(first_aconf);
 	    }
-	  return(wild_aconf);
 	}
       /* Ditto with E line.
        * Propogate an E line "downwards" from *@*.host.tld if found.
        */
       else if(wild_aconf->status & CONF_ELINE)
 	{
-	  if(first_aconf && (first_aconf->status & CONF_KILL))
+	  if(first_aconf)
 	    {
 	      first_aconf->status &= ~CONF_KILL;
 	      first_aconf->status |= CONF_ELINE;
 	      return(first_aconf);
 	    }
-	  return(wild_aconf);
 	}
+      return(wild_aconf);
     }
-  else /* its up to first_aconf since wild_aconf is NULL */
-    {
-      return(first_aconf);
-    }
-  return((aConfItem *)NULL);
+  /* its up to first_aconf since wild_aconf is NULL */
+
+  return(first_aconf);
 }
 
 
@@ -925,7 +917,7 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
       cur_piece = find_host_piece(cur_level,flags,cur_dns_piece,user);
 
       if(!cur_piece)
-        return(aconf);
+	return((aConfItem *)NULL);
     }
 
   if((cur_piece->flags & CONF_KILL) && (!first_kline_trie_list))
@@ -935,7 +927,9 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
     }
 
   if(stack_pointer == 0)
-    return(find_user_piece(cur_piece,flags,cur_dns_piece,user));
+    {
+      return(find_user_piece(cur_piece,flags,cur_dns_piece,user));
+    }
 
   if(cur_piece->next_level)
     {
