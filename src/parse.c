@@ -277,14 +277,13 @@ int parse(aClient *cptr, char *buffer, char *bufend)
 	  else
 	    {
 	      para[i++] = s;
+              if (i > paramcount)
+                {
+                  break;
+                }
               /* scan for end of string, either ' ' or '\0' */
               while (IsNonEOS(*s))
                 s++;
-              if (i > paramcount)
-                {
-                  *s = '\0';
-                  break;
-                }
 	    }
         }
     }

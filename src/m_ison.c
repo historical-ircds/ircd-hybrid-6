@@ -31,6 +31,7 @@
 
 #include <string.h>
 
+static char buf[BUFSIZE];
 
 /*
  * m_functions execute protocol messages on this server:
@@ -108,11 +109,10 @@
 int m_ison(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
   struct Client *acptr;
-  char  *s, **pav = parv;
-  char  *p = (char *)NULL;
+  char *current_nick;
+  char *current_insert_point;
+  char *end_of_current_nick;
   int len;
-  int len2;
-  static char buf[BUFSIZE];
 
   if (parc < 2)
     {
@@ -121,24 +121,45 @@ int m_ison(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       return 0;
     }
 
-  ircsprintf(buf, form_str(RPL_ISON), me.name, *parv);
+  ircsprintf(buf, form_str(RPL_ISON), me.name, parv[0]);
   len = strlen(buf);
+  current_insert_point = buf + len;
+
   if (!IsOper(cptr))
     cptr->priority +=20; /* this keeps it from moving to 'busy' list */
-  for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, (char *)NULL, " "))
-    if ((acptr = find_person(s, NULL)))
-      {
-        len2 = strlen(acptr->name);
-        if((len + len2 + 5) < sizeof(buf)) /* make sure can never overflow  */
-          {                                /* allow for extra ' ','\0' etc. */
-            (void)strcat(buf, acptr->name);
-            len += len2;
-            (void)strcat(buf, " ");
-            len++;
-          }
-        else
-          break;
-      }
+
+  current_nick = parv[1];
+
+  end_of_current_nick = strchr(current_nick,' ');
+
+  for (;;)
+    {
+      if(end_of_current_nick)
+        *end_of_current_nick = '\0';
+      if ((acptr = find_person(current_nick, NULL)))
+	{
+	  len = strlen(acptr->name);
+	  if( (current_insert_point + (len + 5)) < (buf + sizeof(buf)) )
+	    {
+	      memcpy((void *)current_insert_point,
+		     (void *)acptr->name, len);
+	      current_insert_point += len;
+	      *current_insert_point++ = ' ';
+	    }
+	  else
+	    break;
+	}
+
+      if(!end_of_current_nick)
+        break;
+
+      current_nick = end_of_current_nick;
+      current_nick++;  /* should skip to next '\0' or non ' ' */
+      end_of_current_nick = strchr(current_nick,' ');
+    }
+
+  current_insert_point--;
+  *current_insert_point = '\0';
   sendto_one(sptr, "%s", buf);
   return 0;
 }

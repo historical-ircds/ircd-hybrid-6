@@ -44,10 +44,8 @@
 #include "send.h"
 #include "struct.h"
 #include "whowas.h"
+#include "flud.h"
 
-#ifdef FLUD
-#include "blalloc.h"
-#endif /* FLUD */
 #ifdef ANTI_DRONE_FLOOD
 #include "dbuf.h"
 #endif
