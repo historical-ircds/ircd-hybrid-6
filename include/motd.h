@@ -4,6 +4,12 @@
 
 #define MESSAGELINELEN	90
 
+typedef enum {
+  USER_MOTD,
+  OPER_MOTD,
+  HELP_MOTD
+}MotdType;
+
 typedef struct MessageFileLineStruct
 {
   char	line[MESSAGELINELEN];
@@ -13,18 +19,15 @@ typedef struct MessageFileLineStruct
 typedef struct
 {
   char fileName[PATH_MAX+1];
-  int motdType;
+  MotdType motdType;
   MessageFileLine *contentsOfFile;
   char lastChangedDate[MAX_DATE_STRING];
 }MessageFile;
 
-#define  USER_MOTD 0
-#define  OPER_MOTD 1
-#define  HELP_MOTD 2
 
 struct Client;
 
-void InitMessageFile(int, char *, MessageFile *);
+void InitMessageFile(MotdType, char *, MessageFile *);
 int SendMessageFile(struct Client *, MessageFile *);
 int ReadMessageFile(MessageFile *);
 

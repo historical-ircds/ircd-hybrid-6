@@ -87,7 +87,7 @@ int	m_motd(aClient *cptr,
 ** InitMessageFile
 **
 */
-void InitMessageFile(int motdType, char *fileName, MessageFile *motd)
+void InitMessageFile(MotdType motdType, char *fileName, MessageFile *motd)
   {
     strncpy(motd->fileName,fileName,PATH_MAX);
     motd->motdType = motdType;
@@ -106,7 +106,7 @@ void InitMessageFile(int motdType, char *fileName, MessageFile *motd)
 int SendMessageFile(aClient *sptr, MessageFile *motdToPrint)
 {
   MessageFileLine *linePointer;
-  int motdType;
+  MotdType motdType;
 
   if(motdToPrint)
     motdType = motdToPrint->motdType;
