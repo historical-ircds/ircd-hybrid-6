@@ -420,12 +420,6 @@ Info MyInformation[] = {
   { "NO_DEFAULT_INVISIBLE", "OFF", 0, "Do not Give Clients +i Mode Upon Connection" },
 #endif /* NO_DEFAULT_INVISIBLE */
 
-#ifdef NO_DUPE_MULTI_MESSAGES
-  { "NO_DUPE_MULTI_MESSAGES", "ON", 0, "Do not allow dupe PRIVMSG targets" },
-#else
-  { "NO_DUPE_MULTI_MESSAGES", "OFF", 0, "Do not allow dupe PRIVMSG targets" },
-#endif /* NO_DUPE_MULTI_MESSAGES */
-
 #ifdef NO_JOIN_ON_SPLIT
   { "NO_JOIN_ON_SPLIT", "ON", 0, "Users Cannot Join Channels During a NetSplit" },
 #else

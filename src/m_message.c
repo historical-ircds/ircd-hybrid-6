@@ -146,10 +146,8 @@ static  int     m_message(struct Client *cptr,
         return 0;
 #endif
 #endif
-#ifdef NO_DUPE_MULTI_MESSAGES
       if (strchr(parv[1],','))
         parv[1] = canonize(parv[1]);
-#endif
     }
 
 

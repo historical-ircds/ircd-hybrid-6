@@ -233,12 +233,6 @@
  */
 #define MAX_MULTI_MESSAGES 2
 
-/* NO_DUPE_MULTI_MESSAGES
- * Define this to check for duplicate recipients in PRIVMSG, at the expense
- * of noticeable CPU cycles.
- */
-#define NO_DUPE_MULTI_MESSAGES
-
 /* WARN_NO_NLINE
  * Define this if you want ops to get noticed about "things" trying to
  * connect as servers that don't have N: lines.  Twits with misconfigured

@@ -51,9 +51,7 @@ extern int ircncmp(const char *s1, const char *s2, int n);
 ** canonize - reduce a string of duplicate list entries to contain
 ** only the unique items.
 */  
-#ifdef NO_DUPE_MULTI_MESSAGES
 extern char* canonize(char *);
-#endif
 /*
  * ircsprintf - optimized sprintf
  */

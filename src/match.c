@@ -203,7 +203,6 @@ int ircncmp(const char* s1, const char *s2, int n)
   return (res);
 }
 
-#ifdef NO_DUPE_MULTI_MESSAGES
 /*
 ** canonize
 **
@@ -248,7 +247,6 @@ char    *canonize(char *buffer)
     }
   return cbuf;
 } 
-#endif
 
 
 const unsigned char ToLowerTab[] = { 
