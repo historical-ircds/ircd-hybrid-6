@@ -86,8 +86,6 @@ aClient *serv_cptr_list=(aClient *)NULL;
 
 int	MAXCLIENTS = MAX_CLIENTS;	/* semi-configurable if QUOTE_SET is def*/
 struct	Counter	Count;
-int	R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns,
-	R_do_id, R_fin_id, R_fail_id;
 
 time_t	NOW;
 aClient me;			/* That's me */
@@ -816,19 +814,6 @@ int	main(int argc, char *argv[])
       (void)fprintf(stderr,"ERROR: Clock Failure (%d)\n", errno);
       exit(errno);
     }
-
-  /*
-   * We don't want to calculate these every time they are used :)
-   */
-
-  R_do_dns	= strlen(REPORT_DO_DNS);
-  R_fin_dns	= strlen(REPORT_FIN_DNS);
-  R_fin_dnsc	= strlen(REPORT_FIN_DNSC);
-  R_fail_dns	= strlen(REPORT_FAIL_DNS);
-  R_do_id	= strlen(REPORT_DO_ID);
-  R_fin_id	= strlen(REPORT_FIN_ID);
-  R_fail_id	= strlen(REPORT_FAIL_ID);
-
 
   Count.server = 1;	/* us */
   Count.oper = 0;

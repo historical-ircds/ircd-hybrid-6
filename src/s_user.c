@@ -3524,12 +3524,22 @@ int	m_pass(aClient *cptr,
   strncpyzt(cptr->passwd, password, sizeof(cptr->passwd));
   if (parc > 2)
     {
-      int l = strlen(parv[2]);
+      /* It looks to me as if orabidoo wanted to have more
+       * than one set of option strings possible here...
+       * i.e. ":AABBTS" as long as TS was the last two chars
+       * however, as we are now using CAPAB, I think we can
+       * safely assume if there is a ":TS" then its a TS server
+       * -Dianora
+       */
+
+      /*      int l = strlen(parv[2]);
       
       if (l < 2)
-	return 0;
+	return 0; */
+
       /*      if (strcmp(parv[2]+l-2, "TS") == 0) */
-      if(parv[2][0] == 'T' && parv[2][1] == 'S')
+
+      if(parv[2][0] == 'T' && parv[2][1] == 'S' && !parv[2][2])
 	cptr->tsinfo = (ts_val)TS_DOESTS;
     }
   return 0;

@@ -61,6 +61,19 @@
 
 #define REPORT_DLINED   "NOTICE DLINE :*** You have been D-lined\n"
 
+/*
+ * We don't want to calculate these every time they are used :)
+ */
+
+#define R_do_dns (sizeof(REPORT_DO_DNS)-1)
+#define R_fin_dns (sizeof(REPORT_FIN_DNS)-1)
+#define R_fin_dnsc (sizeof(REPORT_FIN_DNSC)-1)
+#define R_fail_dns (sizeof(REPORT_FAIL_DNS)-1)
+#define R_do_id	(sizeof(REPORT_DO_ID)-1)
+#define R_fin_id (sizeof(REPORT_FIN_ID)-1)
+#define R_fail_id (sizeof(REPORT_FAIL_ID)-1)
+
+
 /* sendheader from orabidoo TS4 */
 #define sendheader(cptr, msg, len) do \
    { if (IsUnknown(cptr)) \

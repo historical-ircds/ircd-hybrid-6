@@ -27,9 +27,6 @@
  *
  */
 
-extern int	R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns,
-		R_do_id, R_fin_id, R_fail_id;
-
 
 extern aMessageFile	*motd;
 #ifdef AMOTD

@@ -6075,13 +6075,21 @@ int	m_die(aClient *cptr,
       if (!(acptr = local[i]))
 	continue;
       if (IsClient(acptr))
-	sendto_one(acptr,
-		   ":%s NOTICE %s :Server Terminating. %s",
-		   me.name, acptr->name,
-		   get_client_name(sptr, TRUE));
+	{
+	  if(IsAnOper(acptr))
+	    sendto_one(acptr,
+		       ":%s NOTICE %s :Server Terminating. %s",
+		       me.name, acptr->name,
+		       get_client_name(sptr, TRUE));
+	  else
+	    sendto_one(acptr,
+		       ":%s NOTICE %s :Server Terminating. %s",
+		       me.name, acptr->name,
+		       get_client_name(sptr, HIDEME));
+	}
       else if (IsServer(acptr))
 	sendto_one(acptr, ":%s ERROR :Terminated by %s",
-		   me.name, get_client_name(sptr, TRUE));
+		   me.name, get_client_name(sptr, HIDEME));
     }
   (void)s_die();
   return 0;
