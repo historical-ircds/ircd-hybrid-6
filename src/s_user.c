@@ -1132,11 +1132,11 @@ static int nickkilldone(aClient *cptr, aClient *sptr, int parc,
           while (*m)
             {
               flag = user_modes_from_c_to_bitmask[(int)(*m & 0x1F)];
-              if( flag == FLAGS_INVISIBLE )
+              if( flag & FLAGS_INVISIBLE )
                 {
                   Count.invisi++;
                 }
-              if( flag == FLAGS_OPER )
+              if( flag & FLAGS_OPER )
                 {
                   Count.oper++;
                 }
@@ -1870,7 +1870,7 @@ int user_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
             {
               if(IsServer(cptr))
                 {
-                  Count.oper--;
+                  ++Count.oper;
 
                   SetOper(sptr);
                   sptr->umodes |= FLAGS_OPER;
@@ -1949,9 +1949,9 @@ int user_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
     }
 
   if (!(setflags & FLAGS_INVISIBLE) && IsInvisible(sptr))
-    Count.invisi++;
+    ++Count.invisi;
   if ((setflags & FLAGS_INVISIBLE) && !IsInvisible(sptr))
-    Count.invisi--;
+    --Count.invisi;
   /*
    * compare new flags with old flags and send string which
    * will cause servers to update correctly.
