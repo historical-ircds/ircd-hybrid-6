@@ -1,3 +1,10 @@
+*** 20000423_1 by lusky
+revved patchlevel to b125
+fixed to s_conf for DEBUG mode (db)
+config.h comments for CUSTOM_ERR updated (db)
+syncd config.h.dist to config.h
+
+
 *** 20000421_1 by lusky
 cleanup prototypes in s_bsd.h
 max recipients for privmsg & notice is now configurable at compiletime (perly)
