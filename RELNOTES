@@ -10,7 +10,8 @@ supports POSIX.1 and ANSI-C. We know the code builds cleanly on BSD,
 Solaris, and Linux. If it fails to work for you, or works on another
 platform not listed here, let us know. We won't make any guarantees
 about changing much to support anything wierd, but if including a
-standard header clears up a problem we'll probably do that.
+standard header clears up a problem we'll probably do that.  This code
+is known to _not_ compile on AIX.
 
 The code now uses the ANSI-C assert macro in many places, this means
 that if an invariant isn't, the server will core on the spot hopefully.
