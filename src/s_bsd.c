@@ -234,30 +234,18 @@ void	report_error(char *text,aClient *cptr)
  * inetport
  *
  * Create a socket in the AF_INET domain, bind it to the port given in
- * 'port' and listen to it.  Connections are accepted to this socket
- * depending on the IP# mask given by 'name'.  Returns the fd of the
+ * 'port' and listen to it.  Returns the fd of the
  * socket created or -1 on error.
  */
-int	inetport(aClient *cptr, char *name, int port, u_long bind_addr)
+int	inetport(aClient *cptr, int port, u_long bind_addr)
 {
   static struct sockaddr_in server;
-  int	ad[4], len = sizeof(server);
-  char	ipname[20];
-
-  ad[0] = ad[1] = ad[2] = ad[3] = 0;
-
-  /*
-   * do it this way because building ip# from separate values for each
-   * byte requires endian knowledge or some nasty messing. Also means
-   * easy conversion of "*" 0.0.0.0 or 134.* to 134.0.0.0 :-)
-   */
-  (void)sscanf(name, "%d.%d.%d.%d", &ad[0], &ad[1], &ad[2], &ad[3]);
-  (void)ircsprintf(ipname, "%d.%d.%d.%d", ad[0], ad[1], ad[2], ad[3]);
+  int len = sizeof(server);
 
   if (cptr != &me)
     {
-      (void)ircsprintf(cptr->sockhost, "%-.42s.%.u",
-		       name, (unsigned int)port);
+      (void)ircsprintf(cptr->sockhost, "%-.42s/%.u",
+		       me.name, (unsigned int)port);
       (void)strcpy(cptr->name, me.name);
     }
   /*
@@ -323,17 +311,9 @@ int	inetport(aClient *cptr, char *name, int port, u_long bind_addr)
       return -1;
     }
 
-  if (cptr == &me) /* KLUDGE to get it work... */
-    {
-      char	buf[1024];
-      
-      (void)ircsprintf(buf, rpl_str(RPL_MYPORTIS), me.name, "*",
-		       ntohs(server.sin_port));
-      (void)write(0, buf, strlen(buf));
-    }
   if (cptr->fd > highest_fd)
     highest_fd = cptr->fd;
-  cptr->ip.s_addr = inet_addr(ipname);
+
   cptr->port = (int)ntohs(server.sin_port);
 /* If the operating system has a define for SOMAXCONN, use it, otherwise
    use HYBRID_SOMAXCONN -Dianora
@@ -364,15 +344,18 @@ int	add_listener(aConfItem *aconf)
   cptr->flags = FLAGS_LISTEN;
   cptr->acpt = cptr;
   cptr->from = cptr;
+  cptr->username[0] = '\0';
   SetMe(cptr);
-  strncpyzt(cptr->name, aconf->host, sizeof(cptr->name));
 
   if ((aconf->passwd[0] != '\0') && (aconf->passwd[0] != '*'))
+    {
       vaddr = inet_addr(aconf->passwd);
+      cptr->ip.s_addr = vaddr;
+    }
   else
       vaddr = (u_long) NULL;
 
-  if (inetport(cptr, aconf->host, aconf->port, vaddr))
+  if (inetport(cptr, aconf->port, vaddr))
       cptr->fd = -2;
 
   if (cptr->fd >= 0)
@@ -614,7 +597,7 @@ static	int	check_init(aClient *cptr,char *sockn)
   if (inet_netof(sk.sin_addr) == IN_LOOPBACKNET)
     {
       cptr->hostp = NULL;
-      strncpyzt(sockn, me.sockhost, HOSTLEN);
+      strncpyzt(sockn, me.name, HOSTLEN);
     }
   bcopy((char *)&sk.sin_addr, (char *)&cptr->ip,
 	sizeof(struct in_addr));
@@ -1312,28 +1295,6 @@ aClient	*add_connection(aClient *cptr, int fd)
       bcopy ((char *)&addr.sin_addr, (char *)&acptr->ip,
 	     sizeof(struct in_addr));
       acptr->port = ntohs(addr.sin_port);
-
-      /*
-       * Check that this socket (client) is allowed to accept
-       * connections from this IP#.
-       */
-      for (s = (char *)&cptr->ip, t = (char *)&acptr->ip, len = 4;
-	   len > 0; len--, s++, t++)
-	{
-	  if (!*s)
-	    continue;
-	  if (*s != *t)
-	    break;
-	}
-
-      if (len)
-	{
-	  ircstp->is_ref++;
-	  acptr->fd = -2;
-	  free_client(acptr);
-	  (void)close(fd);
-	  return NULL;
-	}
 
       /* can't use sendheader in this section since acptr->fd hasn't
        * been set yet, must use fd -Dianora/JailBird

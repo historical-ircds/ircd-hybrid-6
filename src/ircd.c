@@ -1173,7 +1173,6 @@ normal user.\n");
 #endif
   if (!(bootopt & BOOT_INETD))
     {
-      static	char	star[] = "*";
       aConfItem	*aconf;
       u_long vaddr;
       
@@ -1181,11 +1180,14 @@ normal user.\n");
 	portnum = aconf->port;
       Debug((DEBUG_ERROR, "Port = %d", portnum));
       if ((aconf->passwd[0] != '\0') && (aconf->passwd[0] != '*'))
-	vaddr = inet_addr(aconf->passwd);
+        {
+	  vaddr = inet_addr(aconf->passwd);
+          me.ip.s_addr = vaddr;
+        }
       else
         vaddr = (u_long) NULL;
 
-      if (inetport(&me, star, portnum, vaddr))
+      if (inetport(&me, portnum, vaddr))
       {
 	if (bootopt & BOOT_STDERR)
           fprintf(stderr,"Couldn't bind to primary port %d\n", portnum);
@@ -1195,7 +1197,7 @@ normal user.\n");
 	exit(1);
       }
     }
-  else if (inetport(&me, "*", 0, 0))
+  else if (inetport(&me, 0, 0))
   {
     if (bootopt & BOOT_STDERR)
       fprintf(stderr,"Couldn't bind to port passed from inetd\n");
@@ -1208,6 +1210,7 @@ normal user.\n");
   (void)get_my_name(&me, me.sockhost, sizeof(me.sockhost)-1);
   if (me.name[0] == '\0')
     strncpyzt(me.name, me.sockhost, sizeof(me.name));
+  (void)ircsprintf(me.sockhost, "%-.42s/%.u", me.sockhost, (unsigned int)me.port);
   me.hopcount = 0;
   me.authfd = -1;
   me.confs = NULL;
@@ -1505,7 +1508,7 @@ static	void	open_debugfile()
       cptr->flags = 0;
       cptr->acpt = cptr;
       local[2] = cptr;
-      (void)strcpy(cptr->sockhost, me.sockhost);
+      (void)strcpy(cptr->sockhost, me.name);
 
       (void)printf("isatty = %d ttyname = %#x\n",
 		   isatty(2), (u_long)ttyname(2));

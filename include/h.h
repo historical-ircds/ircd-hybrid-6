@@ -155,7 +155,7 @@ extern	void	close_listeners ();
 extern	int	connect_server (aConfItem *, aClient *, struct hostent *);
 extern	void	get_my_name (aClient *, char *, int);
 extern	int	get_sockerr (aClient *);
-extern	int	inetport (aClient *, char *, int, u_long);
+extern	int	inetport (aClient *, int, u_long);
 extern	void	init_sys ();
 extern	int	read_message (time_t);
 extern	void	report_error (char *, aClient *);

@@ -3444,7 +3444,7 @@ int	m_oper(aClient *cptr,
 #ifdef	OPER_REMOTE
       if (aconf->status == CONF_LOCOP)
 #else
-	if ((matches(s,me.sockhost) && !IsLocal(sptr)) ||
+	if ((matches(s,me.name) && !IsLocal(sptr)) ||
 	    aconf->status == CONF_LOCOP)
 #endif
 	  {
