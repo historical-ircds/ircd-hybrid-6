@@ -184,7 +184,6 @@ extern	void	server_reboot (void);
 extern	void	terminate (void), write_pidfile (void);
 
 extern	int	send_queued (aClient *);
-extern  int     place_dline(aClient *,char *,char*, char*);
 
 /* Missing definitions */
 /*VARARGS*/
@@ -196,7 +195,7 @@ extern  void	sendto_wallops_butone();	/* defined in send.c */
 extern  int     match(char *,char *);		/* defined in match.c */
 extern	char    *collapse(char *);		/* match.c */
 extern  void    send_capabilities(aClient *,int);
-extern  int	host_is_legal_ip(char *); 
+extern  int	is_address(char *,unsigned long *,unsigned long *); 
 extern  void	do_include_conf();
 extern  void	del_client_from_llist(aClient **, aClient *);
 extern	void	sendto_channel_type_notice(aClient *, aChannel *, int, char *);

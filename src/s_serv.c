@@ -4477,6 +4477,8 @@ int     m_kline(aClient *cptr,
   int wild_user;		/* does user part match everything? */
   time_t temporary_kline_time_seconds=0;
   char *argv;
+  unsigned long ip;
+  unsigned long ip_mask;
 #ifdef SLAVE_SERVERS
   char *slave_oper;
   aClient *rcptr=NULL;
@@ -4719,9 +4721,8 @@ int     m_kline(aClient *cptr,
    * Don't do the CIDR conversion for now of course.
    */
 
-  if(!temporary_kline_time && host_is_legal_ip(host))
+  if(!temporary_kline_time && (ip_kline = is_address(host,&ip,&ip_mask)))
      {
-       ip_kline = YES;
        strncpy(cidr_form_host,host,32);
        p = strchr(cidr_form_host,'*');
        if(p)
@@ -5443,10 +5444,18 @@ int     m_dline(aClient *cptr,
 {
   char *host, *reason;
   char *p;
-  int number_of_dots=0;
-  int number_of_chars=0;
   aClient *acptr;
   char cidr_form_host[64];
+  unsigned long ip_host;
+  unsigned long ip_mask;
+  aConfItem *aconf;
+#if defined(LOCKFILE) && defined(DLINES_IN_KPATH)
+  struct pkl *k;
+#else
+  int out;
+#endif
+  char buffer[1024];
+  char *current_date;
 
 #ifdef NO_LOCAL_KLINE
   if (!MyClient(sptr) || !IsOper(sptr))
@@ -5472,100 +5481,81 @@ int     m_dline(aClient *cptr,
     }
 
   host = parv[1];
+  strncpy(cidr_form_host,host,32);
 
-  p = host;
-  while(*p)
+  if((p = strchr(cidr_form_host,'*')))
     {
-      if(*p == '.')
-	{
-	  number_of_dots++;
-	  p++;
-	  number_of_chars++;
-	}
-      else if(*p == '/')	/* I'm going to gamble
-				   that it is a legal ddd.ddd.ddd.ddd/mask */
-	break;
-      else if(*p == '*')
-	{
-	  if(number_of_dots != 3)
-	    {
-	      sendto_one(sptr, ":%s NOTICE %s :D-line ddd.ddd.ddd.*",
-				 me.name, parv[0]);
-              return 0;
-            }
-          else
-           {
-	     *(p+1) = '\0';
-	     /* I know its a dline old style of form nnn.nnn.nnn.*
-	      * convert to cidr style here *sigh* -Dianora
-	      */
-	     strncpy(cidr_form_host,host,32);
-	     p = strchr(cidr_form_host,'*');
-	     if(p)
-	       {
-		 *p++ = '0';
-		 *p++ = '/';
-		 *p++ = '2';
-		 *p++ = '4';
-		 *p++ = '\0';
-		 number_of_chars += 4;
-	       }
-	     host = cidr_form_host;
-	     break;
-           }
-	}
-      else
-	{
-	  if(!isdigit(*p))
-	    {
-	      if (!(acptr = find_chasing(sptr, parv[1], NULL)))
-		return 0;
-
-	      if(!acptr->user)
-		return 0;
-
-	      if (IsServer(acptr))
-		{
-		  sendto_one(sptr,
-			     ":%s NOTICE %s :Can't DLINE a server silly",
-			     me.name, parv[0]);
-		  return 0;
-		}
-	      
-	      if(!MyConnect(acptr))
-		{
-		  sendto_one(sptr,
-			  ":%s NOTICE :%s :Can't DLINE nick on another server",
-			  me.name, parv[0]);
-		  return 0;
-		}
-
-	      host = cluster(acptr->hostip);
-	      strncpy(cidr_form_host,host,32);
-	      p = strchr(cidr_form_host,'*');
-	      if(p)
-		{
-		  *p++ = '0';
-		  *p++ = '/';
-		  *p++ = '2';
-		  *p++ = '4';
-		  *p++ = '\0';
-		}
-	     host = cidr_form_host;
-	     break;
-	      break;
-	    }
-	  p++;
-	  number_of_chars++;
-	  /* ddd.ddd.ddd.ddd == 15 ddd.ddd.ddd.000/24 == 18 */
-	  if(number_of_chars > 18)
-	    {
-	      if (!(acptr = find_chasing(sptr, parv[1], NULL)))
-		return 0;
-	      break;
-	    }
-	}
+      *p++ = '0';
+      *p++ = '/';
+      *p++ = '2';
+      *p++ = '4';
+      *p++ = '\0';
+      host = cidr_form_host;
     }
+
+  if(!is_address(host,&ip_host,&ip_mask))
+    {
+      if (!(acptr = find_chasing(sptr, parv[1], NULL)))
+	return 0;
+
+      if(!acptr->user)
+	return 0;
+
+      if (IsServer(acptr))
+	{
+	  sendto_one(sptr,
+		     ":%s NOTICE %s :Can't DLINE a server silly",
+		     me.name, parv[0]);
+	  return 0;
+	}
+	      
+      if(!MyConnect(acptr))
+	{
+	  sendto_one(sptr,
+		     ":%s NOTICE :%s :Can't DLINE nick on another server",
+		     me.name, parv[0]);
+	  return 0;
+	}
+
+      if(IsElined(acptr))
+	{
+	  sendto_one(sptr,
+		     ":%s NOTICE %s :%s is E-lined",me.name,parv[0],
+		     acptr->name);
+	  return 0;
+	}
+
+      strncpy(cidr_form_host,acptr->hostip,32);
+      
+      p = strchr(cidr_form_host,'.');
+      if(!p)
+	return 0;
+      /* 192. <- p */
+
+      p++;
+      p = strchr(p,'.');
+      if(!p)
+	return 0;
+      /* 192.168. <- p */
+
+      p++;
+      p = strchr(p,'.');
+      if(!p)
+	return 0;
+      /* 192.168.0. <- p */
+
+      p++;
+      *p++ = '0';
+      *p++ = '/';
+      *p++ = '2';
+      *p++ = '4';
+      *p++ = '\0';
+      host = cidr_form_host;
+
+      ip_mask = 0xFFFFFF00L;
+      ip_host = ntohl(acptr->ip.s_addr);
+    }
+
 
   if (parc > 2)	/* host :reason */
     {
@@ -5594,69 +5584,32 @@ int     m_dline(aClient *cptr,
     reason = "No reason";
 
 
-  /*
-  ** At this point, I know the host to place the d-line on
-  ** I also know the reason field is clean
-  **
-  */
-
-  return place_dline(sptr,parv[0],host,reason); 
-}
-
-/*
-** place_dline()
-** actual code that places the d-line
-*/
-
-int     place_dline(aClient *sptr,
-		    char *parv0,
-		    char *host,
-		    char *reason)
-{
-#if defined(LOCKFILE) && defined(DLINES_IN_KPATH)
-  struct pkl *k;
-#else
-  int out;
-#endif
-  char buffer[1024];
-  char *current_date;
-  unsigned long ip_host;
-  unsigned long ip_host_network_order;
-  unsigned long ip_mask;
-  aConfItem *aconf;
-
-  ip_host = host_name_to_ip(host,&ip_mask); /* returns in =host= order */
-  ip_host_network_order = ntohl(ip_host);   /* get it in network order 
-					     * its used only for 
-					     * find_host_in_dline_hash
-					     */
-
   if((ip_mask & 0xFFFFFF00) ^ 0xFFFFFF00)
     {
       if(ip_mask != 0xFFFFFFFF)
 	{
 	  sendto_one(sptr, ":%s NOTICE %s :Can't use a mask less than 24 with dline",
 		     me.name,
-		     parv0);
+		     parv[0]);
 	  return 0;
 	}
     }
 
 #ifdef NON_REDUNDANT_KLINES
-  if( (aconf = match_Dline(ip_host_network_order)) )
+  if( (aconf = match_Dline(ip_host)) )
      {
        char *reason;
        reason = aconf->passwd ? aconf->passwd : "<No Reason>";
-       if(aconf->status & CONF_ELINE)
+       if(IsConfElined(aconf))
 	 sendto_one(sptr, ":%s NOTICE %s :[%s] is (E)d-lined by [%s] - %s",
 		    me.name,
-		    parv0,
+		    parv[0],
 		    host,
 		    aconf->host,reason);
 	 else
 	   sendto_one(sptr, ":%s NOTICE %s :[%s] already D-lined by [%s] - %s",
 		      me.name,
-		      parv0,
+		      parv[0],
 		      host,
 		      aconf->host,reason);
       return 0;
@@ -5673,16 +5626,19 @@ int     place_dline(aClient *sptr,
   DupString(aconf->host,host);
   DupString(aconf->passwd,buffer);
 
+  aconf->ip = ip_host;
+  aconf->ip_mask &= ip_mask;
+
   add_Dline(aconf);
   sendto_realops("%s added D-Line for [%s] [%s]",
-		 parv0, host, reason);
+		 parv[0], host, reason);
 
 #ifdef DLINES_IN_KPATH
   sendto_one(sptr, ":%s NOTICE %s :Added D-Line [%s] to server klinefile",
-	     me.name, parv0, host);
+	     me.name, parv[0], host);
 #else
   sendto_one(sptr, ":%s NOTICE %s :Added D-Line [%s] to server configfile",
-          me.name, parv0, host);
+          me.name, parv[0], host);
 #endif
 
   /*
@@ -5702,7 +5658,7 @@ int     place_dline(aClient *sptr,
   if((k = (struct pkl *)MyMalloc(sizeof(struct pkl))) == NULL)
     {
       sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		 me.name, parv0);
+		 me.name, parv[0]);
       return(0);
     }
 
@@ -5715,7 +5671,7 @@ int     place_dline(aClient *sptr,
     {
       free(k);
       sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		 me.name, parv0);
+		 me.name, parv[0]);
       return(0);
     }
 
@@ -5729,7 +5685,7 @@ int     place_dline(aClient *sptr,
       free(k->comment);
       free(k); 
       sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		 me.name, parv0);
+		 me.name, parv[0]);
       return(0);
     }       
   k->next = pending_klines;
@@ -5743,7 +5699,7 @@ int     place_dline(aClient *sptr,
   if ((out = open(dlinefile, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
     {
       sendto_one(sptr, ":%s NOTICE %s :Problem opening %s ",
-		 me.name, parv0, dlinefile);
+		 me.name, parv[0], dlinefile);
       return 0;
     }
 
@@ -5752,7 +5708,7 @@ int     place_dline(aClient *sptr,
 		   sptr->user->host, host,
 		   reason, current_date);
 
-  if (safe_write(sptr,parv0,dlinefile,out,buffer))
+  if (safe_write(sptr,parv[0],dlinefile,out,buffer))
     return 0;
 
   (void)ircsprintf(buffer, "D:%s:%s (%s)\n",
@@ -5760,7 +5716,7 @@ int     place_dline(aClient *sptr,
 		   reason,
 		   current_date);
 
-  if (safe_write(sptr,parv0,dlinefile,out,buffer))
+  if (safe_write(sptr,parv[0],dlinefile,out,buffer))
     return 0;
 
   (void)close(out);

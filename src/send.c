@@ -230,9 +230,10 @@ static	int	send_message(aClient *to, char *msg, int len)
       */
       if (DBufLength(&to->sendQ) > get_sendq(to))
 	{
-	  sendto_ops("Max SendQ limit exceeded for %s : %d > %d",
-		     get_client_name(to, FALSE),
-		     DBufLength(&to->sendQ), get_sendq(to));
+	  sendto_ops_butone(to,
+			   "Max SendQ limit exceeded for %s : %d > %d",
+			   get_client_name(to, FALSE),
+			   DBufLength(&to->sendQ), get_sendq(to));
 	  if (IsDoingList(to))
 	    return dead_link(to, "Local kill by /list (so many channels!)");
 	  else

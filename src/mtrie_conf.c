@@ -84,7 +84,7 @@ static void report_unsortable_klines(aClient *,char *);
 static void clear_sub_mtrie(DOMAIN_LEVEL *);
 static aConfItem *find_matching_ip_i_line(unsigned long);
 
-void add_to_ip_ilines(aConfItem *);
+void add_to_ip_ilines(aConfItem *,unsigned long, unsigned long);
 
 /* internally used variables, these can all be static */
 
@@ -124,6 +124,8 @@ aConfItem *ip_i_lines=(aConfItem *)NULL;
 void add_mtrie_conf_entry(aConfItem *aconf,int flags)
 {
   char tokenized_host[HOSTLEN+1];
+  unsigned long ip_host;
+  unsigned long ip_mask;
 
   /* Sanity tests are always good */
   if(!aconf->host || !aconf->name)
@@ -132,9 +134,14 @@ void add_mtrie_conf_entry(aConfItem *aconf,int flags)
       return;
     }
 
-  if( (aconf->host[0] == 'x') && aconf->mask && host_is_legal_ip(aconf->mask) )
+  if( (aconf->host[0] == 'x') && aconf->mask && 
+      is_address(aconf->mask,&ip_host,&ip_mask) )
     {
-      add_to_ip_ilines(aconf);
+      aconf->ip = ip_host & ip_mask;
+      aconf->ip_mask = ip_mask;
+      
+      aconf->next = ip_i_lines;
+      ip_i_lines = aconf;
       return;
     }
 
@@ -144,8 +151,10 @@ void add_mtrie_conf_entry(aConfItem *aconf,int flags)
    * or user@ip.ip.ip.* or user@ip.ip.ip.ip
    */
 
-  if(host_is_legal_ip(aconf->host) && (aconf->status & CONF_KILL))
+  if(is_address(aconf->host,&ip_host,&ip_mask) && (aconf->status & CONF_KILL))
     {
+      aconf->ip = ip_host & ip_mask;
+      aconf->ip_mask = ip_mask;
       add_ip_Kline(aconf);
       return;
     }
@@ -1187,6 +1196,8 @@ void report_matching_host_klines(aClient *sptr,char *host)
 {
   DOMAIN_PIECE *cur_piece;
   DOMAIN_LEVEL *cur_level;
+  unsigned long ip_host;
+  unsigned long ip_mask;
   char *cur_dns_piece;
   char *p;
   int two_letter_tld = 0;
@@ -1195,9 +1206,8 @@ void report_matching_host_klines(aClient *sptr,char *host)
   if (strlen(host) > (size_t) HOSTLEN)
     return;
 
-  if(host_is_legal_ip(host))
+  if(is_address(host,&ip_host,&ip_mask))
     {
-      report_unsortable_klines(sptr,host);
       return;
     }
 
@@ -1771,29 +1781,6 @@ static void clear_sub_mtrie(DOMAIN_LEVEL *dl_ptr)
 	}
     }
   MyFree(dl_ptr);
-}
-
-
-/*
- * add_to_ip_ilines
- *
- * inputs	- pointer to an aConfItem to add
- * output	- NONE
- * side effects	- a conf describing an I line for an IP is added
- */
-
-void add_to_ip_ilines(aConfItem *aconf)
-{
-  unsigned long ip_host;
-  unsigned long ip_mask;
-
-  ip_host = host_name_to_ip(aconf->mask,&ip_mask); /*returns in =host= order*/
-
-  aconf->ip = ip_host & ip_mask;
-  aconf->ip_mask = ip_mask;
-
-  aconf->next = ip_i_lines;
-  ip_i_lines = aconf;
 }
 
 /*

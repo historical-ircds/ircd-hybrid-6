@@ -1502,6 +1502,8 @@ int 	initconf(int opt, int fd,int use_include)
   u_long vaddr;
   aConfItem *aconf = NULL;
   aConfItem *include_conf = NULL;
+  unsigned long ip;
+  unsigned long ip_mask;
 
   (void)dgets(-1, NULL, 0); /* make sure buffer is at empty pos */
   while ((i = dgets(fd, line, sizeof(line) - 1)) > 0)
@@ -1997,8 +1999,13 @@ int 	initconf(int opt, int fd,int use_include)
       else if (aconf->host && (aconf->status & CONF_KILL))
 	{
 	  dontadd = 1;
-	  if(host_is_legal_ip(aconf->host))
-	    add_ip_Kline(aconf);
+	  if(is_address(aconf->host,&ip,&ip_mask))
+	    {
+	      ip &= ip_mask;
+	      aconf->ip = ip;
+	      aconf->ip_mask = ip_mask;
+	      add_ip_Kline(aconf);
+	    }
 	  else
 	    {
 	      (void)collapse(aconf->host);
@@ -2010,6 +2017,11 @@ int 	initconf(int opt, int fd,int use_include)
 	{
 	  dontadd = 1;
 	  DupString(aconf->mask,aconf->host);
+	  (void)is_address(aconf->host,&ip,&ip_mask);
+	  ip &= ip_mask;
+	  aconf->ip = ip;
+	  aconf->ip_mask = ip_mask;
+
 	  if(aconf->flags & CONF_FLAGS_E_LINED)
 	    add_dline(aconf);
 	  else
@@ -2265,7 +2277,7 @@ aConfItem *find_is_klined(char *host,char *name,unsigned long ip)
    */
 
   found_aconf = find_matching_mtrie_conf(host,name,ntohl(ip));
-  if(found_aconf && found_aconf->status & CONF_KILL)
+  if(found_aconf && (found_aconf->status & (CONF_ELINE|CONF_DLINE|CONF_KILL)))
     return(found_aconf);
   else
     return((aConfItem *)NULL);
@@ -3142,103 +3154,6 @@ static int check_time_interval(char *interval)
 }
 #endif
 
-/*
- * host_name_to_ip
- *
- * inputs	- hostname
- *		- pointer to ip_mask
- * output	- ip in host order
- * 		- ip_mask pointed to by ip_mask_ptr is updated
- * side effects	- NONE
- *	generate an ip, and produce the proper mask
- *	given the / mask notation
- */
-
-unsigned long cidr_to_bitmask[]=
-{
-  /* 00 */ 0x00000000,
-  /* 01 */ 0x80000000,
-  /* 02 */ 0xC0000000,
-  /* 03 */ 0xE0000000,
-  /* 04 */ 0xF0000000,
-  /* 05 */ 0xF8000000,
-  /* 06 */ 0xFC000000,
-  /* 07 */ 0xFE000000,
-  /* 08 */ 0xFF000000,
-  /* 09 */ 0xFF800000,
-  /* 10 */ 0xFFC00000,
-  /* 11 */ 0xFFE00000,
-  /* 12 */ 0xFFF00000,
-  /* 13 */ 0xFFF80000,
-  /* 14 */ 0xFFFC0000,
-  /* 15 */ 0xFFFE0000,
-  /* 16 */ 0xFFFF0000,
-  /* 17 */ 0xFFFF8000,
-  /* 18 */ 0xFFFFC000,
-  /* 19 */ 0xFFFFE000,
-  /* 20 */ 0xFFFFF000,
-  /* 21 */ 0xFFFFF800,
-  /* 22 */ 0xFFFFFC00,
-  /* 23 */ 0xFFFFFE00,
-  /* 24 */ 0xFFFFFF00,
-  /* 25 */ 0xFFFFFF80,
-  /* 26 */ 0xFFFFFFC0,
-  /* 27 */ 0xFFFFFFE0,
-  /* 28 */ 0xFFFFFFF0,
-  /* 29 */ 0xFFFFFFF8,
-  /* 30 */ 0xFFFFFFFC,
-  /* 31 */ 0xFFFFFFFE,
-  /* 32 */ 0xFFFFFFFF
-};
-
-unsigned long host_name_to_ip(char *host,unsigned long *ip_mask_ptr)
-{
-  unsigned long generated_host_ip=0L;
-  unsigned long current_ip=0L;
-  unsigned int octet=0;
-  int found_mask=0;
-
-  for(;*host;host++)
-    {
-      if(isdigit(*host))
-	{
-	  octet *= 10;
-	  octet += (*host & 0xF);
-	}
-      else if(*host == '.')
-	{
-	  current_ip <<= 8;
-	  current_ip += octet;
-	  octet = 0;
-	}
-      else if(*host == '/')
-	{
-	  found_mask = 1;
-	  current_ip <<= 8;
-	  current_ip += octet;
-	  octet = 0;
-	  generated_host_ip = current_ip;
-	  current_ip = 0L;
-	}
-    }
-
-  current_ip <<= 8;
-  current_ip += octet;
-
-  if(found_mask)
-    {
-      if(current_ip>32)
-	current_ip = 32;
-      *ip_mask_ptr = cidr_to_bitmask[current_ip];
-    }
-  else
-    {
-      generated_host_ip = current_ip;
-      *ip_mask_ptr = 0xFFFFFFFFL;
-    }
-  return(generated_host_ip);
-}
-
 /* get_oper_privs
  *
  * inputs	- default privs
@@ -3458,72 +3373,124 @@ char *oper_flags(int flags)
 }
 
 /*
- * host_is_legal_ip
+ * is_address
  *
  * inputs	- hostname
+ *		- pointer to ip result
+ *		- pointer to ip_mask result
  * output	- YES if hostname is ip# only NO if its not
+ *              - 
  * side effects	- NONE
  * 
- * (If you think you've seen this somewhere else, you are right.
- * ripped out of tcm-dianora basically)
+ * Thanks Soleil
  *
  * BUGS
- * This is very rudimentary check, it should be improved some time
- * notably:
- *
- * 1) it does not check that each quad is <= 255
- * 2) it does not verify that there is a valid / mask found
- * 
- * -Dianora
  */
-
-int host_is_legal_ip(char *host_name)
+unsigned long cidr_to_bitmask[]=
 {
-  int number_of_dots = 0;
+  /* 00 */ 0x00000000,
+  /* 01 */ 0x80000000,
+  /* 02 */ 0xC0000000,
+  /* 03 */ 0xE0000000,
+  /* 04 */ 0xF0000000,
+  /* 05 */ 0xF8000000,
+  /* 06 */ 0xFC000000,
+  /* 07 */ 0xFE000000,
+  /* 08 */ 0xFF000000,
+  /* 09 */ 0xFF800000,
+  /* 10 */ 0xFFC00000,
+  /* 11 */ 0xFFE00000,
+  /* 12 */ 0xFFF00000,
+  /* 13 */ 0xFFF80000,
+  /* 14 */ 0xFFFC0000,
+  /* 15 */ 0xFFFE0000,
+  /* 16 */ 0xFFFF0000,
+  /* 17 */ 0xFFFF8000,
+  /* 18 */ 0xFFFFC000,
+  /* 19 */ 0xFFFFE000,
+  /* 20 */ 0xFFFFF000,
+  /* 21 */ 0xFFFFF800,
+  /* 22 */ 0xFFFFFC00,
+  /* 23 */ 0xFFFFFE00,
+  /* 24 */ 0xFFFFFF00,
+  /* 25 */ 0xFFFFFF80,
+  /* 26 */ 0xFFFFFFC0,
+  /* 27 */ 0xFFFFFFE0,
+  /* 28 */ 0xFFFFFFF0,
+  /* 29 */ 0xFFFFFFF8,
+  /* 30 */ 0xFFFFFFFC,
+  /* 31 */ 0xFFFFFFFE,
+  /* 32 */ 0xFFFFFFFF
+};
 
-  if(*host_name == '.')
-    return(NO);	/* degenerate case */
+int	is_address(char *host,
+		   unsigned long *ip_ptr,
+		   unsigned long *ip_mask_ptr)
+{
+  unsigned long current_ip=0L;
+  unsigned int octet=0;
+  int found_mask=0;
+  int dot_count=0;
+  char c;
 
-  /* "I:x:..." case */
-  if(*host_name == 'x')
-    return(NO);	/* fast case to throw out */
-
-  /* "I:NOMATCH:..." case */
-  if(*host_name == 'N')
-    return(NO);	/* another fast one to throw out */
-
-  while(*host_name)
+  while( c = *host)
     {
-      if( *host_name == '.' )
-	number_of_dots++;
-      else if(*host_name == '*')
+      if(isdigit(c))
 	{
-	  if(*(host_name+1) == '\0')
+	  octet *= 10;
+	  octet += (*host & 0xF);
+	}
+      else if(c == '.')
+	{
+	  current_ip <<= 8;
+	  current_ip += octet;
+	  if( octet > 255 )
+	    return( 0 );
+	  octet = 0;
+	  dot_count++;
+	}
+      else if(c == '/')
+	{
+	  if( octet > 255 )
+	    return( 0 );
+	  found_mask = 1;
+	  current_ip <<= 8;
+	  current_ip += octet;
+	  octet = 0;
+	  *ip_ptr = current_ip;
+	  current_ip = 0L;
+	}
+      else if(c == '*')
+	{
+	  if( (dot_count == 3) && (*(host+1) == '\0') && (*(host-1) == '.'))
 	    {
-	      if(number_of_dots == 3)
-		return(YES);
-	      else
-		return(NO);
+	      current_ip <<= 8;
+	      *ip_ptr = current_ip;
+	      *ip_mask_ptr = 0xFFFFFF00L;
+	      return( 1 );
 	    }
-	  else
-	    return(NO);
 	}
-      else if(*host_name == '/')
-	{
-	  if(number_of_dots == 3)
-	    return(YES);
-	  else
-	    return(NO);
-	}
-      else if(!isdigit(*host_name))
-	return(NO);
-      host_name++;
+      else
+	return( 0 );
+      host++;
     }
 
-  if(number_of_dots == 3 )
-    return(YES);
+  current_ip <<= 8;
+  current_ip += octet;
+
+  if(found_mask)
+    {
+      if(current_ip>32)
+	return( 0 );
+      *ip_mask_ptr = cidr_to_bitmask[current_ip];
+    }
   else
-    return(NO);
+    {
+      *ip_ptr = current_ip;
+      *ip_mask_ptr = 0xFFFFFFFFL;
+    }
+
+  return( 1 );
 }
 
 #ifdef KILL_COMMENT_IS_FILE
@@ -3577,7 +3544,6 @@ char    *parv, *filename;
 int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
   aConfItem *aconf;
-  char *ip_string;
   unsigned long ip;
   unsigned long host_mask;
   char *p;
@@ -3609,17 +3575,8 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
       *p = '\0';
       p++;
       given_host = p;
-      if(!(p = strchr(given_host,',')))
-	{
-	  ip = 0L;
-	}
-      else
-	{
-	  *p = '\0';
-	  p++;
-	  ip_string = p;
-	  ip = host_name_to_ip(ip_string,&host_mask);
-	}
+      ip = 0L;
+      (void)is_address(given_host,&ip,&host_mask);
 
       aconf = find_matching_mtrie_conf(given_host,given_name,(unsigned long)ip);
 

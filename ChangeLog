@@ -1,6 +1,14 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b74   19-May-1999
+* backed out incorrect change in dline_conf.c
+* Corrected sendto_ops in send.c that was recursive in sendq errors,
+  this one could have restarted server in infinite loop. (Raistlin Mejere)
+* Using variant of soleil's is_address() code
+* Fixed handling of kline/dline in s_serv.c s_bsd.c s_conf.c 
+-Dianora
+	
 version hybrid-6-b73   15-May-1999
 * attempt to workaround 64bit Solaris gcc-2.8.1 bug
 * more compile cleanup for obscure config options
@@ -29,7 +37,7 @@ version hybrid-6-b68   8-May-1999
 * Y2K fixes.  All dates that were YYMMDD are now YYYYMMDD.  Affects
   SEPARATE_QUOTE_KLINES_BY_DATE and GLINE code.
 * SEPARATE_QUOTE_KLINES_BY_DATE wouldn't compile
---Rodder
+-Rodder
 
 version hybrid-6-b67   9-May-1999
 * fixed broken LIMIT_UH code
@@ -45,11 +53,11 @@ version hybrid-6-b66   8-May-1999
 version hybrid-6-b65   8-May-1999
 * changed ANTI_DRONE_FLOOD and JUPE_CHANNEL to undeffed by default
 * servers and opers can no longer trip the drone detection
---Rodder
+-Rodder
 
 version hybrid-6-b64   8-May-1999
 * code clean-up...
---Rodder
+-Rodder
 
 version hybrid-6-b63   6-May-1999
 * SPY_LEVEL notices for clients attempting to join juped channel

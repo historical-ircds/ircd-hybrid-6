@@ -2848,7 +2848,7 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 		{
 		  allow_op = NO;
 
-		  if(!IsRestricted(sptr) && (flags == CHFL_CHANOP))
+		  if(!IsRestricted(sptr) && (flags & CHFL_CHANOP))
 		sendto_one(sptr,":%s NOTICE %s :*** Notice -- Due to a network split, you can not obtain channel operator status in a new channel at this time.",
 			   me.name,
 			   sptr->name);
@@ -2975,9 +2975,13 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 
 #ifdef USE_ALLOW_OP
       if(allow_op)
-	add_user_to_channel(chptr, sptr, flags);
+	{
+	  add_user_to_channel(chptr, sptr, flags);
+	}
       else
-	add_user_to_channel(chptr, sptr, flags & CHFL_EXCEPTION);
+	{
+	  add_user_to_channel(chptr, sptr, flags & CHFL_EXCEPTION);
+	}
 #else
       add_user_to_channel(chptr, sptr, flags);
 #endif
@@ -2989,9 +2993,12 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 	  chptr->channelts = timeofday;
 #ifdef USE_ALLOW_OP
 	  if(allow_op)
-	    sendto_match_servs(chptr, cptr,
-			       ":%s SJOIN %ld %s + :@%s", me.name,
-			       chptr->channelts, name, parv[0]);
+	    {
+	      sendto_match_servs(chptr, cptr,
+				 ":%s SJOIN %ld %s + :@%s", me.name,
+				 chptr->channelts, name, parv[0]);
+
+	    }				     
 	  else
 	    sendto_match_servs(chptr, cptr,
 			       ":%s SJOIN %ld %s + :%s", me.name,
@@ -3000,7 +3007,6 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 	  sendto_match_servs(chptr, cptr,
 			     ":%s SJOIN %ld %s + :@%s", me.name,
 			     chptr->channelts, name, parv[0]);
-
 #endif
 	}
       else if (MyClient(sptr))
@@ -3021,6 +3027,20 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 
       if (MyClient(sptr))
 	{
+	  if( flags & CHFL_CHANOP )
+	    {
+	      chptr->mode.mode |= MODE_TOPICLIMIT;
+	      chptr->mode.mode |= MODE_NOPRIVMSGS;
+
+	      sendto_channel_butserv(chptr, sptr,
+				 ":%s MODE %s +nt",
+				 sptr->name, chptr->chname);
+
+	      sendto_match_servs(chptr, sptr, 
+				 ":%s MODE %s +nt",
+				 sptr->name, chptr->chname);
+	    }
+
 	  del_invite(sptr, chptr);
         /*  call m_names BEFORE spewing the topic, so people actually see
         **  the topic, and stop whining.  --SuperTaz

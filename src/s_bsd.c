@@ -1316,6 +1316,7 @@ aClient	*add_connection(aClient *cptr, int fd)
   Link	lin;
   aClient *acptr;
   aConfItem *aconf = NULL;
+  aConfItem *found_conf = NULL;
   acptr = make_client(NULL);
 
   if (cptr != &me)
@@ -1606,6 +1607,7 @@ void read_clients()
   register int i,j;
   int rr;
   time_t	last_full_to_opers_notice = (time_t)0;
+  aConfItem     *found_conf;
 
   /* if it is called with NULL we check all active fd's */
   if (!listp)
@@ -1710,14 +1712,15 @@ void read_clients()
 	{
 	  return -1;
 	}
-      else if (nfds >= 0)
+      else if( nfds >= 0)
 	break;
-      report_error("select %s:%s", &me);
+
       res++;
       if (res > 5)
 	restart("too many select errors");
       sleep(10);
     }
+
   /*
    * Check the name resolver
    */
@@ -1789,8 +1792,9 @@ void read_clients()
 		    (char *)inetntoa((char *)&addr.sin_addr),
 		    sizeof(host));
 
-	  if (match_Dline(ntohl((unsigned long)addr.sin_addr.s_addr)))
+	  found_conf = match_Dline(ntohl((unsigned long)addr.sin_addr.s_addr));
 
+	  if (found_conf && !IsConfElined(found_conf))
 	    {
 	      ircstp->is_ref++;
 #ifdef REPORT_DLINE_TO_USER
@@ -1993,6 +1997,7 @@ int	read_message(time_t delay, fdlist *listp)
   register	int i,j;
   static aClient	*authclnts[MAXCONNECTIONS];
   char		errmsg[255];
+  aConfItem     *found_conf;
 
   /* if it is called with NULL we check all active fd's */
   if (!listp)
@@ -2155,7 +2160,9 @@ int	read_message(time_t delay, fdlist *listp)
 		    (char *)inetntoa((char *)&addr.sin_addr),
 		    sizeof(host));
 
-	  if (match_Dline(ntohl((unsigned long)addr.sin_addr.s_addr)))
+	  found_conf = match_Dline(ntohl((unsigned long)addr.sin_addr.s_addr));
+
+	  if (found_conf && !IsConfElined(found_conf))
 	    {
 	      ircstp->is_ref++;
 #ifdef REPORT_DLINE_TO_USER

@@ -316,14 +316,11 @@ void add_dline(aConfItem *conf_ptr)
   unsigned long host_mask;
   struct ip_subtree *node;
 
-  host_ip = host_name_to_ip(conf_ptr->host,&host_mask),
-  host_ip &= host_mask;
-  
+  host_ip = conf_ptr->ip;
+  host_mask = conf_ptr->ip_mask;
+
   conf_ptr->status = CONF_DLINE;
   conf_ptr->flags = CONF_FLAGS_E_LINED;
-
-  conf_ptr->ip = host_ip;
-  conf_ptr->ip_mask = host_mask;
 
   /* find the parent D-line for this exception */
   node=find_ip_subtree(Dline[host_ip>>24], host_ip);
@@ -381,11 +378,8 @@ void add_Dline(aConfItem *conf_ptr)
   aConfItem *clist = NULL;
   struct ip_subtree *node;
 
-  host_ip = host_name_to_ip(conf_ptr->host,&host_mask),
-  host_ip &= host_mask;
-
-  conf_ptr->ip=host_ip;
-  conf_ptr->ip_mask=host_mask;
+  host_ip = conf_ptr->ip;
+  host_mask = conf_ptr->ip_mask;
 
   /* resolve ambiguities, duplicates, etc. */
 
@@ -450,7 +444,7 @@ aConfItem *match_Dline(unsigned long ip)
 	continue;
 
       if (scan->ip == (ip & scan->ip_mask))
-	return ((aConfItem *)NULL);   /* exception found */
+	return (scan);   /* exception found */
     }
   return node->conf;  /* no exceptions, return the D-line */
 }
@@ -467,11 +461,8 @@ void add_ip_Kline(aConfItem *conf_ptr)
   aConfItem *scan = NULL;
   struct ip_subtree *node;
 
-  host_ip = host_name_to_ip(conf_ptr->host,&host_mask);
-  host_ip &= host_mask;
-
-  conf_ptr->ip=host_ip;
-  conf_ptr->ip_mask=host_mask;
+  host_ip = conf_ptr->ip;
+  host_mask = conf_ptr->ip_mask;
 
   /* resolve ambiguities, duplicates, etc. */
 
@@ -484,10 +475,10 @@ void add_ip_Kline(aConfItem *conf_ptr)
       ike_oracle[host_ip>>24] |= ((0xffffffff-host_mask)+host_ip);
 
       /* now collect nodes with more specific ip masks */
-#if 0
+      /* #if 0 */
       ip_Kline[host_ip>>24]=
 	delete_ip_subtree(ip_Kline[host_ip>>24], host_ip, host_mask, &clist);
-#endif
+      /* #endif */
 
       /* if this is a *@ Kline, then we can toast all the other Klines in the clist */
       if (!(strcmp(conf_ptr->name,"*")))
@@ -544,11 +535,8 @@ void add_ip_Eline(aConfItem *conf_ptr)
   aConfItem *scan = NULL;
   struct ip_subtree *node;
 
-  host_ip = host_name_to_ip(conf_ptr->host,&host_mask),
-  host_ip &= host_mask;
-
-  conf_ptr->ip=host_ip;
-  conf_ptr->ip_mask=host_mask;
+  host_ip = conf_ptr->ip;
+  host_mask = conf_ptr->ip_mask;
 
   /* resolve ambiguities, duplicates, etc. */
 
@@ -561,10 +549,9 @@ void add_ip_Eline(aConfItem *conf_ptr)
       ike_oracle[host_ip>>24] |= ((0xffffffff-host_mask)+host_ip);
 
       /* now collect nodes with more specific ip masks */
-#if 0
+
       ip_Kline[host_ip>>24]=
 	delete_ip_subtree(ip_Kline[host_ip>>24], host_ip, host_mask, &clist);
-#endif
 
       /* if this is a *@ Eline, then we can toast all the others in the clist */
       if (!(strcmp(conf_ptr->name,"*"))) 
@@ -619,11 +606,8 @@ void add_ip_Iline(aConfItem *conf_ptr)
   aConfItem *clist = NULL;
   struct ip_subtree *node;
 
-  host_ip = host_name_to_ip(conf_ptr->host,&host_mask),
-  host_ip &= host_mask;
-
-  conf_ptr->ip=host_ip;
-  conf_ptr->ip_mask=host_mask;
+  host_ip = conf_ptr->ip;
+  host_mask = conf_ptr->ip_mask;
 
   /* resolve ambiguities, duplicates, etc. */
 
@@ -636,10 +620,10 @@ void add_ip_Iline(aConfItem *conf_ptr)
       ike_oracle[host_ip>>24] |= ((0xffffffff-host_mask)+host_ip);
 
       /* now collect nodes with more specific ip masks */
-#if 0
+
       ip_Kline[host_ip>>24]=
 	delete_ip_subtree(ip_Kline[host_ip>>24], host_ip, host_mask, &clist);
-#endif
+
 
       /* insert the Iline */
       conf_ptr->next=clist;

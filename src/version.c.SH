@@ -85,6 +85,7 @@ char *infotext[] =
         "orabidoo            Roger Espel Llima   espel@unix.bigots.org",
         "Rodder              Jon Lusky           lusky@vol.com",
         "Shadowfax           Michael Pearce      mpearce@varner.com",
+        "Soleil              Philippe Levan      levan@epix.net",            
         "ThemBones           Brian Kraemer       kraemer@u.washington.edu",
         "Wohali              Joan Touzet         jolo@cadence.com",
         "",
