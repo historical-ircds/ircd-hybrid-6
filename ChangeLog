@@ -1,3 +1,15 @@
+androsyn    2002/03/21 19:04:58 EST	(20020322_0)
+
+  Modified files:
+    src                  mtrie_conf.c 
+  Log:
+  Fixed a memory leak discovered by the dancer ircd guys
+  
+  Revision  Changes    Path
+  1.88      +1 -0      ircd-hybrid-6/src/mtrie_conf.c
+
+
+
 androsyn    2002/03/04 18:07:26 EST	(20020304_0)
 
   Modified files:
