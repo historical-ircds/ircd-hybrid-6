@@ -283,7 +283,7 @@
  */
 #define BOTCHECK
 
-/* X_LINES_OPER_ONLY - Allow only local opers to see these stats
+/* x_LINES_OPER_ONLY - Allow only local opers to see these stats
  *
  *  Any one with an F line can almost always get on the server, as
  *  some file descriptors are reserved for people with this F line
@@ -292,6 +292,14 @@
 #define B_LINES_OPER_ONLY
 #define E_LINES_OPER_ONLY
 #define F_LINES_OPER_ONLY
+#undef  I_LINES_OPER_ONLY
+#undef  K_LINES_OPER_ONLY
+#undef  P_LINES_OPER_ONLY
+
+/* SPOOF_NOTICE - See a notice when a user connects with a
+ * spoofed I: line
+ */
+#define SPOOF_NOTICE
 
 /* STATS_NOTICE - See a notice when a user does a /stats
  *

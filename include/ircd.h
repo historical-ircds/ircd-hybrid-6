@@ -113,6 +113,7 @@ extern int            debuglevel;
 extern int            debugtty;
 extern char*          creation;
 extern char*          generation;
+extern char*          platform;
 extern char*          infotext[];
 extern char*          serno;
 extern char*          version;

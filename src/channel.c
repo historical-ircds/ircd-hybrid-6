@@ -3554,8 +3554,6 @@ int     m_kick(struct Client *cptr,
 
   if (!(who = find_chasing(sptr, user, &chasing)))
     {
-      sendto_one(sptr, form_str(ERR_NOSUCHNICK),
-                 me.name, parv[0], user, name);
       return(0);
     }
 

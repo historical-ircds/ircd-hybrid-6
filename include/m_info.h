@@ -39,6 +39,12 @@ typedef struct Information
 
 Info MyInformation[] = {
 
+#ifdef ALLOW_DOT_IN_IDENT 
+  { "ALLOW_DOT_IN_IDENT", "ON", 0, "Allow dot in ident replies" },
+#else
+  { "ALLOW_DOT_IN_IDENT", "OFF", 0, "Allow dot in ident replies" },
+#endif /* ALLOW_DOT_IN_IDENT */
+
 #ifdef ANTI_DRONE_FLOOD
   { "ANTI_DRONE_FLOOD", "ON", 0, "Anti Flood for Drones" },
 #else
@@ -253,6 +259,12 @@ Info MyInformation[] = {
   { "HYBRID_SOMAXCONN", "", HYBRID_SOMAXCONN, "Maximum Queue Length of Pending Connections" },
 #endif /* SOMAXCONN */
 
+#ifdef I_LINES_OPER_ONLY
+  { "I_LINES_OPER_ONLY", "ON", 0, "Allow only Operators to use STATS I" },
+#else
+  { "I_LINES_OPER_ONLY", "OFF", 0, "Allow only Operators to use STATS I" },
+#endif /* I_LINES_OPER_ONLY */
+
 #ifdef IDLE_CHECK
   { "IDLE_CHECK", "ON", 0, "Check Clients for Excessive Idleness" },
 #else
@@ -283,6 +295,12 @@ Info MyInformation[] = {
 #else
   { "JUPE_CHANNEL", "OFF", 0, "Locally jupe channels" },
 #endif /* JUPE_CHANNEL */
+
+#ifdef K_LINES_OPER_ONLY
+  { "K_LINES_OPER_ONLY", "ON", 0, "Allow only Operators to use STATS K" },
+#else
+  { "K_LINES_OPER_ONLY", "OFF", 0, "Allow only Operators to use STATS K" },
+#endif /* K_LINES_OPER_ONLY */
 
   { "KILLCHASETIMELIMIT", "", KILLCHASETIMELIMIT, "Nick Change Tracker for KILL" },
 
@@ -342,6 +360,8 @@ Info MyInformation[] = {
   { "MAX_JOIN_LEAVE_COUNT", "", MAX_JOIN_LEAVE_COUNT, "Anti SpamBot Parameter" },
 #endif /* ANTI_SPAMBOT */
 
+  { "MAX_MULTI_MESSAGES", "", MAX_MULTI_MESSAGES, "Maximum targets per PRIVMSG" },
+
 #ifdef ANTI_NICK_FLOOD
   { "MAX_NICK_CHANGES", "", MAX_NICK_CHANGES, "Maximum Nick Changes Allowed" },
   { "MAX_NICK_TIME", "", MAX_NICK_TIME, "Time Window for MAX_NICK_CHANGES" },
@@ -380,6 +400,12 @@ Info MyInformation[] = {
   { "NO_DEFAULT_INVISIBLE", "OFF", 0, "Do not Give Clients +i Mode Upon Connection" },
 #endif /* NO_DEFAULT_INVISIBLE */
 
+#ifdef NO_DUPE_MULTI_MESSAGES
+  { "NO_DUPE_MULTI_MESSAGES", "ON", 0, "Do not allow dupe PRIVMSG targets" },
+#else
+  { "NO_DUPE_MULTI_MESSAGES", "OFF", 0, "Do not allow dupe PRIVMSG targets" },
+#endif /* NO_DUPE_MULTI_MESSAGES */
+
 #ifdef NO_JOIN_ON_SPLIT
   { "NO_JOIN_ON_SPLIT", "ON", 0, "Users Cannot Join Channels Present before a NetSplit" },
 #else
@@ -403,6 +429,12 @@ Info MyInformation[] = {
 #else
   { "NO_PRIORITY", "OFF", 0, "Do not Prioritize Socket File Descriptors" },
 #endif /* NO_PRIORITY */
+
+#ifdef NO_WHOIS_WILDCARDS
+  { "NO_WHOIS_WILDCARDS", "ON", 0, "Do not allow wildcards in WHOIS" },
+#else
+  { "NO_WHOIS_WILDCARDS", "OFF", 0, "Do not allow wildcards in WHOIS" },
+#endif /* NO_WHOIS_WILDCARDS */
 
 #ifdef NOISY_HTM
   { "NOISY_HTM", "ON", 0, "Notify Operators of HTM (De)activation" },
@@ -431,6 +463,12 @@ Info MyInformation[] = {
 #ifdef ANTI_SPAMBOT
   { "OPER_SPAM_COUNTDOWN", "", OPER_SPAM_COUNTDOWN, "Anti SpamBot Parameter" },
 #endif /* ANTI_SPAMBOT */
+
+#ifdef P_LINES_OPER_ONLY
+  { "P_LINES_OPER_ONLY", "ON", 0, "Allow only Operators to use STATS P" },
+#else
+  { "P_LINES_OPER_ONLY", "OFF", 0, "Allow only Operators to use STATS P" },
+#endif /* P_LINES_OPER_ONLY */
 
   { "PACE_WAIT", "", PACE_WAIT, "Minimum Delay between uses of certain commands" },
 
@@ -531,6 +569,12 @@ Info MyInformation[] = {
 #ifdef SPLIT_SMALLNET_USER_SIZE
   { "SPLIT_SMALLNET_USER_SIZE", "", SPLIT_SMALLNET_USER_SIZE, "Normal amount of Users" },
 #endif /* SPLIT_SMALLNET_USER_SIZE */
+
+#ifdef SPOOF_NOTICE
+  { "SPOOF_NOTICE", "ON", 0, "Show Operators when a Client connects with a spoofed I" },
+#else
+  { "SPOOF_NOTICE", "OFF", 0, "Show Operators when a Client connects with a spoofed I" },
+#endif /* SPOOF_NOTICE */
 
 #ifdef STATS_NOTICE
   { "STATS_NOTICE", "ON", 0, "Show Operators when a Client uses STATS" },

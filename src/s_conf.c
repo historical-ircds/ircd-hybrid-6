@@ -446,13 +446,17 @@ int attach_Iline(aClient* cptr, const char* username, char **preason)
             {
               /* abuse it, lose it. */
 #ifdef SPOOF_FREEFORM
-              sendto_realops("%s spoofing: %s as %s", cptr->name,
-                             cptr->host, aconf->name);
+#ifdef SPOOF_NOTICE
+              sendto_realops("%s spoofing: %s(%s) as %s", cptr->name,
+                             cptr->host, inetntoa((char*) &cptr->ip), aconf->name);
+#endif /* SPOOF_NOTICE */
               strncpy_irc(cptr->host, aconf->name, HOSTLEN);
 #else
               /* default to oper.server.name.tld */
-              sendto_realops("%s spoofing: %s(%s) as oper.%s", cptr->name, 
+#ifdef SPOOF_NOTICE
+              sendto_realops("%s spoofing: %s(%s) as oper.%s", cptr->name,
                              cptr->host, inetntoa((char*) &cptr->ip), me.name);
+#endif /* SPOOF_NOTICE */
               strcpy(cptr->host, "oper.");
               strncpy_irc(&cptr->host[5], me.name, HOSTLEN - 5);
 #endif
@@ -2548,7 +2552,7 @@ static void do_include_conf(void)
         sendto_realops("Can't open %s include file",include_list->name);
       else
         {
-          sendto_realops("Hashing in %s include file",include_list->name);
+          sendto_realops_flags(FLAGS_DEBUG, "Hashing in %s include file",include_list->name);
           initconf(file, NO);
         }
       free_conf(include_list);

@@ -57,6 +57,7 @@ char *generation = "$generation";
 char *creation = "$creation";
 char *version = PATCHLEVEL;
 char *serno = SERIALNUM;
+char *platform = "$uname";
 
 char *infotext[] =
 {
@@ -119,7 +120,6 @@ char *infotext[] =
   "Thanks also to those who provide the kind sys admins who let me and",
   "others continue to develop IRC.",
   "",
-  "Compiled on [$uname]",
   0,
 };
 !SUB!THIS!

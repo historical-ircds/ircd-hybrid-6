@@ -298,17 +298,40 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       break;
 
     case 'I' : case 'i' :
+#ifdef I_LINES_OPER_ONLY
+      if (!IsAnOper(sptr))
+        {
+          ignore_request++;
+          valid_stats++;
+          break;
+        }
+#endif /* I_LINES_OPER_ONLY */
       report_mtrie_conf_links(sptr, CONF_CLIENT);
       valid_stats++;
       break;
 
     case 'k' :
+#ifdef K_LINES_OPER_ONLY
+      if (!IsAnOper(sptr)) 
+        {
+          ignore_request++;
+          valid_stats++;
+          break;
+        }
+#endif /* K_LINES_OPER_ONLY */
       report_temp_klines(sptr);
       valid_stats++;
       break;
 
     case 'K' :
-/* sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]); */
+#ifdef K_LINES_OPER_ONLY
+      if (!IsAnOper(sptr))
+        {
+          ignore_request++;
+          valid_stats++;
+          break;
+        }
+#endif /* K_LINES_OPER_ONLY */
       if(parc > 3)
         report_matching_host_klines(sptr,parv[3]);
       else
@@ -333,7 +356,16 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       break;
 
     case 'P' :
+#ifdef P_LINES_OPER_ONLY
+      if (!IsAnOper(sptr)) 
+        {
+          ignore_request++;
+          valid_stats++;
+          break;
+        }
+#endif /* P_LINES_OPER_ONLY */
       show_ports(sptr);
+      valid_stats++;
       break;
 
     case 'p' :
@@ -407,8 +439,11 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       break;;
 
     case 'Y' : case 'y' :
-      report_classes(sptr);
-      valid_stats++;
+      if(IsAnOper(sptr))
+        { 
+          report_classes(sptr);
+          valid_stats++;
+        }
       break;
 
     case 'Z' : case 'z' :
@@ -440,10 +475,29 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
 #ifdef STATS_NOTICE
   if (valid_stats)
-    sendto_realops_flags(FLAGS_SPY,
-                         "STATS %c requested by %s (%s@%s) [%s]", stat,
-                         sptr->name, sptr->username, sptr->host,
-                         sptr->user->server);
+    {
+      if ( (stat == 'L') || (stat == 'l') )
+        {
+          sendto_realops_flags(FLAGS_SPY,
+                               "STATS %c requested by %s (%s@%s) [%s] on %s",
+                               stat,
+                               sptr->name,
+                               sptr->username,
+                               sptr->host,
+                               sptr->user->server,
+                               parc > 2 ? parv[2] : "\0" );
+        }
+      else
+        {
+          sendto_realops_flags(FLAGS_SPY,
+                               "STATS %c requested by %s (%s@%s) [%s]",
+                               stat,
+                               sptr->name,
+                               sptr->username,
+                               sptr->host,
+                               sptr->user->server );
+        }
+    }
 #endif
   return 0;
 }
