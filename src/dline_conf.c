@@ -296,7 +296,8 @@ aConfItem *find_exception(unsigned long ip)
   
   while (scan)
     {
-      if (scan->ip == (ip & scan->ip_mask)) exit;
+      if (scan->ip == (ip & scan->ip_mask))
+        break;
       scan=scan->next;
     }
   return scan;
