@@ -133,8 +133,7 @@ void free_fluders(aClient *,aChannel *);
 void free_fludees(aClient *);
 #endif
 
-#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-        defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
+#ifdef NEED_SPLITCODE
 extern int server_was_split;               /* defined in channel.c */
 #if defined(SPLIT_PONG)
 extern int got_server_pong;
@@ -795,8 +794,7 @@ static	int	register_user(aClient *cptr,
 	}
 #endif
 
-#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-        defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
+#ifdef NEED_SPLITCODE
       if (server_was_split)
 	{
 	  sendto_one(sptr,"NOTICE %s :*** Notice -- server is currently in split-mode",nick);
@@ -3185,11 +3183,11 @@ int	m_pong(aClient *cptr,
   cptr->flags &= ~FLAGS_PINGSENT;
   sptr->flags &= ~FLAGS_PINGSENT;
 
-#if defined(SPLIT_PONG) && ((defined(NO_CHANOPS_WHEN_SPLIT) || \
-	defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)) \
-	 || defined(NO_JOIN_ON_SPLIT_SIMPLE))
+#ifdef NEED_SPLITCODE
+#ifdef SPLIT_PONG
   if (IsServer(cptr))
     got_server_pong = YES;
+#endif
 #endif
 
   /* Now attempt to route the PONG, comstud pointed out routable PING

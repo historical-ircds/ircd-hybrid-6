@@ -898,7 +898,6 @@
 #define ANTI_SPAM_EXIT_MESSAGE_TIME 300
 
 /* ANTI_SPAMBOT_EXTRA
- * look for "http:" in gecos, flag as possible spambot
  * look for "suspicious" privmsg to other client count
  * other client count cannot be repeated more than once in a row
  * messaging the same client over and over again will not trigger this
@@ -1079,6 +1078,11 @@ error CLIENT_FLOOD undefined.
 #endif
 
 #define REPORT_DLINE_TO_USER
+
+#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
+	defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
+#define NEED_SPLITCODE
+#endif
 
 #define CONFIG_H_LEVEL_6
 

@@ -61,8 +61,7 @@ aMessageFile *amotd=(aMessageFile *)NULL;
 #endif
 aMessageFile *helpfile=(aMessageFile *)NULL;	
 
-#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-	defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
+#ifdef NEED_SPLITCODE
 extern time_t server_split_time;
 extern int server_was_split;
 #endif
@@ -937,11 +936,11 @@ int	main(int argc, char *argv[])
   DRONECOUNT = DEFAULT_DRONE_COUNT;
 #endif
 
-#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-        defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
+#ifdef NEED_SPLITCODE
  SPLITDELAY = (DEFAULT_SERVER_SPLIT_RECOVERY_TIME * 60);
  SPLITNUM = SPLIT_SMALLNET_SIZE;
  SPLITUSERS = SPLIT_SMALLNET_USER_SIZE;
+ server_split_time = timeofday;
 #endif
 
  /* End of global set options */
@@ -1203,11 +1202,6 @@ normal user.\n");
   init_fdlist(&serv_fdlist);
   init_fdlist(&oper_fdlist);
   init_fdlist(&default_fdlist);
-
-#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-	defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
-  server_split_time = NOW;
-#endif
 
   open_debugfile();
   NOW = time(NULL);

@@ -78,18 +78,19 @@ extern aConfItem *x_conf;
 /* conf qline link list root */
 extern aConfItem *q_conf;
 
-#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-	defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
+#ifdef NEED_SPLITCODE
 extern int server_was_split;		/* defined in channel.c */
 extern time_t server_split_time;	/* defined in channel.c */
 
 #ifdef SPLIT_PONG
 extern int got_server_pong;		/* defined in channel.c */
 #endif /* SPLIT_PONG */
-#endif
+
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 extern void remove_empty_channels();	/* defined in channel.c */
-#endif
+#endif /* PRESERVE_CHANNEL_ON_SPLIT NO_JOIN_ON_SPLIT */
+
+#endif /* NEED_SPLITCODE */
 
 extern int cold_start;		/* defined in ircd.c */
 extern fdlist serv_fdlist;
@@ -1190,13 +1191,15 @@ int	m_server_estab(aClient *cptr)
 		(float)cptr->zip->out->total_in);
 #endif /* ZIP_LINKS */
 
-#if defined(SPLIT_PONG) && ((defined(NO_CHANOPS_WHEN_SPLIT) || \
-	defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)) \
-	|| defined(NO_JOIN_ON_SPLIT_SIMPLE))
+  /* Always send a PING after connect burst is done */
   sendto_one(cptr, "PING :%s", me.name);
+
+#ifdef NEED_SPLITCODE
+#ifdef SPLIT_PONG
   if (server_was_split)
     got_server_pong = NO;
-#endif
+#endif /* SPLIT_PONG */
+#endif /* NEED_SPLITCODE */
 
   return 0;
 }
@@ -2838,8 +2841,7 @@ int   m_set(aClient *cptr,
 	  return 0;
 	  break;
 #endif
-#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-	  defined(NO_JOIN_ON_SPLIT)  || defined(NO_JOIN_ON_SPLIT_SIMPLE)
+#ifdef NEED_SPLITCODE
 
 	    case TOKEN_SPLITDELAY:
 	      if(parc > 2)
@@ -3058,9 +3060,8 @@ int   m_set(aClient *cptr,
   sendto_one(sptr, ":%s NOTICE %s :Options: SPAMMSGS",
 	     me.name, parv[0]);
 #endif
-#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-  defined(NO_JOIN_ON_SPLIT)  || defined(NO_JOIN_ON_SPLIT_SIMPLE)
-    sendto_one(sptr, ":%s NOTICE %s :Options: SPLITNUM SPLITUSERS SPLITDELAY",
+#ifdef NEED_SPLITCODE
+  sendto_one(sptr, ":%s NOTICE %s :Options: SPLITNUM SPLITUSERS SPLITDELAY",
 	       me.name, parv[0]);
 #endif
 #ifdef IDLE_CHECK

@@ -290,9 +290,6 @@ static int attach_iline(
 {
   IP_ENTRY *ip_found;
 
-/* every conf when created, has a class pointer set up. 
-   if it isn't, well.  *BOOM* ! */
-
   /* if LIMIT_UH is set, limit clients by idented usernames not by ip */
 
 #ifdef LIMIT_UH
@@ -2119,7 +2116,7 @@ void initconf(int opt, FBFILE* file, int use_include)
 		      sizeof(me.name));
 	    if ((aconf->passwd[0] != '\0') && (aconf->passwd[0] != '*'))
             {
-		memset((void *) &vserv,0, sizeof(vserv));
+		memset(&vserv,0, sizeof(vserv));
 		vserv.sin_family = AF_INET;
 		vaddr = inet_addr(aconf->passwd);
 		bcopy((char *) &vaddr, (char *)&vserv.sin_addr, sizeof(struct in_addr));
@@ -2750,13 +2747,6 @@ char *oper_privs(aClient *cptr,int port)
     {
       if(cptr)
 	SetOperK(cptr);
-
-  /* Lets simply just not report it
-   * as every oper will have default of 'K'
-   * but monitor bots might only have 'k'
-   */
-  /*      *privs_ptr++ = 'K'; */
-
     }
   else
     *privs_ptr++ = 'k';

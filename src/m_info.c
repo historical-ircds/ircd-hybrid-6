@@ -640,8 +640,7 @@ int	m_info(aClient *cptr,
                    me.name, parv[0], outstr);
 #endif
 
-#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-        defined(NO_JOIN_ON_SPLIT)  || defined(NO_JOIN_ON_SPLIT_SIMPLE)
+#ifdef NEED_SPLITCODE
 	ircsprintf(outstr,"DEFAULT_SERVER_SPLIT_RECOVERY_TIME=%d",
                   DEFAULT_SERVER_SPLIT_RECOVERY_TIME);
         sendto_one(sptr, rpl_str(RPL_INFO),
