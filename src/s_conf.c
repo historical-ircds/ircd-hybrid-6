@@ -1526,6 +1526,36 @@ void report_qlines(aClient *sptr)
     }
 }
 
+/* clear_juped_channels()
+ *
+ * inputs       -
+ * output       -
+ * side effects - clears all channel jupes that were added in the conf
+ */
+void clear_juped_channels()
+{
+  aQlineItem *qp;
+  struct ConfItem *aconf;
+  struct Channel *chptr;
+  char *host, *user, *pass, *oper_reason, *name;
+  int port;
+
+  for(qp = q_conf; qp; qp = qp->next)
+  {
+    if(!qp->name)
+      continue;
+
+    for(aconf = qp->confList; aconf; aconf = aconf->next)
+    {
+      get_printable_conf(aconf, &name, &host, &pass,
+                         &oper_reason, &user, &port);
+
+      if((*name == '#') && (chptr = hash_find_channel(name, NULL)))
+        chptr->juped = 0;
+    }
+  }
+}
+       
 /*
  * add_q_line
  *
@@ -3581,7 +3611,10 @@ void read_conf_files(int cold)
     }
 
   if(!cold)
+  {
+    clear_juped_channels();
     clear_out_old_conf();
+  }
 
   initconf(file, YES);
 

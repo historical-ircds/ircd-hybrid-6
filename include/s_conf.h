@@ -253,6 +253,8 @@ extern void report_configured_links(struct Client* cptr, int mask);
 extern void report_specials(struct Client* sptr, int flags, int numeric);
 extern void report_qlines(struct Client* cptr);
 
+extern void clear_juped_channels();
+
 typedef enum {
   CONF_TYPE,
   KLINE_TYPE,
