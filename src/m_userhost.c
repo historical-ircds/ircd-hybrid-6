@@ -30,9 +30,7 @@
 #include "s_serv.h"
 #include "send.h"
 #include "irc_string.h"
-
-static char buf[BUFSIZE];
-static char buf2[BUFSIZE];
+#include <string.h>
 
 /* m_functions execute protocol messages on this server:
  *
@@ -101,13 +99,7 @@ int     m_userhost(struct Client *cptr,
                    char *parv[])
 {
   char  *p = NULL;
-  struct Client       *acptr;
-  char  *s;
-  int   i, len;
-
-  /* omg This is recursive */
-  if (parc > 2)
-    (void)m_userhost(cptr, sptr, parc-1, parv+1);
+  struct Client *acptr;
 
   if (parc < 2)
     {
@@ -116,26 +108,20 @@ int     m_userhost(struct Client *cptr,
       return 0;
     }
 
-  ircsprintf(buf, form_str(RPL_USERHOST), me.name, parv[0]);
-  len = strlen(buf);
-  *buf2 = '\0';
+  p = strchr(parv[1], ' ');
+  if(p)
+    *p = '\0';
 
-  for (i = 5, s = strtoken(&p, parv[1], " "); i && s;
-       s = strtoken(&p, (char *)NULL, " "), i--)
-    if ((acptr = find_person(s, NULL)))
-      {
-        if (*buf2)
-          (void)strcat(buf, " ");
-        ircsprintf(buf2, "%s%s=%c%s@%s",
-                   acptr->name,
-                   IsAnOper(acptr) ? "*" : "",
-                   (acptr->user->away) ? '-' : '+',
-                   acptr->username,
-                   acptr->host);
-        
-        (void)strncat(buf, buf2, sizeof(buf) - len);
-        len += strlen(buf2);
-      }
-  sendto_one(sptr, "%s", buf);
+  if ((acptr = find_person(parv[1], NULL)))
+    {
+      sendto_one(sptr, form_str(RPL_USERHOST), 
+		 me.name, 
+		 parv[0],
+		 acptr->name,
+		 IsAnOper(acptr) ? "*" : "",
+		 (acptr->user->away) ? '-' : '+',
+		 acptr->username,
+		 acptr->host);
+    }
   return 0;
 }
