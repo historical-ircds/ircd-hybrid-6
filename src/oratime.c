@@ -24,13 +24,14 @@
  */
 #include "oratime.h"
 #ifdef ORATIMING
+
 #include "client.h"
 #include "send.h"
 
 #include <sys/time.h>
 
-static struct timeval tdsnow;
-static struct timeval tdsthen;
+static struct timeval tsdnow;
+static struct timeval tsdthen;
 static unsigned int   tsdms;
 
 /*
