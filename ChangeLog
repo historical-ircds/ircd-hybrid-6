@@ -1,3 +1,8 @@
+*** 20011024_1 by db
+- rip LITTLE_I_LINES out
+
+
+
 *** 20011019_1 by db
 - ensure all va_end match up with va_start in send.c 
   as pointed out by Aaron Campbell
