@@ -1900,6 +1900,7 @@ int 	initconf(int opt, int fd,int use_include)
 	  dontadd = 1;
 	  MyFree(aconf->name);
 	  aconf->name = aconf->host;
+	  aconf->host = (char *)NULL;
 	  aconf->next = x_conf;
 	  x_conf = aconf;
 	}
@@ -1909,6 +1910,7 @@ int 	initconf(int opt, int fd,int use_include)
 	  dontadd = 1;
 	  MyFree(aconf->name);
 	  aconf->name = aconf->host;
+	  aconf->host = (char *)NULL;
 	  aconf->next = u_conf;
 	  u_conf = aconf;
 	}
@@ -1918,6 +1920,7 @@ int 	initconf(int opt, int fd,int use_include)
 	  dontadd = 1;
 	  MyFree(aconf->name);
 	  aconf->name = aconf->host;
+	  aconf->host = (char *)NULL;
 	  aconf->next = q_conf;
 	  q_conf = aconf;
 	}

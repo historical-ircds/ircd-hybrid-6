@@ -3093,12 +3093,19 @@ int	m_topic(aClient *cptr,
   if (name && IsChannelName(name))
     {
       chptr = find_channel(name, NullChn);
-      if (!chptr || !IsMember(sptr, chptr))
-	{
-	  sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
-		     me.name, parv[0], name);
-	  return 0;
-	}
+      if (!chptr)
+        {
+          sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
+              name);
+          return 0;
+        }
+
+      if (!IsMember(sptr, chptr))
+        {
+          sendto_one(sptr, err_str(ERR_NOTONCHANNEL), me.name, parv[0],
+              name);
+          return 0;
+        }
 
       if (parc > 2) /* setting topic */
 	topic = parv[2];
