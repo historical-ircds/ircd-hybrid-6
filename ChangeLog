@@ -1,3 +1,16 @@
+*** 20010603_9 by greg
+Chances are you're going to hate me for these mods, but so be it!
+
+- documented SPOOF_FREEFORM
+  everyone knows this thing exists, and there's no use hiding it, as anyone
+  who wants it either has a friend who knows, or can grep.
+- adjusted SPOOF_NOTICE to also hide spoofed ilines in /stats I for opers
+  as well, working under the assumption that if we don't went people to see
+  the spoof notice, we don't want them to see the spoof either
+- added TRUE_NO_OPER_FLOOD, again, another hate-me thing. this extends
+  NO_OPER_FLOOD to not even delaying an opers flooding, a-la -comstud
+
+
 *** 20010603_8 by greg
 *Throws a bracket at Diane*
 
