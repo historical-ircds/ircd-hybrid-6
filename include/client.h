@@ -216,7 +216,7 @@ struct Client
 #endif
 #ifdef CRYPT_LINKS
   struct CryptData *crypt;      /* Encrypted link info */
-  char * ciphers;               /* Supported ciphers */
+  struct CipherDef *cipher;     /* Supported cipher */
 #endif
   short             lastsq;     /* # of 2k blocks when sendqueued called last*/
   struct DBuf       sendQ;      /* Outgoing message queue--if socket full */

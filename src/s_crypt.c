@@ -5,6 +5,7 @@
 #include "common.h"
 #include "s_serv.h"
 #include "ircd.h"
+#include "irc_string.h"
 #include <string.h>
 #include "s_log.h"
 #include "s_bsd.h"
@@ -83,29 +84,30 @@ int do_des_decrypt(struct Client * cptr, char * Data, int Length);
 
 
 
-CipherDef Ciphers[] = {
+struct CipherDef Ciphers[] =
+{
 #ifdef HAVE_CRYPT_DES
-  {"DES", 56, sizeof(DESState), do_des_init, do_des_encrypt, do_des_decrypt},
+  { "DES/56", 56, sizeof(DESState), do_des_init, do_des_encrypt, do_des_decrypt},
 #endif
 #ifdef HAVE_CRYPT_3DES
-  {"3DES", 168, sizeof(TDESState), do_tdes_init, do_tdes_encrypt, do_tdes_decrypt},
+  { "3DES/168", 168, sizeof(TDESState), do_tdes_init, do_tdes_encrypt, do_tdes_decrypt},
 #endif
 #ifdef HAVE_CRYPT_RC5
-  {"RC5.8", 128, sizeof(RC5State), do_rc5_8_init, do_rc5_encrypt, do_rc5_decrypt},
-  {"RC5.12", 128, sizeof(RC5State), do_rc5_12_init, do_rc5_encrypt, do_rc5_decrypt},
-  {"RC5.16", 128, sizeof(RC5State), do_rc5_16_init, do_rc5_encrypt, do_rc5_decrypt},
+  { "RC5.8/128", 128, sizeof(RC5State), do_rc5_8_init, do_rc5_encrypt, do_rc5_decrypt},
+  { "RC5.12/128", 128, sizeof(RC5State), do_rc5_12_init, do_rc5_encrypt, do_rc5_decrypt},
+  { "RC5.16/128", 128, sizeof(RC5State), do_rc5_16_init, do_rc5_encrypt, do_rc5_decrypt},
 #endif
 #ifdef HAVE_CRYPT_IDEA
-  {"IDEA", 128, sizeof(IDEAState), do_idea_init, do_idea_encrypt, do_idea_decrypt},
+  { "IDEA/128", 128, sizeof(IDEAState), do_idea_init, do_idea_encrypt, do_idea_decrypt},
 #endif
 #ifdef HAVE_CRYPT_CAST
-  {"CAST", 128, sizeof(CASTState), do_cast_init, do_cast_encrypt, do_cast_decrypt},
+  { "CAST/128", 128, sizeof(CASTState), do_cast_init, do_cast_encrypt, do_cast_decrypt},
 #endif
 #ifdef HAVE_CRYPT_BLOWFISH
-  {"BF", 128, sizeof(BFState), do_bf128_init, do_bf_encrypt, do_bf_decrypt},
-  {"BF", 256, sizeof(BFState), do_bf256_init, do_bf_encrypt, do_bf_decrypt},
+  { "BF/128", 128, sizeof(BFState), do_bf128_init, do_bf_encrypt, do_bf_decrypt},
+  { "BF/256", 256, sizeof(BFState), do_bf256_init, do_bf_encrypt, do_bf_decrypt},
 #endif
-  {"", 0, 0, 0, 0, 0}
+  { "", 0, 0, 0, 0, 0}
 };
 
 
@@ -421,43 +423,25 @@ int do_rc5_decrypt(struct Client * cptr, char * Data, int Length) {
 }
 #endif /* HAVE_CRYPT_RC5 */
 
-int crypt_selectcipher(char *ciphers) {
-  int bestIndex = (-1);
-  int cipherIndex;
-  char *cipher, *nextcipher, *keysize;
+/*
+ * crypt_selectcipher
+ *   - Find a matching cipher by it's name, and return a pointer to it's
+ *     entry in Ciphers[].
+ *   - If not found, returns NULL.
+ */
+struct CipherDef *crypt_selectcipher(char *ciphername)
+{
+  struct CipherDef *cdef;
 
-  nextcipher = ciphers;
-  while (nextcipher)
+  for (cdef = Ciphers; cdef->name; cdef++)
   {
-    cipher = nextcipher;
-    nextcipher = strchr(cipher, ',');
-    if (nextcipher)
+    if (!irccmp(cdef->name, ciphername))
     {
-      *nextcipher++ = 0;
-    }
-    keysize = strchr(cipher, '/');
-    if (!keysize)
-    {
-      continue;
-    }
-    *keysize++ = 0;
-
-    if (!atoi(keysize))
-    {
-      continue;
-    }
-
-    for (cipherIndex = 0; Ciphers[cipherIndex].name[0]; cipherIndex++)
-    {
-      if (!strcmp(Ciphers[cipherIndex].name, cipher) &&
-         (Ciphers[cipherIndex].keysize == atoi(keysize)))
-      {
-        bestIndex = cipherIndex;
-      }
+      return(cdef);
+      break;
     }
   }
-
-  return bestIndex;
+  return(NULL);
 }
 
 int crypt_rsa_decode(char * base64text, unsigned char * data, int * length) {
@@ -504,39 +488,66 @@ void crypt_free(struct Client * cptr) {
     free(cptr->crypt);
     cptr->crypt = 0;
   }
-  if (cptr->ciphers) {
-    free(cptr->ciphers);
-    cptr->ciphers = 0;
-  }
+  cptr->cipher = NULL;
 };
 
-int crypt_initserver(struct Client * cptr, struct ConfItem * cline, struct ConfItem * nline) {
+int crypt_initserver(struct Client * cptr,
+                     struct ConfItem * cline,
+                     struct ConfItem * nline)
+{
   FILE * keyfile;
   RSA * rsakey = 0;
 
-  if (!cptr || !cline || !nline)
+  if ( (cptr == NULL) || (cline == NULL) || (nline == NULL) )
     return CRYPT_BADPARAM;
 
-  /* Check if this link should be encrypted */
-  if (!nline->passwd || !cline->passwd || !(nline->passwd[0] == CRYPT_LINKS_CNPREFIX) ||
-      strcmp(cline->passwd, nline->passwd)) {
+  /* Make sure rsa_public_keyfile and cipher fields aren't NULL. */
+  if ( (cline->rsa_public_keyfile == NULL) || (cline->cipher == NULL) ||
+       (nline->rsa_public_keyfile == NULL) || (nline->cipher == NULL) )
+  {
+    log(L_ERROR, "RSA public keyfile or cipher not defined for %s",
+         cptr->name);
     return CRYPT_NOT_ENCRYPTED;
   }
-  
-  /* It should be, so lets initialize */
+
+  /* Make sure rsa_public_keyfile are the same for both the C and N. */
+  if (strcmp(cline->rsa_public_keyfile, nline->rsa_public_keyfile))
+  {
+    log(L_ERROR, "RSA public keyfile entries are not identical for %s",
+         cptr->name);
+    return CRYPT_NOT_ENCRYPTED;
+  }
+
+  /* Make sure cipher fields are the same for both the C and N. */
+  if (cline->cipher != nline->cipher)
+  {
+    log(L_ERROR, "Cipher types are not identical for %s",
+         cptr->name);
+    return CRYPT_NOT_ENCRYPTED;
+  }
+
+  /* Link should be encrypted, so lets initialize */
   cptr->crypt = (struct CryptData *) malloc(sizeof(struct CryptData));
   memset(cptr->crypt, 0, sizeof(struct CryptData));
 
   /* Load the servers RSA key */
-  keyfile = fopen(nline->passwd + 1, "r");
-  if (!keyfile) {
+  keyfile = fopen(nline->rsa_public_keyfile, "r");
+
+  if (keyfile == NULL)
+  {
+    log(L_ERROR, "Failed loading public key file for %s", cptr->name);
     sendto_realops("Failed loading public key file for %s", cptr->name);
     exit_client(cptr, cptr, cptr, "Failed to initialize RSA");
     return CRYPT_ERROR;
   }
-  rsakey=(RSA *) PEM_read_RSA_PUBKEY(keyfile,&rsakey, 0, 0);
+
+  rsakey = (RSA *) PEM_read_RSA_PUBKEY(keyfile, &rsakey, 0, 0);
   fclose(keyfile);
-  if (!rsakey) {
+
+  if (!rsakey)
+  {
+    log(L_ERROR, "RSA public keyfiles or ciphers do not match for %s",
+         cptr->name);
     sendto_realops("Failed reading public key file for %s", cptr->name);
     exit_client(cptr, cptr, cptr, "Failed to initialize RSA");
     return CRYPT_ERROR;
@@ -553,8 +564,12 @@ int crypt_initserver(struct Client * cptr, struct ConfItem * cline, struct ConfI
   if (!RAND_pseudo_bytes(cptr->crypt->inkey, sizeof(cptr->crypt->inkey)))
     return CRYPT_ERROR;
 
+  cptr->cipher = nline->cipher;
+
   return CRYPT_ENCRYPTED;
 }
+
+
 
 int crypt_encrypt(struct Client * cptr, const char * Data, int Length) {
   if (!cptr || !Data)
@@ -578,6 +593,8 @@ int crypt_encrypt(struct Client * cptr, const char * Data, int Length) {
     return CRYPT_NOT_ENCRYPTED;
   }
 }
+
+
 
 int crypt_decrypt(struct Client * cptr, const char * Data, int Length) {
   if (!cptr || !Data)
@@ -621,6 +638,91 @@ int crypt_init() {
   memset(me.crypt, 0, sizeof(struct CryptData));
   me.crypt->RSAKey = rsakey;
   return CRYPT_OK;
+}
+
+
+/*
+ * crypt_parse_conf()
+ *   - Parses the passwd field of a conf structure, and assigns the
+ *     rsa_pub_keyfile and cipher elements to the proper data.
+ *   - Returns -1 on error, 0 on success.
+ */
+int crypt_parse_conf(struct ConfItem *aconf)
+{
+  FILE *fp = NULL;
+  char *filename_str;
+  char *cipher_str;
+  struct CipherDef *cdef = NULL;
+
+  /* Make sure the passwd field is at least used */
+  if (aconf->passwd == NULL)
+  {
+    log(L_ERROR, "passwd field undefined/unused for %s", aconf->name);
+    return(-1);
+  }
+
+  /* Make sure passwd[0] contains the CRYPT_LINKS_CNPREFIX character */
+  if (aconf->passwd[0] != CRYPT_LINKS_CNPREFIX)
+  {
+    log(L_ERROR, "passwd field lacks CNPREFIX character %c for %s",
+        CRYPT_LINKS_CNPREFIX, aconf->name);
+    return(-1);
+  }
+
+  /* Assign the filename.  Use +1 to skip the CNPREFIX character. */
+  DupString(filename_str, aconf->passwd + 1);
+
+  /* Now to get the cipher. Find the last occurance of CIPHERPREFIX and
+   * go forward from there.
+   */
+  cipher_str = strrchr(filename_str, CRYPT_LINKS_CIPHERPREFIX);
+
+  if (cipher_str == NULL)
+  {
+    /* We couldn't find the CIPHERPREFIX character.  Someone forgot to
+     * specify the dang thing in the conf.
+     */
+    MyFree(filename_str);
+    log(L_ERROR, "Cipher not specified for %s", aconf->host);
+    sendto_realops("Cipher not specified for %s", aconf->host);
+    return(-1);
+  }
+
+  /* The null assignment zeros out the CIPHERPREFIX character... */
+  *cipher_str = '\0';
+  cipher_str++;
+
+  cdef = crypt_selectcipher(cipher_str);
+
+  if (cdef == NULL)
+  {
+    MyFree(filename_str);
+    log(L_ERROR, "Bad cipher '%s' selected selected for %s",
+        cipher_str, aconf->host);
+    sendto_realops("Bad cipher '%s' selected for %s",
+        cipher_str, aconf->host);
+    return(-1);
+  }
+
+  /* Check to see if the RSA public key file in question is legit */
+  fp = fopen(filename_str, "r");
+
+  if (fp == NULL)
+  {
+    MyFree(filename_str);
+    log(L_ERROR, "Failed loading public key file for %s", aconf->host);
+    sendto_realops("Failed loading public key file for %s", aconf->host);
+    return(-1);
+  }
+  fclose(fp);
+
+  /* Success.  Assign the new conf values, and let's go! */
+  DupString(aconf->rsa_public_keyfile, filename_str);
+  aconf->cipher = cdef;
+
+  MyFree(filename_str);
+
+  return(0);
 }
 
 #endif /* CRYPT_LINKS */

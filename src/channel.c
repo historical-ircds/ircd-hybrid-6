@@ -455,7 +455,6 @@ static void del_matching_exception(struct Client *cptr,struct Channel *chptr)
 static  int is_banned(struct Client *cptr,struct Channel *chptr)
 {
   register Link *tmp;
-  register Link *t2;
   char  s[NICKLEN+USERLEN+HOSTLEN+6];
   char  *s2;
 
@@ -474,6 +473,7 @@ static  int is_banned(struct Client *cptr,struct Channel *chptr)
 #ifdef CHANMODE_E
   if (tmp)
     {
+      register Link *t2;
       for (t2 = chptr->exceptlist; t2; t2 = t2->next)
         if (match(BANSTR(t2), s) ||
             match(BANSTR(t2), s2))

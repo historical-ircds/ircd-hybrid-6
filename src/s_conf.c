@@ -41,6 +41,10 @@
 #include "struct.h"
 #include "s_debug.h"
 
+#ifdef CRYPT_LINKS
+#include "s_crypt.h"
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -192,7 +196,13 @@ struct ConfItem* make_conf()
 
 #if defined(NULL_POINTER_NOT_ZERO)
   aconf->next = NULL;
-  aconf->host = aconf->passwd = aconf->name = NULL;
+  aconf->host = NULL;
+  aconf->passwd = NULL;
+  aconf->name = NULL;
+#ifdef CRYPT_LINKS
+  aconf->rsa_public_keyfile = NULL;
+  aconf->cipher = NULL;
+#endif
   ClassPtr(aconf) = NULL;
 #endif
   return (aconf);
@@ -225,6 +235,9 @@ void free_conf(struct ConfItem* aconf)
   MyFree(aconf->host);
   if (aconf->passwd)
     memset(aconf->passwd, 0, strlen(aconf->passwd));
+#ifdef CRYPT_LINKS
+  MyFree(aconf->rsa_public_keyfile);
+#endif
   MyFree(aconf->passwd);
   MyFree(aconf->user);
   MyFree(aconf->name);
@@ -1815,6 +1828,7 @@ static char *set_conf_flags(struct ConfItem *aconf,char *tmp)
 **
 *
 * Inputs        - file descriptor pointing to config file to use
+*               - int (included file = 1, original (ircd.conf) = 0)
 *
 **    returns -1, if file cannot be opened
 **             0, if file opened
@@ -2250,32 +2264,46 @@ static void initconf(FBFILE* file, int use_include)
             }
         }
 
+      /* If the conf entry specificed is a C/N line... */
       if (aconf->status & CONF_SERVER_MASK)
         {
           if (ncount > MAXCONFLINKS || ccount > MAXCONFLINKS ||
               !aconf->host || !aconf->user)
             {
+              log(L_ERROR, "Bad C/N line");
               sendto_realops("Bad C/N line");
               continue;
             }
 
           if (BadPtr(aconf->passwd))
             {
-              sendto_realops("Bad C/N line host %s", aconf->host);
+              log(L_ERROR, "Bad C/N line passwd for %s");
+              sendto_realops("Bad C/N line passwd for %s", aconf->host);
               continue;
             }
-          
-          if( SplitUserHost(aconf) < 0 )
+
+          if (SplitUserHost(aconf) < 0)
             {
-              sendto_realops("Bad C/N line host %s", aconf->host);
+              log(L_ERROR, "Bad C/N line user/host portion for %s");
+              sendto_realops("Bad C/N line user/host portion for %s",
+                             aconf->host);
               free_conf(aconf);
               aconf = NULL;
               continue;
             }
 
+#ifdef CRYPT_LINKS
+          if (crypt_parse_conf(aconf) < 0)
+          {
+            log(L_ERROR, "Bad C/N line information for %s", aconf->host);
+            sendto_realops("Bad C/N line information for %s", aconf->host);
+            continue;
+          }
+#endif
+
           lookup_confhost(aconf);
         }
-      
+
       /* o: or O: line */
 
       if (aconf->status & (CONF_LOCOP|CONF_OPERATOR))

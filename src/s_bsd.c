@@ -397,20 +397,30 @@ static int completed_connection(struct Client* cptr)
   if ((res=crypt_initserver(cptr, c_conf, n_conf)) == CRYPT_NOT_ENCRYPTED) {
 #endif
     if (!EmptyString(c_conf->passwd))
+    {
       sendto_one(cptr, "PASS %s :TS", c_conf->passwd);
+    }
     send_capabilities(cptr, (c_conf->flags & CONF_FLAGS_ZIP_LINK));
     sendto_one(cptr, "SERVER %s 1 :%s",
-	       my_name_for_link(me.name, n_conf), me.info);
+               my_name_for_link(me.name, n_conf), me.info);
     return (IsDead(cptr)) ? 0 : 1;
 #ifdef CRYPT_LINKS
-  } else if (res == CRYPT_ENCRYPTED) {
-    if (crypt_rsa_encode(cptr->crypt->RSAKey, cptr->crypt->inkey, tmp, sizeof(cptr->crypt->inkey)) != CRYPT_ENCRYPTED)
-      return exit_client(cptr, cptr, cptr, "Failed to generate session key data");
+  }
+  else if (res == CRYPT_ENCRYPTED)
+  {
+    if (crypt_rsa_encode(cptr->crypt->RSAKey, cptr->crypt->inkey,
+                         tmp, sizeof(cptr->crypt->inkey)) != CRYPT_ENCRYPTED)
+    {
+      return exit_client(cptr, cptr, cptr,
+                         "Failed to generate session key data");
+    }
     send_capabilities(cptr, (c_conf->flags & CONF_FLAGS_ZIP_LINK));
-    sendto_one(cptr, "CRYPTSERV %s %s :%s", my_name_for_link(me.name, n_conf), tmp, me.info);
-    return 1;
-  } else
-    return 0;
+    sendto_one(cptr, "CRYPTLINK SERV %s %s :%s",
+               my_name_for_link(me.name, n_conf), tmp, me.info);
+    return(1);
+  }
+  else
+    return(0);
 #endif
 }
 
@@ -940,7 +950,8 @@ static int read_packet(struct Client *cptr)
     Until one of these are true, we do line by line:
     1) client is a person (received USER)
     2) client is a server and crypt isn't set (received SERVER)
-    3) client is a server, crypt is set and decrypt flag is set (received CRYPTAUTH)
+    3) client is a server, crypt is set and decrypt flag is set
+       (received CRYPTLINK AUTH)
     4) no more data
   */
   readBuf[length]=0;

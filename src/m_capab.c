@@ -26,10 +26,13 @@
 #include "client.h"
 #include "irc_string.h"
 #include "s_serv.h"
+#include "send.h"
+
 #ifdef CRYPT_LINKS
 #include "s_crypt.h"
-#include <string.h>
 #endif
+
+#include <string.h>
 #include <assert.h>
 
 /*
@@ -99,6 +102,7 @@ int m_capab(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   struct Capability *cap;
   char* p;
   char* s;
+  struct CipherDef *cdef = NULL;
 
   if ((!IsUnknown(cptr) && !IsHandshake(cptr)) || parc < 2)
     return 0;
@@ -109,24 +113,31 @@ int m_capab(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
     cptr->caps |= CAP_CAP;
 
   for (s = strtoken(&p, parv[1], " "); s; s = strtoken(&p, NULL, " "))
+  {
+    for (cap = captab; cap->name; cap++)
     {
-      for (cap = captab; cap->name; cap++)
+        if (0 == strcmp(cap->name, s))
         {
-          if (0 == strcmp(cap->name, s))
-            {
-              cptr->caps |= cap->cap;
-              break;
-            }
-         }
+          cptr->caps |= cap->cap;
+          break;
+        }
+    }
 #ifdef CRYPT_LINKS
-      if (!strncmp(s, "ENC:", 4)) {
-	if (cptr->ciphers)
-	  free(cptr->ciphers);
-	cptr->ciphers = (char *) malloc(strlen(s)-3);
-	strcpy(cptr->ciphers, s+4);
+    if (!strncmp(s, "ENC:", 4))
+    {
+      cdef = crypt_selectcipher(s+4);
+      if (cdef == NULL)
+      {
+        cptr->cipher = NULL;
+        sendto_realops("Unsupported cipher listed in CAPAB");
+        return exit_client(cptr, cptr, cptr,
+                           "Unsupported cipher listed in CAPAB");
+        break;
       }
+      cptr->cipher = cdef;
+    }
 #endif
-    }  
-  return 0;
+  }
+  return(0);
 }
 

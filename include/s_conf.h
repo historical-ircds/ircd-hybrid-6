@@ -24,6 +24,12 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.46  2001/06/16 15:47:02  db
+ * - ok fixed a "dropped c line" bug. the problem was, both the hostname
+ *   and servername have to match in attach_cn_lines, thats because
+ *   you could have two servers on the same ip with different server names
+ * - also fixed a minor typo here and there
+ *
  * Revision 1.45  2000/12/01 06:28:47  lusky
  * added Gline Exemption flag ('_') to Ilines
  *
@@ -224,6 +230,10 @@ struct ConfItem
   time_t           hold;     /* Hold action until this time (calendar time) */
   struct Class*    c_class;     /* Class of connection */
   int              dns_pending; /* 1 if dns query pending, 0 otherwise */
+#ifdef CRYPT_LINKS
+  char *           rsa_public_keyfile; /* RSA public key filename */
+  struct CipherDef *cipher;            /* Cipher selection; ptr to Cipher[] */
+#endif
 };
 
 typedef struct QlineItem {

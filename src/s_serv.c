@@ -437,35 +437,31 @@ void send_capabilities(struct Client* cptr, int use_zip)
 {
   struct Capability* cap;
   char  msgbuf[BUFSIZE];
-#ifdef CRYPT_LINKS
-  int i;
-#endif
+
   msgbuf[0] = '\0';
 
   for (cap = captab; cap->name; ++cap)
-    {
-      /* kludge to rhyme with sludge */
+  {
+    /* kludge to rhyme with sludge */
 
-      if (use_zip)
-        {
-          strcat(msgbuf, cap->name);
-          strcat(msgbuf, " ");
-        }
-      else
-        {
-          if(cap->cap != CAP_ZIP)
-            {
-              strcat(msgbuf, cap->name);
-              strcat(msgbuf, " ");
-            }
-        }
+    if (use_zip)
+    {
+      strcat(msgbuf, cap->name);
+      strcat(msgbuf, " ");
     }
+    else
+    {
+      if (cap->cap != CAP_ZIP)
+      {
+        strcat(msgbuf, cap->name);
+        strcat(msgbuf, " ");
+      }
+    }
+  }
 #ifdef CRYPT_LINKS
+  /* Append "ENC:CIPHER/SIZE" to the CAPAB line. */
   strcat(msgbuf, "ENC:");
-  for (i=0;Ciphers[i].name[0];i++)
-    sprintf(msgbuf + strlen(msgbuf), "%s/%i,", Ciphers[i].name, Ciphers[i].keysize);
-  if (i)
-    msgbuf[strlen(msgbuf)-1] = 0;
+  strcat(msgbuf, cptr->cipher->name);
 #endif
   sendto_one(cptr, "CAPAB :%s", msgbuf);
 }
@@ -529,9 +525,11 @@ const char* show_capabilities(struct Client* acptr)
     }
 #ifdef CRYPT_LINKS
   if (acptr->crypt)
-    sprintf(msgbuf + strlen(msgbuf), "ENC:%s/%i,%s/%i",
-	    acptr->crypt->OutCipher->name, acptr->crypt->OutCipher->keysize,
-	    acptr->crypt->InCipher->name, acptr->crypt->InCipher->keysize);
+  {
+    sprintf(msgbuf + strlen(msgbuf), "ENC:%s,%s",
+            acptr->crypt->OutCipher->name,
+            acptr->crypt->InCipher->name);
+  }
 #endif
   return msgbuf;
 }

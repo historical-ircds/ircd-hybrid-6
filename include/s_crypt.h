@@ -80,50 +80,52 @@ struct ConfItem;
 #define CRYPT_ERROR            6
 
 /* State flags */
-#define CRYPTFLAG_ENCRYPT     1
-#define CRYPTFLAG_DECRYPT     2
+#define CRYPTFLAG_ENCRYPT      1
+#define CRYPTFLAG_DECRYPT      2
 
 
 #define CRYPT_RSASIZE         256 /* RSA Keys must be exact this size */
 
-#define CRYPT_CIPHERNAMELENGTH 6
-
 typedef int (*cipher_encryptproc) (struct Client *, char *, int);
-typedef int (*cipher_initproc) (void * state, unsigned char * keydata);
+typedef int (*cipher_initproc)    (void * state, unsigned char * keydata);
 
-typedef struct {
-  char name[CRYPT_CIPHERNAMELENGTH];
-  int keysize;
-  int state_data_size;
+struct CipherDef
+{
+  char *name;           /* Cipher name (eg. BF/256) */
+  int keysize;          /* Cipher keysize (eg. BF/256 keysize = 256 */
+  int state_data_size;  /* No idea -- hey einride!  :-) */
   cipher_initproc init;
   cipher_encryptproc encrypt;
   cipher_encryptproc decrypt;
-} CipherDef;
+};
 
-extern CipherDef Ciphers[];
+extern struct CipherDef Ciphers[];
 
-struct CryptData {
-  CipherDef * InCipher;
-  void * InState;
-  unsigned char inkey[64];
-  CipherDef * OutCipher;
-  void * OutState;
-  unsigned char outkey[64];
-  RSA * RSAKey;
-  int flags;
+struct CryptData
+{
+  struct CipherDef *InCipher;
+  void *            InState;
+  unsigned char     inkey[64];
+  struct CipherDef *OutCipher;
+  void *            OutState;
+  unsigned char     outkey[64];
+  RSA *             RSAKey;
+  int               flags;
 };
 
 
 
-int crypt_selectcipher(char * ciphers);
-int crypt_rsa_decode(char * base64text, unsigned char * data, int * length);
-int crypt_rsa_encode(RSA * rsakey, unsigned char * data, char * base64text, int length);
+struct CipherDef *crypt_selectcipher(char *);
+int crypt_rsa_decode(char *, unsigned char *, int *);
+int crypt_rsa_encode(RSA *, unsigned char *, char *, int);
 
-int crypt_init();
-int crypt_initserver(struct Client * cptr, struct ConfItem * cline, struct ConfItem * nline);
-int crypt_encrypt(struct Client * cptr, const char * Data, int Length);
-int crypt_decrypt(struct Client * cptr, const char * Data, int Length);
-void crypt_free(struct Client * cptr);
+int crypt_init(void);
+int crypt_initserver(struct Client *, struct ConfItem *, struct ConfItem *);
+int crypt_encrypt(struct Client *, const char *, int);
+int crypt_decrypt(struct Client *, const char *, int);
+void crypt_free(struct Client *);
+int crypt_parse_conf(struct ConfItem *);
+
 #endif /* CRYPT_LINKS */
 #endif /* INCLUDED_s_crypt_h */
 

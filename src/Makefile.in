@@ -39,8 +39,7 @@ SRCS = \
 	m_capab.c \
 	m_close.c \
 	m_connect.c \
-	m_cryptauth.c \
-	m_cryptserv.c \
+	m_cryptlink.c \
 	m_die.c \
 	m_error.c \
 	m_gline.c \

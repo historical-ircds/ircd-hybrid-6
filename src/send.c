@@ -546,7 +546,8 @@ sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
   va_list       args;
   register Link *lp;
   register aClient *acptr;
-  register int index; /* index of sentalong[] to flag client as having received message */
+  /* index of sentalong[] to flag client as having received message */
+  register int lindex;
 
   va_start(args, pattern);
 
@@ -559,11 +560,11 @@ sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
       if (acptr->from == one)
         continue;       /* ...was the one I should skip */
       
-      index = acptr->from->fd;
+      lindex = acptr->from->fd;
       if (MyConnect(acptr) && IsRegisteredUser(acptr))
         {
           vsendto_prefix_one(acptr, from, pattern, args);
-          sentalong[index] = current_serial;
+          sentalong[lindex] = current_serial;
         }
       else
         {
@@ -571,10 +572,10 @@ sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
            * Now check whether a message has been sent to this
            * remote link already
            */
-          if(sentalong[index] != current_serial)
+          if(sentalong[lindex] != current_serial)
             {
               vsendto_prefix_one(acptr, from, pattern, args);
-              sentalong[index] = current_serial;
+              sentalong[lindex] = current_serial;
             }
         }
     }
@@ -1104,7 +1105,7 @@ sendto_ops_butone(aClient *one, aClient *from, const char *pattern, ...)
 
 {
   va_list args;
-  register int index;
+  register int lindex;
   register aClient *cptr;
 
   va_start(args, pattern);
@@ -1121,15 +1122,15 @@ sendto_ops_butone(aClient *one, aClient *from, const char *pattern, ...)
    continue;
 */
 
-      index = cptr->from->fd; /* find connection oper is on */
+      lindex = cptr->from->fd; /* find connection oper is on */
 
-      if (sentalong[index] == current_serial)
+      if (sentalong[lindex] == current_serial)
         continue;
       
       if (cptr->from == one)
         continue;       /* ...was the one I should skip */
       
-      sentalong[index] = current_serial;
+      sentalong[lindex] = current_serial;
       
       vsendto_prefix_one(cptr->from, from, pattern, args);
     }
@@ -1149,7 +1150,7 @@ sendto_wallops_butone(aClient *one, aClient *from, const char *pattern, ...)
 
 {
   va_list args;
-  register int index;
+  register int lindex;
   register aClient *cptr;
 
   va_start(args, pattern);
@@ -1170,15 +1171,15 @@ sendto_wallops_butone(aClient *one, aClient *from, const char *pattern, ...)
         continue;
 
       /* find connection oper is on */
-      index = cptr->from->fd;
+      lindex = cptr->from->fd;
 
-      if (sentalong[index] == current_serial)
+      if (sentalong[lindex] == current_serial)
         continue;
 
       if (cptr->from == one)
         continue; /* ...was the one I should skip */
 
-      sentalong[index] = current_serial;
+      sentalong[lindex] = current_serial;
       
       vsendto_prefix_one(cptr->from, from, pattern, args);
     }
@@ -1273,7 +1274,7 @@ vsendto_prefix_one(register aClient *to, register aClient *from,
   char* par = 0;
   register int parlen,
                len;
-  static char sendbuf[1024];
+  static char outbuf[1024];
 
   assert(0 != to);
   assert(0 != from);
@@ -1283,11 +1284,11 @@ vsendto_prefix_one(register aClient *to, register aClient *from,
     {
       if (IsServer(from))
         {
-          vsprintf_irc(sendbuf, pattern, args);
+          vsprintf_irc(outbuf, pattern, args);
           
           sendto_realops(
                      "Send message (%s) to %s[%s] dropped from %s(Fake Dir)",
-                     sendbuf, to->name, to->from->name, from->name);
+                     outbuf, to->name, to->from->name, from->name);
           return;
         }
 
@@ -1332,32 +1333,32 @@ vsendto_prefix_one(register aClient *to, register aClient *from,
       par = sender;
     } /* if (user) */
 
-  *sendbuf = ':';
-  strncpy_irc(sendbuf + 1, par, sizeof(sendbuf) - 2);
+  *outbuf = ':';
+  strncpy_irc(outbuf + 1, par, sizeof(sendbuf) - 2);
 
   parlen = strlen(par) + 1;
-  sendbuf[parlen++] = ' ';
+  outbuf[parlen++] = ' ';
 
   len = parlen;
-  len += vsprintf_irc(sendbuf + parlen, &pattern[4], args);
+  len += vsprintf_irc(outbuf + parlen, &pattern[4], args);
 
   if (len > 510)
   {
-    sendbuf[510] = '\r';
-    sendbuf[511] = '\n';
-    sendbuf[512] = '\0';
+    outbuf[510] = '\r';
+    outbuf[511] = '\n';
+    outbuf[512] = '\0';
     len = 512;
   }
   else
   {
-    sendbuf[len++] = '\r';
-    sendbuf[len++] = '\n';
-    sendbuf[len] = '\0';
+    outbuf[len++] = '\r';
+    outbuf[len++] = '\n';
+    outbuf[len] = '\0';
   }
 
-  Debug((DEBUG_SEND,"Sending [%s] to %s",sendbuf,to->name));
+  Debug((DEBUG_SEND,"Sending [%s] to %s",outbuf,to->name));
 
-  send_message(to, sendbuf, len);
+  send_message(to, outbuf, len);
 } /* vsendto_prefix_one() */
 
 /*
