@@ -419,10 +419,10 @@ va_dcl
 } /* sendto_one() */
 
 /*
-vsendto_one()
- Backend for sendto_one() - send string with variable
-arguements to client 'to'
--wnder
+ * vsendto_one()
+ * Backend for sendto_one() - send string with variable
+ * arguments to client 'to'
+ * -wnder
 */
 
 static void
@@ -1351,7 +1351,7 @@ va_dcl
 /*
  * vsendto_prefix_one()
  * Backend to sendto_prefix_one(). stdarg.h does not work
- * well when variadic functions pass their arguements to other
+ * well when variadic functions pass their arguments to other
  * variadic functions, so we can call this function in those
  * situations.
  *  This function must ALWAYS be passed a string of the form:
