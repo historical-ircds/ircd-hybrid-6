@@ -2827,6 +2827,7 @@ int     m_knock(struct Client *cptr,
 #ifdef USE_KNOCK
   struct Channel      *chptr;
   int knock_local = 0;
+  static time_t last_used=0;
 #endif
 
   /* anti flooding code,
