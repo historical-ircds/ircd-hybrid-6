@@ -34,6 +34,7 @@ static char *rcs_version = "$Id$";
 #include "msg.h"
 #include "channel.h"
 #include "s_conf.h"
+#include "class.h"
 #ifndef __EMX__
 #include <utmp.h> /* old slackware utmp.h defines BYTE_ORDER */
 #endif /* __EMX__ */
@@ -429,7 +430,7 @@ int     m_kline(aClient *cptr,
       (void)ircsprintf(buffer, "%s (%s)",reason,current_date);
       DupString(aconf->passwd, buffer );
     }
-  Class(aconf) = find_class(0);
+  ClassPtr(aconf) = find_class(0);
 
 /* when can aconf->host ever be a NULL pointer though?
  * or for that matter, when is aconf->status ever not going

@@ -22,6 +22,7 @@ static char sccsid[] = "@(#)class.c	1.4 28 Jun 1993 (C) 1990 Darren Reed";
 static char *rcs_version = "$Id$";
 #endif
 
+#include "class.h"
 #include "struct.h"
 #include "common.h"
 #include "numeric.h"
@@ -32,12 +33,12 @@ static char *rcs_version = "$Id$";
 #define BAD_PING		-2
 #define BAD_CLIENT_CLASS	-3
 
-aClass	*classes;
+aClass* ClassList;
 
 int	get_conf_class(aConfItem *aconf)
 {
-  if ((aconf) && Class(aconf))
-    return (ConfClass(aconf));
+  if ((aconf) && ClassPtr(aconf))
+    return (ConfClassType(aconf));
 
   Debug((DEBUG_DEBUG,"No Class For %s",
 	 (aconf) ? aconf->name : "*No Conf*"));
@@ -48,7 +49,7 @@ int	get_conf_class(aConfItem *aconf)
 
 static	int	get_conf_ping(aConfItem *aconf)
 {
-  if ((aconf) && Class(aconf))
+  if ((aconf) && ClassPtr(aconf))
     return (ConfPingFreq(aconf));
 
   Debug((DEBUG_DEBUG,"No Ping For %s",
@@ -67,10 +68,10 @@ int	get_client_class(aClient *acptr)
     for (tmp = acptr->confs; tmp; tmp = tmp->next)
       {
 	if (!tmp->value.aconf ||
-	    !(cl = tmp->value.aconf->class))
+	    !(cl = ClassPtr(tmp->value.aconf)))
 	  continue;
-	if (Class(cl) > retc)
-	  retc = Class(cl);
+	if (ClassType(cl) > retc)
+	  retc = ClassType(cl);
       }
 
   Debug((DEBUG_DEBUG,"Returning Class %d For %s",retc,acptr->name));
@@ -135,18 +136,18 @@ void	add_class(int class,
   aClass *t, *p;
 
   t = find_class(class);
-  if ((t == classes) && (class != 0))
+  if ((t == ClassList) && (class != 0))
     {
       p = (aClass *)make_class();
-      NextClass(p) = NextClass(t);
-      NextClass(t) = p;
+      p->next = t->next;
+      t->next = p;
     }
   else
     p = t;
   Debug((DEBUG_DEBUG,
 	 "Add Class %d: p %x t %x - cf: %d pf: %d ml: %d sq: %l",
 	 class, p, t, confreq, ping, maxli, sendq));
-  Class(p) = class;
+  ClassType(p) = class;
   ConFreq(p) = confreq;
   PingFreq(p) = ping;
   MaxLinks(p) = maxli;
@@ -159,10 +160,10 @@ aClass	*find_class(int cclass)
 {
   aClass *cltmp;
   
-  for (cltmp = FirstClass(); cltmp; cltmp = NextClass(cltmp))
-    if (Class(cltmp) == cclass)
+  for (cltmp = ClassList; cltmp; cltmp = cltmp->next)
+    if (ClassType(cltmp) == cclass)
       return cltmp;
-  return classes;
+  return ClassList;
 }
 
 void	check_class()
@@ -171,7 +172,7 @@ void	check_class()
 
   Debug((DEBUG_DEBUG, "Class check:"));
 
-  for (cltmp2 = cltmp = FirstClass(); cltmp; cltmp = NextClass(cltmp2))
+  for (cltmp2 = cltmp = ClassList; cltmp; cltmp = cltmp2->next)
     {
       Debug((DEBUG_DEBUG,
 	     "Class %d : CF: %d PF: %d ML: %d LI: %d SQ: %ld",
@@ -179,7 +180,7 @@ void	check_class()
 	     MaxLinks(cltmp), Links(cltmp), MaxSendq(cltmp)));
       if (MaxLinks(cltmp) < 0)
 	{
-	  NextClass(cltmp2) = NextClass(cltmp);
+	  cltmp2->next = cltmp->next;
 	  if (Links(cltmp) <= 0)
 	    free_class(cltmp);
 	}
@@ -190,24 +191,24 @@ void	check_class()
 
 void	initclass()
 {
-  classes = (aClass *)make_class();
+  ClassList = (aClass *)make_class();
 
-  Class(FirstClass()) = 0;
-  ConFreq(FirstClass()) = CONNECTFREQUENCY;
-  PingFreq(FirstClass()) = PINGFREQUENCY;
-  MaxLinks(FirstClass()) = MAXIMUM_LINKS;
-  MaxSendq(FirstClass()) = MAXSENDQLENGTH;
-  Links(FirstClass()) = 0;
-  NextClass(FirstClass()) = NULL;
+  ClassType(ClassList) = 0;
+  ConFreq(ClassList) = CONNECTFREQUENCY;
+  PingFreq(ClassList) = PINGFREQUENCY;
+  MaxLinks(ClassList) = MAXIMUM_LINKS;
+  MaxSendq(ClassList) = MAXSENDQLENGTH;
+  Links(ClassList) = 0;
+  ClassList->next = NULL;
 }
 
 void	report_classes(aClient *sptr)
 {
   aClass *cltmp;
 
-  for (cltmp = FirstClass(); cltmp; cltmp = NextClass(cltmp))
+  for (cltmp = ClassList; cltmp; cltmp = cltmp->next)
     sendto_one(sptr, form_str(RPL_STATSYLINE), me.name, sptr->name,
-	       'Y', Class(cltmp), PingFreq(cltmp), ConFreq(cltmp),
+	       'Y', ClassType(cltmp), PingFreq(cltmp), ConFreq(cltmp),
 	       MaxLinks(cltmp), MaxSendq(cltmp));
 }
 
@@ -221,10 +222,12 @@ long	get_sendq(aClient *cptr)
     for (tmp = cptr->confs; tmp; tmp = tmp->next)
       {
 	if (!tmp->value.aconf ||
-	    !(cl = tmp->value.aconf->class))
+	    !(cl = ClassPtr(tmp->value.aconf)))
 	  continue;
-	if (Class(cl) > retc)
+	if (ClassType(cl) > retc)
 	  sendq = MaxSendq(cl);
       }
   return sendq;
 }
+
+

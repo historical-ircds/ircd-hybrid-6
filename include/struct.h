@@ -94,7 +94,6 @@ typedef struct  Zdata   aZdata;
 
 typedef struct	MessageFileItem aMessageFile;
 
-#include "class.h"
 #include "dbuf.h"	/* THIS REALLY SHOULDN'T BE HERE!!! --msa */
 
 #define	HOSTLEN		63	/* Length of hostname.  Updated to         */

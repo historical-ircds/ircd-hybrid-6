@@ -26,6 +26,7 @@ static char *rcs_version = "$Id$";
 #endif
 
 #include "s_conf.h"
+#include "class.h"
 #include "struct.h"
 #include "common.h"
 #include "dline_conf.h"
@@ -38,6 +39,7 @@ static char *rcs_version = "$Id$";
 #include <signal.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <assert.h>
 #include "h.h"
 extern int rehashed;
 #include "mtrie_conf.h"
@@ -344,7 +346,7 @@ static int attach_iline(
     }
 #else
   /* only check it if its non zero */
-  if ((aconf->class->conFreq) && (ip_found->count > aconf->class->conFreq))
+  if (ConfConFreq(aconf) && ip_found->count > ConfConFreq(aconf))
     {
       if(!IsConfFlined(aconf))
 	return -4; /* Already at maximum allowed ip#'s */
@@ -760,7 +762,7 @@ int	detach_conf(aClient *cptr,aConfItem *aconf)
     {
       if ((*lp)->value.aconf == aconf)
 	{
-	  if ((aconf) && (Class(aconf)))
+	  if ((aconf) && (ClassPtr(aconf)))
 	    {
 	      if (aconf->status & CONF_CLIENT_MASK)
 		if (ConfLinks(aconf) > 0)
@@ -768,8 +770,8 @@ int	detach_conf(aClient *cptr,aConfItem *aconf)
 	      if (ConfMaxLinks(aconf) == -1 &&
 		  ConfLinks(aconf) == 0)
 		{
-		  free_class(Class(aconf));
-		  Class(aconf) = NULL;
+		  free_class(ClassPtr(aconf));
+		  ClassPtr(aconf) = NULL;
 		}
 	    }
 	  if (aconf && !--aconf->clients && IsIllegal(aconf))
@@ -1001,7 +1003,7 @@ aConfItem *find_conf_exact(char *name,
 	continue;
       if (tmp->status & (CONF_OPERATOR|CONF_LOCOP))
 	{
-	  if (tmp->clients < MaxLinks(Class(tmp)))
+	  if (tmp->clients < ConfMaxLinks(tmp))
 	    return tmp;
 	  else
 	    continue;
@@ -1428,15 +1430,15 @@ int	rehash_dump(aClient *sptr,char *parv0)
 
   for(aconf = ConfigItemList; aconf; aconf = aconf->next)
     {
-      aClass *class_ptr;
-      class_ptr = Class(aconf);
+      aClass* class_ptr = ClassPtr(aconf);
+
       if(aconf->status == CONF_CONNECT_SERVER)
 	{
 	  
 	  (void)sprintf(result_buf,"C:%s:%s:%s::%d\n",
 			aconf->host,aconf->passwd,
 			aconf->name,
-			class_ptr->class);
+			ClassType(class_ptr));
 	  fbputs(result_buf, out);
 	}
       else if(aconf->status == CONF_NOCONNECT_SERVER)
@@ -1444,7 +1446,7 @@ int	rehash_dump(aClient *sptr,char *parv0)
 	  (void)sprintf(result_buf,"N:%s:%s:%s::%d\n",
 			aconf->host,aconf->passwd,
 			aconf->name,
-			class_ptr->class);
+			ClassType(class_ptr));
 	  fbputs(result_buf, out);
 	}
       else if(aconf->status == CONF_OPERATOR)
@@ -1453,7 +1455,7 @@ int	rehash_dump(aClient *sptr,char *parv0)
 			aconf->user,aconf->host,
 			aconf->passwd,
 			aconf->name,
-			class_ptr->class);
+			ClassType(class_ptr));
 	  fbputs(result_buf, out);
 	}
       else if(aconf->status == CONF_LOCOP)
@@ -1462,7 +1464,7 @@ int	rehash_dump(aClient *sptr,char *parv0)
 			aconf->user,aconf->host,
 			aconf->passwd,
 			aconf->name,
-			class_ptr->class);
+			ClassType(class_ptr));
 	  fbputs(result_buf, out);
 	}
       else if(aconf->status == CONF_ADMIN)
@@ -1564,7 +1566,8 @@ int rehash(aClient *cptr,aClient *sptr,int sig)
    * We don't delete the class table, rather mark all entries
    * for deletion. The table is cleaned up by check_class. - avalon
    */
-  for (cltmp = NextClass(FirstClass()); cltmp; cltmp = NextClass(cltmp))
+  assert(0 != ClassList);
+  for (cltmp = ClassList->next; cltmp; cltmp = cltmp->next)
     MaxLinks(cltmp) = -1;
 
   /* do we really want to flush the DNS entirely on a SIGHUP?
@@ -1991,7 +1994,7 @@ void initconf(int opt, FBFILE* file, int use_include)
 	    }
 	  else
 	    {
-	      Class(aconf) = find_class(atoi(tmp));
+	      ClassPtr(aconf) = find_class(atoi(tmp));
 	    }
 
 	  if(aconf->status & (CONF_LOCOP|CONF_OPERATOR))
@@ -2049,10 +2052,10 @@ void initconf(int opt, FBFILE* file, int use_include)
       /*  Unless its a Y line itself, associate this with a class */
       if (aconf->status & (CONF_CLIENT_MASK|CONF_LISTEN_PORT))
 	{
-	  if (Class(aconf) == 0)
-	    Class(aconf) = find_class(0);
-	  if (MaxLinks(Class(aconf)) < 0)
-	    Class(aconf) = find_class(0);
+	  if (0 == ClassPtr(aconf))
+	    ClassPtr(aconf) = find_class(0);
+	  if (ConfMaxLinks(aconf) < 0)
+	    ClassPtr(aconf) = find_class(0);
 	}
 
       /* P: line or I: line */
@@ -2066,9 +2069,9 @@ void initconf(int opt, FBFILE* file, int use_include)
 	      bconf->status &= ~CONF_ILLEGAL;
 	      if (aconf->status == CONF_CLIENT)
 		{
-		  bconf->class->links -= bconf->clients;
-		  bconf->class = aconf->class;
-		  bconf->class->links += bconf->clients;
+		  ConfLinks(bconf) -= bconf->clients;
+		  ClassPtr(bconf) = ClassPtr(aconf);
+		  ConfLinks(bconf) += bconf->clients;
 		  /*
 		   * still... I've munged the flags possibly
 		   * so update the found aConfItem for now 

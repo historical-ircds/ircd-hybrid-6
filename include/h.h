@@ -26,7 +26,10 @@
  * $Id$
  *
  */
+#include "mtrie_conf.h"
+#include "fdlist.h"
 
+struct Class;
 
 extern aMessageFile	*motd;
 #ifdef AMOTD
@@ -34,11 +37,9 @@ extern aMessageFile	*amotd;
 #endif
 extern struct tm	*motd_tm;
 
-
 extern aMessageFile	*helpfile;
 
-#include "mtrie_conf.h"
-#include "fdlist.h"
+
 
 extern int lifesux;
 extern fdlist serv_fdlist;
@@ -248,12 +249,12 @@ extern	void	send_umode_out (aClient*, aClient *, int);
 extern	void	_free_client (aClient *);
 extern	void	_free_link (Link *);
 extern	void	free_conf (aConfItem *);
-extern	void	free_class (aClass *);
+extern	void	free_class(struct Class* c);
 extern	void	_free_user (anUser *, aClient *);
 extern	Link	*make_link (void);
 extern	anUser	*make_user (aClient *);
 extern	aConfItem *make_conf (void);
-extern	aClass	*make_class (void);
+extern	struct Class* make_class(void);
 extern	aServer	*make_server (aClient *);
 extern	aClient	*make_client (aClient *);
 extern	Link	*find_user_link (Link *, aClient *);
@@ -267,11 +268,6 @@ extern  void	block_destroy(void);		/* list.c */
 
 extern	void	add_class (int, int, int, int, long);
 extern	void	fix_class (aConfItem *, aConfItem *);
-extern	long	get_sendq (aClient *);
-extern	int	get_con_freq (aClass *);
-extern	int	get_client_ping (aClient *);
-extern	int	get_client_class (aClient *);
-extern	int	get_conf_class (aConfItem *);
 extern  void    GetPrintableaConfItem(aConfItem *, char **, char **, char **,
 				      char **, int *);
 extern	void	report_classes (aClient *);

@@ -53,6 +53,7 @@
 #include "common.h"
 #include "struct.h"
 #include "s_conf.h"
+#include "class.h"
 #include "h.h"
 
 #include "mtrie_conf.h"

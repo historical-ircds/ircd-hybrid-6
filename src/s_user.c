@@ -37,6 +37,7 @@ static char *rcs_version="$Id$";
 #include "msg.h"
 #include "channel.h"
 #include "s_conf.h"
+#include "class.h"
 #include <sys/stat.h>
 #ifndef __EMX__
 #include <utmp.h>

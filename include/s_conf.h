@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.2  1999/07/03 08:13:09  tomh
+ * cleanup dependencies
+ *
  * Revision 1.1  1999/06/23 00:28:37  tomh
  * added fileio module, changed file read/write code to use fileio, removed dgets, new header s_conf.h, new module files fileio.h fileio.c
  *
@@ -35,7 +38,7 @@
 #include "fileio.h"             /* FBFILE */
 #endif
 #ifndef INCLUDED_netinet_in_h
-#include <netinet/in.h>          /* ipnum */
+#include <netinet/in.h>         /* in_addr */
 #define INCLUDED_netinet_in_h
 #endif
 
@@ -44,20 +47,21 @@ struct SLink;
 
 struct ConfItem
 {
-  unsigned int  status; /* If CONF_ILLEGAL, delete when no clients */
-  unsigned int flags;
-  int   clients;        /* Number of *LOCAL* clients using this */
-  struct in_addr ipnum; /* ip number of host field */
-  unsigned long ip;     /* only used for I D lines etc. */
-  unsigned long ip_mask;
-  char  *name;          /* IRC name, nick, server name, or original u@h */
-  char  *host;          /* host part of user@host */
-  char  *passwd;
-  char  *user;          /* user part of user@host */
-  int   port;
-  time_t hold;          /* Hold action until this time (calendar time) */
-  struct Class *class;  /* Class of connection */
-  struct ConfItem *next;
+  struct ConfItem* next;     /* list node pointer */
+  unsigned int     status;   /* If CONF_ILLEGAL, delete when no clients */
+  unsigned int     flags;
+  int              clients;  /* Number of *LOCAL* clients using this */
+  struct in_addr   ipnum;    /* ip number of host field */
+  unsigned long    ip;       /* only used for I D lines etc. */
+  unsigned long    ip_mask;
+  char*            name;     /* IRC name, nick, server name, or original u@h */
+  char*            host;     /* host part of user@host */
+  char*            passwd;
+  char*            user;     /* user part of user@host */
+  int              port;
+  time_t           hold;     /* Hold action until this time (calendar time) */
+  struct Class*    c_class;     /* Class of connection */
+  int              dns_pending; /* 1 if dns query pending, 0 otherwise */
 };
 
 
@@ -88,8 +92,7 @@ struct ConfItem
 
 #define CONF_OPS                (CONF_OPERATOR | CONF_LOCOP)
 #define CONF_SERVER_MASK        (CONF_CONNECT_SERVER | CONF_NOCONNECT_SERVER)
-#define CONF_CLIENT_MASK        (CONF_CLIENT | CONF_OPS | \
-                                 CONF_SERVER_MASK)
+#define CONF_CLIENT_MASK        (CONF_CLIENT | CONF_OPS | CONF_SERVER_MASK)
 
 #define IsIllegal(x)    ((x)->status & CONF_ILLEGAL)
 

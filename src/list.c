@@ -28,6 +28,7 @@
 #include "numeric.h"
 #include "blalloc.h"
 #include "res.h"
+#include "class.h"
 #include "s_conf.h"
 
 #ifndef INADDR_NONE
@@ -513,7 +514,7 @@ aConfItem *make_conf()
   /* aconf->port = 0; */
   /* aconf->hold = 0; */
   aconf->ipnum.s_addr = INADDR_NONE;
-  Class(aconf) = 0;
+  ClassPtr(aconf) = 0;
   return (aconf);
 }
 

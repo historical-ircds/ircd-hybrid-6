@@ -61,6 +61,7 @@ static char *rcs_version = "$Id$";
 #include "fileio.h"
 #include "res.h"
 #include "s_conf.h"
+#include "class.h"
 
 
 /* external variables */
@@ -3595,10 +3596,10 @@ int	m_trace(aClient *cptr,
 		 parv[0],tname);
       return 0;
     }
-  for (cltmp = FirstClass(); doall && cltmp; cltmp = NextClass(cltmp))
+  for (cltmp = ClassList; doall && cltmp; cltmp = cltmp->next)
     if (Links(cltmp) > 0)
       sendto_one(sptr, form_str(RPL_TRACECLASS), me.name,
-		 parv[0], Class(cltmp), Links(cltmp));
+		 parv[0], ClassType(cltmp), Links(cltmp));
   sendto_one(sptr, form_str(RPL_ENDOFTRACE),me.name, parv[0],tname);
   return 0;
 }

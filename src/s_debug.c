@@ -26,6 +26,7 @@ static char *rcs_version = "$Id$";
 
 #include "struct.h"
 #include "s_conf.h"
+#include "class.h"
 #include "res.h"
 extern	void	count_whowas_memory(int *, u_long *);
 extern  void    count_ip_hash(int *,u_long *);	  /* defined in s_conf.c */
@@ -412,7 +413,7 @@ void count_memory(aClient *cptr,char *nick)
       com += sizeof(aConfItem);
     }
 
-  for (cltmp = classes; cltmp; cltmp = cltmp->next)
+  for (cltmp = ClassList; cltmp; cltmp = cltmp->next)
     cl++;
 
   sendto_one(cptr, ":%s %d %s :Client Local %d(%d) Remote %d(%d)",

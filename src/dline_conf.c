@@ -2,6 +2,7 @@
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
+#include "class.h"
 #include <fcntl.h>
 #include <sys/wait.h>
 #if defined(AIX) || defined(DYNIXPTX) || defined(SVR3)

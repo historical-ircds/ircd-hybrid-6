@@ -43,3 +43,4 @@ extern unsigned long   cres_mem(struct Client* cptr);
 extern void add_local_domain(char* name, int len);
 
 #endif /* INCLUDED_res_h */
+
