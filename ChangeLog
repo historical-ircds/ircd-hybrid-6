@@ -1,3 +1,7 @@
+*** 20000822_1 by lusky
+added support for CIDR IP tklines, just like normal klines
+
+
 *** 20000821_2 by lusky
 kludge to fix an I: bug where blah.foo.com could match I:nomatch::foo.com
 
