@@ -88,11 +88,6 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
   char  buff[BUFSIZE];	/* matches line definition in s_conf.c */
   char	temppath[256];
 
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-  static  char    timebuffer[MAX_DATE_STRING];
-  char filenamebuf[1024];
-  struct tm *tmptr;
-#endif
   char  *filename;		/* filename to use for unkline */
 
   char	*user,*host;
@@ -177,14 +172,7 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
       return 0;
     }
 
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-  tmptr = localtime(&NOW);
-  strftime(timebuffer, MAX_DATE_STRING, "%Y%m%d", tmptr);
-  (void)sprintf(filenamebuf, "%s.%s", ConfigFileEntry.klinefile, timebuffer);
-  filename = filenamebuf;
-#else
-  filename = ConfigFileEntry.klinefile;
-#endif			
+  filename = get_conf_name(KLINE_TYPE);
 
   if( (in = fbopen(filename, "r")) == 0)
     {

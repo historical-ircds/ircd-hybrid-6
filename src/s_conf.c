@@ -3162,22 +3162,24 @@ void GetPrintableaConfItem(aConfItem *aconf, char **name, char **host,
 
 void read_conf_files(int cold)
 {
-  FBFILE* file = 0;      /* initconf */
+  FBFILE* file = 0;     /* initconf */
+  char *filename;	/* kline or conf filename */
 
-  if ((file = openconf(ConfigFileEntry.configfile)) == 0)
+  filename = get_conf_name(CONF_TYPE);
+
+  if ((file = openconf(filename)) == 0)
     {
       if(cold)
 	{
 	  Debug((DEBUG_FATAL, "Failed in reading configuration file %s",
-		 ConfigFileEntry.configfile));
+		 filename));
 	  (void)printf("Couldn't open configuration file %s\n",
-		       ConfigFileEntry.configfile);
+		       filename);
 	  exit(-1);
 	}
       else
 	{
-	  sendto_ops("Can't open %s file aborting rehash!",
-		     ConfigFileEntry.configfile);
+	  sendto_ops("Can't open %s file aborting rehash!", filename );
 	  return;
 	}
     }
@@ -3189,54 +3191,25 @@ void read_conf_files(int cold)
 
   do_include_conf();
 
-/* comstuds SEPARATE_QUOTE_KLINES_BY_DATE code */
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-  {
-    struct tm *tmptr;
-    char timebuffer[20], filename[200];
+  filename = get_conf_name(KLINE_TYPE);
 
-    tmptr = localtime(&NOW);
-    (void)strftime(timebuffer, 20, "%Y%m%d", tmptr);
-    ircsprintf(filename, "%s.%s", ConfigFileEntry.klinefile, timebuffer);
-    if ((file = openconf(filename)) == 0)
-      {
-	if(cold)
-	  {
-	    Debug((DEBUG_ERROR,"Failed reading kline file %s",
-		   filename));
-	    (void)printf("Couldn't open kline file %s\n",
-			 filename);
-	  }
-	else
-	  {
-	    sendto_ops("Can't open %s file klines could be missing!",
-		       filename);
-	  }
-      }
-    else
-      initconf(file, NO);
-  }
-#else
-#ifdef KPATH
-  if ((file = openconf(ConfigFileEntry.klinefile)) == 0)
+  if ((file = openconf(filename)) == 0)
     {
       if(cold)
 	{
 	  Debug((DEBUG_ERROR,"Failed reading kline file %s",
-		 ConfigFileEntry.klinefile));
+		 filename));
 	  (void)printf("Couldn't open kline file %s\n",
-		       ConfigFileEntry.klinefile);
+		       filename);
 	}
       else
 	{
 	  sendto_ops("Can't open %s file klines could be missing!",
-		     ConfigFileEntry.klinefile);
+		     filename);
 	}
     }
   else
     initconf(file, NO);
-#endif
-#endif
 }
 
 
@@ -3324,116 +3297,97 @@ void write_kline_or_dline_to_conf_and_notice_opers(
   char buffer[1024];
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
   char *timebuffer;
-  char filenamebuf[1024];
 #endif
   int out;
   char *filename;		/* filename to use for kline */
 
-    /* comstud's SEPARATE_QUOTE_KLINES_BY_DATE code */
-    /* Note, that if SEPARATE_QUOTE_KLINES_BY_DATE is defined,
-     *  it doesn't make sense to have LOCKFILE on the kline file
-     */
+  filename = get_conf_name(type);
+
+#ifdef SLAVE_SERVERS
+  if(!IsServer(sptr))
+#endif
+    {
+      if(type == DLINE_TYPE)
+	{
+	  sendto_realops("%s added D-Line for [%s] [%s]",
+			 sptr->name, host, reason);
+	  sendto_one(sptr, ":%s NOTICE %s :Added D-Line [%s] to %s",
+		     me.name, sptr->name, host, filename);
+	}
+      else
+	{
+	  sendto_realops("%s added K-Line for [%s@%s] [%s]",
+			 sptr->name, user, host, reason);
+	  sendto_one(sptr, ":%s NOTICE %s :Added K-Line [%s@%s] to %s",
+		     me.name, sptr->name, user, host, filename);
+	}
+    }
+
+  if ((out = open(filename, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
+    {
+      sendto_realops("Problem opening %s ", filename);
+      return;
+    }
 
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-      timebuffer = small_file_date(NOW);
-
-      (void)incsprintf(filenamebuf, "%s.%s", ConfigFileEntry.klinefile,
-		       timebuffer);
-      filename = filenamebuf;
-
-#else	/* Not SEPARATE_QUOTE_KLINES_BY_DATE */
-
-      if(DLINE_TYPE)
-	filename = ConfigFileEntry.dlinefile;
-      else
-	filename = ConfigFileEntry.klinefile;
+  fchmod(out, 0660);
 #endif
 
 #ifdef SLAVE_SERVERS
-      if(!IsServer(sptr))
+  if(IsServer(sptr))
+    {
+      if((type==KLINE_TYPE) && rcptr)
+	ircsprintf(buffer, "#%s!%s@%s from %s K'd: %s@%s:%s\n",
+		   rcptr->name, rcptr->username, rcptr->host,
+		   sptr->name,
+		   user, host, reason);
+    }
+  else
 #endif
-	{
-	  if(type == DLINE_TYPE)
-	    {
-	      sendto_realops("%s added D-Line for [%s] [%s]",
-			     sptr->name, host, reason);
-	      sendto_one(sptr, ":%s NOTICE %s :Added D-Line [%s] to %s",
-			 me.name, sptr->name, host, filename);
-	    }
-	  else
-	    {
-	      sendto_realops("%s added K-Line for [%s@%s] [%s]",
-			     sptr->name, user, host, reason);
-	      sendto_one(sptr, ":%s NOTICE %s :Added K-Line [%s@%s] to %s",
-			 me.name, sptr->name, user, host, filename);
-	    }
-	}
-
-      if ((out = open(filename, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
-	{
-	  sendto_realops("Problem opening %s ", filename);
-	  return;
-	}
-
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-      fchmod(out, 0660);
-#endif
-
-#ifdef SLAVE_SERVERS
-      if(IsServer(sptr))
-	{
-	  if((type==KLINE_TYPE) && rcptr)
-	    ircsprintf(buffer, "#%s!%s@%s from %s K'd: %s@%s:%s\n",
-		       rcptr->name, rcptr->username, rcptr->host,
-		       sptr->name,
-		       user, host, reason);
-	}
-      else
-#endif
-	{
-	  if(type==KLINE_TYPE)
-	    ircsprintf(buffer, "#%s!%s@%s K'd: %s@%s:%s\n",
-		       sptr->name, sptr->username, sptr->host,
-		       user, host, reason);
-	  else
-	    ircsprintf(buffer, "#%s!%s@%s D'd: %s:%s\n",
-		       sptr->name, sptr->username, sptr->host,
-		       host, reason);
-	}
-
-      if (safe_write(sptr,filename,out,buffer))
-	return;
-
+    {
       if(type==KLINE_TYPE)
-	ircsprintf(buffer, "K:%s:%s (%s):%s\n",
-		   host,
-		   reason,
-		   current_date,
-		   user);
+	ircsprintf(buffer, "#%s!%s@%s K'd: %s@%s:%s\n",
+		   sptr->name, sptr->username, sptr->host,
+		   user, host, reason);
       else
-	ircsprintf(buffer, "D:%s:%s (%s)\n",
-		   host,
-		   reason,
-		   current_date);
+	ircsprintf(buffer, "#%s!%s@%s D'd: %s:%s\n",
+		   sptr->name, sptr->username, sptr->host,
+		   host, reason);
+    }
+  
+  if (safe_write(sptr,filename,out,buffer))
+    return;
+
+  if(type==KLINE_TYPE)
+    ircsprintf(buffer, "K:%s:%s (%s):%s\n",
+	       host,
+	       reason,
+	       current_date,
+	       user);
+  else
+    ircsprintf(buffer, "D:%s:%s (%s)\n",
+	       host,
+	       reason,
+	       current_date);
 
 
-      if (safe_write(sptr,filename,out,buffer))
-	return;
+  if (safe_write(sptr,filename,out,buffer))
+    return;
       
-      (void)close(out);
+  (void)close(out);
 
 #ifdef USE_SYSLOG
-      if(type==KLINE_TYPE)
-	syslog(LOG_NOTICE, "%s added K-Line for [%s@%s] [%s]",
-	       sptr->name,
-	       user,
-	       host,
-	       reason);
-      else
-	syslog(LOG_NOTICE, "%s added D-Line for [%s] [%s]",
-	       sptr->name,
-	       host,
-	       reason);
+  if(type==KLINE_TYPE)
+    syslog(LOG_NOTICE, "%s added K-Line for [%s@%s] [%s]",
+	   sptr->name,
+	   user,
+	   host,
+	   reason);
+  else
+    syslog(LOG_NOTICE, "%s added D-Line for [%s] [%s]",
+	   sptr->name,
+	   host,
+	   reason);
 #endif
 
   return;
@@ -3449,4 +3403,34 @@ int safe_write(aClient *sptr,
       return (-1);
     }
   return(0);
+}
+
+char *get_conf_name(KlineType type)
+{
+  static char filenamebuf[1024];
+#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
+  static  char    timebuffer[MAX_DATE_STRING];
+  struct tm *tmptr;
+#endif
+
+  if(type == CONF_TYPE)
+    {
+      strncpy(filenamebuf,ConfigFileEntry.configfile,PATH_MAX);
+      return(filenamebuf);
+    }
+  else if(type == KLINE_TYPE)
+    {
+#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
+      tmptr = localtime(&NOW);
+      strftime(timebuffer, MAX_DATE_STRING, "%Y%m%d", tmptr);
+      ircsprintf(filenamebuf, "%s.%s", ConfigFileEntry.klinefile, timebuffer);
+#else
+      strncpy(filenamebuf,ConfigFileEntry.klinefile,PATH_MAX);
+#endif			
+      return(filenamebuf);
+    }
+  else if(type == DLINE_TYPE)
+    strncpy(filenamebuf,ConfigFileEntry.dlinefile,PATH_MAX);
+
+  return( filenamebuf );
 }

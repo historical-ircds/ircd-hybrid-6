@@ -381,7 +381,7 @@ int     m_kline(aClient *cptr,
 			me.name,
 			parv[0],
 			user,host,
-			aconf->name,aconf->host,reason);
+			aconf->user,aconf->host,reason);
 	   return 0;
 	 }
      }
