@@ -290,7 +290,7 @@ int parse(aClient *cptr, char *pbuffer, char *bufend)
 	  else
 	    {
 	      para[i++] = s;
-              if (i > paramcount)
+              if (i >= paramcount)
                 {
                   break;
                 }
