@@ -3401,8 +3401,15 @@ int	m_names( aClient *cptr,
   int	idx, flag, len, mlen;
   char	*s, *para = parc > 1 ? parv[1] : NULL;
 
+  /* Don't route names, no need for it -Dianora */
+  /*
   if (parc > 1 &&
       hunt_server(cptr, sptr, ":%s NAMES %s %s", 2, parc, parv))
+    return 0;
+    */
+
+  /* And throw away non local names requests that do get here -Dianora */
+  if(!MyConnect(sptr))
     return 0;
 
   mlen = strlen(me.name) + NICKLEN + 7;

@@ -433,7 +433,10 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
 	  else if(found_aconf->status & CONF_CLIENT)
 	    {
 	      if(flags & CONF_CLIENT)
-		free_conf(aconf);	/* toss new I line into the garbage */
+		{
+		  report_dup('I',aconf);
+		  free_conf(aconf);	/* toss new I line into the garbage */
+		}
 	      else
 		{
 		  /* Its a K line */

@@ -2090,9 +2090,6 @@ static	int	m_message(aClient *cptr,
 				  ":%s %s %s :%s",
 				  parv[0], cmd, nick,
 				  parv[2]);
-
-	      /*	      sendto_channel_type_notice(cptr, chptr, type,
-					 parv[2]);*/
 	    }
 #ifdef ANTI_SPAMBOT_EXTRA
 	  if( MyConnect(sptr) && spambot_privmsg_count &&
