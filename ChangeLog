@@ -1,3 +1,8 @@
+*** 20011128_1 by lusky
+- revved patchlevel to 6.2.1rc2
+- another spoofing fix
+
+
 *** 20011126_1 by db
 - Stupid bug in m_gline.c found by David-T, committing before it gets lost
 
