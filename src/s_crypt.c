@@ -669,17 +669,33 @@ int crypt_init()
 {
   RSA * rsakey = 0;
   FILE * keyfile;
+#ifndef CRYPT_LINKS_PRIVATEKEYFILE
+  char privkeyname[BUFSIZE+1];
+
+  ircsprintf(privkeyname, "%s.key", me.name);
+  keyfile = fopen(privkeyname, "r");
+#else /* !CRYPT_LINKS_PRIVATEKEYFILE */
   keyfile = fopen(CRYPT_LINKS_PRIVATEKEYFILE, "r");
+#endif /* !CRYPT_LINKS_PRIVATEKEYFILE */
+
   if (!keyfile)
     {
+#ifndef CRYPT_LINKS_PRIVATEKEYFILE
+      log(L_CRIT, "Failed to open private key file %s", privkeyname);
+#else /* !CRYPT_LINKS_PRIVATEKEYFILE */
       log(L_CRIT, "Failed to open private key file %s", CRYPT_LINKS_PRIVATEKEYFILE);
+#endif /* !CRYPT_LINKS_PRIVATEKEYFILE */
       return CRYPT_ERROR;
     }
   rsakey = PEM_read_RSAPrivateKey(keyfile, &rsakey, 0, 0);
   fclose(keyfile);
   if (!rsakey)
     {
+#ifndef CRYPT_LINKS_PRIVATEKEYFILE
+      log(L_CRIT, "Failed to load private key file %s", privkeyname);
+#else /* !CRYPT_LINKS_PRIVATEKEYFILE */
       log(L_CRIT, "Failed to load private key file %s", CRYPT_LINKS_PRIVATEKEYFILE);
+#endif /* !CRYPT_LINKS_PRIVATEKEYFILE */
       return CRYPT_ERROR;
     }
   crypt_free(&me);
