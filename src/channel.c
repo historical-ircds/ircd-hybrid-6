@@ -4129,7 +4129,9 @@ int	m_sjoin(aClient *cptr,
 {
   aChannel *chptr;
   aClient	*acptr;
-  ts_val	newts, oldts, tstosend;
+  time_t	newts;
+  time_t        oldts;
+  time_t        tstosend;
   static	Mode mode, *oldmode;
   Link	*l;
   int	args = 0, haveops = 0, keep_our_modes = 1, keep_new_modes = 1;

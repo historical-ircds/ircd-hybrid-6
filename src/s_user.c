@@ -1101,7 +1101,7 @@ int	m_nick(aClient *cptr,
 {
   aClient *acptr;
   char	nick[NICKLEN+2], *s;
-  ts_val newts = 0;
+  time_t newts = 0;
   int	sameuser = 0, fromTS = 0;
 
   if (parc < 2)
@@ -1534,7 +1534,7 @@ int	m_nick(aClient *cptr,
 
 
 int nickkilldone(aClient *cptr, aClient *sptr, int parc,
-		 char *parv[], ts_val newts,char *nick)
+		 char *parv[], time_t newts,char *nick)
 {
 
   if (IsServer(sptr))
@@ -1549,7 +1549,7 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
 	sptr->tsinfo = newts;
       else
 	{
-	  newts = sptr->tsinfo = (ts_val)timeofday;
+	  newts = sptr->tsinfo = timeofday;
 	  ts_warn("Remote nick %s introduced without a TS", nick);
 	}
       /* copy the nick in place */
@@ -1593,7 +1593,7 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
       ** on that channel. Propagate notice to other servers.
       */
       if (irccmp(parv[0], nick))
-	sptr->tsinfo = newts ? newts : (ts_val)timeofday;
+	sptr->tsinfo = newts ? newts : timeofday;
 
       if(MyConnect(sptr) && IsRegisteredUser(sptr))
 	{     
@@ -3375,7 +3375,7 @@ int	m_pass(aClient *cptr,
       /*      if (strcmp(parv[2]+l-2, "TS") == 0) */
 
       if(parv[2][0] == 'T' && parv[2][1] == 'S' && !parv[2][2])
-	cptr->tsinfo = (ts_val)TS_DOESTS;
+	cptr->tsinfo = TS_DOESTS;
     }
   return 0;
 }

@@ -1748,9 +1748,9 @@ va_dcl
  
 {
   va_list args;
-  static ts_val last = 0;
+  static time_t last = 0;
   static int warnings = 0;
-  register ts_val now;
+  time_t now;
 
   MyVaStart(args, pattern);
  
