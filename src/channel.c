@@ -247,7 +247,7 @@ static	int	add_banid(aClient *cptr, aChannel *chptr, char *banid)
 	(char *)MyMalloc(strlen(cptr->name)+
 			 strlen(cptr->username)+
 			 strlen(cptr->host)+3);
-      (void)sprintf(ban->value.banptr->who, "%s!%s@%s",
+      (void)ircsprintf(ban->value.banptr->who, "%s!%s@%s",
 		    cptr->name, cptr->username, cptr->host);
     }
   else
@@ -326,7 +326,7 @@ static	int	add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
 	(char *)MyMalloc(strlen(cptr->name)+
 			 strlen(cptr->username)+
 			 strlen(cptr->host)+3);
-      (void)sprintf(ex->value.banptr->who, "%s!%s@%s",
+      (void)ircsprintf(ex->value.banptr->who, "%s!%s@%s",
 		    cptr->name, cptr->username, cptr->host);
     }
   else
@@ -816,7 +816,7 @@ void	send_channel_modes(aClient *cptr, aChannel *chptr)
 
   if (*parabuf)
     strcat(parabuf, " ");
-  sprintf(buf, ":%s SJOIN %ld %s %s %s:", me.name,
+  ircsprintf(buf, ":%s SJOIN %lu %s %s %s:", me.name,
 	  chptr->channelts, chptr->chname, modebuf, parabuf);
   t = buf + strlen(buf);
   for (l = chptr->members; l && l->value.cptr; l = l->next)
@@ -860,7 +860,7 @@ void	send_channel_modes(aClient *cptr, aChannel *chptr)
 	  *t++ = '\0';
 	  if (t[-1] == ' ') t[-1] = '\0';
 	  sendto_one(cptr, "%s", buf);
-	  sprintf(buf, ":%s SJOIN %ld %s 0 :",
+	  ircsprintf(buf, ":%s SJOIN %lu %s 0 :",
 		  me.name, chptr->channelts,
 		  chptr->chname);
 	  t = buf + strlen(buf);
@@ -3704,11 +3704,6 @@ int	m_invite(aClient *cptr,
 	    { 
 	      char message[NICKLEN*2+CHANNELLEN+USERLEN+HOSTLEN+30];
 
-	      /*
-		sprintf(message, "INVITE: %s (%s invited %s)", chptr->chname, sptr->name, acptr->name);
-		sendto_channel_type_notice(cptr, chptr, MODE_CHANOP,
-		message);
-		*/
 	      /* bit of paranoia, be a shame if it cored for this -Dianora */
 	      if(acptr->user)
 		{
@@ -4586,7 +4581,7 @@ int	m_sjoin(aClient *cptr,
       modebuf[1] = '\0';
     }
 
-  sprintf(t, ":%s SJOIN %ld %s %s %s :", parv[0], tstosend, parv[2],
+  ircsprintf(t, ":%s SJOIN %lu %s %s %s :", parv[0], tstosend, parv[2],
 	  modebuf, parabuf);
   t += strlen(t);
 

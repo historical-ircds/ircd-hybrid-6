@@ -3264,7 +3264,7 @@ int	m_restart(aClient *cptr,
   syslog(LOG_WARNING, "Server RESTART by %s\n",
 	 get_client_name(sptr,FALSE));
 #endif
-  sprintf(buf, "Server RESTART by %s", get_client_name(sptr, TRUE));
+  ircsprintf(buf, "Server RESTART by %s", get_client_name(sptr, TRUE));
   restart(buf);
   return 0; /*NOT REACHED*/
 }

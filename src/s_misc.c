@@ -105,18 +105,14 @@ char* date(time_t clock)
   if (minswest < 0)
     minswest = -minswest;
   
-  (void)ircsprintf(buf, "%s %s %d %04d -- %02d:%02d:%02d %c%02d:%02d",
-                   weekdays[lt->tm_wday], months[lt->tm_mon],lt->tm_mday,
-                   lt->tm_year + 1900, lt->tm_hour, lt->tm_min, lt->tm_sec,
-                   plus, minswest/60, minswest%60);
+  ircsprintf(buf, "%s %s %d %d -- %t:%t:%t %c%t:%t",
+	  weekdays[lt->tm_wday], months[lt->tm_mon],lt->tm_mday,
+	  lt->tm_year + 1900, lt->tm_hour, lt->tm_min, lt->tm_sec,
+	  plus, minswest/60, minswest%60);
 
   return buf;
 }
 
-
-/*
-
-*/
 char *smalldate(time_t clock)
 {
   static  char    buf[MAX_DATE_STRING];
@@ -130,9 +126,9 @@ char *smalldate(time_t clock)
   gm = &gmbuf; 
   lt = localtime(&clock);
   
-  (void)ircsprintf(buf, "%04d/%02d/%02d %02d.%02d",
-                   lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday,
-                   lt->tm_hour, lt->tm_min);
+  ircsprintf(buf, "%d/%t/%t %t.%t",
+	     lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday,
+	     lt->tm_hour, lt->tm_min);
   
   return buf;
 }

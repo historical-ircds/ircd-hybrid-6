@@ -60,7 +60,10 @@ void dbuf_init()
   freelist = (dbufbuf *)valloc(sizeof(dbufbuf)*INITIAL_DBUFS);
   if (!freelist) return; /* screw this if it doesn't work */
   dbp = freelist;
-  for(;i<INITIAL_DBUFS-1;i++,dbp++,dbufblocks++) dbp->next = (dbp+1);
+
+  for(;i<INITIAL_DBUFS-1;i++,dbp++,dbufblocks++)
+    dbp->next = (dbp+1);
+
   dbp->next = NULL;
   dbufblocks++;
   maxdbufblocks = dbufblocks;
@@ -72,16 +75,9 @@ void dbuf_init()
 */
 static dbufbuf *dbuf_alloc()
 {
-#if defined(VALLOC) && !defined(DEBUGMODE)
-  dbufbuf	*dbptr, *db2ptr;
-  int	num;
-#else
   dbufbuf *dbptr;
-#endif
 
   dbufalloc++;
-  if (dbufalloc > maxdbufalloc)
-    maxdbufalloc = dbufalloc;
 
   if ( (dbptr = freelist) )
     {
@@ -94,37 +90,8 @@ static dbufbuf *dbuf_alloc()
       return NULL;
     }
 
-#if defined(VALLOC) && !defined(DEBUGMODE)
-# if defined(SOL20) || defined(_SC_PAGESIZE)
-  num = sysconf(_SC_PAGESIZE)/sizeof(dbufbuf);
-# else
-  num = getpagesize()/sizeof(dbufbuf);
-# endif
-  if (num < 0)
-    num = 1;
-
-  dbufblocks += num;
-  if (dbufblocks > maxdbufblocks)
-    maxdbufblocks = dbufblocks;
-
-  dbptr = (dbufbuf *)valloc(num*sizeof(dbufbuf));
-  if (!dbptr)
-    return (dbufbuf *)NULL;
-
-  num--;
-  for (db2ptr = dbptr; num; num--)
-    {
-      db2ptr = (dbufbuf *)((char *)db2ptr + sizeof(dbufbuf));
-      db2ptr->next = freelist;
-      freelist = db2ptr;
-    }
-  return dbptr;
-#else
   dbufblocks++;
-  if (dbufblocks > maxdbufblocks)
-      maxdbufblocks = dbufblocks;
   return (dbufbuf *)MyMalloc(sizeof(dbufbuf));
-#endif
 }
 
 /*
@@ -165,7 +132,6 @@ int	dbuf_put(dbuf *dyn,char *buf,int length)
   int	chunk;
 
   off = (dyn->offset + dyn->length) % DBUFSIZ;
-  /*nbr = (dyn->offset + dyn->length) / DBUFSIZ;>*/
   /*
   ** Locate the last non-empty buffer. If the last buffer is
   ** full, the loop will terminate with 'd==NULL'. This loop

@@ -63,9 +63,6 @@ static  void vsendto_realops(const char *, va_list);
 static	unsigned long sentalong[MAXCONNECTIONS];
 static unsigned long current_serial=0L;
 
-int format(char *,char *,char *,char *,char *,char *,char *,char *,
-	char *,char *,char *,char *,char *,char *);
-
 /*
 ** dead_link
 **	An error has been detected. The link *must* be closed,
@@ -1443,124 +1440,6 @@ vsendto_prefix_one(register aClient *to, register aClient *from,
 
   vsendto_one(to, temp, args);
 } /* vsendto_prefix_one() */
-
-int format(char *outp,char *formp,char *in0p,char *in1p,char *in2p,
-	char *in3p,char *in4p,char *in5p,char *in6p,char *in7p,
-	char *in8p,char *in9p,char *in10p,char *in11p)
-{
-  /* rp for Reading, wp for Writing, fp for the Format string */
-  char *inp[12]; /* we could hack this if we know the format of the stack */
-  register char *rp,*fp,*wp;
-  register char f;
-  register int i=0;
-
-  inp[0]=in0p; inp[1]=in1p; inp[2]=in2p; inp[3]=in3p; inp[4]=in4p;
-  inp[5]=in5p; inp[6]=in6p; inp[7]=in7p; inp[8]=in8p; inp[9]=in9p;
-  inp[10]=in10p; inp[11]=in11p;
-
-  fp = formp;
-  wp = outp;
-
-  rp = inp[i]; /* start with the first input string */
-  /* just scan the format string and puke out whatever is necessary
-     along the way... */
-
-  while ( (f = *(fp++)) )
-    {
-      if (f!= '%') *(wp++) = f;
-      else
-	switch (*(fp++))
-	  {
-	  case 's': /* put the most common case at the top */
-	    if(rp)
-	      {
-		while(*rp)
-		  *wp++ = *rp++;
-		*wp = '\0';
-	      }
-	    else
-	      {
-		*wp++ = '{'; *wp++ = 'n'; *wp++ = 'u'; *wp++ = 'l';
-		*wp++ = 'l'; *wp++ = '}'; *wp++ = '\0';
-	      }
-	    rp = inp[++i];                  /* get the next parameter */
-	    break;
-	  case 'c':
-	    *wp++ = (char)(long)rp;
-	    rp = inp[++i];
-	    break;
-	  case 'd':
-	    {
-	      register int quotient;
-              register long myint;
-	      myint = (long)rp;
-	      if (myint > 999 || myint < 0)
-		{
-		  /* don't call ircsprintf here... that's stupid.. */
-		  (void)sprintf(outp,formp,in0p,in1p,in2p,in3p,
-				in4p,in5p,in6p,in7p,in8p,
-				in9p,in10p,in11p);
-		  /* *blink */
-		  return strlen(outp);
-		}
-	      /* leading 0's are suppressed unlike ircsprintf() - Dianora */
-	      if( (quotient=myint/100) )
-		{
-		  *(wp++) = (char) (quotient + (int) '0');
-		  myint %=100;
-		  *(wp++) = (char) (myint/10 + (int) '0');
-		}
-	      else
-		{
-		  myint %=100;
-		  if( (quotient = myint/10) )
-		    *(wp++) = (char) (quotient + (int)'0');
-		}
-	      myint %=10;
-	      *(wp++) = (char) ((myint) + (int) '0');
-	      
-	      rp = inp[++i];
-	    }
-	  break;
-	  case 'u':
-	    {
-	      register unsigned long myuint;
-	      myuint = (unsigned long)rp;
-
-	      if (myuint < 100 || myuint > 999)
-		{
-		  (void)sprintf(outp,formp,in0p,in1p,in2p,in3p,
-				in4p,in5p,in6p,in7p,in8p,
-				in9p,in10p,in11p);
-		  return strlen(outp);
-		}
-
-	      *(wp++) = (char) ((myuint / 100) + (unsigned int) '0');
-	      myuint %=100;
-	      *(wp++) = (char) ((myuint / 10) + (unsigned int) '0');
-	      myuint %=10;
-	      *(wp++) = (char) ((myuint) + (unsigned int) '0');
-	      rp = inp[++i];
-	    }
-	  break;
-	  case '%':
-	    *(wp++) = '%';
-	    break;
-	  default:
-	    /* oh shit */
-	    /* don't call ircsprintf here... that's stupid.. */
-	    (void)sprintf(outp,formp,in0p,in1p,in2p,in3p,
-			  in4p,in5p,in6p,in7p,in8p,
-			  in9p,in10p,in11p);
-	    return strlen(outp);
-	    break;
-	  }
-    }
-
-  *wp = '\0'; /* leaves wp pointing to the terminating NULL in the string */
-
-  return (wp-outp);
-}
 
 /*
  * sendto_realops

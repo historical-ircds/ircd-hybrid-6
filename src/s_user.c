@@ -2828,7 +2828,7 @@ int m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
       inpath = cptr->host;
       if (!BadPtr(path))
 	{
-	  (void)ircsprintf(buf, "%s%s (%s)",
+	  ircsprintf(buf, "%s%s (%s)",
 			   cptr->name, IsOper(sptr) ? "" : "(L)", path);
 	  path = buf;
 	}
@@ -2893,7 +2893,7 @@ int m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
   ** set in any other place)
   */
   if (MyConnect(acptr) && MyConnect(sptr) && IsAnOper(sptr))
-    (void)ircsprintf(buf2, "Local kill by %s (%s)", sptr->name,
+    ircsprintf(buf2, "Local kill by %s (%s)", sptr->name,
 		     BadPtr(parv[2]) ? sptr->name : parv[2]);
   else
     {
@@ -2908,7 +2908,7 @@ int m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
       else
 	killer = path;
-      (void)ircsprintf(buf2, "Killed (%s)", killer);
+      ircsprintf(buf2, "Killed (%s)", killer);
     }
   return exit_client(cptr, acptr, sptr, buf2);
 }
@@ -3276,7 +3276,7 @@ int	m_oper(aClient *cptr,
 	      (logfile = open(FNAME_OPERLOG, O_WRONLY|O_APPEND)) != -1)
 	    {
 	      /* (void)alarm(0); */
-	      (void)ircsprintf(buf, "%s OPER (%s) (%s) by (%s!%s@%s)\n",
+	      ircsprintf(buf, "%s OPER (%s) (%s) by (%s!%s@%s)\n",
 			       myctime(timeofday), name, encr,
 			       parv[0], sptr->username,
 			       sptr->host);
@@ -3381,7 +3381,7 @@ int	m_userhost(aClient *cptr,
       return 0;
     }
 
-  (void)ircsprintf(buf, rpl_str(RPL_USERHOST), me.name, parv[0]);
+  ircsprintf(buf, rpl_str(RPL_USERHOST), me.name, parv[0]);
   len = strlen(buf);
   *buf2 = '\0';
 
@@ -3391,12 +3391,12 @@ int	m_userhost(aClient *cptr,
       {
 	if (*buf2)
 	  (void)strcat(buf, " ");
-	(void)ircsprintf(buf2, "%s%s=%c%s@%s",
-			 acptr->name,
-			 IsAnOper(acptr) ? "*" : "",
-			 (acptr->user->away) ? '-' : '+',
-			 acptr->username,
-			 acptr->host);
+	ircsprintf(buf2, "%s%s=%c%s@%s",
+		   acptr->name,
+		   IsAnOper(acptr) ? "*" : "",
+		   (acptr->user->away) ? '-' : '+',
+		   acptr->username,
+		   acptr->host);
 	
 	(void)strncat(buf, buf2, sizeof(buf) - len);
 	len += strlen(buf2);
@@ -3433,7 +3433,7 @@ int     m_usrip(aClient *cptr,
       return 0;  
     }
         
-  (void)ircsprintf(buf, rpl_str(RPL_USERHOST), me.name, parv[0]);
+  ircsprintf(buf, rpl_str(RPL_USERHOST), me.name, parv[0]);
   len = strlen(buf);
   *buf2 = '\0';   
     
@@ -3446,28 +3446,28 @@ int     m_usrip(aClient *cptr,
 
 	if(IsAnOper(sptr))
 	  {
-	    (void)ircsprintf(buf2, "%s%s=%c%s@%s",
-			     acptr->name,
-			     IsAnOper(acptr) ? "*" : "",
-			     (acptr->user->away) ? '-' : '+',
-			     acptr->username,
-			     inetntoa((char *)&acptr->ip));
+	    ircsprintf(buf2, "%s%s=%c%s@%s",
+		       acptr->name,
+		       IsAnOper(acptr) ? "*" : "",
+		       (acptr->user->away) ? '-' : '+',
+		       acptr->username,
+		       inetntoa((char *)&acptr->ip));
 	  }
 	else
 	  {
 	    if(IsIPHidden(acptr))
-	       (void)ircsprintf(buf2, "%s%s=%c%s@127.0.0.1",
-				acptr->name,
-				IsAnOper(acptr) ? "*" : "",
-				(acptr->user->away) ? '-' : '+',
-				acptr->username);
+	      ircsprintf(buf2, "%s%s=%c%s@127.0.0.1",
+			 acptr->name,
+			 IsAnOper(acptr) ? "*" : "",
+			 (acptr->user->away) ? '-' : '+',
+			 acptr->username);
 	    else
-	      (void)ircsprintf(buf2, "%s%s=%c%s@%s",
-			       acptr->name,
-			       IsAnOper(acptr) ? "*" : "",
-			       (acptr->user->away) ? '-' : '+',
-			       acptr->username,
-			       inetntoa((char *)&acptr->ip));
+	      ircsprintf(buf2, "%s%s=%c%s@%s",
+			 acptr->name,
+			 IsAnOper(acptr) ? "*" : "",
+			 (acptr->user->away) ? '-' : '+',
+			 acptr->username,
+			 inetntoa((char *)&acptr->ip));
 	  }
 
 	(void)strncat(buf, buf2, sizeof(buf) - len);
@@ -3511,7 +3511,7 @@ int	m_ison(aClient *cptr,
       return 0;
     }
 
-  (void)ircsprintf(buf, rpl_str(RPL_ISON), me.name, *parv);
+  ircsprintf(buf, rpl_str(RPL_ISON), me.name, *parv);
   len = strlen(buf);
   if (!IsOper(cptr))
     cptr->priority +=20; /* this keeps it from moving to 'busy' list */

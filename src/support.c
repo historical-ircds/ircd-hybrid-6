@@ -104,7 +104,7 @@ char *strerror(int err_no)
 	if (errp == (char *)NULL)
 	    {
 		errp = buff;
-		(void) sprintf(errp, "Unknown Error %d", err_no);
+		ircsprintf(errp, "Unknown Error %d", err_no);
 	    }
 	return errp;
 }

@@ -333,7 +333,7 @@ static void log_gline_request(
   struct tm *tmptr;
   int out;
 
-  (void)sprintf(filenamebuf, "%s.%s", 
+  (void)ircsprintf(filenamebuf, "%s.%s", 
 		ConfigFileEntry.glinefile, small_file_date((time_t)0));
   if ((out = open(filenamebuf, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
     {
@@ -381,7 +381,7 @@ static void log_gline(
   struct tm *tmptr;
   int out;
 
-  (void)sprintf(filenamebuf, "%s.%s", 
+  (void)ircsprintf(filenamebuf, "%s.%s", 
 		ConfigFileEntry.glinefile, small_file_date((time_t) 0));
   if ((out = open(filenamebuf, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
     {

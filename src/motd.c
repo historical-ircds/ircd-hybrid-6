@@ -200,13 +200,13 @@ int ReadMessageFile(MessageFile *MessageFileptr)
   local_tm = localtime(&sb.st_mtime);
 
   if (local_tm)
-    (void)sprintf(MessageFileptr->lastChangedDate,
-		  "%d/%d/%d %02d:%02d",
-		  local_tm->tm_mday,
-		  local_tm->tm_mon + 1,
-		  1900 + local_tm->tm_year,
-		  local_tm->tm_hour,
-		  local_tm->tm_min);
+    ircsprintf(MessageFileptr->lastChangedDate,
+	       "%d/%d/%d %t:%t",
+	       local_tm->tm_mday,
+	       local_tm->tm_mon + 1,
+	       1900 + local_tm->tm_year,
+	       local_tm->tm_hour,
+	       local_tm->tm_min);
 
   /*
    * Clear out the old MOTD
