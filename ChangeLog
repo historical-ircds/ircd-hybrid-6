@@ -1,3 +1,16 @@
+db          2002/02/02 10:58:22 EST	(20020202_1)
+
+  Modified files:
+    src                  ircd.c 
+  Log:
+  - updated configure
+  - added check for errno != ENOENT (Lee)
+  
+  Revision  Changes    Path
+  1.163     +1 -1      ircd-hybrid-6/src/ircd.c
+
+
+
 db          2002/02/02 10:52:21 EST	(20020202_0)
 
   Modified files:
