@@ -255,10 +255,6 @@ int	m_version(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
-      /* reject non local requests */
-      if(!MyConnect(sptr))
-	return 0;
-
       if((last_used + MOTD_WAIT) > NOW)
 	return 0;
       else
@@ -3028,6 +3024,31 @@ int	m_admin(aClient *cptr,
 
   static time_t last_used=0L;
 
+  if (hunt_server(cptr,sptr,":%s ADMIN :%s",1,parc,parv) != HUNTED_ISME)
+    return 0;
+}
+
+/*
+** m_admin
+**	parv[0] = sender prefix
+**	parv[1] = servername
+*/
+int	m_admin(aClient *cptr,
+		aClient *sptr,
+		int parc,
+		char *parv[])
+{
+  aConfItem *aconf;
+  /* anti flooding code,
+   * I did have this in parse.c with a table lookup
+   * but I think this will be less inefficient doing it in each
+   * function that absolutely needs it
+   * -Dianora
+   */
+
+  static time_t last_used=0L;
+  static int last_count=0;
+
   if(!IsAnOper(sptr))
     {
       if((last_used + MOTD_WAIT) > NOW)
@@ -5318,7 +5339,7 @@ int	m_trace(aClient *cptr,
   char	*tname;
   int	doall, link_s[MAXCONNECTIONS], link_u[MAXCONNECTIONS];
   int	cnt = 0, wilds, dow;
-  static time_t last_trace=0L;
+
   /* anti flooding code,
    * I did have this in parse.c with a table lookup
    * but I think this will be less inefficient doing it in each
@@ -5326,6 +5347,7 @@ int	m_trace(aClient *cptr,
    * -Dianora
    */
 
+  static time_t last_trace=0L;
   static time_t last_used=0L;
 
   if(!IsAnOper(sptr))
@@ -5338,21 +5360,20 @@ int	m_trace(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
-      /* reject non local requests */
-      if(!MyConnect(sptr))
-	return 0;
-
       if((last_trace + MOTD_WAIT) > NOW)
 	{
 	  return 0;
 	}
       else
 	last_trace = NOW;
+      if (parv[1] && !index(parv[1],'.') && (index(parv[1], '*')
+          || index(parv[1], '?'))) /* bzzzt, no wildcard nicks for nonopers */
+        {
+          sendto_one(sptr, rpl_str(RPL_ENDOFTRACE),me.name,
+                     parv[0], parv[1]);
+          return 0;
+        }
     }
-
-  sendto_realops_lev(SPY_LEV, "trace requested by %s (%s@%s) [%s]",
-		     sptr->name, sptr->user->username, sptr->user->host,
-		     sptr->user->server);
 
   if (parc > 2)
     if (hunt_server(cptr, sptr, ":%s TRACE %s :%s",
@@ -5385,10 +5406,47 @@ int	m_trace(aClient *cptr,
       return 0;
     }
 
+  sendto_realops_lev(SPY_LEV, "trace requested by %s (%s@%s) [%s]",
+		     sptr->name, sptr->user->username, sptr->user->host,
+		     sptr->user->server);
+
+
   doall = (parv[1] && (parc > 1)) ? !matches(tname, me.name): TRUE;
   wilds = !parv[1] || strchr(tname, '*') || strchr(tname, '?');
   dow = wilds || doall;
   
+  if(!IsAnOper(sptr) || !dow) /* non-oper traces must be full nicks */
+                              /* lets also do this for opers tracing nicks */
+    {
+      char      *name;
+      int       class;
+
+      acptr = hash_find_client(tname,(aClient *)NULL);
+      if(!acptr || !IsPerson(acptr)) 
+        {
+	  /* this should only be reached if the matching
+	     target is this server */
+	  sendto_one(sptr, rpl_str(RPL_ENDOFTRACE),me.name,
+		     parv[0], tname);
+          return 0;
+        }
+      name = get_client_name(acptr,FALSE);
+      class = get_client_class(acptr);
+      if (IsAnOper(acptr))
+        {
+          sendto_one(sptr, rpl_str(RPL_TRACEOPERATOR),
+                     me.name, parv[0], class, name);
+        }
+      else
+        {
+          sendto_one(sptr,rpl_str(RPL_TRACEUSER),
+                     me.name, parv[0], class, name);
+        }
+      sendto_one(sptr, rpl_str(RPL_ENDOFTRACE),me.name,
+		 parv[0], tname);
+      return 0;
+    }
+
   if (dow && lifesux && !IsOper(sptr))
     {
       sendto_one(sptr,rpl_str(RPL_LOAD2HI),me.name,parv[0]);

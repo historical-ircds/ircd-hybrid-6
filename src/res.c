@@ -604,6 +604,7 @@ static	int	proc_answer(ResRQ *rptr,
 	  if (ans == 1)
 	    hp->h_addrtype =  (class == C_IN) ?
 	      AF_INET : AF_UNSPEC;
+	  /* from Christophe Kalt <kalt@stealth.net> */
           if (dlen != sizeof(dr))
             {
               sendto_realops("Bad IP length (%d) returned for %s",

@@ -3,6 +3,10 @@
 - fixed m_topic (Dianora)
 - fixed m_motd oper notice in the wrong place (Dianora)
 - fixed m_lusers, added send_lusers() (Dianora)
+- These commands are flood controlled: VERSION, INFO, LINKS, STATS, HELP,
+  LUSERS, ADMIN, TRACE, MOTD
+- These functions are local-only to non-opers:
+  INFO, LINK, STATS (except 'p'), HELP
 - removed pacing from m_time() (Dianora)
 - fixed remote m_info() for opers (Dianora)
 - added OPER_MOTD code, when oper opers up they get an unique motd (Dianora)
