@@ -27,8 +27,13 @@ extern  int sendto_slaves(struct Client *, char *, char *, int, char **);
 extern  void sendto_one(struct Client *, const char *, ...);
 extern  void sendto_channel_butone(struct Client *, struct Client *, 
                                    struct Channel *, const char *, ...);
-extern  void sendto_channel_type(struct Client *, struct Client *, 
-                                 struct Channel *, int, const char *, ...);
+extern  void sendto_channel_type(struct Client *,
+                                 struct Client *, 
+                                 struct Channel *,
+                                 int type,
+                                 const char *nick,
+                                 const char *cmd,
+                                 const char *message);
 extern  void sendto_serv_butone(struct Client *, const char *, ...);
 extern  void sendto_common_channels(struct Client *, const char *, ...);
 extern  void sendto_channel_butserv(struct Channel *, struct Client *, 

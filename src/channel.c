@@ -613,15 +613,6 @@ static  int is_banned(struct Client *cptr,struct Channel *chptr)
         if (match(BANSTR(t2), s) ||
             match(BANSTR(t2), s2))
           {
-#if 0
-            /* I think a message sent to channel
-             * about the ban exception might be in order?
-             */
-            sendto_channel_type(cptr, sptr, chptr, type,
-                                ":%s %s %s :%s",
-                                parv[0], cmd, nick,
-                                "*** Banned but have an ban exception");
-#endif
             return CHFL_EXCEPTION;
           }
     }
@@ -3730,24 +3721,6 @@ int     m_knock(struct Client *cptr,
                    sptr->host);
         sendto_channel_type_notice(cptr, chptr, MODE_CHANOP, message);
       }
-
-    /* There is a problem with the code fragment below...
-     * The problem is, s_user.c checks to see if the sender
-     * is actually chanop on the channel
-     */
-
-    /* bit of paranoia, be a shame if it cored for this -Dianora */
-    /*
-    if(sptr->user)
-      sendto_channel_type(cptr, sptr, chptr, MODE_CHANOP,
-          ":%s PRIVMSG @%s :KNOCK: %s (%s [%s@%s] has asked for an invite)",
-                          parv[0],
-                          chptr->chname,
-                          chptr->chname,
-                          sptr->name,
-                          sptr->username,
-                          sptr->host);
-                          */
   }
   return 0;
 }
@@ -3994,15 +3967,10 @@ int     m_invite(struct Client *cptr,
                              acptr->username,
                              acptr->host);
 
-                  /* Note the horrible kludge here of "PRIVMSG"
-                   * in the arguments, this is to ensure that p4 in 
-                   * sendto_channel_type() in send.c is the message payload
-                   * for non CHW type servers
-                   * -Dianora
-                   */
-                  sendto_channel_type(cptr, sptr, chptr, MODE_CHANOP,
-                                      ":%s %s @%s :%s",
-                                      parv[0], "PRIVMSG", chptr->chname,
+                  sendto_channel_type(cptr, sptr, chptr,
+                                      MODE_CHANOP,
+                                      chptr->chname,
+                                      "PRIVMSG",
                                       message);
                 }
             }

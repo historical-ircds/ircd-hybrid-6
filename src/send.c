@@ -543,18 +543,24 @@ sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
 } /* sendto_channel_butone() */
 
 void
-sendto_channel_type(aClient *one, aClient *from, aChannel *chptr, 
-                    int type, const char *pattern, ...)
+sendto_channel_type(aClient *one, aClient *from, aChannel *chptr,
+                    int type,
+                    const char *nick,
+                    const char *cmd,
+                    const char *message)
 
 {
-  va_list       args;
   register Link *lp;
   register aClient *acptr;
   register int i;
-
-  va_start(args, pattern);
+  char char_type;
 
   ++current_serial;
+
+  if(type&MODE_CHANOP)
+    char_type = '@';
+  else
+    char_type = '+';
 
   for (lp = chptr->members; lp; lp = lp->next)
     {
@@ -568,58 +574,56 @@ sendto_channel_type(aClient *one, aClient *from, aChannel *chptr,
       i = acptr->from->fd;
       if (MyConnect(acptr) && IsRegisteredUser(acptr))
         {
-          vsendto_prefix_one(acptr, from, pattern, args);
-          sentalong[i] = current_serial;
+          sendto_prefix_one(acptr, from,
+                  ":%s %s %c%s :%s",
+                  from->name,
+                  cmd,                    /* PRIVMSG or NOTICE */
+                  char_type,              /* @ or + */
+                  nick,
+                  message);
         }
       else
         {
-#if 0
-          /*
-           * We have to remove this kludge since it is not
-           * compatible with stdarg.h - if we call va_arg()
-           * several times to grab the p1 and p4, it will work
-           * short-term, but the next time we hit a local
-           * client and call vsendto_prefix_one(), 'args'
-           * will be basically null, causing a core dump.
-           * -wnder
-           *
-           */
-
           /*
            * If the target's server can do CAP_CHW, only
            * one send is needed, otherwise, I do a bunch of
            * send's to each target on that server. (kludge)
            *
-           * The USE_VARARGS is broken, we'll have to fix that later
            * -Dianora
            */
           if(!IsCapable(acptr->from,CAP_CHW))
             {
-              /* kludge in a built in chan wall for older servers */
-              
-              sendto_prefix_one(acptr, from,
-                                ":%s NOTICE %s :%s",
-                                p1,
-                                /* ignore p2, replace with NOTICE */
-                                /* ignore p3, replace with username */
-                                lp->value.cptr->name,
-                                /* p4 is message "payload" */
-                                p4);
+              /* Send it individually to each opered or voiced
+               * client on channel
+               */
+              if (sentalong[i] != current_serial)
+                {
+                  sendto_prefix_one(acptr, from,
+                    ":%s NOTICE %s :%s",
+                    from->name,
+                    lp->value.cptr->name, /* target name */
+                    message);
+                }
+              sentalong[i] = current_serial;
             }
           else
             {
-#endif /* 0 */
-
               /* Now check whether a message has been sent to this
                * remote link already
                */
               if (sentalong[i] != current_serial)
                 {
-                  vsendto_prefix_one(acptr, from, pattern, args);
+                  sendto_prefix_one(acptr, from,
+                  ":%s NOTICE %c%s :%s",
+                  from->name,
+                  char_type,
+                  nick,
+                  message);
                   sentalong[i] = current_serial;
                 }
             }
-        } /* for (lp = chptr->members; lp; lp = lp->next) */
+        }
+      } /* for (lp = chptr->members; lp; lp = lp->next) */
 
       va_end(args);
 } /* sendto_channel_type() */

@@ -248,9 +248,12 @@ static  int     m_message(struct Client *cptr,
             }
           else
             {
-              sendto_channel_type(cptr, sptr, chptr, type,
-                                  ":%s %s %s :%s",
-                                  parv[0], cmd, nick,
+              sendto_channel_type(cptr,
+                                  sptr,
+                                  chptr,
+                                  type,
+                                  nick+1,
+                                  cmd,
                                   parv[2]);
             }
         }
