@@ -86,6 +86,7 @@ static  void    sub1_from_channel (struct Channel *);
 /* static functions used in set_mode */
 static char* pretty_mask(char *);
 static char *fix_key(char *);
+static char *fix_key_old(char *);
 static void collapse_signs(char *);
 static int errsent(int,int *);
 static void change_chan_flag(struct Channel *, struct Client *, int );
@@ -115,7 +116,7 @@ static  int     list_length(Link *lp)
 
 /*
  *  Fixes a string so that the first white space found becomes an end of
- * string marker (`\-`).  returns the 'fixed' string or "*" if the string
+ * string marker (`\0`).  returns the 'fixed' string or "*" if the string
  * was NULL length or a NULL pointer.
  */
 static char* check_string(char* s)
@@ -1028,12 +1029,29 @@ static  char    *fix_key(char *arg)
 {
   u_char        *s, *t, c;
 
-  /* No more stripping the 8th bit or checking
-  ** for the +k bug... it's long dead.  -orab
-  */
   for (s = t = (u_char *)arg; (c = *s); s++)
     {
-      if (c != ':' && c > 0x20 && (c < 0x7f || c > 0xa0))
+      if (c != ':' && c > 0x20)
+      {
+	c &= 0x7f;
+        *t++ = c;
+      }
+    }
+  *t = '\0';
+  return arg;
+}
+
+/*
+ * attempt to be compatible with non-hybrid servers
+ */
+static  char    *fix_key_old(char *arg)
+{
+  u_char        *s, *t, c;
+
+  for (s = t = (u_char *)arg; (c = *s); s++)
+    { 
+      c &= 0x7f;
+      if (c != 0x0a)
         *t++ = c;
     }
   *t = '\0';
@@ -1344,7 +1362,19 @@ void set_channel_mode(struct Client *cptr,
                 break;
             }
           else
-            arg = fix_key(check_string(*parv++));
+            {
+              if (whatt == MODE_DEL)
+                {
+                  arg = check_string(*parv++);
+                }
+              else
+                {
+                  if MyClient(sptr)
+                    arg = fix_key(check_string(*parv++));
+                  else
+                    arg = fix_key_old(check_string(*parv++));
+                }
+            }
 
           if (keychange++)
             break;
@@ -1400,6 +1430,17 @@ void set_channel_mode(struct Client *cptr,
                                  chptr->mode.key);
             }
 #endif
+          if (whatt == MODE_DEL)
+            {
+              if( (arg[0] == '*') && (arg[1] == '\0'))
+                arg = chptr->mode.key;
+              else
+                {
+                  if(strcmp(arg,chptr->mode.key))
+                    break;
+		}
+	    }
+
           *mbufw++ = plus;
           *mbufw++ = 'k';
           strcpy(pbufw, arg);
@@ -1409,13 +1450,16 @@ void set_channel_mode(struct Client *cptr,
           /*      opcnt++; */
 
           if (whatt == MODE_DEL)
-            *chptr->mode.key = '\0';
-          else {
-            /*
-             * chptr was zeroed
-             */
-            strncpy_irc(chptr->mode.key, arg, KEYLEN);
-          }
+            {
+              *chptr->mode.key = '\0';
+            }
+          else
+            {
+              /*
+               * chptr was zeroed
+               */
+              strncpy_irc(chptr->mode.key, arg, KEYLEN);
+            }
 
           break;
 
