@@ -2788,7 +2788,7 @@ int	m_join(aClient *cptr,
 	    {
 	      if(SPAMNUM && (sptr->join_leave_count >= SPAMNUM))
 		{
-		  sendto_ops_flags(FLAGS_SPY,
+		  sendto_ops_flags(FLAGS_BOTS,
 				     "User %s (%s@%s) is a possible spambot",
 				     sptr->name,
 				     sptr->username, sptr->host);
@@ -2887,7 +2887,7 @@ int	m_join(aClient *cptr,
  
               if(sptr->oper_warn_count_down == 0)
                 {
-                  sendto_ops_flags(FLAGS_SPY,
+                  sendto_ops_flags(FLAGS_BOTS,
 		    "User %s (%s@%s) trying to join %s is a possible spambot",
                              sptr->name,
                              sptr->username,
@@ -3099,7 +3099,7 @@ int	m_part(aClient *cptr,
 	{
 	  if(SPAMNUM && (sptr->join_leave_count >= SPAMNUM))
 	    {
-	      sendto_ops_flags(FLAGS_SPY,
+	      sendto_ops_flags(FLAGS_BOTS,
 			       "User %s (%s@%s) is a possible spambot",
 			       sptr->name,
 			       sptr->username, sptr->host);

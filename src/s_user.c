@@ -82,6 +82,7 @@ static char buf[BUFSIZE], buf2[BUFSIZE];
 
 static FLAG_ITEM user_modes[] =
 { 
+  {FLAGS_BOTS,	'b'},
   {FLAGS_CCONN,	'c'},
   {FLAGS_DEBUG,	'd'},
   {FLAGS_FULL,	'f'},
@@ -102,7 +103,7 @@ static int user_modes_from_c_to_bitmask[] =
 { 
   0,            /* @ */
   0,		/* a */
-  0,		/* b */
+  FLAGS_BOTS,   /* b */
   FLAGS_CCONN,	/* c */
   FLAGS_DEBUG,	/* d */
   0,		/* e */
@@ -627,14 +628,14 @@ static int register_user(aClient *cptr, aClient *sptr,
 	{
 	  if(IsBlined(sptr))
 	    {
-	      sendto_realops_flags(FLAGS_CCONN,
+	      sendto_realops_flags(FLAGS_BOTS,
 				 "Possible %s: %s (%s@%s) [B-lined]",
 				 type_of_bot[sptr->isbot],
 				 sptr->name, sptr->username, sptr->host);
 	    }
 	  else
 	    {
-	      sendto_realops_flags(FLAGS_REJ, "Rejecting %s: %s",
+	      sendto_realops_flags(FLAGS_BOTS, "Rejecting %s: %s",
 				 type_of_bot[sptr->isbot],
 				 get_client_name(sptr,FALSE));
 	      ircstp->is_ref++;
