@@ -2794,9 +2794,9 @@ int get_oper_privs(int int_privs,char *privs)
       else if(*privs == 'h')		/* disallow rehash */
 	int_privs &= ~CONF_OPER_REHASH;
       else if(*privs == 'D')
-	int_privs &= CONF_OPER_DIE;	/* allow die */
+	int_privs |= CONF_OPER_DIE;	/* allow die */
       else if(*privs == 'd')
-	int_privs &= CONF_OPER_DIE; 	/* disallow die */
+	int_privs &= ~CONF_OPER_DIE; 	/* disallow die */
       privs++;
     }
 
