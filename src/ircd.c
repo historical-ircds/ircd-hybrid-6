@@ -69,6 +69,9 @@ extern time_t server_split_time;
 
 int cold_start=YES;	/* set if the server has just fired up */
 
+/* this stuff by mnystrom@mit.edu */
+#include "fdlist.h"
+
 #ifdef SETUID_ROOT
 #include <sys/lock.h>
 #include <sys/types.h>
@@ -81,9 +84,19 @@ aClient *local_cptr_list=(aClient *)NULL;
 aClient *oper_cptr_list=(aClient *)NULL;
 aClient *serv_cptr_list=(aClient *)NULL;
 
+/* fdlist's */
+fdlist serv_fdlist;
+fdlist oper_fdlist;
+fdlist listen_fdlist;
 
+#ifndef NO_PRIORITY
+fdlist busycli_fdlist;	/* high-priority clients */
+#endif
 
-int	MAXCLIENTS = MAX_CLIENTS;	/* semi-configurable if QUOTE_SET is def*/
+fdlist default_fdlist;	/* just the number of the entry */
+/*    */
+
+int	MAXCLIENTS = MAX_CLIENTS;  /* semi-configurable if QUOTE_SET is def*/
 struct	Counter	Count;
 
 time_t	NOW;
@@ -103,6 +116,7 @@ static  time_t	io_loop(time_t);
 
 /* externally needed functions */
 
+extern  void init_fdlist(fdlist *);	/* defined in fdlist.c */
 extern	void dbuf_init();		/* defined in dbuf.c */
 extern  void read_motd();		/* defined in s_serv.c */
 #ifdef OPER_MOTD
@@ -1183,6 +1197,9 @@ normal user.\n");
   initstats();
   init_tree_parse(msgtab);
   NOW = time(NULL);
+  init_fdlist(&serv_fdlist);
+  init_fdlist(&oper_fdlist);
+  init_fdlist(&listen_fdlist);
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
 	defined(NO_JOIN_ON_SPLIT)
@@ -1191,6 +1208,19 @@ normal user.\n");
 
   open_debugfile();
   NOW = time(NULL);
+
+#ifndef NO_PRIORITY
+  init_fdlist(&busycli_fdlist);
+#endif
+
+  init_fdlist(&default_fdlist);
+  {
+    register int i;
+    for (i=MAXCONNECTIONS+1 ; i>0 ; i--)
+      {
+	default_fdlist.entry[i] = i-1;
+      }
+  }
 
   if((timeofday = time(NULL)) == -1)
     {
@@ -1308,6 +1338,9 @@ normal user.\n");
 #endif
   NOW = time(NULL);
 
+#ifndef NO_PRIORITY
+  check_fdlists(time(NULL));
+#endif
 
   if((timeofday = time(NULL)) == -1)
     {
@@ -1487,14 +1520,51 @@ time_t io_loop(time_t delay)
   io_loop_count++;
 #endif
 
-  /* non blocking read servers, i.e. no select() */
-  read_servers();
-  /* non blocking read opers, i.e. no select() */
-  read_opers(); 
-  /* read using select() */
-  read_message(delay);
-  if(lifesux)
-    read_servers();
+#ifndef NO_PRIORITY
+  (void)read_message(0, &serv_fdlist);
+  (void)read_message(1, &busycli_fdlist);
+  if (lifesux)
+    {
+      (void)read_message(1, &serv_fdlist);
+      if (lifesux & 0x4)
+	{	/* life really sucks */
+	  (void)read_message(1, &busycli_fdlist);
+	  (void)read_message(1, &serv_fdlist);
+	}
+      flush_server_connections();
+    }
+  if((timeofday = time(NULL)) == -1)
+    {
+      syslog(LOG_WARNING, "Clock Failure (%d), TS can be corrupted", errno);
+      sendto_ops("Clock Failure (%d), TS can be corrupted", errno);
+    }
+
+  /*
+   * CLIENT_SERVER = TRUE:
+   * 	If we're in normal mode, or if "lifesux" and a few
+   *	seconds have passed, then read everything.
+   * CLIENT_SERVER = FALSE:
+   *	If it's been more than lifesux*2 seconds (that is, 
+   *	at most 1 second, or at least 2s when lifesux is
+   *	!= 0) check everything.
+   *	-Taner
+   */
+  {
+    static time_t lasttime=0;
+#ifdef CLIENT_SERVER
+    if (!lifesux || (lasttime + lifesux) < timeofday)
+      {
+#else
+    if ((lasttime + (lifesux + 1)) < timeofday)
+      {
+#endif
+	(void)read_message(delay, NULL); /*  check everything! */
+	lasttime = timeofday;
+      }
+   }
+#else
+  (void)read_message(delay, NULL); /*  check everything! */
+#endif
 
   /*
   ** ...perhaps should not do these loops every time,
@@ -1646,6 +1716,58 @@ static	void	setup_signals()
   (void)siginterrupt(SIGALRM, 1);
 #endif
 }
+
+#ifndef NO_PRIORITY
+/*
+ * This is a pretty expensive routine -- it loops through
+ * all the fd's, and finds the active clients (and servers
+ * and opers) and places them on the "busy client" list
+ */
+time_t check_fdlists(now)
+time_t now;
+{
+#ifdef CLIENT_SERVER
+#define BUSY_CLIENT(x)	(((x)->priority < 55) || (!lifesux && ((x)->priority < 75)))
+#else
+#define BUSY_CLIENT(x)	(((x)->priority < 40) || (!lifesux && ((x)->priority < 60)))
+#endif
+#define FDLISTCHKFREQ  2
+
+  register aClient *cptr;
+  register int i,j;
+
+  j = 0;
+  for (i=highest_fd; i >=0; i--)
+    {
+      if (!(cptr=local[i])) continue;
+      if (IsServer(cptr) || IsListening(cptr) || IsOper(cptr))
+	{
+	  busycli_fdlist.entry[++j] = i;
+	  continue;
+	}
+      if (cptr->receiveM == cptr->lastrecvM)
+	{
+	  cptr->priority += 2;	/* lower a bit */
+	  if (cptr->priority > 90) cptr->priority = 90;
+	  else if (BUSY_CLIENT(cptr)) busycli_fdlist.entry[++j] = i;
+	  continue;
+	}
+      else
+	{
+	  cptr->lastrecvM = cptr->receiveM;
+	  cptr->priority -= 30;	/* active client */
+	  if (cptr->priority < 0)
+	    {
+	      cptr->priority = 0;
+	      busycli_fdlist.entry[++j] = i;
+	    }
+	  else if (BUSY_CLIENT(cptr)) busycli_fdlist.entry[++j] = i;
+	}
+    }
+  busycli_fdlist.last_entry = j; /* rest of the fdlist is garbage */
+  return (now + FDLISTCHKFREQ + (lifesux + 1));
+}
+#endif
 
 /*
  * simple function added because its used more than once

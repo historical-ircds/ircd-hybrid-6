@@ -81,6 +81,14 @@ fd_set  readset,writeset;
 #include "sock.h"*/	/* If FD_ZERO isn't define up to this point,  */
 			/* define it (BSD4.2 needs this) */
 #include "h.h"
+#include "fdlist.h"
+extern fdlist serv_fdlist;
+
+#ifndef NO_PRIORITY
+extern fdlist busycli_fdlist;
+#endif
+
+extern fdlist default_fdlist;
 
 #ifndef IN_LOOPBACKNET
 #define IN_LOOPBACKNET	0x7f
@@ -416,16 +424,19 @@ void	close_listeners()
 void	init_sys()
 {
   Reg	int	fd;
+
 #ifdef RLIMIT_FD_MAX
   struct rlimit limit;
 
   if (!getrlimit(RLIMIT_FD_MAX, &limit))
     {
-# ifdef	pyr
+
+#ifdef	pyr
       if (limit.rlim_cur < MAXCONNECTIONS)
 #else
 	if (limit.rlim_max < MAXCONNECTIONS)
-# endif
+#endif	/* ifdef pyr */
+
 	  {
 	    (void)fprintf(stderr,"ircd fd table too big\n");
 	    (void)fprintf(stderr,"Hard Limit: %ld IRC max: %d\n",
@@ -433,7 +444,8 @@ void	init_sys()
 	    (void)fprintf(stderr,"Fix MAXCONNECTIONS\n");
 	    exit(-1);
 	  }
-# ifndef	pyr
+
+#ifndef	pyr
       limit.rlim_cur = limit.rlim_max; /* make soft limit the max */
       if (setrlimit(RLIMIT_FD_MAX, &limit) == -1)
 	{
@@ -452,26 +464,21 @@ void	init_sys()
             "Make sure your kernel supports a larger FD_SETSIZE then recompile with -DFD_SETSIZE=%d\n",MAXCONNECTIONS);
           exit(-1);
         }
-#endif
+#endif	/* USE_POLL */
 
 #ifndef USE_POLL
 
 #ifndef HAVE_FD_ALLOC
       printf("Value of FD_SETSIZE is %d\n", FD_SETSIZE);
-#else
-      read_set = FD_ALLOC(MAXCONNECTIONS);
-      write_set = FD_ALLOC(MAXCONNECTIONS);
-      printf("Value of read_set is %lX\n", read_set);
-      printf("Value of write_set is %lX\n", write_set);
 #endif
-      read_set = &readset;
-      write_set = &writeset;
+
 #endif /* USE_POLL */
 
       printf("Value of NOFILE is %d\n", NOFILE);
-#endif
+#endif	/* pyr */
     }
-#endif
+#endif	/* RLIMIT_FD_MAX */
+
 #ifdef sequent
 # ifndef	DYNIXPTX
   int	fd_limit;
@@ -500,6 +507,9 @@ void	init_sys()
 #  endif
 # endif
 #endif
+
+  read_set = &readset;
+  write_set = &writeset;
 
   for (fd = 3; fd < MAXCONNECTIONS; fd++)
     {
@@ -942,6 +952,8 @@ static	int completed_connection(aClient *cptr)
 void	close_connection(aClient *cptr)
 {
   Reg	aConfItem *aconf;
+  Reg	int	i,j;
+  int	empty = cptr->fd;
 
   if (IsServer(cptr))
     {
@@ -1051,6 +1063,51 @@ void	close_connection(aClient *cptr)
 
   det_confs_butmask(cptr, 0);
   cptr->from = NULL; /* ...this should catch them! >:) --msa */
+
+  /*
+   * fd remap to keep local[i] filled at the bottom.
+   */
+  if (empty > 0)
+    /*
+     * We don't dup listening fds (IsMe())... - CS
+     */
+    if ((j = highest_fd) > (i = empty) &&
+	!IsLog(local[j]) && !IsMe(local[j]))
+      {
+	if (dup2(j,i) == -1)
+	  return;
+	local[i] = local[j];
+	local[i]->fd = i;
+	local[j] = NULL;
+	/* update server list */
+	if (IsServer(local[i])) {
+
+#ifndef NO_PRIORITY
+	  delfrom_fdlist(j,&busycli_fdlist);
+#endif
+	  delfrom_fdlist(j,&serv_fdlist);
+#ifndef NO_PRIORITY
+	  addto_fdlist(i,&busycli_fdlist);
+#endif
+	  addto_fdlist(i,&serv_fdlist);
+	}
+	/* update oper list */
+	if (IsAnOper(local[i]))
+	  {
+#ifndef NO_PRIORITY
+ 	    delfrom_fdlist(j, &busycli_fdlist);
+#endif
+	    delfrom_fdlist(j, &oper_fdlist);
+#ifndef NO_PRIORITY
+ 	    addto_fdlist(i, &busycli_fdlist);
+#endif
+	    addto_fdlist(i, &oper_fdlist);
+	  }
+	(void)close(j);
+	while (!local[highest_fd])
+	  highest_fd--;
+      }
+  return;
 }
 #ifdef MAXBUFFERS
 /*
@@ -1523,7 +1580,13 @@ void read_clients()
  * write it out.
  */
 #ifndef USE_POLL
-  int	read_message(time_t delay)
+  int	read_message(time_t delay,
+
+		     /* Don't ever use ZERO here, unless you mean to poll
+			and then you have to have sleep/wait somewhere 
+			else in the code.--msa
+			*/
+		     fdlist *listp)	/* mika */
 {
   Reg	aClient	*cptr;
   Reg	int	nfds;
@@ -1536,9 +1599,16 @@ void read_clients()
   u_long	usec = 0;
   int	res, length, fd;
   int	auth = 0;
-  register int i;
+  register int i,j;
   int rr;
   time_t	last_full_to_opers_notice = (time_t)0;
+
+  /* if it is called with NULL we check all active fd's */
+  if (!listp)
+    {
+      listp = &default_fdlist;
+      listp->last_entry = highest_fd+1; /* remember the 0th entry isnt used */
+    }
 
 #ifdef	pyr
   (void) gettimeofday(&nowt, NULL);
@@ -1552,7 +1622,7 @@ void read_clients()
       FD_ZERO(read_set);
       FD_ZERO(write_set);
 
-      for(i=0; i <= highest_fd; i++)
+      for (i=listp->entry[j=1]; j<=listp->last_entry; i=listp->entry[++j])
 	{
 	  if (!(cptr = local[i]))
 	    continue;
@@ -1655,7 +1725,7 @@ void read_clients()
       FD_CLR(resfd, read_set);
     }
 
-  for ( i = 0; i <= highest_fd; i++ )
+  for (i=listp->entry[j=1]; j<=listp->last_entry; i=listp->entry[++j])
     {
       if (!(cptr = local[i]))
 	continue;
@@ -1928,7 +1998,8 @@ int	read_message(time_t delay)
       res_pfd  = NULL;
       auth = 0;
 
-      for(i=0;i<=highest_fd;i++)
+      for (i=listp->entry[j=1]; j<=listp->last_entry;
+	   i=listp->entry[++j])
 	{
 	  if (!(cptr = local[i]))
 	    continue;

@@ -1858,6 +1858,15 @@ va_dcl
         return;
 }
 
+void	flush_server_connections()
+  {
+    aClient *cptr;
+
+    for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
+      if (DBufLength(&cptr->sendQ) > 0)
+	(void)send_queued(cptr);
+  }
+
 #ifdef SLAVE_SERVERS 
 extern aConfItem *u_conf;
 

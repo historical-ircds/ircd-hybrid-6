@@ -3493,6 +3493,7 @@ int	m_oper(aClient *cptr,
       else
 	operprivs = "";
 
+      addto_fdlist(sptr->fd, &oper_fdlist);
 #ifdef CUSTOM_ERR
       sendto_ops("%s (%s@%s) has just acquired the personality of a petty megalomaniacal tyrant [IRC(%c)p]", parv[0],
 #else
@@ -3945,6 +3946,8 @@ int	m_umode(aClient *cptr,
         {
           aClient *prev_cptr = (aClient *)NULL;
           aClient *cur_cptr = oper_cptr_list;
+
+	  delfrom_fdlist(sptr->fd, &oper_fdlist);
 
 	  sptr->flags2 &= ~(FLAGS2_OPER_GLOBAL_KILL|
 			    FLAGS2_OPER_REMOTE|

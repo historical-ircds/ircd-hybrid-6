@@ -38,8 +38,13 @@ extern struct tm	*motd_tm;
 extern aMessageFile	*helpfile;
 
 #include "mtrie_conf.h"
+#include "fdlist.h"
 
 extern int lifesux;
+extern fdlist serv_fdlist;
+extern fdlist busycli_fdlist;
+extern fdlist default_fdlist;
+extern fdlist oper_fdlist;
 extern	int	MAXCLIENTS;
 extern	struct	Counter	Count;
 
@@ -52,6 +57,8 @@ extern	int	bootopt;
 extern  int     spare_fd;
 
 extern	char	*canonize (char *);
+extern	time_t	check_fdlists (time_t);
+extern	void	flush_server_connections(void);
 extern	aChannel *find_channel (char *, aChannel *);
 extern	void	remove_user_from_channel (aClient *, aChannel *);
 extern	void	del_invite (aClient *, aChannel *);
@@ -157,7 +164,7 @@ extern	void	get_my_name (aClient *, char *, int);
 extern	int	get_sockerr (aClient *);
 extern	int	inetport (aClient *, int, u_long);
 extern	void	init_sys ();
-extern	int	read_message (time_t);
+extern	int	read_message (time_t, fdlist *);
 extern	void	report_error (char *, aClient *);
 extern	void	set_non_blocking (int, aClient *);
 extern	int	setup_ping (void);

@@ -62,7 +62,7 @@ static char *rcs_version = "$Id$";
 #endif
 #include "dline_conf.h"
 #include "mtrie_conf.h"
-
+#include "fdlist.h"
 
 /* internal variables */
 static	char	buf[BUFSIZE]; 
@@ -95,6 +95,7 @@ extern void remove_empty_channels();	/* defined in channel.c */
 #endif
 
 extern int cold_start;		/* defined in ircd.c */
+extern fdlist serv_fdlist;
 extern int lifesux;		/* defined in ircd.c */
 extern int rehashed;		/* defined in ircd.c */
 extern int dline_in_progress;	/* defined in ircd.c */
@@ -1072,6 +1073,14 @@ int	m_server_estab(aClient *cptr)
   /* add to server link list -Dianora */
   cptr->next_server_client = serv_cptr_list;
   serv_cptr_list = cptr;
+
+  /* adds to fdlist */
+  addto_fdlist(cptr->fd,&serv_fdlist);
+
+#ifndef NO_PRIORITY
+  /* this causes the server to be marked as "busy" */
+  check_fdlists(timeofday);
+#endif
  
   nextping = timeofday;
   /* ircd-hybrid-6 can do TS links, and  zipped links*/

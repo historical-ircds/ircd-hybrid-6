@@ -3,6 +3,10 @@
 *** Newest entries at top
 
 version hybrid-6-b46   15-Feb-1999
+* put fdlist code back in. Ok, I goofed. mea culpa.
+-Dianora
+
+version hybrid-6-b46   15-Feb-1999
 * FAST_FD_ISSET was causing the high CPU, *sigh* ok ripped out for now
 * Fixed buffer overflow problem in m_unkline() s_serv.c, if a long long
   kline was in the kline.conf file, it cored the server. (reported by Phisher)

@@ -49,6 +49,8 @@ static char *rcs_version = "$Id$";
 #include <time.h>
 #endif
 #include "h.h"
+#include "fdlist.h"
+extern fdlist serv_fdlist;
 
 /* LINKLIST */
 extern aClient *local_cptr_list;
@@ -418,6 +420,7 @@ char	*comment	/* Reason for the exit */
 #endif
       if (IsAnOper(sptr))
 	{
+	  delfrom_fdlist(sptr->fd, &oper_fdlist);
           /* LINKLIST */
           /* oh for in-line functions... */
           {
@@ -470,6 +473,7 @@ char	*comment	/* Reason for the exit */
       if (IsServer(sptr))
 	{
 	  Count.myserver--;
+	  delfrom_fdlist(sptr->fd, &serv_fdlist);
 
           /* LINKLIST */
           /* oh for in-line functions... */
