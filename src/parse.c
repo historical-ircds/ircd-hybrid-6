@@ -421,7 +421,11 @@ int     parse(aClient *cptr, char *buffer, char *bufend)
   if (IsRegisteredUser(cptr) && !mptr->reset_idle)
     from->user->last = timeofday;
 #endif
-
+  
+  /* don't allow other commands while a list is blocked. since we treat
+     them specially with respect to sendq. */
+  if ((IsDoingList(cptr)) && (*mptr->func != m_list))
+      return -1;
   return (*mptr->func)(cptr, from, i, para);
 }
 
