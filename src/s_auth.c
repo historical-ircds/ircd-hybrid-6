@@ -101,7 +101,7 @@ void	start_auth(aClient *cptr)
       return;
     }
 
-  bcopy((char *)&cptr->ip, (char *)&sock.sin_addr,
+  memcpy((void *)&sock.sin_addr, (void *)&cptr->ip,
 	sizeof(struct in_addr));
   
   sock.sin_port = htons(113);

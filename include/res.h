@@ -11,11 +11,16 @@
 #define INCLUDED_sys_types_h
 #endif
 
+#ifndef INCLUDED_netdb_h
+#include <netdb.h>           /* struct hostent under bsd */
+#define INCLUDED_netdb_h
+#endif
+
 struct Client;
 
 struct DNSQuery {
   void* vptr;               /* pointer used by callback to identify request */
-  void (*callback)(void* vptr, struct hostent* hp);  /* callback to call */
+  void (*callback)(void* , struct hostent* );  /* callback to call */
 };
 
 extern void get_res(void);

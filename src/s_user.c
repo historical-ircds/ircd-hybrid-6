@@ -965,10 +965,15 @@ static int valid_username( anUser *user )
    * -Dianora
    */
   
-  if(!isalnum(user->username[0]))
-    {
-      return ( NO );
-    }
+  p = user->username;
+
+  /* ignored unidented */
+
+  if(*p == '~')
+    p++;
+
+  if( !isalnum(*p))
+    return ( NO );
 
   return ( YES );
 }

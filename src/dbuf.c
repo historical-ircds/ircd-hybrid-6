@@ -203,7 +203,7 @@ int	dbuf_put(dbuf *dyn,char *buf,int length)
 	}
       if (chunk > length)
 	chunk = length;
-      bcopy(buf, d->data + off, chunk);
+      memcpy(d->data + off, buf, chunk);
       length -= chunk;
       buf += chunk;
       off = 0;
@@ -269,7 +269,7 @@ int	dbuf_get(dbuf *dyn,char *buf,int length)
     {
       if (chunk > length)
 	chunk = length;
-      bcopy(b, buf, (int)chunk);
+      memcpy(buf, b, (int)chunk);
       (void)dbuf_delete(dyn, chunk);
       buf += chunk;
       length -= chunk;

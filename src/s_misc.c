@@ -90,7 +90,7 @@ char	*date(time_t clock)
   if (!clock) 
     time(&clock);
   gm = gmtime(&clock);
-  bcopy((char *)gm, (char *)&gmbuf, sizeof(gmbuf));
+  memcpy((void *)&gmbuf, (void *)gm, sizeof(gmbuf));
   gm = &gmbuf;
   lt = localtime(&clock);
 
@@ -127,7 +127,7 @@ char    *smalldate(time_t clock)
   if (!clock)
     time(&clock);
   gm = gmtime(&clock);
-  bcopy((char *)gm, (char *)&gmbuf, sizeof(gmbuf));
+  memcpy((void *)&gmbuf, (void *)gm, sizeof(gmbuf));
   gm = &gmbuf; 
   lt = localtime(&clock);
   
@@ -938,7 +938,7 @@ void	tstats(aClient *cptr,char *name)
   struct	stats	tmp;
 
   sp = &tmp;
-  bcopy((char *)ircstp, (char *)sp, sizeof(*sp));
+  memcpy((void *)sp, (void *)ircstp, sizeof(*sp));
   for (i = 0; i < highest_fd; i++)
     {
       if (!(acptr = local[i]))
