@@ -1,3 +1,7 @@
+*** 20010703_1 by wcampbel
+Added .cvsignore files over here as well
+
+
 *** 20010702_3 by leeh
 - removed MODE_JUPED and added juped to the channel struct.. this stops
   locally juped channels being removed when we get a burst with a lower TS
