@@ -1,3 +1,8 @@
+*** 20010603_1 by leeh
+- extended the host check for "."'s to also check for ":" so we allow
+  IPv6..
+
+
 *** 20010219_1 by lusky
 - minor mode flag fixes (wc)
 - older syslog buffer fix
