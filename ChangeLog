@@ -1,3 +1,7 @@
+*** 20001124_4 by lusky
+updated defaults for new stuff in config.h
+
+
 *** 20001124_3 by lusky
 oper privs 'K' fix (wc)
 missing RPL_ENDOFTRACE's in m_ltrace (wc)
