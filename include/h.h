@@ -154,7 +154,7 @@ extern  void	do_include_conf();
 extern  void	del_client_from_llist(aClient **, aClient *);
 extern	aConfItem	*match_Dline(unsigned long);
 extern	int	show_lusers(aClient *, aClient *, int, char **);
-extern	int	nickkilldone(aClient *, aClient *, int, char **,ts_val,char *);
+extern	int	nickkilldone(aClient*, aClient*, int, char**, time_t, char*);
 extern	char	*show_iline_prefix(aClient *,aConfItem *,char *);
 /* END Missing definitions */
 

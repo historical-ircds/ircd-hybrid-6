@@ -59,7 +59,6 @@ typedef	struct	User	anUser;
 typedef	struct	Server	aServer;
 typedef	struct	SLink	Link;
 typedef	struct	SMode	Mode;
-typedef	long	ts_val;
 typedef struct  Zdata   aZdata;
 
 typedef struct	MessageFileItem aMessageFile;
@@ -515,7 +514,7 @@ struct Client
   time_t	lasttime;	/* ...should be only LOCAL clients? --msa */
   time_t	firsttime;	/* time client was created */
   time_t	since;		/* last time we parsed something */
-  ts_val	tsinfo;		/* TS on the nick, SVINFO on servers */
+  time_t	tsinfo;		/* TS on the nick, SVINFO on servers */
   long		flags;		/* client flags */
   long		flags2;		/* ugh. overflow */
   aClient	*from;		/* == self, if Local Client, *NEVER* NULL! */
@@ -726,7 +725,7 @@ struct Channel
   Link	*invites;
   Link	*banlist;
   Link  *exceptlist;
-  ts_val channelts;
+  time_t channelts;
   int locally_created;	/* used only to flag a locally created channel */
   int keep_their_modes;	/* used only on mode after sjoin */
 #ifdef FLUD
