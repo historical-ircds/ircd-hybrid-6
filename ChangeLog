@@ -1,3 +1,7 @@
+*** 20010811_2 by lusky
+- revved patchlevel to 6.2rc1
+
+
 *** 20010811_1 by lusky
 - made TS5 undef'd by default for this RC
 
