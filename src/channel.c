@@ -53,6 +53,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <regex.h>
+
 #ifdef NEED_SPLITCODE
 
 static void check_still_split();
@@ -107,6 +109,10 @@ static  char    *PartFmt = ":%s PART %s";
 static  char    buf[BUFSIZE];
 static  char    modebuf[MODEBUFLEN], modebuf2[MODEBUFLEN];
 static  char    parabuf[MODEBUFLEN], parabuf2[MODEBUFLEN];
+
+/* regular expression buffer */
+static regex_t my_regex;
+
 
 /* externally defined function */
 extern Link *find_channel_link(Link *,aChannel *);      /* defined in list.c */
@@ -207,32 +213,22 @@ static char* make_nick_user_host(const char* nick,
 static  int     add_banid(aClient *cptr, aChannel *chptr, char *banid)
 {
   Link  *ban;
-  int   cnt = 0;
 
+  if (chptr->num_bed == MAXBANS)
+	  if (MyClient(cptr))
+	    {
+	      sendto_one(cptr, form_str(ERR_BANLISTFULL),
+                   me.name, cptr->name,
+                   chptr->chname, banid);
+	      return -1;
+	    }
+  
   if (MyClient(cptr))
     collapse(banid);
 
-  /* trust servers */
-  if(!IsServer(cptr))
-    {
-      for (ban = chptr->banlist; ban; ban = ban->next)
-	{
-	  if (MyClient(cptr) && (++cnt >= MAXBANS))
-	    {
-	      sendto_one(cptr, form_str(ERR_BANLISTFULL),
-			 me.name, cptr->name,
-			 chptr->chname, banid);
-	      return -1;
-	    }
-	  /* yikes, we were doing all sorts of weird crap here
-	   * we ONLY want to know if current bans cover this ban,
-	   * ban covers current ones, since it may cover other
-	   * things too -wd
-	   */
-	  else if (match(BANSTR(ban), banid))
+  for (ban = chptr->banlist; ban; ban = ban->next)
+	  if (match(BANSTR(ban), banid))
 	    return -1;
-	}
-    }
 
   ban = make_link();
   memset(ban, 0, sizeof(Link));
@@ -274,6 +270,7 @@ static  int     add_banid(aClient *cptr, aChannel *chptr, char *banid)
 #endif  /* #ifdef BAN_INFO */
 
   chptr->banlist = ban;
+  chptr->num_bed++;
   return 0;
 }
 
@@ -284,37 +281,23 @@ static  int     add_banid(aClient *cptr, aChannel *chptr, char *banid)
 static  int     add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
 {
   Link  *ex, *ban;
-  int   cnt = 0;
+
+  if (chptr->num_bed == MAXBANS)
+    if (MyClient(cptr))
+      {
+        sendto_one(cptr, form_str(ERR_BANLISTFULL),
+                   me.name, cptr->name,
+                   chptr->chname, eid);
+        return -1;
+      }
 
   if (MyClient(cptr))
     (void)collapse(eid);
 
-  if(!IsServer(cptr))
-    {
-      for (ban = chptr->banlist; ban; ban = ban->next)
-	{
-	  if (MyClient(cptr) && (++cnt >= MAXBANS))
-	    {
-	      sendto_one(cptr, form_str(ERR_BANLISTFULL),
-			 me.name, cptr->name,
-			 chptr->chname, eid);
-	      return -1;
-	    }
-	}
-
-      for (ex = chptr->exceptlist; ex; ex = ex->next)
-	{
-	  if (MyClient(cptr) && (++cnt >= MAXBANS))
-	    {
-	      sendto_one(cptr, form_str(ERR_BANLISTFULL),
-			 me.name, cptr->name,
-			 chptr->chname, eid);
-	      return -1;
-	    }
-	  else if (match(BANSTR(ex), eid))
+  for (ban = chptr->exceptlist; ban; ban = ban->next)
+	  if (match(BANSTR(ban), eid))
 	    return -1;
-	}
-    }
+  
 
   ex = make_link();
   memset(ex, 0, sizeof(Link));
@@ -356,35 +339,45 @@ static  int     add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
 #endif  /* #ifdef BAN_INFO */
 
   chptr->exceptlist = ex;
+  chptr->num_bed++;
   return 0;
 }
 
 
 /*
- * Ban functions to work with mode +b
- */
-/* add_denyid - add an id to be banned to the channel  (belongs to cptr) */
-
+ * add_denyid - add an id to be denied to the channel  (belongs to cptr) 
+ * +d modes are CASE SENSITIVE. 
+ * we will attempt to compile the regular expression before we set the mode
+ * since it's quite possible to come up with poorly formed regex's.
+ * we also truncate these things to NICKLEN+USERLEN+HOSTLEN in size.
+ * -sean
+ */  
 static  int     add_denyid(aClient *cptr, aChannel *chptr, char *banid)
 {
   Link  *ban;
-  int   cnt = 0;
 
-  /* trust servers */
-  if(!IsServer(cptr))
-    {
-      for (ban = chptr->denylist; ban; ban = ban->next)
-	{
-	  if (MyClient(cptr) && (++cnt >= MAXBANS))
+  /* truncate stuff to some sort of reasonable length */
+  banid[NICKLEN+USERLEN+HOSTLEN]='\0';
+
+  /* check if its a valid regular expression */
+  regfree(&my_regex);
+  if (regcomp(&my_regex, banid,
+              REG_EXTENDED|REG_NOSUB|REG_NEWLINE))
+    return -1;
+  
+  if (chptr->num_bed == MAXBANS)
+    if (MyClient(cptr))
 	    {
 	      sendto_one(cptr, form_str(ERR_BANLISTFULL),
                    me.name, cptr->name,
                    chptr->chname, banid);
 	      return -1;
 	    }
-	}
-    }
-
+  
+  for (ban = chptr->denylist; ban; ban = ban->next)
+    if (strcmp(BANSTR(ban), banid)==0) 
+      return -1;
+  
   ban = make_link();
   memset(ban, 0, sizeof(Link));
   ban->flags = CHFL_DENY;
@@ -406,7 +399,7 @@ static  int     add_denyid(aClient *cptr, aChannel *chptr, char *banid)
       ircsprintf(ban->value.banptr->who, "%s!%s@%s",
                  cptr->name, cptr->username, cptr->host);
     }
-  else
+   else
     {
 #endif
       ban->value.banptr->who = (char *)MyMalloc(strlen(cptr->name)+1);
@@ -425,6 +418,7 @@ static  int     add_denyid(aClient *cptr, aChannel *chptr, char *banid)
 #endif  /* #ifdef BAN_INFO */
 
   chptr->denylist = ban;
+  chptr->num_bed++;
   return 0;
 }
 
@@ -501,7 +495,8 @@ static  int     del_exceptid(aChannel *chptr, char *eid)
  * "del_denyid - delete an id belonging to cptr
  * if banid is null, deleteall banids belonging to cptr."
  *
- * from orabidoo
+ * use strcmp since this is case sensitive.
+ * -sean
  */
 static  int     del_denyid(aChannel *chptr, char *banid)
 {
@@ -512,9 +507,9 @@ static  int     del_denyid(aChannel *chptr, char *banid)
     return -1;
   for (ban = &(chptr->denylist); *ban; ban = &((*ban)->next))
 #ifdef BAN_INFO
-    if (irccmp(banid, (*ban)->value.banptr->banstr)==0)
+    if (strcmp(banid, (*ban)->value.banptr->banstr)==0) 
 #else
-      if (irccmp(banid, (*ban)->value.cp)==0)
+      if (strcmp(banid, (*ban)->value.cp)==0)
 #endif
         {
           tmp = *ban;
@@ -602,7 +597,7 @@ static void del_matching_exception(aClient *cptr,aChannel *chptr)
 
 /*
  * is_banned -  returns an int 0 if not banned,
- *              CHFL_BAN if banned,
+ *              CHFL_BAN if banned (or +d'd)
  *              CHFL_EXCEPTION if they have a ban exception
  *
  * IP_BAN_ALL from comstud
@@ -630,6 +625,27 @@ static  int is_banned(aClient *cptr,aChannel *chptr)
         match(BANSTR(tmp), s2))
       break;
 
+  if (!tmp) {  /* +b match, lets check +d list */
+    for (tmp = chptr->denylist; tmp; tmp = tmp->next)
+      {
+        regfree(&my_regex);
+        /* not too sure which flags we want to use here.. may need tweaking */
+        if (regcomp(&my_regex, BANSTR(tmp), 
+                    REG_EXTENDED|REG_NOSUB|REG_NEWLINE)) 
+          {
+            /* we shouldnt have any errors compiling the regex, since
+               when they are set by users, we check validity.. 
+               could happen though... should we notify the ops perhaps? */
+            sendto_ops("WARNING - Invalid mode on %s :+d %s", chptr->chname,
+                       BANSTR(tmp));
+            continue;
+          }
+        /* only match against s, not s2 (why match numbers against a regex?) */
+        if (regexec(&my_regex, s, 0, NULL, 0)==0)
+          break;
+      }
+  }
+
   if (tmp)
     {
       for (t2 = chptr->exceptlist; t2; t2 = t2->next)
@@ -648,6 +664,9 @@ static  int is_banned(aClient *cptr,aChannel *chptr)
             return CHFL_EXCEPTION;
           }
     }
+
+  /* return CHFL_BAN for +b or +d match, we really dont need to be more
+     specific */
   return ((tmp?CHFL_BAN:0));
 }
 
