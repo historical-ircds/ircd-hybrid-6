@@ -2,7 +2,8 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 	
-version hybrid-6-b44    31-Jan-1999
+version hybrid-6-b44    2-Feb-1999
+* remove trailing white space on H/L lines (just for Gersh)
 * (s_bsd.c) fixed a botch with rr = 0 causing bizarre behaviour under solaris
   (ping time outs etc.) due to a mis-cut and paste from the select code
 * (s_bsd.c) redid read_packet() to use msg_ready again
@@ -11,7 +12,7 @@ version hybrid-6-b44    31-Jan-1999
   just slowing down the code for no reason.
 * (s_misc.c) redid get_client_name() slightly to be consistent,
   idented names should not have ~ non-idented names should have ~
-  lets not be inconsitent with (+) prefixes for idented names
+  lets not be inconsistent with (+) prefixes for idented names
 -Dianora
 * changed example.conf to remind people to have their virtual address in
   the M: line for outbound connects

@@ -1770,6 +1770,28 @@ int 	initconf(int opt, int fd,int use_include)
 	  break;
           /* NOTREACHED */
 	}
+
+      /* For Gersh
+       * make sure H: lines don't have trailing spaces!
+       * BUG: This code will fail if there is leading whitespace.
+       */
+
+      if( aconf->status & (CONF_HUB|CONF_LEAF) )
+	{
+	  char *p;
+
+	  p = strchr(aconf->name,' ');
+	  if(!p)
+	    p = strchr(aconf->name,'\t');
+
+	  if(p)
+	    {
+	      sendto_realops("H: or L: line trailing whitespace [%s]",
+			     aconf->name);
+	      *p = '\0';
+	    }
+	}
+
       /*
       ** If conf line is a class definition, create a class entry
       ** for it and make the conf_line illegal and delete it.
