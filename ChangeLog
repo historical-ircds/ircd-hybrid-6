@@ -1,3 +1,7 @@
+*** 20000606_1 by lusky
+typo in m_message causing infinite loop
+
+
 *** 20000525_1 by lusky
 revved patchlevel to b127
 added logging to ts_warn()
