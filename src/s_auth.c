@@ -584,7 +584,10 @@ void read_auth_reply(struct AuthRequest* auth)
     if( (s = GetValidIdent(buf)) ) {
       t = auth->client->username;
       for (count = USERLEN; *s && count; s++) {
-        if (!isspace(*s) && *s != ':' && *s != '@') {
+	if(*s == '@') {
+	    break;
+	  }
+        if ( !isspace(*s) && *s != ':' ) {
           *t++ = *s;
           count--;
         }
