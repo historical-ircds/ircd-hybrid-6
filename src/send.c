@@ -20,7 +20,6 @@
  *   $Id$
  */
 #include "send.h"
-#include "bsd.h"
 #include "channel.h"
 #include "class.h"
 #include "common.h"

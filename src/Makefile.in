@@ -19,7 +19,6 @@ CPPFLAGS = ${INCLUDES} @CPPFLAGS@
 
 SRCS = \
 	blalloc.c \
-	bsd.c \
 	channel.c \
 	class.c \
 	client.c \
@@ -69,7 +68,6 @@ SRCS = \
 # 
 #OBJS = \
 #	blalloc.o \
-#	bsd.o \
 #	channel.o \
 #	class.o \
 #	client.o \
