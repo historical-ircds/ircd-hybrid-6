@@ -203,10 +203,7 @@ static int inetport(struct Listener* listener)
 
   
 /*
- * add_listener
- *
- * Create a new client
- * for a socket that is passive (listen'ing for connections to be accepted).
+ * add_listener- create a new listener 
  */
 void add_listener(struct ConfItem* conf)
 {
