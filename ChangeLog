@@ -1,3 +1,18 @@
+lusky       2001/12/22 19:06:16 EST	(20011223_0)
+
+  Modified files:
+    include              patchlevel.h 
+    src                  m_message.c 
+  Log:
+  - removed an unused variable
+  - revved patchlevel to 6.3rc4
+  
+  Revision  Changes    Path
+  1.148     +1 -1      ircd-hybrid-6/include/patchlevel.h
+  1.18      +0 -1      ircd-hybrid-6/src/m_message.c
+
+
+
 wcampbel    2001/12/21 23:06:06 EST	(20011222_0)
 
   Modified files:
