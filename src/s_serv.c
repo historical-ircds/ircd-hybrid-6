@@ -2362,10 +2362,18 @@ int	m_stats(aClient *cptr,
     }
   sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, parv[0], stat);
 
+  /* personally, I don't see why opers need to see stats requests
+   * at all. They are just "noise" to an oper, and users can't do
+   * any damage with stats requests now anyway. So, why show them?
+   * -Dianora
+   */
+
+#ifdef STATS_NOTICE
   if (valid_stats && stat != (char)0)
     sendto_realops_lev(SPY_LEV, "STATS %c requested by %s (%s@%s) [%s]", stat,
 		       sptr->name, sptr->user->username, sptr->user->host,
 		       sptr->user->server);
+#endif
   return 0;
 }
 

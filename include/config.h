@@ -385,6 +385,8 @@
 #define F_LINES_OPER_ONLY
 
 /* STATS_NOTICE - See a notice when a user does a /stats
+ * Bah. You don't need this its extra noise, the users can't
+ * flood a server anyway, and its an invasion of privacy. -Dianora
  */
 #undef STATS_NOTICE
 
@@ -416,6 +418,8 @@
 
 /* WHOIS_NOTICE - Shows a notice to an oper when a user does a
  * /whois on them
+ * Why do opers need this at all? Its an invasion of privacy. bah.
+ * you don't need this. -Dianora
  */
 #undef WHOIS_NOTICE
 

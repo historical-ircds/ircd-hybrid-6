@@ -51,7 +51,7 @@ static char *rcs_version="$Id$";
 #include <strings.h>
 #endif
 
-int    do_user (char *, aClient *, aClient*, char *, char *, char *,
+static int do_user (char *, aClient *, aClient*, char *, char *, char *,
                      char *);
 
 int    botwarn (char *, char *, char *, char *);
@@ -1281,7 +1281,7 @@ int	m_nick(aClient *cptr,
 {
   aClient *acptr;
   char	nick[NICKLEN+2], *s;
-  ts_val	newts = 0;
+  ts_val newts = 0;
   int	sameuser = 0, fromTS = 0;
   
   if (parc < 2)
@@ -1436,7 +1436,10 @@ int	m_nick(aClient *cptr,
   
 
   if (!(acptr = find_client(nick, NULL)))
-    goto nickkilldone;  /* No collisions, all clear... */
+    return(nickkilldone(cptr,sptr,parc,parv,newts,nick));  /* No collisions,
+						       * all clear...
+						       */
+
   /*
   ** If acptr == sptr, then we have a client doing a nick
   ** change between *equivalent* nicknames as far as server
@@ -1449,7 +1452,7 @@ int	m_nick(aClient *cptr,
       /*
       ** Allows change of case in his/her nick
       */
-      goto nickkilldone; /* -- go and process change */
+      return(nickkilldone(cptr,sptr,parc,parv,newts,nick)); /* -- go and process change */
     else
       {
         /*
@@ -1477,7 +1480,7 @@ int	m_nick(aClient *cptr,
     if (MyConnect(acptr))
       {
 	exit_client(NULL, acptr, &me, "Overridden");
-	goto nickkilldone;
+	return(nickkilldone(cptr,sptr,parc,parv,newts,nick));
       }
     else
       {
@@ -1584,7 +1587,7 @@ int	m_nick(aClient *cptr,
 				 get_client_name(cptr, FALSE));
 	      acptr->flags |= FLAGS_KILLED;
 	      (void)exit_client(cptr, acptr, &me, "Nick collision");
-	      goto nickkilldone;
+	      return nickkilldone(cptr,sptr,parc,parv,newts,nick);
 	    }
 	}
     }
@@ -1669,9 +1672,14 @@ int	m_nick(aClient *cptr,
 	  /* goto nickkilldone; */
 	}
     }
+  return(nickkilldone(cptr,sptr,parc,parv,newts,nick));
+}
 
 
-nickkilldone:
+int nickkilldone(aClient *cptr, aClient *sptr, int parc,
+		 char *parv[], ts_val newts,char *nick)
+{
+
   if (IsServer(sptr))
     {
       /* A server introducing a new client, change source */
@@ -2774,7 +2782,7 @@ int	m_user(aClient *cptr,
 /*
 ** do_user
 */
-int	do_user(char *nick,
+static int do_user(char *nick,
 		aClient *cptr,
 		aClient *sptr,
 		char *username,

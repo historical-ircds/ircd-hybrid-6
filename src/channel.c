@@ -973,6 +973,9 @@ static  void     set_mode(aClient *cptr,
   /* is an op or server or remote user on a TS channel */
   isok = ischop || (!isdeop && IsServer(cptr) && chptr->channelts);
 
+  if(isok)
+    chptr->keep_their_modes = YES;
+
   /* isok_c calculated later, only if needed */
 
   /* parc is the number of _remaining_ args (where <0 means 0);
@@ -980,6 +983,8 @@ static  void     set_mode(aClient *cptr,
   */
   parc--;
   parv++;
+
+
 
   FOREVER
     {
@@ -1022,8 +1027,6 @@ static  void     set_mode(aClient *cptr,
 
 	case 'o' :
 	case 'v' :
-	  chptr->keep_their_modes = YES;
-
 	  if (MyClient(sptr) && !IsMember(sptr, chptr))
 	    {
 	      if(!errsent(SM_ERR_NOTONCHANNEL, &errors_sent))
