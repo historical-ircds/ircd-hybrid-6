@@ -1922,8 +1922,6 @@ static	int	m_message(aClient *cptr,
   /*  nick = strtoken(&p, parv[1], ",");*/
   nick = parv[1];
 
-  sptr->since += 4;
-    
 #ifdef EXTRA_BOT_NOTICES
   if (MyConnect(sptr)) /* don't check for remote bots */
     {
