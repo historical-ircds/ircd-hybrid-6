@@ -152,7 +152,6 @@ static char *cluster(char *);
 static void set_autoconn(aClient *,char *,char *,int);
 static void report_specials(aClient *,int,int);
 static int bad_tld(char *);
-static void show_ports(aClient *,char *);
 
 int send_motd(aClient *,aClient *,int, char **,aMessageFile *); 
 static int safe_write(aClient *,char *,char *,int,char *);
@@ -2275,13 +2274,9 @@ int	m_stats(aClient *cptr,
       valid_stats++;
       break;
 
-    case 'p' :
+    case 'p' : case 'P' :
       show_opers(sptr, parv[0]);
       valid_stats++;
-      break;
-
-    case 'P' :
-      show_ports(sptr, parv[0]);
       break;
 
     case 'Q' : case 'q' :
@@ -2392,19 +2387,6 @@ int	m_stats(aClient *cptr,
 		       sptr->user->server);
 #endif
   return 0;
-}
-
-static void show_ports(aClient *cptr,char *name)
-{
-  register aConfItem *aconf;
-
-  sendto_one(cptr,":%s NOTICE %s : %d",me.name,name,me.port);  
-
-  for(aconf=conf;aconf;aconf=aconf->next)
-    {
-      if(aconf->status & CONF_LISTEN_PORT)
-	sendto_one(cptr,":%s NOTICE %s : %d",me.name,name,aconf->port);
-    }
 }
 
 /*
