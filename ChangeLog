@@ -1,3 +1,7 @@
+*** 20010717_8 by lusky
+- fixed crypt.h check
+
+
 *** 20010717_7 by lusky
 - check for crypt.h
 
