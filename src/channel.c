@@ -2853,6 +2853,47 @@ int	m_knock(aClient *cptr,
       return 0;
     }
 
+
+  /* We will cut at the first comma reached, however we will not *
+   * process anything afterwards.  -- David-R                    */
+
+  name = strtoken(&p, parv[1], ",");
+
+  if (!IsChannelName(name) || !(chptr = find_channel(name, NullChn)))
+    {
+      sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
+		 name);
+      return 0;
+    }
+
+  if(!((chptr->mode.mode & MODE_INVITEONLY) ||
+       (*chptr->mode.key) ||
+       (chptr->mode.limit && chptr->users >= chptr->mode.limit )
+       ))
+    {
+      sendto_one(sptr,":%s NOTICE %s :*** Notice -- Channel is open!",
+		 me.name,
+		 sptr->name);
+      return 0;
+    }
+
+  /* don't allow a knock if the user is banned, or the channel is private */
+  if ((chptr->mode.mode & MODE_PRIVATE) || is_banned(sptr, chptr))
+    {
+      sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN), me.name, parv[0],
+		 name);
+      return 0;
+    }
+
+  /* if the user is already on channel, then a knock is pointless! */
+  if (IsMember(sptr, chptr))
+    {
+      sendto_one(sptr,":%s NOTICE %s :*** Notice -- You are on channel already!",
+		 me.name,
+		 sptr->name);
+      return 0;
+    }
+
   /* flood control server wide, clients on KNOCK
    * opers are not flood controlled.
    */
@@ -2883,35 +2924,6 @@ int	m_knock(aClient *cptr,
     }
 
   sptr->last_knock = NOW;
-
-  /* We will cut at the first comma reached, however we will not *
-   * process anything afterwards.  -- David-R                    */
-
-  name = strtoken(&p, parv[1], ",");
-
-  if (!IsChannelName(name) || !(chptr = find_channel(name, NullChn)))
-    {
-      sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
-		 name);
-      return 0;
-    }
-
-  /* don't allow a knock if the user is banned, or the channel is private */
-  if (is_banned(sptr, chptr) || (chptr->mode.mode & MODE_PRIVATE))
-    {
-      sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN), me.name, parv[0],
-		 name);
-      return 0;
-    }
-
-  /* if the user is already on channel, then a knock is pointless! */
-  if (IsMember(sptr, chptr))
-    {
-      sendto_one(sptr,":%s NOTICE %s :*** Notice -- You are on channel already!",
-		 me.name,
-		 sptr->name);
-      return 0;
-    }
 
   sendto_one(sptr,":%s NOTICE %s :*** Notice -- Your KNOCK has been delivered",
 		 me.name,
