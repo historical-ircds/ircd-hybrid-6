@@ -1,3 +1,10 @@
+*** 19990819_1 by lusky
+call release_client_dns_reply for servers too (th)
+fixes for U and X lines (db)
+Hide path on kill from "victim" (db)
+Hide path on kill from oper to non opers (db)
+
+
 *** 19990818_2 by khuon
 Mental note: 
 
