@@ -461,7 +461,7 @@ static void del_matching_exception(aClient *cptr,aChannel *chptr)
   strcpy(s,make_nick_user_host(cptr->name, cptr->user->username,
 			       cptr->user->host));
   s2 = make_nick_user_host(cptr->name, cptr->user->username,
-			   cptr->hostip);
+			   inetntoa((char *)&cptr->ip));
 
   for (ex = &(chptr->exceptlist); *ex; ex = &((*ex)->next))
     {
@@ -528,7 +528,7 @@ static	int is_banned(aClient *cptr,aChannel *chptr)
   strcpy(s,make_nick_user_host(cptr->name, cptr->user->username,
 			       cptr->user->host));
   s2 = make_nick_user_host(cptr->name, cptr->user->username,
-			   cptr->hostip);
+			   inetntoa((char *)&cptr->ip));
 
   for (tmp = chptr->banlist; tmp; tmp = tmp->next)
     if ((match(BANSTR(tmp), s) == 0) ||

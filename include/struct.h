@@ -687,7 +687,6 @@ struct Client
   Link		*confs;		/* Configuration record associated */
   int		authfd;		/* fd for rfc931 authentication */
   struct	in_addr	ip;	/* keep real ip# too */
-  char    hostip[HOSTIPLEN+1];  /* Keep real ip as string too - Dianora */
   unsigned short	port;	/* and the remote port# too :-) */
   struct	hostent	*hostp;
 #ifdef	pyr

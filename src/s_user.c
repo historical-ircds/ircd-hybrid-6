@@ -511,9 +511,6 @@ static	int	register_user(aClient *cptr,
 
   if (MyConnect(sptr))
     {
-      p = inetntoa((char *)&sptr->ip);
-      strncpyzt(sptr->hostip,p,HOSTIPLEN+1);
-      
       if ( (i = check_client(sptr,username,&reason)) )
 	/*
 	 * -2 is a socket error, already reported.
@@ -602,7 +599,7 @@ static	int	register_user(aClient *cptr,
 	      sendto_realops_lev(CCONN_LEV, "%s from %s [%s].",
 				 "Unauthorized client connection",
 				 get_client_host(sptr),
-				 sptr->hostip);
+				 inetntoa((char *)&sptr->ip));
 
 #ifdef USE_SYSLOG
 	    syslog(LOG_INFO,"%s from %s.",i == -3 ? "Too many connections" :
@@ -663,7 +660,7 @@ static	int	register_user(aClient *cptr,
 	{
 	  sendto_realops(
 			 "Invalid hostname for %s, dumping user %s",
-			 sptr->hostip, sptr->name);
+			 inetntoa((char *)&sptr->ip), sptr->name);
 	  return exit_client(cptr, sptr, &me, "Invalid hostname");
 	}
 
@@ -671,8 +668,8 @@ static	int	register_user(aClient *cptr,
 	{
 	  sendto_one(sptr, ":%s NOTICE %s :*** Notice -- You have a bad character in your hostname",
 		     me.name,cptr->name);
-	  strcpy(user->host,sptr->hostip);
-	  strcpy(sptr->sockhost,sptr->hostip);
+	  (void)strcpy(user->host,inetntoa((char *)&sptr->ip));
+	  (void)strcpy(sptr->sockhost,user->host);
 	}
 
       aconf = sptr->confs->value.aconf;
@@ -1145,7 +1142,7 @@ static	int	register_user(aClient *cptr,
 		     nick,
 		     user->username,
 		     user->host,
-		     sptr->hostip,
+		     inetntoa((char *)&sptr->ip),
 		     get_client_class(sptr));
 
   if ((++Count.local) > Count.max_loc)
@@ -3604,7 +3601,7 @@ int	m_oper(aClient *cptr,
   if (!(aconf = find_conf_exact(name, sptr->username, sptr->sockhost,
 				CONF_OPS)) &&
       !(aconf = find_conf_exact(name, sptr->username,
-				cptr->hostip, CONF_OPS)))
+				inetntoa((char *)&cptr->ip), CONF_OPS)))
     {
       sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
 #if defined(FAILED_OPER_NOTICE) && defined(SHOW_FAILED_OPER_ID)
@@ -3928,7 +3925,7 @@ int     m_usrip(aClient *cptr,
 			     IsAnOper(acptr) ? "*" : "",
 			     (acptr->user->away) ? '-' : '+',
 			     acptr->user->username,
-			     acptr->hostip);
+			     inetntoa((char *)&acptr->ip));
 	  }
 	else
 	  {
@@ -3944,7 +3941,7 @@ int     m_usrip(aClient *cptr,
 			       IsAnOper(acptr) ? "*" : "",
 			       (acptr->user->away) ? '-' : '+',
 			       acptr->user->username,
-			       acptr->hostip);
+			       inetntoa((char *)&acptr->ip));
 	  }
 
 	(void)strncat(buf, buf2, sizeof(buf) - len);

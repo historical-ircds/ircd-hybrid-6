@@ -517,7 +517,7 @@ char	*comment	/* Reason for the exit */
 		    (sptr->flags & FLAGS_NORMALEX) ?
 		    "Client Quit" : comment,
 #endif /* WINTRHAWK */
-		    sptr->hostip);
+                    inetntoa((char *)&sptr->ip));
 	}
 #ifdef FNAME_USERLOG
 	  on_for = timeofday - sptr->firsttime;

@@ -1,6 +1,11 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b77   2-Jun-1999
+* duh. just realized that hostip is now obsolete because of the way
+  IP klines are being done. removing it saves 15 bytes per local client.
+-Dianora
+	
 version hybrid-6-b76   28-May-1999
 * make sure mtrie returned aconf is a CONF_KILL in s_serv.c
 * take care of ~*@some.host.at.tld case

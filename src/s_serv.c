@@ -4747,7 +4747,7 @@ int     m_dline(aClient *cptr,
 	  return 0;
 	}
 
-      strncpy(cidr_form_host,acptr->hostip,32);
+      strncpy(cidr_form_host,inetntoa((char *)&acptr->ip),32);
       
       p = strchr(cidr_form_host,'.');
       if(!p)
@@ -5264,7 +5264,7 @@ int	m_trace(aClient *cptr,
           return 0;
         }
       name = get_client_name(acptr,FALSE);
-      ip = acptr->hostip;
+      ip = inetntoa((char *)&acptr->ip);
 
       class = get_client_class(acptr);
 
@@ -5343,7 +5343,7 @@ int	m_trace(aClient *cptr,
       if (!dow && mycmp(tname, acptr->name))
 	continue;
       name = get_client_name(acptr,FALSE);
-      ip = acptr->hostip;
+      ip = inetntoa((char *)&acptr->ip);
 
       class = get_client_class(acptr);
       
@@ -5549,7 +5549,8 @@ int	m_ltrace(aClient *cptr,
       if (!dow && mycmp(tname, acptr->name))
 	continue;
       name = get_client_name(acptr,FALSE);
-      ip = acptr->hostip;
+      ip = inetntoa((char *)&acptr->ip);
+
       class = get_client_class(acptr);
       
       switch(acptr->status)

@@ -247,7 +247,9 @@ int	attach_Iline(aClient *cptr,
 	      */
 	      /* default to oper.server.name.tld */
 	      sendto_realops("%s spoofing: %s(%s) as oper.%s",
-			     cptr->name,host,cptr->hostip,me.name);
+			     cptr->name,host,
+			     inetntoa((char *)&cptr->ip),
+			     me.name);
 	      strncpyzt(cptr->sockhost,"oper.",sizeof(cptr->sockhost));
 	      strcat(cptr->sockhost,me.name);
 	      SetIPSpoof(cptr);
