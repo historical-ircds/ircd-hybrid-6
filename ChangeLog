@@ -1,3 +1,7 @@
+*** 20010617_1 by kreator
+- fix those mmap() tests and use ones that autoconf provides
+
+
 *** 20010616_5 by db
 - ok fixed a "dropped c line" bug. the problem was, both the hostname
   and servername have to match in attach_cn_lines, thats because
