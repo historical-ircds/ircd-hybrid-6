@@ -20,6 +20,7 @@
  *  $Id$
  */
 #include "s_bsd.h"
+#include "s_serv.h"
 #include "listener.h"
 #include "config.h"
 #include "struct.h"

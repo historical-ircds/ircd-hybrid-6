@@ -27,6 +27,7 @@
 #include "struct.h"
 #undef CAPTAB
 
+#include "s_serv.h"
 #include "common.h"
 #include "numeric.h"
 #include "msg.h"
@@ -90,7 +91,6 @@ extern void remove_empty_channels();    /* defined in channel.c */
 
 #endif /* NEED_SPLITCODE */
 
-extern int cold_start;          /* defined in ircd.c */
 extern fdlist serv_fdlist;
 extern int rehashed;            /* defined in ircd.c */
 extern int dline_in_progress;   /* defined in ircd.c */

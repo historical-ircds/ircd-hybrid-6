@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, include/h.h
+ *   IRC - Internet Relay Chat, include/parse.h
  *   Copyright (C) 1992 Darren Reed
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -17,50 +17,23 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  *
- * "h.h". - Headers file.
+ * "parse.h". - Headers file.
  *
- * Most of the externs and prototypes thrown in here to 'cleanup' things.
- * -avalon
  *
  * $Id$
  *
  */
-#ifndef INCLUDED_h_h
-#define INCLUDED_h_h
-#ifndef INCLUDED_sys_types_h
-#include <sys/types.h>
-#define INCLUDED_sys_types_h
-#endif
-#ifndef INCLUDED_fdlist_h
-#include "fdlist.h"
-#endif
 
-struct Client;
-struct Class;
-struct Channel;
-struct ConfItem;
-struct User;
-struct stats;
-struct SLink;
-struct Message;
-struct Server;
+#ifndef INCLUDED_parse_h_h
+#define INCLUDED_parse_h_h
 
-/* 
- * GLOBAL - global variables
- */
+extern  int     parse (struct Client *, char *, char *);
+extern  void    init_tree_parse (struct Message *);
+extern struct Client* find_chasing (struct Client *, char *, int *);
+extern struct Client* find_client(const char* name, struct Client* client);
+extern struct Client* find_name (char *, struct Client *);
+extern struct Client* find_person (char *, struct Client *);
+extern struct Client* find_server(const char* name, struct Client* dflt_client);
+extern struct Client* find_userhost (char *, char *, struct Client *, int *);
 
-
-extern void     dummy(int signo);
-
-extern  char    *form_str (int);
-extern  void    get_my_name (struct Client *, char *, int);
-
-/* bsd.c */
-extern  int     deliver_it (struct Client *, char *, int);
-
-/* s_numeric.c */
-extern  int     do_numeric (int, struct Client *, struct Client *, int, char **);
-
-
-#endif /* INCLUDED_h_h */
-
+#endif /* INCLUDED_parse_h_h */
