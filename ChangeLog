@@ -1,3 +1,16 @@
+leeh        2001/12/14 09:58:45 EST	(20011214_1)
+
+  Modified files:
+    src                  m_message.c 
+  Log:
+  - dianes/my fixes for the oper message crap.
+    we now break hyb7 by sending it #*.mask, but what would I know..
+  
+  Revision  Changes    Path
+  1.17      +80 -26    ircd-hybrid-6/src/m_message.c
+
+
+
 leeh        2001/12/14 02:44:10 EST	(20011214_0)
 
   Modified files:
