@@ -1,3 +1,8 @@
+*** 20010613_1 by db
+- added user mode O removed channel mode d
+
+
+
 *** 20010611_3 by greg
 check if the pid we read from PPATH is ourselves .. handles /restarts.
 
