@@ -307,6 +307,8 @@ mtrie_conf.o: mtrie_conf.c ../include/mtrie_conf.h ../include/class.h \
  ../include/dline_conf.h ../include/irc_string.h ../include/ircd.h \
  ../include/numeric.h ../include/s_conf.h ../include/fileio.h \
  ../include/motd.h ../include/send.h ../include/struct.h
+oratime.o: oratime.c ../include/oratime.h ../include/config.h \
+ ../include/setup.h
 numeric.o: numeric.c ../include/numeric.h ../include/config.h \
  ../include/setup.h ../include/irc_string.h ../include/common.h \
  messages.tab
