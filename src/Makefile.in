@@ -86,7 +86,6 @@ SRCS = \
 	s_auth.c \
 	s_bsd.c \
 	s_conf.c \
-        s_crypt.c \
 	s_debug.c \
 	s_log.c \
 	s_misc.c \

@@ -35,27 +35,6 @@
 /* Define if you are running SOLARIS2.  */
 #undef OS_SOLARIS2
 
-/* Define if you have the BF_cfb64_encrypt function.  */
-#undef HAVE_BF_CFB64_ENCRYPT
-
-/* Define if you have the CAST_cfb64_encrypt function.  */
-#undef HAVE_CAST_CFB64_ENCRYPT
-
-/* Define if you have the RC5_32_cfb64_encrypt function.  */
-#undef HAVE_RC5_32_CFB64_ENCRYPT
-
-/* Define if you have the des_cfb64_encrypt function.  */
-#undef HAVE_DES_CFB64_ENCRYPT
-
-/* Define if you have the des_ede3_cfb64_encrypt function.  */
-#undef HAVE_DES_EDE3_CFB64_ENCRYPT
-
-/* Define if you have the getpagesize function.  */
-#undef HAVE_GETPAGESIZE
-
-/* Define if you have the idea_cfb64_encrypt function.  */
-#undef HAVE_IDEA_CFB64_ENCRYPT
-
 /* Define if you have the <errno.h> header file.  */
 #undef HAVE_ERRNO_H
 
@@ -76,9 +55,6 @@
 
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
-
-/* Define if you have the crypto library (-lcrypto).  */
-#undef HAVE_LIBCRYPTO
 
 /* Define if you have the descrypt library (-ldescrypt).  */
 #undef HAVE_LIBDESCRYPT

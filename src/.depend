@@ -372,12 +372,6 @@ s_conf.o: s_conf.c ../include/s_conf.h ../include/config.h \
  ../include/mtrie_conf.h ../include/numeric.h ../include/res.h \
  ../include/s_bsd.h ../include/s_log.h ../include/send.h \
  ../include/struct.h ../include/s_debug.h
-s_crypt.o: s_crypt.c ../include/s_crypt.h ../include/config.h \
- ../include/setup.h ../include/client.h ../include/ircd_defs.h \
- ../include/dbuf.h ../include/s_conf.h ../include/fileio.h \
- ../include/motd.h ../include/send.h ../include/common.h \
- ../include/s_serv.h ../include/ircd.h ../include/irc_string.h \
- ../include/s_log.h ../include/s_bsd.h
 s_debug.o: s_debug.c ../include/s_debug.h ../include/channel.h \
  ../include/config.h ../include/setup.h ../include/ircd_defs.h \
  ../include/class.h ../include/client.h ../include/dbuf.h \

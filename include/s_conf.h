@@ -128,7 +128,6 @@ typedef struct QlineItem {
 #ifdef LITTLE_I_LINES
 #define CONF_FLAGS_LITTLE_I_LINE        0x8000
 #endif
-#define CONF_FLAGS_ENCRYPTED            0x10000
 
 
 /* Macros for aConfItem */
@@ -142,7 +141,6 @@ typedef struct QlineItem {
 #define IsConfBlined(x)         ((x)->flags & CONF_FLAGS_B_LINED)
 #define IsConfFlined(x)         ((x)->flags & CONF_FLAGS_F_LINED)
 #define IsConfExemptGline(x)    ((x)->flags & CONF_FLAGS_EXEMPTGLINE)
-#define IsConfEncrypted(x)      ((x)->flags & CONF_FLAGS_ENCRYPTED)
 
 #ifdef IDLE_CHECK
 #define IsConfIdlelined(x)      ((x)->flags & CONF_FLAGS_IDLE_LINED)
