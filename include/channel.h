@@ -62,6 +62,7 @@ struct Channel
   struct SLink*   banlist;
   struct SLink*   exceptlist;
   struct SLink*   denylist;
+  int             num_bed;  /* number of bans+exceptions+denies */
   time_t          channelts;
   int             locally_created;  /* used to flag a locally created channel */
   int             keep_their_modes; /* used only on mode after sjoin */
