@@ -1,3 +1,15 @@
+leeh        2001/12/11 19:29:15 EST	(20011212_0)
+
+  Modified files:
+    src                  listener.c 
+  Log:
+  - listener->name to me.name, where did this appear from?
+  
+  Revision  Changes    Path
+  1.22      +2 -2      ircd-hybrid-6/src/listener.c
+
+
+
 leeh        2001/12/11 08:30:53 EST	(20011211_3)
 
   Modified files:
