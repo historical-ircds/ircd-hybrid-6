@@ -1,10 +1,6 @@
 blalloc.o: blalloc.c ../include/blalloc.h ../include/ircd_defs.h \
  ../include/config.h ../include/setup.h ../include/irc_string.h \
  ../include/send.h
-bsd.o: bsd.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/ircd_defs.h ../include/client.h \
- ../include/dbuf.h ../include/common.h ../include/irc_string.h \
- ../include/ircd.h ../include/bsd.h
 channel.o: channel.c ../include/channel.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../include/struct.h \
  ../include/client.h ../include/dbuf.h ../include/common.h \
@@ -186,7 +182,8 @@ s_conf.o: s_conf.c ../include/s_conf.h ../include/config.h \
  ../include/common.h ../include/irc_string.h ../include/dline_conf.h \
  ../include/numeric.h ../include/ircd.h ../include/list.h \
  ../include/mtrie_conf.h ../include/s_bsd.h ../include/channel.h \
- ../include/send.h ../include/s_err.h ../include/res.h
+ ../include/hash.h ../include/send.h ../include/s_err.h \
+ ../include/res.h
 s_debug.o: s_debug.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../include/client.h \
  ../include/dbuf.h ../include/s_conf.h ../include/fileio.h \
@@ -238,13 +235,12 @@ scache.o: scache.c ../include/struct.h ../include/config.h \
  ../include/dbuf.h ../include/common.h ../include/irc_string.h \
  ../include/numeric.h ../include/ircd.h ../include/send.h
 send.o: send.c ../include/send.h ../include/config.h \
- ../include/setup.h ../include/bsd.h ../include/channel.h \
- ../include/ircd_defs.h ../include/class.h ../include/common.h \
- ../include/irc_string.h ../include/ircd.h ../include/m_commands.h \
- ../include/numeric.h ../include/s_bsd.h ../include/s_err.h \
- ../include/s_serv.h ../include/s_zip.h ../zlib/zlib.h ../zlib/zconf.h \
- ../zlib/setup.h ../include/struct.h ../include/client.h \
- ../include/dbuf.h
+ ../include/setup.h ../include/channel.h ../include/ircd_defs.h \
+ ../include/class.h ../include/common.h ../include/irc_string.h \
+ ../include/ircd.h ../include/m_commands.h ../include/numeric.h \
+ ../include/s_bsd.h ../include/s_err.h ../include/s_serv.h \
+ ../include/s_zip.h ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h \
+ ../include/struct.h ../include/client.h ../include/dbuf.h
 sprintf_irc.o: sprintf_irc.c ../include/irc_string.h ../include/send.h \
  ../include/config.h ../include/setup.h ../include/common.h
 whowas.o: whowas.c ../include/struct.h ../include/config.h \
