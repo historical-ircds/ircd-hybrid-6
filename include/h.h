@@ -150,6 +150,7 @@ extern	int	dgets (int, char *, int);
 extern	char	*inetntoa (char *);
 extern	void	ircsprintf ();
 extern	int	dbufalloc, dbufblocks, debuglevel, errno, h_errno;
+extern	int	maxdbufalloc, maxdbufblocks;
 extern	int	highest_fd, debuglevel, portnum, debugtty, maxusersperchannel;
 extern	int	readcalls, udpfd, resfd;
 extern	aClient	*add_connection (aClient *, int);

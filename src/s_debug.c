@@ -344,6 +344,7 @@ void	count_memory(aClient *cptr,char *nick)
   u_long wwm = 0;	/* whowas array memory used */
   u_long com = 0;	/* memory used by conf lines */
   u_long db = 0;	/* memory used by dbufs */
+  u_long maxdb = 0;	/* max used by dbufs */
   u_long rm = 0;	/* res memory used */
   u_long mem_servers_cached; /* memory used by scache */
   u_long mem_ips_stored;	/* memory used by ip address hash */
@@ -454,8 +455,10 @@ void	count_memory(aClient *cptr,char *nick)
 	     CH_MAX, sizeof(aHashEntry) * CH_MAX);
 
   db = dbufblocks * sizeof(dbufbuf);
-  sendto_one(cptr, ":%s %d %s :Dbuf blocks %d(%d)",
-	     me.name, RPL_STATSDEBUG, nick, dbufblocks, db);
+  maxdb = maxdbufblocks * sizeof(dbufbuf);
+  sendto_one(cptr, ":%s %d %s :Dbuf blocks %d(%d), Max %d(%d)",
+	     me.name, RPL_STATSDEBUG, nick, dbufblocks, db,
+	     maxdbufblocks, maxdb);
 
   rm = cres_mem(cptr);
 
