@@ -30,9 +30,6 @@
 /* Define if you have SYSV non-blocking sockets (FIONBIO) */
 #undef NBLOCK_SYSV
 
-/* Define if you have the mmap() function.  */
-#undef USE_MMAP
-
 /* Define if you are running DYNIXPTX.  */
 #undef OS_DYNIXPTX
 
