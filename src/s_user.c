@@ -96,9 +96,43 @@ static FLAG_ITEM user_modes[] =
   {0, 0}
 };
 
+/* memory is cheap. map 0-255 to equivalent mode */
+
 static int user_modes_from_c_to_bitmask[] =
 { 
+  /* 0x00 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0x0F */
+  /* 0x10 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0x1F */
+  /* 0x20 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0x2F */
+  /* 0x30 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0x3F */
   0,            /* @ */
+  0,            /* A */
+  0,            /* B */
+  0,            /* C */
+  0,            /* D */
+  0,            /* E */
+  0,            /* F */
+  0,            /* G */
+  0,            /* H */
+  0,            /* I */
+  0,            /* J */
+  0,            /* K */
+  0,            /* L */
+  0,            /* M */
+  0,            /* N */
+  0,            /* O */
+  0,            /* P */
+  0,            /* Q */
+  0,            /* R */
+  0,            /* S */
+  0,            /* T */
+  0,            /* U */
+  0,            /* V */
+  0,            /* W */
+  0,            /* X */
+  0,            /* Y */
+  0,            /* Z 0x5A */
+  0, 0, 0, 0, 0, /* 0x5F */ 
+  /* 0x60 */       0,
   0,            /* a */
   FLAGS_BOTS,   /* b */
   FLAGS_CCONN,  /* c */
@@ -124,8 +158,17 @@ static int user_modes_from_c_to_bitmask[] =
   FLAGS_WALLOP, /* w */
   FLAGS_EXTERNAL, /* x */
   FLAGS_SPY,    /* y */
-  FLAGS_OPERWALL, /* z */
-  0, 0, 0, 0, 0, 0      /* pad out to 0x1F */
+  FLAGS_OPERWALL, /* z 0x7A */
+  0,0,0,0,0,     /* 0x7B - 0x7F */
+
+  /* 0x80 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0x9F */
+  /* 0x90 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0x9F */
+  /* 0xA0 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0xAF */
+  /* 0xB0 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0xBF */
+  /* 0xC0 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0xCF */
+  /* 0xD0 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0xDF */
+  /* 0xE0 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0xEF */
+  /* 0xF0 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  /* 0xFF */
 };
 
 /* internally defined functions */
@@ -1127,7 +1170,7 @@ static int nickkilldone(aClient *cptr, aClient *sptr, int parc,
           m = &parv[4][1];
           while (*m)
             {
-              flag = user_modes_from_c_to_bitmask[(int)(*m & 0x1F)];
+              flag = user_modes_from_c_to_bitmask[(int)(*m)];
               if( flag & FLAGS_INVISIBLE )
                 {
                   Count.invisi++;
@@ -1924,7 +1967,7 @@ int user_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
         case '\t' :
           break;
         default :
-          if((flag = user_modes_from_c_to_bitmask[(int)(*m & 0x1F)]))
+          if( (flag = user_modes_from_c_to_bitmask[(int)(*m)]))
             {
               if (what == MODE_ADD)
                 sptr->umodes |= flag;
