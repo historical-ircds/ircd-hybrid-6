@@ -430,10 +430,10 @@ void release_client_dns_reply(struct Client* client)
 const char* get_client_name(struct Client* client, int showip)
 {
   static char nbuf[HOSTLEN * 2 + USERLEN + 5];
-  char        t_port[7];
   char        t_user[USERLEN + 2];
   char        t_host[HOSTLEN + 1];
-  /* t_id[4]; */
+  char        t_id[4];
+
   /*
    * The idea here is to build our text first, then do the
    * ircsprintf(), as all these conditionals are getting very
@@ -442,27 +442,22 @@ const char* get_client_name(struct Client* client, int showip)
 
   assert(0 != client);
 
-  t_port[0]='\0';
-  t_user[0]='\0';
-  t_host[0]='\0';
-  /*  t_id[0]='\0'; */
-
   if (MyConnect(client))
     {
+      if (!irccmp(client->name, client->host))
+	return client->name;
+
+      t_user[0]='\0';
+      t_host[0]='\0';
+      t_id[0]='\0';
+
       /* Check for ident */
 
-      /* original -db */
-      /* (void)strcpy(t_id, "(+)"); */
+      if(client->flags & FLAGS_GOTID)
+	strcpy(t_id, "(+)");
 
-      /* Check for a username (listening ports don't have usernames) */
-      if (client->username[0])
-        strcpy(t_user, client->username);
-      if (t_user[0])
-        strcat(t_user, "@");
-
-      /* Check for a port number, needed for listening ports */
-      if (client->flags & FLAGS_LISTEN)
-        sprintf(t_port, "/%u", client->port);
+      strcpy(t_user, client->username);
+      strcat(t_user, "@");
 
       /* And finally, let's get the host information, ip or name */
       switch (showip)
@@ -478,20 +473,14 @@ const char* get_client_name(struct Client* client, int showip)
         }
 
       /* Now we add everything together */
-      /*      (void)ircsprintf(nbuf, "%s[%s%s%s%s]", client->name, t_id,
-        t_user, t_host, t_port); */
-      ircsprintf(nbuf, "%s[%s%s%s]", client->name, t_user, t_host, t_port);
-    }
-  else
-    {
-      /* As pointed out by Adel Mezibra 
-       * Neph|l|m@EFnet. Was missing a return here.
-       */
-      return client->name;
+      ircsprintf(nbuf, "%s[%s%s%s]", client->name, t_id,
+        t_user, t_host); 
+      return nbuf;
     }
 
-  if (irccmp(client->name, client->host) || t_port[0])
-    return nbuf;
+  /* As pointed out by Adel Mezibra 
+   * Neph|l|m@EFnet. Was missing a return here.
+   */
   return client->name;
 }
 
