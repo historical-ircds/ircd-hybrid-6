@@ -475,6 +475,7 @@ static	int	register_user(aClient *cptr,
 	/*
 	 * -2 is a socket error, already reported.
 	 */
+       {
 	if (i != -2)
 	  {
 	    if (i == -4)
@@ -558,7 +559,10 @@ static	int	register_user(aClient *cptr,
 	    
 	  }
 	else
-	  return exit_client(cptr, sptr, &me, "Socket Error");
+	  {
+	    return exit_client(cptr, sptr, &me, "Socket Error");
+	  }
+       }
 
 #ifdef ANTI_SPAMBOT
       /* This appears to be broken */
@@ -988,7 +992,7 @@ static	int	register_user(aClient *cptr,
 
   {
     unsigned char *p;
-    p = user->username;
+    p = (unsigned char *) user->username;
 
     while(*p)
       {
@@ -1433,20 +1437,24 @@ int	m_nick(aClient *cptr,
   ** nickname or somesuch)
   */
   if (acptr == sptr)
+   {
     if (strcmp(acptr->name, nick) != 0)
       /*
       ** Allows change of case in his/her nick
       */
       goto nickkilldone; /* -- go and process change */
     else
-      /*
-      ** This is just ':old NICK old' type thing.
-      ** Just forget the whole thing here. There is
-      ** no point forwarding it to anywhere,
-      ** especially since servers prior to this
-      ** version would treat it as nick collision.
-      */
-      return 0; /* NICK Message ignored */
+      {
+        /*
+        ** This is just ':old NICK old' type thing.
+        ** Just forget the whole thing here. There is
+        ** no point forwarding it to anywhere,
+        ** especially since servers prior to this
+        ** version would treat it as nick collision.
+        */
+        return 0; /* NICK Message ignored */
+      }
+   }
   /*
   ** Note: From this point forward it can be assumed that
   ** acptr != sptr (point to different client structures).
@@ -1458,25 +1466,30 @@ int	m_nick(aClient *cptr,
   ** "dormant nick" way of generating collisions...
   */
   if (IsUnknown(acptr)) 
+   {
     if (MyConnect(acptr))
       {
 	exit_client(NULL, acptr, &me, "Overridden");
 	goto nickkilldone;
       }
-    else if (fromTS && !(acptr->user))
+    else
       {
-	sendto_ops("Nick Collision on %s(%s(NOUSER) <- %s!%s@%s)(TS:%s)",
+	if (fromTS && !(acptr->user))
+          {
+	    sendto_ops("Nick Collision on %s(%s(NOUSER) <- %s!%s@%s)(TS:%s)",
 		   acptr->name, acptr->from->name, parv[1], parv[5], parv[6],
 		   cptr->name);
-	sendto_serv_butone(NULL, /* all servers */
+	    sendto_serv_butone(NULL, /* all servers */
 			   ":%s KILL %s :%s (%s(NOUSER) <- %s!%s@%s)(TS:%s)", me.name,
 			   acptr->name, me.name, acptr->from->name, parv[1], parv[5],
 			   parv[6], cptr->name);
-	acptr->flags |= FLAGS_KILLED;
-	/* Having no USER struct should be ok... */
-	return exit_client(cptr, acptr, &me,
+	    acptr->flags |= FLAGS_KILLED;
+	    /* Having no USER struct should be ok... */
+	    return exit_client(cptr, acptr, &me,
 			   "Got TS NICK before Non-TS USER");
+        }
       }
+   }
   /*
   ** Decide, we really have a nick collision and deal with it
   */
@@ -1855,7 +1868,6 @@ static	int	m_message(aClient *cptr,
 {
   Reg	aClient	*acptr;
   Reg	char	*s;
-  Reg	int	i;
   aChannel *chptr;
   char	*nick, *server, *p, *cmd, *host;
   int type=0;
@@ -3938,7 +3950,6 @@ void	send_umode_out(aClient *cptr,
 		       aClient *sptr,
 		       int old)
 {
-  Reg    int     i, j;
   Reg    aClient *acptr;
 
   send_umode(NULL, sptr, old, SEND_UMODES, buf);

@@ -258,6 +258,7 @@ time_t	timeout_query_list(time_t now)
       r2ptr = rptr->next;
       tout = rptr->sentat + rptr->timeout;
       if (now >= tout)
+       {
 	if (--rptr->retries <= 0)
 	  {
 #ifdef DEBUG
@@ -295,8 +296,11 @@ time_t	timeout_query_list(time_t now)
 		   rptr->cinfo.value.cptr));
 #endif
 	  }
+       }
       if (!next || tout < next)
-	next = tout;
+	{
+	  next = tout;
+	}
     }
   return (next > now) ? next : (now + AR_TTL);
 }

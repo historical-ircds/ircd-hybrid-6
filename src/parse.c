@@ -673,6 +673,7 @@ static	int	cancel_clients(aClient *cptr,
    * kill, else just exit the lame client.
    */
   if (IsServer(cptr))
+   {
     /*
     ** If the fake prefix is coming from a TS server, discard it
     ** silently -orabidoo
@@ -689,10 +690,12 @@ static	int	cancel_clients(aClient *cptr,
     else
       {
 	if (sptr->user)
-	  sendto_realops_lev(DEBUG_LEV,
+	  {
+	    sendto_realops_lev(DEBUG_LEV,
 			     "Message for %s[%s@%s!%s] from %s",
 			   sptr->name, sptr->user->username, sptr->user->host,
 			   sptr->from->name, get_client_name(cptr, TRUE));
+          }
 	sendto_serv_butone(NULL,
 			   ":%s KILL %s :%s (%s[%s] != %s, Fake Prefix)",
 			   me.name, sptr->name, me.name,
@@ -701,6 +704,7 @@ static	int	cancel_clients(aClient *cptr,
 	sptr->flags |= FLAGS_KILLED;
 	return exit_client(cptr, sptr, &me, "Fake Prefix");
       }
+   }
   return exit_client(cptr, cptr, &me, "Fake prefix");
 }
 

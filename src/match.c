@@ -143,21 +143,30 @@ char	*collapse(char *pattern)
    */
   for (; *s; s++)
     if (*s == '\\')
-      if (!*(s + 1))
-	break;
-      else
-	s++;
-    else if (*s == '*')
       {
-	if (*(t = s1 = s + 1) == '*')
-	  while (*t == '*')
-	    t++;
-	else if (*t == '?')
-	  for (t++, s1++; *t == '*' || *t == '?'; t++)
-	    if (*t == '?')
-	      *s1++ = *t;
-	while ((*s1++ = *t++))
-	  ;
+        if (!*(s + 1))
+	  {
+	    break;
+	  }
+        else
+	  {
+	    s++;
+	  }
+      }
+    else
+      {
+	if (*s == '*')
+        {
+	  if (*(t = s1 = s + 1) == '*')
+	    while (*t == '*')
+	      t++;
+	  else if (*t == '?')
+	    for (t++, s1++; *t == '*' || *t == '?'; t++)
+	      if (*t == '?')
+	        *s1++ = *t;
+	  while ((*s1++ = *t++))
+	    ;
+        }
       }
   return pattern;
 }

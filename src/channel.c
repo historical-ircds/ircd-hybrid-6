@@ -511,6 +511,7 @@ static	void	change_chan_flag(aChannel *chptr,aClient *cptr, int flag)
   Reg	Link *tmp;
 
   if ((tmp = find_user_link(chptr->members, cptr)))
+   {
     if (flag & MODE_ADD)
       {
 	tmp->flags |= flag & MODE_FLAGS;
@@ -518,7 +519,10 @@ static	void	change_chan_flag(aChannel *chptr,aClient *cptr, int flag)
 	  tmp->flags &= ~MODE_DEOPPED;
       }
     else
-      tmp->flags &= ~flag & MODE_FLAGS;
+      {
+	tmp->flags &= ~flag & MODE_FLAGS;
+      }
+   }
 }
 
 static	void	set_deopped(aClient *cptr, aChannel *chptr,int flag)
@@ -925,13 +929,12 @@ static  void     set_mode(aClient *cptr,
                          char *parv[])
 {
   int	errors_sent = 0, opcnt = 0, len = 0, tmp, nusers;
-  int   ip;
-  int	keychange = 0, passet = 0, limitset = 0;
-  int	whatt = MODE_ADD, the_mode;
+  int	keychange = 0, limitset = 0;
+  int	whatt = MODE_ADD, the_mode = 0;
   int   done_s_or_p = NO, done_i = NO, done_m = NO, done_n = NO, done_t = NO;
   aClient *who;
   Link	*lp;
-  char	*curr = parv[0], c, cc, *arg, plus = '+', *tmpc, *clear;
+  char	*curr = parv[0], c, *arg, plus = '+', *tmpc;
   char	numeric[16];
   /* mbufw gets the param-less mode chars, always with their sign
    * mbuf2w gets the paramed mode chars, always with their sign
@@ -1829,7 +1832,7 @@ void	clean_channelname(unsigned char *name)
 	** as one being joined. cute bug. Oct 11 1997, Dianora/comstud
 	*/
 
-	if(strlen(name) >  CHANNELLEN) /* same thing is done in get_channel()*/
+	if(strlen((char *) name) >  CHANNELLEN) /* same thing is done in get_channel()*/
 	name[CHANNELLEN] = '\0';
 
 	return;
@@ -2868,6 +2871,7 @@ int	m_knock(aClient *cptr,
 		      ":%s NOTICE %s :%s has knocked on the channel door.",
 		      sptr->name,
 		      chptr->chname, parv[0]);
+  return 0;
 }
 
 /*
@@ -3699,10 +3703,16 @@ int	m_sjoin(aClient *cptr,
       if (*s == '+' || s[1] == '+')
 	fl |= MODE_VOICE;
       if (!keep_new_modes)
+       {
 	if (fl & MODE_CHANOP)
-	  fl = MODE_DEOPPED;
+	  {
+	    fl = MODE_DEOPPED;
+	  }
 	else
-	  fl = 0;
+	  {
+	    fl = 0;
+	  }
+       }
       while (*s == '@' || *s == '+')
 	s++;
       if (!(acptr = find_chasing(sptr, s, NULL)))

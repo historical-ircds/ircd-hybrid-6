@@ -61,7 +61,7 @@ static	int	ckopenconf();
 static	aClass	*get_class();
 
 static	int	numclasses = 0, *classarr = (int *)NULL;
-static	char	*configfile = CONFIGFILE;
+char	*configfile = CONFIGFILE;
 static	char	nullfield[] = "";
 static	char	maxsendq[12];
 

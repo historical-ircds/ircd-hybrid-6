@@ -43,127 +43,150 @@ install: build
 version.c: version.c.SH
 	/bin/sh ./version.c.SH
 
-bsd.o: bsd.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/h.h ../include/mtrie_conf.h 
-channel.o: channel.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/numeric.h ../include/channel.h \
- ../include/h.h ../include/mtrie_conf.h
-class.o: class.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/numeric.h ../include/h.h ../include/mtrie_conf.h 
-dbuf.o: dbuf.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h
-mtrie_conf.o: mtrie_conf.c ../include/sys.h ../include/setup.h \
- ../include/common.h ../include/struct.h ../include/config.h \
- ../include/defs.h ../include/hash.h ../include/class.h \
- ../include/dbuf.h ../include/h.h ../include/mtrie_conf.h 
-fdlist.o: fdlist.c ../include/config.h ../include/setup.h \
- ../include/defs.h
-hash.o: hash.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/h.h ../include/mtrie_conf.h 
-inet_addr.o: inet_addr.c ../include/setup.h ../include/struct.h \
- ../include/config.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/nameser.h ../include/resolv.h
-ircd.o: ircd.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/numeric.h ../include/h.h \
- ../include/mtrie_conf.h
-ircsprintf.o: ircsprintf.c
-list.o: list.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/h.h ../include/mtrie_conf.h \
- ../include/numeric.h
-match.o: match.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h
-packet.o: packet.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/msg.h ../include/h.h \
- ../include/mtrie_conf.h
-parse.o: parse.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/msg.h ../include/sys.h ../include/numeric.h ../include/h.h \
- ../include/mtrie_conf.h
-res.o: res.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/res.h ../include/numeric.h ../include/h.h \
- ../include/mtrie_conf.h ../include/nameser.h \
- ../include/resolv.h
-s_auth.o: s_auth.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/res.h ../include/numeric.h \
- ../include/patchlevel.h ../include/sock.h ../include/h.h \
- ../include/mtrie_conf.h
-s_bsd.o: s_bsd.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/res.h ../include/numeric.h \
- ../include/patchlevel.h ../include/inet.h ../include/nameser.h \
- ../include/resolv.h ../include/h.h ../include/mtrie_conf.h 
-s_conf.o: s_conf.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/numeric.h ../include/h.h \
- ../include/mtrie_conf.h
-s_debug.o: s_debug.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/numeric.h \
- ../include/common.h ../include/sys.h ../include/h.h \
- ../include/mtrie_conf.h
-s_err.o: s_err.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/numeric.h \
- ../include/s_err.h
-s_misc.o: s_misc.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/numeric.h ../include/h.h \
- ../include/mtrie_conf.h
-s_numeric.o: s_numeric.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/numeric.h ../include/h.h \
- ../include/mtrie_conf.h 
-s_serv.o: s_serv.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/numeric.h ../include/msg.h \
- ../include/channel.h ../include/h.h ../include/mtrie_conf.h 
-s_user.o: s_user.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/numeric.h ../include/msg.h \
- ../include/channel.h ../include/h.h ../include/mtrie_conf.h 
-send.o: send.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/h.h ../include/mtrie_conf.h \
- ../include/numeric.h
-support.o: support.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h
-whowas.o: whowas.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/defs.h ../include/hash.h \
- ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/numeric.h ../include/h.h \
- ../include/mtrie_conf.h
-scache.o: scache.c ../include/struct.h ../include/h.h
-blalloc.o: blalloc.c ../include/blalloc.h
+
+# DO NOT DELETE
+
+blalloc.o: ../include/struct.h ../include/config.h ../include/setup.h
+blalloc.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+blalloc.o: ../include/class.h ../include/dbuf.h ../include/common.h
+blalloc.o: ../include/sys.h ../include/h.h ../include/mtrie_conf.h
+blalloc.o: ../include/numeric.h ../include/blalloc.h
+bsd.o: ../include/struct.h ../include/config.h ../include/setup.h
+bsd.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+bsd.o: ../include/class.h ../include/dbuf.h ../include/common.h
+bsd.o: ../include/sys.h ../include/h.h ../include/mtrie_conf.h
+channel.o: ../include/struct.h ../include/config.h ../include/setup.h
+channel.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+channel.o: ../include/class.h ../include/dbuf.h ../include/common.h
+channel.o: ../include/sys.h ../include/numeric.h ../include/channel.h
+channel.o: ../include/h.h ../include/mtrie_conf.h
+class.o: ../include/struct.h ../include/config.h ../include/setup.h
+class.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+class.o: ../include/class.h ../include/dbuf.h ../include/common.h
+class.o: ../include/numeric.h ../include/h.h ../include/mtrie_conf.h
+dbuf.o: ../include/struct.h ../include/config.h ../include/setup.h
+dbuf.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+dbuf.o: ../include/class.h ../include/dbuf.h ../include/common.h
+dbuf.o: ../include/sys.h ../include/h.h ../include/mtrie_conf.h
+hash.o: ../include/struct.h ../include/config.h ../include/setup.h
+hash.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+hash.o: ../include/class.h ../include/dbuf.h ../include/common.h
+hash.o: ../include/sys.h ../include/numeric.h ../include/msg.h ../include/h.h
+hash.o: ../include/mtrie_conf.h
+inet_addr.o: ../include/setup.h ../include/struct.h ../include/config.h
+inet_addr.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h
+inet_addr.o: ../include/hash.h ../include/class.h ../include/dbuf.h
+inet_addr.o: ../include/common.h ../include/sys.h ../include/nameser.h
+inet_addr.o: ../include/resolv.h
+ircd.o: ../include/struct.h ../include/config.h ../include/setup.h
+ircd.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+ircd.o: ../include/class.h ../include/dbuf.h ../include/common.h
+ircd.o: ../include/sys.h ../include/numeric.h ../include/msg.h
+ircd.o: ../include/inet.h ../include/h.h ../include/mtrie_conf.h
+list.o: ../include/struct.h ../include/config.h ../include/setup.h
+list.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+list.o: ../include/class.h ../include/dbuf.h ../include/common.h
+list.o: ../include/sys.h ../include/h.h ../include/mtrie_conf.h
+list.o: ../include/numeric.h ../include/blalloc.h
+match.o: ../include/struct.h ../include/config.h ../include/setup.h
+match.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+match.o: ../include/class.h ../include/dbuf.h ../include/common.h
+match.o: ../include/sys.h
+mtrie_conf.o: ../include/sys.h ../include/setup.h ../zlib/zlib.h
+mtrie_conf.o: ../zlib/zconf.h ../include/numeric.h ../include/common.h
+mtrie_conf.o: ../include/struct.h ../include/config.h ../include/defs.h
+mtrie_conf.o: ../include/hash.h ../include/class.h ../include/dbuf.h
+mtrie_conf.o: ../include/h.h ../include/mtrie_conf.h
+packet.o: ../include/struct.h ../include/config.h ../include/setup.h
+packet.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+packet.o: ../include/class.h ../include/dbuf.h ../include/common.h
+packet.o: ../include/sys.h ../include/msg.h ../include/h.h
+packet.o: ../include/mtrie_conf.h
+parse.o: ../include/struct.h ../include/config.h ../include/setup.h
+parse.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+parse.o: ../include/class.h ../include/dbuf.h ../include/common.h
+parse.o: ../include/msg.h ../include/sys.h ../include/numeric.h
+parse.o: ../include/h.h ../include/mtrie_conf.h
+res.o: ../include/struct.h ../include/config.h ../include/setup.h
+res.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+res.o: ../include/class.h ../include/dbuf.h ../include/common.h
+res.o: ../include/sys.h ../include/res.h ../include/numeric.h ../include/h.h
+res.o: ../include/mtrie_conf.h ../include/nameser.h ../include/resolv.h
+res.o: ../include/inet.h
+res_comp.o: ../include/nameser.h
+res_init.o: ../include/config.h ../include/setup.h ../include/defs.h
+res_init.o: ../include/sys.h ../zlib/zlib.h ../zlib/zconf.h
+res_init.o: ../include/nameser.h ../include/resolv.h
+res_mkquery.o: ../include/config.h ../include/setup.h ../include/defs.h
+res_mkquery.o: ../include/sys.h ../zlib/zlib.h ../zlib/zconf.h
+res_mkquery.o: ../include/nameser.h ../include/resolv.h
+s_auth.o: ../include/struct.h ../include/config.h ../include/setup.h
+s_auth.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+s_auth.o: ../include/class.h ../include/dbuf.h ../include/common.h
+s_auth.o: ../include/sys.h ../include/res.h ../include/numeric.h
+s_auth.o: ../include/patchlevel.h ../include/sock.h ../include/h.h
+s_auth.o: ../include/mtrie_conf.h
+s_bsd.o: ../include/struct.h ../include/config.h ../include/setup.h
+s_bsd.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+s_bsd.o: ../include/class.h ../include/dbuf.h ../include/common.h
+s_bsd.o: ../include/sys.h ../include/res.h ../include/numeric.h
+s_bsd.o: ../include/patchlevel.h ../include/inet.h ../include/nameser.h
+s_bsd.o: ../include/resolv.h ../include/h.h ../include/mtrie_conf.h
+s_conf.o: ../include/struct.h ../include/config.h ../include/setup.h
+s_conf.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+s_conf.o: ../include/class.h ../include/dbuf.h ../include/common.h
+s_conf.o: ../include/sys.h ../include/numeric.h ../include/inet.h
+s_conf.o: ../include/h.h ../include/mtrie_conf.h
+s_debug.o: ../include/struct.h ../include/config.h ../include/setup.h
+s_debug.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+s_debug.o: ../include/class.h ../include/dbuf.h ../include/numeric.h
+s_debug.o: ../include/common.h ../include/sys.h ../include/h.h
+s_debug.o: ../include/mtrie_conf.h
+s_err.o: ../include/struct.h ../include/config.h ../include/setup.h
+s_err.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+s_err.o: ../include/class.h ../include/dbuf.h ../include/numeric.h
+s_err.o: ../include/h.h ../include/mtrie_conf.h
+s_misc.o: ../include/struct.h ../include/config.h ../include/setup.h
+s_misc.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+s_misc.o: ../include/class.h ../include/dbuf.h ../include/common.h
+s_misc.o: ../include/sys.h ../include/numeric.h ../include/h.h
+s_misc.o: ../include/mtrie_conf.h
+s_numeric.o: ../include/struct.h ../include/config.h ../include/setup.h
+s_numeric.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h
+s_numeric.o: ../include/hash.h ../include/class.h ../include/dbuf.h
+s_numeric.o: ../include/common.h ../include/sys.h ../include/numeric.h
+s_numeric.o: ../include/h.h ../include/mtrie_conf.h
+s_serv.o: ../include/struct.h ../include/config.h ../include/setup.h
+s_serv.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+s_serv.o: ../include/class.h ../include/dbuf.h ../include/common.h
+s_serv.o: ../include/sys.h ../include/numeric.h ../include/msg.h
+s_serv.o: ../include/channel.h ../include/nameser.h ../include/resolv.h
+s_serv.o: ../include/h.h ../include/mtrie_conf.h
+s_user.o: ../include/struct.h ../include/config.h ../include/setup.h
+s_user.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+s_user.o: ../include/class.h ../include/dbuf.h ../include/common.h
+s_user.o: ../include/sys.h ../include/numeric.h ../include/msg.h
+s_user.o: ../include/channel.h ../include/h.h ../include/mtrie_conf.h
+s_zip.o: ../include/struct.h ../include/config.h ../include/setup.h
+s_zip.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+s_zip.o: ../include/class.h ../include/dbuf.h ../include/sys.h ../include/h.h
+s_zip.o: ../include/mtrie_conf.h
+scache.o: ../include/struct.h ../include/config.h ../include/setup.h
+scache.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+scache.o: ../include/class.h ../include/dbuf.h ../include/common.h
+scache.o: ../include/sys.h ../include/numeric.h ../include/h.h
+scache.o: ../include/mtrie_conf.h
+send.o: ../include/struct.h ../include/config.h ../include/setup.h
+send.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+send.o: ../include/class.h ../include/dbuf.h ../include/common.h
+send.o: ../include/sys.h ../include/h.h ../include/mtrie_conf.h
+send.o: ../include/numeric.h
+support.o: ../include/struct.h ../include/config.h ../include/setup.h
+support.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+support.o: ../include/class.h ../include/dbuf.h ../include/common.h
+support.o: ../include/sys.h
+whowas.o: ../include/struct.h ../include/config.h ../include/setup.h
+whowas.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+whowas.o: ../include/class.h ../include/dbuf.h ../include/common.h
+whowas.o: ../include/sys.h ../include/numeric.h ../include/h.h
+whowas.o: ../include/mtrie_conf.h

@@ -97,7 +97,7 @@ build:
 
 clean:
 	${RM} -f *~ core
-	@for i in $(ZSUBDIRS); do \
+	@for i in $(SUBDIRS); do \
 		echo "Cleaning $$i";\
 		cd $$i;\
 		${MAKE} clean; cd ..;\
@@ -110,7 +110,7 @@ distclean:
 	${RM} -f Makefile *~ *.rej *.orig core ircd.core
 	${RM} -f config.status config.cache config.log
 	cd include; ${RM} -f setup.h *~ *.rej *.orig ; cd ..
-	@for i in $(ZSUBDIRS); do \
+	@for i in $(SUBDIRS); do \
 		echo "Cleaning $$i";\
 		cd $$i;\
 		${MAKE} distclean; cd ..;\

@@ -130,12 +130,7 @@ I_LINE_IP_ENTRY *ip_i_lines=(I_LINE_IP_ENTRY *)NULL;
 
 void add_mtrie_conf_entry(aConfItem *aconf,int flags)
 {
-  DOMAIN_LEVEL *cur_level;
-  DOMAIN_PIECE *cur_piece;
-  DOMAIN_PIECE *last_piece;
   char tokenized_host[HOSTLEN+1];
-  char *cur_dns_piece;
-  int index;
 
   stack_pointer = 0;
 
@@ -597,13 +592,11 @@ static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 aConfItem *find_matching_mtrie_conf(char *host,char *user,
 				    unsigned long ip)
 {
-  DOMAIN_PIECE *cur_piece;
   aConfItem *iline_aconf_unsortable=(aConfItem *)NULL;
   aConfItem *iline_aconf=(aConfItem *)NULL;
   aConfItem *kline_aconf=(aConfItem *)NULL;
   aConfItem *ip_iline_aconf=(aConfItem *)NULL;
   char tokenized_host[HOSTLEN+1];
-  int flags=CONF_CLIENT;
   int top_of_stack;
 
   /* I look in the unsortable i line list first, to find
@@ -747,7 +740,6 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
 {
   DOMAIN_PIECE *cur_piece;
   char *cur_dns_piece;
-  int index;
   aConfItem *aconf;
 
   cur_dns_piece = dns_stack[--stack_pointer];
@@ -1053,7 +1045,6 @@ void report_matching_host_klines(aClient *sptr,char *host)
   DOMAIN_PIECE *cur_piece;
   DOMAIN_LEVEL *cur_level;
   char *cur_dns_piece;
-  int index;
   char *p;
   int two_letter_tld = 0;
   char tokenized_host[HOSTLEN+1];
@@ -1312,13 +1303,12 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
   DOMAIN_PIECE *dp_ptr;
   aConfItem *aconf;
   int i;
-  char *p;
   char *host;
   char *pass;
   char *name;
   char *mask;
   int  port;
-  char c;
+  char c='\0';
 
   if(!dl_ptr)
     return;

@@ -124,7 +124,6 @@ extern char *oper_privs(aClient *,int);	/* defined in s_conf.c */
 extern void outofmemory(void);		/* defined in list.c */
 extern void s_die(void);		/* defined in ircd.c as VOIDSIG */
 extern int match(char *,char *);	/* defined in match.c */
-extern int host_is_legal_ip(char *);	/* defined in s_conf.c */
 extern void show_opers(aClient *,char *);
 extern void show_servers(aClient *,char *);
 extern void count_memory(aClient *,char *);
@@ -900,7 +899,7 @@ int	m_server_estab(aClient *cptr)
   Reg	aClient	*acptr;
   Reg	aConfItem	*aconf, *bconf;
   char	*inpath, *host, *s, *encr;
-  int	split, i;
+  int	split;
 
   inpath = get_client_name(cptr,TRUE); /* "refresh" inpath with host */
   split = mycmp(cptr->name, cptr->sockhost);
@@ -2057,11 +2056,9 @@ int	m_stats(aClient *cptr,
 		char *parv[])
 {
   static	char	Lformat[]  = ":%s %d %s %s %u %u %u %u %u :%u %u %s";
-  static	int	num = 0;
   struct	Message	*mptr;
   aClient	*acptr;
   char	stat = parc > 1 ? parv[1][0] : '\0';
-  Reg	int	i;
   int	doall = 0, wilds = 0, valid_stats = 0;
   char	*name;
   /* anti flooding code,
@@ -3684,22 +3681,22 @@ int     m_gline(aClient *cptr,
       if(sptr->name)
 	oper_name = sptr->name;
       else 
-	return;
+	return 0;
       
       if(sptr->user && sptr->user->username)
 	oper_username = sptr->user->username;
       else
-	return;
+	return 0;
 
       if(sptr->user && sptr->user->host)
 	oper_host = sptr->user->host;
       else
-	return;
+	return 0;
 
       if(sptr->user && sptr->user->server)
 	oper_server = sptr->user->server;
       else
-	return;
+	return 0;
 
       sendto_serv_butone(NULL, ":%s GLINE %s %s %s %s %s %s :%s",
 			 me.name,
@@ -4381,7 +4378,6 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
   char  *p;
   int   nread;
   int   error_on_write = NO;
-  aConfItem *aconf;
   struct stat oldfilestat;
   mode_t oldumask;
 
@@ -4791,7 +4787,7 @@ int     m_dline(aClient *cptr,
 		int parc,
 		char *parv[])
 {
-  char *user, *host, *reason;
+  char *host, *reason;
   char *p;
   int number_of_dots=0;
   int number_of_chars=0;
@@ -5100,7 +5096,7 @@ int     place_dline(aClient *sptr,
 		   reason, current_date);
 
   if (safe_write(sptr,parv0,dlinefile,out,buffer))
-    return;
+    return 0;
 
   (void)ircsprintf(buffer, "D:%s:%s (%s)\n",
 		   host,
@@ -5108,7 +5104,7 @@ int     place_dline(aClient *sptr,
 		   current_date);
 
   if (safe_write(sptr,parv0,dlinefile,out,buffer))
-    return;
+    return 0;
 
   (void)close(out);
   return 0;
@@ -5159,9 +5155,9 @@ int	m_rehash(aClient *cptr,
               ircsprintf(sparemsg,"invalid spare_fd %d",spare_fd);
               restart(sparemsg);
             }
-/*(	  return 0;
-	  restart_resolver();	/* re-read /etc/resolv.conf AGAIN?
-				   and close/re-open res socket */
+/* 	  return 0; 
+	  restart_resolver(); */	/* re-read /etc/resolv.conf AGAIN?
+					   and close/re-open res socket */
 	  found = YES;
 	}
       else if(mycmp(parv[1],"TKLINES") == 0)
@@ -5291,7 +5287,7 @@ int	m_trace(aClient *cptr,
 		char *parv[])
 {
   Reg	int	i;
-  Reg	aClient	*acptr;
+  Reg	aClient	*acptr = NULL;
   aClass	*cltmp;
   char	*tname;
   int	doall, link_s[MAXCONNECTIONS], link_u[MAXCONNECTIONS];
@@ -5380,17 +5376,26 @@ int	m_trace(aClient *cptr,
    * Count up all the servers and clients in a downlink.
    */
   if (doall)
+   {
     for (acptr = client; acptr; acptr = acptr->next)
 #ifdef	SHOW_INVISIBLE_LUSERS
       if (IsPerson(acptr))
 	link_u[acptr->from->fd]++;
 #else
-  if (IsPerson(acptr) &&
-      (!IsInvisible(acptr) || IsAnOper(sptr)))
-    link_u[acptr->from->fd]++;
+      if (IsPerson(acptr) &&
+        (!IsInvisible(acptr) || IsAnOper(sptr)))
+        {
+          link_u[acptr->from->fd]++;
+        }
 #endif
-  else if (IsServer(acptr))
-    link_s[acptr->from->fd]++;
+   }
+  else
+    {
+      if (IsServer(acptr))
+      {
+        link_s[acptr->from->fd]++;
+      }
+    }
 
   /* report all direct connections */
 	
@@ -5898,7 +5903,7 @@ static void set_autoconn(aClient *sptr,char *parv0,char *hostname,int newval)
 {
   aConfItem *aconf;
 
-  if(aconf= find_conf_name(hostname,CONF_CONNECT_SERVER))
+  if((aconf= find_conf_name(hostname,CONF_CONNECT_SERVER)))
     {
       if(newval)
 	aconf->flags |= CONF_FLAGS_ALLOW_AUTO_CONN;

@@ -85,6 +85,7 @@ aClient *client = &me;		/* Pointer to beginning of Client list */
 extern  time_t  pending_kline_time;
 extern	struct pkl *pending_klines;
 extern  void do_pending_klines(void);
+
 #endif
 
 /* DEBUG */
@@ -200,12 +201,12 @@ void	restart(char *mesg)
   was_here = YES;
 
 #ifdef	USE_SYSLOG
-  (void)syslog(LOG_WARNING, "Restarting Server because: %s, sbrk(0)-etext: %d",
+  (void)syslog(LOG_WARNING, "Restarting Server because: %s, sbrk(0)-etext: %ld",
      mesg,(u_long)sbrk((size_t)0)-(u_long)sbrk0);
 #endif
   if (bootopt & BOOT_STDERR)
     {
-      fprintf(stderr, "Restarting Server because: %s, sbrk(0)-etext: %d\n",
+      fprintf(stderr, "Restarting Server because: %s, sbrk(0)-etext: %ld\n",
         mesg,(u_long)sbrk((size_t)0)-(u_long)sbrk0);
     }
   server_reboot();
@@ -896,14 +897,17 @@ int	main(int argc, char *argv[])
       int	flag = *p++;
 
       if (flag == '\0' || *p == '\0')
+       {
 	if (argc > 1 && argv[1][0] != '-')
 	  {
 	    p = *++argv;
 	    argc -= 1;
 	  }
 	else
-	  p = "";
-      
+	  {
+	    p = "";
+	  }
+       }
       switch (flag)
 	{
 	case 'a':
@@ -1221,7 +1225,6 @@ time_t io_loop(time_t delay)
   static long	lastrecvK	= 0;
   static int	lrv		= 0;
   time_t lasttimeofday;
-  static int read_count = 0;
 
   lasttimeofday = timeofday;
   if((timeofday = time(NULL)) == -1)
@@ -1538,7 +1541,7 @@ static	void	setup_signals()
  * - Dianora
  */
 
-report_error_on_tty(char *error_message)
+void report_error_on_tty(char *error_message)
 {
   int fd;
   if((fd = open("/dev/tty", O_WRONLY)) >= 0 )

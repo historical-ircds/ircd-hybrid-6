@@ -52,6 +52,7 @@ extern	aClient	*client, me, *local[];
 extern	aChannel *channel;
 extern	struct	stats	*ircstp;
 extern	int	bootopt;
+extern  int     spare_fd;
 
 extern	char	*canonize (char *);
 extern	aChannel *find_channel (char *, aChannel *);
@@ -104,6 +105,7 @@ unsigned long host_name_to_ip(char *, unsigned long *);
 extern aConfItem *find_dkill(aClient *cptr);
 extern void report_dline_hash(aClient *,int);
 extern void dhash_stats(aClient *,aClient *,int,char **,int);
+extern int find_dline(struct in_addr);
 
 extern  void	add_temp_kline(aConfItem *);
 extern  void	flush_temp_klines(void);
@@ -121,6 +123,7 @@ extern  int	rehash_dump (aClient *,char *);
 extern	int	initconf (int, int,int );
 extern  int	openconf (char *);
 extern  int     lock_kline_file ();
+extern  void    report_error_on_tty(char *);
 
 extern  void    clear_scache_hash_table(void);
 extern  char    *find_or_add(char *);
@@ -194,7 +197,10 @@ extern  void	send_operwall(aClient *,char *,char *);	/* defined in send.c */
 extern  void	sendto_wallops_butone();	/* defined in send.c */
 extern  int     match(char *,char *);		/* defined in match.c */
 extern	char    *collapse(char *);		/* match.c */
-
+extern  void    send_capabilities(aClient *,int);
+extern  int	host_is_legal_ip(char *); 
+extern  void	do_include_conf();
+extern  void	del_client_from_llist(aClient **, aClient *);
 /* END Missing definitions */
 
 /*VARARGS2*/
@@ -273,6 +279,7 @@ extern	aServer	*make_server (aClient *);
 extern	aClient	*make_client (aClient *);
 extern	Link	*find_user_link (Link *, aClient *);
 extern	void	add_client_to_list (aClient *);
+extern	void	add_client_to_llist(aClient **, aClient *);
 extern	void	checklist (void);
 extern	void	remove_client_from_list (aClient *);
 extern	void	initlists (void);

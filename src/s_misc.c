@@ -600,7 +600,7 @@ char	*comment	/* Reason for the exit */
 		     sptr->name, timeofday - sptr->firsttime,
 		     sptr->sendK, sptr->receiveK);
 #ifdef USE_SYSLOG
-	  syslog(LOG_NOTICE, "%s was connected for %lu seconds.  %lu/%lu sendK/recvK.", sptr->name, timeofday - sptr->firsttime, sptr->sendK, sptr->receiveK);
+	  syslog(LOG_NOTICE, "%s was connected for %u seconds.  %lu/%lu sendK/recvK.", sptr->name, timeofday - sptr->firsttime, sptr->sendK, sptr->receiveK);
 #endif
 
               /* Just for paranoia... this shouldn't be necessary if the
@@ -766,7 +766,6 @@ static	void	exit_one_client(aClient *cptr,
 				char *comment)
 {
   Reg	aClient *acptr;
-  Reg	int	i;
   Reg	Link	*lp;
 
   if (IsServer(sptr))
@@ -1004,10 +1003,9 @@ void	tstats(aClient *cptr,char *name)
 void serv_info(aClient *cptr,char *name)
 {
   static char Lformat[] = ":%s %d %s %s %u %u %u %u %u :%u %u %s";
-  int	j, fd;
+  int	j;
   long	sendK, receiveK, uptime;
   aClient	*acptr;
-  char nbuf[HOSTLEN * 2 + USERLEN + 5];
 
   sendK = receiveK = 0;
   j = 1;
@@ -1106,7 +1104,7 @@ void show_opers(aClient *cptr,char *name)
 void show_servers(aClient *cptr,char *name)
 {
   Reg aClient	*cptr2;
-  register j=0;
+  Reg int j=0;
 
   for(cptr2 = serv_cptr_list; cptr2; cptr2 = cptr2->next_server_client)
     {
