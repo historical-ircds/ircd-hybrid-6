@@ -294,6 +294,7 @@
 #define F_LINES_OPER_ONLY
 #undef  I_LINES_OPER_ONLY
 #undef  K_LINES_OPER_ONLY
+#undef  O_LINES_OPER_ONLY
 #undef  P_LINES_OPER_ONLY
 
 /* SPOOF_NOTICE - See a notice when a user connects with a
