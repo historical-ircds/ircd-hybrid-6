@@ -1992,6 +1992,13 @@ int	read_message(time_t delay, fdlist *listp)
   static aClient	*authclnts[MAXCONNECTIONS];
   char		errmsg[255];
 
+  /* if it is called with NULL we check all active fd's */
+  if (!listp)
+    {
+      listp = &default_fdlist;
+      listp->last_entry = highest_fd+1; /* remember the 0th entry isnt used */
+    }
+
   for (res = 0;;)
     {
       nbr_pfds = 0;
