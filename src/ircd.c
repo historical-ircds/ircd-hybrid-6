@@ -630,32 +630,16 @@ static void write_pidfile(void)
 {
   int fd;
   char buff[20];
-#ifdef PPATH
   if ((fd = open(PPATH, O_CREAT|O_WRONLY, 0600))>=0)
-#else /* PPATH */
-  char ppath[BUFSIZE];
-  ircsprintf(ppath, "%s.pid", me.name);
-  if ((fd = open(ppath, O_CREAT|O_WRONLY, 0600))>=0)
-#endif /* PPATH */
     {
       ircsprintf(buff,"%d\n", (int)getpid());
       if (write(fd, buff, strlen(buff)) == -1)
-        log(L_ERROR,"Error writing to pid file %s", 
-#ifdef PPATH
-          PPATH);
-#else /* PPATH */
-          ppath);
-#endif /* PPATH */
+        log(L_ERROR,"Error writing to pid file %s", PPATH);
       close(fd);
       return;
     }
   else
-    log(L_ERROR, "Error opening pid file %s",
-#ifdef PPATH
-          PPATH);
-#else /* PPATH */
-          ppath);
-#endif /* PPATH */
+    log(L_ERROR, "Error opening pid file %s", PPATH);
 }
 
 /*
@@ -673,27 +657,19 @@ static void check_pidfile(void)
   char buff[20];
   pid_t pidfromfile;
 
-#ifdef PPATH
   if ((fd = open(PPATH, O_RDONLY)) >= 0 )
-#else /* PPATH */
-  char ppath[BUFSIZE];
-  ircsprintf(ppath, "%s.pid", me.name);
-  if ((fd = open(PPATH, O_RDONLY)) >= 0)
-#endif /* PPATH */
-
   {
-    if (read(fd, buff, sizeof(buff)) > 0)
+    if (read(fd, buff, sizeof(buff)) == -1)
+    {
+      /* printf("NOTICE: problem reading from %s (%s)\n", PPATH,
+          strerror(errno)); */
+    }
+    else
     {
       pidfromfile = atoi(buff);
       if (pidfromfile != (int)getpid() && !kill(pidfromfile, 0))
       {
-        printf("error: I detect an ircd already running here. (pid = %s)\n",pidfromfile);
-        printf("       If this is incorrect, please remove %s\n",
-#ifdef PPATH
-               PPATH);
-#else /* PPATH */
-               ppath);
-#endif /* PPATH */
+        printf("ERROR: daemon is already running\n");
         exit(-1);
       }
     }
@@ -701,11 +677,7 @@ static void check_pidfile(void)
   }
   else
   {
-#ifdef PPATH
-    printf("warning: problem opening %s: %s\n", PPATH, strerror(errno));
-#else /* PPATH */
-    printf("warning: problem opening %s: %s\n", ppath, strerror(errno));
-#endif /* PPATH */
+    printf("WARNING: problem opening %s: %s\n", PPATH, strerror(errno));
   }
 }
 
