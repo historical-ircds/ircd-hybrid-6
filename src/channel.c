@@ -2262,8 +2262,7 @@ int     m_join(struct Client *cptr,
 
 
 #ifdef NO_JOIN_ON_SPLIT
-      if (server_was_split && MyClient(sptr) && (*name != '&') &&
-          !IsAnOper(sptr))
+      if (server_was_split && MyClient(sptr) && (*name != '&'))
         {
               sendto_one(sptr, form_str(ERR_UNAVAILRESOURCE),
                          me.name, parv[0], name);
