@@ -1,3 +1,8 @@
+*** 20001029_2 by lusky
+revved patchlevel for rc6
+added O_LINES_OPER_ONLY
+
+
 *** 20001029_1 by lusky
 fix for mIRC NAT+spoofedI DCC send problem (userhost now returns sockhost
 for acptr==sptr).
