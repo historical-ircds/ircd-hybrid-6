@@ -49,6 +49,9 @@ static char *rcs_version="$Id$";
 #ifdef FLUD
 #include "blalloc.h"
 #endif /* FLUD */
+#ifdef ANTI_DRONE_FLOOD
+#include "dbuf.h"
+#endif
 
 #if defined( HAVE_STRING_H)
 #include <string.h>
@@ -130,6 +133,11 @@ void free_fludees(aClient *);
 #ifdef ANTI_SPAMBOT
 int spam_time = MIN_JOIN_LEAVE_TIME;
 int spam_num = MAX_JOIN_LEAVE_COUNT;
+#endif
+
+#ifdef ANTI_DRONE_FLOOD
+int drone_time = DEFAULT_DRONE_TIME;
+int drone_count = DEFAULT_DRONE_COUNT;
 #endif
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
@@ -2008,6 +2016,68 @@ static	int	m_message(aClient *cptr,
 	if(check_for_ctcp(parv[2]))
 	  if(check_for_flud(sptr, acptr, NULL, 1))
 	    return 0;
+#endif
+#ifdef ANTI_DRONE_FLOOD
+      if(MyConnect(acptr) && drone_time)
+	{
+	  if((acptr->first_received_message_time+drone_time) < NOW)
+	    {
+	      acptr->received_number_of_privmsgs=1;
+	      acptr->first_received_message_time = NOW;
+	      acptr->drone_noticed = 0;
+	    }
+	  else
+	    {
+	      if(acptr->received_number_of_privmsgs > drone_count)
+		{
+		  if(acptr->drone_noticed == 0) /* tiny FSM */
+		    {
+		      sendto_ops_lev(REJ_LEV,
+			     "Possible Drone Flooder %s [%s@%s] on %s target: %s",
+				     sptr->name, sptr->user->username,
+				     sptr->user->host,
+				     sptr->user->server, acptr->name);
+		      acptr->drone_noticed = 1;
+		    }
+		  /* heuristic here, if target has been getting a lot
+		   * of privmsgs from clients, and sendq is above halfway up
+		   * its allowed sendq, then throw away the privmsg, otherwise
+		   * let it through. This adds some protection, yet doesn't
+		   * DOS the client.
+		   * -Dianora
+		   */
+		  if(DBufLength(&acptr->sendQ) > (get_sendq(acptr)/2L))
+		    {
+		      if(acptr->drone_noticed == 1) /* tiny FSM */
+			{
+			  sendto_ops_lev(REJ_LEV,
+			 "ANTI_DRONE_FLOOD SendQ protection activated for %s",
+					 acptr->name);
+
+			  sendto_one(acptr,     
+ ":%s NOTICE %s :*** Notice -- Server drone flood protection activated for %s",
+				     me.name, acptr->name, acptr->name);
+			  acptr->drone_noticed = 2;
+			}
+		    }
+
+		  if(DBufLength(&acptr->sendQ) <= (get_sendq(acptr)/4L))
+		    {
+		      if(acptr->drone_noticed == 2)
+			{
+			  sendto_one(acptr,     
+				     ":%s NOTICE %s :*** Notice -- Server drone flood protection de-activated for %s",
+				     me.name, acptr->name, acptr->name);
+			  acptr->drone_noticed = 1;
+			}
+		    }
+		  if(acptr->drone_noticed > 1)
+		    return 0;
+		}
+	      else
+		acptr->received_number_of_privmsgs++;
+	    }
+	}
 #endif
       if (!notice && MyConnect(sptr) &&
 	  acptr->user && acptr->user->away)

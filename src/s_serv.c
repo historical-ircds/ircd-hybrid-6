@@ -113,6 +113,11 @@ int     max_connection_count = 1, max_client_count = 1;
 int spambot_privmsg_count = PRIVMSG_POSSIBLE_SPAMBOT_COUNT;
 #endif
 
+#ifdef ANTI_DRONE_FLOOD
+extern int drone_time;
+extern int drone_count;
+#endif
+
 extern aConfItem *temporary_klines;	/* defined in s_conf.c */
 #ifdef IDLE_CHECK
 extern int idle_time;			/* defined in ircd.c */
@@ -1310,24 +1315,37 @@ int	m_info(aClient *cptr,
 
       if (IsAnOper(sptr))
       {
-#define OUT1     "switches:"
+#ifdef ANTI_DRONE_FLOOD
+#define OUT1     "ANTI_DRONE_FLOOD=1"
+#else
+#define OUT1     "ANTI_DRONE_FLOOD=0"
+#endif
+
 #ifdef ANTI_NICK_FLOOD
 #define OUT2     " ANTI_NICK_FLOOD=1"
 #else
 #define OUT2     " ANTI_NICK_FLOOD=0"
 #endif
+        sendto_one(sptr, rpl_str(RPL_INFO),
+                   me.name, parv[0], "switches: " OUT1 OUT2 );
+
+#undef OUT1
+#undef OUT2
+#undef OUT3
+#undef OUT4
+
 #ifdef ANTI_SPAMBOT
-#define OUT3    " ANTI_SPAMBOT=1"
+#define OUT1    "ANTI_SPAMBOT=1"
 #else
-#define OUT3    " ANTI_SPAMBOT=0"
+#define OUT1    "ANTI_SPAMBOT=0"
 #endif
 #ifdef ANTI_SPAMBOT_EXTRA
-#define OUT4    " ANTI_SPAMBOT_EXTRA=1"
+#define OUT2    " ANTI_SPAMBOT_EXTRA=1"
 #else
-#define OUT4    " ANTI_SPAMBOT_EXTRA=0"
+#define OUT2    " ANTI_SPAMBOT_EXTRA=0"
 #endif
         sendto_one(sptr, rpl_str(RPL_INFO),
-                   me.name, parv[0], OUT1 OUT2 OUT3 OUT4 );
+                   me.name, parv[0], OUT1 OUT2 );
 #undef OUT1
 #undef OUT2
 #undef OUT3
@@ -3570,6 +3588,60 @@ int   m_set(aClient *cptr,
 	    }
 	}
 #endif
+#ifdef ANTI_DRONE_FLOOD
+      else if(!strcasecmp(command, "DRONETIME"))
+	{
+	  if(parc > 2)
+	    {
+	      int newval = atoi(parv[2]);
+
+	      if(newval < 0)
+		{
+		  sendto_one(sptr, ":%s NOTICE %s :DRONETIME must be > 0",
+			     me.name, parv[0]);
+		  return 0;
+		}       
+	      drone_time = newval;
+	      if(drone_time == 0)
+		  sendto_realops("%s has disabled the ANTI_DRONE_FLOOD code",
+				 parv[0]);
+		else
+		  sendto_realops("%s has changed DRONETIME to %i",
+				 parv[0], drone_time);
+	      return 0;       
+	    }
+	  else
+	    {
+	      sendto_one(sptr, ":%s NOTICE %s :DRONETIME is currently %i",
+			 me.name, parv[0], drone_time);
+	      return 0;
+	    }
+	}
+      else if(!strcasecmp(command,"DRONECOUNT"))
+	{
+	  if(parc > 2)
+	    {
+	      int newval = atoi(parv[2]);
+
+	      if(newval <= 0)
+		{
+		  sendto_one(sptr, ":%s NOTICE %s :DRONECOUNT must be > 0",
+			     me.name, parv[0]);
+		  return 0;
+		}       
+	      drone_count = newval;
+	      sendto_realops("%s has changed DRONECOUNT to %i",
+			     parv[0], drone_count);
+	      return 0;       
+	    }
+	  else
+	    {
+	      sendto_one(sptr, ":%s NOTICE %s :DRONECOUNT is currently %i",
+			 me.name, parv[0], drone_count);
+	      return 0;
+	    }
+	}
+#endif
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
 	defined(NO_JOIN_ON_SPLIT)  || defined(NO_JOIN_ON_SPLIT_SIMPLE)
       else if(!strcasecmp(command, "SPLITDELAY"))
@@ -3778,6 +3850,10 @@ int   m_set(aClient *cptr,
 		 me.name, parv[0]);
 #ifdef FLUD
       sendto_one(sptr, ":%s NOTICE %s :Options: FLUDNUM, FLUDTIME, FLUDBLOCK",
+		 me.name, parv[0]);
+#endif
+#ifdef ANTI_DRONE_FLOOD
+      sendto_one(sptr, ":%s NOTICE %s :Options: DRONETIME, DRONECOUNT",
 		 me.name, parv[0]);
 #endif
 #ifdef ANTI_SPAMBOT

@@ -994,6 +994,18 @@
  */
 #define FLUD
 
+/* ANTI_DRONE_FLOOD - anti flooding code for drones
+ * This code adds server side ignore for a client who gets
+ * messaged more than drone_count times within drone_time seconds
+ * unfortunately, its a great DOS, but at least the client won't flood off.
+ * I have no idea what to use for values here, trying 10 privmsgs
+ * within 5 seconds.
+ * I'll do better next time, this is a Q&D -Dianora
+ */
+#define ANTI_DRONE_FLOOD
+#define DEFAULT_DRONE_TIME 5
+#define DEFAULT_DRONE_COUNT 10
+
 /* 
  * ANTI_SPAMBOT
  * if ANTI_SPAMBOT is defined try to discourage spambots

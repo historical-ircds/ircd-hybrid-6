@@ -654,6 +654,11 @@ struct Client
   int	person_privmsgs;  /* Count how many times client privmsgs a person */
   struct Client *last_client_messaged; /* who was privmsg'ed last time */
 #endif
+#ifdef ANTI_DRONE_FLOOD
+  time_t first_received_message_time;
+  int	 received_number_of_privmsgs;
+  int	drone_noticed;
+#endif
   char	buffer[BUFSIZE]; /* Incoming message buffer */
 #ifdef ZIP_LINKS
   aZdata *zip;		/* zip data */
