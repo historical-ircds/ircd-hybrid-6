@@ -1,3 +1,10 @@
+*** 20010603_3 by db
+- backported IGNORE bogus TS into 6, its #ifdef'ed for now
+  under #ifdef IGNORE_BOGUS_TS
+- removed #if 0 code
+
+
+
 *** 20010603_2 by leeh
 - commited Hwy's patch:
 
