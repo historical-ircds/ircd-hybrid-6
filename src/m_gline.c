@@ -101,10 +101,10 @@ int     m_gline(aClient *cptr,
   const char* oper_server;      /* server of oper requesting GLINE */
   char *user, *host;            /* user and host of GLINE "victim" */
   char *reason;                 /* reason for "victims" demise */
+#ifdef GLINES
   char *p;
   register char tmpch;
   register int nonwild;
-#ifdef GLINES
   char buffer[512];
   const char *current_date;
   char tempuser[USERLEN + 2];

@@ -1023,7 +1023,9 @@ static int valid_username(const char* username)
 static int
 tell_user_off(aClient *cptr, char **preason )
 {
+#ifdef KLINE_WITH_REASON
   char* p = 0;
+#endif /* KLINE_WITH_REASON */
 
   /* Ok... if using REJECT_HOLD, I'm not going to dump
    * the client immediately, but just mark the client for exit

@@ -114,7 +114,7 @@
  * implementation.  Once pre-hybrid5.2 servers are eradicated, we can drop this
  * down to 90 seconds or so. --Rodder
  */
-#define TS_MAX_DELTA 600        /* seconds */
+#define TS_MAX_DELTA 300        /* seconds */
 #define TS_WARN_DELTA 30        /* seconds */
 
 /* SLAVE_SERVERS - Use this to send LOCOPS and KLINES to servers you define
@@ -901,7 +901,7 @@
  * three different servers must do the identical GLINE in order
  * for the G line to take effect.
  */
-#define GLINES
+#undef GLINES
 #define GLINEFILE       "gline.log"
 
 /* GLINE_TIME - local expire time for GLINES

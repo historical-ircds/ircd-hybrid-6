@@ -39,9 +39,13 @@
 
 #define LOG_BUFSIZE 2048 
 
+#ifdef USE_LOGFILE
 static int logFile = -1;
+#endif /* USE_LOGFILE */
+
 static int logLevel = INIT_LOG_LEVEL;
 
+#ifdef USE_SYSLOG
 static int sysLogLevel[] = {
   LOG_CRIT,
   LOG_ERR,
@@ -51,6 +55,7 @@ static int sysLogLevel[] = {
   LOG_INFO,
   LOG_INFO
 };
+#endif /* USE_SYSLOG */
 
 static const char *logLevelToString[] =
 { "L_CRIT",

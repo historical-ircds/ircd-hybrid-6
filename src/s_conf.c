@@ -386,7 +386,9 @@ void report_specials(struct Client* sptr, int flags, int numeric)
 int attach_Iline(aClient* cptr, const char* username, char **preason)
 {
   struct ConfItem* aconf;
+#ifdef GLINES
   struct ConfItem* gkill_conf;
+#endif /* GLINES */
   struct ConfItem* tkline_conf;
   char       non_ident[USERLEN + 1];
 
