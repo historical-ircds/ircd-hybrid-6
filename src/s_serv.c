@@ -160,6 +160,7 @@ static int safe_write(aClient *,char *,char *,int,char *);
 void read_motd(void);
 #ifdef AMOTD
 void read_amotd(void);
+char amotd_last_changed_date[MAX_DATE_STRING];	/* enough room for date */
 #endif
 void read_help();
 int read_message_file(char *,aMessageFile **);
@@ -5490,9 +5491,9 @@ int	m_rehash(aClient *cptr,
 	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
           /* this does a full rehash right now, so report it as such */
 #ifdef CUSTOM_ERR
-	  sendto_ops("%s is rehashing server config file while whistling innocently",
+	  sendto_ops("%s is rehashing dlines from server config file while whistling innocently",
 #else
-	  sendto_ops("%s is rehashing server config file",
+	  sendto_ops("%s is rehashing dlines from server config file",
 #endif
 		     parv[0]);
 #ifdef USE_SYSLOG
@@ -6026,6 +6027,7 @@ void read_oper_motd()
 
 void read_amotd()
 {
+  struct tm *motd_tm;
   struct stat	sb;
 
   if(read_message_file(AMOTD,&amotd) < 0)
