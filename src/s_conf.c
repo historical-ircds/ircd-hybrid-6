@@ -1598,7 +1598,10 @@ static void makeQlineEntry(aQlineItem *qp, struct ConfItem *aconf, char *uath)
                   
   bconf = make_conf();
   DupString(bconf->name, aconf->name);
-  DupString(bconf->passwd,aconf->passwd);
+  if(aconf->passwd)
+    DupString(bconf->passwd,aconf->passwd);
+  else
+    DupString(bconf->passwd, "No Reason");
   bconf->user = comu;
   bconf->host = comh;
   bconf->next = qp->confList;
