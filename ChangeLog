@@ -1,3 +1,13 @@
+*** 19991228_1 by lusky
+split m_list.c away from channel.c its getting too silly  ALL paced
+  commands should give RPL_LOAD2HI if its a local client request.
+  Its not going to flood off the user... Hence, I have added RPL_LOAD2HI
+  to m_list.c splitting it from channel.c (db)
+optimized the patch I did for USE_IP_I_LINE first.. not thoroughly tested. (db)
+resync_channels was just a waste of time. If the clock goes that far off,
+ restart the puppy. (db)
+
+
 *** 19991227_1 by lusky
 update the oper help file, which was getting out of sync (db)
 fixed a redundant if in channel.c (db)
