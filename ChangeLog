@@ -1,3 +1,11 @@
+*** 19991113_1 by lusky
+rewrote the way chanwall was being handled, by moving where the varargs code had to be used (db)
+m_userhost old behaviour restored, but rewritten. Need to support
+  up to 5 userhost requests, this fixes ircle clients which depend on
+  this behaviour. (db)
+
+
+
 *** 19991024_1 by lusky
 revved patchlevel to b112
 disallow -ve limit on mode #channel +l (db)
