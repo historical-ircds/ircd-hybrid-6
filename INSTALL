@@ -34,8 +34,8 @@ HOW TO GET HELP:
 Send Check or Money Order to...  just kidding!  Commerical support
 for ircd-hybrid is not available at this time.  There is now a
 mailing list for general discussion of Hybrid.  To subscribe
-to the Hybrid List, send email to hybrid-request@the-project.org with
-the subject "subscribe".
+to the Hybrid List, send email to listmanager@the-project.org with
+a single line in the body containing "subscribe hybrid".
 
 If hybrid crashes on you, PLEASE CONTACT ircd-hybrid@the-project.org
 ASAP with a backtrace of the core.  The hybrid team can't fix bugs if
