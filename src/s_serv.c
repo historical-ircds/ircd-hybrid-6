@@ -3959,6 +3959,6 @@ static void show_ports(aClient *sptr)
 		 listener->port,
 		 listener->name,
 		 listener->ref_count,
-		 listener->active);
+		 (listener->active)?"active":"disabled");
     }
 }
