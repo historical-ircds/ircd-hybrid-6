@@ -1118,11 +1118,11 @@ void set_channel_mode(struct Client *cptr,
                 break;
 	    }
 
-          /* ignore server-generated MODE +-ovh */
-          if (IsServer(sptr))
+          /* ignore server-generated MODE +ovh */
+          if (IsServer(sptr) && (whatt == MODE_ADD))
             {
-              ts_warn( "MODE %c%c on %s for %s from server %s (ignored)", 
-                       (whatt == MODE_ADD ? '+' : '-'), c, chptr->chname, 
+              ts_warn( "MODE +%c on %s for %s from server %s (ignored)", 
+                       c, chptr->chname, 
                        who->name,sptr->name);
               break;
             }
