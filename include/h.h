@@ -142,11 +142,6 @@ extern	int	hunt_server (struct Client *,struct Client *,char *,int,int,char **);
 extern	struct Client	*next_client (struct Client *, char *);
 extern	struct Client	*next_client_double (struct Client *, char *);
 
-/* s_user.c */
-extern	void	send_umode (struct Client *, struct Client *, int, int, char *);
-extern	void	send_umode_out (struct Client*, struct Client *, int);
-
-
 /* stuff in list.c */
 extern	void	_free_link (struct SLink *);
 extern	void	_free_user (struct User *, struct Client *);
