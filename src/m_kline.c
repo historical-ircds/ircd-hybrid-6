@@ -152,7 +152,7 @@ static int
 LockedFile(const char *filename)
 
 {
-	char lockpath[PATH_MAX + 1];
+	const char lockpath[PATH_MAX + 1];
 	char buffer[1024];
 	FBFILE *fileptr;
 	int killret;
@@ -162,7 +162,7 @@ LockedFile(const char *filename)
 
 	ircsprintf(lockpath, "%s.lock", filename);
 
-	if ((fileptr = fbopen(lockpath, "r")) == (FILE *) NULL)
+	if ((fileptr = fbopen(lockpath, "r")) == (FBFILE *) NULL)
 	{
 		/*
 		 * lockfile does not exist
