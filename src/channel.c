@@ -2426,7 +2426,7 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 
 	  if( MyConnect(sptr) && !IsAnOper(sptr) )
 	    {
-	      if(sptr->join_leave_count >= spam_num)
+	      if(spam_num && (sptr->join_leave_count >= spam_num))
 		{
 		  sendto_ops_lev(SPY_LEV,
 				     "User %s (%s@%s) is a possible spambot",
@@ -2478,7 +2478,7 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 	     and server has been split */
 
 #ifdef NO_CHANOPS_WHEN_SPLIT
-	  if((*name != '&')
+	  if((*name != '&') && !IsAnOper(sptr)
 	     && server_was_split && server_split_recovery_time)
 	    {
 	      if( (server_split_time + server_split_recovery_time) < NOW)
@@ -2519,7 +2519,7 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 #ifdef ANTI_SPAMBOT 	  /* Dianora */
           if(flags == 0)	/* if channel doesn't exist, don't penalize */
             successful_join_count++;
-          if( sptr->join_leave_count >= spam_num)
+          if( spam_num && (sptr->join_leave_count >= spam_num))
             { 
               /* Its already known as a possible spambot */
  
@@ -2693,7 +2693,7 @@ int	m_part(aClient *cptr,
 
       if (name && MyConnect(sptr) && !IsAnOper(sptr))
 	{
-	  if(sptr->join_leave_count >= spam_num)
+	  if(spam_num && (sptr->join_leave_count >= spam_num))
 	    {
 	      sendto_ops_lev(SPY_LEV,"User %s (%s@%s) is a possible spambot",
 			 sptr->name,
