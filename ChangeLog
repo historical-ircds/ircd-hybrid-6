@@ -1,3 +1,8 @@
+*** 20010605_2 by db
+- moved mkkeypair from src into tools where it belongs
+
+
+
 *** 20010605_1 by kreator
 - add check_pidfile() that will check if daemon is already running
 - add setup_corefile() that will setup corefilesize to system max
