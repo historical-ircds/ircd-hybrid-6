@@ -675,7 +675,7 @@ static void check_pidfile(void)
     }
     close(fd);
   }
-  else
+  else if(errno != ENOENT)
   {
     printf("WARNING: problem opening %s: %s\n", PPATH, strerror(errno));
   }
