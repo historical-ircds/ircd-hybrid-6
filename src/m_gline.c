@@ -105,9 +105,6 @@ int     m_gline(aClient *cptr,
   char *user, *host;            /* user and host of GLINE "victim" */
   char *reason;                 /* reason for "victims" demise */
 #ifdef GLINES
-  char *p;
-  register char tmpch;
-  register int nonwild;
   char buffer[512];
   const char *current_date;
   char tempuser[USERLEN + 2];
@@ -340,7 +337,7 @@ static int invalid_wildcard(char *luser, char *lhost)
 
   p=luser;
 
-  while(tmpch = *p++)
+  while( (tmpch = *p++) )
   {
     if(!IsKWildChar(tmpch))
     {
@@ -352,7 +349,7 @@ static int invalid_wildcard(char *luser, char *lhost)
   if (nonwild < NONWILDCHARS)
   {
     p=lhost;
-    while(tmpch = *p++)
+    while( (tmpch = *p++) )
     {
       if(!IsKWildChar(tmpch))
       {
@@ -371,18 +368,18 @@ static int invalid_wildcard(char *luser, char *lhost)
 /*
  * invalid_gline()
  *
- * local indicates whether the client doing the gline is ours or not,
+ * local_client indicates whether the client doing the gline is ours or not,
  * if its remote, we need to use sendto_realops() instead of sendto_one()
  * because the possibility of a user doing a gline, and getting hundreds
  * of notices is bad..
  */
 static int invalid_gline(struct Client *sptr, char *luser, char *lhost,
-                         char *lreason, int local)
+                         char *lreason, int local_client)
 {
   /* dont allow *! glines, as theyre invalid */
   if(strchr(luser, '!'))
   {
-    if(local)
+    if(local_client)
       sendto_one(sptr, ":%s NOTICE %s :Invalid character '!' in gline",
                  me.name, sptr->name);
     else
@@ -394,7 +391,7 @@ static int invalid_gline(struct Client *sptr, char *luser, char *lhost,
   /* dont allow glines with # in */
   if(strchr(luser, '#') || strchr(lhost, '#') || strchr(lreason, '#'))
   {
-    if(local)
+    if(local_client)
       sendto_one(sptr, ":%s NOTICE %s :Invalid character '#' in gline",
                  me.name, sptr->name);
     else
@@ -406,7 +403,7 @@ static int invalid_gline(struct Client *sptr, char *luser, char *lhost,
   /* dont allow glines with : in, theyll break the conf */
   if(strchr(luser, ':') || strchr(lhost, ':') || strchr(lreason, ':'))
   {
-    if(local)
+    if(local_client)
       sendto_one(sptr, ":%s NOTICE %s :Invalid character ':' in gline",
                  me.name, sptr->name);
     else
