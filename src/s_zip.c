@@ -212,7 +212,7 @@ char *unzip_packet(aClient *cptr, char *buffer, int *length)
 		   * the bottom of the unzip buffer. -db
 		   */
 
-		  for(p = zin->next_out;;p >= unzipbuf)
+		  for(p = zin->next_out;p >= unzipbuf;)
 		    {
 		      if((*p == '\r') || (*p == '\n'))
 			break;
