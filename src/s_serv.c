@@ -128,7 +128,7 @@ const char* my_name_for_link(const char* name, aConfItem* aconf)
 int hunt_server(struct Client *cptr, struct Client *sptr, char *command,
                 int server, int parc, char *parv[])
 {
-  struct Client *acptr;
+  struct Client *acptr = NULL;
   int wilds;
 
   /*
@@ -143,7 +143,12 @@ int hunt_server(struct Client *cptr, struct Client *sptr, char *command,
    * message to go in the wrong direction while doing quick fast
    * non-matching lookups.
    */
+#ifdef SERVERHIDE
+  if ( !(MyClient(sptr) && !IsOper(sptr))
+      && (acptr = find_client(parv[server], NULL)) )
+#else
   if ((acptr = find_client(parv[server], NULL)))
+#endif
     if (acptr->from == sptr->from && !MyConnect(acptr))
       acptr = NULL;
   if (!acptr && (acptr = find_server(parv[server])))
@@ -160,7 +165,11 @@ int hunt_server(struct Client *cptr, struct Client *sptr, char *command,
    */
   if (!acptr)
     {
+#ifdef SERVERHIDE
+      if ((!wilds || (MyClient(sptr) && !IsOper(sptr))))
+#else
       if (!wilds)
+#endif
         {
           if (!(acptr = find_server(parv[server])))
             {
@@ -696,25 +705,9 @@ int server_estab(struct Client *cptr)
       if ((n_conf = acptr->serv->nline) &&
           match(my_name_for_link(me.name, n_conf), cptr->name))
         continue;
-      if (split)
-        {
-          /*
-          sendto_one(acptr,":%s SERVER %s 2 :[%s] %s",
-                   me.name, cptr->name,
-                   cptr->host, cptr->info);
-                   */
 
-          /* DON'T give away the IP of the server here
-           * if its a hub especially.
-           */
-
-          sendto_one(acptr,":%s SERVER %s 2 :%s",
-                   me.name, cptr->name,
-                   cptr->info);
-        }
-      else
-        sendto_one(acptr,":%s SERVER %s 2 :%s",
-                   me.name, cptr->name, cptr->info);
+      sendto_one(acptr,":%s SERVER %s 2 :%s",
+                 me.name, cptr->name, cptr->info);
     }
 
   /*

@@ -203,11 +203,19 @@ int m_connect(struct Client* cptr, struct Client* sptr, int parc, char* parv[])
    * C:line and a valid port in the C:line
    */
   if (connect_server(aconf, sptr, 0))
-     sendto_one(sptr, ":%s NOTICE %s :*** Connecting to %s[%s].%d",
-                me.name, parv[0], aconf->host, aconf->name, aconf->port);
+#ifdef SERVERHIDE
+    sendto_one(sptr, ":%s NOTICE %s :*** Connecting to %s[%s].%d",
+               me.name, parv[0], "255.255.255.255", aconf->name, aconf->port);
   else
-      sendto_one(sptr, ":%s NOTICE %s :*** Couldn't connect to %s.%d",
-                 me.name, parv[0], aconf->host,aconf->port);
+    sendto_one(sptr, ":%s NOTICE %s :*** Couldn't connect to %s.%d",
+               me.name, parv[0], "255.255.255.255",aconf->port);
+#else
+    sendto_one(sptr, ":%s NOTICE %s :*** Connecting to %s[%s].%d",
+               me.name, parv[0], aconf->host, aconf->name, aconf->port);
+  else
+    sendto_one(sptr, ":%s NOTICE %s :*** Couldn't connect to %s.%d",
+               me.name, parv[0], aconf->host,aconf->port);
+#endif
   /*
    * client is either connecting with all the data it needs or has been
    * destroyed

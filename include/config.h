@@ -118,6 +118,24 @@
 #define HPATH   "opers.txt"
 #define OPATH   "opers.motd"
 
+/* SERVERHIDE
+ * Define this to prevent users from seeing what server a user is on.
+ * It also hide IP address in STATS commands and various notices, disables
+ * TRACE and LTRACE, and prevents hunting by nickname for nonopers.
+ */
+#undef SERVERHIDE
+
+/* NETWORK_NAME
+ * Displayed in place of the servername when SERVERHIDE is enabled
+ */   
+#define NETWORK_NAME "EFnet"
+
+/* NETWORK_DESC
+ * Displayed in place of the server info when SERVERHIDE is enabled
+ */
+#define NETWORK_DESC "Eris Free Network"
+
+
 /* TS_MAX_DELTA and TS_WARN_DELTA -  allowed delta for TS when another
  * server connects.
  *

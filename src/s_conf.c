@@ -297,7 +297,11 @@ void report_configured_links(struct Client* sptr, int mask)
             if(IsAnOper(sptr))
               sendto_one(sptr, form_str(p->rpl_stats), me.name,
                          sptr->name, c,
+#ifdef SERVERHIDE
+                         "255.255.255.255",
+#else
                          host,
+#endif
                          name,
                          port,
                          get_conf_class(tmp),
@@ -305,7 +309,7 @@ void report_configured_links(struct Client* sptr, int mask)
             else
               sendto_one(sptr, form_str(p->rpl_stats), me.name,
                          sptr->name, c,
-                         "*@127.0.0.1",
+                         "*@255.255.255.255",
                          name,
                          port,
                          get_conf_class(tmp));
@@ -324,8 +328,15 @@ void report_configured_links(struct Client* sptr, int mask)
                          oper_flags_as_string((int)tmp->hold));
             else
               sendto_one(sptr, form_str(p->rpl_stats), me.name,
-                         sptr->name, p->conf_char,
-                         user, host, name,
+                         sptr->name,
+                         p->conf_char,
+                         user,
+#ifdef SERVERHIDE
+                         IsAnOper(sptr) ? host : "255.255.255.255",
+#else
+                         host,
+#endif
+                         name,
                          "0",
                          get_conf_class(tmp),
                          "");

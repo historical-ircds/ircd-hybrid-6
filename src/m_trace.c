@@ -114,6 +114,11 @@ int m_trace(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 #endif
   static time_t now;
 
+#ifdef SERVERHIDE
+  if (!IsAnOper(sptr))
+    return 0;
+#endif
+
   now = time(NULL);  
   if (parc > 2)
     if (hunt_server(cptr, sptr, ":%s TRACE %s :%s", 2, parc, parv))
@@ -209,7 +214,11 @@ int m_trace(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
           sendto_one(sptr, form_str(RPL_TRACEOPERATOR),
                      me.name, parv[0], c_class,
                      name, 
+#ifdef SERVERHIDE
+                     "255.255.255.255",
+#else
                      IsAnOper(sptr)?ip:(IsIPHidden(acptr)?"127.0.0.1":ip),
+#endif
                      now - acptr->lasttime,
                      (acptr->user)?(now - acptr->user->last):0);
         }
@@ -218,7 +227,11 @@ int m_trace(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
           sendto_one(sptr,form_str(RPL_TRACEUSER),
                      me.name, parv[0], c_class,
                      name, 
+#ifdef SERVERHIDE
+                     "255.255.255.255",
+#else
                      IsAnOper(sptr)?ip:(IsIPHidden(acptr)?"127.0.0.1":ip),
+#endif
                      now - acptr->lasttime,
                      (acptr->user)?(now - acptr->user->last):0);
         }
@@ -320,14 +333,23 @@ int m_trace(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
                            form_str(RPL_TRACEOPERATOR),
                            me.name,
                            parv[0], c_class,
-                           name, IsAnOper(sptr)?ip:(IsIPHidden(acptr)?"127.0.0.1":ip),
+                           name,
+#ifdef SERVERHIDE
+                           "255.255.255.255",
+#else
+                           IsAnOper(sptr)?ip:(IsIPHidden(acptr)?"127.0.0.1":ip),
+#endif
                            now - acptr->lasttime,
                            (acptr->user)?(now - acptr->user->last):0);
               else
                 sendto_one(sptr,form_str(RPL_TRACEUSER),
                            me.name, parv[0], c_class,
                            name,
+#ifdef SERVERHIDE
+                           "255.255.255.255",
+#else
                            IsAnOper(sptr)?ip:(IsIPHidden(acptr)?"127.0.0.1":ip),
+#endif
                            now - acptr->lasttime,
                            (acptr->user)?(now - acptr->user->last):0);
               cnt++;

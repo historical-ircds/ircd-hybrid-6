@@ -203,7 +203,11 @@ int m_links(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
           sendto_one(sptr, form_str(RPL_LINKS),
                     me.name, parv[0], acptr->name, acptr->serv->up,
+#ifdef SERVERHIDE
+                     0, p);
+#else
                     acptr->hopcount, p);
+#endif
         }
 
     }

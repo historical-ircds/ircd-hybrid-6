@@ -263,7 +263,14 @@ int     m_whois(struct Client *cptr,
           if (buf[0] != '\0')
             sendto_one(sptr, form_str(RPL_WHOISCHANNELS),
                        me.name, parv[0], name, buf);
-          
+         
+#ifdef SERVERHIDE
+          if (!(IsAnOper(sptr) || acptr == sptr))
+            sendto_one(sptr, form_str(RPL_WHOISSERVER),
+                       me.name, parv[0], name, NETWORK_NAME,
+                       NETWORK_DESC);
+          else
+#endif
           sendto_one(sptr, form_str(RPL_WHOISSERVER),
                      me.name, parv[0], name, user->server,
                      a2cptr?a2cptr->info:"*Not On This Net*");
@@ -285,7 +292,11 @@ int     m_whois(struct Client *cptr,
 #endif /* #ifdef WHOIS_NOTICE */
 
 
-          if (acptr->user && MyConnect(acptr))
+          if ((acptr->user
+#ifdef SERVERHIDE
+              && IsAnOper(sptr)
+#endif
+              && MyConnect(acptr)))
             sendto_one(sptr, form_str(RPL_WHOISIDLE),
                        me.name, parv[0], name,
                        CurrentTime - user->last,
@@ -390,7 +401,14 @@ int     m_whois(struct Client *cptr,
           if (buf[0] != '\0')
             sendto_one(sptr, form_str(RPL_WHOISCHANNELS),
                        me.name, parv[0], name, buf);
-          
+         
+#ifdef SERVERHIDE
+          if (!(IsAnOper(sptr) || acptr == sptr))
+            sendto_one(sptr, form_str(RPL_WHOISSERVER),
+                       me.name, parv[0], name, NETWORK_NAME,
+                       NETWORK_DESC);
+          else    
+#endif
           sendto_one(sptr, form_str(RPL_WHOISSERVER),
                      me.name, parv[0], name, user->server,
                      a2cptr?a2cptr->info:"*Not On This Net*");
@@ -411,8 +429,11 @@ int     m_whois(struct Client *cptr,
                        sptr->host);
 #endif /* #ifdef WHOIS_NOTICE */
 
-
-          if (acptr->user && MyConnect(acptr))
+          if ((acptr->user
+#ifdef SERVERHIDE
+              && IsAnOper(sptr) 
+#endif                 
+              && MyConnect(acptr)))
             sendto_one(sptr, form_str(RPL_WHOISIDLE),
                        me.name, parv[0], name,
                        CurrentTime - user->last,

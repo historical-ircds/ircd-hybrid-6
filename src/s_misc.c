@@ -159,8 +159,12 @@ void serv_info(aClient *cptr,char *name)
        * on stats ?
        */
       if(IsAnOper(cptr))
-        sendto_one(cptr, Lformat, me.name, RPL_STATSLINKINFO,
-                   name, get_client_name(acptr, TRUE),
+        sendto_one(cptr, Lformat, me.name, RPL_STATSLINKINFO, name,
+#ifdef SERVERHIDE
+                   get_client_name(acptr, HIDEME),
+#else
+                   get_client_name(acptr, TRUE),
+#endif
                    (int)DBufLength(&acptr->sendQ),
                    (int)acptr->sendM, (int)acptr->sendK,
                    (int)acptr->receiveM, (int)acptr->receiveK,

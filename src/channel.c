@@ -3860,6 +3860,14 @@ int     m_invite(struct Client *cptr,
       return -1;
     }
 
+#ifdef SERVERHIDE
+  if (!IsAnOper(sptr) && parv[2][0] == '&') {
+    sendto_one(sptr, ":%s NOTICE %s :INVITE to local channels is disabled in this server",
+               me.name, parv[0]);
+    return 0;
+  }
+#endif
+
   /* A little sanity test here */
   if(!sptr->user)
     return 0;
@@ -4025,13 +4033,6 @@ int     m_names( struct Client *cptr,
   char  *s, *para = parc > 1 ? parv[1] : NULL;
   int comma_count=0;
   int char_count=0;
-
-  /* Don't route names, no need for it -Dianora */
-  /*
-  if (parc > 1 &&
-      hunt_server(cptr, sptr, ":%s NAMES %s %s", 2, parc, parv))
-    return 0;
-    */
 
   /* And throw away non local names requests that do get here -Dianora */
   if(!MyConnect(sptr))
@@ -4698,8 +4699,12 @@ int     m_sjoin(struct Client *cptr,
               if (pargs >= MAXMODEPARAMS)
                 {
                   *mbuf = '\0';
+#ifdef SERVERHIDE
+                  sjoin_sendit(&me,  sptr, chptr, parv[0]);
+#else
                   sjoin_sendit(cptr, sptr, chptr,
                                parv[0]);
+#endif
                   mbuf = modebuf;
                   *mbuf = parabuf[0] = '\0';
                   pargs = what = 0;
@@ -4720,8 +4725,12 @@ int     m_sjoin(struct Client *cptr,
               if (pargs >= MAXMODEPARAMS)
                 {
                   *mbuf = '\0';
+#ifdef SERVERHIDE
+                  sjoin_sendit(&me,  sptr, chptr, parv[0]);
+#else
                   sjoin_sendit(cptr, sptr, chptr,
                                parv[0]);
+#endif
                   mbuf = modebuf;
                   *mbuf = parabuf[0] = '\0';
                   pargs = what = 0;
@@ -4736,7 +4745,11 @@ int     m_sjoin(struct Client *cptr,
   if (mbuf != modebuf)
     {
       *mbuf = '\0';
+#ifdef SERVERHIDE
+      sjoin_sendit(&me,  sptr, chptr, parv[0]);
+#else
       sjoin_sendit(cptr, sptr, chptr, parv[0]);
+#endif
     }
 
   *modebuf = *parabuf = '\0';
@@ -4804,7 +4817,11 @@ int     m_sjoin(struct Client *cptr,
           if (pargs >= MAXMODEPARAMS)
             {
               *mbuf = '\0';
+#ifdef SERVERHIDE
+              sjoin_sendit(&me,  sptr, chptr, parv[0]);
+#else
               sjoin_sendit(cptr, sptr, chptr, parv[0]);
+#endif
               mbuf = modebuf;
               *mbuf++ = '+';
               parabuf[0] = '\0';
@@ -4820,7 +4837,11 @@ int     m_sjoin(struct Client *cptr,
           if (pargs >= MAXMODEPARAMS)
             {
               *mbuf = '\0';
+#ifdef SERVERHIDE
+              sjoin_sendit(&me,  sptr, chptr, parv[0]);
+#else
               sjoin_sendit(cptr, sptr, chptr, parv[0]);
+#endif
               mbuf = modebuf;
               *mbuf++ = '+';
               parabuf[0] = '\0';
@@ -4831,7 +4852,11 @@ int     m_sjoin(struct Client *cptr,
   
   *mbuf = '\0';
   if (pargs)
+#ifdef SERVERHIDE
+    sjoin_sendit(&me,  sptr, chptr, parv[0]);
+#else
     sjoin_sendit(cptr, sptr, chptr, parv[0]);
+#endif
   if (people)
     {
       if (t[-1] == ' ')

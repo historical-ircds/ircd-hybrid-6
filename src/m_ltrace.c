@@ -116,6 +116,11 @@ int     m_ltrace(struct Client *cptr,
   if (check_registered(sptr))
     return 0;
 
+#ifdef SERVERHIDE
+  if (!IsAnOper(sptr))
+    return 0;
+#endif
+
   if (parc > 2)
     if (hunt_server(cptr, sptr, ":%s LTRACE %s :%s",
                     2, parc, parv))

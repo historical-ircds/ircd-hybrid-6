@@ -1103,9 +1103,11 @@ const char* get_client_name(struct Client* client, int showip)
       switch (showip)
         {
           case SHOW_IP:
+#ifndef SERVERHIDE
             ircsprintf(nbuf, "%s[%s@%s]", client->name, client->username,
               client->sockhost);
             break;
+#endif
           case MASK_IP:
             ircsprintf(nbuf, "%s[%s@255.255.255.255]", client->name,
               client->username);
@@ -1586,6 +1588,11 @@ const char* comment        /* Reason for the exit */
 
   if(IsServer(sptr))
     {        
+#ifdef SERVERHIDE
+      strcpy(comment1, me.name);
+      strcat(comment1, " ");
+      strcat(comment1, me.name);
+#else 
       /* I'm paranoid -Dianora */
       if((sptr->serv) && (sptr->serv->up))
         strcpy(comment1, sptr->serv->up);
@@ -1594,6 +1601,7 @@ const char* comment        /* Reason for the exit */
 
       strcat(comment1," ");
       strcat(comment1, sptr->name);
+#endif
 
       remove_dependents(cptr, sptr, from, comment, comment1);
 

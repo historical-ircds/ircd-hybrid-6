@@ -143,13 +143,6 @@ int     m_list(struct Client *cptr,
       ClearDoingList(sptr);   /* yupo, its over */
       return 0;
     }   
-          
-
-  /* Don't route list, no need for it - Dianora */
-  /*
-    if (hunt_server(cptr, sptr, ":%s LIST %s %s", 2, parc, parv))
-      return 0;
-      */
 
   p = strchr(parv[1],',');
   if(p)

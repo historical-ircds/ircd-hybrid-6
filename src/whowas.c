@@ -220,8 +220,15 @@ int     m_whowas(aClient *cptr,
                      temp->hostname,
                      temp->realname);
           sendto_one(sptr, form_str(RPL_WHOISSERVER),
-                     me.name, parv[0], temp->name,
-                     temp->servername, myctime(temp->logoff));
+                     me.name,
+                     parv[0],
+                     temp->name,
+#ifdef SERVERHIDE
+                     IsAnOper(sptr) ? temp->servername : NETWORK_NAME,
+#else
+                     temp->servername,
+#endif
+                     myctime(temp->logoff));
           cur++;
           found++;
         }

@@ -257,6 +257,15 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       valid_stats++;
       break;
     case 'C' : case 'c' :
+#ifdef SERVERHIDE
+      if (!IsAnOper(sptr))
+        {
+          ignore_request++;
+          valid_stats++;
+          break;
+        }
+      else
+#endif
       report_configured_links(sptr, CONF_CONNECT_SERVER|CONF_NOCONNECT_SERVER);
       valid_stats++;
       break;
@@ -294,6 +303,15 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       break;
 
     case 'H' : case 'h' :
+#ifdef SERVERHIDE
+      if (!IsAnOper(sptr))
+        {
+          ignore_request++;
+          valid_stats++;
+          break;
+        }
+      else
+#endif
       report_configured_links(sptr, CONF_HUB|CONF_LEAF);
       valid_stats++;
       break;
