@@ -24,6 +24,9 @@
 #include <sys/types.h>
 #define INCLUDED_sys_types_h
 #endif
+#ifndef INCLUDED_ircd_defs_h
+#include "ircd_defs.h"        /* buffer sizes */
+#endif
 
 /*
  * match - compare name with mask, mask may contain * and ? as wildcards
@@ -37,13 +40,20 @@ extern int match(const char *mask, const char *name);
  */
 extern char* collapse(char *pattern);
 /*
- * mycmp - case insensitive comparison of s1 and s2
+ * irccmp - case insensitive comparison of s1 and s2
  */
 extern int irccmp(const char *s1, const char *s2);
 /*
- * myncmp - counted case insensitive comparison of s1 and s2
+ * ircncmp - counted case insensitive comparison of s1 and s2
  */
 extern int ircncmp(const char *s1, const char *s2, int n);
+/*
+** canonize - reduce a string of duplicate list entries to contain
+** only the unique items.
+*/  
+#ifdef NO_DUPE_MULTI_MESSAGES
+extern char* canonize(char *);
+#endif
 /*
  * ircsprintf - optimized sprintf
  */

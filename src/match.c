@@ -164,7 +164,7 @@ char* collapse(char *pattern)
 }
 
 /*
- * irccmp - case insensitive comparison of two NULL terminated strings.
+ * irccmp - case insensitive comparison of two 0 terminated strings.
  *
  *      returns  0, if s1 equal to s2
  *              <0, if s1 lexicographically less than s2
@@ -202,6 +202,53 @@ int ircncmp(const char* s1, const char *s2, int n)
   }
   return (res);
 }
+
+#ifdef NO_DUPE_MULTI_MESSAGES
+/*
+** canonize
+**
+** reduce a string of duplicate list entries to contain only the unique
+** items.  Unavoidably O(n^2).
+*/
+char    *canonize(char *buffer)
+{
+  static        char    cbuf[BUFSIZE];
+  register char *s, *t, *cp = cbuf;
+  register int  l = 0;
+  char  *p = 0, *p2;
+
+  *cp = '\0';
+
+  for (s = strtoken(&p, buffer, ","); s; s = strtoken(&p, 0, ","))
+    {
+      if (l)
+        {
+          for (p2 = 0, t = strtoken(&p2, cbuf, ","); t;
+               t = strtoken(&p2, 0, ","))
+            if (!irccmp(s, t))
+              break;
+            else if (p2)
+              p2[-1] = ',';
+        }
+      else
+        t = 0;
+
+      if (!t)
+        {
+          if (l)
+            *(cp-1) = ',';
+          else
+            l = 1;
+          (void)strcpy(cp, s);
+          if (p)
+            cp += (p - s);
+        }
+      else if (p2)
+        p2[-1] = ',';
+    }
+  return cbuf;
+} 
+#endif
 
 
 const unsigned char ToLowerTab[] = { 

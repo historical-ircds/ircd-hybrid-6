@@ -146,24 +146,12 @@ static  int     m_message(struct Client *cptr,
         return 0;
 #endif
 #endif
-      /* As Mortiis points out, if there is only one target,
-       * the call to canonize is silly
-       */
+#ifdef NO_DUPE_MULTI_MESSAGES
+      if (strchr(parv[1],','))
+        parv[1] = canonize(parv[1]);
+#endif
     }
-  /* 
-   * If the target contains a , it will barf tough.
-   */
 
-  nick = parv[1];
-
-/* #if (MAX_MULTI_MESSAGES == 1)
-  if((p = strchr(nick,',')))
-    {
-      sendto_one(sptr, form_str(ERR_TOOMANYTARGETS),
-                     me.name, parv[0], cmd, MAX_MULTI_MESSAGES);
-      return -1;
-    }
-#endif */
 
   /*
   ** channels are privmsg'd a lot more than other clients, moved up here
