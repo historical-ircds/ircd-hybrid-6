@@ -104,7 +104,7 @@ int m_die(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
   if (!IsOperDie(sptr))
     {
-      sendto_one(sptr,":%s NOTICE %s: You have no D flag", me.name, parv[0]);
+      sendto_one(sptr,":%s NOTICE %s :You have no D flag", me.name, parv[0]);
       return 0;
     }
 

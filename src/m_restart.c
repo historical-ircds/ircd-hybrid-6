@@ -107,7 +107,7 @@ int     m_restart(struct Client *cptr,
 
   if ( !IsOperDie(sptr) )
     {
-      sendto_one(sptr,":%s NOTICE %s: You have no D flag", me.name, parv[0]);
+      sendto_one(sptr,":%s NOTICE %s :You have no D flag", me.name, parv[0]);
       return 0;
     }
 

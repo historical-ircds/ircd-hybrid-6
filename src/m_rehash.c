@@ -108,7 +108,7 @@ int m_rehash(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
   if ( !IsOperRehash(sptr) )
     {
-      sendto_one(sptr,":%s NOTICE %s: You have no H flag", me.name, parv[0]);
+      sendto_one(sptr,":%s NOTICE %s :You have no H flag", me.name, parv[0]);
       return 0;
     }
 

@@ -184,7 +184,7 @@ int m_oper(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
           if((int)aconf->hold)
             {
               sptr->umodes |= ((int)aconf->hold & ALL_UMODES); 
-              sendto_one(sptr, ":%s NOTICE %s:*** Oper flags set from conf",
+              sendto_one(sptr, ":%s NOTICE %s :*** Oper flags set from conf",
                          me.name,parv[0]);
             }
           else
@@ -201,7 +201,7 @@ int m_oper(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
               if( !IsSetOperN(sptr) )
                 sptr->umodes &= ~FLAGS_NCHANGE;
               
-              sendto_one(sptr, ":%s NOTICE %s:*** Oper flags set from conf",
+              sendto_one(sptr, ":%s NOTICE %s :*** Oper flags set from conf",
                          me.name,parv[0]);
             }
           else
