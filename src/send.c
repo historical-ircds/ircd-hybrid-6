@@ -125,8 +125,6 @@ static	int	send_message(aClient *to, char *msg, int len)
 {
   static int SQinK;
 
-Debug((DEBUG_DEBUG,"send_message() msg = %s", msg));
-
   if (to->from)
     to = to->from;	/* shouldn't be necessary */
 
@@ -345,8 +343,6 @@ int	send_queued(aClient *to)
 	  more = 0;
 	  msg = zip_buffer(to, NULL, &len, 1);
 
-Debug((DEBUG_DEBUG,"sendQ is now empty len = %d",len));      
-
 	  if (len == -1)
 	    return dead_link(to, "fatal error in zip_buffer()");
       
@@ -389,6 +385,7 @@ va_dcl
   len=format(sendbuf, pattern, p1, p2, p3, p4, p5, p6,
 	     p7, p8, p9, p10, p11, p12);
 #endif
+  Debug((DEBUG_SEND,"Sending [%s] to %s",sendbuf,to->name));
 
   if (to->from)
     to = to->from;

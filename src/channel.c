@@ -1076,8 +1076,9 @@ static  void     set_mode(aClient *cptr,
 
 	  if ((who == sptr) && (c == 'o'))
 	    {
-	      if((whatt == MODE_ADD) && !isok)
+	      if(whatt == MODE_ADD)
 		break;
+	      
 	      if(whatt == MODE_DEL)
 		self_lose_ops = 1;
 	      }

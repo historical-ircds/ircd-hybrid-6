@@ -2042,13 +2042,12 @@ static	int	m_message(aClient *cptr,
 	    sptr->channel_privmsgs++;
 #endif
 #ifdef FLUD
-
 	  if(!notice)
 	    if(check_for_ctcp(parv[2]))
 	      check_for_flud(sptr, NULL, chptr, 1);
 #endif /* FLUD */
 
-	  if (can_send(sptr, chptr) != 0)
+	  if (!is_chan_op(sptr,chptr))
 	    {
 	      if (!notice)
 		{
