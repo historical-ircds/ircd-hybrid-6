@@ -1156,14 +1156,28 @@ static  void     set_mode(aClient *cptr,
 	      break;
 	    }
 
-	  if (strlen(arg) > KEYLEN)
-	    arg[KEYLEN] = '\0';
+	  if ((whatt == MODE_ADD) && (*chptr->mode.key))
+	    {
+	      sendto_one(sptr, err_str(ERR_KEYSET), me.name, 
+			 sptr->name, chptr->chname);
+	      break;
+	    }
 
 	  /* don't check the arg when removing the key */
-	  if (whatt == MODE_DEL && *chptr->mode.key)
-	    arg = chptr->mode.key;
+	  if (whatt == MODE_DEL)
+	    {
+	      if(*chptr->mode.key)
+		arg = chptr->mode.key;
+	      else
+		break;			/* just ignore it */
+	    }
 
-	  tmp = strlen(arg);
+	  if ( (tmp = strlen(arg)) > KEYLEN)
+	    {
+	      arg[KEYLEN] = '\0';
+	      tmp = KEYLEN;
+	    }
+
 	  if (len + tmp + 2 >= MODEBUFLEN)
 	    break;
 
