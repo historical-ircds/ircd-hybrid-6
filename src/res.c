@@ -5,6 +5,10 @@
  * of property which results from the use of this software.
  *
  * $Id$
+ *
+ * July 1999 - Rewrote a bunch of stuff here. Change hostent builder code,
+ *     added callbacks and reference counting of returned hostents.
+ *     --Bleep (Thomas Helvey <tomh@inxpress.net>)
  */
 #include "res.h"
 #include "sys.h"
@@ -1514,8 +1518,10 @@ static void rem_cache(aCache* ocp)
   struct hostent* hp;
   assert(0 != ocp);
 
-  if (0 < ocp->reply.ref_count)
+  if (0 < ocp->reply.ref_count) {
+    ocp->expireat = timeofday + AR_TTL;
     return;
+  }
   hp = &ocp->he.h;
 
 #ifdef  DEBUG
