@@ -211,7 +211,15 @@ int	attach_Iline(aClient *cptr,
     }
   else
     {
-      aconf = find_matching_mtrie_conf(host,username,
+      if(cptr->flags & FLAGS_DOID)
+	{
+	  char non_ident[USERLEN+1];
+	  non_ident[0] = '~';
+	  strncpy(&non_ident[1],username, USERLEN);
+	  aconf = find_matching_mtrie_conf(host,username,
+	}
+      else
+	aconf = find_matching_mtrie_conf(host,username,
 				       ntohl(cptr->ip.s_addr));
       if(aconf && !IsConfElined(aconf))
 	{

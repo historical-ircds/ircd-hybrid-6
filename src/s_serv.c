@@ -3340,7 +3340,7 @@ int   m_set(aClient *cptr,
 		  sendto_one(sptr, ":%s NOTICE %s :Cannot set SPLITDELAY over %d", parv[0], MAX_SERVER_SPLIT_RECOVERY_TIME);
 		  newval = MAX_SERVER_SPLIT_RECOVERY_TIME;
 		}
-              sendto_realops("%s has changed spam SPLITDELAY to %i",
+              sendto_realops("%s has changed SPLITDELAY to %i",
 			     parv[0], newval);
 	      server_split_recovery_time = (newval*60);
               return 0;

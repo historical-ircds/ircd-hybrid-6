@@ -3222,7 +3222,7 @@ int	m_invite(aClient *cptr,
     {
 	if (MyClient(sptr))
 	   sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
-		parv[2]);
+		      parv[2]);
 	return 0;
     }
 
@@ -3407,6 +3407,9 @@ int	m_list(aClient *cptr,
 **	parv[0] = sender prefix
 **	parv[1] = channel
 */
+/* maximum names para to show to opers when abuse occurs */
+#define TRUNCATED_NAMES 20
+
 int	m_names( aClient *cptr,
 		 aClient *sptr,
 		 int parc,
@@ -3418,6 +3421,8 @@ int	m_names( aClient *cptr,
   aChannel *ch2ptr = NULL;
   int	idx, flag, len, mlen;
   char	*s, *para = parc > 1 ? parv[1] : NULL;
+  int comma_count=0;
+  int char_count=0;
 
   /* Don't route names, no need for it -Dianora */
   /*
@@ -3434,20 +3439,43 @@ int	m_names( aClient *cptr,
 
   if (!BadPtr(para))
     {
+      /* Here is the lamer detection code
+       * P.S. meta, GROW UP
+       * -Dianora 
+       */
+      for(s = para; *s; s++)
+	{
+	  char_count++;
+	  if(*s == ',')
+	    comma_count++;
+	  if(comma_count > 1)
+	    {
+	      if(char_count > TRUNCATED_NAMES)
+		para[TRUNCATED_NAMES] = '\0';
+	      else
+		{
+		  s++;
+		  *s = '\0';
+		}
+	      sendto_realops("/names abuser %s [%s]",
+			     para,
+			     get_client_name(sptr,FALSE));
+	      sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
+			 me.name, sptr->name, "NAMES");
+	      return 0;
+	    }
+	}
+
       s = strchr(para, ',');
       if (s)
-	{
-	  parv[1] = ++s;
-	  (void)m_names(cptr, sptr, parc, parv);
-	}
+	*s = '\0';
       clean_channelname((unsigned char *)para);
       ch2ptr = find_channel(para, (aChannel *)NULL);
     }
 
   *buf = '\0';
   
-  /* Allow NAMES without registering
-   *
+  /* 
    * First, do all visible channels (public and the one user self is)
    */
 
