@@ -1,3 +1,8 @@
+*** 20011129_16 by wcampbel
+Corrected the application of the TKLINE expire patch, apparently diff
+created two sections that looked identical.
+
+
 *** 20011129_15 by db
 - committed hwy's tkline expire patch
 
