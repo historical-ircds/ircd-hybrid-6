@@ -1,3 +1,15 @@
+jdc         2001/12/06 23:16:31 EST	(20011207_3)
+
+  Modified files:
+    include              config.h 
+  Log:
+  - Follow-up to zlib changes.
+  
+  Revision  Changes    Path
+  1.146     +1 -1      ircd-hybrid-6/include/config.h
+
+
+
 jdc         2001/12/06 23:13:34 EST	(20011207_2)
 
   Modified files:
