@@ -703,19 +703,11 @@
  */
 #define LITTLE_I_LINES
 
-/* -----------------  approved on EFnet section -------------------- 
- *
- * if you are not an efnet admin, you might want to undefine some of
- * these.. -db
+/* TS5_ONLY
+ * This will disallow TS3 servers from linking
+ * (see README.HYBRID6.1-CHANGES for more details)
  */
-
-/* If this is defined, hack ops is simply not allowed at all
- * This needs to be network wide to take effect, else you will get desynchs
- * on opless channels.  This will have the side effect of preventing users
- * getting ops themselves via splits, you will probably need some form of
- * services in conjunction with this.
- */
-#undef NO_HACK_OPS
+#undef TS5_ONLY
 
 /* ----------------- not approved on EFnet section -------------------- 
  *
@@ -759,7 +751,6 @@
  * +e is supported by dalnet, ircnet, undernet but not EFNet atm. (june 9
  * 2001)
  */
-/* If you are not on EFNet it is recommended you define this.. --fl_ */
 /* #undef'ing this will NOT stop modes passing through your server,
  * it will only stop them being used/set on your server.  This is to
  * stop server "+e patches" and desyncs across a hub where leaf servers

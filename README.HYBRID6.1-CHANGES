@@ -1,0 +1,52 @@
+  ircd-hybrid-6.1 and TS
+--------------------------
+
+There has been a protocol change between ircd-hybrid-6.0 and
+ircd-hybrid-6.1.
+
+The way TS works is by checking whos version of a channel is older.  The
+older channel (the one thats existed the longest) keeps their modes, and
+their ops.  The newer channel removes all their modes and ops.
+
+However there *WAS* an exception to this rule.  In older servers (Those that
+are TS3 in /version), if a channel was opless, it did not obey these rules.
+If a channel was opless then any TS, whether older or newer would keep its
+modes on the channel if it brought ops with it.
+
+This was fine, but it has the ability to be abused.  Newer servers (Those
+that show TS5 in /version (TS4 already exists.. so it was skipped to TS5))
+will ALWAYS obey the TS rule.  If a channel is older, its modes will remain
+even if its opless.
+
+This means that for a user to keep ops after a netsplit something
+extraordinary has to happen, as under normal circumstances they will just
+have their ops removed when the network merges together.
+
+Therefore the only realistic ways to regain ops are through some form of
+services or by making everyone part the channel, and recreating it.
+
+The consequence of this mixed way of handling things, is that desynchs may
+emerge on a mixed TS3 and TS5 network on an opless channel.  Many methods
+were thought of to try to eliminate this problem, but all suffered flaws
+greater than the problem of desync, so weren't implemented.
+
+Therefore the only solution is to upgrade.  There is a config.h option of
+TS5_ONLY which will prevent older servers from linking if you wish to use
+it.
+
+This means that if ircd-hybrid-6.1 links with any of the following or older:
+	ircd-hybrid-6.0
+	2.8.21+CSr31pl4
+	2.8/comstud-1.12-REL
+
+There will more than likely be a desynch on any opless channels.
+
+We understand that having a desync is not a good thing, but if a network
+will upgrade, there will not be a desync problem, and this change wouldve
+arrived eventually, so it might as well be in hybrid6.1.  The coders did
+*not* take this decision lightly, it had a lot of thought behind it, if
+there was a realistic fix, we wouldve avoided the desync, but there wasnt
+one..
+
+--End--
+$Id$

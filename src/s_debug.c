@@ -63,6 +63,12 @@ const char serveropts[] = {
 #ifdef  DEBUGMODE
   'D',
 #endif
+#ifdef CHANMODE_E
+  'e',
+#endif
+#ifdef NO_FAKE_GLINES
+  'g',
+#endif
 #ifdef GLINES
   'G',
 #endif
@@ -72,8 +78,13 @@ const char serveropts[] = {
 #ifdef  SHOW_INVISIBLE_LUSERS
   'i',
 #endif
+#if 0 /* make this chanmode +I in future versions */
 #ifndef NO_DEFAULT_INVISIBLE
   'I',
+#endif
+#endif
+#ifdef USE_KNOCK
+  'K',
 #endif
 #ifdef  IDLE_FROM_MSG
   'M',

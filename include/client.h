@@ -291,10 +291,17 @@ struct Client
 #define PARSE_AS_SERVER(x)      ((x)->status & STAT_SERVER_PARSE)
 
 /*
- * ts stuff
+ * ts stuff:
+ *  if TS5_ONLY is defined, TS_MIN is 5, else 3
  */
-#define TS_CURRENT      3       /* current TS protocol version */
+#define TS_CURRENT	5
+
+#ifdef TS5_ONLY
+#define TS_MIN   	5
+#else
 #define TS_MIN          3       /* minimum supported TS protocol version */
+#endif
+
 #define TS_DOESTS       0x20000000
 #define DoesTS(x)       ((x)->tsinfo == TS_DOESTS)
 

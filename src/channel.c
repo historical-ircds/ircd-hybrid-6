@@ -3680,39 +3680,34 @@ int     m_sjoin(struct Client *cptr,
     tstosend = oldts;
   else if (newts < oldts)
   {
-    if(sptr->serv->tsversion > 3)
-    {
+    keep_our_modes = NO;
+    chptr->channelts = tstosend = newts;
+    
+#if 0 /* OLD BEHAVIOUR */
+    if (doesop)
       keep_our_modes = NO;
-      chptr->channelts = tstosend = newts;
-    }
+    if (haveops && !doesop)
+        tstosend = oldts;
     else
-    {
-      if (doesop)
-        keep_our_modes = NO;
-      if (haveops && !doesop)
-          tstosend = oldts;
-      else
-        chptr->channelts = tstosend = newts;
-    }
+      chptr->channelts = tstosend = newts;
+#endif
+
   }
   else
   {
-    if(sptr->serv->tsversion > 3)
-    {
+    keep_new_modes = NO;
+    tstosend = oldts;
+#if 0 /* OLD BEHAVIOUR */
+    if (haveops)
       keep_new_modes = NO;
-      tstosend = oldts;
-    }
+    if (doesop && !haveops)
+      {
+        chptr->channelts = tstosend = newts;
+      }
     else
-    {
-      if (haveops)
-        keep_new_modes = NO;
-      if (doesop && !haveops)
-        {
-          chptr->channelts = tstosend = newts;
-        }
-      else
-        tstosend = oldts;
-    }
+      tstosend = oldts;
+#endif
+
   }
 
   if (!keep_new_modes)
