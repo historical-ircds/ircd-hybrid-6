@@ -3,6 +3,7 @@
 *** Newest entries at top
 
 version hybrid-6-b72   15-May-1999
+* don't allow SJOIN to & local channels.	
 * restored hybrid-5 m_names code	
 * Fixed send.c to be rfc compliant. 
 * kick of client who joined through a ban due to a +e, has +e removed by server

@@ -4132,6 +4132,14 @@ int	m_sjoin(aClient *cptr,
     return 0;
   if (!IsChannelName(parv[2]))
     return 0;
+
+  /* comstud server did this, SJOIN's for
+   * local channels can't happen.
+   */
+
+  if(*parv[2] == '&')
+    return 0;
+
   newts = atol(parv[1]);
   memset((void *)&mode, 0, sizeof(mode));
 
