@@ -1,3 +1,8 @@
+*** 20000131_1 by lusky
+reverted to -5 nick collide code (db)
+fixes to make debugmode compile (db)
+
+
 *** 20000103_1 by lusky
 revved patchlevel to b119
 
