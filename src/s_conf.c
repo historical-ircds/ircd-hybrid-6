@@ -2209,6 +2209,12 @@ static void initconf(FBFILE* file, int use_include)
                 break;
               aconf->hold = oper_flags_from_string(tmp);
             }
+          else if(aconf->status & CONF_CONNECT_SERVER)
+            {
+              if ((tmp = getfield(NULL)) == NULL)
+                break;
+              (void)is_address(tmp, &aconf->ip, &aconf->ip_mask);
+            }
 
           break;
           /* NOTREACHED */

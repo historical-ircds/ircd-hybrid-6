@@ -403,7 +403,27 @@ static int connect_inet(struct ConfItem *aconf, struct Client *cptr)
    * an already bound socket, different ip# might occur anyway
    * leading to a freezing select() on this side for some time.
    */
-  if (specific_virtual_host)
+  /* this is code duplication, i know, but i can't think of a better way
+   * at 3am...
+   */
+  if (aconf->ip != 0)
+    {
+      mysk.sin_addr.s_addr = htonl(aconf->ip);
+
+      /* support for specifying an address to bind to in C:
+       * we stuff the ip in this conf field if there's a final
+       * parameter in the c line, and we check if we found one (it would
+       * be 0 if we didn't) and if so, bind to it.  otherwise, we let
+       * the normal bind code handle it.
+       */
+      if (bind(cptr->fd, (struct sockaddr*)&mysk, sizeof(mysk)))
+        {
+          report_error("error binding to local port for %s:%s",
+                       cptr->name, errno);
+          return 0;
+        }
+    }
+  else if (specific_virtual_host)
     {
       mysk.sin_addr = vserv.sin_addr;
 
