@@ -67,6 +67,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/param.h>
+#include <signal.h>
 
 #if defined(HAVE_GETOPT_H)
 #include <getopt.h>

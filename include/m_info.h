@@ -101,17 +101,17 @@ Info MyInformation[] = {
 
   { "BUFFERPOOL", "", BUFFERPOOL, "Maximum size of all SendQs" },
 
-#ifdef CHROOTDIR
-  { "CHROOTDIR", "ON", 0, "chroot() before reading Configuration File" },
-#else
-  { "CHROOTDIR", "OFF", 0, "chroot() before reading Configuration File" },
-#endif
-
 #ifdef CLIENT_FLOOD
   { "CLIENT_FLOOD", "", CLIENT_FLOOD, "Client Excess Flood Threshold" },
 #else
   { "CLIENT_FLOOD", "OFF", 0, "Client Excess Flood Threshold" },
 #endif /* CLIENT_FLOOD */
+
+#ifdef CLIENT_SERVER
+  { "CLIENT_SERVER", "ON", 0, "Change HTM to Make Clients Lag Less" },
+#else
+  { "CLIENT_SERVER", "OFF", 0, "Change HTM to Make Clients Lag Less" },
+#endif /* CLIENT_SERVER */
 
 #ifdef CMDLINE_CONFIG
   { "CMDLINE_CONFIG", "ON", 0, "Allow Command Line Specification of Config File" },
@@ -124,6 +124,17 @@ Info MyInformation[] = {
 #else
   { "CPATH", "NONE", 0, "Path to Main Configuration File" },
 #endif /* CPATH */
+
+#ifdef CRYPT_LINKS
+  { "CRYPT_LINKS", "ON", 0, "Encrypt Server to Server Links" },
+#else
+  { "CRYPT_LINKS", "OFF", 0, "Encrypt Server to Server Links" },
+#endif /* CRYPT_LINKS */
+
+#ifdef CRYPT_LINKS
+  { "CRYPT_LINKS_CNPREFIX", CRYPT_LINKS_CNPREFIX, 0, "Prefix in C/N Lines For a Public Key Filename" },
+  { "CRYPT_LINKS_PRIVATEKEYFILE", CRYPT_LINKS_PRIVATEKEYFILE, 0, "Path to the Private Key File" },
+#endif /* CRYPT_LINKS */
 
 #ifdef CRYPT_OPER_PASSWORD
   { "CRYPT_OPER_PASSWORD", "ON", 0, "Encrypt Operator Passwords" },
@@ -154,12 +165,6 @@ Info MyInformation[] = {
 #else
   { "DEFAULT_SERVER_SPLIT_RECOVERY_TIME", "NONE", 0, "Time to Delay Split Status After Resynch" },
 #endif /* DEFAULT_SERVER_SPLIT_RECOVERY_TIME */
-
-#ifdef DNS_DEBUG
-  { "DNS_DEBUG", "ON", 0, "Dns Debugging" },
-#else
-  { "DNS_DEBUG", "OFF", 0, "Dns Debugging" },
-#endif /* DNS_DEBUG */
 
 #ifdef DO_IDENTD
   { "DO_IDENTD", "ON", 0, "Perform identd checks" },
@@ -215,6 +220,18 @@ Info MyInformation[] = {
   { "FLUD_BLOCK", "NONE", 0, "Seconds to Block Fluds" },
 #endif /* FLUD_BLOCK */
 
+#ifdef FNAME_OPERLOG
+  { "FNAME_OPERLOG", FNAME_OPERLOG, 0, "Path to Opers Users Log File" },
+#else
+  { "FNAME_OPERLOG", "NONE", 0, "Path to Local Opers Log File" },
+#endif /* FNAME_OPERLOG */
+
+#ifdef FNAME_USERLOG
+  { "FNAME_USERLOG", FNAME_USERLOG, 0, "Path to Local Users Log File" },
+#else
+  { "FNAME_USERLOG", "NONE", 0, "Path to Local Users Log File" },
+#endif /* FNAME_USERLOG */
+
 #ifdef F_LINES_OPER_ONLY
   { "F_LINES_OPER_ONLY", "ON", 0, "Allow only Operators to use STATS F" },
 #else
@@ -246,6 +263,12 @@ Info MyInformation[] = {
 #else
   { "HIDE_OPS", "OFF", 0, "Hide chanop status from non-chanops" },
 #endif /* HIDE_OPS */
+
+#ifdef HIDE_SERVERS_IPS
+  { "HIDE_SERVERS_IPS", "ON", 0, "Hide server's IP's from all users" },
+#else
+  { "HIDE_SERVERS_IPS", "OFF", 0, "Hide server's IP's from all users" },
+#endif /* HIDE_SERVERS_IPS */
 
 #ifdef HPATH
   { "HPATH", HPATH, 0, "Path to Operator Help File" },
@@ -288,6 +311,12 @@ Info MyInformation[] = {
 #else
   { "IDLE_FROM_MSG", "OFF", 0, "Reset idle time after a PRIVMSG" },
 #endif /* IDLE_FROM_MSG */
+
+#ifdef IGNORE_BOGUS_TS
+  { "IGNORE_BOGUS_TS", "ON", 0, "Ignore Bogus TimeStamps from Other Servers" },
+#else
+  { "IGNORE_BOGUS_TS", "OFF", 0, "Ignore Bogus TimeStamps from Other Servers" },
+#endif /* IGNORE_BOGUS_TS */
 
   { "INIT_MAXCLIENTS", "", INIT_MAXCLIENTS, "Maximum Clients" },
   { "INITIAL_DBUFS", "", INITIAL_DBUFS, "Number of Dbufs to PreAllocate" },
@@ -360,6 +389,7 @@ Info MyInformation[] = {
   { "LWALLOPS", "OFF", 0, "Local Wallops Support" },
 #endif /* LWALLOPS */
 
+  { "MAXSENDQLENGTH", "", MAXSENDQLENGTH, "Maximum Amount of Internal SendQ Buffering" },
   { "MAX_BUFFER", "", MAX_BUFFER, "Maximum Buffer Connections Allowed" },
 
 #ifdef ANTI_SPAMBOT
@@ -425,9 +455,9 @@ Info MyInformation[] = {
 #endif /* NO_DUPE_MULTI_MESSAGES */
 
 #ifdef NO_JOIN_ON_SPLIT
-  { "NO_JOIN_ON_SPLIT", "ON", 0, "Users Cannot Join Channels Present before a NetSplit" },
+  { "NO_JOIN_ON_SPLIT", "ON", 0, "Users Cannot Join Channels During a NetSplit" },
 #else
-  { "NO_JOIN_ON_SPLIT", "OFF", 0, "Users Cannot Join Channels Present before a NetSplit" },
+  { "NO_JOIN_ON_SPLIT", "OFF", 0, "Users Cannot Join Channels During a NetSplit" },
 #endif /* NO_JOIN_ON_SPLIT */
 
 #ifdef NO_OPER_FLOOD
@@ -441,12 +471,6 @@ Info MyInformation[] = {
 #else
   { "NO_PRIORITY", "OFF", 0, "Do not Prioritize Socket File Descriptors" },
 #endif /* NO_PRIORITY */
-
-#ifdef NO_WHOIS_WILDCARDS
-  { "NO_WHOIS_WILDCARDS", "ON", 0, "Do not allow wildcards in WHOIS" },
-#else
-  { "NO_WHOIS_WILDCARDS", "OFF", 0, "Do not allow wildcards in WHOIS" },
-#endif /* NO_WHOIS_WILDCARDS */
 
 #ifdef NOISY_HTM
   { "NOISY_HTM", "ON", 0, "Notify Operators of HTM (De)activation" },
@@ -476,6 +500,12 @@ Info MyInformation[] = {
   { "OPER_SPAM_COUNTDOWN", "", OPER_SPAM_COUNTDOWN, "Anti SpamBot Parameter" },
 #endif /* ANTI_SPAMBOT */
 
+#ifdef O_LINES_OPER_ONLY
+  { "O_LINES_OPER_ONLY", "ON", 0, "Allow only Operators to use STATS O" },
+#else
+  { "O_LINES_OPER_ONLY", "OFF", 0, "Allow only Operators to use STATS O" },
+#endif /* O_LINES_OPER_ONLY */
+
 #ifdef P_LINES_OPER_ONLY
   { "P_LINES_OPER_ONLY", "ON", 0, "Allow only Operators to use STATS P" },
 #else
@@ -483,6 +513,12 @@ Info MyInformation[] = {
 #endif /* P_LINES_OPER_ONLY */
 
   { "PACE_WAIT", "", PACE_WAIT, "Minimum Delay between uses of certain commands" },
+
+#ifdef PACE_WALLOPS
+  { "PACE_WALLOPS", "ON", 0, "Delay WALLOPS and OPERWALL" },
+#else
+  { "PACE_WALLOPS", "OFF", 0, "Delay WALLOPS and OPERWALL" },
+#endif /* PACE_WALLOPS */
 
 #ifdef PPATH
   { "PPATH", PPATH, 0, "Path to Pid File" },
@@ -507,6 +543,12 @@ Info MyInformation[] = {
 #else
   { "REPORT_DLINE_TO_USER", "OFF", 0, "Inform Clients They are D-lined" },
 #endif /* REPORT_DLINE_TO_USER */
+
+#ifdef RFC1035_ANAL
+  { "RFC1035_ANAL", "ON", 0, "Reject / and _ in hostnames" },
+#else
+  { "RFC1035_ANAL", "OFF", 0, "Reject / and _ in hostnames" },
+#endif /* RFC1035_ANAL */
 
 #ifdef SEND_FAKE_KILL_TO_CLIENT
   { "SEND_FAKE_KILL_TO_CLIENT", "ON", 0, "Make Client think they were KILLed" },
@@ -594,6 +636,12 @@ Info MyInformation[] = {
   { "STATS_NOTICE", "OFF", 0, "Show Operators when a Client uses STATS" },
 #endif /* STATS_NOTICE */
 
+#ifdef STATS_P_NOTICE
+  { "STATS_P_NOTICE", "ON", 0, "Show Operators when a Client uses STATS P" },
+#else
+  { "STATS_P_NOTICE", "OFF", 0, "Show Operators when a Client uses STATS P" },
+#endif /* STATS_P_NOTICE */
+
   { "TIMESEC", "", TIMESEC, "Time Interval to Wait Before Checking Pings" },
 
 #ifdef TOPIC_INFO
@@ -602,14 +650,20 @@ Info MyInformation[] = {
   { "TOPIC_INFO", "OFF", 0, "Show Who Set a Topic and When" },
 #endif /* TOPIC_INFO */
 
+#ifdef TRUE_NO_OPER_FLOOD
+  { "TRUE_NO_OPER_FLOOD", "ON", 0, "Completely Disable Flood Control for Operators" },
+#else
+  { "TRUE_NO_OPER_FLOOD", "OFF", 0, "Completely Disable Flood Control for Operators" },
+#endif /* TRUE_NO_OPER_FLOOD */
+
   { "TS_MAX_DELTA", "", TS_MAX_DELTA, "Maximum Allowed TS Delta from another Server" },
   { "TS_WARN_DELTA", "", TS_WARN_DELTA, "Maximum TS Delta before Sending Warning" },
 
-#ifdef USE_IP_I_LINE_FIRST
-  { "USE_IP_I_LINE_FIRST", "ON", 0, "Search IP Ilines First" },
+#ifdef USE_LOGFILE
+  { "USE_LOGFILE", "ON", 0, "Log Errors to LPATH" },
 #else
-  { "USE_IP_I_LINE_FIRST", "OFF", 0, "Search IP Ilines First" },
-#endif /* USE_IP_I_LINE_FIRST */
+  { "USE_LOGFILE", "OFF", 0, "Log Errors to LPATH" },
+#endif /* USE_LOGFILE */
 
 #ifdef USE_RCS
   { "USE_RCS", "ON", 0, "Use \"ci\" to Keep RCS Control" },
@@ -665,11 +719,6 @@ Info MyInformation[] = {
   { "ZIP_LINKS", "OFF", 0, "Compress Server to Server Links" },
 #endif /* ZIP_LINKS */
 
-#ifdef CRYPT_LINKS
-  { "CRYPT_LINKS", "ON", 0, "Encrypt Server to Server Links" },
-#else
-  { "CRYPT_LINKS", "OFF", 0, "Encrypt Server to Server Links" },
-#endif /* CRYPT_LINKS */
   /*
    * since we don't want to include the world here, NULL probably
    * isn't defined by the time we read this, just use plain 0 instead

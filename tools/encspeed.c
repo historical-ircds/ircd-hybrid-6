@@ -437,5 +437,6 @@ int main(int argc, char * argv[]) {
   rc5_test(12);
   rc5_test(16);
 #endif
+  return 0;
 }
 
