@@ -1,3 +1,15 @@
+leeh        2001/12/12 16:56:35 EST	(20011212_4)
+
+  Modified files:
+    src                  m_gline.c 
+  Log:
+  - allow glines even when the mask is klined
+  
+  Revision  Changes    Path
+  1.49      +0 -3      ircd-hybrid-6/src/m_gline.c
+
+
+
 leeh        2001/12/12 14:10:08 EST	(20011212_3)
 
   Modified files:
