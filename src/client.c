@@ -155,7 +155,7 @@ struct Client* make_client(struct Client* from)
 
       cptr->from = from; /* 'from' of local client is self! */
     }
-  cptr->status = STAT_UNKNOWN;
+  SetUnknown(cptr);
   cptr->fd = -1;
   strcpy(cptr->username, "unknown");
 
@@ -1562,12 +1562,16 @@ const char* comment        /* Reason for the exit */
 #endif
           if (sptr->fd >= 0)
             {
-              if (cptr != NULL && sptr != cptr)
-                sendto_one(sptr, "ERROR :Closing Link: %s (%s)",
-                           get_client_name(sptr, MASK_IP), comment);
+              if (IsRegistered(sptr) && !IsServer(sptr))
+                { /* jeremy is anal retentive */
+                  sendto_one(sptr, "ERROR :Closing Link: %s (%s)",
+                             get_client_name(sptr, SHOW_IP, comment);
+                } 
               else
-                sendto_one(sptr, "ERROR :Closing Link: %s (%s)",
-                           get_client_name(sptr, MASK_IP), comment);
+                {
+                  sendto_one(sptr, "ERROR :Closing Link: %s (%s)",
+                             get_client_name(sptr, MASK_IP, comment);
+                }
             }
           /*
           ** Currently only server connections can have

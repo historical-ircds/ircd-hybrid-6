@@ -519,7 +519,7 @@ static int attach_iline(aClient *cptr, struct ConfItem *aconf)
       else
         {
           sendto_one(cptr,
-       ":%s NOTICE %s :*** :I: line is full, but you have an >I: line!",
+       ":%s NOTICE %s :*** I: line is full, but you have an >I: line!",
                      me.name,cptr->name);
         }
     }
@@ -532,7 +532,7 @@ static int attach_iline(aClient *cptr, struct ConfItem *aconf)
       else
         {
           sendto_one(cptr,
-       ":%s NOTICE %s :*** :I: line is full, but you have an >I: line!",
+       ":%s NOTICE %s :*** I: line is full, but you have an >I: line!",
                      me.name,cptr->name);
         }
     }
@@ -1033,9 +1033,8 @@ int attach_conf(aClient *cptr,struct ConfItem *aconf)
             }
           else
             {
-              send(cptr->fd,
-                   "NOTICE FLINE :I: line is full, but you have an >I: line!\n",
-                   56, 0);
+              sendto_one(cptr, ":%s NOTICE %s :*** I: line is full, but you have an >I: line!\n",
+                   me.name, cptr->name);
               SetFlined(cptr);
             }
 
