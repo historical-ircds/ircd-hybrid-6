@@ -1,3 +1,9 @@
+*** 19990909_1 by lusky
+bumped patchlevel to b105
+fix return values for client_dopacket and dopacket (th)
+m_links check for local client instead of connect
+
+
 *** 19990908_2 by lusky
 revved patchlevel to b105
 cleanup m_userhost fix
