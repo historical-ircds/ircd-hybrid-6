@@ -1,3 +1,10 @@
+*** 20011129_9 by db
+- Adds /stats F /stats J
+  added proper RPL_STATSJLINE in numerics.h and in messages.tab
+  messages_cust.tab
+
+
+
 *** 20011129_8 by wcampbel
 Revise docs for the latest flurry of commits.  I still need more testing
 on a couple things, but it's pretty close
