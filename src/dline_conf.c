@@ -14,6 +14,7 @@
 #include <time.h>
 #endif
 #include <signal.h>
+#include <string.h>
 #include "h.h"
 #include "s_conf.h"
 #include "dline_conf.h"

@@ -3,7 +3,6 @@
  * File:   blalloc.c
  * Owner:  Wohali (Joan Touzet)
  *
- *         Hacked up for use in ircd by Dianora
  *
  * $Id$
  */
@@ -14,6 +13,7 @@
 #include "h.h"
 #include "numeric.h"
 #include "send.h"
+#include <string.h>
 
 #ifdef DEBUG_BLOCK_ALLOCATOR
 const char* BH_CurrentFile = 0;   /* GLOBAL used for BlockHeap debugging */

@@ -30,6 +30,7 @@
 #include "res.h"
 #include "class.h"
 #include "send.h"
+#include <string.h>
 
 /*
  * re-written to use Wohali (joant@cadence.com)

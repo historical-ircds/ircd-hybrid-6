@@ -11,7 +11,7 @@
 #include "h.h"
 #include "config.h"
 #include "fdlist.h"
-
+#include <string.h>
 
 void addto_fdlist(int fd,fdlist *listp)
 {
