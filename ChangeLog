@@ -1,3 +1,8 @@
+*** 20011129_2 by db
+- fixed numeric orders. Apparently someone had already fixed KLINE
+
+
+
 *** 20011129_1 by db
 - since the old code did a ++addr_count then compared to RES_MAXADDRS,
   it would not find any ip's, depending on the compilers interpretation
