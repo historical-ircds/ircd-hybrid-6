@@ -103,7 +103,11 @@ void show_ports(struct Client* sptr)
                  sptr->name,
                  'P',
                  listener->port,
+#ifdef HIDE_SERVERS_IPS
+		 me.name,
+#else		 
                  listener->name,
+#endif		 
                  listener->ref_count,
                  (listener->active)?"active":"disabled");
     }
