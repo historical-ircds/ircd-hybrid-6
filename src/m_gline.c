@@ -30,6 +30,7 @@
 #include "msg.h"
 #include "channel.h"
 #include "s_conf.h"
+#include "s_misc.h"
 #include "send.h"
 #include "h.h"
 #include "ircd.h"
@@ -50,18 +51,11 @@
 #ifdef GLINES
 
 /* external variables */
-extern int rehashed;            /* defined in ircd.c */
-extern int dline_in_progress;   /* defined in ircd.c */
-
 extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 
 /* internal variables */
 static  aConfItem *glines = (aConfItem *)NULL;
 static GLINE_PENDING *pending_glines;
-
-/* external functions */
-extern char *small_file_date(time_t);  /* defined in s_misc.c */
-extern char *smalldate(time_t);         /* defined in s_misc.c */
 
 /* internal functions */
 static void add_gline(aConfItem *);

@@ -37,16 +37,13 @@
 #include "fileio.h"
 #include "h.h"
 #include "ircd.h"
+#include "s_misc.h"
 
 #include <time.h>
 #include <string.h>
 
-extern int rehashed;
-extern aConfItem *temporary_klines;     /* defined in s_conf.c */
-extern int dline_in_progress;   /* defined in ircd.c */
 extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 
-extern char *smalldate(time_t);         /* defined in s_misc.c */
 static int flush_write(aClient *, FBFILE* , char *, char *);
 static int remove_tkline_match(char *,char *);
 

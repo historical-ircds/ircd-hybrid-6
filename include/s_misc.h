@@ -15,5 +15,9 @@ extern  char*   date(time_t);
 extern  const   char* my_name_for_link(const char* name,struct ConfItem* conf);
 extern  struct  stats* ircstp;
 extern  char    *show_capabilities (struct Client *);
+extern  char    *smalldate(time_t);
+extern  char    *small_file_date(time_t);
 
 #endif
+
+

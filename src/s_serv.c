@@ -57,6 +57,7 @@
 #include "match.h"
 #include "config.h"
 #include "m_gline.h"
+#include "channel.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -79,8 +80,6 @@ extern void remove_empty_channels();    /* defined in channel.c */
 #endif /* NEED_SPLITCODE */
 
 extern fdlist serv_fdlist;
-extern int rehashed;            /* defined in ircd.c */
-extern int dline_in_progress;   /* defined in ircd.c */
 
 int     max_connection_count = 1;
 int     max_client_count = 1;

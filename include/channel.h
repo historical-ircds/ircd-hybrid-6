@@ -131,9 +131,21 @@ extern  struct  Channel *channel;
 #define MODE_LIMIT      0x1000  /* was 0x0800 */
 #define MODE_FLAGS      0x1fff  /* was 0x0fff */
 
+#ifdef NEED_SPLITCODE
+
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 #define MODE_SPLIT      0x1000
+extern void remove_empty_channels();
 #endif
+
+extern int server_was_split;
+extern time_t server_split_time;
+
+#ifdef SPLIT_PONG
+extern int got_server_pong;
+#endif /* SPLIT_PONG */
+
+#endif /* NEED_SPLITCODE */
 
 #ifdef JUPE_CHANNEL
 #define MODE_JUPED      0x2000

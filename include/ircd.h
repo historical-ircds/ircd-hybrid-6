@@ -53,7 +53,10 @@ extern struct Client*           local_cptr_list;
 extern struct Client*           oper_cptr_list;
 
 #ifdef REJECT_HOLD
-extern int reject_held_fds;             /* defined in ircd.c */
+extern int reject_held_fds;
 #endif
+
+extern int rehashed;
+extern int dline_in_progress;
 
 #endif
