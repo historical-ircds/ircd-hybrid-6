@@ -1,3 +1,7 @@
+*** 20000611_1 by lusky
+removed unused variable (compile warning)
+
+
 *** 20000609_1 by lusky
 misc cosmetic typo fixes (tv)
 fixes for DEBUGMODE (tv)
