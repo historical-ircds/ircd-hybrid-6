@@ -1,3 +1,14 @@
+*** 20011017_1 by db
+- removed PACE_WALLOPS, this affects config.h m_info.h m_info.c
+  m_wallops.c m_operwall.c 
+
+- cleaned up formatting in res.c so I could follow the logic, still
+  havent' found the bug
+
+- cleaned up formatting in dbuf.c
+
+
+
 *** 20011011_1 by db
 We have to have to have to make sure the config.h is sane, EFNet admins are
 lazy.
