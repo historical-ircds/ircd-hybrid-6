@@ -77,6 +77,5 @@ $ gdb bin/ircd ircd.core
 3.  At the "(gdb)" prompt, enter the command "bt"
 4.  Save the output of the backtrace command and send it to
 ircd-hybrid@the-project.org.
-5.  Be sure to save the ircd binary, the modules, and the core file in a
-safe place in case the developers need to look deeper than a backtrace
-provides.
+5.  Be sure to save the ircd binary and the core file in a safe place in
+case the developers need to look deeper than a backtrace provides.
