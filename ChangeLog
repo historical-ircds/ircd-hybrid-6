@@ -1,3 +1,15 @@
+lusky       2001/12/11 21:26:50 EST	(20011212_2)
+
+  Modified files:
+    include              patchlevel.h 
+  Log:
+  - revved patchlevel to 6.3rc3
+  
+  Revision  Changes    Path
+  1.147     +1 -1      ircd-hybrid-6/include/patchlevel.h
+
+
+
 lusky       2001/12/11 21:02:03 EST	(20011212_1)
 
   Modified files:
