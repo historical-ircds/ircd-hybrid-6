@@ -565,12 +565,6 @@ Info MyInformation[] = {
   { "SENDQ_ALWAYS", "OFF", 0, "Put All OutBound data into a SendQ" },
 #endif /* SENDQ_ALWAYS */
 
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-  { "SEPARATE_QUOTE_KLINES_BY_DATE", "ON", 0, "Read/Write K-lines According to Date" },
-#else
-  { "SEPARATE_QUOTE_KLINES_BY_DATE", "OFF", 0, "Read/Write K-lines According to Date" },
-#endif /* SEPARATE_QUOTE_KLINES_BY_DATE */
-
 #ifdef SERVERHIDE
   { "SERVERHIDE", "ON", 0, "Hide server info from users" },
 #else

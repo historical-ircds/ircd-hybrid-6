@@ -3706,9 +3706,7 @@ void write_kline_or_dline_to_conf_and_notice_opers(
       return;
     }
 
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
   fchmod(out, 0660);
-#endif
 
 #ifdef SLAVE_SERVERS
   if(IsServer(sptr))
@@ -3795,26 +3793,13 @@ int safe_write(aClient *sptr, const char *filename, int out, char *buffer)
 const char *
 get_conf_name(KlineType type)
 {
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-  static char filenamebuf[PATH_MAX+1];
-  static  char    timebuffer[MAX_DATE_STRING];
-  struct tm *tmptr;
-#endif
-
   if(type == CONF_TYPE)
     {
       return(ConfigFileEntry.configfile);
     }
   else if(type == KLINE_TYPE)
     {
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-      tmptr = localtime(&CurrentTime);
-      strftime(timebuffer, MAX_DATE_STRING, "%Y%m%d", tmptr);
-      ircsprintf(filenamebuf, "%s.%s", ConfigFileEntry.klinefile, timebuffer);
-      return(filenamebuf);
-#else
       return(ConfigFileEntry.klinefile);
-#endif                  
     }
 
   return(ConfigFileEntry.dlinefile);

@@ -110,7 +110,7 @@ const char* smalldate(time_t clock)
 }
 
 
-#if defined(GLINES) || defined(SEPARATE_QUOTE_KLINES_BY_DATE)
+#if defined(GLINES)
 /*
  * small_file_date
  * Make a small YYYYMMDD formatted string suitable for a

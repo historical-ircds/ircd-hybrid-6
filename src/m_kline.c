@@ -249,9 +249,7 @@ WriteKline(const char *filename, aClient *sptr, aClient *rcptr,
     return;
   }
 
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
   fchmod(out, 0660);
-#endif
 
 #ifdef SLAVE_SERVERS
   if (IsServer(sptr))
@@ -319,9 +317,7 @@ WriteDline(const char *filename, aClient *sptr,
     return;
   }
 
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
   fchmod(out, 0660);
-#endif
 
   ircsprintf(buffer,
     "#%s!%s@%s D'd: %s:%s (%s)\n",

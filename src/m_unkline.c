@@ -61,8 +61,6 @@ static int remove_tkline_match(char *,char *);
 * re-worked and cleanedup for use in hybrid-5 
 * -Dianora
 *
-* Added comstuds SEPARATE_QUOTE_KLINES_BY_DATE
-*
 */
 int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
 {

@@ -176,15 +176,6 @@
  */
 #undef SLAVE_SERVERS
 
-/* SEPARATE_QUOTE_KLINES_BY_DATE
- * If you define this, then klines will be read and written
- * to a separate kline file according to date. You =must= then run
- * a daily/nightly script to consolidate your klines, or the previous
- * days klines are lost. If you define this, LOCKFILE on kline file
- * makes no sense
- */
-#undef SEPARATE_QUOTE_KLINES_BY_DATE
-
 /* FNAME_USERLOG and FNAME_OPERLOG - logs of local USERS and OPERS
  * Define this filename to maintain a list of persons who log
  * into this server. Logging will stop when the file does not exist.
@@ -1055,7 +1046,7 @@ void    free_fludees();
 #define MIN_IDLETIME 1800
 #endif
 
-#define CONFIG_H_LEVEL_6_1
+#define CONFIG_H_LEVEL_6_1_1
 
 #ifdef CRYPT_LINKS
 #  ifndef HAVE_LIBCRYPTO
