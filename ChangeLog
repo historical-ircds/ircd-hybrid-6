@@ -1,3 +1,14 @@
+*** 20010630_2 by greg
+Hi.
+
+m_kill.c	- slight typo in the SERVERHIDE code. resulted in locals
+		being "Killed (nick): reason", while remotes were
+		"Killer (nick (reason))" .. that's bad.
+s_user.c	- modified the nick collide code to, instead of doing a
+		get_client_name in the resulting kills at all, just use
+		cptr->name
+
+
 *** 20010630_1 by greg
 Well well well.  Take a look at this one.
 
