@@ -38,11 +38,6 @@
 /*
  * Contributed by James L. Davis
  */
-struct HashEntry {
-  int    hits;
-  int    links;
-  void*  list;
-};
 
 #ifdef  DEBUGMODE
 static struct HashEntry* clientTable = NULL;
@@ -57,6 +52,11 @@ static struct HashEntry clientTable[U_MAX];
 static struct HashEntry channelTable[CH_MAX];
 
 #endif
+
+struct HashEntry hash_get_channel_block(int i)
+{
+  return channelTable[i];
+}
 
 size_t hash_get_channel_table_size(void)
 {
