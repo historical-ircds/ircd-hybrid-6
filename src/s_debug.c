@@ -31,8 +31,7 @@ extern	void	count_whowas_memory(int *, u_long *);
 extern  void    count_ip_hash(int *,u_long *);	  /* defined in s_conf.c */
 extern  int	maxdbufblocks;			  /* defined in dbuf.c */
 
-extern struct  rusage startup_usage;
-extern struct  rusage current_usage;
+extern  void   *edata;
 
 /*
  * Option string.  Must be before #ifdef DEBUGMODE.
@@ -446,11 +445,9 @@ void count_memory(aClient *cptr,char *nick)
   sendto_one(cptr, ":%s %d %s :Total: ww %d ch %d cl %d co %d db %d",
 	     me.name, RPL_STATSDEBUG, nick, totww, totch, totcl, com, db);
 
-  (void)getrusage(RUSAGE_SELF,&current_usage);
-
-  sendto_one(cptr, ":%s %d %s :TOTAL: %d memory: %u",
+  sendto_one(cptr, ":%s %d %s :TOTAL: %d Available Memory: %u Current sbrk(0) %u",
 	     me.name, RPL_STATSDEBUG, nick, tot,
-	     current_usage.ru_idrss, startup_usage.ru_idrss);
+	     (unsigned long)edata, sbrk(0) );
 
   return;
 }

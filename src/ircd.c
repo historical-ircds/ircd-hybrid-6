@@ -37,7 +37,6 @@
 #include "hash.h"
 #include "fdlist.h"
 
-
 #include <string.h>
 #include <time.h>
 #include <sys/file.h>
@@ -46,7 +45,6 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <sys/socket.h>
-#include <sys/resource.h>
 
 #ifdef SETUID_ROOT
 #include <sys/lock.h>
@@ -108,7 +106,6 @@ static time_t io_loop(time_t);
 /* externally needed functions */
 
 extern  void init_fdlist(fdlist *);	/* defined in fdlist.c */
-extern	void dbuf_init();		/* defined in dbuf.c */
 extern  void sync_channels(time_t);	/* defined in channel.c */
 
 static char **myargv;
@@ -118,8 +115,9 @@ int	portnum = -1;	              /* Server port number, listening this */
 int	debuglevel = -1;		/* Server debug level */
 int	bootopt = 0;			/* Server boot option flags */
 char	*debugmode = "";		/*  -"-    -"-   -"-  */
-struct  rusage startup_usage;
-struct  rusage current_usage;
+
+extern  void *edata;
+
 static	int	dorehash = 0;
 int     rehashed = YES;
 int     dline_in_progress = NO;	/* killing off matching D lines ? */
@@ -169,12 +167,12 @@ void restart(char *mesg)
 
 #ifdef	USE_SYSLOG
   syslog(LOG_WARNING, "Restarting Server because: %s, memory data limit: %ld",
-         mesg, current_usage.ru_idrss - startup_usage.ru_idrss);
+         mesg, edata );
 #endif
   if (bootopt & BOOT_STDERR)
     {
       fprintf(stderr, "Restarting Server because: %s, memory: %ld\n",
-	      mesg, startup_usage.ru_idrss);
+	      mesg, (unsigned long)edata);
     }
   server_reboot();
 }
@@ -199,10 +197,8 @@ void server_reboot()
 {
   int i;
   
-  getrusage(RUSAGE_SELF,&current_usage);
-
-  sendto_ops("Aieeeee!!!  Restarting server... current data-startup data: %d",
-             current_usage.ru_idrss, startup_usage.ru_idrss);
+  sendto_ops("Aieeeee!!!  Restarting server... memory: %d",
+	     edata );
 
   Debug((DEBUG_NOTICE,"Restarting server..."));
   flush_connections(me.fd);
@@ -834,11 +830,7 @@ int main(int argc, char *argv[])
   if(setuid(IRCD_UID)<0)exit(-1); /* blah.. this should be done better */
 #endif
 
-#ifdef INITIAL_DBUFS
   dbuf_init();  /* set up some dbuf stuff to control paging */
-#endif
-
-  getrusage(RUSAGE_SELF, &startup_usage);
 
   uid = getuid();
   euid = geteuid();
@@ -1519,8 +1511,7 @@ void report_error_on_tty(const char *error_message)
  *
  * inputs	- none
  * output	- none
- *
- * This block here sets all global set options needed 
+ * side effects	- This sets all global set options needed 
  */
 
 static void initialize_global_set_options(void)
@@ -1567,8 +1558,7 @@ static void initialize_global_set_options(void)
  *
  * inputs	- none
  * output	- none
- *
- * This block sets up all message files needed, motd etc.
+ * side effects - Set up all message files needed, motd etc.
  */
 
 static void initialize_message_files(void)

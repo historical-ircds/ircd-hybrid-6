@@ -161,5 +161,6 @@ int dbuf_delete (dbuf *, int);
 #define DBufClear(dyn)	dbuf_delete((dyn),DBufLength(dyn))
 
 extern	int	dbuf_getmsg (dbuf *, char *, int);
+extern  void     dbuf_init(void);
 
 #endif /* __dbuf_include__ */

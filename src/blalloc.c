@@ -394,3 +394,31 @@ int BlockHeapDestroy(BlockHeap *bh)
    return 0;
 }
 
+/*
+ *
+ * Function added to count memory usage 
+ */
+
+void BlockHeapCountMemory(BlockHeap *bh,int *TotalUsed,int *TotalAllocated)
+{
+  Block *walker;
+
+  *TotalUsed = 0;
+  *TotalAllocated = 0;
+
+  if (bh == NULL)
+    return;
+
+  *TotalUsed = sizeof(BlockHeap);
+  *TotalAllocated = sizeof(BlockHeap);
+
+  for (walker = bh->base; walker != NULL; walker = walker->next)
+    {
+      *TotalUsed += sizeof(Block);
+      *TotalUsed += ((bh->elemSize * bh->elemsPerBlock) + bh->numlongs);
+
+      *TotalAllocated = sizeof(Block);      
+      *TotalAllocated = ((bh->elemsPerBlock - walker->freeElems)
+			 * bh->elemSize);
+    }
+}
