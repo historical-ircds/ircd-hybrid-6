@@ -1,3 +1,8 @@
+*** 19990910_1 by lusky
+revved patchlevel to b107
+user sys/poll.h instead of poll.h
+
+
 *** 19990909_2 by lusky
 corrected error in ChangeLog
 
