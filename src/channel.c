@@ -3763,6 +3763,7 @@ int     m_list(aClient *cptr,
    * -Dianora
    */
   static time_t last_used=0L;
+  int i,j;
 
   /* throw away non local list requests that do get here -Dianora */
   if(!MyConnect(sptr))
@@ -3770,19 +3771,21 @@ int     m_list(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
-      if((last_used + PACE_WAIT) > NOW)
+      if(((last_used + PACE_WAIT) > NOW) && (!IsDoingList(sptr)))
         return 0;
       else
         last_used = NOW;
     }
 
-  sendto_one(sptr, form_str(RPL_LISTSTART), me.name, parv[0]);
-
-  if (parc < 2 || BadPtr(parv[1]))
-    {
-      SetDoingList(sptr);     /* only set if its a full list */
-      for (chptr = channel; chptr; chptr = chptr->nextch)
-        {
+  /* right.. if we are already involved in a "blocked" /list, we will simply
+     continue where we left off */
+  if (IsDoingList(sptr)) {
+    if (sptr->listprogress != -1) {
+      for (i=sptr->listprogress; i<CH_MAX; i++) {
+        int progress2 = sptr->listprogress2;
+        for (j=0, chptr=(struct Channel*)(hash_get_channel_block(i).list);
+             (chptr) && (j<hash_get_channel_block(i).links); chptr=chptr->hnextch, j++) {
+          if (j<progress2) continue;  /* wind up to listprogress2 */
           if (!sptr->user ||
               (SecretChannel(chptr) && !IsMember(sptr, chptr)))
             continue;
@@ -3790,11 +3793,65 @@ int     m_list(aClient *cptr,
                      ShowChannel(sptr, chptr)?chptr->chname:"*",
                      chptr->users,
                      ShowChannel(sptr, chptr)?chptr->topic:"");
+          if (IsSendqPopped(sptr)) {
+            /* we popped again! : P */
+            sptr->listprogress=i;
+            sptr->listprogress2=j;
+            return 0;
+          }
         }
-      sendto_one(sptr, form_str(RPL_LISTEND), me.name, parv[0]);
-      ClearDoingList(sptr);   /* yupo, its over */
+        sptr->listprogress2 = 0;
+      }
+    }
+    sendto_one(sptr, form_str(RPL_LISTEND), me.name, parv[0]);
+    if (IsSendqPopped(sptr)) { /* popped with the RPL_LISTEND code. d0h */
+      sptr->listprogress = -1;
       return 0;
     }
+    ClearDoingList(sptr);   /* yupo, its over */
+    return 0;
+    
+  }
+  
+  sendto_one(sptr, form_str(RPL_LISTSTART), me.name, parv[0]);
+
+  if (parc < 2 || BadPtr(parv[1]))
+    {
+      SetDoingList(sptr);     /* only set if its a full list */
+      ClearSendqPop(sptr);    /* just to make sure */
+      /* we'll do this by looking through each hash table bucket */
+      for (i=0; i<CH_MAX; i++) {
+        for (j=0, chptr = (struct Channel*)(hash_get_channel_block(i).list);
+             (chptr) && (j<hash_get_channel_block(i).links); chptr = chptr->hnextch, j++) {
+          if (!sptr->user ||
+              (SecretChannel(chptr) && !IsMember(sptr, chptr)))
+            continue;
+          /* EVIL!  sendto_one doesnt return status of any kind!  Forcing us
+             to make up yet another stupid client flag (we could just
+             negate the DOING_LIST flag, but that might confuse people) -good*/
+          sendto_one(sptr, form_str(RPL_LIST), me.name, parv[0],
+                     ShowChannel(sptr, chptr)?chptr->chname:"*",
+                     chptr->users,
+                     ShowChannel(sptr, chptr)?chptr->topic:"");
+          if (IsSendqPopped(sptr)) {
+            /* GAAH!  We popped our sendq.  Mark our location in the /list */
+            sptr->listprogress=i;
+            sptr->listprogress2=j;
+            return 0;
+          }
+        }
+      
+      }
+
+      sendto_one(sptr, form_str(RPL_LISTEND), me.name, parv[0]);
+      if (IsSendqPopped(sptr)) {
+        sptr->listprogress=-1;
+        return 0;
+      }
+      ClearDoingList(sptr);   /* yupo, its over */
+      return 0;
+    }   
+          
 
   /* Don't route list, no need for it - Dianora */
   /*
