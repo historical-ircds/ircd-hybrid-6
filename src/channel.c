@@ -78,6 +78,7 @@ static  int     del_banid (aChannel *, char *);
 static  int     del_exceptid (aChannel *, char *);
 static  int     del_denyid (aChannel *, char *);
 static  void    clear_bans_exceptions(aClient *,aChannel *);
+static  void    clear_denies_allows(aClient *,aChannel *);
 static  int     is_banned (aClient *, aChannel *);
 static  void    set_mode (aClient *, aClient *, aChannel *, int, char **);
 static  void    sub1_from_channel (aChannel *);
@@ -111,7 +112,7 @@ static  char    parabuf[MODEBUFLEN], parabuf2[MODEBUFLEN];
 extern Link *find_channel_link(Link *,aChannel *);      /* defined in list.c */
 
 
-/*
+/* 
  * return the length (>=0) of a chain of links.
  */
 static  int     list_length(Link *lp)
@@ -867,8 +868,8 @@ static  void    channel_modes(aClient *cptr,
 }
 
 /*
- * only used to send +b and +e now 
- *
+ * only used to send +b and +e now, +d/+a too.
+ * 
  */
 
 static  void    send_mode_list(aClient *cptr,
@@ -1013,6 +1014,17 @@ void    send_channel_modes(aClient *cptr, aChannel *chptr)
   modebuf[1] = '\0';
   send_mode_list(cptr, chptr->chname, chptr->exceptlist, CHFL_EXCEPTION,'e');
 
+  if (modebuf[1] || *parabuf)
+    sendto_one(cptr, ":%s MODE %s %s %s",
+               me.name, chptr->chname, modebuf, parabuf);
+
+  if(!IsCapable(cptr,CAP_DE))
+      return;
+  *parabuf = '\0';
+  *modebuf = '+';
+  modebuf[1] = '\0';
+  send_mode_list(cptr, chptr->chname, chptr->denylist, CHFL_DENY,'d');
+  
   if (modebuf[1] || *parabuf)
     sendto_one(cptr, ":%s MODE %s %s %s",
                me.name, chptr->chname, modebuf, parabuf);
@@ -1603,6 +1615,105 @@ static  void     set_mode(aClient *cptr,
 
           break;
 
+
+          /* There is a nasty here... I'm supposed to have
+           * CAP_DE before I can send exceptions to bans to a server.
+           * But that would mean I'd have to keep two strings
+           * one for local clients, and one for remote servers,
+           * one with the 'e' strings, one without.
+           * I added another parameter buf and mode buf for "new"
+           * capabilities.
+           *
+           * -Dianora
+           */
+
+        case 'd':
+          if (whatt == MODE_QUERY || parc-- <= 0)
+            {
+              if (!MyClient(sptr))
+                break;
+              if (errsent(SM_ERR_RPL_E, &errors_sent))
+                break;
+#ifdef BAN_INFO
+                  for (lp = chptr->denylist; lp; lp = lp->next)
+                    sendto_one(cptr, form_str(RPL_BANLIST),
+                               me.name, cptr->name,
+                               chptr->chname,
+                               lp->value.banptr->banstr,
+                               lp->value.banptr->who,
+                               lp->value.banptr->when);
+#else 
+                  for (lp = chptr->denylist; lp; lp = lp->next)
+                    sendto_one(cptr, form_str(RPL_BANLIST),
+                               me.name, cptr->name,
+                               chptr->chname,
+                               lp->value.cp);
+#endif
+                  sendto_one(sptr, form_str(RPL_ENDOFBANLIST),
+                             me.name, sptr->name, 
+                             chptr->chname);
+                  break;
+            }
+          arg = check_string(*parv++);
+
+          if (MyClient(sptr) && opcnt >= MAXMODEPARAMS)
+            break;
+
+          if (!isok)
+            {
+              if (!errsent(SM_ERR_NOOPS, &errors_sent) && MyClient(sptr))
+                sendto_one(sptr, form_str(ERR_CHANOPRIVSNEEDED),
+                           me.name, sptr->name, 
+                           chptr->chname);
+              break;
+            }
+          
+          if(MyClient(sptr))
+            chptr->keep_their_modes = YES;
+          else if(!chptr->keep_their_modes)
+            {
+              parc--;
+              parv++;
+              break;
+            }
+
+          if(*arg == ':')
+            {
+              parc--;
+              parv++;
+              break;
+            }
+
+          tmp = strlen(arg);
+          if (len + tmp + 2 >= MODEBUFLEN)
+            break;
+
+          if (!(((whatt & MODE_ADD) && !add_denyid(sptr, chptr, arg)) ||
+                ((whatt & MODE_DEL) && !del_denyid(chptr, arg))))
+            break;
+
+          /* This stuff can go back in when all servers understand +e 
+           * with the pbufw_new nonsense removed -Dianora
+           */
+
+          /*
+          *mbufw++ = plus;
+          *mbufw++ = 'e';
+          strcpy(pbufw, arg);
+          pbufw += strlen(pbufw);
+          *pbufw++ = ' ';
+          */
+          len += tmp + 1;
+          opcnt++;
+
+          *mbufw_new++ = plus;
+          *mbufw_new++ = 'd';
+          strcpy(pbufw_new, arg);
+          pbufw_new += strlen(pbufw_new);
+          *pbufw_new++ = ' ';
+
+          break;
+
         case 'b':
           if (whatt == MODE_QUERY || parc-- <= 0)
             {
@@ -1696,106 +1807,6 @@ static  void     set_mode(aClient *cptr,
 
           *mbufw++ = plus;
           *mbufw++ = 'b';
-          strcpy(pbufw, arg);
-          pbufw += strlen(pbufw);
-          *pbufw++ = ' ';
-          len += tmp + 1;
-          opcnt++;
-
-          break;
-
-        case 'd':
-          if (whatt == MODE_QUERY || parc-- <= 0)
-            {
-              if (!MyClient(sptr))
-                break;
-
-              if (errsent(SM_ERR_RPL_B, &errors_sent))
-                break;
-#ifdef BAN_INFO
-              for (lp = chptr->denylist; lp; lp = lp->next)
-                sendto_one(cptr, form_str(RPL_BANLIST),
-                           me.name, cptr->name,
-                           chptr->chname,
-                           lp->value.banptr->banstr,
-                           lp->value.banptr->who,
-                           lp->value.banptr->when);
-#else 
-              for (lp = chptr->denylist; lp; lp = lp->next)
-                sendto_one(cptr, form_str(RPL_BANLIST),
-                           me.name, cptr->name,
-                           chptr->chname,
-                           lp->value.cp);
-#endif
-              sendto_one(sptr, form_str(RPL_ENDOFBANLIST),
-                         me.name, sptr->name, 
-                         chptr->chname);
-              break;
-            }
-
-          if(MyClient(sptr))
-            chptr->keep_their_modes = YES;
-          else if(!chptr->keep_their_modes)
-            {
-              parc--;
-              parv++;
-              break;
-            }
-
-          arg = check_string(*parv++); 
-
-          if (MyClient(sptr) && opcnt >= MAXMODEPARAMS)
-            break;
-
-          if (!isok)
-            {
-              if (!errsent(SM_ERR_NOOPS, &errors_sent) && MyClient(sptr))
-                sendto_one(sptr, form_str(ERR_CHANOPRIVSNEEDED),
-                           me.name, sptr->name, 
-                           chptr->chname);
-              break;
-            }
-
-
-          /* Ignore colon at beginning of ban string.
-           * Unfortunately, I can't ignore all such strings,
-           * because otherwise the channel could get desynced.
-           * I can at least, stop local clients from placing a ban
-           * with a leading colon.
-           *
-           * Roger uses check_string() combined with an earlier test
-           * in his TS4 code. The problem is, this means on a mixed net
-           * one can't =remove= a colon prefixed ban if set from
-           * an older server.
-           * His code is more efficient though ;-/ Perhaps
-           * when we've all upgraded this code can be moved up.
-           *
-           * -Dianora
-           */
-
-          /* user-friendly ban mask generation, taken
-          ** from Undernet's ircd  -orabidoo
-          */
-          if (MyClient(sptr))
-            {
-              if( (*arg == ':') && (whatt & MODE_ADD) )
-                {
-                  parc--;
-                  parv++;
-                  break;
-                }
-            }
-
-          tmp = strlen(arg);
-          if (len + tmp + 2 >= MODEBUFLEN)
-            break;
-
-          if (!(((whatt & MODE_ADD) && !add_denyid(sptr, chptr, arg)) ||
-                ((whatt & MODE_DEL) && !del_denyid(chptr, arg))))
-            break;
-
-          *mbufw++ = plus;
-          *mbufw++ = 'd';
           strcpy(pbufw, arg);
           pbufw += strlen(pbufw);
           *pbufw++ = ' ';
@@ -2728,6 +2739,93 @@ static void clear_bans_exceptions(aClient *sptr, aChannel *chptr)
 
   chptr->banlist = chptr->exceptlist = NULL;
 }
+
+/*
+ * clear_bans_exceptions
+ *
+ * I could have re-written del_banid/del_exceptid to do this
+ *
+ * still need a bit of cleanup on the MODE -b stuff...
+ * -Dianora
+ */
+
+static void clear_denies_allows(aClient *sptr, aChannel *chptr)
+{
+  static char modebuf[MODEBUFLEN];
+  register Link *next_ban;
+  register Link *ban;
+  char *b1,*b2,*b3,*b4;
+  char *mp;
+
+  b1="";
+  b2="";
+  b3="";
+  b4="";
+
+  mp= modebuf;
+  *mp = '\0';
+
+  for(ban = chptr->denylist; ban; ban = ban->next)
+    {
+      if(!*b1)
+        {
+          b1 = BANSTR(ban);
+          *mp++ = '-';
+          *mp++ = 'd';
+          *mp = '\0';
+        }
+      else if(!*b2)
+        {
+          b2 = BANSTR(ban);
+          *mp++ = 'd';
+          *mp = '\0';
+        }
+      else if(!*b3)
+        {
+          b3 = BANSTR(ban);
+          *mp++ = 'd';
+          *mp = '\0';
+        }
+      else if(!*b4)
+        {
+          b4 = BANSTR(ban);
+          *mp++ = 'd';
+          *mp = '\0';
+
+          sendto_channel_butserv(chptr, &me,
+                                 ":%s MODE %s %s %s %s %s %s",
+                                 sptr->name,chptr->chname,modebuf,b1,b2,b3,b4);
+          b1="";
+          b2="";
+          b3="";
+          b4="";
+
+          mp = modebuf;
+          *mp = '\0';
+        }
+    }
+
+  if(*modebuf)
+    sendto_channel_butserv(chptr, &me,
+                           ":%s MODE %s %s %s %s %s %s",
+                           sptr->name,chptr->chname,modebuf,b1,b2,b3,b4);
+
+  for(ban = chptr->denylist; ban; ban = next_ban)
+    {
+      next_ban = ban->next;
+#ifdef BAN_INFO
+      MyFree(ban->value.banptr->banstr);
+      MyFree(ban->value.banptr->who);
+      MyFree(ban->value.banptr);
+#else
+      MyFree(ban->value.cp);
+#endif
+      free_link(ban);
+    }
+
+  chptr->denylist = NULL;
+}
+
 
 
 #ifdef NEED_SPLITCODE
@@ -4566,6 +4664,7 @@ int     m_sjoin(aClient *cptr,
         keep_our_modes = NO;
 
       clear_bans_exceptions(sptr,chptr);
+      clear_denies_allows(sptr,chptr);
 
       if (haveops && !doesop)
         {
