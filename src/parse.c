@@ -199,13 +199,17 @@ int parse(aClient *cptr, char *buffer, char *bufend)
   para[0] = from->name;
   if (*ch == ':')
     {
+      ch++;
+
       /*
       ** Copy the prefix to 'sender' assuming it terminates
       ** with SPACE (or NULL, which is an error, though).
       */
-      for (++ch, i = 0; *ch && *ch != ' '; ++ch )
-        if (s < (sender + sizeof(sender)-1))
-          *s++ = *ch; /* leave room for NULL */
+      for (i = 0; *ch && *ch != ' '; i++ )
+	{
+	  if (i < (sizeof(sender)-1))
+	    *s++ = *ch++; /* leave room for NULL */
+	}
       *s = '\0';
 
       /*
