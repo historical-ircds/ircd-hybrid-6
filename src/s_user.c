@@ -552,10 +552,10 @@ static int register_user(aClient *cptr, aClient *sptr,
 
       if(!valid_hostname(sptr->host))
 	{
-	  sendto_realops("Invalid hostname for %s, dumping user %s",
-			 inetntoa((char *)&sptr->ip), sptr->name);
-	  ircstp->is_ref++;
-	  return exit_client(cptr, sptr, &me, "Invalid hostname");
+	  sendto_one(sptr,":%s NOTICE %s :*** Notice -- You have an illegal character in your hostname", 
+		     me.name, sptr->name );
+
+	  strncpy(sptr->host,sptr->sockhost,HOSTIPLEN+1);
 	}
 
       aconf = sptr->confs->value.aconf;

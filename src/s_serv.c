@@ -2375,10 +2375,6 @@ int     m_operwall(aClient *cptr,
 		   me.name, parv[0], "OPERWALL");
       return 0;
     }
-  /*
-  if (strlen(message) > TOPICLEN)
-    message[TOPICLEN] = '\0';
-    */
 
 #ifdef PACE_WALLOPS
   if( MyClient(sptr) && ((last_used_wallops + WALLOPS_WAIT) > NOW) )

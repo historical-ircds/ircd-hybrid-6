@@ -174,6 +174,9 @@ static	time_t	try_connections(time_t currenttime)
 	}
 
       confrq = get_con_freq(cltmp);
+      if( confrq < 300 )
+	confrq = 300;
+
       aconf->hold = currenttime + confrq;
       /*
       ** Found a CONNECT config with port specified, scan clients
