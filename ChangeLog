@@ -1,3 +1,11 @@
+*** 19990818_2 by khuon
+Mental note: 
+
+	Always make sure to check in from the directory where you actually
+	got things working.
+
+
+
 *** 19990818_1 by db
 - backed out a change. You can't strcpy to a pointer without
   allocating memory. 
