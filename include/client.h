@@ -510,7 +510,9 @@ extern void	      del_client_from_llist(struct Client** list,
 extern int	      exit_client(struct Client*, struct Client*, 
                                   struct Client*, const char* comment);
 
-extern void count_local_client_memory(int *, int *);
-extern void count_remote_client_memory(int *, int *);
+extern void     count_local_client_memory(int *, int *);
+extern void     count_remote_client_memory(int *, int *);
+extern	int	check_registered (struct Client *);
+extern	int	check_registered_user (struct Client *);
 
 #endif /* INCLUDED_client_h */

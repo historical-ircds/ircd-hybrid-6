@@ -127,9 +127,8 @@ extern	int	nickkilldone(struct Client*, struct Client*, int, char**, time_t, cha
 
 extern	int	deliver_it (struct Client *, char *, int);
 
-extern	int	check_registered (struct Client *);
-extern	int	check_registered_user (struct Client *);
-extern const char* my_name_for_link(const char* name, struct ConfItem* conf);
+extern  const    char* my_name_for_link(const char* name,
+                   struct ConfItem* conf);
 extern  char*   date(time_t);
 extern	void	initstats (void), tstats (struct Client *, char *);
 extern	void	serv_info (struct Client *, char *);
