@@ -683,7 +683,6 @@ m_kline(aClient *cptr,
       ip = 0L;
     }
 
-#ifdef NON_REDUNDANT_KLINES
   if( (aconf = is_klined(host,user,(unsigned long)ip)) )
      {
        char *nrkreason;
@@ -703,7 +702,6 @@ m_kline(aClient *cptr,
            return 0;
          }
      }
-#endif
 
   current_date = smalldate((time_t) 0);
 
@@ -1161,7 +1159,6 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
         }
     }
 
-#ifdef NON_REDUNDANT_KLINES
   if( (aconf = match_Dline(ip_host)) )
      {
        char *nrkreason;
@@ -1181,7 +1178,6 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
       return 0;
        
      }
-#endif
 
   current_date = smalldate((time_t) 0);
 

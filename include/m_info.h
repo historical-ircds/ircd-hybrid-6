@@ -419,12 +419,6 @@ Info MyInformation[] = {
 
   { "NICKNAMEHISTORYLENGTH", "", NICKNAMEHISTORYLENGTH, "Size of WHOWAS Array" },
 
-#ifdef NON_REDUNDANT_KLINES
-  { "NON_REDUNDANT_KLINES", "ON", 0, "Check for and Disallow Redundant K-lines" },
-#else
-  { "NON_REDUNDANT_KLINES", "OFF", 0, "Check for and Disallow Redundant K-lines" },
-#endif /* NON_REDUNDANT_KLINES */
-
 #ifdef NO_CHANOPS_ON_SPLIT
   { "NO_CHANOPS_ON_SPLIT", "ON", 0, "Do not Allow Channel Ops During a NetSplit" },
 #else

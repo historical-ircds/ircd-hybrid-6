@@ -305,11 +305,6 @@
  */
 #define KLINE_WITH_CONNECTION_CLOSED
 
-/* NON_REDUNDANT_KLINES - If you want the server to flag and not apply
- * redundant klines
- */
-#define NON_REDUNDANT_KLINES
-
 /* BOTCHECK - rudimentary bot checking
  */
 #define BOTCHECK
