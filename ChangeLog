@@ -1,3 +1,23 @@
+*** 20010604_10 by jdc
+* Removed all of this "cipher priority" crap.  I'm sorry folks, but
+  this is silly.  The priority is now defined by the order of the
+  cipher definition in src/s_crypt.c.  I assume the best order is
+  the following, and therefore this is how they're used now:
+  Blowfish(256), Blowfish(128), CAST, IDEA, RC5(16), RC5(12), RC5(8),
+  3DES, DES.
+
+  The reason for this is because the previous method was not taking
+  into account who had what ciphers based upon what autoconf said.
+  I.e. #error's would be stated for ciphers which you didn't have,
+  assuming they were #define'd in config.h.  Now just rely upon the
+  autoconf values ENTIRELY.  Yay.
+
+* Changed Makefile.in to provide full warning flags for "developers" if
+  need be.  We have a __TON__ of warnings, folks.  We should try to
+  clean these up before the next release.
+
+
+
 *** 20010604_9 by jdc
 * Made version.c.SH more like hybrid-7 (based upon Hybrid-team).
 * Added my sorry ass to the list (for my code months prior).
