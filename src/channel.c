@@ -2280,7 +2280,7 @@ static  int     can_join(struct Client *sptr, struct Channel *chptr, char *key, 
              "User %s (%s@%s) is attemping to join locally juped channel %s",
                      sptr->name,
                      sptr->username, sptr->host,chptr->chname);
-      return (ERR_JUPEDCHAN);
+      return (ERR_BADCHANNAME);
     }
 #endif
 

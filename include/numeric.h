@@ -335,7 +335,6 @@ extern const char* form_str(int);
 #define ERR_MODELESS         477        /* ircu numeric -db */
 #define ERR_BANLISTFULL      478        /* I stole the numeric from ircu -db */
 #define ERR_BADCHANNAME      479
-#define ERR_JUPEDCHAN        480        /* co-ordinate later with ircu/ircnet */
 
 #define ERR_NOPRIVILEGES     481
 #define ERR_CHANOPRIVSNEEDED 482

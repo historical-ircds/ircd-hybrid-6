@@ -26,6 +26,7 @@
 #include "dbuf.h"
 #include "common.h"
 #include "irc_string.h"
+#include "ircd_defs.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -41,7 +42,11 @@
 /*
  * DBUF_SIZE must be a power of 2 so we can mask for the offset
  */
-#define DBUF_SIZE 2048
+/* 2k is a real pig with bigger servers */
+/* #define DBUF_SIZE 2048 */
+#define DBUF_SIZE 1024
+
+#define DBUF_USUAL_MAX_COUNT (BUFFERPOOL/DBUF_SIZE)
 
 struct DBufBuffer {
   struct DBufBuffer* next;             /* Next data buffer, NULL if last */
@@ -76,20 +81,26 @@ void count_dbuf_memory(size_t* allocated, size_t* used)
 void dbuf_init()
 {
   int      i;
-  struct DBufBuffer* dbp;
+  struct DBufBuffer* current_bp;
+  struct DBufBuffer* new_bp;
 
   assert(0 == dbufFreeList);
+
   dbufFreeList =
-    (struct DBufBuffer*) MyMalloc(sizeof(struct DBufBuffer) * INITIAL_DBUFS);
+    (struct DBufBuffer*) MyMalloc(sizeof(struct DBufBuffer));
   assert(0 != dbufFreeList);
 
-  dbp = dbufFreeList;
+  current_bp = dbufFreeList;
 
-  for (i = 0; i < INITIAL_DBUFS - 1; ++i) {
-    dbp->next = (dbp + 1);
-    ++dbp;
+  for (i = 0; i < INITIAL_DBUFS; i++ )
+  {
+    new_bp = (struct DBufBuffer*) MyMalloc(sizeof(struct DBufBuffer));
+
+    current_bp->next = new_bp;
+    current_bp = new_bp;
   }
-  dbp->next  = NULL;
+  current_bp->next = 0;
+
   DBufCount = INITIAL_DBUFS;
 }
 
@@ -100,9 +111,6 @@ void dbuf_init()
 static struct DBufBuffer* dbuf_alloc()
 {
   struct DBufBuffer* db = dbufFreeList;
-
-  if (DBufUsedCount * DBUF_SIZE == BUFFERPOOL)
-    return NULL;
 
   if (db)
     dbufFreeList = dbufFreeList->next;
@@ -126,9 +134,16 @@ static void dbuf_free(struct DBufBuffer* ptr)
   assert(0 != ptr);
   assert(DBufUsedCount > 0);
 
+  if (DBufUsedCount > DBUF_USUAL_MAX_COUNT)
+    {
+      MyFree(ptr);
+    }
+  else
+    {
+      ptr->next = dbufFreeList;
+      dbufFreeList = ptr;
+    }
   --DBufUsedCount;
-  ptr->next = dbufFreeList;
-  dbufFreeList = ptr;
 }
 /*
 ** This is called when malloc fails. Scrap the whole content
