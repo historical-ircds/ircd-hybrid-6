@@ -48,6 +48,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <time.h>
+#include <netdb.h>
 
 #define MIN_CONN_FREQ 300
 
@@ -338,7 +339,7 @@ int check_server(struct Client* cptr)
       Debug((DEBUG_DNS,"No C/N lines for %s", cptr->name));
       return 0;
     }
-#if 0
+  lp = cptr->confs;
   if (cptr->dns_reply)
     {
       int             i;
@@ -370,8 +371,6 @@ int check_server(struct Client* cptr)
                                   cptr->username, CONF_NOCONNECT_SERVER);
         }
     }
-#endif
-  lp = cptr->confs;
   /*
    * Check for C and N lines with the hostname portion the ip number
    * of the host the server runs on. This also checks the case where
