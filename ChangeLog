@@ -1,3 +1,9 @@
+*** 20010704_7 by db
+- reformatted hard to read code. grrrr why do people do 
+  function () { ?
+
+
+
 *** 20010704_6 by wcampbel
 Added make lint...that won't be very fun to clean up though
 
