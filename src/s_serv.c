@@ -79,6 +79,35 @@ static int  m_set_parser(char *);
 time_t last_used_wallops = 0L;
 #endif
 
+
+/*
+ * my_name_for_link - return wildcard name of my server name 
+ * according to given config entry --Jto
+ * XXX - this is only called with me.name as name
+ */
+const char* my_name_for_link(const char* name, aConfItem* aconf)
+{
+  static char          namebuf[HOSTLEN + 1];
+  register int         count = aconf->port;
+  register const char* start = name;
+
+  if (count <= 0 || count > 5)
+    return start;
+
+  while (count-- && name)
+    {
+      name++;
+      name = strchr(name, '.');
+    }
+  if (!name)
+    return start;
+
+  namebuf[0] = '*';
+  strncpy_irc(&namebuf[1], name, HOSTLEN - 1);
+  namebuf[HOSTLEN] = '\0';
+  return namebuf;
+}
+
 /*
  * hunt_server - Do the basic thing in delivering the message (command)
  *      across the relays to the specific server (server) for
@@ -457,6 +486,7 @@ int check_server(struct Client* cptr)
 **                      non-NULL pointers.
 */
 
+#if 0
 /*
 ** m_squit
 **      parv[0] = sender prefix
@@ -599,6 +629,7 @@ int m_squit(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   
   return exit_client(cptr, acptr, sptr, comment);
 }
+#endif
 
 /*
 ** m_svinfo

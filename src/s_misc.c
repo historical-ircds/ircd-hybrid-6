@@ -132,34 +132,6 @@ char* small_file_date(time_t clock)
   return timebuffer;
 }
 #endif
-
-/*
- * Return wildcard name of my server name according to given config entry
- * --Jto
- */
-const char* my_name_for_link(const char* name, aConfItem* aconf)
-{
-  static char          namebuf[HOSTLEN + 1];
-  register int         count = aconf->port;
-  register const char* start = name;
-
-  if (count <= 0 || count > 5)
-    return start;
-
-  while (count-- && name)
-    {
-      name++;
-      name = strchr(name, '.');
-    }
-  if (!name)
-    return start;
-
-  namebuf[0] = '*';
-  strncpy_irc(&namebuf[1], name, HOSTLEN - 1);
-  namebuf[HOSTLEN] = '\0';
-  return namebuf;
-}
-
 void        initstats()
 {
   memset(&ircst, 0, sizeof(ircst));

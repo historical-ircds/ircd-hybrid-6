@@ -410,6 +410,65 @@ struct Client* find_server(const char* name)
   return 0;
 }
 
+/*
+ * next_client - find the next matching client. 
+ * The search can be continued from the specified client entry. 
+ * Normal usage loop is:
+ *
+ *      for (x = client; x = next_client(x,mask); x = x->next)
+ *              HandleMatchingClient;
+ *            
+ */
+struct Client*
+next_client(struct Client *next,     /* First client to check */
+            const char* ch)          /* search string (may include wilds) */
+{
+  struct Client *tmp = next;
+
+  next = find_client(ch, tmp);
+  if (tmp && tmp->prev == next)
+    return ((struct Client *) NULL);
+
+  if (next != tmp)
+    return next;
+  for ( ; next; next = next->next)
+    {
+      if (match(ch,next->name)) break;
+    }
+  return next;
+}
+
+
+/* 
+ * this slow version needs to be used for hostmasks *sigh
+ *
+ * next_client_double - find the next matching client. 
+ * The search can be continued from the specified client entry. 
+ * Normal usage loop is:
+ *
+ *      for (x = client; x = next_client(x,mask); x = x->next)
+ *              HandleMatchingClient;
+ *            
+ */
+struct Client* 
+next_client_double(struct Client *next, /* First client to check */
+                   const char* ch)      /* search string (may include wilds) */
+{
+  struct Client *tmp = next;
+
+  next = find_client(ch, tmp);
+  if (tmp && tmp->prev == next)
+    return NULL;
+  if (next != tmp)
+    return next;
+  for ( ; next; next = next->next)
+    {
+      if (match(ch,next->name) || match(next->name,ch))
+        break;
+    }
+  return next;
+}
+
 #if 0
 /*
  * find_server_by_name - attempt to find server in hash table, otherwise 

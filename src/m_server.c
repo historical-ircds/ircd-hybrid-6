@@ -31,9 +31,9 @@
 #include "list.h"        /* make_server */
 #include "numeric.h"     /* ERR_xxx */
 #include "s_conf.h"      /* struct ConfItem */
-#include "s_misc.h"      /* my_name_for_link */
 #include "s_err.h"       /* form_str */
-#include "s_serv.h"      /* server_estab, check_server */
+#include "s_misc.h"      /* ircstp */
+#include "s_serv.h"      /* server_estab, check_server, my_name_for_link */
 #include "scache.h"      /* find_or_add */
 #include "send.h"        /* sendto_one */
 #include "struct.h"      /* bleah */
