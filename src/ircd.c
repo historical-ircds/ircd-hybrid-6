@@ -1726,7 +1726,7 @@ time_t now;
       busycli_fdlist.entry[i] = 0;
 
       if (!(cptr=local[i])) continue;
-      if (IsServer(cptr) || IsListening(cptr) || IsOper(cptr))
+      if (IsServer(cptr) || IsListening(cptr) || IsAnOper(cptr))
 	{
 	  busycli_fdlist.entry[i] = 1;
 	  continue;
