@@ -51,9 +51,11 @@ COMMAND         - USAGE and DESCRIPTION
                   ------ (^ = Can be configured to be oper only.)
                   ^ c - Shows C/N lines
                   * d - Shows D lines
+                  * f - Shows channel/TS statistics
                   * g - Shows G lines
                   ^ h - Shows H/L lines
                   ^ i - Shows I lines
+                  * j - Shows locally juped channels (+j)
                   ^ K - Shows K lines (or matched klines)
                   ^ k - Shows temporary K lines (or matched temp klines)
                     L - Shows IP and generic info about [nick]
