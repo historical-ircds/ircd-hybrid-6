@@ -2135,9 +2135,6 @@ static void initconf(FBFILE* file, int use_include)
           char *ps;        /* space finder */
           char *pt;        /* tab finder */
 
-          ps = strchr(aconf->user,' ');
-          pt = strchr(aconf->user,'\t');
-
 	  if(!aconf->user)
 	    {
 	      DupString(aconf->name, "*");
@@ -2294,8 +2291,15 @@ static void initconf(FBFILE* file, int use_include)
           unsigned long ip_mask;
           dontadd = 1;
           
-          (void)collapse(aconf->host);
-          (void)collapse(aconf->user);
+          if(!aconf->host)
+            DupString(aconf->host,"*");
+          else
+            (void)collapse(aconf->host);
+
+          if(!aconf->user)
+            DupString(aconf->user,"*");
+          else
+            (void)collapse(aconf->user);
 
           /* The idea here is, to separate a name@host part
            * into aconf->host part and aconf->user part
