@@ -94,6 +94,7 @@ static FLAG_ITEM user_modes[] =
   {FLAGS_REJ, 'r'},
   {FLAGS_SERVNOTICE, 's'},
   {FLAGS_WALLOP, 'w'},
+  {FLAGS_EXTERNAL, 'x'},
   {FLAGS_SPY, 'y'},
   {FLAGS_OPERWALL, 'z'},
   {0, 0}
@@ -125,7 +126,7 @@ static int user_modes_from_c_to_bitmask[] =
   0,		/* u */
   0,		/* v */
   FLAGS_WALLOP,	/* w */
-  0,		/* x */
+  FLAGS_EXTERNAL, /* x */
   FLAGS_SPY, 	/* y */
   FLAGS_OPERWALL, /* z */
   0, 0, 0, 0, 0, 0	/* pad out to 0x1F */

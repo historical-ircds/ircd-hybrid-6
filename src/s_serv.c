@@ -763,7 +763,7 @@ int m_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			 
 	}
       
-      sendto_realops_flags(FLAGS_CCONN,"Server %s being introduced by %s",
+      sendto_realops_flags(FLAGS_EXTERNAL,"Server %s being introduced by %s",
 			 acptr->name, sptr->name);
       return 0;
     }
