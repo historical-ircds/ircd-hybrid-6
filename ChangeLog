@@ -1,3 +1,7 @@
+*** 20010805_8 by leeh
+- removed some debugging symbols
+
+
 *** 20010805_7 by leeh
 - dont allow duplicate IP klines
 
