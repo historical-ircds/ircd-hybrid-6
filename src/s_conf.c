@@ -1698,16 +1698,18 @@ static void initconf(FBFILE* file, int use_include)
     0,0,0,0,0,0 
     };
 
-  char        *tmp, *s;
-  int        i, dontadd;
-  char        line[BUFSIZE];
-  int        ccount = 0, ncount = 0;
-  struct ConfItem *aconf = NULL;
-  struct ConfItem *include_conf = NULL;
-  unsigned long ip;
-  unsigned long ip_mask;
-  int sendq = 0;
-  aClass *class0;
+  char*            tmp;
+  char*            s;
+  int              dontadd;
+  char             line[BUFSIZE];
+  int              ccount = 0;
+  int              ncount = 0;
+  struct ConfItem* aconf = NULL;
+  struct ConfItem* include_conf = NULL;
+  unsigned long    ip;
+  unsigned long    ip_mask;
+  int              sendq = 0;
+  aClass*          class0;
 
   class0 = find_class(0);        /* which one is class 0 ? */
 

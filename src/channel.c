@@ -2484,7 +2484,6 @@ void    del_invite(aClient *cptr,aChannel *chptr)
 static  void    sub1_from_channel(aChannel *chptr)
 {
   Link *tmp;
-  Link  *obtmp;
 
   if (--chptr->users <= 0)
     {
@@ -2575,7 +2574,6 @@ static  void    sub1_from_channel(aChannel *chptr)
 static void clear_bans_exceptions_denies(aClient *sptr, aChannel *chptr)
 {
   static char modebuf[MODEBUFLEN];
-  register Link *next_ban;
   register Link *ban;
   char *b1,*b2,*b3,*b4;
   char *mp;
