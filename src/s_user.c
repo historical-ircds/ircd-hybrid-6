@@ -21,10 +21,6 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/*
- * #define CANONIZE if you want canonize()
- * its no longer used in channel.c, and is commented out in whowas.c
- */
 
 #ifndef lint
 static  char sccsid[] = "@(#)s_user.c	2.68 07 Nov 1993 (C) 1988 University of Oulu, \
@@ -397,53 +393,6 @@ static	int do_nick_name(char *nick)
   return (ch - nick);
 }
 
-
-#ifdef CANONIZE
-/*
-** canonize
-**
-** reduce a string of duplicate list entries to contain only the unique
-** items.  Unavoidably O(n^2).
-*/
-char	*canonize(char *buffer)
-{
-  static	char	cbuf[BUFSIZ];
-  register char	*s, *t, *cp = cbuf;
-  register int	l = 0;
-  char	*p = NULL, *p2;
-
-  *cp = '\0';
-
-  for (s = strtoken(&p, buffer, ","); s; s = strtoken(&p, NULL, ","))
-    {
-      if (l)
-	{
-	  for (p2 = NULL, t = strtoken(&p2, cbuf, ","); t;
-	       t = strtoken(&p2, NULL, ","))
-	    if (!irccmp(s, t))
-	      break;
-	    else if (p2)
-	      p2[-1] = ',';
-	}
-      else
-	t = NULL;
-
-      if (!t)
-	{
-	  if (l)
-	    *(cp-1) = ',';
-	  else
-	    l = 1;
-	  (void)strcpy(cp, s);
-	  if (p)
-	    cp += (p - s);
-	}
-      else if (p2)
-	p2[-1] = ',';
-    }
-  return cbuf;
-}
-#endif
 
 /*
 ** register_user

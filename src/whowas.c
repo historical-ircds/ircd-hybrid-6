@@ -160,8 +160,6 @@ int     m_whowas(aClient *cptr,
     if (hunt_server(cptr,sptr,":%s WHOWAS %s %s :%s", 3,parc,parv))
       return 0;
 
-  /*  parv[1] = canonize(parv[1]); */
-
   if(!IsAnOper(sptr) && !MyConnect(sptr)) /* pace non local requests */
     {
       if((last_used + WHOIS_WAIT) > NOW)
