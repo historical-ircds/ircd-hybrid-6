@@ -48,14 +48,19 @@ extern  void sendto_match_cap_servs(struct Channel *, struct Client *,
                                     int, const char *, ...);
 extern  void sendto_match_butone(struct Client *, struct Client *, 
                                  char *, int, const char *, ...);
+
 extern  void sendto_ops_lev(int, const char *, ...);
+extern  void sendto_ops_flags(int, const char *, ...);
+
+extern  void sendto_realops(const char *, ...);
+extern  void sendto_realops_lev(int, const char *, ...);
+extern  void sendto_realops_flags(int, const char *, ...);
+
 extern  void sendto_ops(const char *, ...);
 extern  void sendto_ops_butone(struct Client *, struct Client *, 
                                const char *, ...);
 extern  void sendto_wallops_butone(struct Client *, struct Client *, 
                                    const char *, ...);
-extern  void sendto_realops(const char *, ...);
-extern  void sendto_realops_lev(int, const char *, ...);
 extern  void ts_warn(const char *, ...);
 
 extern  void sendto_prefix_one(struct Client *, struct Client *, 

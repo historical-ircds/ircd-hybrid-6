@@ -970,6 +970,59 @@ sendto_ops_lev(int lev, const char *pattern, ...)
 }  /* sendto_ops_lev */
 
 /*
+ * sendto_ops_flags
+ *
+ *    Send to *local* ops only at a certain level...
+ */
+
+void
+sendto_ops_flags(int flags, const char *pattern, ...)
+
+{
+  va_list args;
+  register aClient *cptr;
+  char nbuf[1024];
+
+  va_start(args, pattern);
+
+  if( flags & FLAGS_SKILL)
+    {
+      for(cptr = local_cptr_list; cptr; cptr = cptr->next_local_client)
+	{
+	  if(cptr->oper_flags & FLAGS_SKILL)
+	    {
+	      (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
+			       me.name, cptr->name);
+      
+	      (void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
+      
+	      vsendto_one(cptr, nbuf, args);
+	    }
+	} /* for(cptr = local_cptr_list; cptr; cptr = cptr->next_local_client) */
+    }
+
+
+  flags &= ~FLAGS_SKILL;
+
+  if(flags)
+    {
+      for(cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client)
+	{
+	  if(cptr->oper_flags & flags)
+	    {
+	      (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
+			       me.name, cptr->name);
+	      
+	      (void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
+	      
+	      vsendto_one(cptr, nbuf, args);
+	    }
+	} /* for(cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client) */
+    }
+  va_end(args);
+}  /* sendto_ops_lev */
+
+/*
  * sendto_ops
  *
  *	Send to *local* ops only.
@@ -1331,10 +1384,6 @@ sendto_realops_lev(int lev, const char *pattern, ...)
 	    continue;
 	  break;
 
-	  /*
-	   * This should not be sent, since this can go to
-	   * normal people
-	   */
 	case SKILL_LEV:
 	  if (!SendSkillNotice(cptr))
 	    continue;
@@ -1370,6 +1419,37 @@ sendto_realops_lev(int lev, const char *pattern, ...)
 
   va_end(args);
 } /* sendto_realops_lev() */
+
+/*
+ * sendto_realops_flags
+ *
+ *    Send to *local* ops with matching flags
+ */
+
+void
+sendto_realops_flags(int flags, const char *pattern, ...)
+
+{
+  va_list args;
+  register aClient *cptr;
+  char nbuf[1024];
+
+  va_start(args, pattern);
+
+  for (cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client)
+    {
+      if(cptr->oper_flags & flags)
+	{
+	  (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
+			   me.name, cptr->name);
+	  (void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
+	  
+	  vsendto_one(cptr, nbuf, args);
+	}
+    } /* for (cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client) */
+
+  va_end(args);
+} /* sendto_realops_flags() */
 
 /*
 ** ts_warn

@@ -43,6 +43,7 @@
 #include "h.h"
 #include "send.h"
 #include "hash.h"
+#include "whowas.h"
 
 #include <string.h>
 #include <stdlib.h>
