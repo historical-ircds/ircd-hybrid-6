@@ -1,3 +1,28 @@
+jdc         2001/12/09 21:56:36 EST	(20011210_1)
+
+  Modified files:
+    include              irc_string.h 
+    src                  channel.c hash.c irc_string.c m_kline.c 
+                         packet.c s_serv.c s_user.c send.c 
+    tools                klineParse.c 
+  Log:
+  - Removal of all 'register' variable declarations.  Unneeded with
+  present-day compilers.
+  
+  Revision  Changes    Path
+  1.17      +1 -1      ircd-hybrid-6/include/irc_string.h
+  1.230     +12 -12    ircd-hybrid-6/src/channel.c
+  1.40      +8 -8      ircd-hybrid-6/src/hash.c
+  1.10      +6 -6      ircd-hybrid-6/src/irc_string.c
+  1.66      +3 -3      ircd-hybrid-6/src/m_kline.c
+  1.25      +2 -2      ircd-hybrid-6/src/packet.c
+  1.229     +5 -5      ircd-hybrid-6/src/s_serv.c
+  1.242     +2 -2      ircd-hybrid-6/src/s_user.c
+  1.109     +36 -37    ircd-hybrid-6/src/send.c
+  1.3       +4 -4      ircd-hybrid-6/tools/klineParse.c
+
+
+
 db          2001/12/09 21:21:13 EST	(20011210_0)
 
   Modified files:
