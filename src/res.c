@@ -161,10 +161,10 @@ typedef struct reslist {
   time_t          timeout;
   struct in_addr  addr;
   char*           name;
-  struct reslist* next;
+  struct reslist *next;
   struct DNSQuery query;             /* query callback for this request */
   aHostent        he;
-} ResRQ;
+};
 
 struct result {
   struct Hostent  he;
@@ -184,28 +184,28 @@ static time_t nextDNSCheck    = 0;
  */ 
 static int         spare_fd = -1;
 
-static ResRQ*      requestListHead;     /* head of resolver request list */
-static ResRQ*      requestListTail;     /* tail of resolver request list */
+static struct reslist *requestListHead;     /* head of resolver request list */
+static struct reslist *requestListTail;     /* tail of resolver request list */
 
 
-static void     add_request(ResRQ* request);
-static void     rem_request(ResRQ* request);
-static ResRQ*   make_request(const struct DNSQuery* query);
+static void     add_request(struct reslist *request);
+static void     rem_request(struct reslist *request);
+static struct reslist *make_request(const struct DNSQuery* query);
 static void     do_query_name(const struct DNSQuery* query, 
                               const char* name, 
-                              ResRQ* request);
+                              struct reslist *request);
 static void     do_query_number(const struct DNSQuery* query,
                                 const struct in_addr*, 
-                                ResRQ* request);
+                                struct reslist *request);
 static void     query_name(const char* name, 
                            int query_class, 
                            int query_type, 
-                           ResRQ* request);
+                           struct reslist *request);
 static int      send_res_msg(const char* buf, int len, int count);
-static void     resend_query(ResRQ* request);
-static int      proc_answer(ResRQ* request, HEADER* header, 
+static void     resend_query(struct reslist *request);
+static int      proc_answer(struct reslist *request, HEADER* header, 
                                     char*, char *);
-static ResRQ*   find_id(int);
+static reslist *find_id(int);
 
 static  struct  resinfo {
   int  re_errors;
@@ -359,7 +359,7 @@ add_local_domain(char* hname, int size)
  * add_request - place a new request in the request list
  */
 static 
-void add_request(ResRQ* request)
+void add_request(struct reslist *request)
 {
   assert(request != NULL);
   if (requestListHead == NULL)
@@ -381,10 +381,10 @@ void add_request(ResRQ* request)
  * temporary storage of DNS results.
  */
 static void 
-rem_request(ResRQ* request)
+rem_request(struct reslist *request)
 {
-  ResRQ** current;
-  ResRQ*  prev = NULL;
+  struct reslist **current;
+  struct reslist *prev = NULL;
 
   assert(request != NULL);
   for (current = &requestListHead; *current; )
@@ -413,13 +413,13 @@ rem_request(ResRQ* request)
 /*
  * make_request - Create a DNS request record for the server.
  */
-static ResRQ* 
+static struct reslist* 
 make_request(const struct DNSQuery* query)
 {
-  ResRQ* request;
+  struct reslist *request;
   assert(query != NULL);
-  request = (ResRQ*) MyMalloc(sizeof(ResRQ));
-  memset(request, 0, sizeof(ResRQ));
+  request = (struct reslist *) MyMalloc(sizeof(struct reslist));
+  memset(request, 0, sizeof(struct reslist));
 
   request->sentat  = CurrentTime;
   request->retries = 3;
@@ -442,8 +442,8 @@ make_request(const struct DNSQuery* query)
 static time_t 
 timeout_query_list(time_t now)
 {
-  ResRQ*   request;
-  ResRQ*   next_request = 0;
+  struct reslist *request;
+  struct reslist *next_request = 0;
   time_t   next_time    = 0;
   time_t   timeout      = 0;
 
@@ -509,8 +509,8 @@ timeout_resolver(time_t now)
 void 
 delete_resolver_queries(const void* vptr)
 {
-  ResRQ* request;
-  ResRQ* next_request;
+  struct reslist *request;
+  struct reslist *next_request;
 
   for (request = requestListHead; request; request = next_request)
   {
@@ -568,10 +568,10 @@ send_res_msg(const char* msg, int len, int rcount)
 /*
  * find_id - find a dns request id (id is determined by dn_mkquery)
  */
-static ResRQ* 
+static struct reslist* 
 find_id(int id)
 {
-  ResRQ* request;
+  struct reslist *request;
 
   for (request = requestListHead; request; request = request->next)
   {
@@ -614,7 +614,7 @@ gethost_byaddr(const char* addr, const struct DNSQuery* query)
  */
 static void 
 do_query_name(const struct DNSQuery* query, 
-                          const char* name, ResRQ* request)
+                          const char* name, struct reslist *request)
 {
   char  hname[HOSTLEN + 1];
   assert(name != NULL);
@@ -645,7 +645,7 @@ do_query_name(const struct DNSQuery* query,
 static void 
 do_query_number(const struct DNSQuery* query, 
                             const struct in_addr* addr,
-                            ResRQ* request)
+                            struct reslist *request)
 {
   char  ipbuf[32];
   const unsigned char* cp;
@@ -676,7 +676,7 @@ do_query_number(const struct DNSQuery* query,
  */
 static void 
 query_name(const char* name, int query_class,
-                       int type, ResRQ* request)
+                       int type, struct reslist *request)
 {
   char buf[MAXPACKET];
   int  request_len = 0;
@@ -721,7 +721,7 @@ query_name(const char* name, int query_class,
 }
 
 static void 
-resend_query(ResRQ* request)
+resend_query(struct reslist *request)
 {
   assert(request != NULL);
 
@@ -746,7 +746,7 @@ resend_query(ResRQ* request)
  * build a hostent struct in the passed request
  */
 static int 
-proc_answer(ResRQ* request, HEADER* header,
+proc_answer(struct reslist *request, HEADER* header,
                        char* buf, char* eob)
 {
   char   hostbuf[HOSTLEN + 1]; /* working buffer */
@@ -1102,7 +1102,7 @@ get_res(void)
 {
   char               buf[sizeof(HEADER) + MAXPACKET];
   HEADER*            header;
-  ResRQ*             request = NULL;
+  struct reslist     *request = NULL;
   struct result      *cp = NULL;
   int                rc;
   int                answer_count;

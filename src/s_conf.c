@@ -169,7 +169,8 @@ static void conf_dns_callback(void* vptr, struct DNSReply* reply)
 struct DNSReply* conf_dns_lookup(struct ConfItem* aconf)
 {
   struct DNSReply* dns_reply = 0;
-  if (!aconf->dns_pending) {
+  if (!aconf->dns_pending)
+  {
     struct DNSQuery query;
     query.vptr     = aconf;
     query.callback = conf_dns_callback;
