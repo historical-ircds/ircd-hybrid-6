@@ -400,13 +400,23 @@ struct Client
   short	            lastsq;	/* # of 2k blocks when sendqueued called last*/
   dbuf	            sendQ;	/* Outgoing message queue--if socket full */
   dbuf	            recvQ;	/* Hold for data incoming yet to be parsed */
-  unsigned long     sendM;	/* Statistics: protocol messages send */
-  unsigned long     sendK;	/* Statistics: total k-bytes send */
-  unsigned long     receiveM;	/* Statistics: protocol messages received */
-  unsigned long     receiveK;	/* Statistics: total k-bytes received */
+  /*
+   * we want to use unsigned int here so the sizes have a better chance of
+   * staying the same on 64 bit machines. The current trend is to use
+   * I32LP64, (32 bit ints, 64 bit longs and pointers) and since ircd
+   * will NEVER run on an operating system where ints are less than 32 bits, 
+   * it's a relatively safe bet to use ints. Since right shift operations are
+   * performed on these, it's not safe to allow them to become negative, 
+   * which is possible for long running server connections. Unsigned values 
+   * generally overflow gracefully. --Bleep
+   */
+  unsigned int      sendM;	/* Statistics: protocol messages send */
+  unsigned int      sendK;	/* Statistics: total k-bytes send */
+  unsigned int      receiveM;	/* Statistics: protocol messages received */
+  unsigned int      receiveK;	/* Statistics: total k-bytes received */
   unsigned short    sendB;	/* counters to count upto 1-k lots of bytes */
   unsigned short    receiveB;	/* sent and received. */
-  unsigned long	    lastrecvM;	/* to check for activity --Mika */
+  unsigned int	    lastrecvM;	/* to check for activity --Mika */
   int		    priority;
   struct Client*    acpt;	/* listening client which we accepted from */
   struct SLink*     confs;	/* Configuration record associated */
