@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, src/m_version.c
+ *   IRC - Internet Relay Chat, src/flud.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
  *
@@ -54,7 +54,7 @@ void announce_fluder(
   else
     fludee = chptr->chname;
 
-  sendto_ops_flags(FLAGS_REJ, "Flooder %s [%s@%s] on %s target: %s",
+  sendto_ops_flags(FLAGS_BOTS, "Flooder %s [%s@%s] on %s target: %s",
                  fluder->name, fluder->username, fluder->host,
                  fluder->user->server, fludee);
 }
