@@ -1245,7 +1245,7 @@ vsendto_prefix_one(register aClient *to, register aClient *from,
     } /* if (user) */
 
   *sendbuf = ':';
-  strncpy(sendbuf + 1, par, sizeof(sendbuf) - 2);
+  strncpy_irc(sendbuf + 1, par, sizeof(sendbuf) - 2);
 
   parlen = strlen(par) + 1;
   sendbuf[parlen++] = ' ';
