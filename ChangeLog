@@ -1,3 +1,9 @@
+*** 19990802_1 by lusky
+fixed 216 reply
+bug in mtrie_conf.c causing ~ klines not to work
+major bug in s_conf.c to do with reading of kline.conf
+
+
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
