@@ -716,4 +716,15 @@ static inline int errno_resources(int e) { return e==ENOMEM || e==ENOBUFS; }
 		       (tv)|=GETIL_B(cb), \
 		       (tv) )
 
+#ifndef timeclear
+#define timerclear(tvp)   (tvp)->tv_sec = (tvp)->tv_usec = 0
+#endif
+
+#ifndef timercmp
+#define timercmp(tvp, uvp, cmp) \
+        (((tvp)->tv_sec != (uvp)->tv_sec) ? \
+        ((tvp)->tv_sec cmp (uvp)->tv_sec) : \
+        ((tvp)->tv_usec cmp (uvp)->tv_usec))
+#endif
+
 #endif

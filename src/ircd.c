@@ -688,6 +688,7 @@ static void check_pidfile(void)
  */
 static void setup_corefile(void)
 {
+#ifdef RLIMIT_CORE
   struct rlimit rlim; /* resource limits */
 
   /* Set corefilesize to maximum */
@@ -696,6 +697,7 @@ static void setup_corefile(void)
     rlim.rlim_cur = rlim.rlim_max;
     setrlimit(RLIMIT_CORE, &rlim);
   }
+#endif /* RLIMIT_CORE */
 }
 
 int main(int argc, char *argv[])

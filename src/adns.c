@@ -161,7 +161,7 @@ static void do_adns_select(void)
 	FD_ZERO(&exceptfds);
 	adns_beforeselect(dns_state, &maxfd, &readfds, &writefds, &exceptfds, 0, &tvbuf, 0);
 	select(maxfd, &readfds, &writefds, &exceptfds, &tvbuf);
-	adns_afterselect(dns_state, maxfd, &readfds, &writefds, &exceptfds, tvbuf); 
+	adns_afterselect(dns_state, maxfd, &readfds, &writefds, &exceptfds, &tvbuf); 
 }
 #else
 static void do_adns_poll(void)
