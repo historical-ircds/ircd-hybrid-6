@@ -1,0 +1,21 @@
+If you don't read this first, we won't help you.
+:-)
+
+See the INSTALL document for info on configuring and compiling
+ircd-hybrid.
+
+IMPORTANT. if you are used to using "ONE" in the password field
+of I lines to limit clients to one per ip, hybrid-5 no longer does it
+that way. It now does it the same way CSr does it. The limit is set
+by the normally unused (for clients) confreq field in the corresponding
+Y line.
+
+TRANSLATION: You *MUST* fix your I and Y lines to be hybrid-5
+compatible before running hybrid-5.
+
+LOTS OF THINGS HAVE CHANGED IN CONFIG.H.  PLEASE READ THROUGH IT.
+
+NEW DEBUGGING MODE: if you run ircd with the -s flag, it will send
+errors that are normally syslogged to stderr.  This is very useful
+if you don't have syslogging set up and ircd won't run.
+
