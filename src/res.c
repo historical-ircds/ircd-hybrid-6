@@ -575,20 +575,31 @@ static	int	proc_answer(ResRQ *rptr,
        * this code was not working on alpha due to that
        * (spotted by rodder/jailbird/dianora)
        */
+      /*
+       * RFC 1104/1105 wasn't very helpful about what these fields
+       * should be named, so for now, we'll just name them this way.
+       * we probably should look at what named calls them or something.
+       */
+
+#define TYPE_SIZE 2
+#define CLASS_SIZE 2
+#define TTL_SIZE 4
+#define DLEN_SIZE 2
 
       cp = (char *)((unsigned long)cp + (unsigned long)n);
+
       type = (int)_getshort(cp);
+      cp = (char *)((unsigned long)cp + (unsigned long)TYPE_SIZE);
 
-      cp = (char *)((unsigned long)cp + (unsigned long)sizeof(short));
       class = (int)_getshort(cp);
+      cp = (char *)((unsigned long)cp + (unsigned long)CLASS_SIZE);
 
-      cp = (char *)((unsigned long)cp + (unsigned long)sizeof(short));
       rptr->ttl = _getlong(cp);
+      cp = (char *)((unsigned long)cp + (unsigned long)TTL_SIZE);
 
-      cp = (char *)((unsigned long)cp + (unsigned long)sizeof(rptr->ttl));
       dlen =  (int)_getshort(cp);
+      cp = (char *)((unsigned long)cp + (unsigned long)DLEN_SIZE);
 
-      cp = (char *)((unsigned long)cp + (unsigned long)sizeof(short));
       /* Wait to set rptr->type until we verify this structure */
       
       len = strlen(hostbuf);
