@@ -26,7 +26,7 @@ fixklines: $(fixklines_OBJECTS)
 	$(CC) $(LDFLAGS) -o fixklines $(fixklines_OBJECTS) $(IRCDLIBS)
 
 clean:
-	$(RM) -f $(all_OBJECTS) fixklines viconf chkconf mkpasswd *~ core
+	$(RM) -f $(all_OBJECTS) fixklines viconf chkconf mkpasswd *~ core *.exe
 
 distclean: clean
 	$(RM) -f Makefile

@@ -54,6 +54,11 @@
 #define HARD_FDLIMIT_   256
 #define INIT_MAXCLIENTS 200
 
+#if defined(__CYGWIN__)
+#define HARD_FDLIMIT_   25
+#define INIT_MAXCLIENTS 20
+#endif /* __CYGWIN__ */
+
 /*
  * This is how many 'buffer connections' we allow... 
  * Remember, MAX_BUFFER + MAX_CLIENTS can't exceed HARD_FDLIMIT :)
@@ -416,10 +421,6 @@
  * and obtain their permission to send messages to the system log files.
  */
 #define USE_SYSLOG
-
-#if defined(__CYGWIN__)
-#undef USE_SYSLOG
-#endif
 
 #ifdef  USE_SYSLOG
 /* SYSLOG_KILL SYSLOG_SQUIT SYSLOG_CONNECT SYSLOG_USERS SYSLOG_OPER

@@ -30,3 +30,8 @@ on FreeBSD 3.x, RedHat 6.2, and Solaris 7/sparc.  Please let us know
 if you find otherwise.  It probably does not compile on AIX, IRIX,
 or libc5 Linux.
 
+CYGWIN USERS: This code is known to compile and run somewhat under
+Cygwin 1.1.2.  You will need BIND-4.9.7 and libcrypt to compile hybrid
+under Cygwin.  I have ported BIND 4.9.7 to Cygwin and written a standalone
+md5-based libcrypt that I will make available seperately.
+
