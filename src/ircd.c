@@ -707,6 +707,12 @@ int main(int argc, char *argv[])
 {
   time_t      delay = 0;
   aConfItem*  aconf;
+  
+  if(geteuid() == 0)
+  {
+  	fprintf(stderr, "ERROR: Don't run ircd as root!\n");
+  	return -1;
+  }
 
   /*
    * save server boot time right away, so getrusage works correctly
