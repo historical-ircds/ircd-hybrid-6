@@ -443,7 +443,8 @@ vsendto_one(aClient *to, const char *pattern, va_list args)
       return;
     }
 
-  len = vsprintf(sendbuf, pattern, args);
+  vsprintf_irc(sendbuf, pattern, args);
+  len = strlen(sendbuf);
 
   /*
    * from rfc1459

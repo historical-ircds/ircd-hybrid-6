@@ -842,7 +842,7 @@ static int register_user(aClient *cptr, aClient *sptr,
       local_cptr_list = sptr;
     }
   
-  sendto_serv_butone(cptr, "NICK %s %d %ld %s %s %s %s :%s",
+  sendto_serv_butone(cptr, "NICK %s %d %lu %s %s %s %s :%s",
 		     nick, sptr->hopcount+1, sptr->tsinfo, ubuf,
 		     sptr->username, sptr->host, user->server,
 		     sptr->info);
@@ -1339,7 +1339,7 @@ int	m_nick(aClient *cptr,
 
 #ifdef NICK_KILL_LOCALLY
       /* just propogate it through */
-      sendto_serv_butone(cptr, ":%s NICK %s :%ld",
+      sendto_serv_butone(cptr, ":%s NICK %s :%lu",
 			 parv[0], nick, sptr->tsinfo);
 #endif
       /*
@@ -1583,7 +1583,7 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
 		{
 		  add_history(sptr,1);
 	      
-		  sendto_serv_butone(cptr, ":%s NICK %s :%ld",
+		  sendto_serv_butone(cptr, ":%s NICK %s :%lu",
 				     parv[0], nick, sptr->tsinfo);
 		}
 #ifdef ANTI_NICK_FLOOD
@@ -1605,7 +1605,7 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
 	  if (sptr->user)
 	    {
 	      add_history(sptr,1);
-	      sendto_serv_butone(cptr, ":%s NICK %s :%ld",
+	      sendto_serv_butone(cptr, ":%s NICK %s :%lu",
 				 parv[0], nick, sptr->tsinfo);
 	    }
 	}

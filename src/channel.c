@@ -247,8 +247,8 @@ static	int	add_banid(aClient *cptr, aChannel *chptr, char *banid)
 	(char *)MyMalloc(strlen(cptr->name)+
 			 strlen(cptr->username)+
 			 strlen(cptr->host)+3);
-      (void)ircsprintf(ban->value.banptr->who, "%s!%s@%s",
-		    cptr->name, cptr->username, cptr->host);
+      ircsprintf(ban->value.banptr->who, "%s!%s@%s",
+		 cptr->name, cptr->username, cptr->host);
     }
   else
     {
@@ -326,8 +326,8 @@ static	int	add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
 	(char *)MyMalloc(strlen(cptr->name)+
 			 strlen(cptr->username)+
 			 strlen(cptr->host)+3);
-      (void)ircsprintf(ex->value.banptr->who, "%s!%s@%s",
-		    cptr->name, cptr->username, cptr->host);
+      ircsprintf(ex->value.banptr->who, "%s!%s@%s",
+		 cptr->name, cptr->username, cptr->host);
     }
   else
     {
@@ -732,7 +732,7 @@ static	void	channel_modes(aClient *cptr,
     {
       *mbuf++ = 'l';
       if (IsMember(cptr, chptr) || IsServer(cptr))
-	(void)ircsprintf(pbuf, "%d ", chptr->mode.limit);
+	ircsprintf(pbuf, "%d ", chptr->mode.limit);
     }
   if (*chptr->mode.key)
     {
@@ -1582,7 +1582,7 @@ static  void     set_mode(aClient *cptr,
 		break; */
 	      if (!(nusers = atoi(arg)))
 		break;
-	      ircsprintf(numeric, "%-15d", nusers);
+	      ircsprintf(numeric, "%d", nusers);
 	      if ((tmpc = strchr(numeric, ' ')))
 		*tmpc = '\0';
 	      arg = numeric;
@@ -2983,24 +2983,24 @@ int	m_join(aClient *cptr,
 	  if(allow_op)
 	    {
 	      sendto_match_servs(chptr, cptr,
-				 ":%s SJOIN %ld %s + :@%s", me.name,
+				 ":%s SJOIN %lu %s + :@%s", me.name,
 				 chptr->channelts, name, parv[0]);
 
 	    }				     
 	  else
 	    sendto_match_servs(chptr, cptr,
-			       ":%s SJOIN %ld %s + :%s", me.name,
+			       ":%s SJOIN %lu %s + :%s", me.name,
 			       chptr->channelts, name, parv[0]);
 #else
 	  sendto_match_servs(chptr, cptr,
-			     ":%s SJOIN %ld %s + :@%s", me.name,
+			     ":%s SJOIN %lu %s + :@%s", me.name,
 			     chptr->channelts, name, parv[0]);
 #endif
 	}
       else if (MyClient(sptr))
 	{
 	  sendto_match_servs(chptr, cptr,
-			     ":%s SJOIN %ld %s + :%s", me.name,
+			     ":%s SJOIN %lu %s + :%s", me.name,
 			     chptr->channelts, name, parv[0]);
 	}
       else
@@ -3707,13 +3707,13 @@ int	m_invite(aClient *cptr,
 	      /* bit of paranoia, be a shame if it cored for this -Dianora */
 	      if(acptr->user)
 		{
-		  (void)ircsprintf(message,
-				   "INVITE: %s (%s invited %s [%s@%s])",
-				   chptr->chname,
-				   sptr->name,
-				   acptr->name,
-				   acptr->username,
-				   acptr->host);
+		  ircsprintf(message,
+			     "INVITE: %s (%s invited %s [%s@%s])",
+			     chptr->chname,
+			     sptr->name,
+			     acptr->name,
+			     acptr->username,
+			     acptr->host);
 
 		  /* Note the horrible kludge here of "PRIVMSG"
 		   * in the arguments, this is to ensure that p4 in 
@@ -4241,9 +4241,9 @@ int	m_sjoin(aClient *cptr,
   if(!isnew && !newts && oldts)
     {
       sendto_channel_butserv(chptr, &me,
-	     ":%s NOTICE %s :*** Notice -- TS for %s changed from %ld to 0",
+	     ":%s NOTICE %s :*** Notice -- TS for %s changed from %lu to 0",
 	      me.name, chptr->chname, chptr->chname, oldts);
-      sendto_realops("Server %s changing TS on %s from %ld to 0",
+      sendto_realops("Server %s changing TS on %s from %lu to 0",
 		     sptr->name,parv[2],oldts);
     }
 
@@ -4490,7 +4490,7 @@ int	m_sjoin(aClient *cptr,
 	  what = 1;
 	}
       *mbuf++ = 'l';
-      (void)sprintf(numeric, "%-15d", mode.limit);
+      ircsprintf(numeric, "%d", mode.limit);
       if ((s = strchr(numeric, ' ')))
 	*s = '\0';
       strcat(parabuf, numeric);
@@ -4563,7 +4563,7 @@ int	m_sjoin(aClient *cptr,
 	    }
 	}
         sendto_channel_butserv(chptr, &me,
-	    ":%s NOTICE %s :*** Notice -- TS for %s changed from %ld to %ld",
+	    ":%s NOTICE %s :*** Notice -- TS for %s changed from %lu to %lu",
 	    me.name, chptr->chname, chptr->chname, oldts, newts);
     }
   if (mbuf != modebuf)
