@@ -1128,8 +1128,8 @@ void show_opers(aClient *cptr,char *name)
       j++;
       sendto_one(cptr, ":%s %d %s :%s [%c] (%s@%s) Idle: %d",
 		 me.name, RPL_STATSDEBUG, name,
-		 IsAnOper(cptr2)?'O':'o',
 		 cptr2->name,
+		 IsAnOper(cptr2)?'O':'o',
 		 cptr2->user->username, cptr2->user->host,
 		 timeofday - cptr2->user->last);
     }
