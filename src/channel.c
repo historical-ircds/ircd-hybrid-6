@@ -48,6 +48,7 @@
 #include "whowas.h"
 #include "s_user.h"
 #include "s_err.h"
+#include "irc_string.h"
 
 #include <assert.h>
 #include <string.h>

@@ -8,7 +8,6 @@
 #include "struct.h"
 #include "common.h"
 #include "numeric.h"
-#include "msg.h"
 #include "channel.h"
 #include "send.h"
 #include "ircd.h"

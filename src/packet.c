@@ -23,7 +23,6 @@
 #include "packet.h"
 #include "struct.h"
 #include "common.h"
-#include "msg.h"
 #include "s_zip.h"
 #include "ircd.h"
 #include "list.h"

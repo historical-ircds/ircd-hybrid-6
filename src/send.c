@@ -28,9 +28,9 @@
 #include "class.h"
 #include "numeric.h"
 #include "channel.h"
-#include "msg.h"
 #include "bsd.h"
 #include "s_err.h"
+#include "m_commands.h"
 
 #include <stdio.h>
 #include <string.h>

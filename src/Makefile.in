@@ -36,6 +36,7 @@ SRCS = \
 	m_gline.c \
 	m_info.c \
 	m_kline.c \
+	m_pass.c \
 	m_unkline.c \
 	match.c \
 	motd.c \
@@ -82,6 +83,7 @@ SRCS = \
 #	m_gline.o \
 #	m_info.o \
 #	m_kline.o \
+#	m_pass.o \
 #	m_unkline.o \
 #	match.o \
 #	motd.o \

@@ -27,7 +27,6 @@
 
 #include "common.h"
 #include "numeric.h"
-#include "msg.h"
 #include "channel.h"
 #include "s_conf.h"
 #include "send.h"

@@ -25,7 +25,6 @@
 #include "common.h"
 #include "dline_conf.h"
 #include "numeric.h"
-#include "msg.h"
 #include "res.h"
 #include "class.h"
 #include "s_auth.h"
@@ -47,6 +46,7 @@
 #include "s_misc.h"
 #include "s_zip.h"
 #include "s_debug.h"
+#include "msg.h"      /* msgtab */
 
 #include <string.h>
 #include <errno.h>

@@ -25,7 +25,6 @@
 #include "struct.h"
 #include "common.h"
 #include "numeric.h"
-#include "msg.h"
 #include "channel.h"
 #include "s_conf.h"
 #include "motd.h"
@@ -43,6 +42,7 @@
 #include "parse.h"
 #include "s_err.h"
 #include "fdlist.h"
+#include "msg.h"
 #ifdef FLUD
 #include "blalloc.h"
 #endif /* FLUD */
@@ -3320,49 +3320,6 @@ int     m_oper(aClient *cptr,
                      parv[0], sptr->username, sptr->host);
 #endif /* SHOW_FAILED_OPER_PASSWD */
 #endif
-    }
-  return 0;
-}
-
-/***************************************************************************
- * m_pass() - Added Sat, 4 March 1989
- ***************************************************************************/
-
-/*
-** m_pass
-**      parv[0] = sender prefix
-**      parv[1] = password
-**      parv[2] = optional extra version information
-*/
-int m_pass(aClient *cptr, aClient *sptr, int parc, char *parv[])
-{
-  char* password = parc > 1 ? parv[1] : NULL;
-
-  if (BadPtr(password))
-    {
-      sendto_one(cptr, form_str(ERR_NEEDMOREPARAMS),
-                 me.name, parv[0], "PASS");
-      return 0;
-    }
-  if (!MyConnect(sptr) || (!IsUnknown(cptr) && !IsHandshake(cptr)))
-    {
-      sendto_one(cptr, form_str(ERR_ALREADYREGISTRED),
-                 me.name, parv[0]);
-      return 0;
-    }
-  strncpy_irc(cptr->passwd, password, PASSWDLEN);
-  if (parc > 2)
-    {
-      /* 
-       * It looks to me as if orabidoo wanted to have more
-       * than one set of option strings possible here...
-       * i.e. ":AABBTS" as long as TS was the last two chars
-       * however, as we are now using CAPAB, I think we can
-       * safely assume if there is a ":TS" then its a TS server
-       * -Dianora
-       */
-      if (0 == irccmp(parv[2], "TS"))
-        cptr->tsinfo = TS_DOESTS;
     }
   return 0;
 }

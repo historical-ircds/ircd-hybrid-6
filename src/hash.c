@@ -24,7 +24,6 @@
 #include "struct.h"
 #include "common.h"
 #include "numeric.h"
-#include "msg.h"
 #include "ircd.h"
 #include "send.h"
 #include "s_err.h"
