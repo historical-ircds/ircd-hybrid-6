@@ -73,7 +73,7 @@
 #define NAMES_OFFSET  (size_t) (ADDRS_OFFSET + ADDRS_DLEN)
 #define MAXGETHOSTLEN (size_t) (NAMES_OFFSET + MAXPACKET)
 
-#define AR_TTL          600   /* TTL in seconds for dns cache entries */
+#define AR_TTL          600   /* minimum TTL in seconds for dns cache entries */
 
 /*
  * the following values should be prime
@@ -1629,7 +1629,7 @@ static void rem_cache(aCache* ocp)
    * remove cache entry from hashed name lists
    */
   assert(0 != hp->h_name);
-  if (hp->h_name)
+  if (hp->h_name == 0)
     return;
   hashv = hash_name(hp->h_name);
 
