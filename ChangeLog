@@ -1,3 +1,8 @@
+*** 19990802_3 by lusky
+Updated documentation files, removed -DNDEBUG from the default CFLAGS,
+and sycn;d config.h.dist to config.h
+
+
 *** 19990802_2 by lusky
 added release notes to the tree
 
