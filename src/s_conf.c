@@ -84,6 +84,7 @@ static void add_q_line(struct ConfItem *);
 static void clear_q_lines(void);
 static void clear_special_conf(struct ConfItem **);
 static struct ConfItem* find_tkline(const char*, const char*, unsigned long);
+static void expire_temp_klines(struct ConfItem **tklines);
 
 struct ConfItem *temporary_klines = NULL;
 struct ConfItem *temporary_ip_klines = NULL;
@@ -2714,104 +2715,79 @@ struct ConfItem *find_kill(aClient* cptr)
 }
 
 /*
+ * expire_temp_klines
+ *
+ * inputs        - pointer to root of tkline list
+ * output        - none
+ * side effects  -
+ *
+ */
+static void
+expire_temp_klines(struct ConfItem **tklines)
+{
+  struct ConfItem *cur_p; 
+  struct ConfItem *next_p;
+  struct ConfItem *last_p;
+
+  for (last_p = NULL, cur_p = *tklines; cur_p; cur_p = next_p)
+  {   
+    next_p = cur_p->next;
+
+    if(cur_p->hold <= CurrentTime)        /* a kline has expired */
+    {
+      if(last_p != NULL)
+        last_p->next = cur_p->next;
+      else
+        *tklines = cur_p->next;
+
+      /* Alert opers that a TKline expired - Hwy */
+      sendto_realops("Temporary K-line for [%s@%s] expired",
+                     (cur_p->user) ? cur_p->user : "*",
+                     (cur_p->host) ? cur_p->host : "*");
+      free_conf(cur_p);
+    }
+    else
+      last_p = cur_p;
+  }
+}
+
+/*
  * find_tkline
  *
  * inputs        - hostname
- *                - username
+ *               - username
  * output        - matching struct ConfItem or NULL
- * side effects        -
+ * side effects  -
  *
  * WARNING, no sanity checking on length of name,host etc.
  * thats expected to be done by caller.... *sigh* -Dianora
  */
 
-static struct ConfItem* find_tkline(const char* host, const char* user, unsigned long ip)
+static struct ConfItem* 
+find_tkline(const char* host, const char* user, unsigned long ip)
 {
-  struct ConfItem *kill_list_ptr;        /* used for the link list only */
-  struct ConfItem *last_list_ptr;
-  struct ConfItem *tmp_list_ptr;
+  struct ConfItem *cur_p; 
+  
+  expire_temp_klines(&temporary_klines);
+  for (cur_p = temporary_klines; cur_p; cur_p = cur_p->next)
+  {   
+    if ((cur_p->user
+	 && (!user || match(cur_p->user, user)))
+	&& (cur_p->host
+	    && (!host || match(cur_p->host,host))))
+      return(cur_p);
+  }
 
-  if(temporary_klines)
-    {
-      kill_list_ptr = last_list_ptr = temporary_klines;
-
-      while(kill_list_ptr)
-        {
-          if(kill_list_ptr->hold <= CurrentTime)        /* a kline has expired */
-            {
-              if(temporary_klines == kill_list_ptr)
-                {
-                  temporary_klines = last_list_ptr = tmp_list_ptr =
-                    kill_list_ptr->next;
-                }
-              else
-                {
-                  /* its in the middle of the list, so link around it */
-                  tmp_list_ptr = last_list_ptr->next = kill_list_ptr->next;
-                }
-
-              /* Alert opers that a TKline expired - Hwy */
-              sendto_realops("Temporary K-line for [%s@%s] expired",
-                             (kill_list_ptr->user) ? kill_list_ptr->user : "*",
-                             (kill_list_ptr->host) ? kill_list_ptr->host : "*");
-
-              free_conf(kill_list_ptr);
-              kill_list_ptr = tmp_list_ptr;
-            }
-          else
-            {
-              if( (kill_list_ptr->user
-                   && (!user || match(kill_list_ptr->user, user)))
-                  && (kill_list_ptr->host
-                      && (!host || match(kill_list_ptr->host,host))))
-                return(kill_list_ptr);
-              last_list_ptr = kill_list_ptr;
-              kill_list_ptr = kill_list_ptr->next;
-            }
-        }
-    }
-
-  if(temporary_ip_klines)
-    {
-      kill_list_ptr = last_list_ptr = temporary_ip_klines;
-
-      while(kill_list_ptr)
-        {
-          if(kill_list_ptr->hold <= CurrentTime)        /* a kline has expired */
-            {
-              if(temporary_ip_klines == kill_list_ptr)
-                {
-                  temporary_ip_klines = last_list_ptr = tmp_list_ptr =
-                    kill_list_ptr->next;
-                }
-              else
-                {
-                  /* its in the middle of the list, so link around it */
-                  tmp_list_ptr = last_list_ptr->next = kill_list_ptr->next;
-                }
-
-              /* Alert opers that a TKline expired - Hwy */
-              sendto_realops("Temporary K-line for [%s@%s] expired",
-                             (kill_list_ptr->user) ? kill_list_ptr->user : "*",
-                             (kill_list_ptr->host) ? kill_list_ptr->host : "*");
-
-              free_conf(kill_list_ptr);
-              kill_list_ptr = tmp_list_ptr;
-            }
-          else
-            {
-              if( (kill_list_ptr->user
-                   && (!user || match(kill_list_ptr->user, user)))
-                  && (kill_list_ptr->ip
-                      && ((ip & kill_list_ptr->ip_mask) == kill_list_ptr->ip)))
-                return(kill_list_ptr);
-              last_list_ptr = kill_list_ptr;
-              kill_list_ptr = kill_list_ptr->next;
-            }
-        }
-    }
-
-  return NULL;
+  expire_temp_klines(&temporary_ip_klines);
+  for (cur_p = temporary_ip_klines; cur_p; cur_p = cur_p->next)
+  {
+    if ((cur_p->user
+	 && (!user || match(cur_p->user, user)))
+	&& (cur_p->ip
+	    && ((ip & cur_p->ip_mask) == cur_p->ip)))
+      return(cur_p);
+  }
+  return (NULL);
 }
 
 /*
@@ -2827,7 +2803,8 @@ static struct ConfItem* find_tkline(const char* host, const char* user, unsigned
  * thats expected to be done by caller.... *sigh* -Dianora
  */
 
-struct ConfItem *find_is_klined(const char* host, const char* name, unsigned long ip)
+struct ConfItem *
+find_is_klined (const char* host, const char* name, unsigned long ip)
 {
   struct ConfItem *found_aconf;
 
@@ -2854,8 +2831,8 @@ struct ConfItem *find_is_klined(const char* host, const char* name, unsigned lon
  * output	- matching struct or NULL
  * side effects - NONE
  */
-struct ConfItem *is_klined(const char *host,const char *name,
-                           unsigned long ip)
+struct ConfItem *
+is_klined(const char *host,const char *name, unsigned long ip)
 {
   struct ConfItem *found_aconf;
 
@@ -2874,12 +2851,13 @@ struct ConfItem *is_klined(const char *host,const char *name,
  *
  * inputs        - pointer to struct ConfItem
  * output        - none
- * Side effects        - links in given struct ConfItem into temporary kline link list
+ * Side effects  - adds given tkline into temporary kline link list
  * 
  * -Dianora
  */
 
-void add_temp_kline(struct ConfItem *aconf)
+void
+add_temp_kline(struct ConfItem *aconf)
 {
   if (aconf->ip == 0)
     {
@@ -2900,7 +2878,8 @@ void add_temp_kline(struct ConfItem *aconf)
  * side effects        - All temporary klines are flushed out. 
  *
  */
-void flush_temp_klines()
+void
+flush_temp_klines()
 {
   struct ConfItem *kill_list_ptr;
 
@@ -2935,8 +2914,10 @@ void flush_temp_klines()
 void report_temp_klines(aClient *sptr)
 {
 
+  expire_temp_klines(&temporary_klines);
   if(temporary_klines)
       show_temp_klines(sptr, temporary_klines);
+  expire_temp_klines(&temporary_ip_klines);
   if(temporary_ip_klines)
       show_temp_klines(sptr, temporary_ip_klines);
 
@@ -2950,67 +2931,33 @@ void report_temp_klines(aClient *sptr)
  * side effects	- NONE
  */
 void
-show_temp_klines(aClient *sptr, struct ConfItem * tklist)
+show_temp_klines(struct Client *sptr, struct ConfItem * tklist)
 {
-  struct ConfItem *kill_list_ptr;
-  struct ConfItem *last_list_ptr;
-  struct ConfItem *tmp_list_ptr;
+  struct ConfItem *cur_p;
   char *host;
   char *user;
   char *reason;
 
-  kill_list_ptr = last_list_ptr = tklist;
+  for(cur_p = tklist; cur_p; cur_p = cur_p->next)
+  {
+    if(cur_p->host != NULL)
+      host = cur_p->host;
+    else
+      host = "*";
 
-  while(kill_list_ptr)
-    {
-      if(kill_list_ptr->hold <= CurrentTime)        /* kline has expired */
-        {
-          if(tklist == kill_list_ptr)
-            {
-              /* Its pointing to first one in link list*/
-              /* so, bypass this one, remember bad things can happen
-                 if you try to use an already freed pointer.. */
+    if(cur_p->user != NULL)
+      user = cur_p->user;
+    else
+      user = "*";
 
-              tklist = last_list_ptr = tmp_list_ptr = kill_list_ptr->next;
-            }
-          else
-            {
-              /* its in the middle of the list, so link around it */
-              tmp_list_ptr = last_list_ptr->next = kill_list_ptr->next;
-            }
+    if(cur_p->passwd)
+      reason = cur_p->passwd;
+    else
+      reason = "No Reason";
 
-          /* Alert opers that a TKline expired - Hwy */
-          sendto_realops("Temporary K-line for [%s@%s] expired",
-                         (kill_list_ptr->user) ? kill_list_ptr->user : "*",
-                         (kill_list_ptr->host) ? kill_list_ptr->host : "*");
-
-          free_conf(kill_list_ptr);
-          kill_list_ptr = tmp_list_ptr;
-        }
-      else
-        {
-          if(kill_list_ptr->host)
-            host = kill_list_ptr->host;
-          else
-            host = "*";
-
-          if(kill_list_ptr->user)
-            user = kill_list_ptr->user;
-          else
-            user = "*";
-
-          if(kill_list_ptr->passwd)
-            reason = kill_list_ptr->passwd;
-          else
-            reason = "No Reason";
-
-	  sendto_one(sptr,form_str(RPL_STATSKLINE), me.name,
-                       sptr->name, 'k' , host, user, reason);
-
-          last_list_ptr = kill_list_ptr;
-          kill_list_ptr = kill_list_ptr->next;
-        }
-    }
+    sendto_one(sptr,form_str(RPL_STATSKLINE), me.name,
+	       sptr->name, 'k' , host, user, reason);
+  }
 }
 
 /* oper_privs_from_string
@@ -3022,7 +2969,8 @@ show_temp_klines(aClient *sptr, struct ConfItem * tklist)
  *
  */
 
-static int oper_privs_from_string(int int_privs,char *privs)
+static int 
+oper_privs_from_string(int int_privs,char *privs)
 {
   while(*privs)
     {
@@ -3169,7 +3117,8 @@ char *oper_privs_as_string(aClient *cptr,int port)
  * -Dianora
  */
 
-static int oper_flags_from_string(char *flags)
+static int 
+oper_flags_from_string(char *flags)
 {
   int int_flags=0;
 
