@@ -72,6 +72,7 @@ char *infotext[] =
         "David-R             David Rientjes      rientjes@mail.whidbey.net",
         "Dianora             Diane Bruce         db@db.net",
 	"echo                Adam J. Durana      adam@caca.com",
+        "Flashman            Craig A. Huegen     chuegen@quadrunner.com"
 	"good                Sean McVeigh        sdlmcvei@uwaterloo.ca",
 	"jailbird            Dustin Marquess     jailbird@alcatraz.fdf.net",
 	"johan               Johannes Erdfelt    jerdfelt@eng.mindspring.net",
