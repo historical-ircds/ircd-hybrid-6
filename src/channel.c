@@ -3802,6 +3802,9 @@ int     m_sjoin(struct Client *cptr,
   static        char numeric[16], sjbuf[BUFSIZE];
   char  *mbuf = modebuf, *t = sjbuf, *p;
 
+  /* wipe sjbuf so we don't use old nicks if we get an empty SJOIN */
+  *sjbuf = '\0';
+
   if (IsClient(sptr) || parc < 5)
     return 0;
   if (!IsChannelName(parv[2]))
