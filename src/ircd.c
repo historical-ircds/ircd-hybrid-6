@@ -810,7 +810,8 @@ int main(int argc, char *argv[])
   read_conf_files(YES);         /* cold start init conf files */
 
   aconf = find_me();
-  strncpy_irc(me.name, aconf->host, HOSTLEN);
+  if (EmptyString(me.name))
+    strncpy_irc(me.name, aconf->host, HOSTLEN);
   strncpy_irc(me.host, aconf->host, HOSTLEN);
 
   me.fd = -1;
