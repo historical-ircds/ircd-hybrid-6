@@ -14,6 +14,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <fcntl.h>
 #ifdef HAVE_MMAP
 #include <sys/mman.h>
 #endif
