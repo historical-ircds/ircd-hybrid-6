@@ -85,7 +85,7 @@ dline_conf.o: ../include/struct.h ../include/config.h ../include/setup.h
 dline_conf.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h
 dline_conf.o: ../include/hash.h ../include/class.h ../include/dbuf.h
 dline_conf.o: ../include/common.h ../include/sys.h ../include/numeric.h
-dline_conf.o: ../include/inet.h ../include/h.h ../include/mtrie_conf.h
+dline_conf.o: ../include/h.h ../include/mtrie_conf.h
 dline_conf.o: ../include/fdlist.h ../include/dline_conf.h
 fdlist.o: ../include/struct.h ../include/config.h ../include/setup.h
 fdlist.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
@@ -101,7 +101,7 @@ ircd.o: ../include/struct.h ../include/config.h ../include/setup.h
 ircd.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
 ircd.o: ../include/class.h ../include/dbuf.h ../include/common.h
 ircd.o: ../include/dline_conf.h ../include/sys.h ../include/numeric.h
-ircd.o: ../include/msg.h ../include/inet.h ../include/h.h
+ircd.o: ../include/msg.h ../include/h.h
 ircd.o: ../include/mtrie_conf.h ../include/fdlist.h
 list.o: ../include/struct.h ../include/config.h ../include/setup.h
 list.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
@@ -132,8 +132,7 @@ res.o: ../include/struct.h ../include/config.h ../include/setup.h
 res.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
 res.o: ../include/class.h ../include/dbuf.h ../include/common.h
 res.o: ../include/sys.h ../include/res.h ../include/numeric.h ../include/h.h
-res.o: ../include/mtrie_conf.h ../include/fdlist.h ../include/nameser.h
-res.o: ../include/resolv.h ../include/inet.h
+res.o: ../include/mtrie_conf.h ../include/fdlist.h
 s_auth.o: ../include/struct.h ../include/config.h ../include/setup.h
 s_auth.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
 s_auth.o: ../include/class.h ../include/dbuf.h ../include/common.h
@@ -144,14 +143,14 @@ s_bsd.o: ../include/struct.h ../include/config.h ../include/setup.h
 s_bsd.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
 s_bsd.o: ../include/class.h ../include/dbuf.h ../include/common.h
 s_bsd.o: ../include/sys.h ../include/res.h ../include/numeric.h
-s_bsd.o: ../include/patchlevel.h ../include/inet.h ../include/nameser.h
-s_bsd.o: ../include/resolv.h ../include/h.h ../include/mtrie_conf.h
+s_bsd.o: ../include/patchlevel.h
+s_bsd.o: ../include/h.h ../include/mtrie_conf.h
 s_bsd.o: ../include/fdlist.h
 s_conf.o: ../include/struct.h ../include/config.h ../include/setup.h
 s_conf.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
 s_conf.o: ../include/class.h ../include/dbuf.h ../include/common.h
 s_conf.o: ../include/dline_conf.h ../include/sys.h ../include/numeric.h
-s_conf.o: ../include/inet.h ../include/h.h ../include/mtrie_conf.h
+s_conf.o: ../include/h.h ../include/mtrie_conf.h
 s_conf.o: ../include/fdlist.h
 s_debug.o: ../include/struct.h ../include/config.h ../include/setup.h
 s_debug.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
@@ -176,7 +175,7 @@ s_serv.o: ../include/struct.h ../include/config.h ../include/setup.h
 s_serv.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
 s_serv.o: ../include/class.h ../include/dbuf.h ../include/common.h
 s_serv.o: ../include/sys.h ../include/numeric.h ../include/msg.h
-s_serv.o: ../include/channel.h ../include/nameser.h ../include/resolv.h
+s_serv.o: ../include/channel.h
 s_serv.o: ../include/h.h ../include/mtrie_conf.h ../include/fdlist.h
 s_serv.o: ../include/dline_conf.h
 s_user.o: ../include/struct.h ../include/config.h ../include/setup.h

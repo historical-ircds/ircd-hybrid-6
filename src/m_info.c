@@ -8,8 +8,6 @@
 #ifndef __EMX__
 #include <utmp.h> /* old slackware utmp.h defines BYTE_ORDER */
 #endif /* __EMX__ */
-#include "nameser.h" /* and nameser.h checks to see if its defined */
-#include "resolv.h"
 
 #if defined(AIX) || defined(DYNIXPTX) || defined(SVR3)
 #include <time.h>

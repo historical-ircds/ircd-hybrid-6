@@ -42,7 +42,6 @@ static char *rcs_version="$Id$";
 #undef RUSAGE_CHILDREN /* hack for old slackware */
 #define RUSAGE_CHILDREN -1
 
-#include "inet.h"
 #include "h.h"
 
 #include "mtrie_conf.h"

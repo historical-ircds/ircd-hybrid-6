@@ -2,7 +2,6 @@
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
-#include "inet.h"
 #include <sys/socket.h>
 #include <fcntl.h>
 #include <sys/wait.h>

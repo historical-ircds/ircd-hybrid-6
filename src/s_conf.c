@@ -30,13 +30,9 @@ static char *rcs_version = "$Id$";
 #include "dline_conf.h"
 #include "sys.h"
 #include "numeric.h"
-#include "inet.h"
 #include <sys/socket.h>
 #include <fcntl.h>
 #include <sys/wait.h>
-#ifdef __hpux
-#include "inet.h"
-#endif
 #if defined(AIX) || defined(DYNIXPTX) || defined(SVR3)
 #include <time.h>
 #endif

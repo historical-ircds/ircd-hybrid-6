@@ -16,9 +16,9 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 
-#include "nameser.h"
-#include "resolv.h"
-#include "inet.h"
+#include <arpa/nameser.h>
+#include <resolv.h>
+#include <arpa/inet.h>
 
 #ifndef lint
 static  char sccsid[] = "@(#)res.c	2.34 03 Nov 1993 (C) 1992 Darren Reed";
@@ -28,12 +28,12 @@ static  char *rcs_version = "$Id$";
 #undef	DEBUG	/* because there is a lot of debug code in here :-) */
 extern  void    debug();
 
-
+#if 0
 extern	int	dn_expand (char *, char *, char *, char *, int);
 extern	int	dn_skipname (char *, char *);
 extern	int	res_mkquery (int, char *, int, int, char *, int,
 				   struct rrec *, char *, int);
-
+#endif
 extern	int	errno, h_errno;
 extern	int	highest_fd;
 extern	aClient	*local[];

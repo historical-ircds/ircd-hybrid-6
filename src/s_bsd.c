@@ -40,7 +40,6 @@ static char *rcs_version = "$Id$";
 #include <sys/select.h>
 #include <unistd.h>
 #endif
-#include "inet.h"
 #include <stdio.h>
 #include <signal.h>
 #include <fcntl.h>
@@ -74,9 +73,9 @@ fd_set  readset,writeset;
 # include <time.h>
 # include <arpa/nameser.h>
 #else
-# include "nameser.h"
+// # include "nameser.h"
 #endif
-#include "resolv.h"
+// #include "resolv.h"
 /*
 #include "sock.h"*/	/* If FD_ZERO isn't define up to this point,  */
 			/* define it (BSD4.2 needs this) */
