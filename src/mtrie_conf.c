@@ -1431,7 +1431,7 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
 
           sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
                      sptr->name, 'K', host,
-                     name, pass);
+                     user, pass);
           if(p)
             *p = '|';
         }
