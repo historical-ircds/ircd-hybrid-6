@@ -319,8 +319,11 @@
  * If KLINE_WITH_CONNECTION_CLOSED is defined and KLINE_WITH_REASON
  * above is undefined then the signoff reason will be "Connection
  * closed". This prevents other users seeing the client disconnect
- * from harassing the IRCops.
- * However, the client will still see the real reason upon connect attempts.
+ * from harassing the IRCops.  The client will not see the reason.
+ *
+ * However, if KLINE_WITH_CONNECTION_CLOSED and KLINE_WITH_REASON
+ * are both defined, the client will still see the real reason on
+ * connect attempts.
  */
 #define KLINE_WITH_CONNECTION_CLOSED
 
