@@ -1,3 +1,22 @@
+leeh        2001/12/19 18:02:09 EST	(20011219_2)
+
+  Modified files:
+    include              config.h config.h.dist 
+    src                  client.c m_trace.c mtrie_conf.c s_user.c 
+  Log:
+  - added HIDE_SPOOF_IPS, replacing the cramming into SPOOF_NOTICE
+  - stats L still needs to be done..
+  
+  Revision  Changes    Path
+  1.151     +9 -2      ircd-hybrid-6/include/config.h
+  1.130     +9 -2      ircd-hybrid-6/include/config.h.dist
+  1.76      +3 -3      ircd-hybrid-6/src/client.c
+  1.12      +18 -14    ircd-hybrid-6/src/m_trace.c
+  1.87      +12 -10    ircd-hybrid-6/src/mtrie_conf.c
+  1.245     +3 -3      ircd-hybrid-6/src/s_user.c
+
+
+
 greg        2001/12/18 23:52:11 EST	(20011219_1)
 
   Modified files:
