@@ -24,6 +24,15 @@
 struct Client;
 struct Channel;
 
+/* for sendto_ops_lev */
+#define CCONN_LEV	1
+#define REJ_LEV		2
+#define SKILL_LEV	3
+#define FULL_LEV	4
+#define SPY_LEV		5
+#define DEBUG_LEV	6
+#define NCHANGE_LEV	7
+
 #ifdef HAVE_STDARG_H
 
 #define MyVaStart(a, p)      (va_start((a), (p)))

@@ -88,22 +88,9 @@ typedef struct  Zdata   aZdata;
 ** flags for bootup options (command line flags)
 */
 #define	BOOT_CONSOLE	1
-#define	BOOT_QUICK	2
 #define	BOOT_DEBUG	4
-#define BOOT_INETD      8
 #define	BOOT_TTY	16
-#define	BOOT_OPER	32
-/* #define BOOT_AUTODIE 64  UNUSED */
 #define BOOT_STDERR	128
-
-/* for sendto_ops_lev */
-#define CCONN_LEV	1
-#define REJ_LEV		2
-#define SKILL_LEV	3
-#define FULL_LEV	4
-#define SPY_LEV		5
-#define DEBUG_LEV	6
-#define NCHANGE_LEV	7
 
 /*
  * defined debugging levels
