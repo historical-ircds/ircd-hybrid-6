@@ -1,140 +1,208 @@
 #include <stdio.h>
+#include "struct.h"
+#include "sys.h"
+#include "send.h"
+
+#ifdef HAVE_STDARG_H
+#include <stdarg.h>
+#else
+#include <varargs.h>
+#endif /* HAVE_STDARG_H */
 
 #ifndef lint
 static char *rcs_version = "$Id$";
 #endif
 
-#ifndef USE_VARARGS
-void ircsprintf(
-	       char *outp,
-	       char *formp,
-	       char *in0p,char *in1p,char *in2p,char *in3p,
-	       char *in4p,char *in5p,char *in6p,char *in7p,
-	       char *in8p,char *in9p,char *in10p
-	       )
-{
+#ifdef HAVE_STDARG_H
+
+void
+ircsprintf(char *outp, char *formp, ...)
+
 #else
-void ircsprintf(outp, formp, va_alist)
-char *outp;
-char *formp;
+
+void
+ircsprintf(outp, formp, va_alist)
+
+char *outp, *formp;
 va_dcl
+
+#endif /* HAVE_STDARG_H */
+
 {
-  va_list vl;
-#endif
-  /* rp for Reading, wp for Writing, fp for the Format string */
-  char *inp[11]; /* we could hack this if we know the format of the stack */
-  register char *rp,*fp,*wp;
-  register char f;
-  register int i=0;
+	va_list args;
+	char *inp[11]; /* we could hack this if we know the format of the stack */
+	/* rp for Reading, wp for Writing, fp for the Format string */
+	register char *rp,*fp,*wp;
+	register char f;
+	register int i=0;
 
-#ifndef USE_VARARGS
-  inp[0]=in0p; inp[1]=in1p; inp[2]=in2p; inp[3]=in3p; inp[4]=in4p; 
-  inp[5]=in5p; inp[6]=in6p; inp[7]=in7p; inp[8]=in8p; inp[9]=in9p; 
-  inp[10]=in10p; 
-#else
-  va_start(vl);
-  inp[0] = va_arg(vl,char *); inp[1] = va_arg(vl,char *);
-  inp[2] = va_arg(vl,char *); inp[3] = va_arg(vl,char *);
-  inp[4] = va_arg(vl,char *); inp[5] = va_arg(vl,char *);
-  inp[6] = va_arg(vl,char *); inp[7] = va_arg(vl,char *);
-  inp[8] = va_arg(vl,char *); inp[9] = va_arg(vl,char *);
-  inp[10] = va_arg(vl,char *);
-  va_end(vl);
-#endif
+	MyVaStart(args, formp);
 
-  fp = formp;
-  wp = outp;
-  
-  rp = inp[i]; /* start with the first input string */
+	inp[0] = va_arg(args, char *);
+	inp[1] = va_arg(args, char *);
+	inp[2] = va_arg(args, char *);
+	inp[3] = va_arg(args, char *);
+	inp[4] = va_arg(args, char *);
+	inp[5] = va_arg(args, char *);
+	inp[6] = va_arg(args, char *);
+	inp[7] = va_arg(args, char *);
+	inp[8] = va_arg(args, char *);
+	inp[9] = va_arg(args, char *);
+	inp[10] = va_arg(args, char *);
 
-  /* just scan the format string and puke out whatever is necessary
-     along the way... */
+  va_end(args);
 
-  while ( (f = *(fp++)) )
-    {
-    
-      if (f!= '%') *(wp++) = f;
-      else
-	switch (*(fp++))
-	  {
+	fp = formp;
+	wp = outp;
 
-	  case 's': /* put the most common case at the top */
-	    if(rp)
-	      {
-		while(*rp)
-		  *wp++ = *rp++;
-		*wp = '\0';
-	      }
-	    else
-	      {
-		*wp++ = '{'; *wp++ = 'n'; *wp++ = 'u'; *wp++ = 'l';
-		*wp++ = 'l'; *wp++ = '}'; *wp++ = '\0';
-	      }
-	    rp = inp[++i];                  /* get the next parameter */
-	    break;
-	  case 'c':
-	    *wp++ = (char) ((long)rp);
-	    rp = inp[++i];
-	    break;
-	  case 'd':
-	    {
-	      register long myint;
-	      myint = (long)rp;
-	      
-	      if (myint < 100 || myint > 999)
+	rp = inp[i]; /* start with the first input string */
+
+	/*
+	 * just scan the format string and puke out whatever is necessary
+	 * along the way...
+	 */
+
+	while ((f = *(fp++)))
+	{
+		if (f != '%')
+			*(wp++) = f;
+		else
 		{
-		  sprintf(outp,formp,in0p,in1p,in2p,in3p,
-			  in4p,in5p,in6p,in7p,in8p,
-			  in9p,in10p);
-		  return;
-		}
-	      /* leading 0's are not suppressed unlike format()
-		 -Dianora */
-	  
-	      *(wp++) = (char) ((myint / 100) + (int) '0');
-	      myint %=100;
-	      *(wp++) = (char) ((myint / 10) + (int) '0');
-	      myint %=10;
-	      *(wp++) = (char) ((myint) + (int) '0');
+			switch (*(fp++))
+			{
+				case 's': /* put the most common case at the top */
+				{
+					if (rp)
+					{
+						while(*rp)
+							*wp++ = *rp++;
 
-	      rp = inp[++i];
-	    }
-	  break;
-	  case 'u':
-	    {
-	      register unsigned long myuint;
-	      myuint = (unsigned long)rp;
-	  
-	      if (myuint < 100 || myuint > 999)
-		{
-		  sprintf(outp,formp,in0p,in1p,in2p,in3p,
-			  in4p,in5p,in6p,in7p,in8p,
-			  in9p,in10p);
-		  return;
-		}
-	  
-	      *(wp++) = (char) ((myuint / 100) + (unsigned int) '0');
-	      myuint %=100;
-	      *(wp++) = (char) ((myuint / 10) + (unsigned int) '0');
-	      myuint %=10;
-	      *(wp++) = (char) ((myuint) + (unsigned int) '0');
-	      
-	      rp = inp[++i];
-	    }
-	  break;
-	  case '%':
-	    *(wp++) = '%';
-	    break;
-	  default:
-	    /* oh shit */
-	    sprintf(outp,formp,in0p,in1p,in2p,in3p,
-		    in4p,in5p,in6p,in7p,in8p,
-		    in9p,in10p);
-	    return;
-	    break;
-	  }
-    }
-  *wp = '\0';
+						*wp = '\0';
+					}
+					else
+					{
+						*wp++ = '{';
+						*wp++ = 'n';
+						*wp++ = 'u';
+						*wp++ = 'l';
+						*wp++ = 'l';
+						*wp++ = '}';
+						*wp++ = '\0';
+					}
 
-  return;
-}
+					/* get the next parameter */
+					rp = inp[++i];
+
+					break;
+				} /* case 's' */
+
+				case 'c':
+				{
+					*wp++ = (char) ((long) rp);
+					rp = inp[++i];
+
+					break;
+				} /* case 'c' */
+
+				case 'd':
+				{
+					register long myint;
+					myint = (long)rp;
+
+					if (myint < 100 || myint > 999)
+					{
+						sprintf(outp, formp,
+							inp[0],
+							inp[1],
+							inp[2],
+							inp[3],
+							inp[4],
+							inp[5],
+							inp[6],
+							inp[7],
+							inp[8],
+							inp[9],
+							inp[10]);
+						return;
+					}
+
+				/*
+				 * leading 0's are not suppressed unlike format()
+				 * -Dianora
+				 */
+
+					*(wp++) = (char) ((myint / 100) + (int) '0');
+					myint %= 100;
+					*(wp++) = (char) ((myint / 10) + (int) '0');
+					myint %= 10;
+					*(wp++) = (char) ((myint) + (int) '0');
+
+					rp = inp[++i];
+
+					break;
+				} /* case 'd' */
+
+				case 'u':
+				{
+					register unsigned long myuint;
+					myuint = (unsigned long)rp;
+
+					if (myuint < 100 || myuint > 999)
+					{
+						sprintf(outp, formp,
+							inp[0],
+							inp[1],
+							inp[2],
+							inp[3],
+							inp[4],
+							inp[5],
+							inp[6],
+							inp[7],
+							inp[8],
+							inp[9],
+							inp[10]);
+						return;
+					}
+
+					*(wp++) = (char) ((myuint / 100) + (unsigned int) '0');
+					myuint %= 100;
+					*(wp++) = (char) ((myuint / 10) + (unsigned int) '0');
+					myuint %= 10;
+					*(wp++) = (char) ((myuint) + (unsigned int) '0');
+
+					rp = inp[++i];
+
+					break;
+				} /* case 'u' */
+
+				case '%':
+				{
+					*(wp++) = '%';
+					break;
+				} /* case '%' */
+
+				default:
+				{
+					/* oh shit */
+					sprintf(outp, formp,
+						inp[0],
+						inp[1],
+						inp[2],
+						inp[3],
+						inp[4],
+						inp[5],
+						inp[6],
+						inp[7],
+						inp[8],
+						inp[9],
+						inp[10]);
+					return;
+
+					break;
+				}
+			} /* switch (*(fp++)) */
+		}
+	} /* while ((f = *(fp++))) */
+
+	*wp = '\0';
+} /* ircsprintf() */

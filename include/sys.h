@@ -142,9 +142,5 @@ typedef	unsigned long	u_long;
 typedef	unsigned int	u_int;
 #endif
 
-#ifdef	USE_VARARGS
-#include <varargs.h>
-#endif
-
 #endif /* __sys_include__ */
 

@@ -30,6 +30,12 @@ static char *rcs_version = "$Id$";
 #include "res.h"
 #include "send.h"
 
+#ifdef HAVE_STDARG_H
+#include <stdarg.h>
+#else
+#include <varargs.h>
+#endif /* HAVE_STDARG_H */
+
 extern	void	count_whowas_memory(int *, u_long *);
 extern  void    count_ip_hash(int *,u_long *);	  /* defined in s_conf.c */
 extern  int	maxdbufblocks;			  /* defined in dbuf.c */
@@ -162,44 +168,51 @@ char	serveropts[] = {
 #if defined(DNS_DEBUG) || defined(DEBUGMODE)
 static	char	debugbuf[1024];
 
-#ifndef	USE_VARARGS
-/*VARARGS2*/
-void debug(int level, 
-	      char *form, char *p1, char *p2, char *p3,
-	      char *p4, char *p5, char *p6, char *p7, char *p8,
-	      char *p9, char *p10)
-{
-#else
-void	debug(int level, char *form, va_alist)
-va_dcl
-{
-  va_list	vl;
+#ifdef HAVE_STDARG_H
 
-  va_start(vl);
-#endif
-  int	err = errno;
-#ifdef USE_SYSLOG
-  if (level == DEBUG_ERROR)
-    syslog(LOG_ERR, form, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
-#endif
-  if ((debuglevel >= 0) && (level <= debuglevel))
-    {
-#ifndef	USE_VARARGS
-      (void)ircsprintf(debugbuf, form,
-		       p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+void
+debug(int level, char *format, ...)
+
 #else
-      (void)vsprintf(debugbuf, form, vl);
+
+void
+debug(level, format, va_alist)
+
+int level;
+char *format;
+va_dcl
+
+#endif /* HAVE_STDARG_H */
+
+{
+	va_list args;
+	int err = errno;
+
+	MyVaStart(args, format);
+
+	(void) vsprintf(debugbuf, format, args);
+
+#ifdef USE_SYSLOG
+	if (level == DEBUG_ERROR)
+		syslog(LOG_ERR, debugbuf);
 #endif
-      if (local[2])
+
+	if ((debuglevel >= 0) && (level <= debuglevel))
 	{
-	  local[2]->sendM++;
-	  local[2]->sendB += strlen(debugbuf);
+		if (local[2])
+		{
+			local[2]->sendM++;
+			local[2]->sendB += strlen(debugbuf);
+		}
+
+		(void)fprintf(stderr, "%s", debugbuf);
+		(void)fputc('\n', stderr);
 	}
-      (void)fprintf(stderr, "%s", debugbuf);
-      (void)fputc('\n', stderr);
-    }
-  errno = err;
-}
+
+	va_end(args);
+
+	errno = err;
+} /* debug() */
 
 /*
  * This is part of the STATS replies. There is no offical numeric for this

@@ -956,18 +956,6 @@
  * NOTE: On some systems, valloc() causes many problems.
  */
 #undef  VALLOC                  /* Define this if you have valloc(3) */
- 
-/*
- * If your host supports varargs and has vsprintf(), vprintf() and vscanf()
- * C calls in its library, then you can define USE_VARARGS to use varargs
- * instead of imitation variable arg passing.
-#undef USE_VARARGS
- 
- * NOTE: with current server code, varargs doesn't survive because it can't
- *       be used in a chain of 3 or more funtions which all have a variable
- *       number of params.  If anyone has a solution to this, please notify
- *       the maintainer.
- */
 
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
