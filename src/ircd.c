@@ -110,6 +110,11 @@ extern  void read_oper_motd();		/* defined in s_serv.c */
 #endif
 extern  void read_help();		/* defined in s_serv.c */
 extern  void sync_channels(time_t);	/* defined in channel.c */
+
+
+/* following 4 functions are for possible future use
+ *
+ */
 extern  void read_servers();		/* defined in s_bsd.c */
 extern	void read_opers();		/* defined in s_bsd.c */
 extern	void read_clients();		/* defined in s_bsd.c */
@@ -848,11 +853,16 @@ static	int	bad_command()
 #define LOADCFREQ 5	/* every 5s */
 #define LOADRECV 40	/* 40k/s */
 
+/* following section is for experimental use 
+ * READ_CLIENTS_NUM down through do_read_message
+ */
 #define READ_CLIENTS_NUM 3	/* read connected clients (non oper/server) */
 #define READ_MESSAGE_NUM 7	/* read everything */
 
 int do_read_clients = 0;
 int do_read_message = 0;
+/* end of experimental use section */
+
 int lifesux = 1;
 int LRV = LOADRECV;
 time_t LCF = LOADCFREQ;
@@ -1290,6 +1300,9 @@ time_t io_loop(time_t delay)
   static long	lastrecvK	= 0;
   static int	lrv		= 0;
   time_t lasttimeofday;
+#ifdef DEBUGMODE
+  static int io_loop_count=0;
+#endif
 
   lasttimeofday = timeofday;
   if((timeofday = time(NULL)) == -1)
@@ -1301,12 +1314,12 @@ time_t io_loop(time_t delay)
     }
 
   if (timeofday < lasttimeofday)
-  {
-  	(void)ircsprintf(to_send,
-		"System clock is running backwards - (%d < %d)",
-		timeofday, lasttimeofday);
-	report_error(to_send, &me);
-  }
+    {
+      (void)ircsprintf(to_send,
+		       "System clock is running backwards - (%d < %d)",
+		       timeofday, lasttimeofday);
+      report_error(to_send, &me);
+    }
   else if((lasttimeofday + 60) < timeofday)
     {
       (void)ircsprintf(to_send,
@@ -1357,24 +1370,26 @@ time_t io_loop(time_t delay)
 */
 	      lifesux = 1;
 
-	      if(noisy_htm) {
-     	        (void)sprintf(to_send, 
-                  "Entering high-traffic mode - (%.1fk/s > %dk/s)",
-		      (float)currlife, LRV);
-	        sendto_ops(to_send);
-              }
+	      if(noisy_htm)
+		{
+		  (void)sprintf(to_send, 
+			"Entering high-traffic mode - (%.1fk/s > %dk/s)",
+				(float)currlife, LRV);
+		  sendto_ops(to_send);
+		}
 	    }
 	  else
 	    {
 	      lifesux++;		/* Ok, life really sucks! */
 	      LCF += 2;			/* Wait even longer */
-              if(noisy_htm) {
-	        (void)sprintf(to_send,
-		   "Still high-traffic mode %d%s (%d delay): %.1fk/s",
-		      lifesux, (lifesux & 0x04) ? " (TURBO)" : "",
-		      (int)LCF, (float)currlife);
-	        sendto_ops(to_send);
-              }
+              if(noisy_htm) 
+		{
+		  (void)sprintf(to_send,
+			"Still high-traffic mode %d%s (%d delay): %.1fk/s",
+				lifesux, (lifesux & 0x04) ? " (TURBO)" : "",
+				(int)LCF, (float)currlife);
+		  sendto_ops(to_send);
+		}
 	    }
 	}
       else
@@ -1438,37 +1453,14 @@ time_t io_loop(time_t delay)
    *	-Taner
    */
 
-  if((timeofday = time(NULL)) == -1)
-    {
-#ifdef USE_SYSLOG
-      syslog(LOG_WARNING, "Clock Failure (%d), TS can be corrupted", errno);
+  Debug((DEBUG_DEBUG,"read_message io_loop_count %d call at: %s %d",
+	 io_loop_count,myctime(NOW), NOW));
+
+#ifdef DEBUGMODE
+  io_loop_count++;
 #endif
-      sendto_ops("Clock Failure (%d), TS can be corrupted", errno);
-    }
 
-  Debug((DEBUG_DEBUG,"read_message call at: %s %d",
-	 myctime(NOW), NOW));
-
-  if (do_read_message == READ_MESSAGE_NUM)
-    {
-      read_message(delay);
-      do_read_message = 0;
-    }
-  else
-    {
-      (void)read_servers();
-      (void)read_opers();
-      
-      if (do_read_clients == READ_CLIENTS_NUM)
-	{
-	  (void)read_clients();
-	  do_read_clients = 0;
-	}
-      else
-	do_read_clients++;
-
-      do_read_message++;
-  }
+  read_message(delay);
 
   /*
   ** ...perhaps should not do these loops every time,
@@ -1506,6 +1498,7 @@ time_t io_loop(time_t delay)
     do_pending_klines();
 #endif
 
+  Debug((DEBUG_DEBUG,"About to return delay %d",delay));
   return delay;
 }
 

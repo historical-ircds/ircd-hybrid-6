@@ -1824,7 +1824,23 @@ void read_clients()
 #endif
 	  continue;
 	}
-      
+  
+#ifdef DEBUGMODE
+      if(cptr->fd == 2)
+	{
+	  Debug((DEBUG_NOTICE,"trying to read stderr"));
+#ifdef USE_FAST_FD_ISSET
+	  fd_mask <<= 1;
+	  if(!fd_mask)
+	    {
+	      fd_offset++;
+	      fd_mask = 1;
+	    }
+#endif
+	  continue;
+	}
+#endif
+    
       /*
        * Check the auth fd's first...
        */
