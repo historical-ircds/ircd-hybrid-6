@@ -2561,7 +2561,7 @@ static int m_set_parser(char *parsethis)
 
   for( i = 0; set_token_table[i]; i++ )
     {
-      if(!strcasecmp(set_token_table[i],parsethis))
+      if(!irccmp(set_token_table[i],parsethis))
 	return i;
     }
   return TOKEN_BAD;
@@ -2625,7 +2625,7 @@ int   m_set(aClient *cptr,
 	    {
 	      int newval = atoi(parv[3]);
 
-	      if(!strcasecmp(parv[2],"ALL"))
+	      if(!(parv[2],"ALL"))
 		{
 		  sendto_realops(
 				 "%s has changed AUTOCONN ALL to %i",
@@ -3016,7 +3016,7 @@ int   m_htm(aClient *cptr,
   if (parc > 1)
     {
       command = parv[1];
-      if (!strcasecmp(command,"TO"))
+      if (!irccmp(command,"TO"))
 	{
 	  if (parc > 2)
 	    {
@@ -3039,7 +3039,7 @@ int   m_htm(aClient *cptr,
         }
       else
 	{
-          if (!strcasecmp(command,"ON"))
+          if (!irccmp(command,"ON"))
 	    {
               LIFESUX = 1;
               sendto_one(sptr, ":%s NOTICE %s :HTM is now ON.", me.name, parv[0]);
@@ -3047,7 +3047,7 @@ int   m_htm(aClient *cptr,
 			 parv[0], sptr->username, sptr->host);
 	      LCF = 30;	/* 30s */
 	    }
-	  else if (!strcasecmp(command,"OFF"))
+	  else if (!irccmp(command,"OFF"))
 	    {
               LIFESUX = 0;
 	      LCF = LOADCFREQ;
@@ -3055,12 +3055,12 @@ int   m_htm(aClient *cptr,
               sendto_ops("Resuming standard operation: Forced by %s!%s@%s",
 			 parv[0], sptr->username, sptr->host);
             }
-          else if (!strcasecmp(command,"QUIET"))
+          else if (!irccmp(command,"QUIET"))
             {
 	      sendto_ops("HTM is now QUIET");
               NOISYHTM = NO;
             }
-          else if (!strcasecmp(command,"NOISY"))
+          else if (!irccmp(command,"NOISY"))
             {
 	      sendto_ops("HTM is now NOISY");
               NOISYHTM = YES;
@@ -3792,7 +3792,7 @@ int	m_die(aClient *cptr,
     }
   else
     {
-      if(strcasecmp(parv[1],me.name))
+      if(irccmp(parv[1],me.name))
 	{
 	  sendto_one(sptr,":%s NOTICE %s :Mismatch on /die %s",
 		     me.name,sptr->name,me.name);

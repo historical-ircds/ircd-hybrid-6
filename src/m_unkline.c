@@ -234,7 +234,7 @@ K:bar:No reason (1997/08/30 14.56):foo
  * then, write the K: line out, and I add it back to the K line
  * tree
  */
-	  if(strcasecmp(host,found_host) || strcasecmp(user,found_user))
+	  if(irccmp(host,found_host) || irccmp(user,found_user))
             {
               if(!error_on_write)
                 error_on_write = flush_write(sptr, out, buf, temppath);
@@ -294,7 +294,7 @@ Then just ignore the line
 	  found_host = p;
 	  found_host++;
 
-	  if( (strcasecmp(found_host,host)) || (strcasecmp(found_user,user)) )
+	  if( (irccmp(found_host,host)) || (irccmp(found_user,user)) )
 	    {
               if(!error_on_write)
                 error_on_write = flush_write(sptr, out, buf, temppath);
@@ -400,8 +400,8 @@ static int remove_tkline_match(char *host,char *user)
 
   while(kill_list_ptr)
     {
-      if( !strcasecmp(kill_list_ptr->host,host)
-	  && !strcasecmp(kill_list_ptr->name,user))	/* match */
+      if( !irccmp(kill_list_ptr->host,host)
+	  && !irccmp(kill_list_ptr->name,user))	/* match */
 	{
 	  if(last_kill_ptr)
 	    last_kill_ptr->next = kill_list_ptr->next;

@@ -2025,7 +2025,7 @@ static	int	m_message(aClient *cptr,
       *server = '\0';
 
       /* special case opers@server */
-      if(!strcasecmp(nick,"opers") && IsAnOper(sptr))
+      if(!irccmp(nick,"opers") && IsAnOper(sptr))
 	{
 	  sendto_realops("To opers: From %s: %s",sptr->name,parv[2]);
 	  return 0;
@@ -3917,7 +3917,7 @@ static int check_for_ctcp(char *str)
   char *p = str;          
   while((p = strchr(p, 1)) != NULL)
     {
-      if(strncasecmp(++p, "ACTION", 6) != 0)
+      if(ircncmp(++p, "ACTION", 6) != 0)
 	return 1;
       if((p = strchr(p, 1)) == NULL)
 	return 0;

@@ -752,12 +752,12 @@ static int majority_gline(aClient *sptr,
   for(gline_pending_ptr = pending_glines;
       gline_pending_ptr; gline_pending_ptr = gline_pending_ptr->next)
     {
-      if( (strcasecmp(gline_pending_ptr->user,user) == 0) &&
-	  (strcasecmp(gline_pending_ptr->host,host) ==0 ) )
+      if( (irccmp(gline_pending_ptr->user,user) == 0) &&
+	  (irccmp(gline_pending_ptr->host,host) ==0 ) )
 	{
-	  if(((strcasecmp(gline_pending_ptr->oper_user1,oper_user) == 0) &&
-	      (strcasecmp(gline_pending_ptr->oper_host1,oper_host) == 0)) ||
-	      (strcasecmp(gline_pending_ptr->oper_server1,oper_server) == 0) )
+	  if(((irccmp(gline_pending_ptr->oper_user1,oper_user) == 0) &&
+	      (irccmp(gline_pending_ptr->oper_host1,oper_host) == 0)) ||
+	      (irccmp(gline_pending_ptr->oper_server1,oper_server) == 0) )
 	    {
 	      /* This oper or server has already "voted" */
 	      sendto_realops("oper or server has already voted");
@@ -768,9 +768,9 @@ static int majority_gline(aClient *sptr,
 	    {
 	      /* if two other opers on two different servers have voted yes */
 
-	      if(((strcasecmp(gline_pending_ptr->oper_user2,oper_user)==0) &&
-		  (strcasecmp(gline_pending_ptr->oper_host2,oper_host)==0)) ||
-		  (strcasecmp(gline_pending_ptr->oper_server2,oper_server)==0))
+	      if(((irccmp(gline_pending_ptr->oper_user2,oper_user)==0) &&
+		  (irccmp(gline_pending_ptr->oper_host2,oper_host)==0)) ||
+		  (irccmp(gline_pending_ptr->oper_server2,oper_server)==0))
 		{
 		  /* This oper or server has already "voted" */
 		  sendto_ops("oper or server has already voted");

@@ -579,7 +579,7 @@ static int count_users_on_this_ip(IP_ENTRY *ip_list,
         {
           if (IsGotId(this_client))
             {
-              if(!strcasecmp(ptr->value.cptr->user->username,username))
+              if(!irccmp(ptr->value.cptr->user->username,username))
                   count++;
             }
           else
@@ -1059,7 +1059,7 @@ aConfItem* find_conf_exact(const char* name, const char* user,
       ** of the configuration.
       */
       if (!match(tmp->host, host) || !match(tmp->user,user)
-          || strcasecmp(tmp->name, name) )
+          || irccmp(tmp->name, name) )
         continue;
       if (tmp->status & (CONF_OPERATOR|CONF_LOCOP))
         {
@@ -1373,7 +1373,7 @@ static void add_q_line(aConfItem *aconf)
           continue;
         }
 
-      if(!strcasecmp(aconf->name,qp->name))
+      if(!irccmp(aconf->name,qp->name))
         {
           if (qp->confList)
             {
@@ -1725,7 +1725,7 @@ static void initconf(FBFILE* file, int use_include)
           char *filename;
           char *back;
 
-          if(!strncasecmp(line+1,"include ",8))
+          if(!ircncmp(line+1,"include ",8))
             {
               if( (filename = strchr(line+8,'"')) )
                 filename++;
