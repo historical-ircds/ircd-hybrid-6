@@ -1678,6 +1678,7 @@ static void clear_sub_mtrie(DOMAIN_LEVEL *dl_ptr)
             }
             
           next_dp_ptr = dp_ptr->next_piece;
+          MyFree(dp_ptr->host_piece);
           MyFree(dp_ptr);
         }
     }
