@@ -1,3 +1,10 @@
+*** 20010806_2 by leeh
+- added a special case exception for juped channels.
+  if the channel is juped, and has no users, always use the incoming TS,
+  even if its older, else if a channel is juped on a hub, youll get a TS
+  desync
+
+
 *** 20010806_1 by wcampbel
 Corrected typos (from dracus)
 
