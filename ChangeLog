@@ -1,3 +1,9 @@
+*** 20010606_10 by jdc
+* MFH7 (merge from hybrid-7) OpenSSL changes to configure, and the
+  proper Makefile templates.  OpenSSL should work happily now.
+
+
+
 *** 20010606_9 by db
 - removed last remnants of broken code PRESERVE_CHANNEL_ON_SPLIT
   NO_CHANOPS_ON_SPLIT (old version)
