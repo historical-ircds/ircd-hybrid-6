@@ -3256,6 +3256,11 @@ int	m_invite(aClient *cptr,
    * tough. -Dianora
    */
 
+  /* Do not send local channel invites to users if they are not on the *
+   * same server as the person sending the INVITE message.  -- David-R */
+  if (!MyConnect(acptr) && (*chptr->chname == '&'))
+    return 0;
+
   if (MyConnect(acptr))
     if (chptr && sptr->user && is_chan_op(sptr, chptr) && need_invite)
       add_invite(acptr, chptr);
