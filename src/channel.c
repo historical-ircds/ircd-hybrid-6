@@ -1042,7 +1042,8 @@ static  char    *fix_key(char *arg)
 }
 
 /*
- * attempt to be compatible with non-hybrid servers
+ * Here we attempt to be compatible with older non-hybrid servers.
+ * We can't back down from the ':' issue however.  --Rodder
  */
 static  char    *fix_key_old(char *arg)
 {
@@ -1051,7 +1052,7 @@ static  char    *fix_key_old(char *arg)
   for (s = t = (u_char *)arg; (c = *s); s++)
     { 
       c &= 0x7f;
-      if (c != 0x0a)
+      if ((c != 0x0a) && (c != ':'))
         *t++ = c;
     }
   *t = '\0';
