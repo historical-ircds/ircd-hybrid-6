@@ -33,6 +33,13 @@ static char *rcs_version = "$Id$";
 
 extern int BlockHeapGarbageCollect(BlockHeap *);
 
+#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
+	defined(NO_JOIN_ON_SPLIT)
+extern int server_was_split;
+extern time_t server_split_time;
+extern int server_split_recovery_time;
+#endif
+
 /* locally defined functions */
 
 
@@ -330,7 +337,21 @@ void free_user(anUser *user, aClient *cptr)
  */
 void remove_client_from_list(aClient *cptr)
 {
-  if (IsServer(cptr)) Count.server--;
+  if (IsServer(cptr))
+    {
+      Count.server--;
+
+#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
+      defined(NO_JOIN_ON_SPLIT)
+
+	if(Count.server < SPLIT_SMALLNET_SIZE)
+	  {
+	    server_was_split = YES;
+	    server_split_time = NOW;
+	  }
+#endif
+    }
+
   else if (IsClient(cptr))
     {
       Count.total--;

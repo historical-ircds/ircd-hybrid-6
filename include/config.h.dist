@@ -691,6 +691,24 @@
  */
 #define PRESERVE_CHANNEL_ON_SPLIT
 
+/*
+ * SPLIT_SMALLNET_SIZE defines what constitutes a split from 
+ * the net. for a leaf, 2 is fine. If the number of servers seen
+ * on the net gets less than 2, a split is deemed to have happened.
+ */
+#define SPLIT_SMALLNET_SIZE 2
+
+/* LIMIT_UH
+ * If this is defined, Y line limit is made against the actual
+ * username not the ip. i.e. if you limit the connect frequency line
+ * to 1, that allows only 1 username to connect instead of 1 client per ip
+ * i.e. you can have 10 clients all with different usernames, but each user
+ * can only connect once. This is only useful if you only allow identd
+ * from that host. (The code strips non identd '~' as it stands)
+ * Its a tad slower then the ip limited code.
+ *
+ */
+#undef LIMIT_UH
 
 /* IDLE_CHECK
  * If this is defined, each client is checked for excessive idleness

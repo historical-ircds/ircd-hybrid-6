@@ -681,6 +681,13 @@
  */
 #define PRESERVE_CHANNEL_ON_SPLIT
 
+/*
+ * SPLIT_SMALLNET_SIZE defines what constitutes a split from 
+ * the net. for a leaf, 2 is fine. If the number of servers seen
+ * on the net gets less than 2, a split is deemed to have happened.
+ */
+#define SPLIT_SMALLNET_SIZE 2
+
 /* LIMIT_UH
  * If this is defined, Y line limit is made against the actual
  * username not the ip. i.e. if you limit the connect frequency line

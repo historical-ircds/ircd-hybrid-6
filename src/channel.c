@@ -2310,31 +2310,20 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 	  ** Operator.
 	  */
 	  flags = (ChannelExists(name)) ? 0 : CHFL_CHANOP;
-#ifdef NO_CHANOPS_WHEN_SPLIT
-	  /* if its not a local channel, or isn't an oper
+
+	/* if its not a local channel, or isn't an oper
 	     and server has been split */
 
+#ifdef NO_CHANOPS_WHEN_SPLIT
 	  if((*name != '&') && !IsAnOper(sptr)
 	     && server_was_split && server_split_recovery_time)
 	    {
-	      if( (server_split_time + server_split_recovery_time) < NOW)
-		{
-		  if(Count.myserver > NO_CHANOPS_SMALLNET_SIZE)
-		    server_was_split = NO;
-		  else
-		    {
-		      server_split_time = NOW;	/* still split */
-		      allow_op = NO;
-		    }
-		}
-	      else
-		{
-		  allow_op = NO;
-		}
-		  if(!IsRestricted(sptr) && (flags == CHFL_CHANOP) && !allow_op)
-		      sendto_one(sptr,":%s NOTICE %s :*** Notice -- Due to a network split, you can not obtain channel operator status in a new channel at this time.",
-				 me.name,
-				 sptr->name);
+	      allow_op = NO;
+
+	      if(!IsRestricted(sptr) && (flags == CHFL_CHANOP))
+		sendto_one(sptr,":%s NOTICE %s :*** Notice -- Due to a network split, you can not obtain channel operator status in a new channel at this time.",
+			   me.name,
+			   sptr->name);
 	    }
 #endif
 
