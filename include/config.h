@@ -93,8 +93,11 @@
  * (unless "." is in your exec path). -Rodder
  * Leave KPATH undefined if you want klines in main conf file.
  * HPATH is the opers help file, seen by opers on /quote help.
- *
  * -Dianora
+ *
+ * DPATH must have a trailing /
+ * Do not use ~'s in any of these pathes
+ *
  */
 
 #define DPATH   "/usr/local/ircd/"
