@@ -181,8 +181,8 @@ unsigned long my_rand(void);    /* provided by orabidoo */
  */
 void show_opers(struct Client *cptr)
 {
-  register struct Client        *cptr2;
-  register int j=0;
+  struct Client        *cptr2;
+  int j=0;
 
   for(cptr2 = oper_cptr_list; cptr2; cptr2 = cptr2->next_oper_client)
     {

@@ -297,8 +297,8 @@ static  int     add_exceptid(struct Client *cptr, struct Channel *chptr, char *e
  */
 static  int     del_banid(struct Channel *chptr, char *banid)
 {
-  register Link **ban;
-  register Link *tmp;
+  Link **ban;
+  Link *tmp;
 
   if (!banid)
     return -1;
@@ -336,8 +336,8 @@ static  int     del_banid(struct Channel *chptr, char *banid)
  */
 static  int     del_exceptid(struct Channel *chptr, char *eid)
 {
-  register Link **ex;
-  register Link *tmp;
+  Link **ex;
+  Link *tmp;
 
   if (!eid)
     return -1;
@@ -377,8 +377,8 @@ static  int     del_exceptid(struct Channel *chptr, char *eid)
  */
 static void del_matching_exception(struct Client *cptr,struct Channel *chptr)
 {
-  register Link **ex;
-  register Link *tmp;
+  Link **ex;
+  Link *tmp;
   char  s[NICKLEN + USERLEN + HOSTLEN+6];
   char  *s2;
 
@@ -457,7 +457,7 @@ static void del_matching_exception(struct Client *cptr,struct Channel *chptr)
 
 static  int is_banned(struct Client *cptr,struct Channel *chptr)
 {
-  register Link *tmp;
+  Link *tmp;
   char  s[NICKLEN+USERLEN+HOSTLEN+6];
   char  *s2;
 
@@ -476,7 +476,7 @@ static  int is_banned(struct Client *cptr,struct Channel *chptr)
 #ifdef CHANMODE_E
   if (tmp)
     {
-      register Link *t2;
+      Link *t2;
       for (t2 = chptr->exceptlist; t2; t2 = t2->next)
         if (match(BANSTR(t2), s) ||
             match(BANSTR(t2), s2))
@@ -840,9 +840,9 @@ void send_channel_modes(struct Client *cptr, struct Channel *chptr)
 
 static char* pretty_mask(char* mask)
 {
-  register char* cp = mask;
-  register char* user;
-  register char* host;
+  char* cp = mask;
+  char* user;
+  char* host;
 
   if ((user = strchr(cp, '!')))
     *user++ = '\0';
@@ -3580,7 +3580,7 @@ int     m_sjoin(struct Client *cptr,
   int   doesop = 0, what = 0, pargs = 0, fl, people = 0, isnew;
   /* loop unrolled this is now redundant */
   /*  int ip; */
-  register      char *s, *s0;
+  char *s, *s0;
   static        char numeric[16], sjbuf[BUFSIZE];
   char  *mbuf = modebuf, *t = sjbuf, *p;
 

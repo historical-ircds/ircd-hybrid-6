@@ -133,7 +133,7 @@ unsigned int hash_nick_name(const char* name)
  */
 unsigned int hash_channel_name(const char* name)
 {
-  register int i = 30;
+  int i = 30;
   unsigned int h = 0;
 
   while (*name && --i)
@@ -439,9 +439,9 @@ struct Channel* hash_find_channel(const char* name, struct Channel* chptr)
 
 int m_hash(struct Client *cptr, struct Client *sptr,int parc,char *parv[])
 {
-  register int l;
-  register int i;
-  register struct HashEntry* tab;
+  int l;
+  int i;
+  struct HashEntry* tab;
   struct HashEntry* table;
   struct tm*        tmptr;
   int        deepest = 0;
@@ -579,7 +579,7 @@ int m_hash(struct Client *cptr, struct Client *sptr,int parc,char *parv[])
     {
     case 'V' : case 'v' :
       {
-        register struct Client* acptr;
+        struct Client* acptr;
         int        bad = 0, listlength = 0;
         
         for (acptr = GlobalClientList; acptr; acptr = acptr->next) {
@@ -602,7 +602,7 @@ int m_hash(struct Client *cptr, struct Client *sptr,int parc,char *parv[])
       return (0);
     case 'r' :
       {
-        register        struct Client        *acptr;
+        struct Client *acptr;
 
         sendto_one(sptr,"NOTICE %s :Rehashing Client List.", parv[0]);
         clear_client_hash_table();
@@ -612,7 +612,7 @@ int m_hash(struct Client *cptr, struct Client *sptr,int parc,char *parv[])
       }
     case 'R' :
       {
-        register        struct Channel        *acptr;
+        struct Channel *acptr;
 
         sendto_one(sptr,"NOTICE %s :Rehashing Channel List.", parv[0]);
         clear_channel_hash_table();

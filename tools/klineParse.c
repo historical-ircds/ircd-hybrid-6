@@ -427,9 +427,9 @@ int strToLower(unsigned char *aString) {
 
 int 
 Tcl_StringMatch(string, pattern)
-    register char *string;	/* String. */
-    register char *pattern;	/* Pattern, which may contain
-				 * special characters. */
+    char *string;	/* String. */
+    char *pattern;	/* Pattern, which may contain
+			 * special characters. */
 {
     char c2;
 

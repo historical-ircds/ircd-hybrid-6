@@ -86,8 +86,8 @@ struct Capability captab[] = {
 const char* my_name_for_link(const char* name, aConfItem* aconf)
 {
   static char          namebuf[HOSTLEN + 1];
-  register int         count = aconf->port;
-  register const char* start = name;
+  int         count = aconf->port;
+  const char* start = name;
 
   if (count <= 0 || count > 5)
     return start;
@@ -933,8 +933,8 @@ void set_autoconn(struct Client *sptr,char *parv0,char *name,int newval)
  */
 void show_servers(struct Client *cptr)
 {
-  register struct Client *cptr2;
-  register int j=0;                /* used to count servers */
+  struct Client *cptr2;
+  int j=0;                /* used to count servers */
 
   for(cptr2 = serv_cptr_list; cptr2; cptr2 = cptr2->next_server_client)
     {

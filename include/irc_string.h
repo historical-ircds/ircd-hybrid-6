@@ -55,7 +55,7 @@ extern char* canonize(char *);
 /*
  * ircsprintf - optimized sprintf
  */
-extern int ircsprintf(register char *str, register const char *format, ...);
+extern int ircsprintf(char *str, const char *format, ...);
 /*
  * inetntoa - optimized inet_ntoa
  */

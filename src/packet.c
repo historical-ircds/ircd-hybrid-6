@@ -55,7 +55,7 @@ int dopacket(aClient *cptr, char *buffer, size_t length)
 {
   char  *ch1;
   char  *ch2;
-  register char *cptrbuf;
+  char *cptrbuf;
 #ifdef ZIP_LINKS
   int  zipped = NO;
   int  done_unzip = NO;
@@ -120,7 +120,7 @@ int dopacket(aClient *cptr, char *buffer, size_t length)
        */
       while (length-- > 0)
         {
-          register char g;
+          char g;
           g = (*ch1 = *ch2++);
           /*
            * Yuck.  Stuck.  To make sure we stay backward compatible,

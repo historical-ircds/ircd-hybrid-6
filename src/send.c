@@ -50,7 +50,7 @@
 static  char    sendbuf[2048];
 static  int     send_message (aClient *, char *, int);
 
-static  void vsendto_prefix_one(register aClient *, register aClient *, const char *, va_list);
+static  void vsendto_prefix_one(aClient *, aClient *, const char *, va_list);
 static  void vsendto_one(aClient *, const char *, va_list);
 static  void vsendto_realops(const char *, va_list);
 
@@ -512,10 +512,10 @@ sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
 
 {
   va_list       args;
-  register Link *lp;
-  register aClient *acptr;
+  Link *lp;
+  aClient *acptr;
   /* index of sentalong[] to flag client as having received message */
-  register int lindex;
+  int lindex;
 
   va_start(args, pattern);
 
@@ -559,9 +559,9 @@ sendto_channel_type(aClient *one, aClient *from, aChannel *chptr,
                     const char *message)
 
 {
-  register Link *lp;
-  register aClient *acptr;
-  register int i;
+  Link *lp;
+  aClient *acptr;
+  int i;
   char char_type;
 
   ++current_serial;
@@ -648,9 +648,9 @@ void
 sendto_channel_type_notice(aClient *from, aChannel *chptr, int type, char *message)
 
 {
-        register Link *lp;
-        register aClient *acptr;
-        register int i;
+        Link *lp;
+        aClient *acptr;
+        int i;
 
         for (lp = chptr->members; lp; lp = lp->next)
         {
@@ -676,8 +676,8 @@ sendto_channel_type_notice(aClient *from, aChannel *chptr, int type, char *messa
 void
 send_knock(aClient *from, aChannel *chptr, int type, char *message)
 {
-  register Link *lp;
-  register aClient *acptr;
+  Link *lp;
+  aClient *acptr;
 
   for(lp = chptr->members; lp; lp = lp->next)
   {
@@ -705,7 +705,7 @@ sendto_serv_butone(aClient *one, const char *pattern, ...)
 
 {
   va_list args;
-  register aClient *cptr;
+  aClient *cptr;
 
   va_start(args, pattern);
   
@@ -732,9 +732,9 @@ sendto_common_channels(aClient *user, const char *pattern, ...)
 
 {
   va_list args;
-  register Link *channels;
-  register Link *users;
-  register aClient *cptr;
+  Link *channels;
+  Link *users;
+  aClient *cptr;
 
   va_start(args, pattern);
   
@@ -780,8 +780,8 @@ sendto_channel_butserv(aChannel *chptr, aClient *from,
 
 {
   va_list args;
-  register Link *lp;
-  register aClient *acptr;
+  Link *lp;
+  aClient *acptr;
 
   va_start(args, pattern);
 
@@ -805,8 +805,8 @@ sendto_channel_chanops_butserv(aChannel *chptr, aClient *from,
 
 {
   va_list args;
-  register Link *lp;
-  register aClient *acptr;
+  Link *lp;
+  aClient *acptr;
 
   va_start(args, pattern);
 
@@ -833,8 +833,8 @@ sendto_channel_non_chanops_butserv(aChannel *chptr, aClient *from,
 
 {
   va_list args;
-  register Link *lp;
-  register aClient *acptr;
+  Link *lp;
+  aClient *acptr;
 
   va_start(args, pattern);
 
@@ -878,7 +878,7 @@ sendto_match_servs(aChannel *chptr, aClient *from, const char *pattern, ...)
 
 {
   va_list args;
-  register aClient *cptr;
+  aClient *cptr;
 
   if (chptr)
     {
@@ -913,7 +913,7 @@ sendto_match_cap_servs(aChannel *chptr, aClient *from, int cap,
 
 {
   va_list args;
-  register aClient *cptr;
+  aClient *cptr;
 
   if (chptr)
     {
@@ -951,7 +951,7 @@ sendto_match_butone(aClient *one, aClient *from, char *mask,
 
 {
   va_list args;
-  register aClient *cptr;
+  aClient *cptr;
 
   va_start(args, pattern);
 
@@ -1014,7 +1014,7 @@ sendto_ops_flags(int flags, const char *pattern, ...)
 
 {
   va_list args;
-  register aClient *cptr;
+  aClient *cptr;
   char nbuf[1024];
 
   va_start(args, pattern);
@@ -1068,7 +1068,7 @@ sendto_ops(const char *pattern, ...)
 
 {
   va_list args;
-  register aClient *cptr;
+  aClient *cptr;
   char nbuf[1024];
 
   va_start(args, pattern);
@@ -1102,8 +1102,8 @@ sendto_ops_butone(aClient *one, aClient *from, const char *pattern, ...)
 
 {
   va_list args;
-  register int lindex;
-  register aClient *cptr;
+  int lindex;
+  aClient *cptr;
 
   va_start(args, pattern);
 
@@ -1148,8 +1148,8 @@ sendto_wallops_butone(aClient *one, aClient *from, const char *pattern, ...)
 
 {
   va_list args;
-  register int lindex;
-  register aClient *cptr;
+  int lindex;
+  aClient *cptr;
 
   va_start(args, pattern);
 
@@ -1239,7 +1239,7 @@ send_operwall(aClient *from, char *type_message, char *message)
  */
 
 void
-sendto_prefix_one(register aClient *to, register aClient *from, 
+sendto_prefix_one(aClient *to, aClient *from, 
                   const char *pattern, ...)
 
 {
@@ -1266,14 +1266,13 @@ sendto_prefix_one(register aClient *to, register aClient *from,
  */
 
 static void
-vsendto_prefix_one(register aClient *to, register aClient *from,
+vsendto_prefix_one(aClient *to, aClient *from,
                    const char *pattern, va_list args)
 
 {
   static char sender[HOSTLEN + NICKLEN + USERLEN + 5];
   char* par = 0;
-  register int parlen,
-               len;
+  int parlen, len;
   static char outbuf[1024];
 
   assert(0 != to);
@@ -1396,7 +1395,7 @@ static void
 vsendto_realops(const char *pattern, va_list args)
 
 {
-  register aClient *cptr;
+  aClient *cptr;
   char nbuf[1024];
   
   for (cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client)
@@ -1423,7 +1422,7 @@ sendto_realops_flags(int flags, const char *pattern, ...)
 
 {
   va_list args;
-  register aClient *cptr;
+  aClient *cptr;
   char nbuf[1024];
 
   va_start(args, pattern);
