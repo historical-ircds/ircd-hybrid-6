@@ -34,6 +34,7 @@
 #include "h.h"
 #include "send.h"
 #include "hash.h"
+#include "whowas.h"
 #include "listener.h"
 #ifdef FLUD
 #include "blalloc.h"

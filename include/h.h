@@ -108,7 +108,6 @@ extern	int	send_queued (aClient *);
 /*VARARGS*/
 extern  void    send_capabilities(aClient *,int);
 extern  int	is_address(char *,unsigned long *,unsigned long *); 
-extern  void	do_include_conf();
 extern	aConfItem	*match_Dline(unsigned long);
 extern	int	show_lusers(aClient *, aClient *, int, char **);
 extern	int	nickkilldone(aClient*, aClient*, int, char**, time_t, char*);
