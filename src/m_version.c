@@ -93,7 +93,7 @@
  */
 int m_version(struct Client* cptr, struct Client* sptr, int parc, char* parv[])
 {
-  if (IsAnOper(sptr))
+  if (!MyClient(sptr) || IsAnOper(sptr))
      {
        if (hunt_server(cptr, sptr, ":%s VERSION :%s", 
                        1, parc, parv) == HUNTED_ISME)
