@@ -2826,7 +2826,7 @@ int     m_knock(struct Client *cptr,
   char  *p, *name;
 #ifdef USE_KNOCK
   struct Channel      *chptr;
-  int local = 0;
+  int knock_local = 0;
 #endif
 
   /* anti flooding code,
@@ -2842,7 +2842,7 @@ int     m_knock(struct Client *cptr,
 
   if(MyClient(sptr))
 #ifdef USE_KNOCK
-    local = 1;
+    knock_local = 1;
 #else
   {
     sendto_one(sptr, form_str(ERR_UNKNOWNCOMMAND),
@@ -2869,7 +2869,7 @@ int     m_knock(struct Client *cptr,
 #ifdef USE_KNOCK
   if (!IsChannelName(name) || !(chptr = hash_find_channel(name, NullChn)))
     {
-      if(local)    
+      if(knock_local)    
         sendto_one(sptr, form_str(ERR_NOSUCHCHANNEL), 
 	           me.name, parv[0], name);
 		   
@@ -2881,14 +2881,14 @@ int     m_knock(struct Client *cptr,
        (chptr->mode.limit && chptr->users >= chptr->mode.limit )
        ))
     {
-      if(local)
+      if(knock_local)
         sendto_one(sptr,":%s NOTICE %s :*** Notice -- Channel is open!",
                    me.name, sptr->name);
       return 0;
     }
 
   /* don't allow a knock if the user is banned, or the channel is secret */
-  if (local && (chptr->mode.mode & MODE_SECRET) || 
+  if (knock_local && (chptr->mode.mode & MODE_SECRET) || 
       (is_banned(sptr, chptr) == CHFL_BAN) )
     {
       sendto_one(sptr, form_str(ERR_CANNOTSENDTOCHAN), me.name, parv[0],
@@ -2899,7 +2899,7 @@ int     m_knock(struct Client *cptr,
   /* if the user is already on channel, then a knock is pointless! */
   if (IsMember(sptr, chptr))
     {
-      if(local)
+      if(knock_local)
         sendto_one(sptr,":%s NOTICE %s :*** Notice -- You are on channel already!",
                    me.name,
                    sptr->name);
@@ -2909,7 +2909,7 @@ int     m_knock(struct Client *cptr,
   /* flood control server wide, clients on KNOCK
    * opers are not flood controlled.
    */
-  if(local)
+  if(knock_local)
   {
     if(!IsAnOper(sptr))
     {

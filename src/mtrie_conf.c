@@ -1273,7 +1273,7 @@ report_unsortable_klines(struct Client *sptr,char *need_host)
 void report_mtrie_conf_links(struct Client *sptr, int flags)
 {
   struct ConfItem *found_conf;
-  char *name, *host, *pass, *oper_reason, *user, *p;
+  char *name, *host, *pass, *oper_reason, *user;
   int  port;
   char c;               /* conf char used for CONF_CLIENT only */
 
@@ -1527,7 +1527,7 @@ report_sub_mtrie(struct Client *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
               if(aconf->status & flags)
                 {
                   get_printable_conf(aconf, &name, &host, &pass,
-				     &oper_reason, &user, &port);
+				     &oper_reason, &user, &port)
 
                   if (aconf->status == CONF_KILL)
                     {
