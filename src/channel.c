@@ -3678,36 +3678,19 @@ int     m_sjoin(struct Client *cptr,
     chptr->channelts = tstosend = 0;
   else if (newts == oldts)
     tstosend = oldts;
+  /* if their TS is older, remove our modes, change the channel ts to their
+   * ts and accept their modes
+   */
   else if (newts < oldts)
   {
     keep_our_modes = NO;
     chptr->channelts = tstosend = newts;
-    
-#if 0 /* OLD BEHAVIOUR */
-    if (doesop)
-      keep_our_modes = NO;
-    if (haveops && !doesop)
-        tstosend = oldts;
-    else
-      chptr->channelts = tstosend = newts;
-#endif
-
   }
+  /* their TS is newer, ignore all their modes, tstosend is our ts */
   else
   {
     keep_new_modes = NO;
     tstosend = oldts;
-#if 0 /* OLD BEHAVIOUR */
-    if (haveops)
-      keep_new_modes = NO;
-    if (doesop && !haveops)
-      {
-        chptr->channelts = tstosend = newts;
-      }
-    else
-      tstosend = oldts;
-#endif
-
   }
 
   if (!keep_new_modes)
