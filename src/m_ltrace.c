@@ -155,7 +155,7 @@ int     m_ltrace(struct Client *cptr,
 
 
   doall = (parv[1] && (parc > 1)) ? match(tname, me.name): TRUE;
-  wilds = !parv[1] || index(tname, '*') || index(tname, '?');
+  wilds = !parv[1] || strchr(tname, '*') || strchr(tname, '?');
   dow = wilds || doall;
   
   for (i = 0; i < MAXCONNECTIONS; i++)

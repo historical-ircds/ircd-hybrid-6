@@ -22,7 +22,7 @@ mkpasswd: $(mkpasswd_OBJECTS)
 viconf: $(viconf_OBJECTS)
 	$(CC) $(LDFLAGS) -o viconf $(viconf_OBJECTS) $(IRCDLIBS)
 
-fixklines: fixklines.o $(IRCDLIBS)
+fixklines: $(fixklines_OBJECTS)
 	$(CC) $(LDFLAGS) -o fixklines $(fixklines_OBJECTS) $(IRCDLIBS)
 
 clean:

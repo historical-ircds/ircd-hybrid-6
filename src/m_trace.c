@@ -164,8 +164,8 @@ int m_trace(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
         }
 #endif
 
-      if (parv[1] && !index(parv[1],'.') && (index(parv[1], '*')
-          || index(parv[1], '?'))) /* bzzzt, no wildcard nicks for nonopers */
+      if (parv[1] && !strchr(parv[1],'.') && (strchr(parv[1], '*')
+          || strchr(parv[1], '?'))) /* bzzzt, no wildcard nicks for nonopers */
         {
           sendto_one(sptr, form_str(RPL_ENDOFTRACE),me.name,
                      parv[0], parv[1]);
