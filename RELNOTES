@@ -38,9 +38,6 @@ o vimotd and viklines are installed along with viconf.
 
 o P: lines can now be removed if there are no clients on that port.
 
-o IP I: lines can include a username.  Consult example.conf for more
-  information.
-
 o RESTART requires the server name, like DIE.
 
 o NO_CREATE_ON_SPLIT will allow users to join existing channel but
