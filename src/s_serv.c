@@ -3021,7 +3021,6 @@ int     m_locops(aClient *cptr,
   char *message;
 #ifdef SLAVE_SERVERS
   char *slave_oper;
-  char *nick;
   char *p;
   register aClient *acptr;
 #endif
@@ -3038,13 +3037,8 @@ int     m_locops(aClient *cptr,
       if(parc > 2)
 	{
 	  slave_oper = parv[1];
-	  nick = slave_oper;
-	  p = strchr(nick,'!');
-	  if(p)
-	    *p = '\0';
-	  else
-	    return 0;
-	  if ((acptr = hash_find_client(nick,(aClient *)NULL)))
+
+	  if ((acptr = hash_find_client(slave_oper,(aClient *)NULL)))
 	    {
 	      if(!IsPerson(acptr))
 		return 0;
@@ -3059,6 +3053,10 @@ int     m_locops(aClient *cptr,
 	    }
 	  else
 	    return 0;
+#ifdef HUB
+	  sendto_slaves(sptr,"LOCOPS",sptr->name,parc,parv);
+#endif
+
 	}
     }
   else
@@ -3082,9 +3080,7 @@ int     m_locops(aClient *cptr,
   if(MyConnect(sptr) && IsAnOper(sptr))
     {
 #ifdef SLAVE_SERVERS
-      sendto_slaves("LOCOPS",cptr,sptr,
-		    sptr->name,sptr->user->username,
-		    sptr->user->host,parc,parv);
+      sendto_slaves(NULL,"LOCOPS",sptr->name,parc,parv);
 #endif
       send_operwall(sptr, "LOCOPS", message);
     }
@@ -4216,31 +4212,45 @@ int     m_kline(aClient *cptr,
   int wild_user;		/* does user part match everything? */
   time_t temporary_kline_time_seconds=0;
   char *argv;
-
 #ifdef SLAVE_SERVERS
   char *slave_oper;
-#endif
+  aClient *rcptr;
 
-#ifdef SLAVE_SERVERS
   if(IsServer(sptr))
     {
-      sendto_realops("received kline from %s",
-		     sptr->name,parv[0]);
-
       if(parc < 2)	/* pick up actual oper who placed kline */
 	return 0;
 
       slave_oper = parv[1];	/* make it look like normal local kline */
+
       parc--;
       parv++;
 
       if ( parc < 2 )
 	return 0;
+
+      if ((rcptr = hash_find_client(slave_oper,(aClient *)NULL)))
+	{
+	  if(!IsPerson(rcptr))
+	    return 0;
+	}
+      else
+	return 0;
+
       if(!find_special_conf(sptr->name,CONF_ULINE))
 	{
 	  sendto_realops("received Unauthorized kline from %s",sptr->name);
 	  return 0;
 	}
+      else
+	{
+	  sendto_realops("received kline from %s", sptr->name);
+	}
+
+#ifdef HUB
+      sendto_slaves(sptr,"KLINE",slave_oper,parc,parv);
+#endif
+
     }
   else
 #endif
@@ -4275,9 +4285,7 @@ int     m_kline(aClient *cptr,
 #ifdef SLAVE_SERVERS
       if(MyConnect(sptr) && IsAnOper(sptr))
 	{
-	  sendto_slaves("KLINE",cptr,sptr,
-			sptr->name,sptr->user->username,
-			sptr->user->host,parc,parv);
+	  sendto_slaves(NULL,"KLINE",sptr->name,parc,parv);
 	}
 #endif
     }
@@ -4489,12 +4497,8 @@ int     m_kline(aClient *cptr,
 
   if(temporary_kline_time)
     (void)ircsprintf(buffer,
-#ifdef WINTRHAWK
-	    "Temporary K-line %d min. - %s (%s)",
-#else
-	    "Temporary K-line %d min. for %s (%s)",
-#endif /* WINTRHAWK */
-       temporary_kline_time,reason,current_date);
+		     "Temporary K-line %d min. - %s (%s)",
+		     temporary_kline_time,reason,current_date);
   else
     (void)ircsprintf(buffer, "%s (%s)",reason,current_date);
 
@@ -4583,8 +4587,11 @@ int     m_kline(aClient *cptr,
 #ifdef SLAVE_SERVERS
   if(IsServer(sptr))
     {
-      (void)ircsprintf(buffer, "#%s K'd: %s@%s:%s\n",
-		       slave_oper, user, host, reason);
+      (void)ircsprintf(buffer, "#%s!%s@%s from %s K'd: %s@%s:%s\n",
+		       rcptr->name, rcptr->user->username,
+		       rcptr->user->host, sptr->name,
+		       user, host,
+		       reason);
     }
   else
 #endif
@@ -4648,8 +4655,10 @@ int     m_kline(aClient *cptr,
 #ifdef SLAVE_SERVERS
   if(IsServer(sptr))
     {
-      (void)ircsprintf(buffer, "#%s K'd: %s@%s:%s\n",
-		       slave_oper, user, host, reason);
+      (void)ircsprintf(buffer, "#%s!%s@%s from %s K'd: %s@%s:%s\n",
+		       rcptr->name, rcptr->user->username,
+		       rcptr->user->host, sptr->name, user, host,
+		       reason);
     }
   else
 #endif

@@ -2,12 +2,21 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
-version hybrid-6-b51   10-Mar-1999
+version hybrid-6-b51   11-Mar-1999
 * added WHOIS_WAIT to info output 
 -Rodder
 * was using idented username instead of ~ name for unidented clients
-  for tklines caused weird bug
+  caused weird bug. s_conf.c attach_Iline()
+* clients with > I line were still being limited by client per IP limits.
 * had BUFSIZ instead of BUFSIZE in strncpy() in s_serv.c broke m_unkline
+* fixed "Bad Nick" problem. was harmless but stupid. users who used
+  a nick beginning with '~' would trigger this one. Had Q line code in
+  slightly wrong place. s_user.c m_nick()
+* fixed truncation for username, affects k-lines both unidented, idented.
+  s_user.c register_user()
+* Added sendto_realops notification of spoofed IP's. should be SYSLOG
+  or logged, for proper backtracking if necessary IMO
+* fixed CLUSTER code, still needs thorough testing. s_serv.c send.c
 -Dianora
 	
 version hybrid-6-b50   24-Feb-1999

@@ -1870,43 +1870,46 @@ void	flush_server_connections()
 #ifdef SLAVE_SERVERS 
 extern aConfItem *u_conf;
 
-int sendto_slaves(char *message,
-		  aClient *cptr,
-		  aClient *sptr,
-		  char *nick, char *user, char *host,
+int sendto_slaves(aClient *one,
+		  char *message,
+		  char *nick,
 		  int parc,
 		  char *parv[])
   {
     aClient *acptr;
     aConfItem *aconf;
 
-    for(aconf = u_conf; aconf; aconf= aconf->next)
+    for(acptr = serv_cptr_list; acptr; acptr = acptr->next_server_client)
       {
-	acptr = find_client(aconf->name, NULL);
-	if(acptr && IsServer(acptr))
-	  {
-	    if(parc > 3)
-	      sendto_one(acptr,":%s %s %s!%s@%s %s %s :%s",
-			 me.name,
-			 message,
-			 nick,user,host,
-			 parv[1],
-			 parv[2],
-			 parv[3]);
-	    else if(parc > 2)
-	      sendto_one(acptr,":%s %s %s!%s@%s %s :%s",
-			 me.name,
-			 message,
-			 nick,user,host,
-			 parv[1],
-			 parv[2]);
-	    else if(parc > 1)
-	      sendto_one(acptr,":%s %s %s!%s@%s :%s",
-			 me.name,
-			 message,
-			 nick,user,host,
-			 parv[1]);
+	if( one == acptr )
+	  continue;
 
+	for(aconf = u_conf; aconf; aconf= aconf->next)
+	  {
+	    if (!matches(acptr->name,aconf->name))
+	      {
+		if(parc > 3)
+		  sendto_one(acptr,":%s %s %s %s %s :%s",
+			     me.name,
+			     message,
+			     nick,
+			     parv[1],
+			     parv[2],
+			     parv[3]);
+		else if(parc > 2)
+		  sendto_one(acptr,":%s %s %s %s :%s",
+			     me.name,
+			     message,
+			     nick,
+			     parv[1],
+			     parv[2]);
+		else if(parc > 1)
+		  sendto_one(acptr,":%s %s %s :%s",
+			     me.name,
+			     message,
+			     nick,
+			     parv[1]);
+	      }
 	  }
       }
   }

@@ -1037,10 +1037,6 @@
 #define ANTI_SPAMBOT_EXTRA
 #define PRIVMSG_POSSIBLE_SPAMBOT_COUNT	50
 
-#ifdef HUB
-#undef FLUD
-#endif
-
 #ifdef FLUD
 #define FLUD_NUM	4	/* Number of flud messages to trip alarm */
 #define FLUD_TIME	3	/* Seconds in which FLUD_NUM msgs must occur */

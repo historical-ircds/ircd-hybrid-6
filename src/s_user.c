@@ -483,8 +483,8 @@ static	int	register_user(aClient *cptr,
   parv[1] = parv[2] = NULL;
 
   /* pointed out by Mortiis, never be too careful */
-  if(strlen(username) > USERLEN)
-    username[USERLEN] = '\0';
+  if(strlen(username) > USERLEN-1)
+    username[USERLEN-1] = '\0';
 
   reason = (char *)NULL;
 
@@ -1359,19 +1359,9 @@ int	m_nick(aClient *cptr,
 
   fromTS = (parc > 6);
   
-  if (MyClient(sptr) && (s = (char *)strchr(parv[1], '~')))
+  if (MyConnect(sptr) && (s = (char *)strchr(parv[1], '~')))
     *s = '\0';
   strncpyzt(nick, parv[1], NICKLEN+1);
-
-  if(MyClient(sptr) &&
-     !IsAnOper(sptr) && find_special_conf(nick,CONF_QUARANTINED_NICK)) 
-    {
-      sendto_realops_lev(REJ_LEV,
-			 "Quarantined nick [%s], dumping user %s",
-			 nick,get_client_name(cptr, FALSE));
-
-      return exit_client(cptr, sptr, &me, "quarantined nick");
-    }
 
   /*
    * if do_nick_name() returns a null name OR if the server sent a nick
@@ -1409,6 +1399,16 @@ int	m_nick(aClient *cptr,
 	    }
 	}
       return 0;
+    }
+
+  if(MyClient(sptr) &&
+     !IsAnOper(sptr) && find_special_conf(nick,CONF_QUARANTINED_NICK)) 
+    {
+      sendto_realops_lev(REJ_LEV,
+			 "Quarantined nick [%s], dumping user %s",
+			 nick,get_client_name(cptr, FALSE));
+
+      return exit_client(cptr, sptr, &me, "quarantined nick");
     }
 
   /*
@@ -2931,7 +2931,10 @@ static int do_user(char *nick,
   if (sptr->name[0]) /* NICK already received, now I have USER... */
     return register_user(cptr, sptr, sptr->name, username);
   else
-    strncpyzt(sptr->user->username, username, USERLEN+1);
+    {
+      strncpy(sptr->user->username, username, USERLEN);
+      sptr->user->username[USERLEN] = '\0';
+    }
   return 0;
 }
 

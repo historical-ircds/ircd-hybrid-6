@@ -213,7 +213,8 @@ int	attach_Iline(aClient *cptr,
     {
       char non_ident[USERLEN+1];
       non_ident[0] = '~';
-      strncpy(&non_ident[1],username, USERLEN);
+      strncpy(&non_ident[1],username, USERLEN-1);
+      non_ident[USERLEN] = '\0';
       aconf = find_matching_mtrie_conf(host,non_ident,
 				       ntohl(cptr->ip.s_addr));
       if(aconf && !IsConfElined(aconf))
@@ -232,7 +233,11 @@ int	attach_Iline(aClient *cptr,
 
 	  /* Thanks for spoof idea amm */
 	  if(IsConfDoSpoofIp(aconf))
-	    strncpyzt(cptr->sockhost,aconf->mask,sizeof(cptr->sockhost));
+	    {
+	      sendto_realops("%s spoofing: %s as %s",
+			     cptr->name,host,aconf->mask);
+	      strncpyzt(cptr->sockhost,aconf->mask,sizeof(cptr->sockhost));
+	    }
 	  else
 	    strncpyzt(cptr->sockhost,host,sizeof(cptr->sockhost));
 
@@ -293,7 +298,7 @@ static int attach_iline(
       else
 	{
 	  sendto_one(cptr,
-       ":%s NOTICE %s :*** FLINE :I: line is full, but you have an >I: line!",
+       ":%s NOTICE %s :*** :I: line is full, but you have an >I: line!",
 		     me.name,cptr->name);
 	}
     }
@@ -306,7 +311,7 @@ static int attach_iline(
       else
 	{
 	  sendto_one(cptr,
-       ":%s NOTICE %s :*** FLINE :I: line is full, but you have an >I: line!",
+       ":%s NOTICE %s :*** :I: line is full, but you have an >I: line!",
 		     me.name,cptr->name);
 	}
     }
