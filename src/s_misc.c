@@ -88,7 +88,7 @@ char* date(time_t clock)
   return buf;
 }
 
-char *smalldate(time_t clock)
+const char* smalldate(time_t clock)
 {
   static  char    buf[MAX_DATE_STRING];
   struct  tm *lt, *gm;

@@ -34,6 +34,7 @@
 #include "restart.h"
 #include "s_auth.h"
 #include "s_conf.h"
+#include "s_log.h"
 #include "s_serv.h"
 #include "s_stats.h"
 #include "s_zip.h"
@@ -169,17 +170,7 @@ void report_error(const char* text, const char* who, int error)
 
   sendto_realops_flags(FLAGS_DEBUG, text, who, strerror(error));
 
-#ifdef USE_SYSLOG
-  syslog(LOG_WARNING, text, who, strerror(error));
-#endif
-
-  if (bootopt & BOOT_STDERR)
-    {
-       fprintf(stderr, text, who, strerror(error));
-       fprintf(stderr, "\n");
-       /* fflush(stderr); XXX - stderr is unbuffered, pointless */
-    }
-  Debug((DEBUG_ERROR, text, who, strerror(error)));
+  log(L_ERROR, text, who, strerror(error));
 }
 
 /*
@@ -394,25 +385,13 @@ void init_sys()
   write_set = &writeset;
 #endif
 
-  for (fd = 3; fd < MAXCONNECTIONS; fd++)
+  for (fd = 0; fd < MAXCONNECTIONS; fd++)
     {
       close(fd);
       local[fd] = NULL;
     }
-  local[1] = NULL;
-  local[2] = NULL;
-
-  if (bootopt & BOOT_TTY)        /* debugging is going to a tty */
-    {
-      init_resolver();
-      return;
-    }
-  close(1);
-  if (!(bootopt & BOOT_DEBUG) && !(bootopt & BOOT_STDERR))
-    close(2);
 
 #ifndef __CYGWIN__
-  if (((bootopt & BOOT_CONSOLE) || isatty(0)) && !(bootopt & BOOT_STDERR))
     {
       int pid;
       if( (pid = fork()) < 0)
@@ -421,7 +400,7 @@ void init_sys()
           report_error_on_tty("Couldn't fork!\n");
           exit(0);
         }
-      else if(pid > 0)
+      else if (pid > 0)
         exit(0);
 #ifdef TIOCNOTTY
       if ((fd = open("/dev/tty", O_RDWR)) >= 0)
@@ -431,12 +410,9 @@ void init_sys()
         }
 #endif
      setsid();
-     close(0);        /* fd 0 opened by inetd */
-     local[0] = NULL;
     }
 #endif /* __CYGWIN__ */
   init_resolver();
-  return;
 }
 
 /*
@@ -460,20 +436,15 @@ int check_client(struct Client *cptr,char *username,char **reason)
   struct hostent* hp = 0;
  
   ClearAccess(cptr);
-  Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]",
-         cptr->name, inetntoa((char *)&cptr->ip)));
 
   if (cptr->dns_reply)
     hp = cptr->dns_reply->hp;
 
   if ((i = attach_Iline(cptr, hp, sockname, username, reason)))
     {
-      Debug((DEBUG_DNS,"ch_cl: access denied: %s[%s]",
-             cptr->name, sockname));
+      log(L_INFO, "Access denied: %s[%s]", cptr->name, sockname);
       return i;
     }
-
-  Debug((DEBUG_DNS, "ch_cl: access ok: %s[%s]", cptr->name, sockname));
 
   return 0;
 }
@@ -627,8 +598,8 @@ int connect_server(struct ConfItem* aconf,
   if (aconf->dns_pending)
     return 0;
 
-  Debug((DEBUG_NOTICE,"Connect to %s[%s] @%s",
-         aconf->user, aconf->host, inetntoa((char*)&aconf->ipnum)));
+  log(L_NOTICE, "Connect to %s[%s] @%s",
+      aconf->user, aconf->host, inetntoa((char*)&aconf->ipnum));
 
   /*
    * if this is coming from m_connect, we have just checked this
@@ -661,8 +632,7 @@ int connect_server(struct ConfItem* aconf,
       query.vptr     = aconf;
       query.callback = connect_dns_callback;
       reply = gethost_byname(aconf->host, &query);
-      Debug((DEBUG_NOTICE, "co_sv: reply %x ac %x na %s ho %s",
-             reply, aconf, aconf->name, aconf->host));
+
       if (!reply) {
         aconf->dns_pending = 1;
         return 0;
@@ -1159,10 +1129,8 @@ int read_message(time_t delay, unsigned char mask)        /* mika */
 
       if ((CurrentTime = time(NULL)) == -1)
         {
-#ifdef USE_SYSLOG
-          syslog(LOG_WARNING, "Clock Failure (%d), TS can be corrupted", errno);
-#endif
-          sendto_ops("Clock Failure (%d), TS can be corrupted", errno);
+          log(L_CRIT, "Clock Failure (%d), TS can be corrupted", errno);
+          exit(0);
         }   
 
       if (nfds == -1 && errno == EINTR)
@@ -1419,6 +1387,11 @@ int read_message(time_t delay, unsigned char mask)
     wait.tv_usec = usec;
     nfds = poll(poll_fdarray, nbr_pfds,
                 wait.tv_sec * 1000 + wait.tv_usec / 1000);
+    if ((CurrentTime = time(NULL)) == -1)
+      {
+        log(L_CRIT, "Clock Failure (%d)", errno);
+        exit(0);
+      }   
     if (nfds == -1 && ((errno == EINTR) || (errno == EAGAIN)))
       return -1;
     else if (nfds >= 0)

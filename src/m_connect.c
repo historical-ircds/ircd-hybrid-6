@@ -30,6 +30,7 @@
 #include "numeric.h"
 #include "s_bsd.h"
 #include "s_conf.h"
+#include "s_log.h"
 #include "s_serv.h"
 #include "send.h"
 
@@ -192,10 +193,8 @@ int m_connect(struct Client* cptr, struct Client* sptr, int parc, char* parv[])
                         me.name, parv[1], parv[2] ? parv[2] : "",
                         get_client_name(sptr, FALSE));
 
-#if defined(USE_SYSLOG) && defined(SYSLOG_CONNECT)
-      syslog(LOG_DEBUG, "CONNECT From %s : %s %s", 
-             parv[0], parv[1], parv[2] ? parv[2] : "");
-#endif
+      log(L_TRACE, "CONNECT From %s : %s %s", 
+          parv[0], parv[1], parv[2] ? parv[2] : "");
     }
 
   aconf->port = port;

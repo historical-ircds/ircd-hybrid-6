@@ -20,13 +20,12 @@
  * $Id$
  */
 #include "ircd_signal.h"
-#include "send.h"         /* flush_connections */
-#include "restart.h"      /* server_reboot */
 #include "ircd.h"         /* dorehash */
+#include "restart.h"      /* server_reboot */
+#include "s_log.h"
+#include "send.h"         /* flush_connections */
+
 #include <signal.h>
-#ifdef USE_SYSLOG
-#include <syslog.h>
-#endif
 
 /*
  * dummy_handler - don't know if this is really needed but if alarm is still
@@ -43,9 +42,7 @@ static void dummy_handler(int sig)
 static void sigterm_handler(int sig)  
 {
   flush_connections(0);
-#ifdef  USE_SYSLOG
-  syslog(LOG_CRIT, "Server killed By SIGTERM");
-#endif
+  log(L_CRIT, "Server killed By SIGTERM");
   exit(-1);
 }
   
@@ -64,9 +61,7 @@ static void sigint_handler(int sig)
 {
   static int restarting = 0;
 
-#ifdef  USE_SYSLOG
-  syslog(LOG_WARNING, "Server Restarting on SIGINT");
-#endif
+  log(L_WARN, "Server Restarting on SIGINT");
   if (restarting == 0) {
     restarting = 1;
     server_reboot();

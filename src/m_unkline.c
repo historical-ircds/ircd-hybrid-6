@@ -33,6 +33,7 @@
 #include "mtrie_conf.h"
 #include "numeric.h"
 #include "s_conf.h"
+#include "s_log.h"
 #include "s_misc.h"
 #include "send.h"
 #include "struct.h"
@@ -141,12 +142,8 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
       sendto_ops("%s has removed the temporary K-Line for: [%s@%s]",
                  parv[0], user, host );
 
-#ifdef USE_SYSLOG
-      syslog(LOG_NOTICE, "%s removed temporary K-Line for [%s@%s]",
-             parv[0],
-             user,
-             host);
-#endif
+      log(L_NOTICE, "%s removed temporary K-Line for [%s@%s]",
+          parv[0], user, host);
       return 0;
     }
 
@@ -332,12 +329,7 @@ Then just ignore the line
   sendto_ops("%s has removed the K-Line for: [%s@%s]",
              parv[0], user, host);
 
-#ifdef USE_SYSLOG
-      syslog(LOG_NOTICE, "%s removed K-Line for [%s@%s]",
-             parv[0],
-             user,
-             host);
-#endif
+  log(L_NOTICE, "%s removed K-Line for [%s@%s]", parv[0], user, host);
   return 0; 
 }
 

@@ -35,6 +35,7 @@
 #include "numeric.h"
 #include "res.h"    /* gethost_byname, gethost_byaddr */
 #include "s_bsd.h"
+#include "s_log.h"
 #include "send.h"
 #include "struct.h"
 
@@ -399,7 +400,6 @@ int attach_Iline(aClient* cptr, struct hostent* hp,
        * XXX - this probably isn't needed, but ...
        */
       add_local_domain(host, HOSTLEN);
-      Debug((DEBUG_DNS, "a_il: %s->%s", sockhost, host));
     }
   else
     {
@@ -1070,17 +1070,16 @@ struct ConfItem *find_admin()
 struct ConfItem *find_me()
 {
   struct ConfItem *aconf;
-  for (aconf = ConfigItemList; aconf; aconf = aconf->next)
+  for (aconf = ConfigItemList; aconf; aconf = aconf->next) {
     if (aconf->status & CONF_ME)
       return(aconf);
+  }
 
-#ifdef USE_SYSLOG
-  syslog(LOG_CRIT,"Server has no M: line");
-#endif
+  log(L_CRIT, "Server has no M: line");
+  exit (-1);
 
-  exit(-1);
-
-  return((struct ConfItem *)NULL);        /* oh oh... is there code to handle
+  assert(0);
+  return NULL;        /* oh oh... is there code to handle
                                    this case ? - Dianora */
                                 /* There is now... -Dianora */
 }
@@ -1879,7 +1878,7 @@ static void initconf(FBFILE* file, int use_include)
                 filename++;
               else
                 {
-                  Debug((DEBUG_ERROR, "Bad config line: %s", line));
+                  log(L_ERROR, "Bad config line: %s", line);
                   continue;
                 }
 
@@ -1887,7 +1886,7 @@ static void initconf(FBFILE* file, int use_include)
                 *back = '\0';
               else
                 {
-                  Debug((DEBUG_ERROR, "Bad config line: %s", line));
+                  log(L_ERROR, "Bad config line: %s", line);
                   continue;
                 }
               include_conf = make_conf();
@@ -1907,7 +1906,7 @@ static void initconf(FBFILE* file, int use_include)
       /* Could we test if it's conf line at all?        -Vesa */
       if (line[1] != ':')
         {
-          Debug((DEBUG_ERROR, "Bad config line: %s", line));
+          log(L_ERROR, "Bad config line: %s", line);
           continue;
         }
       if (aconf)
@@ -2031,7 +2030,7 @@ static void initconf(FBFILE* file, int use_include)
           break;
 
         default:
-          Debug((DEBUG_ERROR, "Error in config file: %s", line));
+          log(L_ERROR, "Error in config file: %s", line);
           break;
         }
       if (IsIllegal(aconf))
@@ -2064,7 +2063,6 @@ static void initconf(FBFILE* file, int use_include)
 	  /* port field */
           if(aconf->status & CONF_OPERATOR)
             {
-              Debug((DEBUG_DEBUG,"Setting defaults for oper"));
               /* defaults */
               aconf->port = 
                 CONF_OPER_GLOBAL_KILL|CONF_OPER_REMOTE|CONF_OPER_UNKLINE|
@@ -2075,7 +2073,6 @@ static void initconf(FBFILE* file, int use_include)
             }
           else if(aconf->status & CONF_LOCOP)
             {
-              Debug((DEBUG_DEBUG,"Setting defaults for local oper"));
               aconf->port = CONF_OPER_UNKLINE|CONF_OPER_K;
               if ((tmp = getfield(NULL)) == NULL)
                 break;
@@ -2470,10 +2467,7 @@ static void initconf(FBFILE* file, int use_include)
 
   if(me.name[0] == '\0')
     {
-      report_error_on_tty("Server has no M: line\n");
-#ifdef USE_SYSLOG
-      syslog(LOG_CRIT,"Server has no M: line");
-#endif
+      log(L_CRIT, "Server has no M: line");
       exit(-1);
     }
 }
@@ -2554,8 +2548,8 @@ static void lookup_confhost(struct ConfItem* aconf)
 
   if (BadPtr(aconf->host) || BadPtr(aconf->name))
     {
-      Debug((DEBUG_ERROR,"Host/server name error: (%s) (%s)",
-             aconf->host, aconf->name));
+      log(L_ERROR, "Host/server name error: (%s) (%s)",
+          aconf->host, aconf->name);
       return;
     }
 
@@ -2571,8 +2565,8 @@ static void lookup_confhost(struct ConfItem* aconf)
     memcpy(&aconf->ipnum, dns_reply->hp->h_addr, sizeof(struct in_addr));
   
   if (INADDR_NONE == aconf->ipnum.s_addr) {
-    Debug((DEBUG_ERROR,"Host/server name error: (%s) (%s)",
-           aconf->host, aconf->name));
+    log(L_ERROR, "Host/server name error: (%s) (%s)",
+        aconf->host, aconf->name);
   }
 }
 
@@ -3360,10 +3354,7 @@ void read_conf_files(int cold)
     {
       if(cold)
         {
-          Debug((DEBUG_FATAL, "Failed in reading configuration file %s",
-                 filename));
-          (void)printf("Couldn't open configuration file %s\n",
-                       filename);
+          log(L_CRIT, "Failed in reading configuration file %s", filename);
           exit(-1);
         }
       else
@@ -3389,10 +3380,7 @@ void read_conf_files(int cold)
     {
       if(cold)
         {
-          Debug((DEBUG_ERROR,"Failed reading kline file %s",
-                 filename));
-          (void)printf("Couldn't open kline file %s\n",
-                       filename);
+          log(L_ERROR,"Failed reading kline file %s", filename);
         }
       else
         {
@@ -3601,23 +3589,14 @@ void write_kline_or_dline_to_conf_and_notice_opers(
   if (safe_write(sptr,filename,out,buffer))
     return;
       
-  (void)close(out);
+  close(out);
 
-#ifdef USE_SYSLOG
   if(type==KLINE_TYPE)
-    syslog(LOG_NOTICE, "%s added K-Line for [%s@%s] [%s]",
-           sptr->name,
-           user,
-           host,
-           reason);
+    log(L_TRACE, "%s added K-Line for [%s@%s] [%s]",
+        sptr->name, user, host, reason);
   else
-    syslog(LOG_NOTICE, "%s added D-Line for [%s] [%s]",
-           sptr->name,
-           host,
-           reason);
-#endif
-
-  return;
+    log(L_TRACE, "%s added D-Line for [%s] [%s]",
+           sptr->name, host, reason);
 }
 
 /*

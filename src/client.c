@@ -35,6 +35,7 @@
 #include "res.h"
 #include "s_bsd.h"
 #include "s_conf.h"
+#include "s_log.h"
 #include "s_misc.h"
 #include "s_serv.h"
 #include "send.h"
@@ -207,9 +208,7 @@ void _free_client(struct Client* cptr)
       sendto_ops("Please report to the hybrid team! " \
                  "ircd-hybrid@the-project.org");
 
-#if defined(USE_SYSLOG) && defined(SYSLOG_BLOCK_ALLOCATOR)
-       syslog(LOG_DEBUG, BH_FREE_ERROR_MESSAGE, cptr);
-#endif
+      log(L_WARN, BH_FREE_ERROR_MESSAGE, cptr);
     }
 }
 
@@ -1069,14 +1068,14 @@ const char* comment        /* Reason for the exit */
         }
 #ifdef FNAME_USERLOG
           on_for = CurrentTime - sptr->firsttime;
-# if defined(USE_SYSLOG) && defined(SYSLOG_USERS)
+# if defined(SYSLOG_USERS)
           if (IsPerson(sptr))
-            syslog(LOG_NOTICE, "%s (%3ld:%02ld:%02ld): %s!%s@%s %ld/%ld\n",
-                   myctime(sptr->firsttime),
-                   on_for / 3600, (on_for % 3600)/60,
-                   on_for % 60, sptr->name,
-                   sptr->user->username, sptr->user->host,
-                   sptr->sendK, sptr->receiveK);
+            log(L_INFO, "%s (%3ld:%02ld:%02ld): %s!%s@%s %ld/%ld\n",
+                myctime(sptr->firsttime),
+                on_for / 3600, (on_for % 3600)/60,
+                on_for % 60, sptr->name,
+                sptr->user->username, sptr->user->host,
+                sptr->sendK, sptr->receiveK);
 # else
           {
             char        linebuf[300];
@@ -1100,22 +1099,22 @@ const char* comment        /* Reason for the exit */
                   {
                     logfile = open(FNAME_USERLOG, O_WRONLY|O_APPEND);
                   }
-                (void)ircsprintf(linebuf,
-                                 "%s (%3d:%02d:%02d): %s!%s@%s %d/%d\n",
-                                 myctime(sptr->firsttime), on_for / 3600,
-                                 (on_for % 3600)/60, on_for % 60,
-                                 sptr->name,
-                                 sptr->username,
-                                 sptr->host,
-                                 sptr->sendK,
-                                 sptr->receiveK);
-                (void)write(logfile, linebuf, strlen(linebuf));
+                ircsprintf(linebuf,
+                           "%s (%3d:%02d:%02d): %s!%s@%s %d/%d\n",
+                            myctime(sptr->firsttime), on_for / 3600,
+                            (on_for % 3600)/60, on_for % 60,
+                            sptr->name,
+                            sptr->username,
+                            sptr->host,
+                            sptr->sendK,
+                            sptr->receiveK);
+                write(logfile, linebuf, strlen(linebuf));
                 /*
                  * Resync the file evey 10 seconds
                  */
                 if (CurrentTime - lasttime > 10)
                   {
-                    (void)close(logfile);
+                    close(logfile);
                     logfile = -1;
                     lasttime = CurrentTime;
                   }
@@ -1167,9 +1166,9 @@ const char* comment        /* Reason for the exit */
           sendto_ops("%s was connected for %d seconds.  %d/%d sendK/recvK.",
                      sptr->name, CurrentTime - sptr->firsttime,
                      sptr->sendK, sptr->receiveK);
-#ifdef USE_SYSLOG
-          syslog(LOG_NOTICE, "%s was connected for %d seconds.  %d/%d sendK/recvK.", sptr->name, CurrentTime - sptr->firsttime, sptr->sendK, sptr->receiveK);
-#endif
+          log(L_NOTICE, "%s was connected for %d seconds.  %d/%d sendK/recvK.",
+              sptr->name, CurrentTime - sptr->firsttime, 
+              sptr->sendK, sptr->receiveK);
 
               /* Just for paranoia... this shouldn't be necessary if the
               ** remove_dependents() stuff works, but it's still good

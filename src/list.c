@@ -32,6 +32,7 @@
 #include "numeric.h"
 #include "res.h"
 #include "restart.h"
+#include "s_log.h"
 #include "send.h"
 #include "flud.h"
 
@@ -113,7 +114,7 @@ void outofmemory()
   was_here = YES;
   clear_mtrie_conf_links();
 
-  Debug((DEBUG_FATAL, "Out of memory: restarting server..."));
+  log(L_CRIT, "Out of memory: restarting server...");
   restart("Out of Memory");
 }
 

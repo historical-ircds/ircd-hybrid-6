@@ -9,6 +9,7 @@
 #include "send.h"
 #include "struct.h"
 #include "s_debug.h"
+#include "s_log.h"
 
 #include <unistd.h>
 
@@ -23,15 +24,9 @@ void restart(char *mesg)
     abort();
   was_here = YES;
 
-#ifdef  USE_SYSLOG
-  syslog(LOG_WARNING, "Restarting Server because: %s, memory data limit: %ld",
+  log(L_NOTICE, "Restarting Server because: %s, memory data limit: %ld",
          mesg, get_maxrss());
-#endif
-  if (bootopt & BOOT_STDERR)
-    {
-      fprintf(stderr, "Restarting Server because: %s, memory: %u\n",
-              mesg, get_maxrss());
-    }
+
   server_reboot();
 }
 
@@ -41,28 +36,13 @@ void server_reboot(void)
   
   sendto_ops("Aieeeee!!!  Restarting server... memory: %d", get_maxrss());
 
-  Debug((DEBUG_NOTICE,"Restarting server..."));
+  log(L_NOTICE, "Restarting server...");
   flush_connections(0);
 
-#ifdef USE_SYSLOG
-  closelog();
-#endif
-
-  for (i = 3; i < MAXCONNECTIONS; i++)
+  for (i = 0; i < MAXCONNECTIONS; ++i)
     close(i);
-  if (!(bootopt & (BOOT_TTY | BOOT_DEBUG | BOOT_STDERR)))
-    close(2);
-  close(1);
-  close(0);
   execv(SPATH, myargv);
 
-#ifdef USE_SYSLOG
-  /* Have to reopen since it has been closed above */
-  openlog(myargv[0], LOG_PID|LOG_NDELAY, LOG_FACILITY);
-  syslog(LOG_CRIT, "execv(%s,%s) failed: %m\n", SPATH, myargv[0]);
-  closelog();
-#endif
-  Debug((DEBUG_FATAL,"Couldn't restart server: %s", strerror(errno)));
   exit(-1);
 }
 

@@ -30,6 +30,7 @@
 #include "ircd.h"
 #include "numeric.h"
 #include "s_conf.h"
+#include "s_log.h"
 #include "s_user.h"
 #include "send.h"
 #include "struct.h"
@@ -249,15 +250,11 @@ int m_oper(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
       SendMessageFile(sptr, &ConfigFileEntry.opermotd);
 
-#if !defined(CRYPT_OPER_PASSWORD) && (defined(FNAME_OPERLOG) ||\
-    (defined(USE_SYSLOG) && defined(SYSLOG_OPER)))
+#if !defined(CRYPT_OPER_PASSWORD) && (defined(FNAME_OPERLOG) || defined(SYSLOG_OPER))
         encr = "";
 #endif
-#if defined(USE_SYSLOG) && defined(SYSLOG_OPER)
-        syslog(LOG_INFO, "OPER (%s) (%s) by (%s!%s@%s)",
-               name, encr,
-               parv[0], sptr->username, sptr->host);
-#endif
+        log(L_TRACE, "OPER (%s) (%s) by (%s!%s@%s)",
+            name, encr, parv[0], sptr->username, sptr->host);
 #ifdef FNAME_OPERLOG
         {
           int     logfile;

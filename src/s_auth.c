@@ -36,6 +36,7 @@
 #include "numeric.h"
 #include "res.h"
 #include "s_bsd.h"
+#include "s_log.h"
 #include "s_stats.h"
 #include "send.h"
 #include "struct.h"
@@ -251,10 +252,8 @@ static int start_auth_query(struct AuthRequest* auth)
   if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
     report_error("creating auth stream socket %s:%s", 
                  get_client_name(auth->client, TRUE), errno);
-#ifdef USE_SYSLOG
-    syslog(LOG_ERR, "Unable to create auth socket for %s:%m",
-           get_client_name(auth->client,TRUE));
-#endif
+    log(L_ERROR, "Unable to create auth socket for %s:%m",
+        get_client_name(auth->client, SHOW_IP));
     ++ServerStats->is_abad;
     return 0;
   }
@@ -268,7 +267,7 @@ static int start_auth_query(struct AuthRequest* auth)
 
   sendheader(auth->client, REPORT_DO_ID);
   if (!set_non_blocking(fd)) {
-    report_error(NONB_ERROR_MSG, get_client_name(auth->client, TRUE), errno);
+    report_error(NONB_ERROR_MSG, get_client_name(auth->client, SHOW_IP), errno);
     close(fd);
     return 0;
   }
@@ -372,7 +371,6 @@ static char* GetValidIdent(char *buf)
   
   *colon3Ptr = '\0';
   colon3Ptr++;
-  Debug((DEBUG_INFO,"auth reply ok"));
   return(colon3Ptr);
 }
 
@@ -392,7 +390,6 @@ void start_auth(struct Client* client)
   query.callback = auth_dns_callback;
 
   sendheader(client, REPORT_DO_DNS);
-  Debug((DEBUG_DNS, "lookup %s", inetntoa((char *)&addr.sin_addr)));
 
   client->dns_reply = gethost_byaddr((const char*) &client->ip, &query);
   if (client->dns_reply) {
@@ -433,8 +430,8 @@ void timeout_auth_queries(time_t now)
         delete_resolver_queries(auth);
         sendheader(auth->client, REPORT_FAIL_DNS);
       }
-      Debug((DEBUG_NOTICE,"DNS/AUTH timeout %s",
-             get_client_name(auth->client,TRUE)));
+      log(L_INFO, "DNS/AUTH timeout %s",
+          get_client_name(auth->client, SHOW_IP));
 
       auth->client->since = now;
       release_auth_client(auth->client);
@@ -447,8 +444,7 @@ void timeout_auth_queries(time_t now)
     if (auth->timeout < CurrentTime) {
       delete_resolver_queries(auth);
       sendheader(auth->client, REPORT_FAIL_DNS);
-      Debug((DEBUG_NOTICE,"DNS timeout %s",
-             get_client_name(auth->client,TRUE)));
+      log(L_INFO, "DNS timeout %s", get_client_name(auth->client, SHOW_IP));
 
       auth->client->since = now;
       release_auth_client(auth->client);
@@ -473,15 +469,11 @@ void send_auth_query(struct AuthRequest* auth)
   int             ulen = sizeof(struct sockaddr_in);
   int             tlen = sizeof(struct sockaddr_in);
 
-  Debug((DEBUG_NOTICE,"write_authports(%x) fd %d authfd %d flags %d",
-         auth, auth->client->fd, auth->fd, auth->flags));
-
   if (getsockname(auth->client->fd, (struct sockaddr *)&us,   &ulen) ||
       getpeername(auth->client->fd, (struct sockaddr *)&them, &tlen)) {
-#ifdef USE_SYSLOG
-    syslog(LOG_DEBUG, "auth get{sock,peer}name error for %s:%m",
-           get_client_name(auth->client, TRUE));
-#endif
+
+    log(L_INFO, "auth get{sock,peer}name error for %s:%m",
+        get_client_name(auth->client, SHOW_IP));
     auth_error(auth);
     return;
   }
@@ -489,9 +481,6 @@ void send_auth_query(struct AuthRequest* auth)
              (unsigned int) ntohs(them.sin_port),
              (unsigned int) ntohs(us.sin_port));
 
-  Debug((DEBUG_SEND, "sending [%s] to auth port %s.113",
-         authbuf, inetntoa((char*) &them.sin_addr)));
-      
   if (send(auth->fd, authbuf, strlen(authbuf), 0) == -1) {
     auth_error(auth);
     return;
@@ -516,9 +505,6 @@ void read_auth_reply(struct AuthRequest* auth)
   int   len;
   int   count;
   char  buf[AUTH_BUFSIZ + 1]; /* buffer to read auth reply into */
-
-  Debug((DEBUG_NOTICE,"read_auth_reply(%x) fd %d authfd %d flags %d",
-         auth, auth->client->fd, auth->fd, auth->flags));
 
   len = recv(auth->fd, buf, AUTH_BUFSIZ, 0);
   
@@ -552,7 +538,6 @@ void read_auth_reply(struct AuthRequest* auth)
     sendheader(auth->client, REPORT_FIN_ID);
     ++ServerStats->is_asuc;
     SetGotId(auth->client);
-    Debug((DEBUG_INFO, "got username [%s]", ruser));
   }
   unlink_auth_request(auth, &AuthPollList);
 

@@ -9,6 +9,8 @@
 #include "blalloc.h"
 #include "ircd_defs.h"      /* DEBUG_BLOCK_ALLOCATOR */
 #include "irc_string.h"     /* MyMalloc */
+#include "s_log.h"
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -250,8 +252,8 @@ int BlockHeapFree(BlockHeap *bh, void *ptr)
 
    if (bh == NULL)
      {
-#if defined(USE_SYSLOG) && defined(SYSLOG_BLOCK_ALLOCATOR)
-       syslog(LOG_DEBUG,"blalloc.c bh == NULL");
+#if defined(SYSLOG_BLOCK_ALLOCATOR)
+       log(L_NOTICE,"blalloc.c bh == NULL");
 #endif
        return 1;
      }
@@ -274,10 +276,8 @@ int BlockHeapFree(BlockHeap *bh, void *ptr)
           if( (walker->allocMap[ctr] & bitmask) == 0 )
             {
 #ifdef DEBUG_BLOCK_ALLOCATOR
-#if defined(USE_SYSLOG) && defined(SYSLOG_BLOCK_ALLOCATOR)
-      syslog(LOG_DEBUG,"blalloc.c bit already clear in map caller %s %d",
-                     BH_CurrentFile, BH_CurrentLine);
-#endif
+      log(L_WARN, "blalloc.c bit already clear in map caller %s %d",
+          BH_CurrentFile, BH_CurrentLine);
       sendto_ops("blalloc.c bit already clear in map elemSize %d caller %s %d",
                          bh->elemSize,
                          BH_CurrentFile,

@@ -38,6 +38,7 @@
 #include "numeric.h"
 #include "s_bsd.h"
 #include "s_conf.h"
+#include "s_log.h"
 #include "s_serv.h"
 #include "s_stats.h"
 #include "scache.h"
@@ -519,15 +520,12 @@ static int register_user(aClient *cptr, aClient *sptr,
 
         case I_LINE_FULL:
         case I_LINE_FULL2:
-        sendto_realops_flags(FLAGS_FULL, "%s for %s.",
-                           "I-line is full", get_client_host(sptr));
-#ifdef USE_SYSLOG
-        syslog(LOG_INFO,"%s from %s.", "Too many connections",
-               get_client_host(sptr));
-#endif
-            ServerStats->is_ref++;
-            return exit_client(cptr, sptr, &me, 
-               "No more connections allowed in your connection class" );
+          sendto_realops_flags(FLAGS_FULL, "%s for %s.",
+                               "I-line is full", get_client_host(sptr));
+          log(L_INFO,"Too many connections from %s.", get_client_host(sptr));
+          ServerStats->is_ref++;
+          return exit_client(cptr, sptr, &me, 
+                 "No more connections allowed in your connection class" );
           break;
 
         case NOT_AUTHORIZED:
@@ -550,10 +548,9 @@ static int register_user(aClient *cptr, aClient *sptr,
                                  "Unauthorized client connection",
                                  get_client_host(sptr),
                                  inetntoa((char *)&sptr->ip));
-#ifdef USE_SYSLOG
-              syslog(LOG_INFO,"%s from %s.",
-                     "Unauthorized client connection", get_client_host(sptr));
-#endif
+              log(L_INFO,"Unauthorized client connection from %s.",
+                  get_client_host(sptr));
+
               ServerStats->is_ref++;
               return exit_client(cptr, sptr, &me,
                                  "You are not authorized to use this server");
@@ -1790,6 +1787,187 @@ static int do_user(char* nick, aClient* cptr, aClient* sptr,
     }
   return 0;
 }
+
+/*
+<<<<<<< s_user.c
+** m_kill
+**      parv[0] = sender prefix
+**      parv[1] = kill victim
+**      parv[2] = kill path
+*/
+int m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+  aClient*    acptr;
+  const char* inpath = get_client_name(cptr,FALSE);
+  char*       user;
+  char*       path;
+  char*       killer;
+  int         chasing = 0;
+
+  if (parc < 2 || *parv[1] == '\0')
+    {
+      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
+                 me.name, parv[0], "KILL");
+      return 0;
+    }
+
+  user = parv[1];
+  path = parv[2]; /* Either defined or NULL (parc >= 2!!) */
+
+  if (!IsPrivileged(cptr))
+    {
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      return 0;
+    }
+
+  if (MyClient(sptr) && IsAnOper(sptr) && !IsSetOperK(sptr))
+    {
+      sendto_one(sptr,":%s NOTICE %s :You have no K flag",me.name,parv[0]);
+      return 0;
+    }
+
+  if (IsAnOper(cptr))
+    {
+      if (!BadPtr(path))
+        if (strlen(path) > (size_t) KILLLEN)
+          path[KILLLEN] = '\0';
+    }
+
+  if (!(acptr = find_client(user, NULL)))
+    {
+      /*
+      ** If the user has recently changed nick, we automaticly
+      ** rewrite the KILL for this new nickname--this keeps
+      ** servers in synch when nick change and kill collide
+      */
+      if (!(acptr = get_history(user, (long)KILLCHASETIMELIMIT)))
+        {
+          sendto_one(sptr, form_str(ERR_NOSUCHNICK),
+                     me.name, parv[0], user);
+          return 0;
+        }
+      sendto_one(sptr,":%s NOTICE %s :KILL changed from %s to %s",
+                 me.name, parv[0], user, acptr->name);
+      chasing = 1;
+    }
+  if (!MyConnect(acptr) && IsLocOp(cptr))
+    {
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      return 0;
+    }
+  if (IsServer(acptr) || IsMe(acptr))
+    {
+      sendto_one(sptr, form_str(ERR_CANTKILLSERVER),
+                 me.name, parv[0]);
+      return 0;
+    }
+
+  if (MyOper(sptr) && !MyConnect(acptr) && (!IsOperGlobalKill(sptr)))
+    {
+      sendto_one(sptr, ":%s NOTICE %s :Nick %s isnt on your server",
+                 me.name, parv[0], acptr->name);
+      return 0;
+    }
+
+  if (!IsServer(cptr))
+    {
+      /*
+      ** The kill originates from this server, initialize path.
+      ** (In which case the 'path' may contain user suplied
+      ** explanation ...or some nasty comment, sigh... >;-)
+      **
+      **        ...!operhost!oper
+      **        ...!operhost!oper (comment)
+      */
+      inpath = cptr->host;
+      if (!BadPtr(path))
+        {
+          ircsprintf(buf, "%s%s (%s)",
+                           cptr->name, IsOper(sptr) ? "" : "(L)", path);
+          path = buf;
+        }
+      else
+        path = cptr->name;
+    }
+  else if (BadPtr(path))
+    path = "*no-path*"; /* Bogus server sending??? */
+  /*
+  ** Notify all *local* opers about the KILL (this includes the one
+  ** originating the kill, if from this server--the special numeric
+  ** reply message is not generated anymore).
+  **
+  ** Note: "acptr->name" is used instead of "user" because we may
+  **     have changed the target because of the nickname change.
+  */
+  if (IsLocOp(sptr) && !MyConnect(acptr))
+    {
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      return 0;
+    }
+  if (IsAnOper(sptr)) /* send it normally */
+    sendto_ops("Received KILL message for %s. From %s Path: %s!%s",
+               acptr->name, parv[0], inpath, path);
+  else
+    sendto_ops_flags(FLAGS_SKILL,
+                     "Received KILL message for %s. From %s Path: %s!%s",
+                     acptr->name, parv[0], inpath, path);
+
+#if defined(SYSLOG_KILL)
+  if (IsOper(sptr))
+    log(L_INFO,"KILL From %s For %s Path %s!%s",
+        parv[0], acptr->name, inpath, path);
+#endif
+  /*
+  ** And pass on the message to other servers. Note, that if KILL
+  ** was changed, the message has to be sent to all links, also
+  ** back.
+  ** Suicide kills are NOT passed on --SRB
+  */
+  if (!MyConnect(acptr) || !MyConnect(sptr) || !IsAnOper(sptr))
+    {
+      sendto_serv_butone(cptr, ":%s KILL %s :%s!%s",
+                         parv[0], acptr->name, inpath, path);
+      if (chasing && IsServer(cptr))
+        sendto_one(cptr, ":%s KILL %s :%s!%s",
+                   me.name, acptr->name, inpath, path);
+      acptr->flags |= FLAGS_KILLED;
+    }
+
+  /*
+  ** Tell the victim she/he has been zapped, but *only* if
+  ** the victim is on current server--no sense in sending the
+  ** notification chasing the above kill, it won't get far
+  ** anyway (as this user don't exist there any more either)
+  */
+  if (MyConnect(acptr))
+    sendto_prefix_one(acptr, sptr,":%s KILL %s :%s!%s",
+                      parv[0], acptr->name, inpath, path);
+  /*
+  ** Set FLAGS_KILLED. This prevents exit_one_client from sending
+  ** the unnecessary QUIT for this. (This flag should never be
+  ** set in any other place)
+  */
+  if (MyConnect(acptr) && MyConnect(sptr) && IsAnOper(sptr))
+    ircsprintf(buf2, "Local kill by %s (%s)", sptr->name,
+                     BadPtr(parv[2]) ? sptr->name : parv[2]);
+  else
+    {
+      if ((killer = strchr(path, ' ')))
+        {
+          while (*killer && *killer != '!')
+            killer--;
+          if (!*killer)
+            killer = path;
+          else
+            killer++;
+        }
+      else
+        killer = path;
+      ircsprintf(buf2, "Killed (%s)", killer);
+    }
+  return exit_client(cptr, acptr, sptr, buf2);
+}
+
 
 /*
  * user_mode - set get current users mode

@@ -41,6 +41,7 @@
 #include "s_bsd.h"
 #include "s_conf.h"
 #include "s_debug.h"
+#include "s_log.h"
 #include "s_misc.h"
 #include "s_serv.h"      /* try_connections */
 #include "s_stats.h"
@@ -97,7 +98,6 @@ aClient *serv_cptr_list  = NULL;
 
 static size_t initialVMTop;     /* top of virtual memory at init */
 
-static void open_debugfile();
 static void write_pidfile(void);
 
 static void initialize_global_set_options(void);
@@ -575,7 +575,7 @@ static  time_t  check_pings(time_t currenttime)
 
   if (!oldest || oldest < currenttime)
     oldest = currenttime + PINGFREQUENCY;
-  Debug((DEBUG_NOTICE,"Next check_ping() call at: %s, %d %d %d",
+  Debug((DEBUG_NOTICE, "Next check_ping() call at: %s, %d %d %d",
          myctime(oldest), ping, oldest, currenttime));
   
   return (oldest);
@@ -868,23 +868,8 @@ int main(int argc, char *argv[])
   init_tree_parse(msgtab);      /* tree parse code (orabidoo) */
 
   fdlist_init();
-  open_debugfile();
-
-#if 0
-  if ((CurrentTime = time(NULL)) == -1)
-    {
-#ifdef USE_SYSLOG
-      syslog(LOG_WARNING, "Clock Failure (%d), TS can be corrupted", errno);
-#endif
-      sendto_ops("Clock Failure (%d), TS can be corrupted", errno);
-    }
-#endif
-
   init_sys();
-
-#ifdef USE_SYSLOG
-  openlog("ircd", LOG_PID | LOG_NDELAY, LOG_FACILITY);
-#endif
+  init_log();
 
   read_conf_files(YES);         /* cold start init conf files */
 
@@ -908,12 +893,7 @@ int main(int argc, char *argv[])
   check_class();
   write_pidfile();
 
-  Debug((DEBUG_NOTICE,"Server ready..."));
-  if (bootopt & BOOT_STDERR)
-    fprintf(stderr,"Server Ready\n");
-#ifdef USE_SYSLOG
-  syslog(LOG_NOTICE, "Server Ready");
-#endif
+  log(L_NOTICE, "Server Ready");
 
   ServerRunning = 1;
   while (ServerRunning)
@@ -932,10 +912,9 @@ time_t io_loop(time_t delay)
   lasttimeofday = CurrentTime;
   if ((CurrentTime = time(NULL)) == -1)
     {
-#ifdef USE_SYSLOG
-      syslog(LOG_WARNING, "Clock Failure (%d), TS can be corrupted", errno);
-#endif
+      log(L_ERROR, "Clock Failure (%d)", errno);
       sendto_ops("Clock Failure (%d), TS can be corrupted", errno);
+      restart("Clock Failure");
     }
 
   if (CurrentTime < lasttimeofday)
@@ -1064,13 +1043,6 @@ time_t io_loop(time_t delay)
         }
       flush_server_connections();
     }
-  if ((CurrentTime = time(NULL)) == -1)
-    {
-#ifdef USE_SYSLOG
-      syslog(LOG_WARNING, "Clock Failure (%d), TS can be corrupted", errno);
-#endif
-      sendto_ops("Clock Failure (%d), TS can be corrupted", errno);
-    }
 
   /*
    * CLIENT_SERVER = TRUE:
@@ -1130,11 +1102,11 @@ time_t io_loop(time_t delay)
   fdlist_check(CurrentTime);
 #endif
 
-  Debug((DEBUG_DEBUG,"About to return delay %d",delay));
   return delay;
 
 }
 
+#if 0
 /*
  * open_debugfile
  *
@@ -1176,6 +1148,7 @@ static void open_debugfile()
 #endif
 }
 
+#endif
 /*
  * simple function added because its used more than once
  * - Dianora
@@ -1274,13 +1247,10 @@ static void write_pidfile(void)
     {
       ircsprintf(buff,"%d\n", (int)getpid());
       if (write(fd, buff, strlen(buff)) == -1)
-        Debug((DEBUG_NOTICE,"Error writing to pid file %s",
-               PPATH));
+        log(L_ERROR,"Error writing to pid file %s", PPATH);
       close(fd);
       return;
     }
-#ifdef        DEBUGMODE
   else
-    Debug((DEBUG_NOTICE,"Error opening pid file %s", PPATH));
-#endif
+    log(L_ERROR, "Error opening pid file %s", PPATH);
 }

@@ -29,6 +29,7 @@
 #include "ircd.h"
 #include "numeric.h"
 #include "s_conf.h"
+#include "s_log.h"
 #include "s_serv.h"
 #include "send.h"
 
@@ -223,10 +224,7 @@ int m_squit(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       sendto_ops_butone(NULL, &me,
                         ":%s WALLOPS :Received SQUIT %s from %s (%s)",
                         me.name, server, get_client_name(sptr,FALSE), comment);
-#if defined(USE_SYSLOG) && defined(SYSLOG_SQUIT)
-      syslog(LOG_DEBUG,"SQUIT From %s : %s (%s)",
-             parv[0], server, comment);
-#endif
+      log(L_TRACE, "SQUIT From %s : %s (%s)", parv[0], server, comment);
     }
   else if (MyConnect(acptr))
     sendto_ops("Received SQUIT %s from %s (%s)",

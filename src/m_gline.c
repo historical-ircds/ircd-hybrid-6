@@ -105,7 +105,7 @@ int     m_gline(aClient *cptr,
   register int nonwild;
 #ifdef GLINES
   char buffer[512];
-  char *current_date;
+  const char *current_date;
   char tempuser[USERLEN + 2];
   char temphost[HOSTLEN + 1];
   aConfItem *aconf;

@@ -29,8 +29,8 @@
 #include "ircd.h"
 #include "numeric.h"
 #include "restart.h"
+#include "s_log.h"
 #include "send.h"
-#include "struct.h" /* XXX - syslog */
 
 /*
  * m_functions execute protocol messages on this server:
@@ -111,11 +111,8 @@ int     m_restart(struct Client *cptr,
       return 0;
     }
 
-#ifdef USE_SYSLOG
-  syslog(LOG_WARNING, "Server RESTART by %s\n",
-         get_client_name(sptr,FALSE));
-#endif
-  ircsprintf(buf, "Server RESTART by %s", get_client_name(sptr, TRUE));
+  log(L_WARN, "Server RESTART by %s\n", get_client_name(sptr, SHOW_IP));
+  ircsprintf(buf, "Server RESTART by %s", get_client_name(sptr, SHOW_IP));
   restart(buf);
   return 0; /*NOT REACHED*/
 }
