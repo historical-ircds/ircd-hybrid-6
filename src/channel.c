@@ -1076,12 +1076,6 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if((whatt == MODE_ADD) && !isok)
 		break;
-	      /* This mod dedicated to Martyn on Efnet, the biggest
-	       * sickest bigot I have ever met. He finds it ok to "out" others
-	       * yet finds it ok to be in the closet himself about his
-	       * his own bisexuality. Hypocrite.
-	       * - with love, Dianora
-	       */
 	      if(whatt == MODE_DEL)
 		isok = 0;
 	      }
