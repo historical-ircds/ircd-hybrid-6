@@ -1,3 +1,17 @@
+db          2001/12/07 21:13:20 EST	(20011208_1)
+
+  Modified files:
+    src                  channel.c mtrie_conf.c send.c 
+  Log:
+  - fixed some unused variables
+  
+  Revision  Changes    Path
+  1.222     +4 -3      ircd-hybrid-6/src/channel.c
+  1.83      +2 -2      ircd-hybrid-6/src/mtrie_conf.c
+  1.108     +1 -2      ircd-hybrid-6/src/send.c
+
+
+
 wcampbel    2001/12/07 20:59:20 EST	(20011208_0)
 
   Modified files:
