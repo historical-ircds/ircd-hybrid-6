@@ -97,7 +97,7 @@ SRCS = \
 	s_zip.c \
 	scache.c \
 	send.c \
-        sprintf_irc.c \
+	sprintf_irc.c \
 	whowas.c
 
 #
