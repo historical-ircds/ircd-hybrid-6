@@ -638,8 +638,8 @@ find_or_add_ip(aClient *cptr)
     {
       if( free_ip_entries == (IP_ENTRY *)NULL)
         {
-          sendto_ops("s_conf.c free_ip_entries was found NULL in find_or_add");
-          sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
+          sendto_realops("s_conf.c free_ip_entries was found NULL in find_or_add");
+          sendto_realops("Please report to the hybrid team! ircd-hybrid@the-project.org");
           outofmemory();
         }
 
@@ -662,8 +662,8 @@ find_or_add_ip(aClient *cptr)
     {
       if( free_ip_entries == (IP_ENTRY *)NULL)
         {
-          sendto_ops("s_conf.c free_ip_entries was found NULL in find_or_add");
-          sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
+          sendto_realops("s_conf.c free_ip_entries was found NULL in find_or_add");
+          sendto_realops("Please report to the hybrid team! ircd-hybrid@the-project.org");
           outofmemory();
         }
 
@@ -796,8 +796,8 @@ void remove_one_ip(unsigned long ip_in)
           ptr = ptr->next;
         }
     }
-  sendto_ops("s_conf.c couldn't find ip# in hash table in remove_one_ip()");
-  sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
+  sendto_realops("s_conf.c couldn't find ip# in hash table in remove_one_ip()");
+  sendto_realops("Please report to the hybrid team! ircd-hybrid@the-project.org");
   return;
 }
 
@@ -1716,7 +1716,7 @@ int rehash_dump(aClient *sptr)
 int rehash(aClient *cptr,aClient *sptr, int sig)
 {
   if (sig)
-    sendto_ops("Got signal SIGHUP, reloading ircd conf. file");
+    sendto_realops("Got signal SIGHUP, reloading ircd conf. file");
 
   read_conf_files(NO);
   close_listeners();

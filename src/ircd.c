@@ -406,7 +406,7 @@ static time_t io_loop(time_t delay)
                   sprintf(to_send, 
                         "Entering high-traffic mode - (%.1fk/s > %dk/s)",
                                 (float)currlife, LRV);
-                  sendto_ops(to_send);
+                  sendto_ops("%s", to_send);
                 }
             }
           else
@@ -420,7 +420,7 @@ static time_t io_loop(time_t delay)
                                 LIFESUX,
                                 (LIFESUX & 0x04) ?  " (TURBO)" : "",
                                 (int)LCF, (float)currlife);
-                  sendto_ops(to_send);
+                  sendto_ops("%s", to_send);
                 }
             }
         }

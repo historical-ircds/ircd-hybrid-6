@@ -189,7 +189,7 @@ static void connect_dns_callback(void* vptr, struct DNSReply* reply)
     connect_server(aconf, 0, reply);
   }
   else
-    sendto_ops("Connect to %s failed: host lookup", aconf->host);
+    sendto_realops("Connect to %s failed: host lookup", aconf->host);
 }
 
 /*
@@ -563,7 +563,7 @@ int connect_server(struct ConfItem* aconf,
    */
   if (!attach_cn_lines(cptr, aconf->host))
     {
-      sendto_ops("Host %s is not enabled for connecting:no C/N-line",
+      sendto_realops("Host %s is not enabled for connecting:no C/N-line",
                  aconf->host);
       if (by && IsPerson(by) && !MyClient(by))
         sendto_one(by, ":%s NOTICE %s :Connect to host %s failed.",
@@ -922,7 +922,7 @@ static void error_exit_client(struct Client* cptr, int error)
       else
         report_error("Lost connection to %s:%s", 
                      get_client_name(cptr, TRUE), current_error);
-      sendto_ops("%s had been connected for %d day%s, %2d:%02d:%02d",
+      sendto_realops("%s had been connected for %d day%s, %2d:%02d:%02d",
                  cptr->name, connected/86400,
                  (connected/86400 == 1) ? "" : "s",
                  (connected % 86400) / 3600, (connected % 3600) / 60,

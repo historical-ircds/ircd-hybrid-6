@@ -186,7 +186,7 @@ void _free_user(anUser* user, aClient* cptr)
        */
       if (user->joined || user->refcnt < 0 ||
           user->invited || user->channel)
-      sendto_ops("* %#x user (%s!%s@%s) %#x %#x %#x %d %d *",
+      sendto_realops("* %#x user (%s!%s@%s) %#x %#x %#x %d %d *",
                  cptr, cptr ? cptr->name : "<noname>",
                  cptr->username, cptr->host, user,
                  user->invited, user->channel, user->joined,
@@ -194,8 +194,8 @@ void _free_user(anUser* user, aClient* cptr)
 
       if(BlockHeapFree(free_anUsers,user))
         {
-          sendto_ops("list.c couldn't BlockHeapFree(free_anUsers,user) user = %lX", user );
-          sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
+          sendto_realops("list.c couldn't BlockHeapFree(free_anUsers,user) user = %lX", user );
+          sendto_realops("Please report to the hybrid team! ircd-hybrid@the-project.org");
 #ifdef SYSLOG_BLOCK_ALLOCATOR 
           log(L_DEBUG,"list.c couldn't BlockHeapFree(free_anUsers,user) user = %lX", (long unsigned int) user);
 #endif
@@ -246,8 +246,8 @@ void _free_link(Link *lp)
 {
   if(BlockHeapFree(free_Links,lp))
     {
-      sendto_ops("list.c couldn't BlockHeapFree(free_Links,lp) lp = %lX", lp );
-      sendto_ops("Please report to the hybrid team!");
+      sendto_realops("list.c couldn't BlockHeapFree(free_Links,lp) lp = %lX", lp );
+      sendto_realops("Please report to the hybrid team!");
     }
 }
 

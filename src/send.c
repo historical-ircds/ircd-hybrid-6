@@ -86,7 +86,7 @@ dead_link(aClient *to, char *notice)
   DBufClear(&to->recvQ);
   DBufClear(&to->sendQ);
   if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
-    sendto_ops(notice, get_client_name(to, FALSE));
+    sendto_realops(notice, get_client_name(to, FALSE));
   
   Debug((DEBUG_ERROR, notice, get_client_name(to, FALSE)));
 
@@ -155,14 +155,14 @@ send_message(aClient *to, char *msg, int len)
         if (DBufLength(&to->sendQ) > get_sendq(to))
         {
                 if (IsServer(to))
-                        sendto_ops("Max SendQ limit exceeded for %s: %d > %d",
+                        sendto_realops("Max SendQ limit exceeded for %s: %d > %d",
                                 get_client_name(to, FALSE),
                                 DBufLength(&to->sendQ), get_sendq(to));
 
                 if (IsDoingList(to)) {
       /* Pop the sendq for this message */
       /*if (!IsAnOper(to))
-        sendto_ops("LIST blocked for %s", get_client_name(to, FALSE)); */
+        sendto_realops("LIST blocked for %s", get_client_name(to, FALSE)); */
       SetSendqPop(to);
       return 0;
     }
@@ -241,7 +241,7 @@ send_message(aClient *to, char *msg, int len)
 
         if (IsMe(to))
         {
-                sendto_ops("Trying to send to myself! [%s]", msg);
+                sendto_realops("Trying to send to myself! [%s]", msg);
                 return 0;
         }
 
@@ -450,7 +450,7 @@ vsendto_one(aClient *to, const char *pattern, va_list args)
     }
   else if (IsMe(to))
     {
-      sendto_ops("Trying to send [%s] to myself!", sendbuf);
+      sendto_realops("Trying to send [%s] to myself!", sendbuf);
       return;
     }
 
@@ -676,13 +676,6 @@ sendto_serv_butone(aClient *one, const char *pattern, ...)
 {
   va_list args;
   register aClient *cptr;
-
-  /*
-   * USE_VARARGS IS BROKEN someone volunteer to fix it :-) -Dianora
-   *
-   * fixed! :-)
-   * -wnder
-   */
 
   va_start(args, pattern);
   
@@ -1198,13 +1191,13 @@ vsendto_prefix_one(register aClient *to, register aClient *from,
         {
           vsprintf_irc(sendbuf, pattern, args);
           
-          sendto_ops(
+          sendto_realops(
                      "Send message (%s) to %s[%s] dropped from %s(Fake Dir)",
                      sendbuf, to->name, to->from->name, from->name);
           return;
         }
 
-      sendto_ops("Ghosted: %s[%s@%s] from %s[%s@%s] (%s)",
+      sendto_realops("Ghosted: %s[%s@%s] from %s[%s@%s] (%s)",
                  to->name, to->username, to->host,
                  from->name, from->username, from->host,
                  to->from->name);

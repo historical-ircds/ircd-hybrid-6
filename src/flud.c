@@ -167,7 +167,7 @@ check_for_flud(struct Client *fluder, /* fluder, client being fluded */
   
   if(cptr && !MyConnect(cptr))
     {
-      sendto_ops("check_for_flud() called for non-local client");
+      sendto_realops("check_for_flud() called for non-local client");
       return 0;
     }
  
@@ -335,7 +335,7 @@ void free_fluders(struct Client *cptr, struct Channel *chptr)
 
   if((cptr == NULL) && (chptr == NULL))
     {
-      sendto_ops("free_fluders(NULL, NULL)");
+      sendto_realops("free_fluders(NULL, NULL)");
       return;
     }    
  
@@ -369,7 +369,7 @@ void free_fludees(struct Client *badguy)
                 
   if(badguy == NULL)
     {
-      sendto_ops("free_fludees(NULL)");
+      sendto_realops("free_fludees(NULL)");
       return;
     }
   fludees = badguy->fludees;
@@ -382,7 +382,7 @@ void free_fludees(struct Client *badguy)
       else
         {
           if(!MyConnect(fludees->value.cptr))
-            sendto_ops("free_fludees() encountered non-local client");
+            sendto_realops("free_fludees() encountered non-local client");
           else
             remove_fluder_reference(&fludees->value.cptr->fluders, badguy);
         }

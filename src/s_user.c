@@ -793,7 +793,7 @@ static int register_user(aClient *cptr, aClient *sptr,
   sptr->servptr = find_server(user->server);
   if (!sptr->servptr)
     {
-      sendto_ops("Ghost killed: %s on invalid server %s",
+      sendto_realops("Ghost killed: %s on invalid server %s",
                  sptr->name, sptr->user->server);
       sendto_one(cptr,":%s KILL %s :%s (Ghosted, %s doesn't exist)",
                  me.name, sptr->name, me.name, user->server);
@@ -1453,7 +1453,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
       ** there is no danger of the server being disconnected.
       ** Ultimate way to jupiter a nick ? >;-). -avalon
       */
-      sendto_ops("Nick collision on %s(%s <- %s)",
+      sendto_realops("Nick collision on %s(%s <- %s)",
                  sptr->name, acptr->from->name,
                  get_client_name(cptr, FALSE));
       ServerStats->is_kill++;
@@ -1523,7 +1523,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
       {
         if (fromTS && !(acptr->user))
           {
-            sendto_ops("Nick Collision on %s(%s(NOUSER) <- %s!%s@%s)(TS:%s)",
+            sendto_realops("Nick Collision on %s(%s(NOUSER) <- %s!%s@%s)(TS:%s)",
                    acptr->name, acptr->from->name, parv[1], parv[5], parv[6],
                    cptr->name);
 
@@ -1601,7 +1601,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
       if (!newts || !acptr->tsinfo
           || (newts == acptr->tsinfo))
         {
-          sendto_ops("Nick collision on %s(%s <- %s)(both killed)",
+          sendto_realops("Nick collision on %s(%s <- %s)(both killed)",
                      acptr->name, acptr->from->name,
                      get_client_name(cptr, FALSE));
           ServerStats->is_kill++;
@@ -1633,11 +1633,11 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
           else
             {
               if (sameuser)
-                sendto_ops("Nick collision on %s(%s <- %s)(older killed)",
+                sendto_realops("Nick collision on %s(%s <- %s)(older killed)",
                            acptr->name, acptr->from->name,
                            get_client_name(cptr, FALSE));
               else
-                sendto_ops("Nick collision on %s(%s <- %s)(newer killed)",
+                sendto_realops("Nick collision on %s(%s <- %s)(newer killed)",
                            acptr->name, acptr->from->name,
                            get_client_name(cptr, FALSE));
               
@@ -1669,7 +1669,7 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
   if ( !newts || !acptr->tsinfo || (newts == acptr->tsinfo) ||
       !sptr->user)
     {
-      sendto_ops("Nick change collision from %s to %s(%s <- %s)(both killed)",
+      sendto_realops("Nick change collision from %s to %s(%s <- %s)(both killed)",
                  sptr->name, acptr->name, acptr->from->name,
                  get_client_name(cptr, FALSE));
       ServerStats->is_kill++;
@@ -1705,11 +1705,11 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
           (!sameuser && newts > acptr->tsinfo))
         {
           if (sameuser)
-            sendto_ops("Nick change collision from %s to %s(%s <- %s)(older killed)",
+            sendto_realops("Nick change collision from %s to %s(%s <- %s)(older killed)",
                        sptr->name, acptr->name, acptr->from->name,
                        get_client_name(cptr, FALSE));
           else
-            sendto_ops("Nick change collision from %s to %s(%s <- %s)(newer killed)",
+            sendto_realops("Nick change collision from %s to %s(%s <- %s)(newer killed)",
                        sptr->name, acptr->name, acptr->from->name,
                        get_client_name(cptr, FALSE));
           ServerStats->is_kill++;
@@ -1730,11 +1730,11 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
       else
         {
           if (sameuser)
-            sendto_ops("Nick collision on %s(%s <- %s)(older killed)",
+            sendto_realops("Nick collision on %s(%s <- %s)(older killed)",
                        acptr->name, acptr->from->name,
                        get_client_name(cptr, FALSE));
           else
-            sendto_ops("Nick collision on %s(%s <- %s)(newer killed)",
+            sendto_realops("Nick collision on %s(%s <- %s)(newer killed)",
                        acptr->name, acptr->from->name,
                        get_client_name(cptr, FALSE));
           

@@ -112,10 +112,10 @@ int m_error(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   if (IsPerson(cptr) || IsUnknown(cptr))
     return 0;
   if (cptr == sptr)
-    sendto_ops("ERROR :from %s -- %s",
+    sendto_realops("ERROR :from %s -- %s",
                get_client_name(cptr, FALSE), para);
   else
-    sendto_ops("ERROR :from %s via %s -- %s", sptr->name,
+    sendto_realops("ERROR :from %s via %s -- %s", sptr->name,
                get_client_name(cptr,FALSE), para);
   return 0;
 }

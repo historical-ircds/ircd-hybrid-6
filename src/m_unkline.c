@@ -328,7 +328,7 @@ Then just ignore the line
     }
   sendto_one(sptr, ":%s NOTICE %s :K-Line for [%s@%s] is removed", 
              me.name, parv[0], user,host);
-  sendto_ops("%s has removed the K-Line for: [%s@%s]",
+  sendto_realops("%s has removed the K-Line for: [%s@%s]",
              parv[0], user, host);
 
   log(L_NOTICE, "%s removed K-Line for [%s@%s]", parv[0], user, host);

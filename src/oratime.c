@@ -61,7 +61,7 @@ void orat_no(void)
 
 void orat_report(void)
 {
-  sendto_ops("Time spent: %ld ms", tsdms);
+  sendto_realops("Time spent: %ld ms", tsdms);
 }
 
 #endif /* ORATIMING */
