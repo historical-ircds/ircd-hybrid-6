@@ -1683,6 +1683,9 @@ int m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[])
   int     i;
   struct hostent* hp;
 
+  if (!IsAnOper(sptr))
+    return 0;
+
   if (parv[1] && *parv[1] == 'l') {
     for(cp = cacheTop; cp; cp = cp->list_next) {
       hp = &cp->he.h;

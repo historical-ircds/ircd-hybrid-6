@@ -147,7 +147,7 @@ void debug(int level, char *format, ...)
     vsprintf(debugbuf, format, args);
     va_end(args);
 
-    log(L_DEBUG, debugbuf);
+    log(L_DEBUG, "%s", debugbuf);
   }
   errno = err;
 } /* debug() */

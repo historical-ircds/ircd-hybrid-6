@@ -1390,7 +1390,7 @@ ts_warn(const char *pattern, ...)
 
   vsendto_realops(pattern, args);
   vsprintf(buf, pattern, args);
-  log(L_CRIT,buf);
+  log(L_CRIT, "%s", buf);
 
   va_end(args);
 } /* ts_warn() */
