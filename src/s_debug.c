@@ -16,14 +16,9 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ *   $Id$
  */
-
-#ifndef lint
-static  char sccsid[] = "@(#)s_debug.c	2.28 07 Nov 1993 (C) 1988 University of Oulu, \
-Computing Center and Jarkko Oikarinen";
-static char *rcs_version = "$Id$";
-#endif
-
 #include "struct.h"
 #include "s_conf.h"
 #include "class.h"
@@ -366,8 +361,10 @@ void count_memory(aClient *cptr,char *nick)
   u_long maxdb = 0;	/* max used by dbufs */
   u_long rm = 0;	/* res memory used */
   u_long mem_servers_cached; /* memory used by scache */
-  u_long mem_ips_stored;	/* memory used by ip address hash */
+  u_long mem_ips_stored; /* memory used by ip address hash */
 
+  size_t client_hash_table_size = 0;
+  size_t channel_hash_table_size = 0;
   u_long totcl = 0;
   u_long totch = 0;
   u_long totww = 0;
@@ -465,12 +462,15 @@ void count_memory(aClient *cptr,char *nick)
   sendto_one(cptr, ":%s %d %s :Whowas array %d(%d)",
 	     me.name, RPL_STATSDEBUG, nick, NICKNAMEHISTORYLENGTH, wwm);
 
-  totww = wwu*sizeof(anUser) + wwm;
+  totww = wwu * sizeof(anUser) + wwm;
+
+  client_hash_table_size  = hash_get_client_table_size();
+  channel_hash_table_size = hash_get_channel_table_size();
 
   sendto_one(cptr, ":%s %d %s :Hash: client %d(%d) chan %d(%d)",
 	     me.name, RPL_STATSDEBUG, nick,
-	     U_MAX, sizeof(aHashEntry) * U_MAX,
-	     CH_MAX, sizeof(aHashEntry) * CH_MAX);
+	     U_MAX, client_hash_table_size,
+	     CH_MAX, channel_hash_table_size);
 
   db = dbufblocks * sizeof(dbufbuf);
   maxdb = maxdbufblocks * sizeof(dbufbuf);
@@ -494,8 +494,8 @@ void count_memory(aClient *cptr,char *nick)
 	     mem_ips_stored);
 
   tot = totww + totch + totcl + com + cl*sizeof(aClass) + db + rm;
-  tot += sizeof(aHashEntry) * U_MAX;
-  tot += sizeof(aHashEntry) * CH_MAX;
+  tot += client_hash_table_size;
+  tot += channel_hash_table_size;
 
   tot += mem_servers_cached;
   sendto_one(cptr, ":%s %d %s :Total: ww %d ch %d cl %d co %d db %d",

@@ -18,37 +18,52 @@
  *
  *  $Id$
  */
+#include "hash.h"
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
 #include "msg.h"
-#include "hash.h"
 #include "h.h"
 #include "send.h"
 
+#include <assert.h>
+#include <fcntl.h>     /* O_RDWR ... */
 #include <sys/stat.h>
-#include <fcntl.h>
 
 /* New hash code */
 /*
  * Contributed by James L. Davis
  */
-
-int HASHSIZE = U_MAX;
-int CHANNELHASHSIZE = CH_MAX;
+struct HashEntry {
+  int    hits;
+  int    links;
+  void*  list;
+};
 
 #ifdef  DEBUGMODE
-static  aHashEntry	*clientTable = NULL;
-static	aHashEntry	*channelTable = NULL;
-static  int	clhits, clmiss;
-static	int	chhits, chmiss;
+static struct HashEntry* clientTable = NULL;
+static struct HashEntry* channelTable = NULL;
+static int clhits;
+static int clmiss;
+static int chhits;
+static int chmiss;
 #else
 
-static	aHashEntry	clientTable[U_MAX];
-static	aHashEntry	channelTable[CH_MAX];
+static struct HashEntry clientTable[U_MAX];
+static struct HashEntry channelTable[CH_MAX];
 
 #endif
+
+size_t hash_get_channel_table_size(void)
+{
+  return sizeof(struct HashEntry) * CH_MAX;
+}
+
+size_t hash_get_client_table_size(void)
+{
+  return sizeof(struct HashEntry) * U_MAX;
+}
 
 /*
  *
@@ -87,16 +102,16 @@ static	aHashEntry	channelTable[CH_MAX];
  *
  */
 
-unsigned hash_nick_name(const char* name)
+unsigned int hash_nick_name(const char* name)
 {
-  unsigned h = 0;
+  unsigned int h = 0;
 
   while (*name)
     {
       h = (h << 4) - (h + (unsigned char)tolower(*name++));
     }
 
-  return(h & (U_MAX-1));
+  return(h & (U_MAX - 1));
 }
 
 /*
@@ -107,29 +122,29 @@ unsigned hash_nick_name(const char* name)
  * is little or no point hashing on a full channel name which maybe 255 chars
  * long.
  */
-int hash_channel_name(const char* name)
+unsigned int hash_channel_name(const char* name)
 {
   register int i = 30;
-  unsigned h = 0;
+  unsigned int h = 0;
 
   while (*name && --i)
     {
       h = (h << 4) - (h + (unsigned char)tolower(*name++));
     }
 
-  return(h & (CH_MAX-1));
+  return(h & (CH_MAX - 1));
 }
 
 unsigned int hash_whowas_name(const char* name)
 {
-  unsigned h = 0;
+  unsigned int h = 0;
 
   while (*name)
     {
       h = (h << 4) - (h + (unsigned char)tolower(*name++));
     }
 
-  return(h & (WW_MAX-1));
+  return(h & (WW_MAX - 1));
 }
 
 /*
@@ -143,9 +158,10 @@ void clear_client_hash_table()
   clhits = 0;
   clmiss = 0;
   if(!clientTable)
-    clientTable = (aHashEntry*) MyMalloc(HASHSIZE * sizeof(aHashEntry));
+    clientTable = (struct HashEntry*) MyMalloc(U_MAX * 
+                                               sizeof(struct HashEntry));
 #endif
-  memset(clientTable, 0, sizeof(aHashEntry) * U_MAX);
+  memset(clientTable, 0, sizeof(struct HashEntry) * U_MAX);
 }
 
 void clear_channel_hash_table()
@@ -154,22 +170,24 @@ void clear_channel_hash_table()
   chmiss = 0;
   chhits = 0;
   if (!channelTable)
-    channelTable = (aHashEntry*) MyMalloc(CHANNELHASHSIZE *
-					  sizeof(aHashEntry));
+    channelTable = (struct HashEntry*) MyMalloc(CH_MAX *
+					        sizeof(struct HashEntry));
 #endif
-  memset(channelTable, 0, sizeof(aHashEntry) * CH_MAX);
+  memset(channelTable, 0, sizeof(struct HashEntry) * CH_MAX);
 }
 
 /*
  * add_to_client_hash_table
  */
-void add_to_client_hash_table(const char* name, aClient *cptr)
+void add_to_client_hash_table(const char* name, aClient* cptr)
 {
-  int	hashv;
+  unsigned int hashv;
+  assert(0 != name);
+  assert(0 != cptr);
 
   hashv = hash_nick_name(name);
-  cptr->hnext = (aClient *)clientTable[hashv].list;
-  clientTable[hashv].list = (void *)cptr;
+  cptr->hnext = (aClient*) clientTable[hashv].list;
+  clientTable[hashv].list = (void*) cptr;
   clientTable[hashv].links++;
   clientTable[hashv].hits++;
 }
@@ -179,11 +197,13 @@ void add_to_client_hash_table(const char* name, aClient *cptr)
  */
 void add_to_channel_hash_table(const char* name, aChannel* chptr)
 {
-  int	hashv;
+  unsigned int hashv;
+  assert(0 != name);
+  assert(0 != chptr);
 
   hashv = hash_channel_name(name);
-  chptr->hnextch = (aChannel *)channelTable[hashv].list;
-  channelTable[hashv].list = (void *)chptr;
+  chptr->hnextch = (aChannel*) channelTable[hashv].list;
+  channelTable[hashv].list = (void*) chptr;
   channelTable[hashv].links++;
   channelTable[hashv].hits++;
 }
@@ -193,9 +213,11 @@ void add_to_channel_hash_table(const char* name, aChannel* chptr)
  */
 int del_from_client_hash_table(const char* name, aClient* cptr)
 {
-  aClient* tmp;
-  aClient* prev = NULL;
-  int	   hashv;
+  aClient*     tmp;
+  aClient*     prev = NULL;
+  unsigned int hashv;
+  assert(0 != name);
+  assert(0 != cptr);
 
   hashv = hash_nick_name(name);
   for (tmp = (aClient*) clientTable[hashv].list; tmp; tmp = tmp->hnext)
@@ -230,13 +252,14 @@ int del_from_client_hash_table(const char* name, aClient* cptr)
  */
 int del_from_channel_hash_table(const char* name, aChannel* chptr)
 {
-  aChannel* tmp;
-  aChannel* prev = NULL;
-  int	    hashv;
+  aChannel*    tmp;
+  aChannel*    prev = NULL;
+  unsigned int hashv;
+  assert(0 != name);
+  assert(0 != chptr);
 
   hashv = hash_channel_name(name);
-  for (tmp = (aChannel *)channelTable[hashv].list; tmp;
-       tmp = tmp->hnextch)
+  for (tmp = (aChannel *)channelTable[hashv].list; tmp; tmp = tmp->hnextch)
     {
       if (tmp == chptr)
 	{
@@ -262,31 +285,28 @@ int del_from_channel_hash_table(const char* name, aChannel* chptr)
 /*
  * hash_find_client
  */
-aClient* hash_find_client(const char* name, aClient* cptr)
+struct Client* hash_find_client(const char* name, struct Client* cptr)
 {
-  aClient	*tmp;
-  aClient	*prv = NULL;
-  aHashEntry	*tmp3;
-  int	hashv;
+  struct Client* tmp;
+  unsigned int   hashv;
 
+  assert(0 != name);
   hashv = hash_nick_name(name);
-  tmp3 = &clientTable[hashv];
-
   /*
    * Got the bucket, now search the chain.
    */
-  for (tmp = (aClient*) tmp3->list; tmp; prv = tmp, tmp = tmp->hnext)
+  for (tmp = (aClient*) clientTable[hashv].list; tmp; tmp = tmp->hnext)
     if (irccmp(name, tmp->name) == 0)
       {
 #ifdef	DEBUGMODE
 	clhits++;
 #endif
-	return(tmp);
+	return tmp;
       }
 #ifdef	DEBUGMODE
   clmiss++;
 #endif
-return (cptr);
+return cptr;
 
   /*
    * If the member of the hashtable we found isnt at the top of its
@@ -303,65 +323,76 @@ return (cptr);
 }
 
 /*
+ * Whats happening in this next loop ? Well, it takes a name like
+ * foo.bar.edu and proceeds to earch for *.edu and then *.bar.edu.
+ * This is for checking full server names against masks although
+ * it isnt often done this way in lieu of using matches().
+ *
+ * Rewrote to do *.bar.edu first, which is the most likely case,
+ * also made const correct
+ * --Bleep
+ */
+static struct Client* hash_find_masked_server(const char* name,
+                                              struct Client* client)
+{
+  char           buf[HOSTLEN + 1];
+  char*          p = buf;
+  char*          s;
+  struct Client* server;
+
+  if ('*' == *name || '.' == *name)
+    return client;
+
+  /*
+   * copy the damn thing and be done with it
+   */
+  strncpy(buf, name, HOSTLEN);
+  buf[HOSTLEN] = '\0';
+
+  while ((s = strchr(p, '.')) != 0)
+    {
+       *--s = '*';
+      /*
+       * Dont need to check IsServer() here since nicknames cant
+       * have *'s in them anyway.
+       */
+      if (((server = hash_find_client(s, client))) != client)
+        return server;
+      p = s + 2;
+    }
+  return client;
+}
+
+/*
  * hash_find_server
  */
-aClient* hash_find_server(const char* server, aClient* cptr)
+aClient* hash_find_server(const char* name, aClient* cptr)
 {
-  aClient*     tmp;
-  aClient*     prv = NULL;
-  char 	       *t;
-  char         ch;
-  aHashEntry*  tmp3;
-  int          hashv;
+  struct Client* tmp;
+  unsigned int   hashv;
 
-  hashv = hash_nick_name(server);
-  tmp3 = &clientTable[hashv];
+  assert(0 != name);
+  hashv = hash_nick_name(name);
 
-  for (tmp = (aClient*) tmp3->list; tmp; prv = tmp, tmp = tmp->hnext)
+  for (tmp = (aClient*) clientTable[hashv].list; tmp; tmp = tmp->hnext)
     {
       if (!IsServer(tmp) && !IsMe(tmp))
 	continue;
-      if (irccmp(server, tmp->name) == 0)
+      if (irccmp(name, tmp->name) == 0)
 	{
 #ifdef	DEBUGMODE
 	  clhits++;
 #endif
-	  return(tmp);
+	  return tmp;
 	}
     }
-
-  t = ((char *)server + strlen(server));
-  /*
-   * Whats happening in this next loop ? Well, it takes a name like
-   * foo.bar.edu and proceeds to earch for *.edu and then *.bar.edu.
-   * This is for checking full server names against masks although
-   * it isnt often done this way in lieu of using matches().
-   */
-  for (;;)
-    {
-      t--;
-      for (; t > server; t--)
-        if (*(t+1) == '.')
-          break;
-      if (*t == '*' || t == server)
-        break;
-      ch = *t;
-      *t = '*';
-      /*
-       * Dont need to check IsServer() here since nicknames cant
-       *have *'s in them anyway.
-       */
-      if (((tmp = hash_find_client(t, cptr))) != cptr)
-        {
-          *t = ch;
-          return (tmp);
-        }
-      *t = ch;
-    }
+  
+  if ((tmp = hash_find_masked_server(name, cptr)) != cptr)
+    return tmp;
 #ifdef	DEBUGMODE
   clmiss++;
 #endif
-  return (cptr);
+  return cptr;
 }
 
 /*
@@ -369,21 +400,19 @@ aClient* hash_find_server(const char* server, aClient* cptr)
  */
 aChannel* hash_find_channel(const char* name, aChannel* chptr)
 {
-  int         hashv;
-  aChannel*   tmp;
-  aChannel*   prv = NULL;
-  aHashEntry* tmp3;
+  aChannel*    tmp;
+  unsigned int hashv;
   
+  assert(0 != name);
   hashv = hash_channel_name(name);
-  tmp3 = &channelTable[hashv];
 
-  for (tmp = (aChannel *)tmp3->list; tmp; prv = tmp, tmp = tmp->hnextch)
+  for (tmp = (aChannel*) channelTable[hashv].list; tmp; tmp = tmp->hnextch)
     if (irccmp(name, tmp->chname) == 0)
       {
 #ifdef	DEBUGMODE
 	chhits++;
 #endif
-	return (tmp);
+	return tmp;
       }
 #ifdef	DEBUGMODE
   chmiss++;
@@ -399,22 +428,33 @@ aChannel* hash_find_channel(const char* name, aChannel* chptr)
  *       -avalon
  *
  * partially rewritten (finally) -Dianora
+ *
+ * XXX - spaghetti still, sigh
  */
 
 int m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
 {
-  register	int	l, i;
-  register	aHashEntry	*tab;
-  int	deepest = 0, deeplink = 0, showlist = 0, tothits = 0;
-  int	mosthit = 0, mosthits = 0, used = 0, used_now = 0, totlink = 0;
-  int	link_pop[10], size = HASHSIZE;
+  register int l;
+  register int i;
+  register struct HashEntry* tab;
+  struct HashEntry* table;
+  struct tm*        tmptr;
+  int	deepest = 0;
+  int   deeplink = 0;
+  int   showlist = 0;
+  int   tothits = 0;
+  int	mosthit = 0;
+  int   mosthits = 0;
+  int   used = 0;
+  int   used_now = 0;
+  int   totlink = 0;
+  int   size = U_MAX;
   char	ch;
-  char  result_buf[256];
-  aHashEntry	*table;
-  char  hash_log_file[256];
   int   out = 0;
-  char timebuffer[MAX_DATE_STRING];
-  struct tm *tmptr;
+  int	link_pop[10];
+  char  result_buf[256];
+  char  hash_log_file[256];
+  char  timebuffer[MAX_DATE_STRING];
 
   if (!MyClient(sptr) || !IsOper(sptr))
     {
@@ -435,7 +475,7 @@ int m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
 	  (void)sprintf(hash_log_file,"%s/hash/iphash.%s",
 			DPATH,timebuffer);
 
-	  if ((out = open(hash_log_file, O_RDWR|O_APPEND|O_CREAT,0664))==-1)
+	  if ((out = open(hash_log_file, O_RDWR | O_APPEND | O_CREAT,0664))==-1)
 	      sendto_one(sptr, ":%s NOTICE %s :Problem opening %s ",
 			 me.name, parv[0], hash_log_file);
 	  else
@@ -455,13 +495,13 @@ int m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
       else
 	{
 	  table = channelTable;
-	  size = CHANNELHASHSIZE;
+	  size = CH_MAX;
 	}
       if (ch == 'L' || ch == 'l')
 	{
 	  tmptr = localtime(&NOW);
 	  strftime(timebuffer, MAX_DATE_STRING, "%Y%m%d%H%M", tmptr);
-	  (void)sprintf(hash_log_file,"%s/hash/%cdump.%s",
+	  sprintf(hash_log_file,"%s/hash/%cdump.%s",
 			DPATH,ch,timebuffer);
 	  showlist = 1;
 	  if ((out = open(hash_log_file, O_RDWR|O_APPEND|O_CREAT,0664))==-1)
@@ -493,9 +533,9 @@ int m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
 	  parv[0], i, tab->hits, l); */
 	  if(out >= 0)
 	    {
-	      (void)sprintf(result_buf,"Hash Entry:%6d Hits;%7d Links:%6d\n",
+	      sprintf(result_buf,"Hash Entry:%6d Hits;%7d Links:%6d\n",
 			    i, tab->hits, l);
-	      (void)write(out,result_buf,strlen(result_buf));
+	      write(out,result_buf,strlen(result_buf));
 	    }
 	}
 
@@ -534,7 +574,7 @@ int m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
     {
     case 'V' : case 'v' :
       {
-	register	aClient	*acptr;
+	register aClient* acptr;
 	int	bad = 0, listlength = 0;
 	
 	for (acptr = GlobalClientList; acptr; acptr = acptr->next) {
@@ -562,7 +602,7 @@ int m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
 	sendto_one(sptr,"NOTICE %s :Rehashing Client List.", parv[0]);
 	clear_client_hash_table();
 	for (acptr = GlobalClientList; acptr; acptr = acptr->next)
-	  (void)add_to_client_hash_table(acptr->name, acptr);
+	  add_to_client_hash_table(acptr->name, acptr);
 	break;
       }
     case 'R' :
@@ -594,9 +634,9 @@ int m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
 	
 	if (parc <= 2)
 	  return (0);
-	l = atoi(parv[2]) % HASHSIZE;
+	l = atoi(parv[2]) % U_MAX;
 	if (parc > 3)
-	  max = atoi(parv[3]) % HASHSIZE;
+	  max = atoi(parv[3]) % U_MAX;
 	else
 	  max = l;
 	for (;l <= max; l++)
@@ -617,13 +657,13 @@ int m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
 
 	if (parc <= 2)
 	  return (0);
-	l = atoi(parv[2]) % CHANNELHASHSIZE;
+	l = atoi(parv[2]) % CH_MAX;
 	if (parc > 3)
-	  max = atoi(parv[3]) % CHANNELHASHSIZE;
+	  max = atoi(parv[3]) % CH_MAX;
 	else
 	  max = l;
 	for (;l <= max; l++)
-	  for (i = 0, tmp = (aChannel *)channelTable[l].list; tmp;
+	  for (i = 0, tmp = (aChannel*) channelTable[l].list; tmp;
 	       i++, tmp = tmp->hnextch)
 	    sendto_one(sptr,"NOTICE %s :Node: %d #%d %s",
 		       parv[0], l, i, tmp->chname);
