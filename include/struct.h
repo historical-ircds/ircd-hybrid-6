@@ -395,6 +395,8 @@ struct	ConfItem
   unsigned int flags;	
   int	clients;	/* Number of *LOCAL* clients using this */
   struct in_addr ipnum;	/* ip number of host field */
+  unsigned long ip;	/* only used for I D lines etc. */
+  unsigned long ip_mask;
   char	*host;
   char	*passwd;
   char	*name;

@@ -69,7 +69,6 @@ static  int  get_oper_privs(int,char *);
 
 /* externally defined functions */
 extern  void    outofmemory(void);	/* defined in list.c */
-extern  void    add_to_ip_ilines(aConfItem *); /* defined in mtrie_conf.c */
 
 /* usually, with hash tables, you use a prime number...
  * but in this case I am dealing with ip addresses, not ascii strings.
@@ -1893,14 +1892,6 @@ int 	initconf(int opt, int fd,int use_include)
 	  char *p;
 
 	  DupString(aconf->mask,aconf->host);
-
-	  /* add_to_ip_ilines defined in mtrie_conf.c */
-
-	  if(host_is_legal_ip(aconf->mask))
-	    {
-	      add_to_ip_ilines(aconf);
-	    }
-
 	  p = strchr(aconf->name,'@');
 	  if(p)
 	    {

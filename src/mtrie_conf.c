@@ -103,23 +103,12 @@ aConfItem *wild_card_ilines = (aConfItem *)NULL;
  * There is some argument for including the integer ip and needed mask
  * inside aConfItem, instead of "wrapping" it. This would change
  * the code handling for D lines as well (s_conf.c)
+ * 
+ * I did this finally, added ip, and ip_mask to aConfItem
  * -db
  */
 
-/* The observant will note, that this is an identical structure
- * to DLINE_ENTRY in s_conf.c, perhaps a common struct could be
- * defined in struct.h ..
- */
-
-typedef struct i_line_ip_entry
-{
-  unsigned long ip;
-  unsigned long mask;
-  aConfItem *conf_entry;
-  struct i_line_ip_entry *next;
-}I_LINE_IP_ENTRY;
-
-I_LINE_IP_ENTRY *ip_i_lines=(I_LINE_IP_ENTRY *)NULL;
+aConfItem *ip_i_lines=(aConfItem *)NULL;
 
 /* add_mtrie_conf_entry
  *
@@ -131,6 +120,12 @@ I_LINE_IP_ENTRY *ip_i_lines=(I_LINE_IP_ENTRY *)NULL;
 void add_mtrie_conf_entry(aConfItem *aconf,int flags)
 {
   char tokenized_host[HOSTLEN+1];
+
+  if( aconf->mask && host_is_legal_ip(aconf->mask) )
+    {
+      add_to_ip_ilines(aconf);
+      return;
+    }
 
   stack_pointer = 0;
 
@@ -1221,6 +1216,33 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
 		     port,
 		     get_conf_class(found_conf));
 	}
+
+      for(found_conf = ip_i_lines;
+	  found_conf;found_conf=found_conf->next)
+	{
+	  host = BadPtr(found_conf->host) ? null : found_conf->host;
+	  pass = BadPtr(found_conf->passwd) ? null : found_conf->passwd;
+	  name = BadPtr(found_conf->name) ? null : found_conf->name;
+	  mask = BadPtr(found_conf->mask) ? null : found_conf->mask;
+	  port = (int)found_conf->port;
+
+	  if(!(found_conf->status&CONF_CLIENT))
+	    continue;
+
+	  c = 'I';
+#ifdef LITTLE_I_LINES
+	  if(IsConfLittleI(found_conf))
+	    c = 'i';
+#endif
+	  sendto_one(sptr, rpl_str(RPL_STATSILINE), me.name,
+		     sptr->name,
+		     c,
+		     mask,
+		     show_iline_prefix(sptr,found_conf,name),
+		     host,
+		     port,
+		     get_conf_class(found_conf));
+	}
     }
   else
     {
@@ -1434,8 +1456,6 @@ void clear_mtrie_conf_links()
 {
   aConfItem *found_conf;
   aConfItem *found_conf_next;
-  I_LINE_IP_ENTRY *found_ip_entry;
-  I_LINE_IP_ENTRY *found_ip_entry_next;
 
   if(trie_list)
     {
@@ -1476,18 +1496,20 @@ void clear_mtrie_conf_links()
     }
   wild_card_ilines = (aConfItem *)NULL;
 
-  for(found_ip_entry = ip_i_lines; found_ip_entry;
-      found_ip_entry = found_ip_entry_next)
+  for(found_conf = ip_i_lines; found_conf;
+      found_conf = found_conf_next)
     {
-      found_ip_entry_next = found_ip_entry->next;
+      found_conf_next = found_conf->next;
 
       /* The aconf's pointed to by each ip entry here,
        * have already been cleared out of the mtrie tree above.
        */
-
-      MyFree(found_ip_entry);
+      if(found_conf->clients)
+	found_conf->status |= CONF_ILLEGAL;
+      else
+	free_conf(found_conf);
     }
-  ip_i_lines = (I_LINE_IP_ENTRY *)NULL;
+  ip_i_lines = (aConfItem *)NULL;
 }
 
 /*
@@ -1589,21 +1611,16 @@ static int wildcmp(char *s1,char *s2)
 
 void add_to_ip_ilines(aConfItem *aconf)
 {
-  I_LINE_IP_ENTRY *new_ip;
   unsigned long ip_host;
   unsigned long ip_mask;
 
-  new_ip = (I_LINE_IP_ENTRY *)MyMalloc(sizeof(I_LINE_IP_ENTRY));
-  memset((void *)new_ip,0,sizeof(I_LINE_IP_ENTRY));
-
   ip_host = host_name_to_ip(aconf->mask,&ip_mask); /*returns in =host= order*/
 
-  new_ip->ip = ip_host & ip_mask;
-  new_ip->mask = ip_mask;
-  new_ip->conf_entry = aconf;
+  aconf->ip = ip_host & ip_mask;
+  aconf->ip_mask = ip_mask;
 
-  new_ip->next = ip_i_lines;
-  ip_i_lines = new_ip;
+  aconf->next = ip_i_lines;
+  ip_i_lines = aconf;
 }
 
 /*
@@ -1619,14 +1636,14 @@ void add_to_ip_ilines(aConfItem *aconf)
 static aConfItem *find_matching_ip_i_line(unsigned long host_ip)
 {
   unsigned long host_ip_host_order;
-  I_LINE_IP_ENTRY *p;
+  aConfItem *aconf;
 
   host_ip_host_order = ntohl(host_ip);
 
-  for( p = ip_i_lines; p; p = p->next)
+  for( aconf = ip_i_lines; aconf; aconf = aconf->next)
     {
-      if((host_ip_host_order & p->mask) == p->ip)
-	return(p->conf_entry);
+      if((host_ip_host_order & aconf->ip_mask) == aconf->ip)
+	return(aconf);
     }
   return((aConfItem *)NULL);
 }
