@@ -207,6 +207,10 @@ U:csa.bu.edu:foobar:csa.bu.edu
 ## - db
 ##
 #
+# The host part of C/N lines MUST contain a valid hostname or IP address
+# The host part in the C:line MUST be identical to the host part in the N:line
+# The name part of the C/N lines MUST match the associated H/L line name
+# 
 # C: [NETWORKED]. These lines define what servers your server tries to
 # connect to. 
 # N: [NETWORKED]. These lines define what servers your server permits
