@@ -1,3 +1,9 @@
+*** 20000421_1 by lusky
+cleanup prototypes in s_bsd.h
+max recipients for privmsg & notice is now configurable at compiletime (perly)
+clean up some char vs u_char issues in res.c
+
+
 *** 20000419_1 by lusky
 fixed channel unavailable error (db)
 
