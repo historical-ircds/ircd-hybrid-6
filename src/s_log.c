@@ -77,8 +77,13 @@ static int open_log(const char* filename)
   logFile = open(filename, 
                  O_WRONLY | O_APPEND | O_CREAT | O_NONBLOCK, 0644);
   if (-1 == logFile) {
+#ifdef USE_SYSLOG
+    /* If the user does not wish to use syslog, don't even send the log error
+     * to syslog -Hwy
+     */
     syslog(LOG_ERR, "Unable to open log file: %s: %s",
            filename, strerror(errno));
+#endif
     return 0;
   }
   return 1;
