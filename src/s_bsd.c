@@ -39,6 +39,7 @@
 #include "s_zip.h"
 #include "ircd.h"
 #include "s_misc.h"
+#include "list.h"
 
 #include <assert.h>
 #include <stdio.h>

@@ -27,6 +27,7 @@
 #include "s_zip.h"
 #include "h.h"
 #include "ircd.h"
+#include "list.h"
  
 /*
 ** dopacket

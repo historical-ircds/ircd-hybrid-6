@@ -20,6 +20,7 @@
  */
 #include "irc_string.h"
 #include "h.h"
+#include "list.h"
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>

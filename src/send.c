@@ -29,6 +29,7 @@
 #include "class.h"
 #include "numeric.h"
 #include "channel.h"
+#include "list.h"
 
 #include <stdio.h>
 #include <string.h>

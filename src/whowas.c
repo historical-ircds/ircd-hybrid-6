@@ -25,6 +25,7 @@
 #include "ircd.h"
 #include "send.h"
 #include "hash.h"
+#include "list.h"
 
 #include <assert.h>
 #include <string.h>

@@ -56,6 +56,7 @@
 #include "irc_string.h"
 #include "match.h"
 #include "config.h"
+#include "list.h"
 
 #include <string.h>
 #include <stdlib.h>

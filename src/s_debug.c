@@ -26,6 +26,7 @@
 #include "dbuf.h"
 #include "res.h"
 #include "send.h"
+#include "list.h"
 
 #include <string.h>
 #include <stdarg.h>

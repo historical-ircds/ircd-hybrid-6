@@ -13,6 +13,7 @@
 #include "fdlist.h"
 #include "h.h"
 #include "ircd.h"
+#include "list.h"
 
 #include <time.h>
 #include <string.h>

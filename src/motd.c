@@ -37,6 +37,7 @@
 #include "client.h"
 #include "struct.h"     /* HUNTED_ISME */
 #include "irc_string.h"
+#include "list.h"
 
 #include <string.h>
 #include <stdlib.h>

@@ -42,6 +42,7 @@
 #include "fdlist.h"
 #include "restart.h"
 #include "m_gline.h"
+#include "list.h"
 
 #include <string.h>
 #include <errno.h>

@@ -26,6 +26,7 @@
 #include "ircd.h"
 #include "s_conf.h"
 #include "send.h"
+#include "list.h"
 
 #define BAD_CONF_CLASS          -1
 #define BAD_PING                -2
