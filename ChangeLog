@@ -1,3 +1,15 @@
+androsyn    2002/04/28 04:13:05 EDT	(20020428_0)
+
+  Modified files:
+    src                  s_conf.c 
+  Log:
+  Fixed a potential NULL dereference in the dns code..
+  
+  Revision  Changes    Path
+  1.237     +1 -1      ircd-hybrid-6/src/s_conf.c
+
+
+
 lusky       2002/04/17 23:15:59 EDT	(20020418_1)
 
   Modified files:
