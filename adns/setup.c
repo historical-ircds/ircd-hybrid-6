@@ -499,7 +499,6 @@ static int init_begin(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
 
 static int init_finish(adns_state ads) {
   struct in_addr ia;
-  struct protoent *proto;
   int r;
   
   if (!ads->nservers) {
@@ -508,9 +507,7 @@ static int init_finish(adns_state ads) {
     ia.s_addr= htonl(INADDR_LOOPBACK);
     addserver(ads,ia);
   }
-
-  proto= getprotobyname("udp"); if (!proto) { r= ENOPROTOOPT; goto x_free; }
-  ads->udpsocket= socket(AF_INET,SOCK_DGRAM,proto->p_proto);
+  ads->udpsocket= socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
   if (ads->udpsocket<0) { r= errno; goto x_free; }
 
   r= adns__setnonblock(ads,ads->udpsocket);
