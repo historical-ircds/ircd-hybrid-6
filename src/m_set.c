@@ -30,6 +30,8 @@
 #include "s_bsd.h"
 #include "s_serv.h"
 #include "send.h"
+#include "common.h"   /* for NO */
+#include "channel.h"  /* for server_was_split */
 
 #include <stdlib.h>  /* atoi */
 

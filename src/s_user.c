@@ -2274,30 +2274,6 @@ static int do_user(char* nick, aClient* cptr, aClient* sptr,
 }
 
 /*
-** m_quit
-**      parv[0] = sender prefix
-**      parv[1] = comment
-*/
-int     m_quit(aClient *cptr,
-               aClient *sptr,
-               int parc,
-               char *parv[])
-{
-  char *comment = (parc > 1 && parv[1]) ? parv[1] : cptr->name;
-
-  sptr->flags |= FLAGS_NORMALEX;
-  if (strlen(comment) > (size_t) TOPICLEN)
-    comment[TOPICLEN] = '\0';
-
-#ifdef ANTI_SPAM_EXIT_MESSAGE
-  if( !IsServer(sptr) && MyConnect(sptr) &&
-     (sptr->firsttime + ANTI_SPAM_EXIT_MESSAGE_TIME) > CurrentTime)
-    comment = "Client Quit";
-#endif
-  return IsServer(sptr) ? 0 : exit_client(cptr, sptr, sptr, comment);
-}
-
-/*
 ** m_kill
 **      parv[0] = sender prefix
 **      parv[1] = kill victim
