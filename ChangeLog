@@ -1,3 +1,8 @@
+*** 20010613_4 by jdc
+* Added support for U_LINES_OPER_ONLY (capital U, not lowercase).
+
+
+
 *** 20010613_3 by leeh
 - commited hwy's patch to opers.txt
 
