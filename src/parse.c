@@ -234,10 +234,15 @@ int parse(aClient *cptr, char *buffer, char *bufend)
       if ((mptr->flags & 1) && !(IsServer(cptr)))
         {
 #ifdef NO_OPER_FLOOD
+#ifndef TRUE_NO_OPER_FLOOD
+/* note: both have to be defined for the real no-flood */
           if (IsAnOper(cptr))
             /* "randomly" (weighted) increase the since */
             cptr->since += (cptr->receiveM % 5) ? 1 : 0;
           else
+#else
+          if (!IsAnOper(cptr))
+#endif
 #endif
             cptr->since += (2 + i / 120);
         }

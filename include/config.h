@@ -329,8 +329,18 @@
 
 /* SPOOF_NOTICE - See a notice when a user connects with a
  * spoofed I: line
+ * err, this also will now not show spoofed i-lines to opers who
+ * /stats i.
  */
 #define SPOOF_NOTICE
+
+/* SPOOF_FREEFORM - Allow a spoofed iline to specify a target
+ * host which the user will receive. If this is not defined all
+ * users who fall into a spoofed iline will be "oper.servername".
+ * everyone and their mother knows this define exists, we might
+ * as well acknowledge it.
+ */
+#undef SPOOF_FREEFORM
 
 /* STATS_NOTICE - See a notice when a user does a /stats
  *
@@ -383,6 +393,14 @@
  * define this to remove flood control for opers
  */
 #define NO_OPER_FLOOD
+
+/* TRUE_NO_OPER_FLOOD - absolutely remove all flood
+ * control for opered clients. for this to work, the above define
+ * must be enabled as well. typically we delay oper floods after
+ * an initial burst, this removes such a delay. BE CAREFUL WITH
+ * THIS.
+ */
+#undef TRUE_NO_OPER_FLOOD
 
 /* SHOW_INVISIBLE_LUSERS - show invisible clients in LUSERS
  * As defined this will show the correct invisible count for anyone who does
