@@ -2024,7 +2024,7 @@ static void initconf(FBFILE* file, int use_include)
       if ( aconf->status & CONF_LISTEN_PORT)
 	{
 	  dontadd = 1;
-	  if(aconf->passwd[0] == '*')
+	  if((aconf->passwd[0] == '\0') || (aconf->password[0] == '*'))
 	    add_listener(aconf->port, NULL );
 	  else
 	    add_listener(aconf->port, (const char *)aconf->passwd);
