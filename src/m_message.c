@@ -389,9 +389,11 @@ static  int     m_message(struct Client *cptr,
   **
   ** Armin, 8Jun90 (gruner@informatik.tu-muenchen.de)
   */
-  if ((*nick == '$' || *nick == '#'))
+  if (*nick == '$')
     {
-
+      if((*(nick+1) == '$' || *(nick+1) == '#'))
+        nick++;
+      
       if(!IsAnOper(sptr))
         {
           sendto_one(sptr, form_str(ERR_NOSUCHNICK),
@@ -420,7 +422,7 @@ static  int     m_message(struct Client *cptr,
                           sptr, nick + 1,
                           (*nick == '#') ? MATCH_HOST :
                           MATCH_SERVER,
-                          ":%s %s %s :%s", parv[0],
+                          ":%s %s $%s :%s", parv[0],
                           cmd, nick, parv[2]);
       msgs++;
       continue;
