@@ -1,3 +1,8 @@
+*** 20011121_2 by db
+- A bogus numeric would not be cool.
+
+
+
 *** 20011121_1 by db
 - Make res.c resolve again
 
