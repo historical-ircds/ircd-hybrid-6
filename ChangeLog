@@ -1,3 +1,9 @@
+*** 20010710_3 by jdc
+- Put back HAVE_GETPAGESIZE support.  Accidentally removed during prior
+  changes.
+
+
+
 *** 20010710_2 by jdc
 - More stuff for encrypted link removal.
 
