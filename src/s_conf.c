@@ -833,7 +833,7 @@ aConfItem *find_admin()
   Reg aConfItem *aconf;
 
   for (aconf = conf; aconf; aconf = aconf->next)
-    if (aconf->status & CONF_ADMIN)
+    if (aconf->status & CONF_ADMIN && aconf->name)
       break;
   
   return (aconf);

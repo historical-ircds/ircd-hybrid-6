@@ -433,6 +433,36 @@ static int 	ckinitconf(int opt)
 	  continue;
 	}
 
+       if (aconf->status & CONF_ADMIN && !aconf->name)
+       {
+          (void)fprintf(stderr, "\tERROR: bad admin info\n");
+          continue;
+       }
+
+       if (aconf->status & CONF_ADMIN && !aconf->name)
+       {
+          (void)fprintf(stderr, "\tERROR: bad admin info\n");
+          continue;
+       }
+
+       if (aconf->status & CONF_ADMIN && !aconf->name)
+       {
+          (void)fprintf(stderr, "\tERROR: bad admin info\n");
+          continue;
+       }
+
+       if (aconf->status & CONF_ADMIN && !aconf->name)
+       {
+          (void)fprintf(stderr, "\tERROR: bad admin info\n");
+          continue;
+       }
+
+       if (aconf->status & CONF_ADMIN && !aconf->name)
+       {
+          (void)fprintf(stderr, "\tERROR: bad admin info\n");
+          continue;
+       }
+
       if (aconf->status & (CONF_SERVER_MASK|CONF_OPS))
 	if (!index(aconf->host, '@'))
 	  {
