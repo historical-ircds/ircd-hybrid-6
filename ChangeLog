@@ -1,3 +1,18 @@
+wcampbel    2001/12/21 23:06:06 EST	(20011222_0)
+
+  Modified files:
+    doc                  ircd.8 
+  Log:
+  Fixed a few bad troff macros in the manpage (found when converting it to
+  HTML, URL: http://kabel.pp.ru/sgml/ircd.8.hyb6.html
+  
+  Approved by:    db
+  
+  Revision  Changes    Path
+  1.4       +2 -2      ircd-hybrid-6/doc/ircd.8
+
+
+
 db          2001/12/20 18:12:27 EST	(20011220_3)
 
   Modified files:
