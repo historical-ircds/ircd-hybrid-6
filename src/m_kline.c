@@ -57,7 +57,7 @@ static char *cluster(char *);
  * Linked list of pending klines that need to be written to
  * the conf
  */
-struct PendingLine *PendingLines = NULL;
+aPendingLine *PendingLines = NULL;
 
 #ifdef SLAVE_SERVERS
 extern aConfItem *find_special_conf(char *,int); /* defined in s_conf.c */
