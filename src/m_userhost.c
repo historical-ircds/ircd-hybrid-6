@@ -154,10 +154,9 @@ int     m_userhost(struct Client *cptr,
       cn = p;
     }
 
-  ircsprintf(buf, "%s%s %s %s %s %s",
-    form_str(RPL_USERHOST),
+  ircsprintf(buf, "%s %s %s %s %s",
     response[0], response[1], response[2], response[3], response[4] );
-  sendto_one(sptr, "%s", buf, me.name, parv[0]);
+  sendto_one(sptr, form_str(RPL_USERHOST), me.name, parv[0], buf);
 
   return 0;
 }
