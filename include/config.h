@@ -398,13 +398,6 @@
  */
 #define KNOCK_DELAY 300
 
-/* If you are an admin that does not think operwall/wallops
- * should be used instead of a channel, define this.
- * Undefine PACE_WALLOPS to disable
- */
-#define PACE_WALLOPS
-#define WALLOPS_WAIT 10
-
 /* SHORT_MOTD
  * There are client ignoring the FORCE_MOTD MOTD numeric, there is
  * no point forcing MOTD on connecting clients IMO. Give them a short

@@ -61,8 +61,8 @@ static struct DBufBuffer* dbufFreeList = NULL;
 
 void count_dbuf_memory(size_t* allocated, size_t* used)
 {
-  assert(0 != allocated);
-  assert(0 != used);
+  assert(allocated != NULL);
+  assert(used != NULL);
   *allocated = DBufCount     * sizeof(struct DBufBuffer);
   *used      = DBufUsedCount * sizeof(struct DBufBuffer);
 }
@@ -84,11 +84,11 @@ void dbuf_init()
   struct DBufBuffer* current_bp;
   struct DBufBuffer* new_bp;
 
-  assert(0 == dbufFreeList);
+  assert(dbufFreeList == NULL);
 
   dbufFreeList =
     (struct DBufBuffer*) MyMalloc(sizeof(struct DBufBuffer));
-  assert(0 != dbufFreeList);
+  assert(dbufFreeList != NULL);
 
   current_bp = dbufFreeList;
 
@@ -114,9 +114,10 @@ static struct DBufBuffer* dbuf_alloc(void)
 
   if (db)
     dbufFreeList = dbufFreeList->next;
-  else {
+  else
+  {
     db = (struct DBufBuffer*) MyMalloc(sizeof(struct DBufBuffer));
-    assert(0 != db);
+    assert(db != NULL);
     ++DBufCount;
   }
   ++DBufUsedCount;
@@ -131,18 +132,18 @@ static struct DBufBuffer* dbuf_alloc(void)
  */
 static void dbuf_free(struct DBufBuffer* ptr)
 {
-  assert(0 != ptr);
+  assert(ptr != NULL);
   assert(DBufUsedCount > 0);
 
   if (DBufUsedCount > DBUF_USUAL_MAX_COUNT)
-    {
-      MyFree(ptr);
-    }
+  {
+    MyFree(ptr);
+  }
   else
-    {
-      ptr->next = dbufFreeList;
-      dbufFreeList = ptr;
-    }
+  {
+    ptr->next = dbufFreeList;
+    dbufFreeList = ptr;
+  }
   --DBufUsedCount;
 }
 /*
@@ -156,7 +157,8 @@ static int dbuf_malloc_error(struct DBuf* dyn)
   struct DBufBuffer* db;
 
   dyn->length = 0;
-  while (0 != (db = dyn->head)) {
+  while (0 != (db = dyn->head))
+  {
     dyn->head = db->next;
     dbuf_free(db);
   }
@@ -173,8 +175,8 @@ int dbuf_put(struct DBuf* dyn, const char* buf, size_t length)
   struct DBufBuffer*  d;
   int                 chunk;
 
-  assert(0 != dyn);
-  assert(0 != buf);
+  assert(dyn != NULL);
+  assert(buf != NULL);
   /*
    * Locate the last non-empty buffer. If the last buffer is
    * full, the loop will terminate with 'd==NULL'. This loop
@@ -190,8 +192,10 @@ int dbuf_put(struct DBuf* dyn, const char* buf, size_t length)
    */
   dyn->length += length;
 
-  for ( ; length > 0; h = &(d->next)) {
-    if (0 == (d = *h)) {
+  for ( ; length > 0; h = &(d->next))
+  {
+    if (0 == (d = *h))
+    {
       if (0 == (d = dbuf_alloc()))
         return dbuf_malloc_error(dyn);
 
@@ -199,7 +203,8 @@ int dbuf_put(struct DBuf* dyn, const char* buf, size_t length)
       *h        = d;        /* prev->next = d */
     }
     chunk = (d->data + DBUF_SIZE) - d->end;
-    if (chunk) {
+    if (chunk != 0)
+    {
       if (chunk > length)
         chunk = length;
       
@@ -216,13 +221,14 @@ int dbuf_put(struct DBuf* dyn, const char* buf, size_t length)
 
 const char* dbuf_map(const struct DBuf* dyn, size_t* length)
 {
-  assert(0 != dyn);
+  assert(dyn != NULL);
 
-  if (0 == dyn->length) {
+  if (0 == dyn->length)
+  {
     *length   = 0;
     return 0;
   }
-  assert(0 != dyn->head);
+  assert(dyn->head != NULL);
 
   *length = dyn->head->end - dyn->head->start;
   return dyn->head->start;
@@ -234,12 +240,13 @@ void dbuf_delete(struct DBuf* dyn, size_t length)
   struct DBufBuffer* db;
   size_t             chunk;
 
-  assert(0 != dyn);
+  assert(dyn != NULL);
 
   if (length > dyn->length)
     length = dyn->length;
 
-  while (length > 0) {
+  while (length > 0)
+  {
     if (0 == (db = dyn->head))
       break;
     chunk = db->end - db->start; 
@@ -250,12 +257,14 @@ void dbuf_delete(struct DBuf* dyn, size_t length)
     dyn->length -= chunk;
     db->start   += chunk;
 
-    if (db->start == db->end) {
+    if (db->start == db->end)
+    {
       dyn->head = db->next;
       dbuf_free(db);
     }
   }
-  if (0 == dyn->head) {
+  if (0 == dyn->head)
+  {
     dyn->tail   = 0;
     dyn->length = 0;
   }
@@ -270,7 +279,8 @@ size_t dbuf_get(struct DBuf* dyn, char* buf, size_t length)
   assert(0 != dyn);
   assert(0 != buf);
 
-  while (length > 0 && (b = dbuf_map(dyn, &chunk)) != 0) {
+  while (length > 0 && (b = dbuf_map(dyn, &chunk)) != 0)
+  {
     if (chunk > length)
       chunk = length;
 
@@ -295,11 +305,14 @@ static size_t dbuf_flush(struct DBuf* dyn)
   /*
    * flush extra line terms
    */
-  while (IsEol(*db->start)) {
-    if (++db->start == db->end) {
+  while (IsEol(*db->start))
+  {
+    if (++db->start == db->end)
+    {
       dyn->head = db->next;
       dbuf_free(db);
-      if (0 == (db = dyn->head)) {
+      if (0 == (db = dyn->head))
+      {
         dyn->tail   = 0;
         dyn->length = 0;
         break;
@@ -332,13 +345,13 @@ int dbuf_getmsg(struct DBuf* dyn, char* buf, size_t length)
   size_t             count;
   size_t             copied = 0;
 
-  assert(0 != dyn);
-  assert(0 != buf);
+  assert(dyn != NULL);
+  assert(buf != NULL);
 
   if (0 == dbuf_flush(dyn))
     return 0;
 
-  assert(0 != dyn->head);
+  assert(dyn->head != NULL);
   
   db    = dyn->head;
   start = db->start;
@@ -350,13 +363,15 @@ int dbuf_getmsg(struct DBuf* dyn, char* buf, size_t length)
   /*
    * might as well copy it while we're here
    */
-  while (length > 0) {
+  while (length > 0)
+  {
     end = IRCD_MIN(db->end, (start + length));
     while (start < end && !IsEol(*start))
       *buf++ = *start++;
 
     count = start - db->start;
-    if (start < end) {
+    if (start < end)
+    {
       *buf = '\0';
       copied += count;
       dbuf_delete(dyn, copied);
@@ -371,88 +386,5 @@ int dbuf_getmsg(struct DBuf* dyn, char* buf, size_t length)
   }
   return 0;  
 }
-
-#if 0
-
-/*
- * dbuf_getmsg
- *
- * Check the buffers to see if there is a string which is terminated with
- * either a \r or \n present.  If so, copy as much as possible (determined by
- * length) into buf and return the amount copied - else return 0.
- */
-int dbuf_getmsg(struct DBuf* dyn, char* buf, size_t length)
-{
-  struct DBufBuffer* d;
-  char*              s;
-  int                dlen;
-  int                i;
-  int                copy;
-  
-  assert(0 != dyn);
-  assert(0 != buf);
-
-getmsg_init:
-  d = dyn->head;
-  dlen = dyn->length;
-  i = DBUF_SIZE - dyn->offset;
-  if (i <= 0)
-    return -1;
-  copy = 0;
-  if (d && dlen)
-    s = dyn->offset + d->data;
-  else
-    return 0;
-
-  if (i > dlen)
-    i = dlen;
-  while (length > 0 && dlen > 0)
-    {
-      dlen--;
-      if (*s == '\n' || *s == '\r')
-        {
-          copy = dyn->length - dlen;
-          /*
-          ** Shortcut this case here to save time elsewhere.
-          ** -avalon
-          */
-          if (copy == 1)
-            {
-              dbuf_delete(dyn, 1);
-              goto getmsg_init;
-            }
-          break;
-        }
-      length--;
-      if (!--i)
-        {
-          if ((d = d->next))
-            {
-              s = d->data;
-              i = IRCD_MIN(DBUF_SIZE, dlen);
-            }
-        }
-      else
-        s++;
-    }
-
-  if (copy <= 0)
-    return 0;
-
-  /*
-  ** copy as much of the message as wanted into parse buffer
-  */
-  i = dbuf_get(dyn, buf, IRCD_MIN(copy, length));
-  /*
-  ** and delete the rest of it!
-  */
-  if (copy - i > 0)
-    dbuf_delete(dyn, copy - i);
-  if (i >= 0)
-    *(buf+i) = '\0';    /* mark end of messsage */
-  
-  return i;
-}
-#endif /* 0 */
 
 

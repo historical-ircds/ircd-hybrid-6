@@ -62,10 +62,6 @@
 #include <sys/stat.h>
 
 
-#ifdef PACE_WALLOPS
-time_t LastUsedWallops = 0;
-#endif
-
 static int do_user (char *, aClient *, aClient*, char *, char *, char *,
                      char *);
 

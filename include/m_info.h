@@ -497,12 +497,6 @@ Info MyInformation[] = {
 
   { "PACE_WAIT", "", PACE_WAIT, "Minimum Delay between uses of certain commands" },
 
-#ifdef PACE_WALLOPS
-  { "PACE_WALLOPS", "ON", 0, "Delay WALLOPS and OPERWALL" },
-#else
-  { "PACE_WALLOPS", "OFF", 0, "Delay WALLOPS and OPERWALL" },
-#endif /* PACE_WALLOPS */
-
 #ifdef PPATH
   { "PPATH", PPATH, 0, "Path to Pid File" },
 #else

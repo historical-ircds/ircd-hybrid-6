@@ -33,10 +33,6 @@
 #endif
 
 struct Client;
-#ifdef PACE_WALLOPS
-extern time_t LastUsedWallops;
-#endif
-
 
 extern int   user_mode(struct Client *, struct Client *, int, char **);
 extern void  send_umode (struct Client *, struct Client *,

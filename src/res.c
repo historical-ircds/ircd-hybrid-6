@@ -245,15 +245,15 @@ res_ourserver(const struct __res_state* statp, const struct sockaddr_in *inp)
 
   ina = *inp;
   for (ns = 0;  ns < statp->nscount;  ns++)
-    {
-      const struct sockaddr_in *srv = &statp->nsaddr_list[ns];
+  {
+    const struct sockaddr_in *srv = &statp->nsaddr_list[ns];
 
-      if (srv->sin_family == ina.sin_family &&
-        srv->sin_port == ina.sin_port &&
-        (srv->sin_addr.s_addr == INADDR_ANY ||
-         srv->sin_addr.s_addr == ina.sin_addr.s_addr))
-      return (1);
-    }
+    if (srv->sin_family == ina.sin_family &&
+      srv->sin_port == ina.sin_port &&
+      (srv->sin_addr.s_addr == INADDR_ANY ||
+       srv->sin_addr.s_addr == ina.sin_addr.s_addr))
+    return (1);
+  }
   return (0);
 }
 
@@ -261,7 +261,8 @@ res_ourserver(const struct __res_state* statp, const struct sockaddr_in *inp)
  * start_resolver - do everything we need to read the resolv.conf file
  * and initialize the resolver file descriptor if needed
  */
-static void start_resolver(void)
+static void 
+start_resolver(void)
 {
   char sparemsg[80];
 
@@ -279,31 +280,32 @@ static void start_resolver(void)
    */
   spare_fd = open("/dev/null",O_RDONLY,0);
   if ((spare_fd < 0) || (spare_fd > 255))
-    {
-      ircsprintf(sparemsg,"invalid spare_fd %d",spare_fd);
-      restart(sparemsg);
-    }
+  {
+    ircsprintf(sparemsg,"invalid spare_fd %d",spare_fd);
+    restart(sparemsg);
+  }
 
-  if (!_res.nscount)
-    {
-      _res.nscount = 1;
-      _res.nsaddr_list[0].sin_addr.s_addr = inet_addr("127.0.0.1");
-    }
+  if (_res.nscount == 0)
+  {
+    _res.nscount = 1;
+    _res.nsaddr_list[0].sin_addr.s_addr = inet_addr("127.0.0.1");
+  }
   _res.options |= RES_NOALIASES;
 #ifdef DEBUG
   _res.options |= RES_DEBUG;
 #endif
   if (ResolverFileDescriptor < 0)
-    {
-      ResolverFileDescriptor = socket(AF_INET, SOCK_DGRAM, 0);
-      set_non_blocking(ResolverFileDescriptor);
-    }
+  {
+    ResolverFileDescriptor = socket(AF_INET, SOCK_DGRAM, 0);
+    set_non_blocking(ResolverFileDescriptor);
+  }
 }
 
 /*
  * init_resolver - initialize resolver and resolver library
  */
-int init_resolver(void)
+int 
+init_resolver(void)
 {
 
 #ifdef  LRAND48
@@ -322,7 +324,8 @@ int init_resolver(void)
 /*
  * restart_resolver - reread resolv.conf, reopen socket
  */
-void restart_resolver(void)
+void 
+restart_resolver(void)
 {
   start_resolver();
 }
@@ -331,46 +334,43 @@ void restart_resolver(void)
  * add_local_domain - Add the domain to hostname, if it is missing
  * (as suggested by eps@TOASTER.SFSU.EDU)
  */
-void add_local_domain(char* hname, int size)
+void 
+add_local_domain(char* hname, int size)
 {
-  assert(0 != hname);
+  assert(hname != NULL);
   /* 
    * try to fix up unqualified names 
    */
   if ((_res.options & RES_DEFNAMES) && !strchr(hname, '.'))
-    {
-#if 0
-      /*
-       * XXX - resolver should already be initialized
-       */
-      if (0 == (_res.options & RES_INIT))
-        init_resolver();
-#endif 
-      if (_res.defdname[0])
+  {
+    if (_res.defdname[0])
+      {
+        size_t len = strlen(hname);
+        if ((strlen(_res.defdname) + len + 2) < size)
         {
-          size_t len = strlen(hname);
-          if ((strlen(_res.defdname) + len + 2) < size)
-            {
-              hname[len++] = '.';
-              strcpy(hname + len, _res.defdname);
-            }
+          hname[len++] = '.';
+          strcpy(hname + len, _res.defdname);
         }
-    }
+      }
+  }
 }
 
 /*
  * add_request - place a new request in the request list
  */
-static void add_request(ResRQ* request)
+static 
+void add_request(ResRQ* request)
 {
-  assert(0 != request);
-  if (!requestListHead)
+  assert(request != NULL);
+  if (requestListHead == NULL)
+  {
     requestListHead = requestListTail = request;
+  }
   else
-    {
-      requestListTail->next = request;
-      requestListTail = request;
-    }
+  {
+    requestListTail->next = request;
+    requestListTail = request;
+  }
   request->next = NULL;
   reinfo.re_requests++;
 }
@@ -380,28 +380,31 @@ static void add_request(ResRQ* request)
  * This must also free any memory that has been allocated for 
  * temporary storage of DNS results.
  */
-static void rem_request(ResRQ* request)
+static void 
+rem_request(ResRQ* request)
 {
   ResRQ** current;
   ResRQ*  prev = NULL;
 
-  assert(0 != request);
+  assert(request != NULL);
   for (current = &requestListHead; *current; )
+  {
+    if (*current == request)
     {
-      if (*current == request)
-        {
-          *current = request->next;
-          if (requestListTail == request)
-            requestListTail = prev;
-          break;
-        } 
-        prev    = *current;
-        current = &(*current)->next;
-    }
+      *current = request->next;
+      if (requestListTail == request)
+        requestListTail = prev;
+      break;
+    } 
+    prev    = *current;
+    current = &(*current)->next;
+  }
+
 #ifdef  DEBUG
   Debug((DEBUG_DNS, "rem_request:Remove %#x at %#x %#x",
          old, *current, prev));
 #endif
+
   MyFree(request->he.buf);
   MyFree(request->name);
   MyFree(request);
@@ -410,10 +413,11 @@ static void rem_request(ResRQ* request)
 /*
  * make_request - Create a DNS request record for the server.
  */
-static ResRQ* make_request(const struct DNSQuery* query)
+static ResRQ* 
+make_request(const struct DNSQuery* query)
 {
   ResRQ* request;
-  assert(0 != query);
+  assert(query != NULL);
   request = (ResRQ*) MyMalloc(sizeof(ResRQ));
   memset(request, 0, sizeof(ResRQ));
 
@@ -427,13 +431,6 @@ static ResRQ* make_request(const struct DNSQuery* query)
   request->query.vptr       = query->vptr;
   request->query.callback   = query->callback;
 
-#if defined(NULL_POINTER_NOT_ZERO)
-  request->next             = NULL;
-  request->he.buf           = NULL;
-  request->he.h.h_name      = NULL;
-  request->he.h.h_aliases   = NULL;
-  request->he.h.h_addr_list = NULL;
-#endif
   add_request(request);
   return request;
 }
@@ -442,7 +439,8 @@ static ResRQ* make_request(const struct DNSQuery* query)
  * timeout_query_list - Remove queries from the list which have been 
  * there too long without being resolved.
  */
-static time_t timeout_query_list(time_t now)
+static time_t 
+timeout_query_list(time_t now)
 {
   ResRQ*   request;
   ResRQ*   next_request = 0;
@@ -451,46 +449,52 @@ static time_t timeout_query_list(time_t now)
 
   Debug((DEBUG_DNS, "timeout_query_list at %s", myctime(now)));
   for (request = requestListHead; request; request = next_request)
+  {
+    next_request = request->next;
+    timeout = request->sentat + request->timeout;
+    if (now >= timeout)
     {
-      next_request = request->next;
-      timeout = request->sentat + request->timeout;
-      if (now >= timeout)
-        {
-          if (--request->retries <= 0)
-            {
+      if (--request->retries <= 0)
+      {
+
 #ifdef DEBUG
-              Debug((DEBUG_ERROR, "timeout %x now %d cptr %x",
-                     request, now, request->cinfo.value.cptr));
+        Debug((DEBUG_ERROR, "timeout %x now %d cptr %x",
+                 request, now, request->cinfo.value.cptr));
 #endif
-              reinfo.re_timeouts++;
-              (*request->query.callback)(request->query.vptr, 0);
-              rem_request(request);
-              continue;
-            }
-          else
-            {
-              request->sentat = now;
-              request->timeout += request->timeout;
-              resend_query(request);
-#ifdef DEBUG
-              Debug((DEBUG_INFO,"r %x now %d retry %d c %x",
-                     request, now, request->retries,
-                     request->cinfo.value.cptr));
-#endif
-            }
-        }
-        if (!next_time || timeout < next_time) {
-        next_time = timeout;
+        reinfo.re_timeouts++;
+        (*request->query.callback)(request->query.vptr, 0);
+        rem_request(request);
+        continue;
       }
+      else
+      {
+        request->sentat = now;
+        request->timeout += request->timeout;
+        resend_query(request);
+
+#ifdef DEBUG
+        Debug((DEBUG_INFO,"r %x now %d retry %d c %x",
+               request, now, request->retries,
+	       request->cinfo.value.cptr));
+#endif
+       }
     }
+
+    if ((next_time == 0) || (timeout < next_time))
+    {
+      next_time = timeout;
+    }
+  }
+
   return (next_time > now) ? next_time : (now + AR_TTL);
 }
 
 
 /*
- * timeout_resolver - check request list and cache for expired entries
+ * timeout_resolver - check request list for expired entries
  */
-time_t timeout_resolver(time_t now)
+time_t 
+timeout_resolver(time_t now)
 {
   if (nextDNSCheck < now)
     nextDNSCheck = timeout_query_list(now);
@@ -502,17 +506,18 @@ time_t timeout_resolver(time_t now)
  * delete_resolver_queries - cleanup outstanding queries 
  * for which there no longer exist clients or conf lines.
  */
-void delete_resolver_queries(const void* vptr)
+void 
+delete_resolver_queries(const void* vptr)
 {
   ResRQ* request;
   ResRQ* next_request;
 
   for (request = requestListHead; request; request = next_request)
-    {
-      next_request = request->next;
-      if (vptr == request->query.vptr)
-        rem_request(request);
-    }
+  {
+    next_request = request->next;
+    if (vptr == request->query.vptr)
+      rem_request(request);
+  }
 }
 
 /*
@@ -522,61 +527,67 @@ void delete_resolver_queries(const void* vptr)
  * isnt present. Returns number of messages successfully sent to 
  * nameservers or -1 if no successful sends.
  */
-static int send_res_msg(const char* msg, int len, int rcount)
+static int 
+send_res_msg(const char* msg, int len, int rcount)
 {
   int i;
   int sent = 0;
   int max_queries = IRCD_MIN(_res.nscount, rcount);
 
-  assert(0 != msg);
+  assert(msg != NULL);
   /*
    * RES_PRIMARY option is not implemented
    * if (_res.options & RES_PRIMARY || 0 == max_queries)
    */
-  if (0 == max_queries)
+  if (max_queries == 0)
     max_queries = 1;
 
   for (i = 0; i < max_queries; i++)
+  {
+    /*
+     * XXX - this should already have been done by res_init
+     */
+    _res.nsaddr_list[i].sin_family = AF_INET;
+    if (sendto(ResolverFileDescriptor, msg, len, 0, 
+        (struct sockaddr*) &(_res.nsaddr_list[i]),
+        sizeof(struct sockaddr_in)) == len)
     {
-      /*
-       * XXX - this should already have been done by res_init
-       */
-      _res.nsaddr_list[i].sin_family = AF_INET;
-      if (sendto(ResolverFileDescriptor, msg, len, 0, 
-          (struct sockaddr*) &(_res.nsaddr_list[i]),
-          sizeof(struct sockaddr_in)) == len)
-        {
-          ++reinfo.re_sent;
-          ++sent;
-        }
-      else
-        Debug((DEBUG_ERROR,"s_r_m:sendto: %d on %d", 
-               errno, ResolverFileDescriptor));
+      ++reinfo.re_sent;
+      ++sent;
     }
+    else
+    {
+      Debug((DEBUG_ERROR,"s_r_m:sendto: %d on %d", 
+	     errno, ResolverFileDescriptor));
+    }
+  }
+
   return sent;
 }
 
 /*
  * find_id - find a dns request id (id is determined by dn_mkquery)
  */
-static ResRQ* find_id(int id)
+static ResRQ* 
+find_id(int id)
 {
   ResRQ* request;
 
   for (request = requestListHead; request; request = request->next)
-    {
-      if (request->id == id)
-        return request;
-    }
+  {
+    if (request->id == id)
+      return request;
+  }
   return NULL;
 }
 
 /*
  * gethost_byname - get host address from name
  */
-void gethost_byname(const char* name, const struct DNSQuery* query)
+void 
+gethost_byname(const char* name, const struct DNSQuery* query)
 {
-  assert(0 != name);
+  assert(name != NULL);
 
   ++reinfo.re_na_look;
 
@@ -587,9 +598,10 @@ void gethost_byname(const char* name, const struct DNSQuery* query)
 /*
  * gethost_byaddr - get host name from address
  */
-void gethost_byaddr(const char* addr, const struct DNSQuery* query)
+void 
+gethost_byaddr(const char* addr, const struct DNSQuery* query)
 {
-  assert(0 != addr);
+  assert(addr != NULL);
 
   ++reinfo.re_nu_look;
   do_query_number(query, (const struct in_addr*) addr, NULL);
@@ -600,123 +612,141 @@ void gethost_byaddr(const char* addr, const struct DNSQuery* query)
 /*
  * do_query_name - nameserver lookup name
  */
-static void do_query_name(const struct DNSQuery* query, 
+static void 
+do_query_name(const struct DNSQuery* query, 
                           const char* name, ResRQ* request)
 {
   char  hname[HOSTLEN + 1];
-  assert(0 != name);
+  assert(name != NULL);
 
   strncpy_irc(hname, name, HOSTLEN);
   hname[HOSTLEN] = '\0';
   add_local_domain(hname, HOSTLEN);
 
-  if (!request)
-    {
-      request       = make_request(query);
-      request->type = T_A;
-      request->name = (char*) MyMalloc(strlen(hname) + 1);
-      strcpy(request->name, hname);
-    }
+  if (request != NULL)
+  {
+    request       = make_request(query);
+    request->type = T_A;
+    request->name = (char*) MyMalloc(strlen(hname) + 1);
+    strcpy(request->name, hname);
+  }
+  else
+  {
+    /* XXX if request _is_ NULL is there any point calling query_name?
+    return;
+  }
+
   query_name(hname, C_IN, T_A, request);
 }
 
 /*
  * do_query_number - Use this to do reverse IP# lookups.
  */
-static void do_query_number(const struct DNSQuery* query, 
+static void 
+do_query_number(const struct DNSQuery* query, 
                             const struct in_addr* addr,
                             ResRQ* request)
 {
   char  ipbuf[32];
   const unsigned char* cp;
 
-  assert(0 != addr);
+  assert(addr != NULL);
   cp = (const unsigned char*) &addr->s_addr;
   ircsprintf(ipbuf, "%u.%u.%u.%u.in-addr.arpa.",
              (unsigned int)(cp[3]), (unsigned int)(cp[2]),
              (unsigned int)(cp[1]), (unsigned int)(cp[0]));
 
-  if (!request)
-    {
-      request              = make_request(query);
-      request->type        = T_PTR;
-      request->addr.s_addr = addr->s_addr;
-    }
+  if (request != NULL)
+  {
+    request              = make_request(query);
+    request->type        = T_PTR;
+    request->addr.s_addr = addr->s_addr;
+  }
+  else
+  {
+    /* XXX if request _is_ NULL is there any point calling query_name?
+    return;
+  }
+
   query_name(ipbuf, C_IN, T_PTR, request);
 }
 
 /*
  * query_name - generate a query based on class, type and name.
  */
-static void query_name(const char* name, int query_class,
+static void 
+query_name(const char* name, int query_class,
                        int type, ResRQ* request)
 {
   char buf[MAXPACKET];
   int  request_len = 0;
 
-  assert(0 != name);
-  assert(0 != request);
+  assert(name != NULL);
+  assert(request != NULL);
 
   memset(buf, 0, sizeof(buf));
   if ((request_len = res_mkquery(QUERY, name, query_class, type, 
-                                 NULL, 0, NULL, (u_char *) buf, sizeof(buf))) > 0)
-    {
-      HEADER* header = (HEADER*) buf;
+				 NULL, 0, NULL, (u_char *) buf, sizeof(buf)))
+      > 0)
+  {
+    HEADER* header = (HEADER*) buf;
 #ifndef LRAND48
-      int            k = 0;
-      struct timeval tv;
+    int            k = 0;
+    struct timeval tv;
 #endif
-      /*
-       * generate a unique id
-       * NOTE: we don't have to worry about converting this to and from
-       * network byte order, the nameserver does not interpret this value
-       * and returns it unchanged
-       */
+    /*
+     * generate a unique id
+     * NOTE: we don't have to worry about converting this to and from
+     * network byte order, the nameserver does not interpret this value
+     * and returns it unchanged
+     */
 #ifdef LRAND48
-      do
-      {
-        header->id = (header->id + lrand48()) & 0xffff;
-      } while (find_id(header->id));
+    do
+    {
+      header->id = (header->id + lrand48()) & 0xffff;
+    } while (find_id(header->id));
 #else
-      gettimeofday(&tv, NULL);
-      do
-      {
-        header->id = (header->id + k + tv.tv_usec) & 0xffff;
-        k++;
-      } while (find_id(header->id));
+    gettimeofday(&tv, NULL);
+    do
+    {
+      header->id = (header->id + k + tv.tv_usec) & 0xffff;
+      k++;
+    } while (find_id(header->id));
 #endif /* LRAND48 */
-      request->id = header->id;
-      ++request->sends;
+    request->id = header->id;
+    ++request->sends;
 
-      request->sent += send_res_msg(buf, request_len, request->sends);
-    }
+    request->sent += send_res_msg(buf, request_len, request->sends);
+  }
 }
 
-static void resend_query(ResRQ* request)
+static void 
+resend_query(ResRQ* request)
 {
-  assert(0 != request);
+  assert(request != NULL);
 
   if (request->resend == 0)
     return;
   ++reinfo.re_resends;
   switch(request->type)
-    {
-      case T_PTR:
-        do_query_number(NULL, &request->addr, request);
-        break;
-      case T_A:
-        do_query_name(NULL, request->name, request);
-        break;
-      default:
-        break;
-    }
+  {
+    case T_PTR:
+      do_query_number(NULL, &request->addr, request);
+      break;
+    case T_A:
+      do_query_name(NULL, request->name, request);
+      break;
+    default:
+      break;
+  }
 }
 
 /*
  * proc_answer - process name server reply
  * build a hostent struct in the passed request
  */
-static int proc_answer(ResRQ* request, HEADER* header,
+static int 
+proc_answer(ResRQ* request, HEADER* header,
                        char* buf, char* eob)
 {
   char   hostbuf[HOSTLEN + 1]; /* working buffer */
@@ -735,68 +765,84 @@ static int proc_answer(ResRQ* request, HEADER* header,
   int    alias_count = 0;      /* number of aliases in hostent */
   struct hostent* hp;          /* hostent getting filled */
 
-  assert(0 != request);
-  assert(0 != header);
-  assert(0 != buf);
-  assert(0 != eob);
+  assert(request != NULL);
+  assert(header != NULL);
+  assert(buf != NULL);
+  assert(eob != NULL);
   
   current = (unsigned char *) buf + sizeof(HEADER);
   hp = &(request->he.h);
+
   /*
    * lazy allocation of request->he.buf, we don't allocate a buffer
    * unless there is something to put in it.
    */
-  if (!request->he.buf)
-    {
-      request->he.buf = (char*) MyMalloc(MAXGETHOSTLEN + 1);
-      request->he.buf[MAXGETHOSTLEN] = '\0';
-      /*
-       * array of alias list pointers starts at beginning of buf
-       */
-      hp->h_aliases = (char**) request->he.buf;
-      hp->h_aliases[0] = NULL;
-      /*
-       * array of address list pointers starts after alias list pointers
-       * the actual addresses follow the the address list pointers
-       */ 
-      hp->h_addr_list = (char**)(request->he.buf + ALIAS_BLEN);
-      /*
-       * don't copy the host address to the beginning of h_addr_list
-       */
-      hp->h_addr_list[0] = NULL;
-    }
+
+  if (request->he.buf != NULL)
+  {
+    request->he.buf = (char*) MyMalloc(MAXGETHOSTLEN + 1);
+    request->he.buf[MAXGETHOSTLEN] = '\0';
+
+    /*
+     * array of alias list pointers starts at beginning of buf
+     */
+
+    hp->h_aliases = (char**) request->he.buf;
+    hp->h_aliases[0] = NULL;
+
+    /*
+     * array of address list pointers starts after alias list pointers
+     * the actual addresses follow the the address list pointers
+     */ 
+
+    hp->h_addr_list = (char**)(request->he.buf + ALIAS_BLEN);
+
+    /*
+     * don't copy the host address to the beginning of h_addr_list
+     */
+
+     hp->h_addr_list[0] = NULL;
+  }
+
   endp = request->he.buf + MAXGETHOSTLEN;
+
   /*
    * find the end of the address list
    */
+
   addr = hp->h_addr_list;
   while (*addr)
-    {
-      ++addr;
-      ++addr_count;
-    }
+  {
+    ++addr;
+    ++addr_count;
+  }
+
   /*
    * make address point to first available address slot
    */
+
   address = request->he.buf + ADDRS_OFFSET +
                     (sizeof(struct in_addr) * addr_count);
   /*
    * find the end of the alias list
    */
+
   alias = hp->h_aliases;
   while (*alias)
-    {
-      ++alias;
-      ++alias_count;
-    }
+  {
+    ++alias;
+    ++alias_count;
+  }
+
   /*
    * make name point to first available space in request->buf
    */
+
   if (alias_count > 0)
-    {
-      name = hp->h_aliases[alias_count - 1];
-      name += (strlen(name) + 1);
-    }
+  {
+    name = hp->h_aliases[alias_count - 1];
+    name += (strlen(name) + 1);
+  }
   else if (hp->h_name)
     name = hp->h_name + strlen(hp->h_name) + 1;
   else
@@ -805,149 +851,164 @@ static int proc_answer(ResRQ* request, HEADER* header,
   /*
    * skip past queries
    */ 
+
   for (; header->qdcount > 0; --header->qdcount)
-    {
-      if ((n = dn_skipname(current, (u_char *) eob)) < 0)
-        break;
-      current += (size_t) n + QFIXEDSZ;
-    }
+  {
+    if ((n = dn_skipname(current, (u_char *) eob)) < 0)
+      break;
+    current += (size_t) n + QFIXEDSZ;
+  }
+
   /*
    * process each answer sent to us blech.
    */
-  while (header->ancount-- > 0 && (char *) current < eob && name < endp)
-    {
-      n = dn_expand((u_char *) buf, (u_char *) eob, current, hostbuf, sizeof(hostbuf));
-      if (n < 0)
-        {
-          /*
-           * broken message
-           */
-          return 0;
-        }
-      else if (n == 0)
-        {
-          /*
-           * no more answers left
-           */
-          return answer_count;
-        }
-      hostbuf[HOSTLEN] = '\0';
-      /* 
-       * With Address arithmetic you have to be very anal
-       * this code was not working on alpha due to that
-       * (spotted by rodder/jailbird/dianora)
-       */
-      current += (size_t) n;
 
-      if (!(((char *)current + ANSWER_FIXED_SIZE) < eob))
+  while (header->ancount-- > 0 && (char *) current < eob && name < endp)
+  {
+    n = dn_expand((u_char *) buf, (u_char *) eob, current, hostbuf, sizeof(hostbuf));
+    if (n < 0)
+    {
+      /*
+       * broken message
+       */
+
+      return 0;
+    }
+    else if (n == 0)
+    {
+      /*
+       * no more answers left
+       */
+
+      return answer_count;
+    }
+
+    hostbuf[HOSTLEN] = '\0';
+
+    /* 
+     * With Address arithmetic you have to be very anal
+     * this code was not working on alpha due to that
+     * (spotted by rodder/jailbird/dianora)
+     */
+
+    current += (size_t) n;
+
+    if (!(((char *)current + ANSWER_FIXED_SIZE) < eob))
+      break;
+
+    type = _getshort(current);
+    current += TYPE_SIZE;
+
+    query_class = _getshort(current);
+    current += CLASS_SIZE;
+
+    request->ttl = _getlong(current);
+    current += TTL_SIZE;
+
+    rd_length = _getshort(current);
+    current += RDLENGTH_SIZE;
+
+    /* 
+     * Wait to set request->type until we verify this structure 
+     */
+    /* add_local_domain(hostbuf, HOSTLEN); */
+
+    switch(type)
+    {
+      case T_A:
+        /*
+         * check for invalid rd_length or too many addresses
+         */
+        if (rd_length != sizeof(struct in_addr))
+          return answer_count;
+
+        if (++addr_count < RES_MAXADDRS)
+        {
+          if (answer_count == 1)
+            hp->h_addrtype = (query_class == C_IN) ?  AF_INET : AF_UNSPEC;
+
+          memcpy(address, current, sizeof(struct in_addr));
+          *addr++ = address;
+          *addr = 0;
+          address += sizeof(struct in_addr);
+
+          if (hp->h_name == NULL)
+          {
+            strcpy(name, hostbuf);
+            hp->h_name = name;
+            name += strlen(name) + 1;
+          }
+          Debug((DEBUG_INFO,"got ip # %s for %s", 
+          inetntoa((char*) hp->h_addr_list[addr_count - 1]), hostbuf));
+        }
+        current += rd_length;
+        ++answer_count;
         break;
 
-      type = _getshort(current);
-      current += TYPE_SIZE;
-
-      query_class = _getshort(current);
-      current += CLASS_SIZE;
-
-      request->ttl = _getlong(current);
-      current += TTL_SIZE;
-
-      rd_length = _getshort(current);
-      current += RDLENGTH_SIZE;
-
-      /* 
-       * Wait to set request->type until we verify this structure 
-       */
-      /* add_local_domain(hostbuf, HOSTLEN); */
-
-      switch(type)
-        {
-          case T_A:
+        case T_PTR:
+          n = dn_expand((u_char *) buf, (u_char *) eob, current, hostbuf, sizeof(hostbuf));
+          if (n < 0)
+          {
             /*
-             * check for invalid rd_length or too many addresses
+             * broken message
              */
-            if (rd_length != sizeof(struct in_addr))
-              return answer_count;
-            if (++addr_count < RES_MAXADDRS)
-              {
-                if (answer_count == 1)
-                  hp->h_addrtype = (query_class == C_IN) ?  AF_INET : AF_UNSPEC;
-
-                memcpy(address, current, sizeof(struct in_addr));
-                *addr++ = address;
-                *addr = 0;
-                address += sizeof(struct in_addr);
-
-                if (!hp->h_name)
-                  {
-                    strcpy(name, hostbuf);
-                    hp->h_name = name;
-                    name += strlen(name) + 1;
-                  }
-                Debug((DEBUG_INFO,"got ip # %s for %s", 
-                inetntoa((char*) hp->h_addr_list[addr_count - 1]), hostbuf));
-              }
-            current += rd_length;
-            ++answer_count;
-            break;
-          case T_PTR:
-            n = dn_expand((u_char *) buf, (u_char *) eob, current, hostbuf, sizeof(hostbuf));
-            if (n < 0)
-              {
-                /*
-                 * broken message
-                 */
-                return 0;
-              }
-            else if (n == 0)
-              {
-                /*
-                 * no more answers left
-                 */
-                return answer_count;
-              }
+            return 0;
+          }
+          else if (n == 0)
+          {
             /*
-             * This comment is based on analysis by Shadowfax, Wohali and johan, 
-             * not me.  (Dianora) I am only commenting it.
-             *
-             * dn_expand is guaranteed to not return more than sizeof(hostbuf)
-             * but do all implementations of dn_expand also guarantee
-             * buffer is terminated with null byte? Lets not take chances.
-             *  -Dianora
+             * no more answers left
              */
-            hostbuf[HOSTLEN] = '\0';
-            current += (size_t) n;
+            return answer_count;
+          }
 
-            Debug((DEBUG_INFO,"got host %s",hostbuf));
-            /*
-             * copy the returned hostname into the host name
-             * ignore duplicate ptr records
-             */
-            if (!hp->h_name)
-              {
-                strcpy(name, hostbuf);
-                hp->h_name = name;
-                name += strlen(name) + 1;
-              }
-            ++answer_count;
-            break;
-          case T_CNAME:
-            Debug((DEBUG_INFO,"got cname %s", hostbuf));
-            if (++alias_count < RES_MAXALIASES)
-              {
-                strncpy_irc(name, hostbuf, endp - name);
-                *alias++ = name;
-                *alias   = 0;
-                name += strlen(name) + 1;
-              }
-            current += rd_length;
-            ++answer_count;
-            break;
-          default :
+          /*
+           * This comment is based on analysis by Shadowfax, Wohali and johan, 
+           * not me.  (Dianora) I am only commenting it.
+           *
+           * dn_expand is guaranteed to not return more than sizeof(hostbuf)
+           * but do all implementations of dn_expand also guarantee
+           * buffer is terminated with null byte? Lets not take chances.
+           *  -Dianora
+           */
+
+          hostbuf[HOSTLEN] = '\0';
+          current += (size_t) n;
+
+          Debug((DEBUG_INFO,"got host %s",hostbuf));
+
+          /*
+           * copy the returned hostname into the host name
+           * ignore duplicate ptr records
+           */
+
+          if (hp->h_name != NULL)
+          {
+            strcpy(name, hostbuf);
+            hp->h_name = name;
+            name += strlen(name) + 1;
+          }
+          ++answer_count;
+          break;
+        case T_CNAME:
+          Debug((DEBUG_INFO,"got cname %s", hostbuf));
+          if (++alias_count < RES_MAXALIASES)
+          {
+            strncpy_irc(name, hostbuf, endp - name);
+            *alias++ = name;
+            *alias   = 0;
+            name += strlen(name) + 1;
+          }
+          current += rd_length;
+          ++answer_count;
+          break;
+        default :
+
 #ifdef DEBUG
-            Debug((DEBUG_INFO,"proc_answer: type:%d for:%s", type, hostbuf));
+          Debug((DEBUG_INFO,"proc_answer: type:%d for:%s", type, hostbuf));
 #endif
-            current += rd_length;
-            break;
+          current += rd_length;
+          break;
         }
     }
   return answer_count;
@@ -958,7 +1019,8 @@ static int proc_answer(ResRQ* request, HEADER* header,
  * dup_hostent - Duplicate a hostent struct, allocate only enough memory for
  * the data we're putting in it.
  */
-static void dup_hostent(aHostent* new_hp, struct hostent* hp)
+static void 
+dup_hostent(aHostent* new_hp, struct hostent* hp)
 {
   char*  p;
   char** ap;
@@ -967,25 +1029,29 @@ static void dup_hostent(aHostent* new_hp, struct hostent* hp)
   int    addr_count = 0;
   size_t bytes_needed = 0;
 
-  assert(0 != new_hp);
-  assert(0 != hp);
+  assert(new_hp != NULL);
+  assert(hp != NULL);
 
   /* how much buffer do we need? */
   bytes_needed += (strlen(hp->h_name) + 1);
 
   pp = hp->h_aliases;
   while (*pp)
-    {
-      bytes_needed += (strlen(*pp++) + 1 + sizeof(void*));
-      ++alias_count;
-    }
+  {
+    bytes_needed += (strlen(*pp++) + 1 + sizeof(void*));
+    ++alias_count;
+  }
+
   pp = hp->h_addr_list;
+
   while (*pp++)
-    {
-      bytes_needed += (hp->h_length + sizeof(void*));
-      ++addr_count;
-    }
+  {
+    bytes_needed += (hp->h_length + sizeof(void*));
+    ++addr_count;
+  }
+
   /* Reserve space for 2 nulls to terminate h_aliases and h_addr_list */
+
   bytes_needed += (2 * sizeof(void*));
 
   /* Allocate memory */
@@ -995,31 +1061,35 @@ static void dup_hostent(aHostent* new_hp, struct hostent* hp)
   new_hp->h.h_length = hp->h_length;
 
   /* first write the address list */
+
   pp = hp->h_addr_list;
   ap = new_hp->h.h_addr_list =
       (char**)(new_hp->buf + ((alias_count + 1) * sizeof(void*)));
   p = (char*)ap + ((addr_count + 1) * sizeof(void*));
   while (*pp)
-    {
-      *ap++ = p;
-      memcpy(p, *pp++, hp->h_length);
-      p += hp->h_length;
-    }
+  {
+    *ap++ = p;
+    memcpy(p, *pp++, hp->h_length);
+    p += hp->h_length;
+  }
   *ap = 0;
+
   /* next write the name */
+
   new_hp->h.h_name = p;
   strcpy(p, hp->h_name);
   p += (strlen(p) + 1);
 
   /* last write the alias list */
+
   pp = hp->h_aliases;
   ap = new_hp->h.h_aliases = (char**) new_hp->buf;
   while (*pp)
-    {
-      *ap++ = p;
-      strcpy(p, *pp++);
-      p += (strlen(p) + 1);
-    }
+  {
+    *ap++ = p;
+    strcpy(p, *pp++);
+    p += (strlen(p) + 1);
+  }
   *ap = 0;
 }
 
@@ -1027,7 +1097,8 @@ static void dup_hostent(aHostent* new_hp, struct hostent* hp)
 /*
  * get_res - read a dns reply from the nameserver and process it.
  */
-void get_res(void)
+void 
+get_res(void)
 {
   char               buf[sizeof(HEADER) + MAXPACKET];
   HEADER*            header;
@@ -1043,11 +1114,15 @@ void get_res(void)
                 (struct sockaddr*) &res_sin, &len);
   if (rc <= sizeof(HEADER))
     return;
+
   /*
    * convert DNS reply reader from Network byte order to CPU byte order.
    */
+
   header = (HEADER*) buf;
+
   /* header->id = ntohs(header->id); */
+
   header->ancount = ntohs(header->ancount);
   header->qdcount = ntohs(header->qdcount);
   header->nscount = ntohs(header->nscount);
@@ -1056,26 +1131,33 @@ void get_res(void)
   Debug((DEBUG_NOTICE, "get_res:id = %d rcode = %d ancount = %d",
          header->id, header->rcode, header->ancount));
 #endif
+
   ++reinfo.re_replies;
+
   /*
    * response for an id which we have already received an answer for
    * just ignore this response.
    */
-  if (0 == (request = find_id(header->id)))
+
+  if ((request = find_id(header->id)) == 0)
     return;
   /*
    * check against possibly fake replies
    */
-  if (!res_ourserver(&_res, &res_sin)) {
+
+  if (!res_ourserver(&_res, &res_sin))
+  {
     ++reinfo.re_unkrep;
     return;
   }
 
-  if ((header->rcode != NOERROR) || (header->ancount == 0)) {
+  if ((header->rcode != NOERROR) || (header->ancount == 0))
+  {
     ++reinfo.re_errors;
     if (SERVFAIL == header->rcode)
       resend_query(request);
-    else {
+    else
+    {
       /*
        * If a bad error was returned, we stop here and dont send
        * send any more (no retries granted).
@@ -1091,13 +1173,18 @@ void get_res(void)
    * try it again and hope it works the next time.
    */
   answer_count = proc_answer(request, header, buf, buf + rc);
+
 #ifdef DEBUG
   Debug((DEBUG_INFO,"get_res:Proc answer = %d",a));
 #endif
-  if (answer_count) {
-    if (request->type == T_PTR) {
+
+  if (answer_count != 0)
+  {
+    if (request->type == T_PTR)
+    {
       struct DNSReply* reply = NULL;
-      if (0 == request->he.h.h_name) {
+      if (0 == request->he.h.h_name)
+      {
         /*
          * got a PTR response with no name, something bogus is happening
          * don't bother trying again, the client address doesn't resolve
@@ -1122,27 +1209,28 @@ void get_res(void)
       memcpy(&requestListTail->he.h, &request->he.h, sizeof(struct hostent));
       rem_request(request);
     }
-    else {
+    else
+    {
       /*
        * got a name and address response, client resolved
        */
-      assert(0 != request);
+      assert(request != NULL);
       hp = &request->he.h;
       /*
        * shouldn't happen but it just might...
        */
-      if (!hp->h_name || !hp->h_addr_list[0])
-        {
-          (*request->query.callback)(request->query.vptr, 0 );
-        }
+      if ((hp->h_name == NULL) || (hp->h_addr_list[0] == NULL))
+      {
+        (*request->query.callback)(request->query.vptr, 0 );
+      }
       else
-        {
-          cp = (struct result*) MyMalloc(sizeof(struct result));
-          memset(cp, 0, sizeof(struct result));
-          dup_hostent(&cp->he, hp);
-          cp->reply.hp = &cp->he.h;
-          (*request->query.callback)(request->query.vptr, &cp->reply);
-        }
+      {
+        cp = (struct result*) MyMalloc(sizeof(struct result));
+        memset(cp, 0, sizeof(struct result));
+        dup_hostent(&cp->he, hp);
+        cp->reply.hp = &cp->he.h;
+        (*request->query.callback)(request->query.vptr, &cp->reply);
+      }
 
 #ifdef  DEBUG
       Debug((DEBUG_INFO,"get_res:cp=%#x request=%#x (made)",cp,request));
@@ -1150,7 +1238,8 @@ void get_res(void)
       rem_request(request);
     }
   }
-  else if (!request->sent) {
+  else if (!request->sent)
+  {
     /*
      * XXX - we got a response for a query we didn't send with a valid id?
      * this should never happen, bail here and leave the client unresolved
@@ -1164,13 +1253,14 @@ void get_res(void)
 /*
  * m_dns - dns status query
  */
-int m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[])
+int 
+m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
   if (parv[1] && *parv[1] == 'd')
-    {
-      sendto_one(sptr, "NOTICE %s :ResolverFileDescriptor = %d", parv[0], ResolverFileDescriptor);
-      return 0;
-    }
+  {
+    sendto_one(sptr, "NOTICE %s :ResolverFileDescriptor = %d", parv[0], ResolverFileDescriptor);
+    return 0;
+  }
   
   sendto_one(sptr,"NOTICE %s :Re %d Rl %d/%d Rp %d Rq %d",
              sptr->name, reinfo.re_errors, reinfo.re_nu_look,
@@ -1182,7 +1272,8 @@ int m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[])
 }
 
 
-unsigned long cres_mem(aClient *sptr)
+unsigned long 
+cres_mem(aClient *sptr)
 {
   return 0L;
 }
