@@ -123,8 +123,6 @@ int	init_resolver(int op)
       int     on = 0;
       
       ret = resfd = socket(AF_INET, SOCK_DGRAM, 0);
-      (void) setsockopt(ret, SOL_SOCKET, SO_BROADCAST,
-			(char *)&on, sizeof(on));
     }
 #ifdef DEBUG
   if (op & RES_INITDEBG);
@@ -157,9 +155,6 @@ int restart_resolver()
     }
   (void)close(resfd);
   ret = resfd = socket(AF_INET, SOCK_DGRAM, 0);
-  (void) setsockopt(ret, SOL_SOCKET, SO_BROADCAST,
-		    (char *)&on, sizeof(on));
-
   return ret;
 }
 
