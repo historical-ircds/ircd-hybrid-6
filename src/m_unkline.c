@@ -734,4 +734,5 @@ int m_ungline (aClient *cptr,aClient *sptr,int parc,char *parv[])
 #else
   sendto_one(sptr,":%s NOTICE %s :UNGLINE disabled",me.name,parv[0]);
 #endif
+  return 0;
 }
