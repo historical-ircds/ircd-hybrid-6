@@ -342,14 +342,10 @@ int m_trace(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
                            me.name,
                            parv[0], c_class,
                            name,
-#if (defined SERVERHIDE) || (defined HIDE_SERVERS_IPS)
-                           "255.255.255.255",
-#else
 #ifndef SPOOF_NOTICE
                            IsIPHidden(acptr)?"255.255.255.255":ip,
 #else
                            IsAnOper(sptr)?ip:(IsIPHidden(acptr)?"255.255.255.255":ip),
-#endif
 #endif
                            now - acptr->lasttime,
                            (acptr->user)?(now - acptr->user->last):0);
