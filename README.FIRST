@@ -26,7 +26,7 @@ egcs ONLY on 64-bit Solaris7.  gcc-2.95 and SunPro C on 64bit should
 work fine, and any gcc or SunPro compiler on 32bit.
 
 SUPPORTED PLATFORMS: this code should compile without any warnings
-on Cygwin 1.3.6, FreeBSD 3.x/4.x, RedHat 6.1/7.1, and Solaris 8/sparc.
+on Cygwin 1.3.6, FreeBSD 3.x/4.x, RedHat 4.2/6.1/7.1, and Solaris 8/sparc.
 Please let us know if you find otherwise.  It probably does not compile on
-AIX, IRIX, or libc5 Linux.
+AIX, HPUX, or IRIX.
 

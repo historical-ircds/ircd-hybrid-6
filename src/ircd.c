@@ -719,11 +719,6 @@ int main(int argc, char *argv[])
    */
   setup_corefile();
 
-  /*
-   * Check if daemon is already running
-   */
-  check_pidfile();
-
   /* 
    * set initialVMTop before we allocate any memory
    */
@@ -790,6 +785,11 @@ int main(int argc, char *argv[])
       perror("chdir");
       exit(-1);
     }
+
+  /*
+   * Check if daemon is already running
+   */
+  check_pidfile();
 
   init_sys(bootDaemon);
   init_log(logFileName);

@@ -1019,10 +1019,11 @@ int read_message(time_t delay, unsigned char mask)        /* mika */
             }
         }
       
-      if (ResolverFileDescriptor >= 0)
+/*      if (ResolverFileDescriptor >= 0)
         {
           FD_SET(ResolverFileDescriptor, read_set);
         }
+*/
       wait.tv_sec = IRCD_MIN(delay2, delay);
       wait.tv_usec = usec;
 
@@ -1050,12 +1051,13 @@ int read_message(time_t delay, unsigned char mask)        /* mika */
   /*
    * Check the name resolver
    */
-
+/*
   if (-1 < ResolverFileDescriptor && 
       FD_ISSET(ResolverFileDescriptor, read_set)) {
     get_res();
     --nfds;
   }
+*/
   /*
    * Check the auth fd's
    */
