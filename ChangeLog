@@ -1,3 +1,7 @@
+*** 20011204_14 by androsyn
+Fixed minor compile issue.  I'm pretty sure this is the right fix
+
+
 *** 20011204_13 by db
 - put the | in the wrong place on a write
 
