@@ -25,19 +25,13 @@ static char *rcs_version = "$Id$";
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
-#include "res.h"
 #include "numeric.h"
 #include "patchlevel.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/file.h>
 #include <sys/ioctl.h>
-#if defined(__hpux)
-# include "inet.h"
-#endif
 #include <fcntl.h>
-#include "sock.h"	/* If FD_ZERO isn't define up to this point,  */
-			/* define it (BSD4.2 needs this) */
 #include "h.h"
 
 static void authsenderr(aClient *);	/* locally defined */

@@ -12,9 +12,6 @@
 #if defined(AIX) || defined(DYNIXPTX) || defined(SVR3)
 #include <time.h>
 #endif
-#include <sys/stat.h>
-#include <sys/socket.h>
-#include <fcntl.h>
 #include "h.h"
 #if defined( HAVE_STRING_H )
 #include <string.h>

@@ -47,6 +47,7 @@ static char *rcs_version = "$Id$";
 #include <utmp.h>
 #endif
 #include <sys/resource.h>
+#include <netdb.h>
 
 /*
  * Stuff for poll()
@@ -71,14 +72,7 @@ fd_set  readset,writeset;
 
 #ifdef	AIX
 # include <time.h>
-# include <arpa/nameser.h>
-#else
-// # include "nameser.h"
 #endif
-// #include "resolv.h"
-/*
-#include "sock.h"*/	/* If FD_ZERO isn't define up to this point,  */
-			/* define it (BSD4.2 needs this) */
 #include "h.h"
 #include "fdlist.h"
 extern fdlist serv_fdlist;
@@ -102,15 +96,15 @@ void	reset_sock_opts (int, int);
 
 extern char specific_virtual_host;	/* defined in s_conf.c */
 extern struct sockaddr_in vserv;	/* defined in s_conf.c */
-extern int spare_fd;	/* defined in ircd.c */
 extern aClient *serv_cptr_list;	/* defined in ircd.c */
 extern aClient *local_cptr_list;/* defined in ircd.c */
 extern aClient *oper_cptr_list; /* defined in ircd.c */
+extern int resfd;   /* defined in res.c */
 
 
 aClient	*local[MAXCONNECTIONS];
 
-int	highest_fd = 0, resfd = -1;
+int	highest_fd = 0;
 time_t	timeofday;
 static	struct	sockaddr_in	mysk;
 
@@ -144,40 +138,6 @@ static	char	readbuf[READBUF_SIZE];
 #endif
 
 
-/*
-** add_local_domain()
-** Add the domain to hostname, if it is missing
-** (as suggested by eps@TOASTER.SFSU.EDU)
-*/
-
-void	add_local_domain(char *hname,int size)
-{
-#ifdef RES_INIT
-  char	sparemsg[80];
-  /* try to fix up unqualified names */
-  if (!strchr(hname, '.'))
-    {
-      if (!(_res.options & RES_INIT))
-	{
-	  Debug((DEBUG_DNS,"res_init()"));
-	  close(spare_fd);
-	  res_init();
-	  spare_fd = open("/dev/null",O_RDONLY,0);
-	  if ((spare_fd < 0) || (spare_fd > 256))
-	    {
-	      ircsprintf(sparemsg,"invalid spare_fd %d",spare_fd);
-	      restart(sparemsg);
-	    }
-	}
-      if (_res.defdname[0])
-	{
-	  (void)strncat(hname, ".", size-1);
-	  (void)strncat(hname, _res.defdname, size-2);
-	}
-    }
-#endif
-  return;
-}
 
 /*
 ** Cannot use perror() within daemon. stderr is closed in
@@ -521,7 +481,7 @@ void	init_sys()
 
   if (bootopt & BOOT_TTY)	/* debugging is going to a tty */
     {
-      resfd = init_resolver(0x1f);
+      resfd = init_resolver();
       return;
     }
   (void)close(1);
@@ -561,7 +521,7 @@ void	init_sys()
     local[0] = NULL;
     }
 #endif /* __CYGWIN__ */
-  resfd = init_resolver(0x1f);
+  resfd = init_resolver();
   return;
 }
 

@@ -48,6 +48,7 @@ static char *rcs_version = "$Id$";
 #include <sys/types.h>
 #include <time.h>
 #endif
+#include <netdb.h>
 #include "h.h"
 #include "fdlist.h"
 extern fdlist serv_fdlist;

@@ -33,7 +33,6 @@ static char *rcs_version="$Id$";
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <pwd.h>
 #include <signal.h>
 #include <fcntl.h>
@@ -171,7 +170,6 @@ time_t	nextping = 1;		/* same as above for check_pings() */
 time_t	nextdnscheck = 0;	/* next time to poll dns to force timeouts */
 time_t	nextexpire = 1;		/* next expire run on the dns cache */
 int	autoconn = 1;		/* allow auto conns or not */
-int	spare_fd = 0;		/* fd to be saved for special circumstances */
 
 #ifdef	PROFIL
 extern	etext();
@@ -949,13 +947,6 @@ int	main(int argc, char *argv[])
   if (chdir(dpath))
     {
       perror("chdir");
-      exit(-1);
-    }
-  res_init();
-  spare_fd=open("/dev/null",O_RDONLY,0); /* save this fd for rehash dns */
-  if (spare_fd < 0)
-    {
-      perror("cannot save spare_fd");
       exit(-1);
     }
   if (chroot(DPATH))

@@ -30,21 +30,17 @@ static char *rcs_version = "$Id$";
 #include "dline_conf.h"
 #include "sys.h"
 #include "numeric.h"
-#include <sys/socket.h>
-#include <fcntl.h>
-#include <sys/wait.h>
 #if defined(AIX) || defined(DYNIXPTX) || defined(SVR3)
 #include <time.h>
 #endif
-#ifdef	R_LINES
-#include <signal.h>
-#endif
-
+#include <netdb.h>
 #include <signal.h>
 #include "h.h"
 extern int rehashed;
 #include "mtrie_conf.h"
 #include "s_conf.h"
+
+#include "res.h"    /* gethost_byname, gethost_byaddr */
 
 struct sockaddr_in vserv;
 char	specific_virtual_host;

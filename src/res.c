@@ -3,11 +3,13 @@
  * This file may not be distributed without the author's permission in any
  * shape or form. The author takes no responsibility for any damage or loss
  * of property which results from the use of this software.
+ *
+ * $Id$
  */
+#include "res.h"
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
-#include "res.h"
 #include "numeric.h"
 #include "h.h"
 
@@ -16,14 +18,10 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 
-#include <arpa/nameser.h>
 #include <resolv.h>
+#include <netdb.h>
 #include <arpa/inet.h>
-
-#ifndef lint
-static  char sccsid[] = "@(#)res.c	2.34 03 Nov 1993 (C) 1992 Darren Reed";
-static  char *rcs_version = "$Id$";
-#endif
+#include <arpa/nameser.h>
 
 #undef	DEBUG	/* because there is a lot of debug code in here :-) */
 extern  void    debug();
@@ -34,10 +32,70 @@ extern	int	dn_skipname (char *, char *);
 extern	int	res_mkquery (int, char *, int, int, char *, int,
 				   struct rrec *, char *, int);
 #endif
+
+#define MAXPACKET	1024
+#define MAXALIASES	35
+#define MAXADDRS	35
+
+#define	AR_TTL		600	/* TTL in seconds for dns cache entries */
+
+struct	hent {
+	char	*h_name;	/* official name of host */
+	char	*h_aliases[MAXALIASES];	/* alias list */
+	int	h_addrtype;	/* host address type */
+	int	h_length;	/* length of address */
+	/* list of addresses from name server */
+	struct	in_addr	h_addr_list[MAXADDRS];
+#define	h_addr	h_addr_list[0]	/* address, for backward compatiblity */
+};
+
+typedef	struct	reslist {
+	int	id;
+	int	sent;	/* number of requests sent */
+	int	srch;
+	time_t	ttl;
+	char	type;
+	char	retries; /* retry counter */
+	char	sends;	/* number of sends (>1 means resent) */
+	char	resend;	/* send flag. 0 == dont resend */
+	time_t	sentat;
+	time_t	timeout;
+	struct	in_addr	addr;
+	char	*name;
+	struct	reslist	*next;
+	Link	cinfo;
+	struct	hent he;
+	} ResRQ;
+
+typedef	struct	cache {
+	time_t	expireat;
+	time_t	ttl;
+	struct	hostent	he;
+	struct	cache	*hname_next, *hnum_next, *list_next;
+	} aCache;
+
+typedef struct	cachetable {
+	aCache	*num_list;
+	aCache	*name_list;
+	} CacheTable;
+
+#define ARES_CACSIZE	307
+
+#define	MAXCACHED	281
+
 extern	int	errno, h_errno;
 extern	int	highest_fd;
 extern	aClient	*local[];
-extern	int	spare_fd;
+
+/*
+ * Keep a spare file descriptor open. res_init calls fopen to read the
+ * resolv.conf file. If ircd is hogging all the file descriptors below 256,
+ * on systems with crippled FILE structures this will cause wierd bugs.
+ * This is definitely needed for Solaris which uses an unsigned char to
+ * hold the file descriptor.
+ */ 
+int             resfd = -1;
+static int      spare_fd = -1;
 
 static	char	hostbuf[HOSTLEN+1];
 static	int	incache = 0;
@@ -87,75 +145,91 @@ static	struct	resinfo {
 	int	re_unkrep;
 } reinfo;
 
-int	init_resolver(int op)
+/*
+ * start_resolver - do everything we need to read the resolv.conf file
+ * and initialize the resolver file descriptor if needed
+ */
+static void start_resolver(void)
 {
-  int	ret = 0;
   char  sparemsg[80];
+  /*
+   * close the spare file descriptor so res_init can read resolv.conf
+   * successfully. Needed on Solaris
+   */
+  if (spare_fd > -1)
+    close(spare_fd);
+
+  res_init();      /* res_init always returns 0 */
+  /*
+   * make sure we have a valid file descriptor below 256 so we can
+   * do this again. Needed on Solaris
+   */
+  spare_fd = open("/dev/null",O_RDONLY,0);
+  if ((spare_fd < 0) || (spare_fd > 256)) {
+    ircsprintf(sparemsg,"invalid spare_fd %d",spare_fd);
+    restart(sparemsg);
+  }
+
+  if (!_res.nscount) {
+    _res.nscount = 1;
+    _res.nsaddr_list[0].sin_addr.s_addr = inet_addr("127.0.0.1");
+  }
+
+#ifdef DEBUG
+  _res.options |= RES_DEBUG;
+#endif
+  if (resfd < 0)
+    resfd = socket(AF_INET, SOCK_DGRAM, 0);
+}
+
+/*
+ * init_resolver - initialize resolver and resolver library
+ */
+int init_resolver(void)
+{
 
 #ifdef	LRAND48
   srand48(timeofday);
 #endif
-  if (op & RES_INITLIST)
-    {
-      memset((void *)&reinfo, 0, sizeof(reinfo));
-      first = last = NULL;
-    }
-  if (op & RES_CALLINIT)
-    {
-      close(spare_fd);
-      ret = res_init();
-      spare_fd = open("/dev/null",O_RDONLY,0);
-      if ((spare_fd < 0) || (spare_fd > 256))
-        {
-          ircsprintf(sparemsg,"invalid spare_fd %d",spare_fd);
-          restart(sparemsg);
-        }
-      if (!_res.nscount)
-	{
-	  _res.nscount = 1;
-	  _res.nsaddr_list[0].sin_addr.s_addr =
-	    inet_addr("127.0.0.1");
-	}
-    }
+  /*
+   * XXX - we don't really need to do this, all of these are static
+   */
+  memset((void *)&cainfo, 0, sizeof(cainfo));
+  memset((void *)hashtable, 0, sizeof(hashtable));
+  memset((void *)&reinfo, 0, sizeof(reinfo));
 
-  if (op & RES_INITSOCK)
-    {
-      int     on = 0;
-      
-      ret = resfd = socket(AF_INET, SOCK_DGRAM, 0);
-    }
-#ifdef DEBUG
-  if (op & RES_INITDEBG);
-  _res.options |= RES_DEBUG;
-#endif
-  if (op & RES_INITCACH)
-    {
-      memset((void *)&cainfo, 0, sizeof(cainfo));
-      memset((void *)hashtable, 0, sizeof(hashtable));
-    }
-  if (op == 0)
-    ret = resfd;
-  return ret;
+  first = last = NULL;
+  start_resolver();
+  return resfd;
 }
 
-int restart_resolver()
+/*
+ * restart_resolver - flush the cache, reread resolv.conf, reopen socket
+ */
+int restart_resolver(void)
 {
-  int ret = 0;
-  int on = 0;
-  char sparemsg[80];
-
   flush_cache();	/* flush the dns cache */
-  close(spare_fd);
-  ret = res_init();
-  spare_fd = open("/dev/null",O_RDONLY,0);
-  if ((spare_fd < 0) || (spare_fd > 256))
-    {
-      ircsprintf(sparemsg,"invalid spare_fd %d",spare_fd);
-      restart(sparemsg);
+  start_resolver();
+  return resfd;
+}
+
+/*
+ * add_local_domain - Add the domain to hostname, if it is missing
+ * (as suggested by eps@TOASTER.SFSU.EDU)
+ */
+void add_local_domain(char* hname, int size)
+{
+  char	sparemsg[80];
+  /* try to fix up unqualified names */
+  if (!strchr(hname, '.')) {
+    if (!(_res.options & RES_INIT))
+      init_resolver();
+    if (_res.defdname[0]) {
+      strncat(hname, ".", size - 1);
+      strncat(hname, _res.defdname, size - 2);
     }
-  (void)close(resfd);
-  ret = resfd = socket(AF_INET, SOCK_DGRAM, 0);
-  return ret;
+  }
+  return;
 }
 
 static int add_request(ResRQ *new)
