@@ -1,3 +1,7 @@
+*** 20010805_5 by jdc
+- Minor cleanups.
+
+
 *** 20010805_4 by jdc
 - Pure cosmetical changes; "#undef " became "#undef  ", removed excessive
   whitespace from end of lines, and minor definition changes.
