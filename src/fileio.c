@@ -20,6 +20,7 @@
  */
 #include "fileio.h"
 #include <stdio.h>  /* BUFSIZ, EOF */
+#include <stdlib.h> /* malloc, free */
 #include <fcntl.h>  /* O_RDONLY, O_WRONLY, ... */
 #include <unistd.h> /* read, write, open, close */
 #include <assert.h> /* assert */
