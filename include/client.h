@@ -298,11 +298,6 @@ struct Client
 #define FLAGS_SENDQEX      0x0800 /* Sendq exceeded */
 #define FLAGS_IPHASH       0x1000 /* iphashed this client */
 
-/* user information flags, only settable by remote mode or local oper */
-#define	FLAGS_OPER	   0x2000 /* Operator */
-#define	FLAGS_LOCOP        0x4000 /* Local operator -- SRB */
-
-
 /* umodes, settable flags */
 #define	FLAGS_SERVNOTICE   0x0001 /* server notices such as kill */
 #define FLAGS_CCONN        0x0002 /* Client Connections */
@@ -315,7 +310,9 @@ struct Client
 #define	FLAGS_WALLOP       0x0100 /* send wallops to them */
 #define FLAGS_OPERWALL     0x0200 /* Operwalls */
 #define	FLAGS_INVISIBLE    0x0400 /* makes user invisible */
-/* 0x2000 and 0x4000 reserved, replicated from flags for umode *sigh* */
+/* user information flags, only settable by remote mode or local oper */
+#define	FLAGS_OPER	   0x4000 /* Operator */
+#define	FLAGS_LOCOP        0x8000 /* Local operator -- SRB */
 
 /* *sigh* overflow flags */
 #define FLAGS2_RESTRICTED   0x0001      /* restricted client */
@@ -394,13 +391,13 @@ struct Client
 
 /* oper flags */
 #define	MyOper(x)		(MyConnect(x) && IsOper(x))
-#define	IsOper(x)		((x)->flags & FLAGS_OPER)
-#define	IsLocOp(x)		((x)->flags & FLAGS_LOCOP)
-#define	IsAnOper(x)		((x)->flags & (FLAGS_OPER|FLAGS_LOCOP))
-#define	SetOper(x)		((x)->flags |= FLAGS_OPER)
-#define	SetLocOp(x)    		((x)->flags |= FLAGS_LOCOP)
-#define	ClearOper(x)		((x)->flags &= ~FLAGS_OPER)
-#define ClearLocOp(x)		((x)->flags &= ~FLAGS_LOCOP)
+#define	IsOper(x)		((x)->umodes & FLAGS_OPER)
+#define	IsLocOp(x)		((x)->umodes & FLAGS_LOCOP)
+#define	IsAnOper(x)		((x)->umodes & (FLAGS_OPER|FLAGS_LOCOP))
+#define	SetOper(x)		((x)->umodes |= FLAGS_OPER)
+#define	SetLocOp(x)    		((x)->umodes |= FLAGS_LOCOP)
+#define	ClearOper(x)		((x)->umodes &= ~FLAGS_OPER)
+#define ClearLocOp(x)		((x)->umodes &= ~FLAGS_LOCOP)
 #define	IsPrivileged(x)		(IsAnOper(x) || IsServer(x))
 
 /* umode flags */

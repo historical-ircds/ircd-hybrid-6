@@ -115,7 +115,7 @@ static int user_modes_from_c_to_bitmask[] =
   0,		/* l */
   0, 		/* m */
   FLAGS_NCHANGE, /* n */
-  0, 		/* o */
+  FLAGS_OPER,   /* o */
   0,		/* p */
   0,		/* q */
   FLAGS_REJ,	/* r */
@@ -1588,16 +1588,14 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
 	  m = &parv[4][1];
 	  while (*m)
 	    {
-	      if (*m == 'o')	/* Can only be a remote oper */
-		{
-		  Count.oper++;
-		  SetOper(sptr);
-		  sptr->umodes |= FLAGS_OPER;
-		}
 	      flag = user_modes_from_c_to_bitmask[(int)(*m & 0x1F)];
 	      if( flag == FLAGS_INVISIBLE )
 		{
 		  Count.invisi++;
+		}
+	      if( flag == FLAGS_OPER )
+		{
+		  Count.oper++;
 		}
 	      sptr->umodes |= flag & SEND_UMODES;
 	      m++;
@@ -3249,8 +3247,6 @@ int	m_oper(aClient *cptr,
       if (aconf->status == CONF_LOCOP)
 	{
 	  SetLocOp(sptr);
-	  /* replicate oper mode here */
-	  sptr->umodes |= FLAGS_LOCOP;
 	  if((int)aconf->hold)
 	    {
 	      sptr->umodes |= ((int)aconf->hold & ALL_UMODES); 
@@ -3272,7 +3268,6 @@ int	m_oper(aClient *cptr,
       else
 	{
 	  SetOper(sptr);
-	  sptr->umodes |= FLAGS_OPER;
 	  if((int)aconf->hold)
 	    {
 	      sptr->umodes |= ((int)aconf->hold & ALL_UMODES); 
@@ -3693,7 +3688,6 @@ int	m_umode(aClient *cptr,
 	    }
 	  else
 	    {
-	      sptr->flags &= ~(FLAGS_OPER|FLAGS_LOCOP);
 	      sptr->umodes &= ~(FLAGS_OPER|FLAGS_LOCOP);
 
 	      Count.oper--;
