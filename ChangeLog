@@ -1,3 +1,10 @@
+*** 20001121_1 by lusky
+revved patchlevel to rc7
+redundant if in server_estab() (gp)
+ported SERVERHIDE from +ins patch (ejb/jrl)
+disabled hunting by nick or wildcard for local nonopers with SERVERHIDE
+
+
 *** 20001118_1 by lusky
 changed a bunch of debugging sendto_ops to sendto_realops
 first fix for bogus hostnames from other ircds
