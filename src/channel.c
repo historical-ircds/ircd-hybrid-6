@@ -1549,21 +1549,27 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
-	      chptr->mode.mode |= MODE_NOPRIVMSGS;
-	      *mbufw++ = '+';
-	      *mbufw++ = 'n';
-	      len += 2;
-	      opcnt++;
+	      if(!(chptr->mode.mode & MODE_NOPRIVMSGS))
+		{
+		  chptr->mode.mode |= MODE_NOPRIVMSGS;
+		  *mbufw++ = '+';
+		  *mbufw++ = 'n';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  else
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
-	      chptr->mode.mode &= ~MODE_NOPRIVMSGS;
-	      *mbufw++ = '-';
-	      *mbufw++ = 'n';
-	      len += 2;
-	      opcnt++;
+	      if(chptr->mode.mode & MODE_NOPRIVMSGS)
+		{
+		  chptr->mode.mode &= ~MODE_NOPRIVMSGS;
+		  *mbufw++ = '-';
+		  *mbufw++ = 'n';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  break;
 
@@ -1600,21 +1606,27 @@ static  void     set_mode(aClient *cptr,
 		  len += 2;
 		  chptr->mode.mode &= ~MODE_SECRET;
 		}
-	      chptr->mode.mode |= MODE_PRIVATE;
-	      *mbufw++ = '+';
-	      *mbufw++ = 'p';
-	      len += 2;
-	      opcnt++;
+	      if(!(chptr->mode.mode & MODE_PRIVATE))
+		{
+		  chptr->mode.mode |= MODE_PRIVATE;
+		  *mbufw++ = '+';
+		  *mbufw++ = 'p';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  else
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
-	      chptr->mode.mode &= ~MODE_PRIVATE;
-	      *mbufw++ = '-';
-	      *mbufw++ = 'p';
-	      len += 2;
-	      opcnt++;
+	      if(chptr->mode.mode & MODE_PRIVATE)
+		{
+		  chptr->mode.mode &= ~MODE_PRIVATE;
+		  *mbufw++ = '-';
+		  *mbufw++ = 'p';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  break;
 
@@ -1653,21 +1665,28 @@ static  void     set_mode(aClient *cptr,
 		  len += 2;
 		  chptr->mode.mode &= ~MODE_PRIVATE;
 		}
-	      chptr->mode.mode |= MODE_SECRET;
-	      *mbufw++ = '+';
-	      *mbufw++ = 's';
-	      len += 2;
-	      opcnt++;
+
+	      if(!(chptr->mode.mode & MODE_SECRET))
+		{
+		  chptr->mode.mode |= MODE_SECRET;
+		  *mbufw++ = '+';
+		  *mbufw++ = 's';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  else
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
-	      chptr->mode.mode &= ~MODE_SECRET;
-	      *mbufw++ = '-';
-	      *mbufw++ = 's';
-	      len += 2;
-	      opcnt++;
+	      if(chptr->mode.mode & MODE_SECRET)
+		{
+		  chptr->mode.mode &= ~MODE_SECRET;
+		  *mbufw++ = '-';
+		  *mbufw++ = 's';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  break;
 
@@ -1695,21 +1714,27 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
-	      chptr->mode.mode |= MODE_TOPICLIMIT;
-	      *mbufw++ = '+';
-	      *mbufw++ = 't';
-	      len += 2;
-	      opcnt++;
+	      if(!(chptr->mode.mode & MODE_TOPICLIMIT))
+		{
+		  chptr->mode.mode |= MODE_TOPICLIMIT;
+		  *mbufw++ = '+';
+		  *mbufw++ = 't';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  else
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
-	      chptr->mode.mode &= ~MODE_TOPICLIMIT;
-	      *mbufw++ = '-';
-	      *mbufw++ = 't';
-	      len += 2;
-	      opcnt++;
+	      if(chptr->mode.mode & MODE_TOPICLIMIT)
+		{
+		  chptr->mode.mode &= ~MODE_TOPICLIMIT;
+		  *mbufw++ = '-';
+		  *mbufw++ = 't';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  break;
 
