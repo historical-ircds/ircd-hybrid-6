@@ -1,3 +1,7 @@
+*** 19990902_1 by lusky
+added check for '#' in username and hostname of /quote kline
+
+
 *** 19990831_1 by lusky
 bumped patchlevel to b102
 left over aconf->user gets freed twice, causing some malloc packages to leave their lunch all over the disk.... NULL things after every free (db)
