@@ -1,3 +1,10 @@
+*** 19990907_2 by lusky
+bumped patchlevel to b104
+fixed a couple of stary index()'s
+fix a cast in viconf
+fixed broken tools/Makefile.in
+
+
 *** 19990907_1 by lusky
 disallow ':' in fix_key_old() too
 
