@@ -401,9 +401,9 @@ int	m_info(aClient *cptr,
 #define OUT1 "NO_JOIN_ON_SPLIT=0"
 #endif
 #ifdef NO_JOIN_ON_SPLIT_SIMPLE
-#define OUT2 "NO_JOIN_ON_SPLIT_SIMPLE=1"
+#define OUT2 " NO_JOIN_ON_SPLIT_SIMPLE=1"
 #else
-#define OUT2 "NO_JOIN_ON_SPLIT_SIMPLE=0"
+#define OUT2 " NO_JOIN_ON_SPLIT_SIMPLE=0"
 #endif 
 #ifdef NO_LOCAL_KLINE
 #define OUT3 " NO_LOCAL_KLINE=1"
