@@ -36,11 +36,10 @@
  *
  * $Id$
  */
-#include "config.h"
+#include "channel.h"
 #include "struct.h"
 #include "common.h"
 #include "numeric.h"
-#include "channel.h"
 #include "h.h"
 #include "ircd.h"
 #include "list.h"
