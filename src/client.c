@@ -23,6 +23,7 @@
  *  $Id$
  */
 #include "client.h"
+#include "s_conf.h"
 #include "struct.h"
 #include "blalloc.h"
 #include "res.h"

@@ -177,14 +177,6 @@ extern	void	send_listinfo (struct Client *, char *);
 extern	void	count_memory (struct Client *, char *);
 #endif
 
-
-#ifdef LIMIT_UH
-void remove_one_ip(struct Client *);
-#else
-void remove_one_ip(unsigned long);
-#endif
-
-
 #ifdef FLUD
 void	free_fluders();
 void	free_fludees();
