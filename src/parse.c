@@ -102,7 +102,8 @@ int parse(aClient *cptr, char *buffer, char *bufend)
       for (i = 0; *ch && *ch != ' '; i++ )
 	{
 	  if (i < (sizeof(sender)-1))
-	    *s++ = *ch++; /* leave room for NULL */
+	    *s++ = *ch; /* leave room for NULL */
+	  ch++;
 	}
       *s = '\0';
       i = 0;

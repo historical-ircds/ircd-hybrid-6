@@ -215,9 +215,9 @@ int m_rehash(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 #undef OUT
 
 #ifdef GLINES
-#define OUT "rehash one of :DNS TKLINES GLINES GC MOTD OMOTD DUMP"
+#define OUT "rehash one of :DNS TKLINES GLINES GC HELP MOTD OMOTD DUMP"
 #else
-#define OUT "rehash one of :DNS TKLINES GC MOTD OMOTD DUMP"
+#define OUT "rehash one of :DNS TKLINES GC HELP MOTD OMOTD DUMP"
 #endif
           sendto_one(sptr,":%s NOTICE %s : " OUT,me.name,sptr->name);
           return(0);

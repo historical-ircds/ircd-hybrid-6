@@ -110,7 +110,7 @@ int m_admin(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
         last_used = CurrentTime;
     }
 
-  if (hunt_server(cptr,sptr,":%s ADMIN :%s",1,parc,parv) != HUNTED_ISME)
+  if (IsRegisteredUser(sptr) && (hunt_server(cptr,sptr,":%s ADMIN :%s",1,parc,parv) != HUNTED_ISME))
     return 0;
 
   if (IsPerson(sptr))
