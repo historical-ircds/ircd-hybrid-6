@@ -1226,8 +1226,17 @@ static	int	register_user(aClient *cptr,
 	 * local client
 	 * -Dianora
 	 */
+	/*
+	 * double link list only for clients, traversing
+	 * a small link list for opers/servers isn't a big deal
+	 * but it is for clients -Dianora
+	 */
+
 	if (MyConnect(sptr))
 	  {
+	    if(local_cptr_list)
+	      local_cptr_list->previous_local_client = sptr;
+	    sptr->previous_local_client = (aClient *)NULL;
 	    sptr->next_local_client = local_cptr_list;
 	    local_cptr_list = sptr;
 	  }

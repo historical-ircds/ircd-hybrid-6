@@ -441,30 +441,30 @@ char	*comment	/* Reason for the exit */
 	}
       if (IsClient(sptr))
         {
+	  aClient *nxt_client;
+	  aClient *prv_client;
+
           Count.local--;
 
           /* LINKLIST */
           /* oh for in-line functions... */
           if(IsPerson(sptr))	/* a little extra paranoia */
             {
-              aClient *prev_cptr = (aClient *)NULL;
-              aClient *cur_cptr = local_cptr_list;
-              while(cur_cptr)
-                {
-                  if(sptr == cur_cptr)
-                    {
-                      if(prev_cptr)
-                        prev_cptr->next_local_client = 
-			  cur_cptr->next_local_client;
-                      else
-                        local_cptr_list = cur_cptr->next_local_client;
-                      cur_cptr->next_local_client = (aClient *)NULL;
-		      break;
-                    }
-		  else
-		    prev_cptr = cur_cptr;
-                  cur_cptr = cur_cptr->next_local_client;
-                }
+	      nxt_client = sptr->next_local_client;
+	      prv_client = sptr->previous_local_client;
+
+	      if(prv_client)
+		prv_client->next_local_client = nxt_client;
+
+	      if(nxt_client)
+		nxt_client->previous_local_client = prv_client;
+	      else
+		{
+		  if(local_cptr_list == sptr)
+		    local_cptr_list = (aClient *)NULL;
+		}
+	      sptr->previous_local_client = sptr->next_local_client = 
+		(aClient *)NULL;
             }
         }
       if (IsServer(sptr))
