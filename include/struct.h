@@ -369,8 +369,6 @@ extern  char    *generation, *creation;
 
 /* misc defines */
 
-#define FLUSH_BUFFER    -2
-#define GO_ON           -3      /* for m_nick/m_client's benefit */
 #define UTMP            "/etc/utmp"
 #define COMMA           ","
 

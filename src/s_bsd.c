@@ -1143,8 +1143,8 @@ static int parse_client_queued(struct Client* cptr)
       if (dolen > 0 && DBufLength(&cptr->recvQ))
 	DBufClear(&cptr->recvQ);
     }
-    if (dolen > 0 && (dopacket(cptr, readBuf, dolen) == FLUSH_BUFFER))
-      return FLUSH_BUFFER;
+    if (dolen > 0 && (dopacket(cptr, readBuf, dolen) == CLIENT_EXITED))
+      return CLIENT_EXITED;
   }
   return 1;
 }
@@ -1450,7 +1450,7 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
     else if (PARSE_AS_CLIENT(cptr) && !NoNewLine(cptr))
       length = parse_client_queued(cptr);
 
-    if (length > 0 || length == FLUSH_BUFFER)
+    if (length > 0 || length == CLIENT_EXITED)
       continue;
     if (IsDead(cptr)) {
        exit_client(cptr, cptr, &me,
@@ -1724,7 +1724,7 @@ int read_message(time_t delay, fdlist *listp)
       else if (PARSE_AS_CLIENT(cptr) && !NoNewLine(cptr))
         length = parse_client_queued(cptr);
 
-      if (length > 0 || length == FLUSH_BUFFER)
+      if (length > 0 || length == CLIENT_EXITED)
         continue;
       if (IsDead(cptr)) {
          exit_client(cptr, cptr, &me,

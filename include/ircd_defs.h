@@ -56,6 +56,11 @@
 #define USERHOST_REPLYLEN       (NICKLEN+HOSTLEN+USERLEN+5)
 #define MAX_DATE_STRING 32      /* maximum string length for a date string */
 
+/* 
+ * message return values 
+ */
+#define CLIENT_EXITED    -2
+#define HANDLED_OK        0
 
 /* 
  * Macros everyone uses :/ moved here from sys.h

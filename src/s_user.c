@@ -1228,8 +1228,8 @@ static int nickkilldone(aClient *cptr, aClient *sptr, int parc,
           ** may reject the client and call exit_client for it
           ** --must test this and exit m_nick too!!!
           */
-            if (register_user(cptr, sptr, nick, buf) == FLUSH_BUFFER)
-              return FLUSH_BUFFER;
+            if (register_user(cptr, sptr, nick, buf) == CLIENT_EXITED)
+              return CLIENT_EXITED;
         }
     }
 

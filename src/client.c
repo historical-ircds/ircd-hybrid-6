@@ -744,7 +744,7 @@ static void remove_dependents(aClient* cptr,
 ** For convenience, this function returns a suitable value for
 ** m_function return value:
 **
-**        FLUSH_BUFFER        if (cptr == sptr)
+**        CLIENT_EXITED        if (cptr == sptr)
 **        0                if (cptr != sptr)
 */
 int exit_client(
@@ -1003,7 +1003,7 @@ const char* comment        /* Reason for the exit */
         }
 
   exit_one_client(cptr, sptr, from, comment);
-  return cptr == sptr ? FLUSH_BUFFER : 0;
+  return cptr == sptr ? CLIENT_EXITED : 0;
 }
 
 /*
