@@ -310,11 +310,13 @@ int m_trace(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       switch(acptr->status)
         {
         case STAT_CONNECTING:
+	  name = get_client_name(acptr, MASK_IP);
           sendto_one(sptr, form_str(RPL_TRACECONNECTING), me.name,
                      parv[0], c_class, name);
           cnt++;
           break;
         case STAT_HANDSHAKE:
+	  name = get_client_name(acptr, MASK_IP);
           sendto_one(sptr, form_str(RPL_TRACEHANDSHAKE), me.name,
                      parv[0], c_class, name);
           cnt++;
