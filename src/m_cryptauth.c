@@ -109,100 +109,110 @@ int m_cryptauth(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
   int cipherIndex, keylen;
   unsigned char key[CRYPT_RSASIZE+1];
 
-  if (cptr != sptr) {
-    sendto_one(sptr, form_str(ERR_UNKNOWNCOMMAND), me.name, parv[0], "CRYPTAUTH");
+  if (cptr != sptr)
+    {
+      sendto_one(sptr, form_str(ERR_UNKNOWNCOMMAND), me.name, parv[0], "CRYPTAUTH");
 
-    sendto_realops("CRYPTAUTH command from %s -- %s is a hacked server",
-		   get_client_name(sptr,SHOW_IP),
-		   get_client_name(cptr,SHOW_IP));
-    cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
-    return exit_client(cptr, cptr, cptr, "Hacked server");
-  }
+      sendto_realops("CRYPTAUTH command from %s -- %s is a hacked server",
+		     get_client_name(sptr,SHOW_IP),
+		     get_client_name(cptr,SHOW_IP));
+      cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
+      return exit_client(cptr, cptr, cptr, "Hacked server");
+    }
 
   /* Never from users */
-  if (IsPerson(cptr)) {
-    sendto_one(cptr, form_str(ERR_UNKNOWNCOMMAND), me.name, parv[0], "CRYPTAUTH");
-    return 0;
-  }
+  if (IsPerson(cptr))
+    {
+      sendto_one(cptr, form_str(ERR_UNKNOWNCOMMAND), me.name, parv[0], "CRYPTAUTH");
+      return 0;
+    }
   
   /* And never from known servers */
-  if (IsServer(cptr)) {
-    sendto_realops("CRYPTAUTH from server %s -- it's hacked",
-		   get_client_name(cptr, SHOW_IP));
-    log(L_WARN, "CRYPTAUTH from server %s -- it's hacked",
-	get_client_name(cptr, SHOW_IP));
-    cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
-    return exit_client(cptr, cptr, cptr, "Hacked server");
-  }
-
-  if (parc < 3) {
-    sendto_realops("Invalid CRYPTAUTH data from %s",
-		   get_client_name(cptr, SHOW_IP));
-    log(L_WARN, "Invalid CRYPTAUTH data from %s",
-		   get_client_name(cptr, SHOW_IP));
-    if (cptr->crypt)
+  if (IsServer(cptr))
+    {
+      sendto_realops("CRYPTAUTH from server %s -- it's hacked",
+		     get_client_name(cptr, SHOW_IP));
+      log(L_WARN, "CRYPTAUTH from server %s -- it's hacked",
+	  get_client_name(cptr, SHOW_IP));
       cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
-    return exit_client(cptr, cptr, cptr, "Invalid encrypted link authentication");
-  }
+      return exit_client(cptr, cptr, cptr, "Hacked server");
+    }
+
+  if (parc < 3)
+    {
+      sendto_realops("Invalid CRYPTAUTH data from %s",
+		     get_client_name(cptr, SHOW_IP));
+      log(L_WARN, "Invalid CRYPTAUTH data from %s",
+	  get_client_name(cptr, SHOW_IP));
+      if (cptr->crypt)
+	cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
+      return exit_client(cptr, cptr, cptr, "Invalid encrypted link authentication");
+    }
   
-  if (!cptr->crypt || !cptr->crypt->OutCipher || !cptr->crypt->OutState) {
-    sendto_realops("Got CRYPTAUTH but no CRYPTSERV from %s",
-		   get_client_name(cptr, SHOW_IP));
-    log(L_WARN, "Got CRYPTAUTH but no CRYPTSERV from %s",
-		   get_client_name(cptr, SHOW_IP));
-    if (cptr->crypt)
-      cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
-    return exit_client(cptr, cptr, cptr, "No CRYPTSERV received");
-  }
+  if (!cptr->crypt || !cptr->crypt->OutCipher || !cptr->crypt->OutState)
+    {
+      sendto_realops("Got CRYPTAUTH but no CRYPTSERV from %s",
+		     get_client_name(cptr, SHOW_IP));
+      log(L_WARN, "Got CRYPTAUTH but no CRYPTSERV from %s",
+	  get_client_name(cptr, SHOW_IP));
+      if (cptr->crypt)
+	cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
+      return exit_client(cptr, cptr, cptr, "No CRYPTSERV received");
+    }
 
-  if (cptr->crypt->InCipher || cptr->crypt->InState) {
-    sendto_realops("Got multiple CRYPTAUTH from %s",
-		   get_client_name(cptr, SHOW_IP));
-    log(L_WARN, "Got multiple CRYPTAUTH from %s",
-		   get_client_name(cptr, SHOW_IP));
-    cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
-    return exit_client(cptr, cptr, cptr, "Multiple CRYPTAUTH received");
-  }
+  if (cptr->crypt->InCipher || cptr->crypt->InState)
+    {
+      sendto_realops("Got multiple CRYPTAUTH from %s",
+		     get_client_name(cptr, SHOW_IP));
+      log(L_WARN, "Got multiple CRYPTAUTH from %s",
+	  get_client_name(cptr, SHOW_IP));
+      cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
+      return exit_client(cptr, cptr, cptr, "Multiple CRYPTAUTH received");
+    }
 
   cipherIndex = crypt_selectcipher(parv[1]);
 
-  if (cipherIndex < 0) {
-    sendto_realops("Unsupported cipher %s selected by %s", parv[1], 
-		   get_client_name(cptr, SHOW_IP));
-    log(L_WARN, "Unsupported cipher %s selected by %s", parv[1], 
-		   get_client_name(cptr, SHOW_IP));
-    cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
-    return exit_client(cptr, cptr, cptr, "Unsupported cipher");
-  }
+  if (cipherIndex < 0)
+    {
+      sendto_realops("Unsupported cipher %s selected by %s", parv[1], 
+		     get_client_name(cptr, SHOW_IP));
+      log(L_WARN, "Unsupported cipher %s selected by %s", parv[1], 
+	  get_client_name(cptr, SHOW_IP));
+      cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
+      return exit_client(cptr, cptr, cptr, "Unsupported cipher");
+    }
 
   cptr->crypt->InCipher = &Ciphers[cipherIndex];
   cptr->crypt->InState = (void *) malloc(cptr->crypt->InCipher->state_data_size);
   memset(cptr->crypt->InState, 0, cptr->crypt->InCipher->state_data_size);
   cptr->crypt->InCipher->init(cptr->crypt->InState, cptr->crypt->inkey);
 
-  if (crypt_rsa_decode(parv[2], key, &keylen) != CRYPT_DECRYPTED) {
-    sendto_realops("Couldn't decrypt session key authentication data from %s", 
-		   get_client_name(cptr, SHOW_IP));
-    log(L_WARN,"Couldn't decrypt session key authentication data from %s", 
-		   get_client_name(cptr, SHOW_IP));
-    cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
-    return exit_client(cptr, cptr, cptr, "Session key authentication failed");
-  }
+  if (crypt_rsa_decode(parv[2], key, &keylen) != CRYPT_DECRYPTED)
+    {
+      sendto_realops("Couldn't decrypt session key authentication data from %s", 
+		     get_client_name(cptr, SHOW_IP));
+      log(L_WARN,"Couldn't decrypt session key authentication data from %s", 
+	  get_client_name(cptr, SHOW_IP));
+      cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
+      return exit_client(cptr, cptr, cptr, "Session key authentication failed");
+    }
 
   if ((keylen * 8 < Ciphers[cipherIndex].keysize) || 
-      (memcmp(key, cptr->crypt->inkey, Ciphers[cipherIndex].keysize / 8))) {
-    sendto_realops("Invalid session key authentication data from %s", 
-		   get_client_name(cptr, SHOW_IP));
-    log(L_WARN,"Invalid session key authentication data from %s", 
-		   get_client_name(cptr, SHOW_IP));
-    cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
-    return exit_client(cptr, cptr, cptr, "Session key authentication failed");
-  }
+      (memcmp(key, cptr->crypt->inkey, Ciphers[cipherIndex].keysize / 8)))
+    {
+      sendto_realops("Invalid session key authentication data from %s", 
+		     get_client_name(cptr, SHOW_IP));
+      log(L_WARN,"Invalid session key authentication data from %s", 
+	  get_client_name(cptr, SHOW_IP));
+      cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;
+      return exit_client(cptr, cptr, cptr, "Session key authentication failed");
+    }
 
-  if (check_server(cptr)) {
-    cptr->crypt->flags |= CRYPTFLAG_DECRYPT;
-    return server_estab(cptr);
-  }
+  if (check_server(cptr))
+    {
+      cptr->crypt->flags |= CRYPTFLAG_DECRYPT;
+      return server_estab(cptr);
+    }
 
   ++ServerStats->is_ref;
   sendto_ops("Received unauthorized connection from %s.",

@@ -121,43 +121,49 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
   info[0] = '\0';
 
   /* We should only get this from local clients */
-  if (cptr != sptr) {
-    sendto_one(sptr, form_str(ERR_UNKNOWNCOMMAND), me.name, parv[0], "CRYPTSERV");
+  if (cptr != sptr)
+    {
+      sendto_one(sptr, form_str(ERR_UNKNOWNCOMMAND), me.name, parv[0], "CRYPTSERV");
 
-    sendto_realops("CRYPTSERV command from %s -- %s is a hacked server",
-		   get_client_name(sptr,SHOW_IP),
-		   get_client_name(cptr,SHOW_IP));
-    return exit_client(cptr, cptr, cptr, "Hacked server");
-  }
+      sendto_realops("CRYPTSERV command from %s -- %s is a hacked server",
+		     get_client_name(sptr,SHOW_IP),
+		     get_client_name(cptr,SHOW_IP));
+      return exit_client(cptr, cptr, cptr, "Hacked server");
+    }
 
   /* Never from users */
-  if (IsPerson(cptr)) {
-    sendto_one(cptr, form_str(ERR_UNKNOWNCOMMAND), me.name, parv[0], "CRYPTSERV");
-    return 0;
-  }
+  if (IsPerson(cptr))
+    {
+      sendto_one(cptr, form_str(ERR_UNKNOWNCOMMAND), me.name, parv[0], "CRYPTSERV");
+      return 0;
+    }
   
   /* And never from known servers */
-  if (IsServer(cptr)) {
-    sendto_realops("CRYPTSERV from server %s -- it's hacked",
-		   get_client_name(cptr, SHOW_IP));
-    return exit_client(cptr, cptr, cptr, "Hacked server");
-  }
+  if (IsServer(cptr))
+    {
+      sendto_realops("CRYPTSERV from server %s -- it's hacked",
+		     get_client_name(cptr, SHOW_IP));
+      return exit_client(cptr, cptr, cptr, "Hacked server");
+    }
 
-  if (parc < 2 || *parv[1] == '\0') {
-    sendto_one(cptr,"ERROR :No servername");
-    return 0;
-  }
+  if (parc < 2 || *parv[1] == '\0')
+    {
+      sendto_one(cptr,"ERROR :No servername");
+      return 0;
+    }
   host = parv[1];
 
-  if (parc < 3 || *parv[2] == '\0') {
-    sendto_one(cptr, "ERROR :No session key");
-    return 0;
-  }
+  if (parc < 3 || *parv[2] == '\0')
+    {
+      sendto_one(cptr, "ERROR :No session key");
+      return 0;
+    }
 
-  if (parc > 3) {
-    strncpy_irc(info, parv[3], REALLEN);
-    info[REALLEN] = '\0';
-  }
+  if (parc > 3)
+    {
+      strncpy_irc(info, parv[3], REALLEN);
+      info[REALLEN] = '\0';
+    }
 
   if (strlen(host) > HOSTLEN)
     host[HOSTLEN] = '\0';
@@ -166,10 +172,11 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
   s = host;
   while (*s)
     {
-      if (!IsServChar(*s)) {
-	bogus_server = 1;
-	break;
-      }
+      if (!IsServChar(*s))
+	{
+	  bogus_server = 1;
+	  break;
+	}
       if ('.' == *s)
 	++dots;
       ++s;
@@ -184,11 +191,12 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
     }
   
 
-  if (MyConnect(cptr) && (GlobalSetOptions.autoconn == 0)) {
-    sendto_realops("WARNING AUTOCONN is 0, Closing %s",
-		   get_client_name(cptr, TRUE));
-    return exit_client(cptr, cptr, cptr, "AUTOCONNS off");
-  }
+  if (MyConnect(cptr) && (GlobalSetOptions.autoconn == 0))
+    {
+      sendto_realops("WARNING AUTOCONN is 0, Closing %s",
+		     get_client_name(cptr, TRUE));
+      return exit_client(cptr, cptr, cptr, "AUTOCONNS off");
+    }
 
   /* The following if statement would be nice to remove
    * since user nicks never have '.' in them and servers
@@ -264,39 +272,45 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
   }
  
 
-  if (!cptr->crypt) {
-    if (crypt_initserver(cptr, cline, nline) != CRYPT_ENCRYPTED)
-      return CRYPT_ERROR;
+  if (!cptr->crypt)
+    {
+      if (crypt_initserver(cptr, cline, nline) != CRYPT_ENCRYPTED)
+	return CRYPT_ERROR;
 
-    if (crypt_rsa_encode(cptr->crypt->RSAKey, cptr->crypt->inkey, tmp, sizeof(cptr->crypt->inkey)) != CRYPT_ENCRYPTED) {
-      return exit_client(cptr, cptr, cptr, "Failed to generate session key data");
+      if (crypt_rsa_encode(cptr->crypt->RSAKey, cptr->crypt->inkey, tmp, sizeof(cptr->crypt->inkey)) != CRYPT_ENCRYPTED)
+	{
+	  return exit_client(cptr, cptr, cptr, "Failed to generate session key data");
+	}
+      send_capabilities(cptr, (cline->flags & CONF_FLAGS_ZIP_LINK));
+      sendto_one(cptr, "CRYPTSERV %s %s :%s", my_name_for_link(me.name, nline), tmp, me.info);
     }
-    send_capabilities(cptr, (cline->flags & CONF_FLAGS_ZIP_LINK));
-    sendto_one(cptr, "CRYPTSERV %s %s :%s", my_name_for_link(me.name, nline), tmp, me.info);
-  }
 
-  if (!cptr->ciphers) {
-    sendto_realops("%s wanted an encrypted link without supplying cipher list", get_client_name(cptr, TRUE));
-    return exit_client(cptr, cptr, cptr, "Need supported cipher list");
-  }
+  if (!cptr->ciphers)
+    {
+      sendto_realops("%s wanted an encrypted link without supplying cipher list", get_client_name(cptr, TRUE));
+      return exit_client(cptr, cptr, cptr, "Need supported cipher list");
+    }
 
   cipherIndex = crypt_selectcipher(cptr->ciphers);
-  if (cipherIndex < 0) {
-    sendto_realops("No ciphers in common with %s - can't link", cptr->name);    
-    return exit_client(cptr, cptr, cptr, "No common ciphers");
-  }
+  if (cipherIndex < 0)
+    {
+      sendto_realops("No ciphers in common with %s - can't link", cptr->name);    
+      return exit_client(cptr, cptr, cptr, "No common ciphers");
+    }
 
-  if (crypt_rsa_decode(parv[2], key, &keylen) != CRYPT_DECRYPTED) {
-    sendto_realops("Failed decrypting session key received from %s", get_client_name(cptr, TRUE));
-    return exit_client(cptr, cptr, cptr, "Invalid session key data");
-  }
+  if (crypt_rsa_decode(parv[2], key, &keylen) != CRYPT_DECRYPTED)
+    {
+      sendto_realops("Failed decrypting session key received from %s", get_client_name(cptr, TRUE));
+      return exit_client(cptr, cptr, cptr, "Invalid session key data");
+    }
 
   authlen = Ciphers[cipherIndex].keysize / 8;
   authlen = ((authlen + 7) / 8) * 8;
 
-  if (keylen * 8 < authlen) {
-    return exit_client(cptr, cptr, cptr, "Not enough session key data");
-  }
+  if (keylen * 8 < authlen)
+    {
+      return exit_client(cptr, cptr, cptr, "Not enough session key data");
+    }
 
   cptr->crypt->OutCipher = &Ciphers[cipherIndex];
   cptr->crypt->OutState = (void *) malloc(cptr->crypt->OutCipher->state_data_size);
@@ -304,9 +318,11 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
   cptr->crypt->OutCipher->init(cptr->crypt->OutState, key);
 
  
-  if (crypt_rsa_encode(cptr->crypt->RSAKey, key, tmp, authlen ) != CRYPT_ENCRYPTED) {
-    return exit_client(cptr, cptr, cptr, "Couldn't generate session key authentication");
-  }
+  if (crypt_rsa_encode(cptr->crypt->RSAKey, key, tmp, authlen )
+      != CRYPT_ENCRYPTED)
+    {
+      return exit_client(cptr, cptr, cptr, "Couldn't generate session key authentication");
+    }
   sendto_one(cptr, "CRYPTAUTH %s/%i %s", cptr->crypt->OutCipher->name, cptr->crypt->OutCipher->keysize, tmp);
   send_queued(cptr);
   cptr->crypt->flags |= CRYPTFLAG_ENCRYPT;
