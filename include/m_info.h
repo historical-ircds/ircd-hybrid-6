@@ -354,12 +354,6 @@ Info MyInformation[] = {
   { "LIMIT_UH", "OFF", 0, "Make Y: lines limit username instead of hostname" },
 #endif /* LIMIT_UH */
 
-#ifdef LITTLE_I_LINES
-  { "LITTLE_I_LINES", "ON", 0, "\"i\" lines prevent matching clients from channel opping" },
-#else
-  { "LITTLE_I_LINES", "OFF", 0, "\"i\" lines prevent matching clients from channel opping" },
-#endif /* LITTLE_I_LINES */
-
 #ifdef LPATH
   { "LPATH", LPATH, 0, "Path to Log File" },
 #else

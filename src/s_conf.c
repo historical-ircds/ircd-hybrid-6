@@ -1985,23 +1985,11 @@ static void initconf(FBFILE* file, int use_include)
           aconf->status = CONF_HUB;
           break;
 
-#ifdef LITTLE_I_LINES
-        case 'i': /* Just plain normal irc client trying  */
-                  /* to connect to me */
-          aconf->status = CONF_CLIENT;
-          aconf->flags |= CONF_FLAGS_LITTLE_I_LINE;
-          break;
-
-        case 'I': /* Just plain normal irc client trying  */
-                  /* to connect to me */
-          aconf->status = CONF_CLIENT;
-          break;
-#else
         case 'i': /* Just plain normal irc client trying  */
         case 'I': /* to connect to me */
           aconf->status = CONF_CLIENT;
           break;
-#endif
+
         case 'K': /* Kill user line on irc.conf           */
         case 'k':
           aconf->status = CONF_KILL;

@@ -780,20 +780,6 @@ int main(int argc, char *argv[])
   ConfigFileEntry.glinefile = GLINEFILE;
 #endif
 
-#ifdef  CHROOTDIR
-  if (chdir(DPATH))
-    {
-      perror("chdir " DPATH );
-      exit(-1);
-    }
-
-  if (chroot(DPATH))
-    {
-      fprintf(stderr,"ERROR:  Cannot chdir/chroot\n");
-      exit(5);
-    }
-#endif /*CHROOTDIR*/
-
 #ifdef  ZIP_LINKS
   if (zlib_version[0] == '0')
     {
@@ -817,13 +803,11 @@ int main(int argc, char *argv[])
   setuid(uid);
   parse_command_line(argc, argv); 
 
-#ifndef CHROOT
   if (chdir(ConfigFileEntry.dpath))
     {
       perror("chdir");
       exit(-1);
     }
-#endif
 
 #if !defined(IRC_UID)
   if ((uid != euid) && !euid)
@@ -834,6 +818,9 @@ int main(int argc, char *argv[])
       exit(-1);
     }
 #endif
+
+  init_sys(bootDaemon);
+  init_log(logFileName);
 
 #if !defined(CHROOTDIR) || (defined(IRC_UID) && defined(IRC_GID))
 
@@ -873,10 +860,6 @@ int main(int argc, char *argv[])
 #endif /*CHROOTDIR/UID/GID*/
 
   setup_signals();
-
-  init_sys(bootDaemon);
-  init_log(logFileName);
-
   initialize_message_files();
 
   dbuf_init();  /* set up some dbuf stuff to control paging */

@@ -723,12 +723,6 @@
  * you may want to undef some -- fl_
  */
 
-/* LITTLE_I_LINE support
- * clients with a little i instead of an I in their I line
- * can be chanopped, but cannot chanop anyone else.
- */
-#undef LITTLE_I_LINES
-
 /* Ignore bogus timestamps from other servers. Yes this will desync
  * the network, but it will allow chanops to resync with a valid non TS 0
  */

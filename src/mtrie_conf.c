@@ -1308,10 +1308,7 @@ void report_mtrie_conf_links(struct Client *sptr, int flags)
           get_printable_conf(found_conf, &name, &host, &pass, &user, &port );
 
           c = 'I';
-#ifdef LITTLE_I_LINES
-          if(IsConfLittleI(found_conf))
-            c = 'i';
-#endif
+
           sendto_one(sptr, form_str(RPL_STATSILINE), me.name,
                      sptr->name,
                      c,
@@ -1328,10 +1325,7 @@ void report_mtrie_conf_links(struct Client *sptr, int flags)
           get_printable_conf(found_conf, &name, &host, &pass, &user, &port);
 
           c = 'I';
-#ifdef LITTLE_I_LINES
-          if(IsConfLittleI(found_conf))
-            c = 'i';
-#endif
+
           sendto_one(sptr, form_str(RPL_STATSILINE), me.name,
                      sptr->name,
                      c,
@@ -1351,10 +1345,7 @@ void report_mtrie_conf_links(struct Client *sptr, int flags)
             continue;
 
           c = 'I';
-#ifdef LITTLE_I_LINES
-          if(IsConfLittleI(found_conf))
-            c = 'i';
-#endif
+
           sendto_one(sptr, form_str(RPL_STATSILINE), me.name,
                      sptr->name,
                      c,
@@ -1532,10 +1523,7 @@ report_sub_mtrie(struct Client *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 #endif
 
                       c = 'I';
-#ifdef LITTLE_I_LINES
-                      if(IsConfLittleI(aconf))
-                        c = 'i';
-#endif
+
                       sendto_one(sptr, form_str(RPL_STATSILINE),
                                  me.name,
                                  sptr->name,
@@ -1591,10 +1579,7 @@ report_sub_mtrie(struct Client *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 #endif
 
                       c = 'I';
-#ifdef LITTLE_I_LINES
-                      if(IsConfLittleI(aconf))
-                        c = 'i';
-#endif
+
                       sendto_one(sptr, form_str(RPL_STATSILINE),
                                  me.name,
                                  sptr->name,

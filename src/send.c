@@ -1292,20 +1292,24 @@ vsendto_prefix_one(register aClient *to, register aClient *from,
   par = va_arg(args, char *);
   if (MyClient(to) && IsPerson(from) && !irccmp(par, from->name))
     {
-      strcpy(sender, from->name);
-      
-      if (*from->username)
-        {
-          strcat(sender, "!");
-          strcat(sender, from->username);
-        }
+      int l;
+      char *cp;
 
+      l = ircsprintf(from->name);
+      cp = sender + l;
+
+      if (*from->username)
+	{
+	  l = ircsprintf(cp,"!%s",from->username);
+	  cp += l;
+	}
+      
       if (*from->host)
         {
-          strcat(sender, "@");
-          strcat(sender, from->host);
+          l = ircsprintf(cp,"@%s",from->host)
+          cp += l;
         }
-      
+
       par = sender;
     } /* if (user) */
 
