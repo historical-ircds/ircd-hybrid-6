@@ -1,3 +1,8 @@
+*** 19990817_1 by lusky
+fixed LIMIT_UH and IDLE_CHECK which were using old structs
+revved patchlevel to b99
+
+
 *** 19990816_1 by lusky
 removed redundant "New highest connections" server notice
 fixed SYSLOG_USERS bug (th)
