@@ -58,18 +58,21 @@ hash.o: hash.c ../include/s_conf.h ../include/config.h \
 irc_string.o: irc_string.c ../include/irc_string.h ../include/h.h \
  ../include/fdlist.h ../include/config.h ../include/setup.h \
  ../include/list.h
-ircd.o: ircd.c ../include/ircd.h ../include/struct.h \
- ../include/config.h ../include/setup.h ../include/ircd_defs.h \
- ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h ../include/client.h \
- ../include/dbuf.h ../include/common.h ../include/irc_string.h \
- ../include/dline_conf.h ../include/numeric.h ../include/msg.h \
- ../include/res.h ../include/class.h ../include/s_auth.h \
- ../include/channel.h ../include/list.h ../include/parse.h \
- ../include/h.h ../include/fdlist.h ../include/mtrie_conf.h \
- ../include/s_conf.h ../include/fileio.h ../include/motd.h \
- ../include/s_bsd.h ../include/send.h ../include/hash.h \
- ../include/whowas.h ../include/restart.h ../include/m_gline.h \
- ../include/scache.h ../include/s_misc.h
+ircd.o: ircd.c ../include/ircd.h ../include/ircd_signal.h \
+ ../include/struct.h ../include/config.h ../include/setup.h \
+ ../include/ircd_defs.h ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h \
+ ../include/client.h ../include/dbuf.h ../include/common.h \
+ ../include/irc_string.h ../include/dline_conf.h ../include/numeric.h \
+ ../include/msg.h ../include/res.h ../include/class.h \
+ ../include/s_auth.h ../include/channel.h ../include/list.h \
+ ../include/parse.h ../include/h.h ../include/fdlist.h \
+ ../include/mtrie_conf.h ../include/s_conf.h ../include/fileio.h \
+ ../include/motd.h ../include/s_bsd.h ../include/send.h \
+ ../include/hash.h ../include/whowas.h ../include/restart.h \
+ ../include/m_gline.h ../include/scache.h ../include/s_misc.h
+ircd_signal.o: ircd_signal.c ../include/ircd_signal.h \
+ ../include/send.h ../include/config.h ../include/setup.h \
+ ../include/restart.h ../include/ircd.h
 list.o: list.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../zlib/zlib.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \
@@ -90,17 +93,17 @@ m_gline.o: m_gline.c ../include/config.h ../include/setup.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \
  ../include/common.h ../include/irc_string.h ../include/numeric.h \
  ../include/msg.h ../include/channel.h ../include/s_conf.h \
- ../include/fileio.h ../include/motd.h ../include/send.h \
- ../include/h.h ../include/fdlist.h ../include/ircd.h \
- ../include/scache.h ../include/dline_conf.h ../include/mtrie_conf.h \
- ../include/m_kline.h ../include/m_gline.h
-m_info.o: m_info.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/ircd_defs.h ../zlib/zlib.h \
- ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \
- ../include/common.h ../include/irc_string.h ../include/numeric.h \
- ../include/msg.h ../include/channel.h ../include/send.h \
- ../include/fdlist.h ../include/h.h ../include/ircd.h \
- ../include/s_user.h ../include/m_info.h
+ ../include/fileio.h ../include/motd.h ../include/s_misc.h \
+ ../include/send.h ../include/h.h ../include/fdlist.h \
+ ../include/ircd.h ../include/scache.h ../include/dline_conf.h \
+ ../include/mtrie_conf.h ../include/m_kline.h ../include/m_gline.h
+m_info.o: m_info.c ../include/m_info.h ../include/config.h \
+ ../include/setup.h ../include/struct.h ../include/ircd_defs.h \
+ ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h ../include/client.h \
+ ../include/dbuf.h ../include/common.h ../include/irc_string.h \
+ ../include/numeric.h ../include/msg.h ../include/channel.h \
+ ../include/send.h ../include/fdlist.h ../include/h.h \
+ ../include/ircd.h ../include/s_user.h
 m_kline.o: m_kline.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../zlib/zlib.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \
@@ -108,8 +111,8 @@ m_kline.o: m_kline.c ../include/struct.h ../include/config.h \
  ../include/msg.h ../include/channel.h ../include/s_conf.h \
  ../include/fileio.h ../include/motd.h ../include/class.h \
  ../include/send.h ../include/h.h ../include/fdlist.h \
- ../include/ircd.h ../include/parse.h ../include/m_kline.h \
- ../include/dline_conf.h ../include/mtrie_conf.h
+ ../include/ircd.h ../include/s_misc.h ../include/parse.h \
+ ../include/m_kline.h ../include/dline_conf.h ../include/mtrie_conf.h
 m_unkline.o: m_unkline.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../zlib/zlib.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \
@@ -117,8 +120,9 @@ m_unkline.o: m_unkline.c ../include/struct.h ../include/config.h \
  ../include/msg.h ../include/channel.h ../include/s_conf.h \
  ../include/fileio.h ../include/motd.h ../include/send.h \
  ../include/dline_conf.h ../include/mtrie_conf.h ../include/fdlist.h \
- ../include/h.h ../include/ircd.h
-match.o: match.c ../include/irc_string.h
+ ../include/h.h ../include/ircd.h ../include/s_misc.h
+match.o: match.c ../include/irc_string.h ../include/config.h \
+ ../include/setup.h
 motd.o: motd.c ../include/h.h ../include/fdlist.h ../include/config.h \
  ../include/setup.h ../include/ircd.h ../include/s_bsd.h \
  ../include/fileio.h ../include/res.h ../include/s_conf.h \
@@ -227,7 +231,7 @@ s_serv.o: s_serv.c ../include/struct.h ../include/config.h \
  ../include/s_conf.h ../include/motd.h ../include/class.h \
  ../include/send.h ../include/hash.h ../include/s_debug.h \
  ../include/listener.h ../include/restart.h ../include/s_user.h \
- ../include/s_misc.h ../include/match.h ../include/m_gline.h
+ ../include/s_misc.h ../include/m_gline.h
 s_user.o: s_user.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../zlib/zlib.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \

@@ -54,7 +54,6 @@
 #include "s_user.h"
 #include "s_misc.h"
 #include "irc_string.h"
-#include "match.h"
 #include "config.h"
 #include "m_gline.h"
 #include "channel.h"
