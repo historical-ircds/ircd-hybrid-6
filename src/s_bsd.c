@@ -31,7 +31,6 @@ static char *rcs_version = "$Id$";
 #include "numeric.h"
 #include "patchlevel.h"
 #include <sys/types.h>
-/* DEBUG */
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/file.h>
@@ -325,7 +324,7 @@ int	inetport(aClient *cptr, int port, u_long bind_addr)
 
   cptr->port = (int)ntohs(server.sin_port);
 /* If the operating system has a define for SOMAXCONN, use it, otherwise
-   use HYBRID_SOMAXCONN -Dianora
+ *   use HYBRID_SOMAXCONN -Dianora
 */
 
 #ifdef SOMAXCONN
