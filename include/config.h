@@ -120,15 +120,17 @@
 
 /* HIDE_OPS
  * Define this to prevent non chanops from seeing what ops a channel has
+ * NOT ADEQUATELY TESTED YET, DON'T USE ON PRODUCTION NETWORK --Rodder
  */
-#undef HIDE_OPS
+/* #undef HIDE_OPS */
 
 /* SERVERHIDE
  * Define this to prevent users from seeing what server a user is on.
  * It also hide IP address in STATS commands and various notices, disables
  * TRACE and LTRACE, and prevents hunting by nickname for nonopers.
+ * NOT ADEQUATELY TESTED YET, DON'T USE ON PRODUCTION NETWORK --Rodder
  */
-#define SERVERHIDE
+/* #undef SERVERHIDE */
 
 /* NETWORK_NAME
  * Displayed in place of the servername when SERVERHIDE is enabled
