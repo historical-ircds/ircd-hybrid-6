@@ -57,7 +57,7 @@ static char *cluster(char *);
  * Linked list of pending klines that need to be written to
  * the conf
  */
-aPendingLine *PendingLines = (aPendingLine *) NULL;
+struct PendingLine *PendingLines = NULL;
 
 #ifdef SLAVE_SERVERS
 extern aConfItem *find_special_conf(char *,int); /* defined in s_conf.c */
@@ -70,10 +70,10 @@ static aPendingLine *AddPending(void);
 static void DelPending(aPendingLine *);
 static int LockedFile(const char *);
 static void WritePendingLines(const char *);
-static void WriteKline(const char *, aClient *, aClient *,
+static void WriteKline(const char *, struct Client *, struct Client *,
                        const char *, const char *, const char *, 
-                       const char *);
-static void WriteDline(const char *, aClient *,
+                       const char *, const char *);
+static void WriteDline(const char *, struct Client *,
                        const char *, const char *, const char *);
 
 /*
@@ -144,7 +144,7 @@ LockedFile(const char *filename)
 
   ircsprintf(lockpath, "%s.lock", filename);
 
-  if ((fileptr = fbopen(lockpath, "r")) == (FBFILE *) NULL)
+  if ((fileptr = fbopen(lockpath, "r")) == NULL)
   {
     /*
      * lockfile does not exist
@@ -199,20 +199,21 @@ WritePendingLines(const char *filename)
     if (PendingLines->type == KLINE_TYPE)
     {
       WriteKline(filename,
-        PendingLines->sptr,
-        PendingLines->rcptr,
-        PendingLines->user,
-        PendingLines->host,
-        PendingLines->reason,
-        PendingLines->when);
+		 PendingLines->sptr,
+		 PendingLines->rcptr,
+		 PendingLines->user,
+		 PendingLines->host,
+		 PendingLines->reason,
+		 PendingLines->oper_reason,
+		 PendingLines->when);
     }
     else
     {
       WriteDline(filename,
-        PendingLines->sptr,
-        PendingLines->host,
-        PendingLines->reason,
-        PendingLines->when);
+		 PendingLines->sptr,
+		 PendingLines->host,
+		 PendingLines->reason,
+		 PendingLines->when);
     }
 
     /*
@@ -226,20 +227,21 @@ WritePendingLines(const char *filename)
 } /* WritePendingLines() */
 
 /*
-WriteKline()
- Write out a kline to the kline configuration file
-*/
+ * WriteKline()
+ *  Write out a kline to the kline configuration file
+ */
 
 static void
-WriteKline(const char *filename, aClient *sptr, aClient *rcptr,
-           const char *user, const char *host, const char *reason, 
+WriteKline(const char *filename, struct Client *sptr, struct Client *rcptr,
+           const char *user, const char *host,
+	   const char *reason, const char *oper_reason,
            const char *when)
 
 {
   char buffer[1024];
   int out;
 
-  if (!filename)
+  if (filename == NULL)
     return;
 
   if ((out = open(filename, O_RDWR|O_APPEND|O_CREAT, 0644)) == (-1))
@@ -255,38 +257,66 @@ WriteKline(const char *filename, aClient *sptr, aClient *rcptr,
 #ifdef SLAVE_SERVERS
   if (IsServer(sptr))
   {
-    if (rcptr)
+    if (rcptr != NULL)
       ircsprintf(buffer,
-        "#%s!%s@%s from %s K'd: %s@%s:%s\n",
-        rcptr->name,
-        rcptr->username,
-        rcptr->host,
-        sptr->name,
-        user,
-        host,
-        reason);
+		 "#%s!%s@%s from %s K'd: %s@%s:%s\n",
+		 rcptr->name,
+		 rcptr->username,
+		 rcptr->host,
+		 sptr->name,
+		 user,
+		 host,
+		 reason);
   }
   else
 #endif /* SLAVE_SERVERS */
   {
-    ircsprintf(buffer,
-      "#%s!%s@%s K'd: %s@%s:%s\n",
-      sptr->name,
-      sptr->username,
-      sptr->host,
-      user,
-      host,
-      reason);
+    if (oper_reason != NULL)
+      {
+	ircsprintf(buffer,
+		   "#%s!%s@%s K'd: %s@%s:%s|%s\n",
+		   sptr->name,
+		   sptr->username,
+		   sptr->host,
+		   user,
+		   host,
+		   reason,
+		   oper_reason);
+      }
+    else
+      {
+	ircsprintf(buffer,
+		   "#%s!%s@%s K'd: %s@%s:%s\n",
+		   sptr->name,
+		   sptr->username,
+		   sptr->host,
+		   user,
+		   host,
+		   reason);
+      }
+
   }
 
   if (safe_write(sptr, filename, out, buffer) == (-1))
     return;
 
-  ircsprintf(buffer, "K:%s:%s (%s):%s\n",
-    host,
-    reason,
-    when,
-    user);
+  if (oper_reason != NULL)
+    {
+      ircsprintf(buffer, "K:%s:%s|%s (%s):%s\n",
+		 host,
+		 reason,
+		 oper_reason,
+		 when,
+		 user);
+    }
+  else
+    {
+      ircsprintf(buffer, "K:%s:%s (%s):%s\n",
+		 host,
+		 reason,
+		 when,
+		 user);
+    }
 
   if (safe_write(sptr, filename, out, buffer) == (-1))
     return;
@@ -300,7 +330,7 @@ WriteDline()
 */
 
 static void
-WriteDline(const char *filename, aClient *sptr,
+WriteDline(const char *filename, struct Client *sptr,
            const char *host, const char *reason, const char *when)
 
 {
@@ -352,22 +382,23 @@ WriteDline(const char *filename, aClient *sptr,
  */
 
 int
-m_kline(aClient *cptr,
-                aClient *sptr,
-                int parc,
-                char *parv[])
+m_kline(struct Client *cptr,
+	struct Client *sptr,
+	int parc,
+	char *parv[])
 {
   char buffer[512];
   char *p;
   char cidr_form_host[HOSTLEN + 1];
   char *user, *host;
   char *reason = NULL;
+  char *oper_reason = NULL;
   const char* current_date;
   int  ip_kline = NO;
-  aClient *acptr;
+  struct Client *acptr;
   char tempuser[USERLEN + 2];
   char temphost[HOSTLEN + 1];
-  aConfItem *aconf;
+  struct ConfItem *aconf;
   int temporary_kline_time=0;   /* -Dianora */
   time_t temporary_kline_time_seconds=0;
   char *argv;
@@ -379,7 +410,7 @@ m_kline(aClient *cptr,
 
 #ifdef SLAVE_SERVERS
   char *slave_oper;
-  aClient *rcptr=NULL;
+  struct Client *rcptr=NULL;
 
   if(IsServer(sptr))
     {
@@ -394,7 +425,7 @@ m_kline(aClient *cptr,
       if ( parc < 2 )
         return 0;
 
-      if ((rcptr = hash_find_client(slave_oper,(aClient *)NULL)))
+      if ((rcptr = hash_find_client(slave_oper,NULL)))
         {
           if(!IsPerson(rcptr))
             return 0;
@@ -708,18 +739,30 @@ m_kline(aClient *cptr,
   aconf = make_conf();
   aconf->status = CONF_KILL;
   DupString(aconf->host, host);
-
   DupString(aconf->user, user);
   aconf->port = 0;
+
+  if (reason == NULL)
+    reason = "No reason";
+  else
+    {
+      if ((p = strchr(reason, '|')) != NULL)
+	{
+	  *p = '\0';
+	  oper_reason = p+1;
+	}
+    }
 
   if(temporary_kline_time)
     {
       ircsprintf(buffer,
-        "Temporary K-line %d min. - %s (%s)",
-        temporary_kline_time,
-        reason ? reason : "No reason",
-        current_date);
+		 "Temporary K-line %d min. - %s (%s)",
+		 temporary_kline_time,
+		 reason,
+		 current_date);
       DupString(aconf->passwd, buffer );
+      DupString(aconf->oper_reason, oper_reason);
+
       aconf->hold = CurrentTime + temporary_kline_time_seconds;
       if(ip_kline)
         {
@@ -730,20 +773,20 @@ m_kline(aClient *cptr,
       rehashed = YES;
       dline_in_progress = NO;
       nextping = CurrentTime;
-      sendto_realops("%s added temporary %d min. K-Line for [%s@%s] [%s]",
-        parv[0],
-        temporary_kline_time,
-        user,
-        host,
-        reason ? reason : "No reason");
+      sendto_realops("%s added temporary %d min. K-Line for [%s@%s] [%s|%s]",
+		     parv[0],
+		     temporary_kline_time,
+		     user,
+		     host,
+		     reason, oper_reason);
       return 0;
     }
   else
     {
-      ircsprintf(buffer, "%s (%s)",
-        reason ? reason : "No reason",
-        current_date);
-      DupString(aconf->passwd, buffer );
+      ircsprintf(buffer, "%s (%s)", reason, current_date);
+      DupString(aconf->passwd, buffer);
+      if (oper_reason != NULL)
+	DupString(aconf->oper_reason, p);
     }
   ClassPtr(aconf) = find_class(0);
 
@@ -756,14 +799,22 @@ m_kline(aClient *cptr,
   else
     add_mtrie_conf_entry(aconf,CONF_KILL);
 
-  sendto_realops("%s added K-Line for [%s@%s] [%s]",
-    sptr->name,
-    user,
-    host,
-    reason ? reason : "No reason");
+  if (oper_reason != NULL)
+    sendto_realops("%s added K-Line for [%s@%s] [%s|%s]",
+		   sptr->name,
+		   user,
+		   host,
+		   reason, oper_reason);
+  else
+    sendto_realops("%s added K-Line for [%s@%s] [%s]",
+		   sptr->name,
+		   user,
+		   host,
+		   reason);
 
-  log(L_TRACE, "%s added K-Line for [%s@%s] [%s]",
-      sptr->name, user, host, reason ? reason : "No reason");
+
+  log(L_TRACE, "%s added K-Line for [%s@%s] [%s|%s]",
+      sptr->name, user, host, reason, oper_reason ? oper_reason : "");
 
   kconf = get_conf_name(KLINE_TYPE);
 
@@ -786,13 +837,13 @@ m_kline(aClient *cptr,
     pptr->sptr = sptr;
     DupString(pptr->user, user);
     DupString(pptr->host, host);
-    DupString(pptr->reason, reason ? reason : "No reason");
+    DupString(pptr->reason, reason);
     DupString(pptr->when, current_date);
 
 #ifdef SLAVE_SERVERS
     pptr->rcptr = rcptr;
 #else
-    pptr->rcptr = (aClient *) NULL;
+    pptr->rcptr = NULL;
 #endif
 
     sendto_one(sptr,
@@ -820,20 +871,22 @@ m_kline(aClient *cptr,
    */
 #ifdef SLAVE_SERVERS
   WriteKline(kconf,
-    sptr,
-    rcptr,
-    user,
-    host,
-    reason ? reason : "No reason",
-    current_date);
+	     sptr,
+	     rcptr,
+	     user,
+	     host,
+	     reason,
+	     oper_reason,
+	     current_date);
 #else
   WriteKline(kconf,
-    sptr,
-    (aClient *) NULL,
-    user,
-    host,
-    reason ? reason : "No reason",
-    current_date);
+	     sptr,
+	     NULL,
+	     user,
+	     host,
+	     reason,
+	     oper_reason,
+	     current_date);
 #endif
 
   rehashed = YES;
@@ -903,7 +956,7 @@ static char *cluster(char *hostname)
   /* If a '@' is found in the hostname, this is bogus
    * and must have been introduced by server that doesn't
    * check for bogus domains (dns spoof) very well. *sigh* just return it...
-   * I could also legitimately return (char *)NULL as above.
+   * I could also legitimately return NULL as above.
    *
    * -Dianora
    */
@@ -1003,12 +1056,12 @@ static char *cluster(char *hostname)
  */
 
 int
-m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
+m_dline(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
 {
   char *host, *reason;
   char *p;
-  aClient *acptr;
+  struct Client *acptr;
   char cidr_form_host[HOSTLEN + 1];
   unsigned long ip_host;
   unsigned long ip_mask;
@@ -1220,8 +1273,8 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
                  */
                 pptr->type = DLINE_TYPE;
                 pptr->sptr = sptr;
-                pptr->rcptr = (aClient *) NULL;
-                pptr->user = (char *) NULL;
+                pptr->rcptr = NULL;
+                pptr->user = NULL;
                 pptr->host = strdup(host);
                 pptr->reason = strdup(reason);
                 pptr->when = strdup(current_date);

@@ -54,7 +54,8 @@ struct ConfItem
   unsigned long    ip_mask;
   char*            name;     /* IRC name, nick, server name, or original u@h */
   char*            host;     /* host part of user@host */
-  char*            passwd;
+  char*            passwd;   /* doubles as kline reason */
+  char*		   oper_reason; /* | portion of kline reason */
   char*            user;     /* user part of user@host */
   int              port;
   time_t           hold;     /* Hold action until this time (calendar time) */
@@ -246,8 +247,8 @@ extern struct ConfItem* find_is_klined(const char* host,
                                        unsigned long ip);
 extern char* show_iline_prefix(struct Client *,struct ConfItem *,char *);
 extern void get_printable_conf(struct ConfItem *,
-                                    char **, char **, char **,
-                                    char **, int *);
+			       char **, char **, char **, char **,
+			       char **, int *);
 extern void report_configured_links(struct Client* cptr, int mask);
 extern void report_specials(struct Client* sptr, int flags, int numeric);
 extern void report_qlines(struct Client* cptr);

@@ -271,6 +271,7 @@ void report_configured_links(struct Client* sptr, int mask)
   struct LinkReport* p;
   char*              host;
   char*              pass;
+  char*		     oper_reason;
   char*              user;
   char*              name;
   int                port;
@@ -283,7 +284,8 @@ void report_configured_links(struct Client* sptr, int mask)
             break;
         if(p->conf_type == 0)return;
 
-        get_printable_conf(tmp, &name, &host, &pass, &user, &port);
+        get_printable_conf(tmp, &name, &host, &pass, &oper_reason, 
+			   &user, &port);
 
         if(mask & (CONF_CONNECT_SERVER|CONF_NOCONNECT_SERVER))
           {
@@ -368,6 +370,7 @@ void report_specials(struct Client* sptr, int flags, int numeric)
   char*            name;
   char*            host;
   char*            pass;
+  char*		   oper_reason;
   char*            user;
   int              port;
 
@@ -380,7 +383,8 @@ void report_specials(struct Client* sptr, int flags, int numeric)
   for (aconf = this_conf; aconf; aconf = aconf->next)
     if (aconf->status & flags)
       {
-        get_printable_conf(aconf, &name, &host, &pass, &user, &port);
+        get_printable_conf(aconf, &name, &host, &pass, &oper_reason,
+			   &user, &port);
 
         sendto_one(sptr, form_str(numeric),
                    me.name,
@@ -1497,6 +1501,7 @@ void report_qlines(aClient *sptr)
   char *host;
   char *user;
   char *pass;
+  char *oper_reason;
   char *name;
   int port;
 
@@ -1509,7 +1514,8 @@ void report_qlines(aClient *sptr)
 
       for (aconf=qp->confList;aconf;aconf = aconf->next)
         {
-          get_printable_conf(aconf, &name, &host, &pass, &user, &port);
+          get_printable_conf(aconf, &name, &host, &pass, 
+			     &oper_reason, &user, &port);
           
           sendto_one(sptr, form_str(RPL_STATSQLINE),
                      me.name, sptr->name, 'Q', name, user, host, pass);
@@ -1671,6 +1677,7 @@ int rehash_dump(aClient *sptr)
   struct tm *tmptr;
   char *host;
   char *pass;
+  char *oper_reason;
   char *user;
   char *name;
   int  port;
@@ -1697,7 +1704,8 @@ int rehash_dump(aClient *sptr)
   for(aconf = ConfigItemList; aconf; aconf = aconf->next)
     {
       aClass* class_ptr = ClassPtr(aconf);
-      get_printable_conf(aconf, &name, &host, &pass, &user, & port );
+      get_printable_conf(aconf, &name, &host, &pass,
+			 &oper_reason, &user, & port );
 
       if(aconf->status == CONF_CONNECT_SERVER)
         {
@@ -2087,6 +2095,8 @@ static void initconf(FBFILE* file, int use_include)
 
       for (;;) /* Fake loop, that I can use break here --msa */
         {
+	  char *p;
+
 	  /* host field */
           if ((tmp = getfield(NULL)) == NULL)
             break;
@@ -2098,7 +2108,18 @@ static void initconf(FBFILE* file, int use_include)
 	  /* pass field */
           if ((tmp = getfield(NULL)) == NULL)
             break;
-          DupString(aconf->passwd, tmp);
+
+	  if ((p = strchr(tmp, '|')) != NULL)
+	  {
+	    *p = '\0';
+	    DupString(aconf->passwd, tmp);
+	    DupString(aconf->oper_reason, (p+1));
+	    *p = '|';
+	  }
+	  else
+	  {
+	    DupString(aconf->passwd, tmp);
+	  }
 
 	  /* user field */
           if ((tmp = getfield(NULL)) == NULL)
@@ -3398,7 +3419,7 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
   struct ConfItem *aconf;
   unsigned long ip;
   unsigned long host_mask;
-  char *host, *pass, *user, *name, *given_host, *given_name, *p;
+  char *host, *pass, *oper_reason, *user, *name, *given_host, *given_name, *p;
   int port;
 
   if (!MyClient(sptr) || !IsAnOper(sptr))
@@ -3418,7 +3439,8 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
               aconf = match_Dline(ip);
               if( aconf )
                 {
-                  get_printable_conf(aconf, &name, &host, &pass, &user, &port);
+                  get_printable_conf(aconf, &name, &host, &pass,
+				     &oper_reason, &user, &port);
                   sendto_one(sptr, 
                          ":%s NOTICE %s :D-line host [%s] pass [%s]",
                          me.name, parv[0], 
@@ -3444,9 +3466,10 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
       aconf = find_matching_mtrie_conf(given_host,given_name,(unsigned long)ip);
 
-      if(aconf)
+      if(aconf != NULL) 
         {
-          get_printable_conf(aconf, &name, &host, &pass, &user, &port);
+          get_printable_conf(aconf, &name, &host, &pass, &oper_reason,
+			     &user, &port);
       
           if(aconf->status & CONF_KILL) 
             {
@@ -3497,11 +3520,12 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
  *
  * inputs        - struct ConfItem
  *
- * output        - name 
- *                - host
- *                 - pass
- *                - user
- *                - port
+ * output       - name 
+ *              - host
+ *              - pass
+ *              - oper reason
+ *              - user
+ *              - port
  *
  * side effects        -
  * Examine the struct struct ConfItem, setting the values
@@ -3510,13 +3534,15 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
  */
 
 void get_printable_conf(struct ConfItem *aconf, char **name, char **host,
-                           char **pass, char **user,int *port)
+                        char **pass, char **oper_reason,
+			char **user,int *port)
 {
   static  char        null[] = "<NULL>";
 
   *name = BadPtr(aconf->name) ? null : aconf->name;
   *host = BadPtr(aconf->host) ? null : aconf->host;
   *pass = BadPtr(aconf->passwd) ? null : aconf->passwd;
+  *oper_reason = BadPtr(aconf->oper_reason) ? "" : aconf->passwd;
   *user = BadPtr(aconf->user) ? null : aconf->user;
   *port = (int)aconf->port;
 }

@@ -1240,30 +1240,22 @@ static void
 report_unsortable_klines(struct Client *sptr,char *need_host)
 {
   struct ConfItem *found_conf;
-  char *host, *pass, *user, *name;
-  char *p;
+  char *host, *pass, *oper_reason, *user, *name;
   int port;
 
   for(found_conf = unsortable_list_klines;
       found_conf;found_conf=found_conf->next)
     {
-      get_printable_conf(found_conf, &name, &host, &pass, &user, &port );
+      get_printable_conf(found_conf, &name, &host, &pass,
+			 &oper_reason, &user, &port);
 
-      /* Hide any comment following a '|' seen in the password field */
       if(match(host,need_host))
         {
-          p = NULL;
-          if(!IsAnOper(sptr))
-            {
-              p = strchr(pass,'|');
-              if(p)
-                *p = '\0';
-            }
-          sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
-                     sptr->name, 'K', host,
-                     name, pass);
-          if(p)
-            *p = '|';
+	  if (!IsAnOper(sptr))
+	    *oper_reason = '\0';
+	    sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
+		       sptr->name, 'K', host,
+		       name, pass ); /* oper_reason); */
         }
     }
 }
@@ -1281,7 +1273,7 @@ report_unsortable_klines(struct Client *sptr,char *need_host)
 void report_mtrie_conf_links(struct Client *sptr, int flags)
 {
   struct ConfItem *found_conf;
-  char *name, *host, *pass, *user, *p;
+  char *name, *host, *pass, *oper_reason, *user, *p;
   int  port;
   char c;               /* conf char used for CONF_CLIENT only */
 
@@ -1305,7 +1297,8 @@ void report_mtrie_conf_links(struct Client *sptr, int flags)
 	  if(IsConfDoSpoofIp(found_conf))
 	    continue;
 #endif
-          get_printable_conf(found_conf, &name, &host, &pass, &user, &port );
+          get_printable_conf(found_conf, &name, &host, 
+			     &pass, &oper_reason, &user, &port );
 
           c = 'I';
 #ifdef LITTLE_I_LINES
@@ -1325,7 +1318,8 @@ void report_mtrie_conf_links(struct Client *sptr, int flags)
       for(found_conf = wild_card_ilines;
           found_conf;found_conf=found_conf->next)
         {
-          get_printable_conf(found_conf, &name, &host, &pass, &user, &port);
+          get_printable_conf(found_conf, &name, &host,
+			     &pass, &oper_reason, &user, &port);
 
           c = 'I';
 #ifdef LITTLE_I_LINES
@@ -1345,7 +1339,8 @@ void report_mtrie_conf_links(struct Client *sptr, int flags)
       for(found_conf = ip_i_lines;
           found_conf;found_conf=found_conf->next)
         {
-          get_printable_conf(found_conf, &name, &host, &pass, &user, &port );
+          get_printable_conf(found_conf, &name, &host, &pass,
+			     &oper_reason, &user, &port );
 
           if(!(found_conf->status&CONF_CLIENT))
             continue;
@@ -1372,22 +1367,21 @@ void report_mtrie_conf_links(struct Client *sptr, int flags)
       for(found_conf = unsortable_list_klines;
           found_conf;found_conf=found_conf->next)
         {
-          get_printable_conf(found_conf, &name, &host, &pass, &user, &port);
+          get_printable_conf(found_conf, &name, &host, &pass,
+			     &oper_reason, &user, &port);
 
-          /* Hide any comment following a '|' seen in the password field */
-          p = NULL;
-          if(!IsAnOper(sptr))
-            {
-              p = strchr(pass,'|');
-              if(p)
-                *p = '\0';
-            }
-
-          sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
-                     sptr->name, 'K', host,
-                     user, pass);
-          if(p)
-            *p = '|';
+          if(IsAnOper(sptr))
+          {
+	    sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
+		       sptr->name, 'K', host,
+		       user, pass); /*  oper_reason); */
+	  }
+	  else
+	  {
+	    sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
+		       sptr->name, 'K', host,
+		       user, pass);
+	  }
         }
     }
 }
@@ -1468,7 +1462,7 @@ report_sub_mtrie(struct Client *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
   DOMAIN_PIECE *dp_ptr;
   struct ConfItem *aconf;
   int i;
-  char *name, *host, *pass, *user, *p;
+  char *name, *host, *pass, *oper_reason, *user, *p;
   int  port;
   char c='\0';
 
@@ -1487,30 +1481,20 @@ report_sub_mtrie(struct Client *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 
               if(aconf->status & flags)
                 {
-                  get_printable_conf(aconf, &name, &host, &pass, &user,
-                                        &port);
-
+                  get_printable_conf(aconf, &name, &host, &pass,
+				     &oper_reason, &user, &port);
                   if (aconf->status == CONF_KILL)
                     {
-                      /* Hide any comment following a '|' seen in the
-                       * password field
-                       */
-                      p = NULL;
                       if(!IsAnOper(sptr))
-                        {
-                          p = strchr(pass,'|');
-                          if(p)
-                            *p = '\0';
-                        }
-                      sendto_one(sptr, form_str(RPL_STATSKLINE),
-                                 me.name,
-                                 sptr->name,
-                                 'K',
-                                 host,
-                                 user,
-                                 pass);
-                      if(p)
-                        *p = '|';
+			*oper_reason = '\0';
+
+		      sendto_one(sptr, form_str(RPL_STATSKLINE),
+				 me.name,
+				 sptr->name,
+				 'K',
+				 host,
+				 user,
+				 pass); /* oper_reason); */
                     }
                   else
                     {
@@ -1550,26 +1534,19 @@ report_sub_mtrie(struct Client *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
               if(aconf->status & flags)
                 {
                   get_printable_conf(aconf, &name, &host, &pass,
-                                        &user, &port);
+				     &oper_reason, &user, &port);
 
                   if (aconf->status == CONF_KILL)
                     {
-                      p = NULL;
-                      if(!IsAnOper(sptr))
-                        {
-                          p = strchr(pass,'|');
-                          if(p)
-                            *p = '\0';
-                        }
+		      if (!IsAnOper(sptr))
+			*oper_reason = '\0';
                       sendto_one(sptr, form_str(RPL_STATSKLINE),
                                  me.name,
                                  sptr->name,
                                  'K',
                                  host,
                                  user,
-                                 pass);
-                      if(p)
-                        *p = '|';
+                                 pass); /* oper_reason); */
                     }
                   else
                     {
@@ -1762,12 +1739,12 @@ find_matching_ip_i_line(char *user, unsigned long host_ip)
  *
  */
 
-static void report_dup(char type,struct ConfItem *aconf)
+static void report_dup(char type, struct ConfItem *aconf)
 {
-  char *name, *host, *pass, *user;
+  char *name, *host, *pass, *oper_reason, *user;
   int port;
 
-  get_printable_conf(aconf, &name, &host, &pass, &user, &port);
+  get_printable_conf(aconf, &name, &host, &pass, &oper_reason, &user, &port);
 
   sendto_realops("DUP: %c: (%s@%s) pass %s name %s port %d",
                  type,user,host,pass,name,port);

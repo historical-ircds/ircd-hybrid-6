@@ -31,6 +31,7 @@ struct PKDlines
   char*            user; /* username of K/D lined user */
   char*            host; /* hostname of K/D lined user */
   char*            reason; /* reason they are K/D lined */
+  char*		   oper_reason; /* oper comment on kline */
   char*            when; /* when the K/D line was set */
   int              type;
 };

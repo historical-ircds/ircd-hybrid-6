@@ -808,8 +808,8 @@ void zap_Dlines()
  */
 void walk_the_dlines(aClient *sptr, struct ip_subtree *tree)
 {
-  aConfItem *scan;
-  char *name, *host, *pass, *user;
+  struct ConfItem *scan;
+  char *name, *host, *pass, *oper_reason, *user;
   int port;
   char c;               /* D,d or K */
 
@@ -829,7 +829,8 @@ void walk_the_dlines(aClient *sptr, struct ip_subtree *tree)
         c = 'd';
       /* print Dline */
 
-      get_printable_conf(scan, &name, &host, &pass, &user, &port);
+      get_printable_conf(scan, &name, &host, &pass, &oper_reason,
+			 &user, &port);
 
       sendto_one(sptr, form_str(RPL_STATSDLINE), me.name,
                  sptr->name, c, host, pass);
@@ -852,7 +853,7 @@ void walk_the_ip_Klines(aClient *sptr, struct ip_subtree *tree,
                         char conftype, int MASK)
 {
   aConfItem *scan;
-  char *name, *host, *pass, *user;
+  char *name, *host, *pass, *oper_reason, *user;
   int port;
 
   if (!tree) return;
@@ -862,10 +863,11 @@ void walk_the_ip_Klines(aClient *sptr, struct ip_subtree *tree,
   scan=tree->conf;
   for(scan=tree->conf;scan;scan=scan->next)
     {
-      if(!(scan->status & MASK))
+      if((scan->status & MASK) == NULL)
         continue;
 
-      get_printable_conf(scan, &name, &host, &pass, &user, &port);
+      get_printable_conf(scan, &name, &host, &pass, &oper_reason,
+			 &user, &port);
 
       if(scan->status & CONF_KILL)
         {

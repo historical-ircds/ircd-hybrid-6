@@ -345,15 +345,8 @@ time_t check_pings(time_t currenttime)
                   dying_clients[die_index] = (struct Client *)NULL;
                   if(IsPerson(cptr))
                     {
-		      char *p;
-
-		      /* In hybrid-7 this stupidity goes away ! */
-		      if( (p = strchr(reason, '|')) != NULL)
-			*p = '\0';
                       sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
                                  me.name, cptr->name, reason);
-		      if(p != NULL)
-			*p = '|';
                     }
 #ifdef REPORT_DLINE_TO_USER
                   else
@@ -395,13 +388,8 @@ time_t check_pings(time_t currenttime)
 
                       dying_clients_reason[die_index++] = reason;
                       dying_clients[die_index] = (struct Client *)NULL;
-		      if ((strchr(reason,'|')) != NULL)
-			*p = '\0';
                       sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
                                  me.name, cptr->name, reason);
-
-		      if (p != NULL)
-			*p = '|';
 
                       continue;         /* and go examine next fd/cptr */
                     }
@@ -410,8 +398,6 @@ time_t check_pings(time_t currenttime)
                   if((aconf = find_kill(cptr))) /* if there is a returned
                                                    struct ConfItem.. then kill it */
                     {
-		      char *p;
-
                       if(aconf->status & CONF_ELINE)
                         {
                           sendto_realops("K-line over-ruled for %s client is E-lined",
@@ -441,12 +427,8 @@ time_t check_pings(time_t currenttime)
 
                       dying_clients_reason[die_index++] = reason;
                       dying_clients[die_index] = (struct Client *)NULL;
-		      if ((p = strchr(reason,'|')) != NULL)
-			*p = '\0';
                       sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
                                  me.name, cptr->name, reason);
-		      if (p != NULL)
-			*p = '|';
                       continue;         /* and go examine next fd/cptr */
                     }
                 }
@@ -632,30 +614,15 @@ time_t check_pings(time_t currenttime)
 	  char *killer;
 	  char *p;
 
-	  /* This entire kludge goes away in hybrid-7 yech */
-	  p = strchr(dying_clients_reason[die_index], '|');
-	  if (p != NULL)
-	    *p = '\0';
-
 	  killer = "AutoKILL";
           if (fakekill)
             sendto_prefix_one(cptr, cptr, ":%s KILL %s :(%s)", killer,
             cptr->name, dying_clients_reason[die_index]);
 	  (void)exit_client(cptr, cptr, &me, dying_clients_reason[die_index]);
-	  if (p != NULL)
-	    *p = '|';
         }
 #else 
       {
-	char *p;
-
-	/* This entire kludge goes away in hybrid-7 yech */
-	p = strchr(dying_clients_reason[die_index], '|');
-	if (p != NULL)
-	  *p = '\0';
 	(void)exit_client(cptr, cptr, &me, dying_clients_reason[die_index]);
-	if (p != NULL)
-	  *p = '|';
       }
 
 #endif /* SEND_FAKE_KILL_TO_CLIENT && IDLE_CHECK */
