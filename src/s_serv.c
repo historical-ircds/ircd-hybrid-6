@@ -1602,13 +1602,18 @@ int	m_info(aClient *cptr,
 #else
 #define OUT2 " NO_SPECIAL=0"
 #endif
-#ifdef OLD_Y_LIMIT
-#define OUT3 " OLD_Y_LIMIT=1"
+#ifdef NO_PRIORITY
+#define OUT3 " NO_PRIORITY=1"
 #else
-#define OUT3 " OLD_Y_LIMIT=0"
+#define OUT3 " NO_PRIORITY=0"
+#endif
+#ifdef OLD_Y_LIMIT
+#define OUT4 " OLD_Y_LIMIT=1"
+#else
+#define OUT4 " OLD_Y_LIMIT=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3 );
+		me.name, parv[0], OUT1 OUT2 OUT3 OUT4);
 
 #undef OUT1
 #undef OUT2
@@ -1772,9 +1777,9 @@ int	m_info(aClient *cptr,
 #define OUT2 " WHOIS_NOTICE=0"
 #endif
 #ifdef WINTRHAWK
-#define OUT3 "WINTRHAWK=1"
+#define OUT3 " WINTRHAWK=1"
 #else
-#define OUT3 "WINTRHAWK=0"
+#define OUT3 " WINTRHAWK=0"
 #endif
 #ifdef ZIP_LINKS
 #define OUT4 " ZIP_LINKS=1"

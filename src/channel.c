@@ -1175,8 +1175,9 @@ static  void     set_mode(aClient *cptr,
 
 	  if (keychange++)
 	    break;
-	  if (MyClient(sptr) && opcnt >= MAXMODEPARAMS)
+	  /*	  if (MyClient(sptr) && opcnt >= MAXMODEPARAMS)
 	    break;
+	    */
 	  if (!*arg)
 	    break;
 
@@ -1232,7 +1233,7 @@ static  void     set_mode(aClient *cptr,
 	  pbufw += strlen(pbufw);
 	  *pbufw++ = ' ';
 	  len += tmp + 1;
-	  opcnt++;
+	  /*	  opcnt++; */
 
 	  if (whatt == MODE_DEL)
 	    *chptr->mode.key = '\0';
@@ -1473,8 +1474,8 @@ static  void     set_mode(aClient *cptr,
 		}
 	      
 	      arg = check_string(*parv++);
-	      if (MyClient(sptr) && opcnt >= MAXMODEPARAMS)
-		break;
+	      /*	      if (MyClient(sptr) && opcnt >= MAXMODEPARAMS)
+		break; */
 	      if (!(nusers = atoi(arg)))
 		break;
 	      ircsprintf(numeric, "%-15d", nusers);
@@ -1495,7 +1496,7 @@ static  void     set_mode(aClient *cptr,
 	      pbufw += strlen(pbufw);
 	      *pbufw++ = ' ';
 	      len += tmp + 1;
-	      opcnt++;
+	      /*	      opcnt++;*/
 	    }
 	  else
 	    {
@@ -1534,8 +1535,8 @@ static  void     set_mode(aClient *cptr,
 	      else
 		done_i = YES;
 
-	      if ( opcnt >= MAXMODEPARAMS)
-		break;
+	      /*	      if ( opcnt >= MAXMODEPARAMS)
+		break; */
 	    }
 
 	  if(whatt == MODE_ADD)
@@ -1550,7 +1551,7 @@ static  void     set_mode(aClient *cptr,
 		  *mbufw++ = '+';
 		  *mbufw++ = 'i';
 		  len += 2;
-		  opcnt++;
+		  /*		  opcnt++; */
 		}
 	    }
 	  else
@@ -1569,7 +1570,7 @@ static  void     set_mode(aClient *cptr,
 		  *mbufw++ = '-';
 		  *mbufw++ = 'i';
 		  len += 2;
-		  opcnt++;
+		  /*		  opcnt++; */
 		}
 	    }
 	  break;
@@ -1590,8 +1591,8 @@ static  void     set_mode(aClient *cptr,
 	      else
 		done_m = YES;
 
-	      if ( opcnt >= MAXMODEPARAMS)
-		break;
+	      /*	      if ( opcnt >= MAXMODEPARAMS)
+			      break; */
 	    }
 
 	  if(whatt == MODE_ADD)
@@ -1606,7 +1607,7 @@ static  void     set_mode(aClient *cptr,
 		  *mbufw++ = '+';
 		  *mbufw++ = 'm';
 		  len += 2;
-		  opcnt++;
+		  /*		  opcnt++; */
 		}
 	    }
 	  else
@@ -1621,7 +1622,7 @@ static  void     set_mode(aClient *cptr,
 		  *mbufw++ = '-';
 		  *mbufw++ = 'm';
 		  len += 2;
-		  opcnt++;
+		  /*		  opcnt++; */
 		}
 	    }
 	  break;
@@ -1642,8 +1643,8 @@ static  void     set_mode(aClient *cptr,
 	      else
 		done_n = YES;
 
-	      if ( opcnt >= MAXMODEPARAMS)
-		break;
+	      /*	      if ( opcnt >= MAXMODEPARAMS)
+			      break; */
 	    }
 
 	  if(whatt == MODE_ADD)
@@ -1658,7 +1659,7 @@ static  void     set_mode(aClient *cptr,
 		  *mbufw++ = '+';
 		  *mbufw++ = 'n';
 		  len += 2;
-		  opcnt++;
+		  /*		  opcnt++; */
 		}
 	    }
 	  else
@@ -1673,7 +1674,7 @@ static  void     set_mode(aClient *cptr,
 		  *mbufw++ = '-';
 		  *mbufw++ = 'n';
 		  len += 2;
-		  opcnt++;
+		  /*		  opcnt++; */
 		}
 	    }
 	  break;
@@ -1700,8 +1701,8 @@ static  void     set_mode(aClient *cptr,
 	      else
 		done_p = YES;
 #endif
-	      if ( opcnt >= MAXMODEPARAMS)
-		break;
+	      /*	      if ( opcnt >= MAXMODEPARAMS)
+		break; */
 	    }
 
 	  if(whatt == MODE_ADD)
@@ -1727,7 +1728,7 @@ static  void     set_mode(aClient *cptr,
 		  *mbufw++ = '+';
 		  *mbufw++ = 'p';
 		  len += 2;
-		  opcnt++;
+		  /*		  opcnt++; */
 		}
 	    }
 	  else
@@ -1742,7 +1743,7 @@ static  void     set_mode(aClient *cptr,
 		  *mbufw++ = '-';
 		  *mbufw++ = 'p';
 		  len += 2;
-		  opcnt++;
+		  /*		  opcnt++; */
 		}
 	    }
 	  break;
@@ -1771,8 +1772,8 @@ static  void     set_mode(aClient *cptr,
 	      else
 		done_s = YES;
 #endif
-	      if ( opcnt >= MAXMODEPARAMS)
-		break;
+	      /*	      if ( opcnt >= MAXMODEPARAMS)
+			      break; */
 	    }
 
 	  if(whatt == MODE_ADD)
@@ -1798,7 +1799,7 @@ static  void     set_mode(aClient *cptr,
 		  *mbufw++ = '+';
 		  *mbufw++ = 's';
 		  len += 2;
-		  opcnt++;
+		  /*		  opcnt++; */
 		}
 	    }
 	  else
@@ -1813,7 +1814,7 @@ static  void     set_mode(aClient *cptr,
 		  *mbufw++ = '-';
 		  *mbufw++ = 's';
 		  len += 2;
-		  opcnt++;
+		  /*		  opcnt++; */
 		}
 	    }
 	  break;
@@ -1834,8 +1835,8 @@ static  void     set_mode(aClient *cptr,
 	      else
 		done_t = YES;
 
-	      if ( opcnt >= MAXMODEPARAMS)
-		break;
+	      /*	      if ( opcnt >= MAXMODEPARAMS)
+			      break; */
 	    }
 
 	  if(whatt == MODE_ADD)
@@ -1850,7 +1851,7 @@ static  void     set_mode(aClient *cptr,
 		  *mbufw++ = '+';
 		  *mbufw++ = 't';
 		  len += 2;
-		  opcnt++;
+		  /*		  opcnt++; */
 		}
 	    }
 	  else
@@ -1865,7 +1866,7 @@ static  void     set_mode(aClient *cptr,
 		  *mbufw++ = '-';
 		  *mbufw++ = 't';
 		  len += 2;
-		  opcnt++;
+		  /* 		  opcnt++; */
 		}
 	    }
 	  break;
@@ -3451,6 +3452,7 @@ int	m_invite(aClient *cptr,
   if (chptr && (chptr->mode.mode & MODE_INVITEONLY))
     {
       need_invite = YES;
+
       if (!is_chan_op(sptr, chptr))
 	{
 	  if (MyClient(sptr))
@@ -3460,54 +3462,64 @@ int	m_invite(aClient *cptr,
 	}
     }
 
-  if (MyConnect(sptr) && need_invite)
+  /*
+   * due to some whining I've taken out the need for the channel
+   * being +i before sending an INVITE. It was intentionally done this
+   * way, it makes no sense (to me at least) letting the server send
+   * an unnecessary invite when a channel isn't +i !
+   * bah. I can't be bothered arguing it
+   * -Dianora
+   */
+  if (MyConnect(sptr) /* && need_invite*/ )
     {
       sendto_one(sptr, rpl_str(RPL_INVITING), me.name, parv[0],
 		 acptr->name, ((chptr) ? (chptr->chname) : parv[2]));
       if (acptr->user->away)
 	sendto_one(sptr, rpl_str(RPL_AWAY), me.name, parv[0],
 		   acptr->name, acptr->user->away);
+      
+      if( need_invite )
+	{
+	  /* Send a NOTICE to all channel operators concerning chanops who  *
+	   * INVITE other users to the channel when it is invite-only (+i). *
+	   * The NOTICE is sent from the local server.  -- David-R          */
 
-      /* Send a NOTICE to all channel operators concerning chanops who  *
-       * INVITE other users to the channel when it is invite-only (+i). *
-       * The NOTICE is sent from the local server.  -- David-R          */
+	  /* Only allow this invite notice if the channel is +p
+	   * i.e. "paranoid"
+	   * -Dianora
+	   */
 
-      /* Only allow this invite notice if the channel is +p
-       * i.e. "paranoid"
-       * -Dianora
-       */
+	  if (chptr && (chptr->mode.mode & MODE_PRIVATE))
+	    { 
+	      char message[300];
 
-      if (chptr && (chptr->mode.mode & MODE_INVITEONLY)
-	  && (chptr->mode.mode & MODE_PRIVATE))
-	{ 
-	  char message[300];
+	      /*
+		sprintf(message, "INVITE: %s (%s invited %s)", chptr->chname, sptr->name, acptr->name);
+		sendto_channel_type_notice(cptr, chptr, MODE_CHANOP,
+		message);
+		*/
+	      /* bit of paranoia, be a shame if it cored for this -Dianora */
+	      if(acptr->user)
+		{
+		  (void)ircsprintf(message,
+				   "INVITE: %s (%s invited %s [%s@%s])",
+				   chptr->chname,
+				   sptr->name,
+				   acptr->name,
+				   acptr->user->username,
+				   acptr->user->host);
 
-	  /*
-	  sprintf(message, "INVITE: %s (%s invited %s)", chptr->chname, sptr->name, acptr->name);
-	  sendto_channel_type_notice(cptr, chptr, MODE_CHANOP,
-				     message);
-				     */
-	  /* bit of paranoia, be a shame if it cored for this -Dianora */
-	  if(acptr->user)
-	    {
-	      (void)ircsprintf(message,
-		      "INVITE: %s (%s invited %s [%s@%s])",
-				chptr->chname,
-				sptr->name,
-				acptr->name,
-				acptr->user->username,
-				acptr->user->host);
-
-	      /* Note the horrible kludge here of "PRIVMSG"
-	       * in the arguments, this is to ensure that p4 in 
-	       * sendto_channel_type() in send.c is the message payload
-	       * for non CHW type servers
-	       * -Dianora
-	       */
-	      sendto_channel_type(cptr, sptr, chptr, MODE_CHANOP,
-				  ":%s %s @%s :%s",
-				  parv[0], "PRIVMSG", chptr->chname,
-				  message);
+		  /* Note the horrible kludge here of "PRIVMSG"
+		   * in the arguments, this is to ensure that p4 in 
+		   * sendto_channel_type() in send.c is the message payload
+		   * for non CHW type servers
+		   * -Dianora
+		   */
+		  sendto_channel_type(cptr, sptr, chptr, MODE_CHANOP,
+				      ":%s %s @%s :%s",
+				      parv[0], "PRIVMSG", chptr->chname,
+				      message);
+		}
 	    }
 	}
     }
@@ -4420,9 +4432,17 @@ void sync_channels(time_t delta)
       if(chptr->locally_created)
 	{
 	  newts = chptr->channelts + delta;
+	  /*
+	   * Leaving this sendto in can cause a lot of "noise"
+	   * when it happens, and possibly contribute to the server
+	   * lagging worse and worse... finally splitting it...
+	   */
+
+	  /*
 	  sendto_realops("*** resetting TS on locally created %s from %d to %d",
 			 chptr->chname,chptr->channelts,
 			 newts);
+			 */
 
 	  chptr->channelts = newts;
 	}
