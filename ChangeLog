@@ -1,3 +1,7 @@
+*** 20001108_2 by lusky
+don't allow VERSION from unregistered clients
+
+
 *** 20001108_1 by lusky
 removed bogus C++ comment (cab)
 added CIDR documentation
