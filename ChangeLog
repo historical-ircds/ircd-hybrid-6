@@ -1,3 +1,7 @@
+*** 19990911_1 by lusky
+another bogus fd check in send.c
+
+
 *** 19990910_2 by lusky
 removed an exit that shouldn't have been there
 
