@@ -74,6 +74,8 @@ static int majority_gline(aClient*, const char *,const char *, const char *,
                           const char* serv_name,
                           const char *,const char *,const char *); 
 
+static int invalid_wildcard(char *, char *);
+static int invalid_gline(struct Client *, char *, char *, char *, int);
 #endif
 
 /*
@@ -112,7 +114,7 @@ int     m_gline(aClient *cptr,
   aConfItem *aconf;
 #endif
 
-  if(!IsServer(sptr)) /* allow remote opers to apply g lines */
+  if(MyClient(sptr)) /* allow remote opers to apply g lines */
     {
 #ifdef GLINES
       /* Only globals can apply Glines */
@@ -168,72 +170,18 @@ int     m_gline(aClient *cptr,
           return 0;
         }
 
-      if(strchr(parv[2], ':'))
-        {
-          sendto_one(sptr,
-                     ":%s NOTICE %s :Invalid character ':' in comment",
-                     me.name, parv[2]);
-          return 0;
-        }
+      if(invalid_wildcard(user, host))
+      {
+        sendto_one(sptr,
+	           ":%s NOTICE %s :Please include at least %d non-wildcard characters with the user@host",
+		   me.name, parv[0], NONWILDCHARS);
 
-  /*
-   * Now we must check the user and host to make sure there
-   * are at least NONWILDCHARS non-wildcard characters in
-   * them, otherwise assume they are attempting to gline
-   * *@* or some variant of that. This code will also catch
-   * people attempting to gline *@*.tld, as long as NONWILDCHARS
-   * is greater than 3. In that case, there are only 3 non-wild
-   * characters (tld), so if NONWILDCHARS is 4, the gline will
-   * be disallowed.
-   * -wnder
-   */
+        return 0;
+      }
 
-  nonwild = 0;
-  p = user;
-  while ((tmpch = *p++))
-  {
-    if (!IsKWildChar(tmpch))
-    {
-      /*
-       * If we find enough non-wild characters, we can
-       * break - no point in searching further.
-       */
-      if (++nonwild >= NONWILDCHARS)
-        break;
-    }
-  }
-
-  if (nonwild < NONWILDCHARS)
-  {
-    /*
-     * The user portion did not contain enough non-wild
-     * characters, try the host.
-     */
-    p = host;
-    while ((tmpch = *p++))
-    {
-      if (!IsKWildChar(tmpch))
-        if (++nonwild >= NONWILDCHARS)
-          break;
-    }
-  }
-
-  if (nonwild < NONWILDCHARS)
-  {
-    /*
-     * Not enough non-wild characters were found, assume
-     * they are trying to gline *@*.
-     */
-    if (MyClient(sptr))
-      sendto_one(sptr,
-        ":%s NOTICE %s :Please include at least %d non-wildcard characters with the user@host",
-        me.name,
-        parv[0],
-        NONWILDCHARS);
-
-    return 0;
-  }
-
+      if(invalid_gline(sptr, user, host, reason, 1))
+        return 0;
+	
       reason = parv[2];
 
       if (sptr->user && sptr->user->server)
@@ -244,7 +192,6 @@ int     m_gline(aClient *cptr,
       oper_name     = sptr->name;
       oper_username = sptr->username;
       oper_host     = sptr->host;
-
 
       sendto_serv_butone(NULL, ":%s GLINE %s %s %s %s %s %s :%s",
                          me.name,
@@ -259,8 +206,14 @@ int     m_gline(aClient *cptr,
       sendto_one(sptr,":%s NOTICE %s :GLINE disabled",me.name,parv[0]);  
 #endif
     }
+  /* its not my client, its something else */
   else
     {
+#ifdef GLINES
+      struct Client *acptr;
+#endif      
+      
+      /* if its not my client, and its not a server.. we dont wanna know */
       if(!IsServer(sptr))
         return(0);
 
@@ -278,12 +231,45 @@ int     m_gline(aClient *cptr,
 
       sendto_serv_butone(sptr, ":%s GLINE %s %s %s %s %s %s :%s",
                          sptr->name,
-                         oper_name,oper_username,oper_host,oper_server,
-                         user,
-                         host,
-                         reason);
+			 oper_name,oper_username,oper_host,oper_server,
+			 user, host, reason);
+
+#ifdef GLINES
+      /* check theres enough non-wildcard chars after we send it, our limit
+       * might be different to other peoples.. */
+      if(invalid_wildcard(user, host))
+      {
+        sendto_realops("%s!%s@%s on %s is requesting a gline without %d non-wildcard characters for [%s@%s] [%s]",
+	               oper_name, oper_username, oper_host, oper_server,
+		       NONWILDCHARS, user, host, reason);
+        return 0;
+      }	
+
+      acptr=find_client(oper_name, NULL);
+
+      /* if the client whos doing the gline doesnt exist do one of two
+       * things:
+       * a) return if NO_FAKE_GLINES is #define'd
+       * b) copy sptr to acptr so acptr isnt NULL, so at least invalid_gline
+       *    knows what server it came from..
+       * -- fl_
+       */
+      
+      if(!acptr)
+#ifdef NO_FAKE_GLINES
+        return 0;
+#else	
+        acptr=sptr;
+#endif /* NO_FAKE_GLINES */
+
+      if(invalid_gline(acptr, user, host, reason, 0))
+        return 0;
+	
+#endif /* GLINES */     
+      
     }
 #ifdef GLINES
+
    log_gline_request(oper_name,oper_username,oper_host,oper_server,
                      user,host,reason);
 
@@ -340,6 +326,98 @@ int     m_gline(aClient *cptr,
 
 
 #ifdef GLINES
+/*
+ * invalid_wildcard()
+ */
+static int invalid_wildcard(char *luser, char *lhost)
+{
+  char *p;
+  char tmpch;
+  int nonwild;
+
+  nonwild=0;
+
+  p=luser;
+
+  while(tmpch = *p++)
+  {
+    if(!IsKWildChar(tmpch))
+    {
+      if (++nonwild >= NONWILDCHARS)
+        break;
+    }
+  }
+
+  if (nonwild < NONWILDCHARS)
+  {
+    p=lhost;
+    while(tmpch = *p++)
+    {
+      if(!IsKWildChar(tmpch))
+      {
+        if (++nonwild >= NONWILDCHARS)
+	  break;
+      }
+    }
+  }
+
+  if (nonwild < NONWILDCHARS)
+    return 1;
+  else
+    return 0;
+}
+
+/*
+ * invalid_gline()
+ *
+ * local indicates whether the client doing the gline is ours or not,
+ * if its remote, we need to use sendto_realops() instead of sendto_one()
+ * because the possibility of a user doing a gline, and getting hundreds
+ * of notices is bad..
+ */
+static int invalid_gline(struct Client *sptr, char *luser, char *lhost,
+                         char *lreason, int local)
+{
+  /* dont allow *! glines, as theyre invalid */
+  if(strchr(luser, '!'))
+  {
+    if(local)
+      sendto_one(sptr, ":%s NOTICE %s :Invalid character '!' in gline",
+                 me.name, sptr->name);
+    else
+      sendto_realops("%s is requesting a gline with invalid character '!'",
+                     me.name);
+    return 1;		     
+  }
+  
+  /* dont allow glines with # in */
+  if(strchr(luser, '#') || strchr(lhost, '#') || strchr(lreason, '#'))
+  {
+    if(local)
+      sendto_one(sptr, ":%s NOTICE %s :Invalid character '#' in gline",
+                 me.name, sptr->name);
+    else
+      sendto_realops("%s is requesting a gline with invalid character '#'",
+                     me.name);
+    return 1;
+  }
+  
+  /* dont allow glines with : in, theyll break the conf */
+  if(strchr(luser, ':') || strchr(lhost, ':') || strchr(lreason, ':'))
+  {
+    if(local)
+      sendto_one(sptr, ":%s NOTICE %s :Invalid character ':' in gline",
+                 me.name, sptr->name);
+    else
+      sendto_realops("%s is requesting a gline with invalid character ':'",
+                     me.name);
+    return 1;		     
+  }		     
+
+  /* nothing wrong with the gline */
+  return 0;
+}  
+  
 /*
  * log_gline_request()
  *

@@ -739,6 +739,13 @@
  */
 #define GLINE_TIME      (12*3600)
 
+/* NO_FAKE_GLINES - disable fake glines
+ * Define this if you want to stop fake glines from users who
+ * dont exist.  This could possibly have an impact with services,
+ * so its #undef'd by default.
+ */
+#undef NO_FAKE_GLINES
+
 /* Ignore bogus timestamps from other servers. Yes this will desync
  * the network, but it will allow chanops to resync with a valid non TS 0
  */
