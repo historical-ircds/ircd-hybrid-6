@@ -108,17 +108,17 @@
  * -Dianora
  */
 
-#define DPATH   "/usr/local/lib/irc/ircd/"
-#define SPATH   "/usr/local/sbin/ircd"
+#define DPATH   "/usr/local/ircd/"
+#define SPATH   "/usr/local/ircd/ircd"
 #define	CPATH	"ircd.conf"
-#undef  KPATH   "kline.conf"
+#define KPATH   "kline.conf"
 #define	MPATH	"ircd.motd"
 #undef  APATH
 #define	LPATH	"ircd.log"
 #define	PPATH	"ircd.pid"
 #define HPATH	"opers.txt"
 
-#undef OPER_MOTD
+#define OPER_MOTD
 #define OMOTD   "opers.motd"
 
 /* TS_MAX_DELTA and TS_WARN_DELTA -  allowed delta for TS when another
@@ -182,8 +182,8 @@
  *
  * These need to be defined if you want to use SYSLOG logging, too.
  */
-#define FNAME_USERLOG "users" /* */
-#define FNAME_OPERLOG "opers" /* */
+#define FNAME_USERLOG "/usr/local/ircd/users" /* */
+#define FNAME_OPERLOG "/usr/local/ircd/opers" /* */
 
 /* FOLLOW_IDENT_RFC
  * 
@@ -272,7 +272,7 @@
  * A character is "special" if it's not "a-z", "A-Z", "0-9", ".", "-",
  * and "_"
  */
-#define NO_SPECIAL
+#undef NO_SPECIAL
 
 /* REJECT_IPHONE - reject I-phone clients
  * Define if you want to reject I-phoners
@@ -308,11 +308,6 @@
  * Define this if you want to keep track of your max connections.
  */
 #define HIGHEST_CONNECTION
-
-/* USERNAMES_IN_TRACE - show usernames in trace
- * Define this if you want to see usernames in /trace.
- */
-#define USERNAMES_IN_TRACE
 
 /* BAN_INFO - Shows you who and when someone did a ban
  */
@@ -388,7 +383,7 @@
 
 /* IDENTD_COMPLAIN - yell at users that don't have identd installed
  */
-#define IDENTD_COMPLAIN
+#undef IDENTD_COMPLAIN
 
 /* CLIENT_COUNT - keep a running count of Local & Global users
  *                also redefine the /USERS command
@@ -496,7 +491,7 @@
  * Above 4 will only give a rather marginal increase in compression for a
  * large increase in CPU usage.
  */
-#define ZIP_LEVEL       3
+#define ZIP_LEVEL       2
 
 /* OPER_KILL OPER_REHASH OPER_RESTART OPER_DIE OPER_REMOTE -
  *      restrict what local global-Opers can do
@@ -523,8 +518,8 @@
  * to 'local' operators.  See above section.
  */
 #define	LOCOP_REHASH
-#define	LOCOP_RESTART
-#define	LOCOP_DIE
+#undef	LOCOP_RESTART
+#undef	LOCOP_DIE
 
 /*
  * OPER_UMODES LOCAOP_UMODES - set these to be the initial umodes when OPER'ing
@@ -681,8 +676,8 @@
  * define IRC_UID to that UID.  This should only be defined if you are running
  * as root and even then perhaps not.
  */
-#undef	IRC_UID 1001
-#undef	IRC_GID 31
+#define	IRC_UID 1001
+#define	IRC_GID 31
 
 /* CLIENT_FLOOD - client excess flood threshold
  * this controls the number of bytes the server will allow a client to

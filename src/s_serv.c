@@ -1695,13 +1695,8 @@ int	m_info(aClient *cptr,
 #else
 #define OUT2 " UNKLINE=0"
 #endif
-#ifdef USERNAMES_IN_TRACE
-#define OUT3 " USERNAMES_IN_TRACE=1"
-#else
-#define OUT3 " USERNAMES_IN_TRACE=0"
-#endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2 OUT3);
+		me.name, parv[0], OUT1 OUT2 );
 
 #undef OUT1
 #undef OUT2

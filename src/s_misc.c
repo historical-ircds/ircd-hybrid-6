@@ -259,16 +259,14 @@ char	*get_client_name(aClient *sptr,int showip)
       if (IsGotId(sptr))
         (void)strcpy(t_id, "(+)");
 
-#ifdef USERNAMES_IN_TRACE
       /* Check for a username (listening ports don't have usernames) */
-      if (sptr->user)
+      if (sptr->user && sptr->user->username[0])
         (void)strcpy(t_user, sptr->user->username);
       else
         if (sptr->username[0])
           (void)strcpy(t_user, sptr->username);
       if (t_user[0])
         (void)strcat(t_user, "@");
-#endif
 
       /* Check for a port number, needed for listening ports */
       if (sptr->flags & FLAGS_LISTEN)

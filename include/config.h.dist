@@ -225,6 +225,16 @@
  */
 #define FAILED_OPER_NOTICE
 
+/* SHOW_FAILED_OPER_ID - if FAILED_OPER_NOTICE is defined, also notify when
+ * a client fails to oper because of a identity mismatch (wrong host or nick)
+ */
+#define SHOW_FAILED_OPER_ID
+
+/* SHOW_FAILED_OPER_PASSWD - if FAILED_OPER_NOTICE is defined, also show the
+ * attempted passwd
+ */
+#define SHOW_FAILED_OPER_PASSWD
+
 /* CLIENT_SERVER - Don't be so fascist about idle clients ;)
  * changes behaviour of HTM code to make clients lag less.
  * Not necessary any more
@@ -298,11 +308,6 @@
  * Define this if you want to keep track of your max connections.
  */
 #define HIGHEST_CONNECTION
-
-/* USERNAMES_IN_TRACE - show usernames in trace
- * Define this if you want to see usernames in /trace.
- */
-#define USERNAMES_IN_TRACE
 
 /* BAN_INFO - Shows you who and when someone did a ban
  */
@@ -479,7 +484,7 @@
  * mode "i" (i == invisible). Invisibility means people dont showup in
  * WHO or NAMES unless they are on the same channel as you.
  */
-#define	NO_DEFAULT_INVISIBLE
+#undef	NO_DEFAULT_INVISIBLE
 
 /*
  * The compression level used for zipped links. (Suggested values: 1 to 5)
@@ -730,6 +735,12 @@
  * on the net gets less than 2, a split is deemed to have happened.
  */
 #define SPLIT_SMALLNET_SIZE 2
+
+/*
+ * DEFAULT_SERVER_SPLIT_RECOVERY_TIME - determines how long to delay split
+ * status after resyncing
+ */
+#define DEFAULT_SERVER_SPLIT_RECOVERY_TIME 5
 
 /* LIMIT_UH
  * If this is defined, Y line limit is made against the actual

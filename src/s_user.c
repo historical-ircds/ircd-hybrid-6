@@ -564,10 +564,11 @@ static	int	register_user(aClient *cptr,
 #endif
 	      }
 	    else
-              sendto_realops_lev(CCONN_LEV, "%s from %s [%s].",
+	      sendto_realops_lev(CCONN_LEV, "%s from %s [%s].",
 				 "Unauthorized client connection",
 				 get_client_host(sptr),
 				 sptr->hostip);
+
 #ifdef USE_SYSLOG
 	    syslog(LOG_INFO,"%s from %s.",i == -3 ? "Too many connections" :
 		   "Unauthorized client connection", get_client_host(sptr));
