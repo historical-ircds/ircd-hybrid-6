@@ -55,7 +55,8 @@ char	specific_virtual_host;
 
 /* internally defined functions */
 
-static	int	lookup_confhost (aConfItem *);
+static	int	lookup_confhost ( aConfItem * );
+static  int     SplitUserHost( aConfItem * );
 
 #ifdef LIMIT_UH
 static  int     attach_iline(aClient *, aConfItem *,char *);
@@ -159,7 +160,7 @@ extern void do_pending_klines(void);
  */
 void	det_confs_butmask(aClient *cptr,int mask)
 {
-  Reg Link *tmp, *tmp2;
+  Link *tmp, *tmp2;
 
   for (tmp = cptr->confs; tmp; tmp = tmp2)
     {
@@ -729,7 +730,7 @@ void iphash_stats(aClient *cptr, aClient *sptr,int parc, char *parv[],int out)
  */
 aConfItem	*count_cnlines(Link *lp)
 {
-  Reg	aConfItem	*aconf, *cline = NULL, *nline = NULL;
+  aConfItem	*aconf, *cline = NULL, *nline = NULL;
   
   for (; lp; lp = lp->next)
     {
@@ -751,7 +752,7 @@ aConfItem	*count_cnlines(Link *lp)
 */
 int	detach_conf(aClient *cptr,aConfItem *aconf)
 {
-  Reg	Link	**lp, *tmp;
+  Link	**lp, *tmp;
 
   lp = &(cptr->confs);
 
@@ -788,7 +789,7 @@ int	detach_conf(aClient *cptr,aConfItem *aconf)
 
 static	int	is_attached(aConfItem *aconf,aClient *cptr)
 {
-  Reg	Link	*lp;
+  Link	*lp;
 
   for (lp = cptr->confs; lp; lp = lp->next)
     if (lp->value.aconf == aconf)
@@ -806,7 +807,7 @@ static	int	is_attached(aConfItem *aconf,aClient *cptr)
 */
 int	attach_conf(aClient *cptr,aConfItem *aconf)
 {
-  Reg Link *lp;
+  Link *lp;
 
   if (is_attached(aconf, cptr))
     {
@@ -881,7 +882,7 @@ int	attach_conf(aClient *cptr,aConfItem *aconf)
 
 aConfItem *find_admin()
 {
-  Reg aConfItem *aconf;
+  aConfItem *aconf;
 
   for (aconf = conf; aconf; aconf = aconf->next)
     if (aconf->status & CONF_ADMIN && aconf->name)
@@ -892,7 +893,7 @@ aConfItem *find_admin()
 
 aConfItem *find_me()
 {
-  Reg aConfItem *aconf;
+  aConfItem *aconf;
   for (aconf = conf; aconf; aconf = aconf->next)
     if (aconf->status & CONF_ME)
       return(aconf);
@@ -916,7 +917,7 @@ aConfItem *find_me()
  */
 aConfItem *attach_confs(aClient *cptr,char *name,int statmask)
 {
-  Reg aConfItem *tmp;
+  aConfItem *tmp;
   aConfItem *first = NULL;
   int len = strlen(name);
   
@@ -948,7 +949,7 @@ aConfItem *attach_confs(aClient *cptr,char *name,int statmask)
  */
 aConfItem *attach_confs_host(aClient *cptr,char *host,int statmask)
 {
-  Reg	aConfItem *tmp;
+  aConfItem *tmp;
   aConfItem *first = NULL;
   int	len = strlen(host);
   
@@ -983,7 +984,7 @@ aConfItem *find_conf_exact(char *name,
 			   char *host,
 			   int statmask)
 {
-  Reg	aConfItem *tmp;
+  aConfItem *tmp;
 
   for (tmp = conf; tmp; tmp = tmp->next)
     {
@@ -1021,7 +1022,7 @@ aConfItem *find_conf_exact(char *name,
 
 aConfItem *find_conf_name(char *name,int statmask)
 {
-  Reg	aConfItem *tmp;
+  aConfItem *tmp;
  
   for (tmp = conf; tmp; tmp = tmp->next)
     {
@@ -1034,7 +1035,7 @@ aConfItem *find_conf_name(char *name,int statmask)
 
 aConfItem *find_conf(Link *lp,char *name,int statmask)
 {
-  Reg	aConfItem *tmp;
+  aConfItem *tmp;
   int	namelen = name ? strlen(name) : 0;
   
   if (namelen > HOSTLEN)
@@ -1058,7 +1059,7 @@ aConfItem *find_conf(Link *lp,char *name,int statmask)
  */
 aConfItem *find_conf_host(Link *lp, char *host,int statmask)
 {
-  Reg	aConfItem *tmp;
+  aConfItem *tmp;
   int	hostlen = host ? strlen(host) : 0;
   
   if (hostlen > HOSTLEN || BadPtr(host))
@@ -1082,7 +1083,7 @@ aConfItem *find_conf_host(Link *lp, char *host,int statmask)
  */
 aConfItem *find_conf_ip(Link *lp,char *ip,char *user, int statmask)
 {
-  Reg	aConfItem *tmp;
+  aConfItem *tmp;
   
   for (; lp; lp = lp->next)
     {
@@ -1090,12 +1091,12 @@ aConfItem *find_conf_ip(Link *lp,char *ip,char *user, int statmask)
       if (!(tmp->status & statmask))
 	continue;
 
-      if (match(tmp->host, user))
+      if (match(tmp->user, user))
 	{
 	  continue;
 	}
 
-      if (!bcmp((char *)&tmp->ipnum, ip, sizeof(struct in_addr)))
+      if (!memcmp((void *)&tmp->ipnum, (void *)ip, sizeof(struct in_addr)))
 	return tmp;
     }
   return ((aConfItem *)NULL);
@@ -1108,7 +1109,7 @@ aConfItem *find_conf_ip(Link *lp,char *ip,char *user, int statmask)
  */
 aConfItem *find_conf_entry(aConfItem *aconf, int mask)
 {
-  Reg	aConfItem *bconf;
+  aConfItem *bconf;
 
   for (bconf = conf, mask &= ~CONF_ILLEGAL; bconf; bconf = bconf->next)
     {
@@ -1130,11 +1131,11 @@ aConfItem *find_conf_entry(aConfItem *aconf, int mask)
 	  irccmp(bconf->passwd, aconf->passwd))
       continue;
 
-      if ((BadPtr(bconf->user) && !BadPtr(aconf->user)) ||
-	  (BadPtr(aconf->user) && !BadPtr(bconf->user)))
+      if ((BadPtr(bconf->name) && !BadPtr(aconf->name)) ||
+	  (BadPtr(aconf->name) && !BadPtr(bconf->name)))
 	continue;
 
-      if (!BadPtr(bconf->user) && irccmp(bconf->user, aconf->user))
+      if (!BadPtr(bconf->name) && irccmp(bconf->name, aconf->name))
 	continue;
       break;
     }
@@ -1702,7 +1703,7 @@ void initconf(int opt, FBFILE* file, int use_include)
     {'\\', '\\'}, { 0, 0}
   };
 
-  Reg	char	*tmp, *s;
+  char	*tmp, *s;
   int	i, dontadd;
   char	line[BUFSIZE];
   int	ccount = 0, ncount = 0;
@@ -2079,8 +2080,6 @@ void initconf(int opt, FBFILE* file, int use_include)
 
       if (aconf->status & CONF_SERVER_MASK)
 	{
-	  char *p;
-
 	  if (ncount > MAXCONFLINKS || ccount > MAXCONFLINKS ||
 	      !aconf->host || !aconf->user)
 	    {
@@ -2093,39 +2092,13 @@ void initconf(int opt, FBFILE* file, int use_include)
 	      sendto_realops("Bad C/N line host %s", aconf->host);
 	      continue;
 	    }
-
-	  if ( (p = strchr(aconf->host, '@')) )
+	  
+	  if( SplitUserHost(aconf) < 0 )
 	    {
-	      *p = '\0';
-	      p++;
-	      if(aconf->user)
-		{
-		  aconf->name = aconf->user;
-		  DupString(aconf->user, aconf->host);
-		  strcpy(aconf->host, p);
-		}
-	      else
-		{
-		  sendto_realops("Bad C/N line host %s", aconf->host);
-		  free_conf(aconf);
-		  aconf = NULL;
-		  continue;
-		}
-	    }
-	  else
-	    {
-	      if(aconf->user)
-		{
-		  aconf->name = aconf->user;
-		  DupString(aconf->user, "*");
-		}
-	      else
-		{
-		  sendto_realops("Bad C/N line host %s", aconf->host);
-		  free_conf(aconf);
-		  aconf = NULL;
-		  continue;
-		}
+	      sendto_realops("Bad C/N line host %s", aconf->host);
+	      free_conf(aconf);
+	      aconf = NULL;
+	      continue;
 	    }
 
 	  if (!(opt & BOOT_QUICK))
@@ -2136,25 +2109,11 @@ void initconf(int opt, FBFILE* file, int use_include)
 
       if (aconf->status & (CONF_LOCOP|CONF_OPERATOR))
 	{
-	  char *p;
-
-	  if ( (p = strchr(aconf->host, '@')) )
+	  if(SplitUserHost(aconf) < 0)
 	    {
-	      *p = '\0';
-	      p++;
-	      if(aconf->user)
-		{
-		  aconf->name = aconf->user;
-		  DupString(aconf->user, aconf->host);
-		  strcpy(aconf->host, p);
-		}
-	      else
-		{
-		  sendto_realops("Bad O/o line host %s", aconf->host);
-		  free_conf(aconf);
-		  aconf = NULL;
-		  continue;
-		}
+	      sendto_realops("Bad O/o line host %s", aconf->host);
+	      free_conf(aconf);
+	      aconf = NULL;
 	    }
 	}
 
@@ -2376,6 +2335,40 @@ void initconf(int opt, FBFILE* file, int use_include)
 }
 
 /*
+ * commonly used function to split user@host part into user and host fields
+ */
+
+static int SplitUserHost(aConfItem *aconf)
+{
+  char *p;
+
+  if ( (p = strchr(aconf->host, '@')) )
+    {
+      *p = '\0';
+      p++;
+      if(aconf->user)
+	{
+	  aconf->name = aconf->user;
+	  DupString(aconf->user, aconf->host);
+	  strcpy(aconf->host, p);
+	}
+      else
+	{
+	  return(-1);
+	}
+    }
+  else
+    {
+      if(aconf->user)
+	{
+	  aconf->name = aconf->user;
+	  DupString(aconf->user, "*");
+	}
+    }
+  return(1);
+}
+
+/*
  * do_include_conf()
  *
  * inputs	- NONE
@@ -2454,7 +2447,7 @@ static	int	lookup_confhost(aConfItem *aconf)
       aconf->ipnum.s_addr = htonl(ip);
     }
   else if ((hp = gethost_byname(aconf->host, &ln)))
-    memcpy(hp->h_addr, (char *)&(aconf->ipnum),
+    memcpy((void *)&(aconf->ipnum),(void *)hp->h_addr,
 	  sizeof(struct in_addr));
   
   if (aconf->ipnum.s_addr == -1)
@@ -3540,7 +3533,7 @@ char    *parv, *filename;
 {
   FBFILE* file;
   char    line[256];
-  Reg1    char	*tmp;
+  char    *tmp;
   struct  stat	sb;
   struct  tm	*tm;
 

@@ -796,6 +796,29 @@ int	check_server(aClient *cptr,
 	  break;
     }
 
+  if (hp)
+    {
+      /*
+       * if we are missing a C or N line from above, search for
+       * it under all known hostnames we have for this ip#.
+       */
+      for (i=0,name = hp->h_name; name ; name = hp->h_aliases[i++])
+	{
+	  Debug((DEBUG_DNS, "sv_cl: gethostbyaddr: %s->%s",
+		 sockname, name));
+
+	  if (!c_conf)
+	    c_conf = find_conf_host(lp, name, CONF_CONNECT_SERVER );
+	  if (!n_conf)
+	    n_conf = find_conf_host(lp, name, CONF_NOCONNECT_SERVER );
+	  if (c_conf && n_conf)
+	    {
+	      get_sockhost(cptr, name);
+	      break;
+	    }
+	}
+    }
+
   name = cptr->name;
 
   /*
