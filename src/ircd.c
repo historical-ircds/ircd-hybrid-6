@@ -19,6 +19,7 @@
  *
  * $Id$
  */
+
 #include "ircd.h"
 #include "channel.h"
 #include "class.h"
