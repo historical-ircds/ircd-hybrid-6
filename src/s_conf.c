@@ -1708,11 +1708,13 @@ int 	initconf(int opt, int fd)
 	if (!index(aconf->host, '@') && *aconf->host != '/')
 	  {
 	    char	*newhost;
-	    int	len = 3;	/* *@\0 = 3 */
+	    int	len;		
 	    
-	    len += strlen(aconf->host);
+	    len = strlen(aconf->host) + 3; /* *@\0 = 3 */
 	    newhost = (char *)MyMalloc(len);
-	    (void)ircsprintf(newhost, "*@%s", aconf->host);
+	    *newhost++ = '*';
+	    *newhost++ = '@';
+	    strcpy(newhost,aconf->host);
 	    MyFree(aconf->host);
 	    aconf->host = newhost;
 	  }

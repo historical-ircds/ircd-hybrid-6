@@ -1543,7 +1543,10 @@ void clear_mtrie_conf_links()
       found_conf;found_conf=found_conf_next)
     {
       found_conf_next = found_conf->next;
-      free_conf(found_conf);
+      if (found_conf->clients)
+	found_conf->status |= CONF_ILLEGAL;
+      else
+	free_conf(found_conf);
     }
   wild_card_ilines = (aConfItem *)NULL;
 
