@@ -299,8 +299,8 @@ struct Client
 #define FLAGS_IPHASH       0x1000 /* iphashed this client */
 
 /* user information flags, only settable by remote mode or local oper */
-#define	FLAGS_OPER	   0x1000 /* Operator */
-#define	FLAGS_LOCOP        0x2000 /* Local operator -- SRB */
+#define	FLAGS_OPER	   0x2000 /* Operator */
+#define	FLAGS_LOCOP        0x4000 /* Local operator -- SRB */
 
 
 /* umodes, settable flags */

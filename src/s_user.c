@@ -131,7 +131,7 @@ static int user_modes_from_c_to_bitmask[] =
 #ifdef BOTCHECK
 static int bot_check(char *);
 
-char *type_of_bot[]={
+const char *type_of_bot[]={
   "NONE",
   "eggdrop",
   "vald/com/joh bot",
@@ -3665,6 +3665,15 @@ int	m_umode(aClient *cptr,
 	case '-' :
 	  what = MODE_DEL;
 	  break;	
+
+	case 'o':
+	  if(what == MODE_ADD)
+	    {
+	      if(IsServer(cptr))
+		SetOper(sptr);
+	    }
+	  break;
+
 	  /* we may not get these,
 	   * but they shouldnt be in default
 	   */
