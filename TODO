@@ -1,5 +1,3 @@
-- Update opers.txt to reflect changes since last year
-- update Hybrid-team
 - add example *::* and NOMATCH::* I: lines to example.conf
 - add more stderr debugging (ircd -s)... one for every place we syslog()
 - make wrapper function for res_init() to do spare_fd crap
@@ -8,4 +6,9 @@
 - let people view topics on -s channels with /topic
 - re-implment first parm in m_lusers()
 - UNdline
-
+- lazy links
+- a version of ircnet's iauth
+- trie' channel name list
+- one time oper passwords
+- SSL support
+- new conf format

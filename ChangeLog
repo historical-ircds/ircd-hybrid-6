@@ -2,7 +2,7 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
-version hybrid-6-b57   26-Mar-1999
+version hybrid-6-b57   28-Mar-1999
 * integrated ChangeLog with README.hybrid
 * updated Hybrid-team and version.c.SH to reflect the current core team
 * updated INSTALL file to match current install_ircd script
@@ -12,6 +12,9 @@ version hybrid-6-b57   26-Mar-1999
 * install_ircd now installs viconf and mkpasswd
 * added a couple of ifdefs to help compile under cygwin32b20.1
 * added simple.conf to doc directory
+* fixed rcs_version string in mtrie_conf.c and s_debug.c
+* added SPLIT_PONG...  sends a PING at the end of m_server_estab(),
+  checks for PONG from a server before resetting server_was_split.
 -Rodder
 * fixed mtrie_conf.c kline code
 -Dianora

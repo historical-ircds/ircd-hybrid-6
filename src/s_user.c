@@ -132,6 +132,11 @@ int spam_time = MIN_JOIN_LEAVE_TIME;
 int spam_num = MAX_JOIN_LEAVE_COUNT;
 #endif
 
+#if defined(SPLIT_PONG) && (defined(NO_CHANOPS_WHEN_SPLIT) || \
+	defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT))
+extern int got_server_pong;
+#endif
+
 /*
 ** m_functions execute protocol messages on this server:
 **
@@ -3358,6 +3363,12 @@ int	m_pong(aClient *cptr,
   destination = parv[2];
   cptr->flags &= ~FLAGS_PINGSENT;
   sptr->flags &= ~FLAGS_PINGSENT;
+
+#if defined(SPLIT_PONG) && (defined(NO_CHANOPS_WHEN_SPLIT) || \
+	defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT))
+  if (IsServer(cptr))
+    got_server_pong = YES;
+#endif
 
   /* Now attempt to route the PONG, comstud pointed out routable PING
    * is used for SPING.  routable PING should also probably be left in

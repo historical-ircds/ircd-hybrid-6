@@ -737,6 +737,16 @@
 #define SPLIT_SMALLNET_USER_SIZE 10000
 
 /*
+ * SPLIT_PONG will send a PING to a server after the connect burst.
+ * It will stay in "split" mode until it receives a PONG in addition
+ * to meeting the other conditions.  This is very useful for true
+ * leafs, less useful for "clustered" servers.  If this is enabled,
+ * you should be able to crank DEFAULT_SERVER_SPLIT_RECOVERY_TIME
+ * down to 1.
+ */
+#define SPLIT_PONG
+
+/*
  * DEFAULT_SERVER_SPLIT_RECOVERY_TIME - determines how long to delay split
  * status after resyncing
  */

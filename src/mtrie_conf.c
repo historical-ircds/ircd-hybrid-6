@@ -56,7 +56,7 @@
 #endif
 
 #ifndef lint
-static char *version="$Id$";
+static char *rcs_version="$Id$";
 #endif /* lint */
 
 #define MAXPREFIX (HOSTLEN+USERLEN+15)
