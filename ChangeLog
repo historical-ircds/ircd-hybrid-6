@@ -1,3 +1,18 @@
+db          2001/12/07 21:38:19 EST	(20011208_4)
+
+  Modified files:
+    include              msg.h 
+    src                  client.c 
+  Log:
+  - removed c++ style comments. One could argue all modern c compilers
+    handle these now, but I personally, hate c++ comments anyway.
+  
+  Revision  Changes    Path
+  1.22      +4 -2      ircd-hybrid-6/include/msg.h
+  1.74      +7 -4      ircd-hybrid-6/src/client.c
+
+
+
 db          2001/12/07 21:33:55 EST	(20011208_3)
 
   Modified files:
