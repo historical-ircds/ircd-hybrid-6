@@ -1,3 +1,7 @@
+*** 20011129_11 by wcampbel
+Update opers.txt documentation again.
+
+
 *** 20011129_10 by db
 Lee is right. /stats j should be /stats q like hybrid-7. done deal.
 Also removed the unnecessary (char *) cast on the NULLs in the message tables
