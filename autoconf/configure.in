@@ -20,8 +20,6 @@ AC_PATH_PROG(CP,cp)
 AC_PROG_INSTALL
 
 dnl Checks for libraries.
-dnl Replace `main' with a function in -lnsl:
-AC_CHECK_LIB(nsl, gethostbyname)
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_FUNC(crypt,, AC_CHECK_LIB(descrypt, crypt,,AC_CHECK_LIB(crypt, crypt,,)))
 
