@@ -125,25 +125,25 @@ else
 fi
 
 # install mkpasswd
-if [ ! -f ${DPATH}/mkpasswd ]; then
-  echo installing mkpasswd as ${DPATH}/mkpasswd${EXESUFFIX}
-  $INSTALL_SH -c tools/mkpasswd${EXESUFFIX} ${DPATH}/mkpasswd${EXESUFFIX};
+if [ ! -f ${DPATH}mkpasswd ]; then
+  echo installing mkpasswd as ${DPATH}mkpasswd${EXESUFFIX}
+  $INSTALL_SH -c tools/mkpasswd${EXESUFFIX} ${DPATH}mkpasswd${EXESUFFIX};
 else
-   echo installing mkpasswd as ${DPATH}/mkpasswd${EXESUFFIX}
+   echo installing mkpasswd as ${DPATH}mkpasswd${EXESUFFIX}
    echo previous mkpasswd saved as mkpasswd${EXESUFFIX}.old
-   mv ${DPATH}/mkpasswd${EXESUFFIX} ${DPATH}/mkpasswd${EXESUFFIX}.old
-   $INSTALL_SH -c tools/mkpasswd${EXESUFFIX} ${DPATH}/mkpasswd${EXESUFFIX};
+   mv ${DPATH}mkpasswd${EXESUFFIX} ${DPATH}mkpasswd${EXESUFFIX}.old
+   $INSTALL_SH -c tools/mkpasswd${EXESUFFIX} ${DPATH}mkpasswd${EXESUFFIX};
 fi 
 
 # install viconf
-if [ ! -f ${DPATH}/viconf ]; then
-  echo installing viconf as ${DPATH}/viconf${EXESUFFIX}
-  $INSTALL_SH -c tools/viconf${EXESUFFIX} ${DPATH}/viconf${EXESUFFIX};
+if [ ! -f ${DPATH}viconf ]; then
+  echo installing viconf as ${DPATH}viconf${EXESUFFIX}
+  $INSTALL_SH -c tools/viconf${EXESUFFIX} ${DPATH}viconf${EXESUFFIX};
 else
-   echo installing viconf as ${DPATH}/viconf${EXESUFFIX}
+   echo installing viconf as ${DPATH}viconf${EXESUFFIX}
    echo previous viconf saved as viconf${EXESUFFIX}.old
-   mv ${DPATH}/viconf${EXESUFFIX} ${DPATH}/viconf${EXESUFFIX}.old
-   $INSTALL_SH -c tools/viconf${EXESUFFIX} ${DPATH}/viconf${EXESUFFIX};
+   mv ${DPATH}viconf${EXESUFFIX} ${DPATH}viconf${EXESUFFIX}.old
+   $INSTALL_SH -c tools/viconf${EXESUFFIX} ${DPATH}viconf${EXESUFFIX};
 fi
 
 # finished.
