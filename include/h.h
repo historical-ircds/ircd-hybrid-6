@@ -205,9 +205,8 @@ extern void	off_history (aClient *);
 extern	int	dopacket (aClient *, char *, int);
 
 /*VARARGS2*/
-extern	void	debug();
+extern	void	debug(int, char *, ...);
 #ifdef DEBUGMODE
-extern	void	send_usage (aClient *, char *);
 extern	void	send_listinfo (aClient *, char *);
 extern	void	count_memory (aClient *, char *);
 #endif

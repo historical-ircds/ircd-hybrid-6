@@ -43,6 +43,7 @@
 #include "class.h"
 #include "send.h"
 #include "hash.h"
+#include "s_debug.h"
 
 #ifndef __EMX__
 #include <utmp.h> /* old slackware utmp.h defines BYTE_ORDER */
@@ -1675,9 +1676,7 @@ int	m_stats(aClient *cptr,
       break;
 
     case 'R' : case 'r' :
-#ifdef DEBUGMODE
       send_usage(sptr,parv[0]);
-#endif
       valid_stats++;
       break;
 

@@ -35,10 +35,6 @@ extern	char	*sys_errlist[];
 #endif
 #endif
 
-#if defined(DEBUGMODE) || defined (DNS_DEBUG)
-int	writecalls = 0, writeb[10] = {0,0,0,0,0,0,0,0,0,0};
-int     readcalls = 0;
-#endif
 VOIDSIG dummy()
 {
 #ifndef HAVE_RELIABLE_SIGNALS
@@ -94,9 +90,6 @@ int	deliver_it(aClient *cptr,char *str,int len)
 {
   int	retval;
 
-#ifdef	DEBUGMODE
-  writecalls++;
-#endif
   retval = send(cptr->fd, str, len, 0);
   /*
   ** Convert WOULDBLOCK to a return of "0 bytes moved". This
@@ -117,31 +110,6 @@ int	deliver_it(aClient *cptr,char *str,int len)
       cptr->flags &= ~FLAGS_BLOCKED;
     }
 
-#ifdef DEBUGMODE
-  if (retval < 0)
-    {
-      writeb[0]++;
-      Debug((DEBUG_ERROR,"write error (%s) to %s",
-	     sys_errlist[errno], cptr->name));
-    } else if (retval == 0)
-      writeb[1]++;
-  else if (retval < 16)
-    writeb[2]++;
-  else if (retval < 32)
-    writeb[3]++;
-  else if (retval < 64)
-    writeb[4]++;
-  else if (retval < 128)
-    writeb[5]++;
-  else if (retval < 256)
-    writeb[6]++;
-  else if (retval < 512)
-    writeb[7]++;
-  else if (retval < 1024)
-    writeb[8]++;
-  else
-    writeb[9]++;
-#endif
   if (retval > 0)
     {
       cptr->sendB += retval;

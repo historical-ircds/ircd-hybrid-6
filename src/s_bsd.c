@@ -1408,9 +1408,6 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
     rr = FD_ISSET(i, read_set);
     if (!NoNewLine(cptr) || rr)
       length = read_packet(cptr, rr);
-#ifdef DEBUGMODE
-    readcalls++;
-#endif
 
     if ((length != FLUSH_BUFFER) && IsDead(cptr)) {
       if (FD_ISSET(i, read_set)) {
@@ -1719,9 +1716,7 @@ int read_message(time_t delay, fdlist *listp)
       length = 1;     /* for fall through case */
       if (!NoNewLine(cptr) || rr)
         length = read_packet(cptr, rr);
-#ifdef DEBUGMODE
-          readcalls++;
-#endif
+
       if (length == FLUSH_BUFFER)
         continue;
       if (IsDead(cptr))

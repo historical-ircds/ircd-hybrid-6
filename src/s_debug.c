@@ -127,26 +127,25 @@ char	serveropts[] = {
 # include <sys/syscall.h>
 # define getrusage(a,b) syscall(SYS_GETRUSAGE, a, b)
 #endif
-#if defined( HAVE_GETRUSAGE )
+
 # ifdef SOL20
 #  include <sys/time.h>
 /*
 #  include <sys/rusage.h>
 */
 # endif
+
 # include <sys/resource.h>
-#else
-#  if defined( HAVE_TIMES )
-#   include <sys/times.h>
-#  endif
-#endif /* HAVE_GETRUSAGE */
+
+
 #ifdef HPUX
 #include <unistd.h>
 #ifdef DYNIXPTX
 #include <sys/types.h>
 #include <time.h>
-#endif
-#endif
+#endif /* DYNIXPTX */
+#endif /* HPUX */
+
 #include "h.h"
 
 #ifndef ssize_t
@@ -155,8 +154,6 @@ char	serveropts[] = {
 
 /* extern char *sys_errlist[]; */
 
-/*#ifdef DEBUGMODE*/
-#if defined(DNS_DEBUG) || defined(DEBUGMODE)
 static	char	debugbuf[1024];
 
 void
@@ -166,7 +163,7 @@ debug(int level, char *format, ...)
 	va_list args;
 	int err = errno;
 
-	MyVaStart(args, format);
+	va_start(args, format);
 
 	(void) vsprintf(debugbuf, format, args);
 
@@ -192,6 +189,8 @@ debug(int level, char *format, ...)
 	errno = err;
 } /* debug() */
 
+
+
 /*
  * This is part of the STATS replies. There is no offical numeric for this
  * since this isnt an official command, in much the same way as HASH isnt.
@@ -201,8 +200,6 @@ debug(int level, char *format, ...)
  */
 void	send_usage(aClient *cptr, char *nick)
 {
-
-#if defined( HAVE_GETRUSAGE )
   struct	rusage	rus;
   time_t	secs, rup;
 #ifdef	hz
@@ -249,55 +246,16 @@ void	send_usage(aClient *cptr, char *nick)
   sendto_one(cptr, ":%s %d %s :Signals %d Context Vol. %d Invol %d",
 	     me.name, RPL_STATSDEBUG, nick, rus.ru_nsignals,
 	     rus.ru_nvcsw, rus.ru_nivcsw);
-#else
-# if defined( HAVE_TIMES )
-  struct	tms	tmsbuf;
-  time_t	secs, mins;
-  int	hzz = 1, ticpermin;
-  int	umin, smin, usec, ssec;
 
-#  ifdef HPUX
-  hzz = sysconf(_SC_CLK_TCK);
-#  endif
-  ticpermin = hzz * 60;
+  /* The counters that were here have been removed, 
+   * Bleep and I (Dianora) contend they weren't useful for
+   * even debugging.
+   */
 
-  umin = tmsbuf.tms_utime / ticpermin;
-  usec = (tmsbuf.tms_utime%ticpermin)/(float)hzz;
-  smin = tmsbuf.tms_stime / ticpermin;
-  ssec = (tmsbuf.tms_stime%ticpermin)/(float)hzz;
-  secs = usec + ssec;
-  mins = (secs/60) + umin + smin;
-  secs %= hzz;
-
-  if (times(&tmsbuf) == -1)
-    {
-      sendto_one(cptr,":%s %d %s :times(2) error: %s.",
-		 me.name, RPL_STATSDEBUG, nick, strerror(errno));
-      return;
-    }
-  secs = tmsbuf.tms_utime + tmsbuf.tms_stime;
-
-  sendto_one(cptr,
-	     ":%s %d %s :CPU Secs %d:%d User %d:%d System %d:%d",
-	     me.name, RPL_STATSDEBUG, nick, mins, secs, umin, usec,
-	     smin, ssec);
-# endif /* HAVE_TIMES */
-#endif /* HAVE_GETRUSAGE */
-  sendto_one(cptr, ":%s %d %s :Reads %d Writes %d",
-	     me.name, RPL_STATSDEBUG, nick, readcalls, writecalls);
   sendto_one(cptr, ":%s %d %s :DBUF alloc %d blocks %d",
 	     me.name, RPL_STATSDEBUG, nick, dbufalloc, dbufblocks);
-  sendto_one(cptr,
-	     ":%s %d %s :Writes:  <0 %d 0 %d <16 %d <32 %d <64 %d",
-	     me.name, RPL_STATSDEBUG, nick,
-	     writeb[0], writeb[1], writeb[2], writeb[3], writeb[4]);
-  sendto_one(cptr,
-	     ":%s %d %s :<128 %d <256 %d <512 %d <1024 %d >1024 %d",
-	     me.name, RPL_STATSDEBUG, nick,
-	     writeb[5], writeb[6], writeb[7], writeb[8], writeb[9]);
   return;
 }
-#endif
 
 void count_memory(aClient *cptr,char *nick)
 {
