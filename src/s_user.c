@@ -140,8 +140,6 @@ const char *type_of_bot[]={
 
 unsigned long my_rand(void);    /* provided by orabidoo */
 
-/* externally defined functions */
-extern Link *find_channel_link(Link *,aChannel *);      /* defined in list.c */
 
 #ifdef FLUD
 extern BlockHeap *free_fludbots;

@@ -92,6 +92,7 @@ typedef struct  Channel aChannel;
 
 extern  void sync_channels();
 extern  struct  Channel *find_channel (char *, struct Channel *);
+extern  struct  SLink *find_channel_link(struct SLink *, struct Channel *);
 extern  void    remove_user_from_channel(struct Client *,struct Channel *,int);
 extern  void    del_invite (struct Client *, struct Channel *);
 extern  void    send_user_joins (struct Client *, struct Client *);
