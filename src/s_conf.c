@@ -2570,10 +2570,6 @@ static void lookup_confhost(struct ConfItem* aconf)
   else if (0 != (dns_reply = conf_dns_lookup(aconf)))
     memcpy(&aconf->ipnum, dns_reply->hp->h_addr, sizeof(struct in_addr));
   
-  if (INADDR_NONE == aconf->ipnum.s_addr) {
-    log(L_ERROR, "Host/server name error: (%s) (%s)",
-        aconf->host, aconf->name);
-  }
 }
 
 /*
