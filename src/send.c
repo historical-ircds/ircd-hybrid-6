@@ -309,7 +309,7 @@ send_message(aClient *to, char *msg, int len)
 */
 int send_queued(aClient *to)
 {
-  char *msg;
+  const char *msg;
   int len, rlen;
 #ifdef ZIP_LINKS
   int more = NO;
