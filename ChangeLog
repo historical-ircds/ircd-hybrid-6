@@ -1,3 +1,10 @@
+*** 20010704_3 by jdc
+- include/config.h
+    * Forgot to add CRYPT_LINKS_CIPHERPREFIX to this file, not just
+      config.h.dist.
+
+
+
 *** 20010704_2 by jdc
 - src/m_cryptlink.c
     * Woohoo!  Found the bug in question; old code was sending the old
