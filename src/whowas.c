@@ -167,33 +167,31 @@ int     m_whowas(aClient *cptr,
   if(p)
     *p = '\0';
   nick = parv[1];
+
+  temp = WHOWASHASH[hash_whowas_name(nick)];
+  found = 0;
+  for(;temp;temp=temp->next)
     {
-      temp = WHOWASHASH[hash_whowas_name(nick)];
-      found = 0;
-      for(;temp;temp=temp->next)
+      if (!mycmp(nick, temp->name))
 	{
-	  if (!mycmp(nick, temp->name))
-	    {
-	      sendto_one(sptr, rpl_str(RPL_WHOWASUSER),
-			 me.name, parv[0], temp->name,
-			 temp->username,
-			 temp->hostname,
-			 temp->realname);
-	      sendto_one(sptr, rpl_str(RPL_WHOISSERVER),
-			 me.name, parv[0], temp->name,
-			 temp->servername, myctime(temp->logoff));
-	      cur++;
-	      found++;
-	    }
-	  if (max > 0 && cur >= max)
-	    break;
+	  sendto_one(sptr, rpl_str(RPL_WHOWASUSER),
+		     me.name, parv[0], temp->name,
+		     temp->username,
+		     temp->hostname,
+		     temp->realname);
+	  sendto_one(sptr, rpl_str(RPL_WHOISSERVER),
+		     me.name, parv[0], temp->name,
+		     temp->servername, myctime(temp->logoff));
+	  cur++;
+	  found++;
 	}
-      if (!found)
-	sendto_one(sptr, err_str(ERR_WASNOSUCHNICK),
-		   me.name, parv[0], nick);
-      if (p)
-	p[-1] = ',';
+      if (max > 0 && cur >= max)
+	break;
     }
+  if (!found)
+    sendto_one(sptr, err_str(ERR_WASNOSUCHNICK),
+	       me.name, parv[0], nick);
+
   sendto_one(sptr, rpl_str(RPL_ENDOFWHOWAS), me.name, parv[0], parv[1]);
   return 0;
 }

@@ -734,6 +734,13 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
    * and not bothering with the K line search - Dianora
    */
 
+  /* if iline returned says no ident needed then get rid
+   * of ~ if found in user
+   */
+
+  if(!IsConfDoIdentd(iline_aconf) && (*user == '~'))
+    user++;
+
   if(trie_list && first_kline_trie_list)
     {
       stack_pointer = saved_stack_pointer;
@@ -1007,8 +1014,9 @@ static aConfItem *look_in_unsortable_ilines(char *host,char *user)
 
   for(found_conf=unsortable_list_ilines;found_conf;found_conf=found_conf->next)
     {
-      if(!matches(found_conf->host,host) && !matches(found_conf->name,user))
-	 return(found_conf);
+      if(!matches(found_conf->host,host) &&
+	 !matches(found_conf->name,user))
+	return(found_conf);
     }
   return((aConfItem *)NULL);
 }
@@ -1030,7 +1038,8 @@ static aConfItem *look_in_unsortable_klines(char *host,char *user)
 
   for(found_conf=unsortable_list_klines;found_conf;found_conf=found_conf->next)
     {
-      if(!matches(found_conf->host,host) && !matches(found_conf->name,user))
+      if(!matches(found_conf->host,host) &&
+	 !matches(found_conf->name,user))
 	return(found_conf);
     }
   return((aConfItem *)NULL);
