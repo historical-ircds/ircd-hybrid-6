@@ -53,7 +53,7 @@ static	void	resend_query (ResRQ *);
 static	int	proc_answer (ResRQ *, HEADER *, char *, char *);
 static	int	query_name (char *, int, int, ResRQ *);
 static	aCache	*make_cache (ResRQ *);
-static aCache  *find_cache_name (char *);
+static  aCache  *find_cache_name (char *);
 static	aCache	*find_cache_number (ResRQ *, char *);
 static	int	add_request (ResRQ *);
 static	ResRQ	*make_request (Link *);
@@ -755,8 +755,8 @@ struct	hostent	*get_res(char *lp)
 
   for (a = 0; a < max; a++)
     if (!_res.nsaddr_list[a].sin_addr.s_addr ||
-	!bcmp((char *)&sin.sin_addr,
-	      (char *)&_res.nsaddr_list[a].sin_addr,
+	!memcmp((void *)&sin.sin_addr,
+	      (void *)&_res.nsaddr_list[a].sin_addr,
 	      sizeof(struct in_addr)))
       break;
   if (a == max)
@@ -1042,7 +1042,7 @@ static	void	update_list(ResRQ *rptr,aCache *cachep)
        ((struct in_addr *)s)->s_addr; s += sizeof(struct in_addr))
     {
       for (i = 0; (t = cp->he.h_addr_list[i]); i++)
-	if (!bcmp(s, t, sizeof(struct in_addr)))
+	if (!memcmp((void *)s, (void *)t, sizeof(struct in_addr)))
 	  break;
       if (i >= MAXADDRS || addrcount >= MAXADDRS)
 	break;
@@ -1150,7 +1150,7 @@ static	aCache	*find_cache_number(ResRQ *rptr,char *numb)
 
   for (; cp; cp = cp->hnum_next)
     for (i = 0; cp->he.h_addr_list[i]; i++)
-      if (!bcmp(cp->he.h_addr_list[i], numb,
+      if (!memcmp((void *)cp->he.h_addr_list[i], (void *)numb,
 		sizeof(struct in_addr)))
 	{
 	  cainfo.ca_nu_hits++;
@@ -1173,7 +1173,7 @@ static	aCache	*find_cache_number(ResRQ *rptr,char *numb)
       if (hashv == hash_number((u_char *)cp->he.h_addr_list[0]))
 	continue;
       for (i = 1; cp->he.h_addr_list[i]; i++)
-	if (!bcmp(cp->he.h_addr_list[i], numb,
+	if (!memcmp((void *)cp->he.h_addr_list[i], (void *)numb,
 		  sizeof(struct in_addr)))
 	  {
 	    cainfo.ca_nu_hits++;
