@@ -1,3 +1,7 @@
+*** 20000910_1 by lusky
+backed out bill's patch for now
+
+
 *** 20000907_2 by bill
 
 Oops.  Forgot to remove canonize() and place function call in the #ifdef.
