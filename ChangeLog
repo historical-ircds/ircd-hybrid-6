@@ -1,3 +1,8 @@
+*** 20010701_8 by db
+- changed too many nick changes into a numeric (back ported from h7)
+
+
+
 *** 20010701_7 by wcampbel
 USE_RCS isn't needed here
 
