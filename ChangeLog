@@ -1,3 +1,15 @@
+leeh        2001/12/11 08:30:53 EST	(20011211_3)
+
+  Modified files:
+    src                  m_message.c 
+  Log:
+  - allow voiced users to send to +#channel and @#channel
+  
+  Revision  Changes    Path
+  1.16      +1 -1      ircd-hybrid-6/src/m_message.c
+
+
+
 lusky       2001/12/10 21:20:45 EST	(20011211_2)
 
   Modified files:
