@@ -33,6 +33,7 @@
 #include "s_bsd.h"
 #include "send.h"
 
+#include <assert.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <fcntl.h>
