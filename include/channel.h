@@ -188,11 +188,13 @@ extern int got_server_pong;
 #define IsChannelName(name) ((name) && (*(name) == '#' || *(name) == '&'))
 
 #ifdef NEED_SPLITCODE
+
 extern int server_was_split;
 #if defined(SPLIT_PONG)
 extern int got_server_pong;
 #endif
 
+#endif  /* NEED_SPLITCODE */
 
 #endif
 
