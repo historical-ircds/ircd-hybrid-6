@@ -225,7 +225,7 @@ int dopacket(aClient *cptr, char *buffer, size_t length)
     }while(!done_unzip);
 #endif
   cptr->count = ch1 - cptrbuf;
-  return 0;
+  return 1;
 }
 
 
@@ -294,7 +294,7 @@ int client_dopacket(struct Client *cptr, char *buffer, size_t length)
     return exit_client(cptr, cptr, &me, 
             (cptr->flags & FLAGS_SENDQEX) ? "SendQ exceeded" : "Dead socket");
   }
-  return 0;
+  return 1;
 }
 
 

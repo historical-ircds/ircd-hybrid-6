@@ -122,7 +122,7 @@ int m_links(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   if(!IsAnOper(sptr))
     {
       /* reject non local requests */
-      if(!MyConnect(sptr))
+      if(!MyClient(sptr))
         return 0;
 
       if((last_used + PACE_WAIT) > CurrentTime)
