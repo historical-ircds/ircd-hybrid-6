@@ -60,7 +60,6 @@
 #include <pwd.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <getopt.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
@@ -71,13 +70,13 @@
 #endif /* SETUID_ROOT */
 
 /*
- * DELETE when verified
  * for getopt
  * ZZZ this is going to need confirmation on other OS's
  *
+ * #include <getopt.h>
  * Solaris has getopt.h, you should too... hopefully
+ * BSD declares them in stdlib.h
  * extern char *optarg;
- * 
  * 
  * for FreeBSD the following are defined:
  *
