@@ -454,12 +454,6 @@ Info MyInformation[] = {
 	{ "REPORT_DLINE_TO_USER", "OFF", 0, "Inform Clients They are D-lined" },
 #endif /* REPORT_DLINE_TO_USER */
 
-#ifdef RFC1035_ANAL
-	{ "RFC1035_ANAL", "ON", 0, "Reject Hostnames With Non-Compliant Characters" },
-#else
-	{ "RFC1035_ANAL", "OFF", 0, "Reject Hostnames With Non-Compliant Characters" },
-#endif /* RFC1035_ANAL */
-
 #ifdef SEND_FAKE_KILL_TO_CLIENT
 	{ "SEND_FAKE_KILL_TO_CLIENT", "ON", 0, "Make Client think they were KILLed" },
 #else
