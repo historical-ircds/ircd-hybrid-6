@@ -1,3 +1,8 @@
+*** 20010810_1 by leeh
+- wrapped TS5 in #ifdef's
+  I need to add doc/ts5.txt later
+
+
 *** 20010806_2 by leeh
 - added a special case exception for juped channels.
   if the channel is juped, and has no users, always use the incoming TS,
