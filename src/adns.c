@@ -4,6 +4,7 @@
  *
  * Written by Aaron Sethman <androsyn@ratbox.org>
  */
+#include <stdlib.h>
 #include "fileio.h"
 #include "res.h"
 #include "send.h"
@@ -13,6 +14,7 @@
 #include "client.h"
 #include "ircd_defs.h"
 #include "numeric.h"
+#include "irc_string.h"
 #include <errno.h>
 #include "../adns/internal.h"
 #define ADNS_MAXFD 2
@@ -31,6 +33,31 @@ void delete_adns_queries(struct DNSQuery *q)
   adns_cancel(q->query);
 }                       
 
+/*
+ * void dns_cancel_all(void)
+ *
+ * Input: None.
+ * Output: None.
+ * Side effects: Cancels all pending DNS requests
+ */
+ 
+static void dns_cancel_all(void)
+{
+ adns_query q, r;
+ adns_answer *answer;
+ struct DNSQuery *query;
+ adns_forallqueries_begin(dns_state);
+ while((q = adns_forallqueries_next(dns_state, (void **)&r)) != NULL)
+ {
+	adns_cancel(q);
+	adns__query_done(q);
+ 	adns_check(dns_state, &q, &answer, (void **)&query);
+ 	assert(query->callback != NULL);
+	query->query = NULL;
+ 	query->callback(query->ptr, NULL);
+ }
+}
+
 /* void restart_resolver(void)
  * Input: None
  * Output: None
@@ -38,10 +65,8 @@ void delete_adns_queries(struct DNSQuery *q)
  */
 void restart_resolver(void)
 {
-//  fd_close(dns_state->udpsocket);
-  close(dns_state->udpsocket);
-  adns_globalsystemfailure(dns_state);
-//  eventDelete(timeout_adns, NULL);
+  dns_cancel_all();
+  adns_finish(dns_state);
   init_resolver();
 }
 
@@ -60,7 +85,6 @@ void init_resolver(void)
    log(L_CRIT, "Error opening /etc/resolv.conf: %s; r = %d", strerror(errno), r);
    exit(76);
  }
-// dns_select();
 }
 
 /* void timeout_adns(void *ptr);
@@ -138,7 +162,6 @@ static void do_adns_select(void)
 	adns_beforeselect(dns_state, &maxfd, &readfds, &writefds, &exceptfds, 0, &tvbuf, 0);
 	select(maxfd, &readfds, &writefds, &exceptfds, &tvbuf);
 	adns_afterselect(dns_state, maxfd, &readfds, &writefds, &exceptfds, tvbuf); 
-
 }
 #else
 static void do_adns_poll(void)
@@ -160,6 +183,7 @@ void do_adns_io(void)
 #else
 	do_adns_select();
 #endif
+	adns_processany(dns_state);
 	dns_do_callbacks();
 }
 /* void adns_gethost(const char *name, struct DNSQuery *req);
