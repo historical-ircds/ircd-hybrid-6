@@ -392,6 +392,8 @@ void init_sys()
     }
 
 #ifndef __CYGWIN__
+  /* This is needed to not fork if -s is on */
+  if( !bootopt & BOOT_STDERR )
     {
       int pid;
       if( (pid = fork()) < 0)
