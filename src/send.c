@@ -233,7 +233,11 @@ static	int	send_message(aClient *to, char *msg, int len)
 	  sendto_ops("Max SendQ limit exceeded for %s : %d > %d",
 		     get_client_name(to, FALSE),
 		     DBufLength(&to->sendQ), get_sendq(to));
-	  return dead_link(to, "Max Sendq exceeded");
+	  if (IsDoingList(to))
+	    return dead_link(to, "Local kill by /list (so many channels!)");
+	  else
+	    return dead_link(to, "Max Sendq exceeded");
+
 	}
       else
 	{
