@@ -21,12 +21,9 @@ There is now a mailing list for general discussion of Hybrid.  To subscribe
 to the Hybrid List, send email to listmanager@the-project.org with
 a single line in the body containing "subscribe hybrid".
 
-SOLARIS USERS: this code appears to tickle a bug in older gcc and
-egcs ONLY on 64-bit Solaris7.  gcc-2.95 and SunPro C on 64bit should
-work fine, and any gcc or SunPro compiler on 32bit.
+SOLARIS USERS: this code appears to tickle a bug in gcc and egcs ONLY
+on 64-bit Solaris7.  You must compile on a 32bit kernel, then you
+can run on 32bit or 64bit.  Compiling with SunPro C on 64bit Solaris
+appears to work fine.
 
-SUPPORT PLATFORMS: this code should compile without any warnings
-on FreeBSD 3.x, RedHat 6.2, and Solaris 7/sparc.  Please let us know
-if you find otherwise.  It probably does not compile on AIX, IRIX,
-or libc5 Linux.
 
