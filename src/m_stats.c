@@ -215,7 +215,8 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
           /* Don't trust opers not on this server */
 #ifdef HIDE_SERVERS_IPS
-          if(MyClient(sptr) && IsAnOper(sptr) && !IsServer(acptr))
+          if(MyClient(sptr) && IsAnOper(sptr) && !IsServer(acptr) &&
+	    !IsConnecting(acptr) && !IsHandshake(acptr))
 #else	  
           if(MyClient(sptr) && IsAnOper(sptr))
 #endif	 
@@ -234,7 +235,8 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
               }
             else
               {
-                if(IsIPHidden(acptr) || IsServer(acptr))
+                if(IsIPHidden(acptr) || IsServer(acptr) ||
+		   IsConnecting(acptr) || IsHandshake(acptr))
                   sendto_one(sptr, Lformat, me.name,
                      RPL_STATSLINKINFO, parv[0],
                      get_client_name(acptr, MASK_IP),

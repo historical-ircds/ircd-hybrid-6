@@ -243,10 +243,21 @@ int     m_ltrace(struct Client *cptr,
       switch(acptr->status)
         {
         case STAT_HANDSHAKE:
+#ifdef HIDE_SERVERS_IPS
+	  name=get_client_name(acptr, MASK_IP);
+#endif	  
           sendto_one(sptr, form_str(RPL_TRACEHANDSHAKE), me.name,
                      parv[0], c_class, name);
           cnt++;
           break;
+	case STAT_CONNECTING:
+#ifdef HIDE_SERVERS_IPS
+          name=get_client_name(acptr, MASK_IP);
+#endif
+	  sendto_one(sptr, form_str(RPL_TRACECONNECTING), me.name, 
+	             parv[0], c_class, name);
+	  cnt++;
+	  break;
         case STAT_ME:
           break;
         case STAT_CLIENT:
