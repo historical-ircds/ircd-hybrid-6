@@ -1,3 +1,8 @@
+*** 20010722_2 by db
+- Don't show ip's on auto conns
+
+
+
 *** 20010722_1 by db
 *sigh*
 1) NO_HACK_OPS is broken atm, all servers in the network have to
