@@ -1,3 +1,8 @@
+*** 20000516_2 by lusky
+reworked vsendto_one() again (pa)
+another fix to the llist fix (db)
+
+
 *** 20000516_1 by lusky
 revved patchlevel to b126
 missing va_start/end in send.c (db)
