@@ -1375,7 +1375,7 @@ register char f;
 	    rp = inp[++i];                  /* get the next parameter */
 	    break;
 	  case 'c':
-	    *wp++ = (char)rp;
+	    *wp++ = (char)(int)rp;
 	    rp = inp[++i];
 	    break;
 	  case 'd':
