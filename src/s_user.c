@@ -2903,13 +2903,14 @@ int	m_quit(aClient *cptr,
 	   * be trying to exit with a spam message.
 	   */
 
-	  if(sptr->last_join_time &&
+	  if(sptr->last_join_time && !IsElined(sptr) &&
 	     !(sptr->person_privmsgs | sptr->channel_privmsgs))
 	    {
-	      sendto_realops("Possible spambot exiting %s [%s@%s] [%s]",
-			     sptr->name, sptr->user->username,
-			     sptr->user->host,
-			     comment);
+	      sendto_realops_lev(REJ_LEV,
+				 "Possible spambot exiting %s [%s@%s] [%s]",
+				 sptr->name, sptr->user->username,
+				 sptr->user->host,
+				 comment);
 	    }
 	}
 #endif
