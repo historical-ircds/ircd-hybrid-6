@@ -3480,12 +3480,13 @@ int	m_invite(aClient *cptr,
        * INVITE other users to the channel when it is invite-only (+i). *
        * The NOTICE is sent from the local server.  -- David-R          */
 
-      /* Only allow this invite notice if the channel is also not +p
+      /* Only allow this invite notice if the channel is +p
+       * i.e. "paranoid"
        * -Dianora
        */
 
       if (chptr && (chptr->mode.mode & MODE_INVITEONLY)
-	  && !(chptr->mode.mode & MODE_PRIVATE))
+	  && (chptr->mode.mode & MODE_PRIVATE))
 	{ 
 	  char message[300];
 

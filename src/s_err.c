@@ -495,7 +495,7 @@ static	char *	replies[] = {
 /* 434 */	(char *)NULL,
 /* 435 */	(char *)NULL,
 /* 436 ERR_NICKCOLLISION, */	":%s 436 %s %s :Nickname collision KILL",
-/* 437 */	(char *)NULL,
+/* 437 EER_NOTAVAILABLE, */	":%s 437 %s %s :Nick/channel is temporarily unavailable",
 /* 438 */	(char *)NULL,
 /* 439 */	(char *)NULL,
 /* 440 */	(char *)NULL,

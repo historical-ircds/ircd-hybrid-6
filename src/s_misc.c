@@ -254,10 +254,17 @@ char	*get_client_name(aClient *sptr,int showip)
 
   if (MyConnect(sptr))
     {
-
       /* Check for ident */
-      if (IsGotId(sptr))
-        (void)strcpy(t_id, "(+)");
+
+      /* For consistency everywhere else no? -db */
+      if (!IsGotId(sptr))
+	{
+	  t_id[0] = '~';
+	  t_id[1] = '\0';
+	}
+
+      /* original -db */
+      /* (void)strcpy(t_id, "(+)"); */
 
       /* Check for a username (listening ports don't have usernames) */
       if (sptr->user && sptr->user->username[0])

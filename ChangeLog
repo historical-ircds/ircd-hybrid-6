@@ -22,6 +22,18 @@ I started this file to keep track of changes made in hybrid-6,
 beginning with b37.  We are in VERY HIGH SPEED development mode,
 so it's important to keep track of this. =)
 	
+version hybrid-6-b44    30-Jan-1999
+* (s_bsd.c) fixed a botch with rr = 0 causing bizarre behaviour under solaris
+  (ping time outs etc.) due to a mis-cut and paste from the select code
+* (s_bsd.c) redid read_packet() to use msg_ready again
+* (s_bsd.c) removed unnecessary default_read_set default_write_set, that was a
+  remnant from a failed experiment with pre-set up fd set's, it was
+  just slowing down the code for no reason.
+* (s_misc.c) redid get_client_name() slightly to be consistent,
+  idented names should not have ~ non-idented names should have ~
+  lets not be inconsitent with (+) prefixes for idented names
+-Dianora
+	
 version hybrid-6-b43    24-Jan-1999
 * reworked io_loop dropping CPU load significantly, this is still something 
   that needs to be looked at.

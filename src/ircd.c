@@ -1329,7 +1329,13 @@ time_t io_loop(time_t delay)
       sync_channels(timeofday - lasttimeofday);
     }
 
-  NOW = timeofday;
+  if(timeofday == lasttimeofday)
+    {
+      sleep(1);
+      NOW = timeofday+1;
+    }
+  else
+    NOW = timeofday;
 
   /*
    * This chunk of code determines whether or not

@@ -62,11 +62,9 @@ static char *rcs_version = "$Id$";
  * Stuff for select()
  */
 
-fd_set  *default_read_set,*default_write_set; 
 fd_set  *read_set,*write_set;
 
 #ifndef HAVE_FD_ALLOC
-fd_set  default_readset,default_writeset;
 fd_set  readset,writeset;
 #endif
 
@@ -465,16 +463,9 @@ void	init_sys()
       write_set = FD_ALLOC(MAXCONNECTIONS);
       printf("Value of read_set is %lX\n", read_set);
       printf("Value of write_set is %lX\n", write_set);
-      default_read_set = FD_ALLOC(MAXCONNECTIONS);
-      default_write_set = FD_ALLOC(MAXCONNECTIONS);
-      printf("Value of default_readset is %lX\n", default_read_set);
-      printf("Value of default_writeset is %lX\n", default_write_set);
 #endif
       read_set = &readset;
       write_set = &writeset;
-      default_read_set = &default_readset;
-      default_write_set = &default_writeset;
-
 #endif /* USE_POLL */
 
       printf("Value of NOFILE is %d\n", NOFILE);
@@ -1360,7 +1351,7 @@ int read_packet(aClient *cptr, int msg_ready)
 {
   Reg	int	dolen = 0, length = 0, done;
 
-  if ( /* msg_ready && */
+  if (  msg_ready &&
       !(IsPerson(cptr) && DBufLength(&cptr->recvQ) > 6090))
       {
 	errno = 0;
@@ -1591,14 +1582,17 @@ void read_clients()
   now = timeofday;
 #endif
 
-  FD_ZERO(default_read_set);
-  FD_ZERO(default_write_set);
-
+  FD_ZERO(read_set);
+  FD_ZERO(write_set);
 
 #ifdef USE_FAST_FD_ISSET
   fd_mask = 1;
   fd_offset = 0;
 #endif
+
+  /* First part, fill in the fd sets with the bits for
+   * each fd to look for in the select()
+   */
 
   for(i=0;i<=highest_fd;i++)
     {
@@ -1615,6 +1609,7 @@ void read_clients()
 	  continue;
 	}
 
+#ifdef DEBUGMODE
       if (IsLog(cptr))
 	{
 #ifdef USE_FAST_FD_ISSET
@@ -1627,17 +1622,27 @@ void read_clients()
 #endif
 	  continue;
 	}
+#endif
 
       if (DoingAuth(cptr))
 	{
 	  auth++;
 	  Debug((DEBUG_NOTICE,"auth on %x %d", cptr, i));
-	  FD_SET(cptr->authfd, default_read_set);
+	  FD_SET(cptr->authfd, read_set);
 	  if (cptr->flags & FLAGS_WRAUTH)
-	    FD_SET(cptr->authfd, default_write_set);
+	    FD_SET(cptr->authfd, write_set);
+#ifdef USE_FAST_FD_ISSET
+	  fd_mask <<= 1;
+	  if(!fd_mask)
+	    {
+	      fd_offset++;
+	      fd_mask = 1;
+	    }
+#endif
+	  continue;
 	}
 
-      if (DoingDNS(cptr) || DoingAuth(cptr))
+      if (DoingDNS(cptr))
 	{
 #ifdef USE_FAST_FD_ISSET
 	  fd_mask <<= 1;
@@ -1650,24 +1655,33 @@ void read_clients()
 	  continue;
 	}
 
-      if (IsMe(cptr) && IsListening(cptr))
+      if (IsMe(cptr))
 	{
+	  if(IsListening(cptr))
+	    {
 #ifdef USE_FAST_FD_ISSET
-	  default_read_set->fds_bits[fd_offset] |= fd_mask;
+	      read_set->fds_bits[fd_offset] |= fd_mask;
+	      fd_mask <<= 1;
+	      if(!fd_mask)
+		{
+		  fd_offset++;
+		  fd_mask = 1;
+		}
 #else
-	  FD_SET(i, default_read_set);
+	      FD_SET(i, read_set);
 #endif
+	    }
 	}
-      else if (!IsMe(cptr))
+      else /* if(!IsMe(cptr)) */
 	{
 	  if (DBufLength(&cptr->recvQ) && delay2 > 2)
 	    delay2 = 1;
 	  if (DBufLength(&cptr->recvQ) < 4088)	
 	    {
 #ifdef USE_FAST_FD_ISSET
-	      default_read_set->fds_bits[fd_offset] |= fd_mask;
+	      read_set->fds_bits[fd_offset] |= fd_mask;
 #else
-	      FD_SET(i, default_read_set);
+	      FD_SET(i, read_set);
 #endif
 	    }
 	}
@@ -1679,23 +1693,24 @@ void read_clients()
 	  )
 #ifndef	pyr
 #ifdef USE_FAST_FD_ISSET
-	default_write_set->fds_bits[fd_offset] |= fd_mask;
+	  write_set->fds_bits[fd_offset] |= fd_mask;
 #else
-        FD_SET(i, default_write_set);
+	  FD_SET(i, write_set);
 #endif
 #else
-      {
-	if (!(cptr->flags & FLAGS_BLOCKED))
-	  {
+	{
+	  if (!(cptr->flags & FLAGS_BLOCKED))
+	    {
 #ifdef USE_FAST_FD_ISSET
-	    default_write_set->fds_bits[fd_offset] |= fd_mask;
+	      write_set->fds_bits[fd_offset] |= fd_mask;
 #else
-	    FD_SET(i, default_write_set);
+	      FD_SET(i, write_set);
 #endif
-	  }
-	else
-	  delay2 = 0, usec = 500000;
-      }
+	    }
+	  else
+	    delay2 = 0, usec = 500000;
+	}
+
       if (now - cptr->lw.tv_sec &&
 	  nowt.tv_usec - cptr->lw.tv_usec < 0)
 	us = 1000000;
@@ -1718,27 +1733,13 @@ void read_clients()
       
   if (resfd >= 0)
     {
-      FD_SET(resfd, default_read_set);
+      FD_SET(resfd, read_set);
     }
   wait.tv_sec = MIN(delay2, delay);
   wait.tv_usec = usec;
-  
+
   for(res=0;;)
     {
-#ifdef HAVE_FD_ALLOC
-      /* FD_SETSIZE/sizeof(fd_mask) is OS dependent, but I've only 
-       * seen fd_alloc in bsd/os
-       * -Dianora
-       */
-
-      memcpy(read_set,default_read_set,FD_SETSIZE/sizeof(fd_mask));
-      memcpy(write_set,default_write_set,FD_SETSIZE/sizeof(fd_mask));
-#else
-      memcpy(read_set,default_read_set,sizeof(default_readset));
-      memcpy(write_set,default_write_set,sizeof(default_writeset));
-#endif
-
-
 #ifdef	HPUX
       nfds = select(FD_SETSIZE, (fd_set *)read_set, (fd_set *)write_set,
 		    (fd_set *)0, &wait);
@@ -1762,28 +1763,8 @@ void read_clients()
       /* DEBUG */
       else if(nfds == -1 && errno == EBADF)
 	{
-	  int i;
-	  int result;
-	  struct stat file_stat;
-
-	  for(i=0;i<FD_SETSIZE;i++)
-	    {
-	      if(FD_ISSET(i,default_read_set))
-		{
-		  /* check to see if its an open fd */
-		  result = fstat(i,&file_stat);
-		  if(result < 0)
-		    {
-		      /* bleah. its not an open fd, so pull it */
-		      FD_CLR(i,default_read_set);
-		      FD_CLR(i,default_write_set);
-		      FD_CLR(i,read_set);
-		      FD_CLR(i,write_set);
-		      Debug((DEBUG_DEBUG,"EBADF on fd %d",i));
-		      sendto_realops("EBADF on fd %d",i);
-		    }
-		}
-	    }
+	  Debug((DEBUG_DEBUG,"EBADF on fd %d",i));
+	  sendto_realops("EBADF on fd %d",i);
 	}
       /* DEBUG */
       else if (nfds >= 0)
@@ -1826,7 +1807,7 @@ void read_clients()
 	}
   
 #ifdef DEBUGMODE
-      if(cptr->fd == 2)
+      if(IsLog(cptr))
 	{
 	  Debug((DEBUG_NOTICE,"trying to read stderr"));
 #ifdef USE_FAST_FD_ISSET
@@ -2022,12 +2003,14 @@ void read_clients()
       length = 1;	/* for fall through case */
       rr = 0;
 #ifdef USE_FAST_FD_ISSET
-      if (!NoNewLine(cptr) || 
-	  (rr = (read_set->fds_bits[fd_offset] & fd_mask)) )
-	  length = read_packet(cptr, rr);
+      rr = read_set->fds_bits[fd_offset] & fd_mask;
+
+      if (!NoNewLine(cptr) || rr)
+	length = read_packet(cptr, rr);
 #else
-      if (!NoNewLine(cptr) || (rr = FD_ISSET(i, read_set)) )
-          length = read_packet(cptr, rr);
+      rr = FD_ISSET(i, read_set);
+      if (!NoNewLine(cptr) || rr)
+	length = read_packet(cptr, rr);
 #endif
 #ifdef DEBUGMODE
        readcalls++;
@@ -2399,9 +2382,8 @@ int	read_message(time_t delay)
 	    }
 	}
       length = 1;     /* for fall through case */
-      rr = 0;
       if (!NoNewLine(cptr) || rr)
-          length = read_packet(cptr, rr);
+	length = read_packet(cptr, rr);
 #ifdef DEBUGMODE
           readcalls++;
 #endif
