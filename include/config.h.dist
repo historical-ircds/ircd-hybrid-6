@@ -55,7 +55,9 @@
 #define INIT_MAXCLIENTS 200
 
 #if defined(__CYGWIN__)
+#undef HARD_FDLIMIT_
 #define HARD_FDLIMIT_   25
+#undef INIT_MAXCLIENTS
 #define INIT_MAXCLIENTS 20
 #endif /* __CYGWIN__ */
 

@@ -67,19 +67,25 @@ HPATH=`dir_concat ${HPATH}`;
 # Let's make sure $DPATH exists
 dir_make ${DPATH}
 
-# install ircd, save old one as ircd.old
-dir_make `dirname ${SPATH}`
-if [ ! -f ${SPATH} ]; then
-  echo installing ircd as ${SPATH}
-  $INSTALL_SH -c src/ircd ${SPATH};
+if [ -f src/ircd.exe ]; then
+  EXESUFFIX=".exe"
 else
-  echo installing ircd as ${SPATH}
-  echo previous ircd saved as ircd.old
-  mv ${SPATH} ${SPATH}.old
-  $INSTALL_SH -c src/ircd ${SPATH};
+  EXESUFFIX=""
 fi
 
 # try to install their ircd.conf file, unless it already exists.
+# install ircd, save old one as ircd.old
+dir_make `dirname ${SPATH}`
+if [ ! -f ${SPATH}${EXESUFFIX} ]; then
+  echo installing ircd as ${SPATH}${EXESUFFIX}
+  $INSTALL_SH -c src/ircd${EXESUFFIX} ${SPATH}${EXESUFFIX};
+else
+  echo installing ircd as ${SPATH}${EXESUFFIX}
+  echo previous ircd saved as ircd${EXESUFFIX}.old
+  mv ${SPATH}${EXESUFFIX} ${SPATH}${EXESUFFIX}.old
+  $INSTALL_SH -c src/ircd${EXESUFFIX} ${SPATH}${EXESUFFIX};
+fi
+
 dir_make `dirname ${CPATH}`
 if [ ! -f ${CPATH} ]; then
   echo installing example.conf as ${CPATH}
@@ -120,24 +126,24 @@ fi
 
 # install mkpasswd
 if [ ! -f ${DPATH}/mkpasswd ]; then
-  echo installing mkpasswd as ${DPATH}/mkpasswd
-  $INSTALL_SH -c tools/mkpasswd ${DPATH}/mkpasswd;
+  echo installing mkpasswd as ${DPATH}/mkpasswd${EXESUFFIX}
+  $INSTALL_SH -c tools/mkpasswd${EXESUFFIX} ${DPATH}/mkpasswd${EXESUFFIX};
 else
-   echo installing mkpasswd as ${DPATH}/mkpasswd
-   echo previous mkpasswd saved as mkpasswd.old
-   mv ${DPATH}/mkpasswd ${DPATH}/mkpasswd.old
-   $INSTALL_SH -c tools/mkpasswd ${DPATH}/mkpasswd;
+   echo installing mkpasswd as ${DPATH}/mkpasswd${EXESUFFIX}
+   echo previous mkpasswd saved as mkpasswd${EXESUFFIX}.old
+   mv ${DPATH}/mkpasswd${EXESUFFIX} ${DPATH}/mkpasswd${EXESUFFIX}.old
+   $INSTALL_SH -c tools/mkpasswd${EXESUFFIX} ${DPATH}/mkpasswd${EXESUFFIX};
 fi 
 
 # install viconf
 if [ ! -f ${DPATH}/viconf ]; then
-  echo installing viconf as ${DPATH}/viconf
-  $INSTALL_SH -c tools/viconf ${DPATH}/viconf;
+  echo installing viconf as ${DPATH}/viconf${EXESUFFIX}
+  $INSTALL_SH -c tools/viconf${EXESUFFIX} ${DPATH}/viconf${EXESUFFIX};
 else
-   echo installing viconf as ${DPATH}/viconf
-   echo previous viconf saved as viconf.old
-   mv ${DPATH}/viconf ${DPATH}/viconf.old
-   $INSTALL_SH -c tools/viconf ${DPATH}/viconf;
+   echo installing viconf as ${DPATH}/viconf${EXESUFFIX}
+   echo previous viconf saved as viconf${EXESUFFIX}.old
+   mv ${DPATH}/viconf${EXESUFFIX} ${DPATH}/viconf${EXESUFFIX}.old
+   $INSTALL_SH -c tools/viconf${EXESUFFIX} ${DPATH}/viconf${EXESUFFIX};
 fi
 
 # finished.
