@@ -1,3 +1,8 @@
+*** 20000606_2 by lusky
+check for bogus NICK from peer server in m_nick
+minor fix for some notices in m_stats and m_oper (mh)
+
+
 *** 20000606_1 by lusky
 typo in m_message causing infinite loop
 
