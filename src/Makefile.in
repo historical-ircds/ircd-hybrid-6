@@ -129,7 +129,7 @@ clean:
 	${RM} -f ${OBJS} *~ ircd.core core ircd 
 
 distclean: clean
-	${RM} -f Makefile version.c.last .depend
+	${RM} -f Makefile version.c.last
 
 include .depend
 
