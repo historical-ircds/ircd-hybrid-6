@@ -662,6 +662,12 @@ Info MyInformation[] = {
   { "TS_MAX_DELTA", "", TS_MAX_DELTA, "Maximum Allowed TS Delta from another Server" },
   { "TS_WARN_DELTA", "", TS_WARN_DELTA, "Maximum TS Delta before Sending Warning" },
 
+#ifdef U_LINES_OPER_ONLY
+  { "U_LINES_OPER_ONLY", "ON", 0, "Only allow Operators to use STATS U" },
+#else
+  { "U_LINES_OPER_ONLY", "OFF", 0, "Only allow Operators to use STATS U" },
+#endif /* U_LINES_OPER_ONLY */
+
 #ifdef USE_LOGFILE
   { "USE_LOGFILE", "ON", 0, "Log Errors to LPATH" },
 #else

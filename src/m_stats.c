@@ -438,6 +438,14 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       break;
 
     case 'U' :
+#ifdef U_LINES_OPER_ONLY
+      if (!IsAnOper(sptr))
+      {
+        ignore_request++;
+        valid_stats++;
+        break;
+      }
+#endif /* U_LINES_OPER_ONLY */
       report_specials(sptr,CONF_ULINE,RPL_STATSULINE);
       valid_stats++;
       break;

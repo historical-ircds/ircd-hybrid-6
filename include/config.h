@@ -329,6 +329,9 @@
  *
  *  P_LINES_OPER_ONLY blocks STATS P (Capital P, NOT lower case p) from
  *  non-opers, denying them permission to see configured ports
+ *
+ *  U_LINES_OPER_ONLY only applies to STATS U (capital U, not lowercase).
+ *  U-lines are used to share K/D-lines between servers.
  */
 #define B_LINES_OPER_ONLY
 #define E_LINES_OPER_ONLY
@@ -337,6 +340,7 @@
 #undef  K_LINES_OPER_ONLY
 #undef  O_LINES_OPER_ONLY
 #define P_LINES_OPER_ONLY
+#undef  U_LINES_OPER_ONLY
 
 /* SPOOF_NOTICE - See a notice when a user connects with a
  * spoofed I: line
