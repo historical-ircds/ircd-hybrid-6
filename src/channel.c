@@ -1349,14 +1349,15 @@ void set_channel_mode(struct Client *cptr,
           if (len + tmp + 2 >= MODEBUFLEN)
             break;
 
+#ifndef CHANMODE_E
+	  if(whatt == MODE_ADD)
+	    break;
+#endif
+
           if (!(((whatt & MODE_ADD) && !add_exceptid(sptr, chptr, arg)) ||
                 ((whatt & MODE_DEL) && !del_exceptid(chptr, arg))))
             break;
 
-#ifndef CHANMODE_E
-	  if(whatt == MODE_ADD)
-	    break;
-#endif	    
           /* This stuff can go back in when all servers understand +e 
            * with the pbufw_new nonsense removed -Dianora
            */
