@@ -1,3 +1,7 @@
+*** 19990802_2 by lusky
+added release notes to the tree
+
+
 *** 19990802_1 by lusky
 fixed 216 reply
 bug in mtrie_conf.c causing ~ klines not to work
