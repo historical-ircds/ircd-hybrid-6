@@ -1455,7 +1455,7 @@ report_sub_mtrie(struct Client *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
   DOMAIN_PIECE *dp_ptr;
   struct ConfItem *aconf;
   int i;
-  char *name, *host, *pass, *oper_reason, *user, *p;
+  char *name, *host, *pass, *oper_reason, *user;
   int  port;
   char c='\0';
 

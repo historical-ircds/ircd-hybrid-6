@@ -678,7 +678,6 @@ send_knock(aClient *from, aChannel *chptr, int type, char *message)
 {
   register Link *lp;
   register aClient *acptr;
-  register int i;
 
   for(lp = chptr->members; lp; lp = lp->next)
   {

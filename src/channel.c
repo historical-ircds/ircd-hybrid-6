@@ -2823,9 +2823,11 @@ int     m_knock(struct Client *cptr,
                int parc,
                char *parv[])
 {
-  struct Channel      *chptr;
   char  *p, *name;
+#ifdef USE_KNOCK
+  struct Channel      *chptr;
   int local = 0;
+#endif
 
   /* anti flooding code,
    * I did have this in parse.c with a table lookup
@@ -2834,7 +2836,6 @@ int     m_knock(struct Client *cptr,
    *
    * -Dianora
    */
-  static time_t last_used=0L;
 
   if(IsServer(sptr))
     return 0;
