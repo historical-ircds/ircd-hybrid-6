@@ -203,7 +203,7 @@ int	attach_Iline(aClient *cptr,
     {
       aconf = find_matching_mtrie_conf(host,cptr->username,
 				       ntohl(cptr->ip.s_addr));
-      if(!IsConfElined(aconf))
+      if(aconf && !IsConfElined(aconf))
 	{
 	  if(tkline_conf = find_tkline(host,cptr->username))
 	    aconf = tkline_conf;
@@ -212,7 +212,7 @@ int	attach_Iline(aClient *cptr,
   else
     {
       aconf = find_matching_mtrie_conf(host,username,ntohl(cptr->ip.s_addr));
-      if(!IsConfElined(aconf))
+      if(aconf && !IsConfElined(aconf))
 	{
 	  if(tkline_conf = find_tkline(host,username))
 	    aconf = tkline_conf;
