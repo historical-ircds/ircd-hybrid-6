@@ -12,6 +12,17 @@
  * whether we're using stdarg.h or varargs.h.
  * -wnder
  */
+#ifndef INCLUDED_send_h
+#define INCLUDED_send_h
+#ifndef INCLUDED_config_h
+#include "config.h"       /* HAVE_STDARG_H */
+#endif
+
+/*
+ * struct decls
+ */
+struct Client;
+struct Channel;
 
 #ifdef HAVE_STDARG_H
 
@@ -25,30 +36,40 @@
 
 /* send.c prototypes */
 
-extern  void send_operwall(aClient *,char *,char *);	/* defined in send.c */
-extern  void sendto_channel_type_notice(aClient *, aChannel *, int, char *);
-extern  int sendto_slaves(aClient *, char *, char *, int, char **);
+extern  void send_operwall(struct Client *,char *,char *); /* send.c */
+extern  void sendto_channel_type_notice(struct Client *, 
+                                        struct Channel *, int, char *);
+extern  int sendto_slaves(struct Client *, char *, char *, int, char **);
 
 #ifdef HAVE_STDARG_H
 
-extern  void sendto_one(aClient *, char *, ...);
-extern  void sendto_channel_butone(aClient *, aClient *, aChannel *, char *, ...);
-extern  void sendto_channel_type(aClient *, aClient *, aChannel *, int, char *, ...);
-extern  void sendto_serv_butone(aClient *, char *, ...);
-extern  void sendto_common_channels(aClient *, char *, ...);
-extern  void sendto_channel_butserv(aChannel *, aClient *, char *, ...);
-extern  void sendto_match_servs(aChannel *, aClient *, char *, ...);
-extern  void sendto_match_cap_servs(aChannel *, aClient *, int, char *, ...);
-extern  void sendto_match_butone(aClient *, aClient *, char *, int, char *, ...);
-extern  void sendto_ops_lev(int, char *, ...);
-extern  void sendto_ops(char *, ...);
-extern  void sendto_ops_butone(aClient *, aClient *, char *, ...);
-extern  void sendto_wallops_butone(aClient *, aClient *, char *, ...);
-extern  void sendto_realops(char *, ...);
-extern  void sendto_realops_lev(int, char *, ...);
-extern  void ts_warn(char *, ...);
+extern  void sendto_one(struct Client *, char *, ...);
+extern  void sendto_channel_butone(struct Client *, struct Client *, 
+                                   struct Channel *, const char *, ...);
+extern  void sendto_channel_type(struct Client *, struct Client *, 
+                                 struct Channel *, int, const char *, ...);
+extern  void sendto_serv_butone(struct Client *, const char *, ...);
+extern  void sendto_common_channels(struct Client *, const char *, ...);
+extern  void sendto_channel_butserv(struct Channel *, struct Client *, 
+                                    const char *, ...);
+extern  void sendto_match_servs(struct Channel *, struct Client *, 
+                                const char *, ...);
+extern  void sendto_match_cap_servs(struct Channel *, struct Client *, 
+                                    int, const char *, ...);
+extern  void sendto_match_butone(struct Client *, struct Client *, 
+                                 char *, int, const char *, ...);
+extern  void sendto_ops_lev(int, const char *, ...);
+extern  void sendto_ops(const char *, ...);
+extern  void sendto_ops_butone(struct Client *, struct Client *, 
+                               const char *, ...);
+extern  void sendto_wallops_butone(struct Client *, struct Client *, 
+                                   const char *, ...);
+extern  void sendto_realops(const char *, ...);
+extern  void sendto_realops_lev(int, const char *, ...);
+extern  void ts_warn(const char *, ...);
 
-extern  void sendto_prefix_one(aClient *, aClient *, char *, ...);
+extern  void sendto_prefix_one(struct Client *, struct Client *, 
+                               const char *, ...);
 
 #else
 
@@ -72,3 +93,4 @@ extern  void ts_warn();
 extern  void sendto_prefix_one();
 
 #endif /* HAVE_STDARG_H */
+#endif /* INCLUDED_send_h */

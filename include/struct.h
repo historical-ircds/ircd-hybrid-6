@@ -40,12 +40,6 @@
 #define INCLUDED_netinet_in_h
 #endif
 
-#if defined(HAVE_STDDEF_H)
-# ifndef INCLUDED_stddef_h
-#  include <stddef.h>
-#  define INCLUDED_stddef_h
-# endif
-#endif
 #ifdef ORATIMING
 # ifndef INCLUDED_sys_time_h
 #  include <sys/time.h>
