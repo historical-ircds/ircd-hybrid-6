@@ -98,8 +98,7 @@ int            highest_fd = 0;
 static struct sockaddr_in mysk;
 static char               readBuf[READBUF_SIZE];
 
-static int        completed_connection (struct Client *);
-static void       do_dns_async(void);
+static void do_dns_async(void);
 
 
 /*
@@ -455,203 +454,6 @@ int check_client(struct Client *cptr,char *username,char **reason)
   return 0;
 }
 
-static int check_server(struct Client* cptr, struct DNSReply* dns_reply,
-                        struct ConfItem *c_conf, struct ConfItem *n_conf)
-{
-  char*           name;
-  Link*           lp = cptr->confs;
-  int             i;
-  struct hostent* hp;
-
-  assert(0 != cptr);
-
-  ClearAccess(cptr);
-
-  hp = (dns_reply) ? dns_reply->hp : 0;
-
-  if (hp)
-    {
-      /*
-       * XXX - this is already done for all connecting clients
-       */
-      for (i = 0; hp->h_addr_list[i]; i++)
-        {
-          if (0 == memcmp(hp->h_addr_list[i], (char*) &cptr->ip,
-                          sizeof(struct in_addr)))
-            break;
-        }
-      if (!hp->h_addr_list[i])
-        {
-          sendto_realops_flags(FLAGS_DEBUG,
-                               "Server IP# Mismatch: %s != %s[%08x]",
-                               inetntoa((char*) &cptr->ip), hp->h_name,
-                               *((unsigned long*) hp->h_addr));
-          hp = NULL;
-        }
-    }
-  if (hp)
-    {
-      /*
-       * if we are missing a C or N line from above, search for
-       * it under all known hostnames we have for this ip#.
-       */
-      for (i = 0, name = hp->h_name; name; name = hp->h_aliases[i++])
-        {
-          if (!c_conf)
-            c_conf = find_conf_host(lp, name, CONF_CONNECT_SERVER );
-          if (!n_conf)
-            n_conf = find_conf_host(lp, name, CONF_NOCONNECT_SERVER );
-          if (c_conf && n_conf)
-            {
-              strncpy_irc(cptr->host, name, HOSTLEN);
-              break;
-            }
-        }
-    }
-
-  name = cptr->name;
-
-  /*
-   * Check for C and N lines with the hostname portion the ip number
-   * of the host the server runs on. This also checks the case where
-   * there is a server connecting from 'localhost'.
-   */
-  if (IsUnknown(cptr))
-    {
-      if (!c_conf)
-        c_conf = find_conf_host(lp, cptr->name, CONF_CONNECT_SERVER);
-      if (!n_conf)
-        n_conf = find_conf_host(lp, cptr->name, CONF_NOCONNECT_SERVER);
-    }
-  /*
-   * Attach by IP# only if all other checks have failed.
-   * It is quite possible to get here with the strange things that can
-   * happen when using DNS in the way the irc server does. -avalon
-   */
-  if (!hp)
-    {
-      if (!c_conf)
-        c_conf = find_conf_ip(lp, (char*)& cptr->ip,
-                              cptr->username, CONF_CONNECT_SERVER);
-      if (!n_conf)
-        n_conf = find_conf_ip(lp, (char*)& cptr->ip,
-                              cptr->username, CONF_NOCONNECT_SERVER);
-    }
-  else
-    {
-      for (i = 0; hp->h_addr_list[i]; ++i)
-        {
-          if (!c_conf)
-            c_conf = find_conf_ip(lp, hp->h_addr_list[i],
-                                  cptr->username, CONF_CONNECT_SERVER);
-          if (!n_conf)
-            n_conf = find_conf_ip(lp, hp->h_addr_list[i],
-                                  cptr->username, CONF_NOCONNECT_SERVER);
-        }
-    }
-  /*
-   * detach all conf lines that got attached by attach_confs()
-   */
-  det_confs_butmask(cptr, 0);
-  /*
-   * if no C or no N lines, then deny access
-   */
-  if (!c_conf || !n_conf)
-    {
-      /* strncpy_irc(cptr->host, sockname); */
-      Debug((DEBUG_DNS, "sv_cl: access denied: %s[%s@%s] c %x n %x",
-             name, cptr->username, cptr->host, c_conf, n_conf));
-      return -1;
-    }
-  /*
-   * attach the C and N lines to the client structure for later use.
-   */
-  attach_conf(cptr, n_conf);
-  attach_conf(cptr, c_conf);
-  attach_confs(cptr, name, CONF_HUB | CONF_LEAF);
-  
-  if (c_conf->ipnum.s_addr == INADDR_NONE)
-    c_conf->ipnum.s_addr = cptr->ip.s_addr;
-
-  strncpy_irc(cptr->host, c_conf->host, HOSTLEN);
-  Debug((DEBUG_DNS,"sv_cl: access ok: %s[%s]", name, cptr->host));
-
-  return 0;
-}
-
-/*
- * check_server_init, check_server
- *        check access for a server given its name (passed in cptr struct).
- *        Must check for all C/N lines which have a name which matches the
- *        name given and a host which matches. A host alias which is the
- *        same as the server name is also acceptable in the host field of a
- *        C/N line.
- *  0 = Success
- * -1 = Access denied
- * -2 = Bad socket.
- */
-int check_server_init(struct Client* cptr)
-{
-  struct ConfItem* c_conf    = NULL;
-  struct ConfItem* n_conf    = NULL;
-  struct DNSReply* dns_reply = NULL;
-  struct SLink*    lp;
-  assert(0 != cptr);
-
-  dns_reply = cptr->dns_reply;
-
-  Debug((DEBUG_DNS, "sv_cl: check access for %s[%s]", 
-         cptr->name, cptr->host));
-
-  if (IsUnknown(cptr) && 
-      !attach_confs(cptr, cptr->name, 
-                    CONF_CONNECT_SERVER | CONF_NOCONNECT_SERVER ))
-    {
-      Debug((DEBUG_DNS,"No C/N lines for %s", cptr->name));
-      return -1;
-    }
-  lp = cptr->confs;
-  /*
-   * We initiated this connection so the client should have a C and N
-   * line already attached after passing through the connect_server()
-   * function earlier.
-   */
-  if (IsConnecting(cptr) || IsHandshake(cptr))
-    {
-      c_conf = find_conf(lp, cptr->name, CONF_CONNECT_SERVER);
-      n_conf = find_conf(lp, cptr->name, CONF_NOCONNECT_SERVER);
-      if (!c_conf || !n_conf)
-        {
-          sendto_realops_flags(FLAGS_DEBUG, "Connecting Error: %s[%s]", 
-                               cptr->name, cptr->host);
-          det_confs_butmask(cptr, 0);
-          return -1;
-        }
-    }
-  /*
-   * If the servername is a hostname, either an alias (CNAME) or
-   * real name, then check with it as the host. Use gethostbyname()
-   * to check for servername as hostname.
-   */
-  if (!dns_reply)
-    {
-      struct ConfItem* conf = find_first_nline(lp);
-      if (conf)
-        {
-          /*
-           * Do a lookup for the CONF line *only* and not
-           * the server connection else we get stuck in a
-           * nasty state since it takes a SERVER message to
-           * get us here and we cant interrupt that very
-           * well.
-           */
-          Debug((DEBUG_DNS,"sv_ci:cache lookup (%s)", conf->host));
-          dns_reply = conf_dns_lookup(conf);
-        }
-    }
-  return check_server(cptr, dns_reply, c_conf, n_conf);
-}
-
 /*
  * completed_connection - Complete non-blocking connect-sequence. 
  * Check access and terminate connection, if trouble detected.
@@ -659,35 +461,35 @@ int check_server_init(struct Client* cptr)
  * Return         TRUE, if successfully completed
  *                FALSE, if failed and ClientExit
  */
-static int completed_connection(struct Client *cptr)
+static int completed_connection(struct Client* cptr)
 {
-  struct ConfItem *c_conf;
-  struct ConfItem *n_conf;
+  struct ConfItem* c_conf;
+  struct ConfItem* n_conf;
 
-  SetHandshake(cptr);
-        
-  c_conf = find_conf(cptr->confs, cptr->name, CONF_CONNECT_SERVER);
+  c_conf = find_conf_name(cptr->confs, cptr->name, CONF_CONNECT_SERVER);
   if (!c_conf)
     {
       sendto_realops("Lost C-Line for %s", get_client_name(cptr,FALSE));
-      return -1;
+      return 0;
     }
-  if (!BadPtr(c_conf->passwd))
-    sendto_one(cptr, "PASS %s :TS", c_conf->passwd);
-  
-  n_conf = find_conf(cptr->confs, cptr->name, CONF_NOCONNECT_SERVER);
+  n_conf = find_conf_name(cptr->confs, cptr->name, CONF_NOCONNECT_SERVER);
   if (!n_conf)
     {
       sendto_realops("Lost N-Line for %s", get_client_name(cptr,FALSE));
-      return -1;
+      return 0;
     }
+  
+  SetHandshake(cptr);
+
+  if (!EmptyString(c_conf->passwd))
+    sendto_one(cptr, "PASS %s :TS", c_conf->passwd);
   
   send_capabilities(cptr, (c_conf->flags & CONF_FLAGS_ZIP_LINK));
 
   sendto_one(cptr, "SERVER %s 1 :%s",
              my_name_for_link(me.name, n_conf), me.info);
 
-  return (IsDead(cptr)) ? -1 : 0;
+  return (IsDead(cptr)) ? 0 : 1;
 }
 
 /*
@@ -1390,23 +1192,24 @@ int read_message(time_t delay, unsigned char mask)        /* mika */
      * See if we can write...
      */
     if (FD_ISSET(i, write_set)) {
-      int write_err = 0;
       --nfds;
-
-      /*
-       * ...room for writing, empty some queue then...
-       */
-      if (IsConnecting(cptr))
-        write_err = completed_connection(cptr);
-      if (!write_err)
+      if (IsConnecting(cptr) && completed_connection(cptr)) {
         send_queued(cptr);
-
-      if (write_err || IsDead(cptr)) {
-        exit_client(cptr, cptr, &me, 
-                    (cptr->flags & FLAGS_SENDQEX) ? 
-                    "SendQ Exceeded" : strerror(get_sockerr(cptr->fd)));
-        continue;
+        if (!IsDead(cptr))
+          continue;
       }
+      else {
+        /*
+         * ...room for writing, empty some queue then...
+         */
+        send_queued(cptr);
+        if (!IsDead(cptr))
+          continue;
+      }
+      exit_client(cptr, cptr, &me, 
+                 (cptr->flags & FLAGS_SENDQEX) ? 
+                 "SendQ Exceeded" : strerror(get_sockerr(cptr->fd)));
+      continue;
     }
     length = 1;     /* for fall through case */
 
@@ -1665,20 +1468,23 @@ int read_message(time_t delay, unsigned char mask)
 
       if (rw)
         {
-          int     write_err = 0;
-          /*
-           * ...room for writing, empty some queue then...
-           */
-          if (IsConnecting(cptr))
-            write_err = completed_connection(cptr);
-          if (!write_err)
+          if (IsConnecting(cptr) && completed_connection(cptr)) {
             send_queued(cptr);
-          if (IsDead(cptr) || write_err)
-            {
-              exit_client(cptr, cptr, &me,
-                          strerror(get_sockerr(cptr->fd)));
+            if (!IsDead(cptr))
               continue;
-            }
+          }
+          else {
+            /*
+             * ...room for writing, empty some queue then...
+             */
+            send_queued(cptr);
+            if (!IsDead(cptr))
+              continue;
+          }
+          exit_client(cptr, cptr, &me, 
+                     (cptr->flags & FLAGS_SENDQEX) ? 
+                     "SendQ Exceeded" : strerror(get_sockerr(cptr->fd)));
+          continue;
         }
       length = 1;     /* for fall through case */
       if (rr)

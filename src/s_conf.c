@@ -364,15 +364,9 @@ int attach_Iline(aClient* cptr, struct hostent* hp,
  */
 
 #ifdef LIMIT_UH
-static int
-attach_iline(
-             aClient *cptr,
-             struct ConfItem *aconf,char *username)
+static int attach_iline(aClient *cptr, struct ConfItem *aconf,char *username)
 #else
-static int
-attach_iline(
-             aClient *cptr,
-             struct ConfItem *aconf)
+static int attach_iline(aClient *cptr, struct ConfItem *aconf)
 #endif
 {
   IP_ENTRY *ip_found;
@@ -418,7 +412,7 @@ attach_iline(
     }
 #endif
 
-  return ( attach_conf(cptr, aconf) );
+  return (attach_conf(cptr, aconf) );
 }
 
 /* link list of free IP_ENTRY's */
@@ -965,44 +959,44 @@ struct ConfItem *find_me()
 }
 
 /*
- * attach_confs
- *  Attach a CONF line to a client if the name passed matches that for
- * the conf file (for non-C/N lines) or is an exact match (C/N lines
- * only).  The difference in behaviour is to stop C:*::* and N:*::*.
+ * attach_confs - Attach all possible CONF lines to a client
+ * if the name passed matches that for the conf file (for non-C/N lines) 
+ * or is an exact match (C/N lines only).  The difference in behaviour 
+ * is to stop C:*::* and N:*::*.
+ * returns count of conf entries attached if successful, 0 if none are found
+ *
+ * NOTE: this will allow C:::* and N:::* because the match mask is the
+ * conf line and not the name
  */
-struct ConfItem *attach_confs(aClient *cptr,char *name,int statmask)
+int attach_confs(aClient* cptr, const char* name, int statmask)
 {
-  struct ConfItem *tmp;
-  struct ConfItem *first = NULL;
-  int len = strlen(name);
+  struct ConfItem* tmp;
+  int              conf_counter = 0;
   
-  if (!name || len > HOSTLEN)
-    return((struct ConfItem *)NULL);
-
   for (tmp = ConfigItemList; tmp; tmp = tmp->next)
     {
       if ((tmp->status & statmask) && !IsIllegal(tmp) &&
-          ((tmp->status & (CONF_SERVER_MASK|CONF_HUB)) == 0) &&
           tmp->name && match(tmp->name, name))
         {
-          if (!attach_conf(cptr, tmp) && !first)
-            first = tmp;
+          if (0 == attach_conf(cptr, tmp))
+            ++conf_counter;
         }
       else if ((tmp->status & statmask) && !IsIllegal(tmp) &&
-               (tmp->status & (CONF_SERVER_MASK|CONF_HUB)) &&
                tmp->name && !irccmp(tmp->name, name))
         {
-          if (!attach_conf(cptr, tmp) && !first)
-            first = tmp;
+          if (0 == attach_conf(cptr, tmp))
+            ++conf_counter;
         }
     }
-  return (first);
+  return conf_counter;
 }
 
 /*
  * attach_cn_lines - find C/N lines and attach them to connecting client
  * return true (1) if both are found, otherwise return false (0)
  * called from connect_server
+ * NOTE: this requires an exact match between the name on the C:line and
+ * the name on the N:line
  */
 int attach_cn_lines(aClient *cptr, const char* host)
 {
@@ -1018,7 +1012,7 @@ int attach_cn_lines(aClient *cptr, const char* host)
        * look for matching C:line
        */
       if (!found_cline && CONF_CONNECT_SERVER == tmp->status && 
-          0 == irccmp(tmp->host, host)) {
+          tmp->host && 0 == irccmp(tmp->host, host)) {
         attach_conf(cptr, tmp);
         if (found_nline)
           return 1;
@@ -1028,7 +1022,7 @@ int attach_cn_lines(aClient *cptr, const char* host)
        * look for matching N:line
        */
       else if (!found_nline && CONF_NOCONNECT_SERVER == tmp->status &&
-               0 == irccmp(tmp->host, host)) {
+               tmp->host && 0 == irccmp(tmp->host, host)) {
         attach_conf(cptr, tmp);
         if (found_cline)
           return 1;
@@ -1073,22 +1067,16 @@ struct ConfItem* find_conf_exact(const char* name, const char* user,
   return NULL;
 }
 
-struct ConfItem* find_conf(struct SLink* lp, char* name, int statmask)
+struct ConfItem* find_conf_name(struct SLink* lp, const char* name, 
+                                int statmask)
 {
   struct ConfItem* tmp;
-  int              namelen = name ? strlen(name) : 0;
   
-  if (namelen > HOSTLEN)
-    return NULL;
-
   for (; lp; lp = lp->next)
     {
       tmp = lp->value.aconf;
-      if ((tmp->status & statmask) &&
-          (((tmp->status & (CONF_SERVER_MASK|CONF_HUB)) &&
-            tmp->name && !irccmp(tmp->name, name)) ||
-           ((tmp->status & (CONF_SERVER_MASK|CONF_HUB)) == 0 &&
-            tmp->name && match(tmp->name, name))))
+      if ((tmp->status & statmask) && tmp->name && 
+          (!irccmp(tmp->name, name) || match(tmp->name, name)))
         return tmp;
     }
   return NULL;
@@ -1105,19 +1093,15 @@ struct ConfItem* find_conf(struct SLink* lp, char* name, int statmask)
 /*
  * Added for new access check    meLazy <- no youShithead, your code sucks
  */
-struct ConfItem *find_conf_host(Link* lp, char* host, int statmask)
+struct ConfItem* find_conf_host(struct SLink* lp, const char* host, 
+                                int statmask)
 {
   struct ConfItem *tmp;
-  int        hostlen = host ? strlen(host) : 0;
   
-  if (hostlen > HOSTLEN || BadPtr(host))
-    return NULL;
   for (; lp; lp = lp->next)
     {
       tmp = lp->value.aconf;
-      if (tmp->status & statmask &&
-          (!(tmp->status & CONF_SERVER_MASK || tmp->host) ||
-           (tmp->host && match(tmp->host, host))))
+      if (tmp->status & statmask && tmp->host && match(tmp->host, host))
         return tmp;
     }
   return NULL;
@@ -1129,7 +1113,8 @@ struct ConfItem *find_conf_host(Link* lp, char* host, int statmask)
  * Find a conf line using the IP# stored in it to search upon.
  * Added 1/8/92 by Avalon.
  */
-struct ConfItem *find_conf_ip(Link *lp,char *ip,char *user, int statmask)
+struct ConfItem *find_conf_ip(struct SLink* lp, char *ip, char *user, 
+                              int statmask)
 {
   struct ConfItem *tmp;
   
@@ -1160,11 +1145,11 @@ struct ConfItem* find_conf_by_name(const char* name, int status)
  
   for (conf = ConfigItemList; conf; conf = conf->next)
     {
-      /*
-       * NOTE: if conf->name is invalid, match will assert if NDEBUG is
-       * not defined, otherwise match will core
-       */
-      if (conf->status == status && match(name, conf->name))
+      if (conf->status == status && conf->name &&
+          match(name, conf->name))
+#if 0
+          (match(name, conf->name) || match(conf->name, name)))
+#endif
         return conf;
     }
   return NULL;
@@ -1180,11 +1165,11 @@ struct ConfItem* find_conf_by_host(const char* host, int status)
  
   for (conf = ConfigItemList; conf; conf = conf->next)
     {
-      /*
-       * NOTE: if conf->host is invalid, match will assert if NDEBUG is
-       * not defined, otherwise match will core
-       */
-      if (conf->status == status && match(host, conf->host))
+      if (conf->status == status && conf->host &&
+          match(host, conf->host))
+#if 0
+          (match(host, conf->host) || match(conf->host, host)))
+#endif
         return conf;
     }
   return NULL;
@@ -2021,6 +2006,9 @@ static void initconf(FBFILE* file, int use_include)
         {
           char *ps;        /* space finder */
           char *pt;        /* tab finder */
+
+          ps = strchr(aconf->user,' ');
+          pt = strchr(aconf->user,'\t');
 
 	  if(!aconf->user)
 	    {

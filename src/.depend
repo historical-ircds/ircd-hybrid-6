@@ -111,10 +111,10 @@ m_server.o: m_server.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/common.h ../include/irc_string.h \
  ../include/hash.h ../include/ircd.h ../include/list.h \
- ../include/numeric.h ../include/s_bsd.h ../include/s_conf.h \
- ../include/fileio.h ../include/motd.h ../include/s_misc.h \
- ../include/s_err.h ../include/s_serv.h ../include/scache.h \
- ../include/send.h ../include/struct.h
+ ../include/numeric.h ../include/s_conf.h ../include/fileio.h \
+ ../include/motd.h ../include/s_misc.h ../include/s_err.h \
+ ../include/s_serv.h ../include/scache.h ../include/send.h \
+ ../include/struct.h
 m_unkline.o: m_unkline.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../include/client.h \
  ../include/dbuf.h ../include/common.h ../include/irc_string.h \

@@ -187,7 +187,6 @@ time_t try_connections(time_t currenttime)
 {
   struct ConfItem*   aconf;
   struct Client*     cptr;
-  struct ConfItem**  pconf;
   int                connecting = FALSE;
   int                confrq;
   time_t             next = 0;
@@ -264,6 +263,7 @@ time_t try_connections(time_t currenttime)
        */
       if (con_conf->next)  /* are we already last? */
         {
+          struct ConfItem**  pconf;
           for (pconf = &ConfigItemList; (aconf = *pconf);
                pconf = &(aconf->next))
             /* 
@@ -291,6 +291,113 @@ time_t try_connections(time_t currenttime)
     }
   Debug((DEBUG_NOTICE,"Next connection check : %s", myctime(next)));
   return next;
+}
+
+/*
+ * check_server - check access for a server given its name 
+ * (passed in cptr struct). Must check for all C/N lines which have a 
+ * name which matches the name given and a host which matches. A host 
+ * alias which is the same as the server name is also acceptable in the 
+ * host field of a C/N line.
+ *  
+ *  0 = Access denied
+ *  1 = Success
+ */
+int check_server(struct Client* cptr)
+{
+  struct SLink*    lp;
+  struct ConfItem* c_conf = 0;
+  struct ConfItem* n_conf = 0;
+
+  assert(0 != cptr);
+
+  if (attach_confs(cptr, cptr->name, 
+                   CONF_CONNECT_SERVER | CONF_NOCONNECT_SERVER ) < 2)
+    {
+      Debug((DEBUG_DNS,"No C/N lines for %s", cptr->name));
+      return 0;
+    }
+#if 0
+  if (cptr->dns_reply)
+    {
+      int             i;
+      struct hostent* hp   = cptr->dns_reply->hp;
+      char*           name = hp->h_name;
+      /*
+       * if we are missing a C or N line from above, search for
+       * it under all known hostnames we have for this ip#.
+       */
+      for (i = 0, name = hp->h_name; name; name = hp->h_aliases[i++])
+        {
+          if (!c_conf)
+            c_conf = find_conf_host(lp, name, CONF_CONNECT_SERVER );
+          if (!n_conf)
+            n_conf = find_conf_host(lp, name, CONF_NOCONNECT_SERVER );
+          if (c_conf && n_conf)
+            {
+              strncpy_irc(cptr->host, name, HOSTLEN);
+              break;
+            }
+        }
+      for (i = 0; hp->h_addr_list[i]; ++i)
+        {
+          if (!c_conf)
+            c_conf = find_conf_ip(lp, hp->h_addr_list[i],
+                                  cptr->username, CONF_CONNECT_SERVER);
+          if (!n_conf)
+            n_conf = find_conf_ip(lp, hp->h_addr_list[i],
+                                  cptr->username, CONF_NOCONNECT_SERVER);
+        }
+    }
+#endif
+  lp = cptr->confs;
+  /*
+   * Check for C and N lines with the hostname portion the ip number
+   * of the host the server runs on. This also checks the case where
+   * there is a server connecting from 'localhost'.
+   */
+  if (!c_conf)
+    c_conf = find_conf_host(lp, cptr->host, CONF_CONNECT_SERVER);
+  if (!n_conf)
+    n_conf = find_conf_host(lp, cptr->host, CONF_NOCONNECT_SERVER);
+  /*
+   * Attach by IP# only if all other checks have failed.
+   * It is quite possible to get here with the strange things that can
+   * happen when using DNS in the way the irc server does. -avalon
+   */
+  if (!c_conf)
+    c_conf = find_conf_ip(lp, (char*)& cptr->ip,
+                          cptr->username, CONF_CONNECT_SERVER);
+  if (!n_conf)
+    n_conf = find_conf_ip(lp, (char*)& cptr->ip,
+                          cptr->username, CONF_NOCONNECT_SERVER);
+  /*
+   * detach all conf lines that got attached by attach_confs()
+   */
+  det_confs_butmask(cptr, 0);
+  /*
+   * if no C or no N lines, then deny access
+   */
+  if (!c_conf || !n_conf)
+    {
+      Debug((DEBUG_DNS, "sv_cl: access denied: %s[%s@%s] c %x n %x",
+             name, cptr->name, cptr->host, c_conf, n_conf));
+      return 0;
+    }
+  /*
+   * attach the C and N lines to the client structure for later use.
+   */
+  attach_conf(cptr, n_conf);
+  attach_conf(cptr, c_conf);
+  attach_confs(cptr, cptr->name, CONF_HUB | CONF_LEAF);
+  
+  if (c_conf->ipnum.s_addr == INADDR_NONE)
+    c_conf->ipnum.s_addr = cptr->ip.s_addr;
+
+  // strncpy_irc(cptr->host, c_conf->host, HOSTLEN);
+  Debug((DEBUG_DNS,"sv_cl: access ok: %s[%s]", name, cptr->host));
+
+  return 1;
 }
 
 /*
@@ -633,35 +740,60 @@ static void sendnick_TS(struct Client *cptr, struct Client *acptr)
     }
 }
 
+#if 0
+int check_connect_cnlines(struct Client* cptr)
+{
+  struct SLink* lp = cptr->confs;
+  /*
+   * We initiated this connection so the client should have a C and N
+   * line already attached after passing through the connect_server()
+   * function earlier.
+   */
+  if (IsConnecting(cptr) || IsHandshake(cptr))
+    {
+      c_conf = find_conf_name(lp, cptr->name, CONF_CONNECT_SERVER);
+      n_conf = find_conf_name(lp, cptr->name, CONF_NOCONNECT_SERVER);
+      if (!c_conf || !n_conf)
+        {
+          sendto_realops_flags(FLAGS_DEBUG, "Connecting Error: %s[%s]", 
+                               cptr->name, cptr->host);
+          det_confs_butmask(cptr, 0);
+          return -1;
+        }
+    }
+}
+#endif
+
 int server_estab(struct Client *cptr)
 {
   struct Channel*   chptr;
   struct Client*    acptr;
-  struct ConfItem*  aconf;
-  struct ConfItem*  bconf;
-  const char* inpath;
-  char*       host;
-  char*       encr;
-  int         split;
+  struct ConfItem*  n_conf;
+  struct ConfItem*  c_conf;
+  const char*       inpath;
+  char*             host;
+  char*             encr;
+  int               split;
 
-  inpath = get_client_name(cptr,TRUE); /* "refresh" inpath with host */
+  assert(0 != cptr);
+  ClearAccess(cptr);
+
+  inpath = get_client_name(cptr, TRUE); /* "refresh" inpath with host */
   split = irccmp(cptr->name, cptr->host);
   host = cptr->name;
 
-  if (!(aconf = find_conf(cptr->confs, host, CONF_NOCONNECT_SERVER)))
+  if (!(n_conf = find_conf_name(cptr->confs, host, CONF_NOCONNECT_SERVER)))
     {
       ircstp->is_ref++;
       sendto_one(cptr,
-                 "ERROR :Access denied. No N line for server %s",
-                 inpath);
+                 "ERROR :Access denied. No N line for server %s", inpath);
       sendto_ops("Access denied. No N line for server %s", inpath);
       return exit_client(cptr, cptr, cptr, "No N line for server");
     }
-  if (!(bconf = find_conf(cptr->confs, host, CONF_CONNECT_SERVER )))
+  if (!(c_conf = find_conf_name(cptr->confs, host, CONF_CONNECT_SERVER )))
     {
       ircstp->is_ref++;
-      sendto_one(cptr, "ERROR :Only N (no C) field for server %s",
-                 inpath);
+      sendto_one(cptr, "ERROR :Only N (no C) field for server %s", inpath);
       sendto_ops("Only N (no C) field for server %s",inpath);
       return exit_client(cptr, cptr, cptr, "No C line for server");
     }
@@ -670,17 +802,17 @@ int server_estab(struct Client *cptr)
   /* use first two chars of the password they send in as salt */
 
   /* passwd may be NULL. Head it off at the pass... */
-  if(*cptr->passwd && *aconf->passwd)
+  if(*cptr->passwd && *n_conf->passwd)
     {
       extern  char *crypt();
-      encr = crypt(cptr->passwd, aconf->passwd);
+      encr = crypt(cptr->passwd, n_conf->passwd);
     }
   else
     encr = "";
 #else
   encr = cptr->passwd;
 #endif  /* CRYPT_LINK_PASSWORD */
-  if (*aconf->passwd && 0 != strcmp(aconf->passwd, encr))
+  if (*n_conf->passwd && 0 != strcmp(n_conf->passwd, encr))
     {
       ircstp->is_ref++;
       sendto_one(cptr, "ERROR :No Access (passwd mismatch) %s",
@@ -708,26 +840,26 @@ int server_estab(struct Client *cptr)
 #endif
   if (IsUnknown(cptr))
     {
-      if (bconf->passwd[0])
-        sendto_one(cptr,"PASS %s :TS", bconf->passwd);
+      if (c_conf->passwd[0])
+        sendto_one(cptr,"PASS %s :TS", c_conf->passwd);
       /*
       ** Pass my info to the new server
       */
 
-      send_capabilities(cptr,(bconf->flags & CONF_FLAGS_ZIP_LINK));
+      send_capabilities(cptr,(c_conf->flags & CONF_FLAGS_ZIP_LINK));
       sendto_one(cptr, "SERVER %s 1 :%s",
-                 my_name_for_link(me.name, aconf), 
+                 my_name_for_link(me.name, n_conf), 
                  (me.info[0]) ? (me.info) : "IRCers United");
     }
   else
     {
       Debug((DEBUG_INFO, "Check Usernames [%s]vs[%s]",
-             aconf->user, cptr->username));
-      if (!match(aconf->user, cptr->username))
+             n_conf->user, cptr->username));
+      if (!match(n_conf->user, cptr->username))
         {
           ircstp->is_ref++;
           sendto_ops("Username mismatch [%s]v[%s] : %s",
-                     aconf->user, cptr->username,
+                     n_conf->user, cptr->username,
                      get_client_name(cptr, TRUE));
           sendto_one(cptr, "ERROR :No Username Match");
           return exit_client(cptr, cptr, cptr, "Bad User");
@@ -736,7 +868,7 @@ int server_estab(struct Client *cptr)
   
 
 #ifdef ZIP_LINKS
-  if (IsCapable(cptr, CAP_ZIP) && (bconf->flags & CONF_FLAGS_ZIP_LINK))
+  if (IsCapable(cptr, CAP_ZIP) && (c_conf->flags & CONF_FLAGS_ZIP_LINK))
     {
       if (zip_init(cptr) == -1)
         {
@@ -798,7 +930,7 @@ int server_estab(struct Client *cptr)
   /* add it to scache */
   find_or_add(cptr->name);
   
-  cptr->serv->nline = aconf;
+  cptr->serv->nline = n_conf;
   cptr->flags2 |= FLAGS2_CBURST;
 
   /*
@@ -811,8 +943,8 @@ int server_estab(struct Client *cptr)
       if (acptr == cptr)
         continue;
 
-      if ((aconf = acptr->serv->nline) &&
-          match(my_name_for_link(me.name, aconf), cptr->name))
+      if ((n_conf = acptr->serv->nline) &&
+          match(my_name_for_link(me.name, n_conf), cptr->name))
         continue;
       if (split)
         {
@@ -854,7 +986,7 @@ int server_estab(struct Client *cptr)
   **    is destroyed...)
   */
 
-  aconf = cptr->serv->nline;
+  n_conf = cptr->serv->nline;
   for (acptr = &me; acptr; acptr = acptr->prev)
     {
       /* acptr->from == acptr for acptr == cptr */
@@ -862,7 +994,7 @@ int server_estab(struct Client *cptr)
         continue;
       if (IsServer(acptr))
         {
-          if (match(my_name_for_link(me.name, aconf), acptr->name))
+          if (match(my_name_for_link(me.name, n_conf), acptr->name))
             continue;
           split = (MyConnect(acptr) &&
                    irccmp(acptr->name, acptr->host));

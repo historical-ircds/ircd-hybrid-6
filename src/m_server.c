@@ -30,11 +30,10 @@
 #include "ircd.h"        /* me */
 #include "list.h"        /* make_server */
 #include "numeric.h"     /* ERR_xxx */
-#include "s_bsd.h"       /* check_server_init */
 #include "s_conf.h"      /* struct ConfItem */
 #include "s_misc.h"      /* my_name_for_link */
 #include "s_err.h"       /* form_str */
-#include "s_serv.h"      /* server_estab */
+#include "s_serv.h"      /* server_estab, check_server */
 #include "scache.h"      /* find_or_add */
 #include "send.h"        /* sendto_one */
 #include "struct.h"      /* bleah */
@@ -178,9 +177,9 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   else
     {
       /* Lets check for bogus names and clean them up
-         we don't bother cleaning up ones from users, becasuse
-         we will never see them any more - Dianora
-         */
+       * we don't bother cleaning up ones from users, becasuse
+       * we will never see them any more - Dianora
+       */
 
       int bogus_server = 0;
       int dots = 0;
@@ -207,10 +206,11 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
         }
     }
 
-  /* *WHEN* can it be that "cptr != sptr" ????? --msa */
-  /* When SERVER command (like now) has prefix. -avalon */
-  
-  /* check to see this host even has an N line before bothering
+  /* 
+   * *WHEN* can it be that "cptr != sptr" ????? --msa
+   * When SERVER command (like now) has prefix. -avalon
+   * 
+   * check to see this host even has an N line before bothering
    * anyone about it. Its only a quick sanity test to stop
    * the conference room and win95 ircd dorks. 
    * Sure, it will be redundantly checked again in m_server_estab()
@@ -234,7 +234,7 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
         }
     }
 
-  if (MyConnect(cptr) && (AUTOCONN == 0))
+  if (MyConnect(cptr) && (GlobalSetOptions.autoconn == 0))
     {
       sendto_ops("WARNING AUTOCONN is 0, Closing %s",
                  get_client_name(cptr, TRUE));
@@ -308,9 +308,7 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
        */
       if (parc == 1 || info[0] == '\0')
         {
-          sendto_one(cptr,
-                     "ERROR :No server info specified for %s",
-                     host);
+          sendto_one(cptr, "ERROR :No server info specified for %s", host);
           return 0;
         }
 
@@ -387,8 +385,8 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
     return 0;
   /*
    * A local link that is still in undefined state wants
-   * to be a SERVER. Check if this is allowed and change
-   * status accordingly...
+   * to be a SERVER, or we have gotten here as a result of a connect
+   * Check if this is allowed and change status accordingly...
    */
 
   /* 
@@ -401,24 +399,24 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       return exit_client(cptr, cptr, cptr, "Non-TS server");
     }
 
+  /*
+   * if we are connecting (Handshake), we already have the name from the
+   * C:line in cptr->name
+   */
   strncpy_irc(cptr->name, host, HOSTLEN);
   strncpy_irc(cptr->info, info[0] ? info : me.name, REALLEN);
   cptr->hopcount = hop;
 
-  switch (check_server_init(cptr))
-    {
-    case 0 :
-      return server_estab(cptr);
-    case 1 :
-      sendto_ops("Access check for %s in progress",
-                 get_client_name(cptr,TRUE));
-      return 1;
-    default :
-      ircstp->is_ref++;
-      sendto_ops("Received unauthorized connection from %s.",
-                 get_client_host(cptr));
-      return exit_client(cptr, cptr, cptr, "No C/N conf lines");
-    }
+  if (IsHandshake(cptr))
+    return server_estab(cptr);
+
+  if (check_server(cptr))
+    return server_estab(cptr);
+
+  ++ircstp->is_ref;
+  sendto_ops("Received unauthorized connection from %s.",
+              get_client_host(cptr));
+  return exit_client(cptr, cptr, cptr, "No C/N conf lines");
 }
 
 
