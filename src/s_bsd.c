@@ -64,7 +64,7 @@
  * Stuff for poll()
  */
 #ifdef USE_POLL
-#include <poll.h>
+#include <sys/poll.h>
 #endif
 
 #ifndef IN_LOOPBACKNET
