@@ -745,9 +745,9 @@ void zap_Dlines()
 void walk_the_dlines(aClient *sptr, struct ip_subtree *tree)
 {
   aConfItem *scan;
-  char *name, *pass;
+  char *name, *host, *pass, *user;
+  int port;
   char c;		/* D,d or K */
-  static  char	null[] = "<NULL>";
 
   if (!tree) return;
   
@@ -764,9 +764,9 @@ void walk_the_dlines(aClient *sptr, struct ip_subtree *tree)
       if(scan->flags & CONF_FLAGS_E_LINED)
 	c = 'd';
       /* print Dline */
-      name = BadPtr(scan->user) ? null : scan->user;
-      pass = BadPtr(scan->passwd) ? null : scan->passwd;
-      
+
+      GetPrintableaConfItem(scan, &name, &host, &pass, &user, &port);
+
       sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name,
 		 sptr->name, c, name, pass);
     }
