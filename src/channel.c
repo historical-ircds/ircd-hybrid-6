@@ -2365,8 +2365,8 @@ int     m_join(struct Client *cptr,
            if((chptr = hash_find_channel(name, NullChn)))
              flags = 0;
            else
-#ifdef NO_CREATE_ON_SPLIT
              {
+#ifdef NO_CREATE_ON_SPLIT
                if (!IsAnOper(sptr))
                  {
                    if (server_was_split && MyClient(sptr) && (*name != '&'))
@@ -2376,9 +2376,10 @@ int     m_join(struct Client *cptr,
                        continue;
                      }
                  }
-             }
+#else
+               flags = CHFL_CHANOP;
 #endif /* NO_CREATE_ON_SPLIT */
-             flags = CHFL_CHANOP;
+             }
 
            /* if its not a local channel, or isn't an oper
             * and server has been split
