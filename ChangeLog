@@ -2,6 +2,15 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 	
+version hybrid-6-b45    9-Feb-1999
+* may as well use the same numeric for not being able to join a channel
+  as ircnet uses changes to channel.c, s_err.c, s_err.h, numeric.h
+* added small net user count to split end detection
+* removed lame sleep()
+* try non blocking reads of all connected servers, local opers
+ then read_message()
+-Dianora
+	
 version hybrid-6-b44    2-Feb-1999
 * remove trailing white space on H/L lines (just for Gersh)
 * (s_bsd.c) fixed a botch with rr = 0 causing bizarre behaviour under solaris

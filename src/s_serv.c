@@ -88,6 +88,7 @@ extern int server_was_split;		/* defined in channel.c */
 extern time_t server_split_time;	/* defined in channel.c */
 extern int server_split_recovery_time;	/* defined in channel.c */
 extern int split_smallnet_size;		/* defined in channel.c */
+extern int split_smallnet_users;	/* defined in channel.c */
 #endif
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 extern void remove_empty_channels();	/* defined in channel.c */
@@ -1101,9 +1102,21 @@ int	m_server_estab(aClient *cptr)
 	  !matches(my_name_for_link(me.name, aconf), cptr->name))
 	continue;
       if (split)
-	sendto_one(acptr,":%s SERVER %s 2 :[%s] %s",
+	{
+	  /*
+	  sendto_one(acptr,":%s SERVER %s 2 :[%s] %s",
 		   me.name, cptr->name,
 		   cptr->sockhost, cptr->info);
+		   */
+
+	  /* DON'T give away the IP of the server here
+	   * if its a hub especially.
+	   */
+
+	  sendto_one(acptr,":%s SERVER %s 2 :%s",
+		   me.name, cptr->name,
+		   cptr->info);
+	}
       else
 	sendto_one(acptr,":%s SERVER %s 2 :%s",
 		   me.name, cptr->name, cptr->info);
@@ -2028,7 +2041,7 @@ static	void	report_configured_links(aClient *sptr,int mask)
 	      c = 'c';
 
 	    /* Don't allow non opers to see actual ips */
-	    if(IsAnOper(sptr))
+	    if(IsAnOper(sptr) && MyConnect(sptr))
 	      sendto_one(sptr, rpl_str(p->rpl_stats), me.name,
 			 sptr->name, c,
 			 host,
@@ -3418,7 +3431,7 @@ int   m_set(aClient *cptr,
 			 server_split_recovery_time/60);
 	    }
 	}
-      else if(!strcasecmp(command, "SMALLNET"))
+      else if(!strcasecmp(command, "SPLITNUM"))
 	{
           if(parc > 2)
             {
@@ -3426,21 +3439,46 @@ int   m_set(aClient *cptr,
 
               if(newval < SPLIT_SMALLNET_SIZE)
                 {
-                  sendto_one(sptr, ":%s NOTICE %s :SMALLNET must be >= %d",
+                  sendto_one(sptr, ":%s NOTICE %s :SPLITNUM must be >= %d",
                              me.name, parv[0],SPLIT_SMALLNET_SIZE);
                   return 0;
                 }
-              sendto_realops("%s has changed SMALLNET  to %i",
+              sendto_realops("%s has changed SPLITNUM to %i",
 			     parv[0], newval);
 	      split_smallnet_size = newval;
               return 0;
             }
 	  else
 	    {
-	      sendto_one(sptr, ":%s NOTICE %s :SMALLNET is currently %i",
+	      sendto_one(sptr, ":%s NOTICE %s :SPLITNUM is currently %i",
 			 me.name,
 			 parv[0],
 			 split_smallnet_size);
+	    }
+	}
+      else if(!strcasecmp(command, "SPLITUSERS"))
+	{
+          if(parc > 2)
+            {
+              int newval = atoi(parv[2]);
+
+              if(newval < 0)
+                {
+                  sendto_one(sptr, ":%s NOTICE %s :SPLITUSERS must be >= 0",
+                             me.name, parv[0]);
+                  return 0;
+                }
+              sendto_realops("%s has changed SPLITUSERS to %i",
+			     parv[0], newval);
+	      split_smallnet_users = newval;
+              return 0;
+            }
+	  else
+	    {
+	      sendto_one(sptr, ":%s NOTICE %s :SPLITUSERS is currently %i",
+			 me.name,
+			 parv[0],
+			 split_smallnet_users);
 	    }
 	}
 #endif
@@ -3563,7 +3601,7 @@ int   m_set(aClient *cptr,
 #endif
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
 	defined(NO_JOIN_ON_SPLIT)
-	sendto_one(sptr, ":%s NOTICE %s :Options: SMALLNET SPLITDELAY",
+	sendto_one(sptr, ":%s NOTICE %s :Options: SPLITNUM SPLITUSERS SPLITDELAY",
 		me.name, parv[0]);
 #endif
 #ifdef IDLE_CHECK

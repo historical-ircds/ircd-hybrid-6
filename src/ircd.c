@@ -1366,13 +1366,7 @@ time_t io_loop(time_t delay)
       sync_channels(timeofday - lasttimeofday);
     }
 
-  if(timeofday == lasttimeofday)
-    {
-      sleep(1);
-      NOW = timeofday+1;
-    }
-  else
-    NOW = timeofday;
+  NOW = timeofday;
 
   /*
    * This chunk of code determines whether or not
@@ -1503,7 +1497,11 @@ time_t io_loop(time_t delay)
   io_loop_count++;
 #endif
 
+  read_servers();
+  read_opers();
   read_message(delay);
+  if(lifesux)
+    read_servers();
 
   /*
   ** ...perhaps should not do these loops every time,

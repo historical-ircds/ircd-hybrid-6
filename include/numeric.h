@@ -295,6 +295,7 @@
 #define ERR_ERRONEUSNICKNAME 432
 #define ERR_NICKNAMEINUSE    433
 #define	ERR_NICKCOLLISION    436
+#define ERR_UNAVAILRESOURCE  437
 
 #define ERR_USERNOTINCHANNEL 441
 #define ERR_NOTONCHANNEL     442
@@ -321,8 +322,6 @@
 #define	ERR_BADCHANMASK      476
 #define ERR_MODELESS	     477	/* ircu numeric -db */
 #define ERR_BANLISTFULL	     478	/* I stole the numeric from ircu -db */
-
-#define ERR_NOJOINSPLIT	     479
 
 #define ERR_NOPRIVILEGES     481
 #define ERR_CHANOPRIVSNEEDED 482

@@ -1590,6 +1590,15 @@ void read_clients()
   fd_offset = 0;
 #endif
 
+  /*
+  if(delay > 1)
+    {
+      wait.tv_sec = 0;
+      wait.tv_usec = 500000;
+      select(0,(fd_set *)NULL,(fd_set *)NULL,(fd_set *)NULL,&wait);
+    }
+    */
+
   /* First part, fill in the fd sets with the bits for
    * each fd to look for in the select()
    */
@@ -2180,8 +2189,14 @@ int	read_message(time_t delay)
   register	int i;
   static aClient	*authclnts[MAXCONNECTIONS];
   char		errmsg[255];
-  
-
+  /*
+  if(delay > 1)
+    {
+      wait.tv_sec = 0;
+      wait.tv_usec = 500000;
+      select(0,(fd_set *)NULL,(fd_set *)NULL,(fd_set *)NULL,&wait);
+    }
+    */
   for (res = 0;;)
     {
       nbr_pfds = 0;

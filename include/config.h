@@ -734,6 +734,16 @@
 #define SPLIT_SMALLNET_SIZE 2
 
 /*
+ * SPLIT_SMALLNET_USER_SIZE defines how many global users on the
+ * net constitute a "normal" net size. It's used in conjunction
+ * with SPLIT_SMALLNET_SIZE to help determine the end of a split.
+ * if number of server seen on net > SPLIT_SMALLNET_SIZE &&
+ * number of users seen on net > SPLIT_SMALLNET_USER_SIZE start
+ * counting down the SERVER_SPLIT_RECOVERY_TIME
+ */
+#define SPLIT_SMALLNET_USER_SIZE 10000
+
+/*
  * DEFAULT_SERVER_SPLIT_RECOVERY_TIME - determines how long to delay split
  * status after resyncing
  */

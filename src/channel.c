@@ -55,6 +55,7 @@ int server_was_split=YES;
 time_t server_split_time;
 int server_split_recovery_time = (DEFAULT_SERVER_SPLIT_RECOVERY_TIME * 60);
 int split_smallnet_size = SPLIT_SMALLNET_SIZE;
+int split_smallnet_users = SPLIT_SMALLNET_USER_SIZE;
 static void check_still_split();
 #define USE_ALLOW_OP
 #endif
@@ -1941,7 +1942,7 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key)
 #ifdef NO_JOIN_ON_SPLIT
       else
 	{
-	  return(ERR_NOJOINSPLIT);
+	  return(ERR_UNAVAILRESOURCE);
 	}
 #endif
     }
@@ -1951,7 +1952,7 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key)
 	{
 	  chptr->mode.mode |= MODE_SPLIT;
 #ifdef NO_JOIN_ON_SPLIT
-	  return(ERR_NOJOINSPLIT);
+	  return(ERR_UNAVAILRESOURCE);
 #endif
 	}
     }
@@ -2372,11 +2373,7 @@ static void clear_bans_exceptions(aClient *sptr, aChannel *chptr)
  * side effects -
  * Check to see if the server split timer has expired, if so
  * check to see if there are now a decent number of servers connected
- * so I can consider this split over.
- *
- * I'm hoping that also including the network wide count of users
- * will be unnecessary, (as the "smallnet patch" does) but if
- * its demonstrated that its needed, this is where it should go.
+ * and users present, so I can consider this split over.
  *
  * -Dianora
  */
@@ -2385,14 +2382,8 @@ static void check_still_split()
 {
   if((server_split_time + server_split_recovery_time) < NOW)
     {
-      /* If needed..., split_smallnet_users will also
-      * have to be defined */
-
-      /* if((Count.server > split_smallnet_size) &&
-	    (Count.total > split_smallnet_users))
-	    */
-
-      if(Count.server >= split_smallnet_size)
+      if((Count.server > split_smallnet_size) &&
+	 (Count.total > split_smallnet_users))
 	{
 	  /* server hasn't been split for a while.
 	   * -Dianora
@@ -2580,7 +2571,7 @@ int	m_join(aClient *cptr,
       if(cold_start && MyClient(sptr) &&
 	 (*name == '#') && !IsAnOper(sptr))
 	{
-	      sendto_one(sptr, err_str(ERR_NOJOINSPLIT),
+	      sendto_one(sptr, err_str(ERR_UNAVAILRESOURCE),
 			 me.name, parv[0], name);
 	      continue;
 

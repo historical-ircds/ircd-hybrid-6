@@ -481,7 +481,7 @@ static	char *	replies[] = {
 /* 434 */	(char *)NULL,
 /* 435 */	(char *)NULL,
 /* 436 ERR_NICKCOLLISION, */	":%s 436 %s %s :Nickname collision KILL",
-/* 437 */	(char *)NULL,
+/* 437 ERR_NOTAVAILABLE, */	":%s 437 %s %s :Nick/channel is temporarily unavailable",
 /* 438 */	(char *)NULL,
 /* 439 */	(char *)NULL,
 /* 440 */	(char *)NULL,
@@ -524,8 +524,7 @@ static	char *	replies[] = {
 /* 477 ERR_MODELESS, */		":%s 477 %s %s :Channel does not support modes",
 /* 478 ERR_BANLISTFULL, */	":%s 478 %s :Channel ban list is full",
 
-/* 479 ERR_NOJOINSPLIT */	":%s 479 %s %s :Cannot join channel on split",
-
+/* 479 */	(char *)NULL,
 /* 480 */	(char *)NULL,
 /* 481 ERR_NOPRIVILEGES, */
 		":%s 481 %s :I don't THINK so, homez... you ain't got what it takes. (IRC operator)",
