@@ -1169,6 +1169,7 @@ int read_message(time_t delay, unsigned char mask)        /* mika */
 #define CHECK_PFD(thisfd)                     \
         if (pfd->fd != thisfd) {              \
                 pfd = &poll_fdarray[nbr_pfds++];\
+                poll_fdarray[nbr_pfds].fd = -1; \
                 pfd->fd     = thisfd;           \
                 pfd->events = 0;                \
         }
