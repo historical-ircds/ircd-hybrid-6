@@ -1578,7 +1578,7 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
 	  m = &parv[4][1];
 	  while (*m)
 	    {
-	      if (*m == 'O')	/* Can only be a remote oper */
+	      if (*m == 'o')	/* Can only be a remote oper */
 		{
 		  Count.oper++;
 		  SetOper(sptr);
