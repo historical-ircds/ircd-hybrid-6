@@ -1,3 +1,17 @@
+*** 20010608_3 by db
+From Walter Campbell
+
+1.  Updated example.conf for the cryptlinks patch
+2.  Fixed a compilation issue with the bogus TS patch
+3.  Cleaned up the make depend's
+4.  Fixed a core with CRYPT_LINKS and INFO
+5.  Use /dev/urandom for the random block in mkkeypair, this is not quite
+    as secure, but works on almost all systems
+6.  Updated .depend
+7.  Changed the patchlevel to 6.1b1
+
+
+
 *** 20010608_2 by kreator
 - oops, forgot to do the same with config.h.dist as with config.h
 
