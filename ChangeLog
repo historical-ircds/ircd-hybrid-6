@@ -1,3 +1,18 @@
+db          2002/02/02 10:52:21 EST	(20020202_0)
+
+  Modified files:
+    .                    README.FIRST 
+    src                  s_log.c 
+  Log:
+  Two patches send in by hwy to fix a logging problem and a doc mistake
+  :
+  
+  Revision  Changes    Path
+  1.15      +5 -0      ircd-hybrid-6/README.FIRST
+  1.14      +5 -0      ircd-hybrid-6/src/s_log.c
+
+
+
 androsyn    2002/01/30 18:55:44 EST	(20020130_0)
 
   Modified files:
