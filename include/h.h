@@ -121,7 +121,7 @@ extern  char	*dlinefile;
 extern	char	*glinefile;
 #endif
 extern	char	*getfield (char *);
-extern	void	get_sockhost (aClient *, char *);
+extern	void    set_client_sockhost(aClient* client, const char* name); /* s_misc.c */
 extern	char	*rpl_str (int);
 extern  char 	*err_str (int);
 extern  char    *form_str (int);
