@@ -177,11 +177,11 @@
 #define WARN_NO_NLINE
 
 /* CUSTOM_ERR - colorful notice/error/messages
- * Defining this will use custom notice/error/messages from include/s_err.h
- * instead of stock ones in ircd/s_err.c.  If you prefer the "colorful"
- * messages that Hybrid was known for, or if you wish to customize the
- * messages, define this.  Otherwise leave it undef'd for plain ole
- * boring messages.
+ * Defining this will use custom notice/error/messages from
+ * src/messages.tab instead of stock ones in src/messages_cust.tab
+ * If you prefer the "colorful" messages that Hybrid was known for,
+ * or if you wish to customize the  messages, define this.
+ * Otherwise leave it undef'd for plain ole boring messages.
  */
 #undef CUSTOM_ERR
 

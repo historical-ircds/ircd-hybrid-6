@@ -162,6 +162,13 @@
  */
 #define RFC1035_ANAL
 
+/* MAX_MULTI_MESSAGES
+ * Maximum number of recipients to a PRIVMSG.  Any more than MAX_MULTI_MESSAGES
+ * will not be sent.  If MAX_MULTI_MESSAGES is 1, then any PRIVMSG with a ',' in
+ * the target will be rejected
+ */
+#define MAX_MULTI_MESSAGES 2
+
 /* WARN_NO_NLINE
  * Define this if you want ops to get noticed about "things" trying to
  * connect as servers that don't have N: lines.  Twits with misconfigured
@@ -170,11 +177,11 @@
 #define WARN_NO_NLINE
 
 /* CUSTOM_ERR - colorful notice/error/messages
- * Defining this will use custom notice/error/messages from include/s_err.h
- * instead of stock ones in ircd/s_err.c.  If you prefer the "colorful"
- * messages that Hybrid was known for, or if you wish to customize the
- * messages, define this.  Otherwise leave it undef'd for plain ole
- * boring messages.
+ * Defining this will use custom notice/error/messages from
+ * src/messages.tab instead of stock ones in src/messages_cust.tab
+ * If you prefer the "colorful" messages that Hybrid was known for,
+ * or if you wish to customize the  messages, define this.
+ * Otherwise leave it undef'd for plain ole boring messages.
  */
 #undef CUSTOM_ERR
 

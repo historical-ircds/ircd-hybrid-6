@@ -2457,10 +2457,12 @@ static void initconf(FBFILE* file, int use_include)
           (void)collapse(aconf->host);
           (void)collapse(aconf->user);
           Debug((DEBUG_NOTICE,
-                 "Read Init: (%d) (%s) (%s) (%s) (%d) (%d)",
-                 aconf->status, aconf->host, aconf->passwd,
-                 aconf->user, aconf->port,
-		 ConfClassType(aconf)));
+                 "Read Init: (%d) (%s) (%s) (%s) (%d)",
+                 aconf->status,
+		 (aconf->host)?(aconf->host):"NULL",
+		 (aconf->passwd)?(aconf->passwd):"NULL",
+                 (aconf->user)?(aconf->user):"NULL",
+		 aconf->port));
           aconf->next = ConfigItemList;
           ConfigItemList = aconf;
         }
