@@ -1,3 +1,7 @@
+*** 20000824_4 by lusky
+- removed trailing ')' from channel +/-j oper notices
+
+
 *** 20000824_3 by lusky
 - glines were not matched properly for unidented clients
 
