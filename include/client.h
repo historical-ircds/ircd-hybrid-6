@@ -507,6 +507,13 @@ struct Client
 #define CLIENT_LOCAL_SIZE sizeof(struct Client)
 #define CLIENT_REMOTE_SIZE offsetof(struct Client, count)
 
+/*
+ * definitions for get_client_name
+ */
+#define HIDE_IP 0
+#define SHOW_IP 1
+#define MASK_IP 2
+
 extern const char*    get_client_name(struct Client* client, int show_ip);
 extern const char*    get_client_host(struct Client* client);
 extern void           release_client_dns_reply(struct Client* client);
