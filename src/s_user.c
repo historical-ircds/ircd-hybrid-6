@@ -1406,7 +1406,11 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
           ServerStats->is_kill++;
           sendto_realops_flags(FLAGS_DEBUG, "Bad Nick: %s From: %s %s",
                              parv[1], parv[0],
+#ifndef HIDE_SERVERS_IPS
                              get_client_name(cptr, FALSE));
+#else
+                             get_client_name(cptr, MASK_IP));
+#endif
           sendto_one(cptr, ":%s KILL %s :%s (%s <- %s[%s])",
                      me.name, parv[1], me.name, parv[1],
                      nick, cptr->name);
@@ -1415,7 +1419,11 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
               sendto_serv_butone(cptr,
                                  ":%s KILL %s :%s (%s <- %s!%s@%s)",
                                  me.name, parv[0], me.name,
+#ifndef HIDE_SERVERS_IPS
                                  get_client_name(cptr, FALSE),
+#else
+                                 get_client_name(cptr, MASK_IP),
+#endif
                                  parv[0],
                                  sptr->username,
                                  sptr->user ? sptr->user->server :
@@ -1472,7 +1480,11 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
       */
       sendto_realops("Nick collision on %s(%s <- %s)",
                  sptr->name, acptr->from->name,
+#ifndef HIDE_SERVERS_IPS
                  get_client_name(cptr, FALSE));
+#else
+                 get_client_name(cptr, MASK_IP));
+#endif
       ServerStats->is_kill++;
       sendto_one(cptr, ":%s KILL %s :%s (%s <- %s)",
                  me.name, sptr->name, me.name, acptr->from->name,
@@ -1481,7 +1493,11 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
                  ** string pointer--the other info
                  ** would be lost
                  */
+#ifndef HIDE_SERVERS_IPS
                  get_client_name(cptr, FALSE));
+#else
+                 get_client_name(cptr, MASK_IP));
+#endif
       sptr->flags |= FLAGS_KILLED;
       return exit_client(cptr, sptr, &me, "Nick/Server collision");
     }
@@ -1620,7 +1636,11 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
         {
           sendto_realops("Nick collision on %s(%s <- %s)(both killed)",
                      acptr->name, acptr->from->name,
+#ifndef HIDE_SERVERS_IPS	
                      get_client_name(cptr, FALSE));
+#else
+                     get_client_name(cptr, MASK_IP));
+#endif
           ServerStats->is_kill++;
           sendto_one(acptr, form_str(ERR_NICKCOLLISION),
                      me.name, acptr->name, acptr->name);
@@ -1634,7 +1654,11 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			     ** here, it returns static string pointer:
 			     ** the other info would be lost
 			     */
+#ifndef HIDE_SERVERS_IPS
 			     get_client_name(cptr, FALSE));
+#else
+                             get_client_name(cptr, MASK_IP));
+#endif
 #endif
           acptr->flags |= FLAGS_KILLED;
           return exit_client(cptr, acptr, &me, "Nick collision");
@@ -1652,11 +1676,19 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
               if (sameuser)
                 sendto_realops("Nick collision on %s(%s <- %s)(older killed)",
                            acptr->name, acptr->from->name,
+#ifndef HIDE_SERVERS_IPS
                            get_client_name(cptr, FALSE));
+#else
+                           get_client_name(cptr, MASK_IP));
+#endif
               else
                 sendto_realops("Nick collision on %s(%s <- %s)(newer killed)",
                            acptr->name, acptr->from->name,
+#ifndef HIDE_SERVERS_IPS
                            get_client_name(cptr, FALSE));
+#else
+                           get_client_name(cptr, MASK_IP));
+#endif
               
               ServerStats->is_kill++;
               sendto_one(acptr, form_str(ERR_NICKCOLLISION),
@@ -1667,7 +1699,11 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				 ":%s KILL %s :%s (%s <- %s)",
 				 me.name, acptr->name, me.name,
 				 acptr->from->name,
+#ifndef HIDE_SERVERS_IPS
 				 get_client_name(cptr, FALSE));
+#else
+                                 get_client_name(cptr, MASK_IP));
+#endif
 #endif
 
               acptr->flags |= FLAGS_KILLED;
@@ -1688,7 +1724,11 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
     {
       sendto_realops("Nick change collision from %s to %s(%s <- %s)(both killed)",
                  sptr->name, acptr->name, acptr->from->name,
+#ifndef HIDE_SERVERS_IPS
                  get_client_name(cptr, FALSE));
+#else
+                 get_client_name(cptr, MASK_IP));
+#endif
       ServerStats->is_kill++;
       sendto_one(acptr, form_str(ERR_NICKCOLLISION),
                  me.name, acptr->name, acptr->name);
@@ -1697,7 +1737,11 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
       sendto_serv_butone(NULL, /* KILL old from outgoing servers */
 			 ":%s KILL %s :%s (%s(%s) <- %s)",
 			 me.name, sptr->name, me.name, acptr->from->name,
+#ifndef HIDE_SERVERS_IPS
 			 acptr->name, get_client_name(cptr, FALSE));
+#else
+			 acptr->name, get_client_name(cptr, MASK_IP));
+#endif
 #endif
 
       ServerStats->is_kill++;
@@ -1706,7 +1750,11 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
       sendto_serv_butone(NULL, /* Kill new from incoming link */
 			 ":%s KILL %s :%s (%s <- %s(%s))",
 			 me.name, acptr->name, me.name, acptr->from->name,
+#ifndef HIDE_SERVERS_IP
 			 get_client_name(cptr, FALSE), sptr->name);
+#else
+			 get_client_name(cptr, MASK_IP), sptr->name);
+#endif
 #endif
 
       acptr->flags |= FLAGS_KILLED;
@@ -1724,18 +1772,30 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
           if (sameuser)
             sendto_realops("Nick change collision from %s to %s(%s <- %s)(older killed)",
                        sptr->name, acptr->name, acptr->from->name,
+#ifndef HIDE_SERVERS_IPS
                        get_client_name(cptr, FALSE));
+#else
+                       get_client_name(cptr, MASK_IP));
+#endif
           else
             sendto_realops("Nick change collision from %s to %s(%s <- %s)(newer killed)",
                        sptr->name, acptr->name, acptr->from->name,
+#ifndef HIDE_SERVERS_IPS
                        get_client_name(cptr, FALSE));
+#else
+                       get_client_name(cptr, MASK_IP));
+#endif
           ServerStats->is_kill++;
 
 #ifndef LOCAL_NICK_COLLIDE
 	  sendto_serv_butone(cptr, /* KILL old from outgoing servers */
 			     ":%s KILL %s :%s (%s(%s) <- %s)",
 			     me.name, sptr->name, me.name, acptr->from->name,
+#ifndef HIDE_SERVERS_IPS
 			     acptr->name, get_client_name(cptr, FALSE));
+#else
+                             acptr->name, get_client_name(cptr, MASK_IP));
+#endif
 #endif
 
           sptr->flags |= FLAGS_KILLED;
@@ -1749,11 +1809,19 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
           if (sameuser)
             sendto_realops("Nick collision on %s(%s <- %s)(older killed)",
                        acptr->name, acptr->from->name,
+#ifndef HIDE_SERVERS_IPS
                        get_client_name(cptr, FALSE));
+#else
+                       get_client_name(cptr, MASK_IP));
+#endif
           else
             sendto_realops("Nick collision on %s(%s <- %s)(newer killed)",
                        acptr->name, acptr->from->name,
+#ifndef HIDE_SERVERS_IPS
                        get_client_name(cptr, FALSE));
+#else
+                       get_client_name(cptr, MASK_IP));
+#endif
           
           ServerStats->is_kill++;
           sendto_one(acptr, form_str(ERR_NICKCOLLISION),
@@ -1764,7 +1832,11 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			     ":%s KILL %s :%s (%s <- %s)",
 			     me.name, acptr->name, me.name,
 			     acptr->from->name,
+#ifndef HIDE_SERVERS_IPS
 			     get_client_name(cptr, FALSE));
+#else
+			     get_client_name(cptr, MASK_IP));
+#endif
 #endif
 
           acptr->flags |= FLAGS_KILLED;
@@ -1822,7 +1894,11 @@ int m_user(aClient* cptr, aClient* sptr, int parc, char *parv[])
                  me.name, BadPtr(parv[0]) ? "*" : parv[0], "USER");
       if (IsServer(cptr))
         sendto_realops("bad USER param count for %s from %s",
+#ifndef HIDE_SERVERS_IPS
                        parv[0], get_client_name(cptr, FALSE));
+#else
+                       parv[0], get_client_name(cptr, MASK_IP));
+#endif
       else
         return 0;
     }
@@ -1953,7 +2029,14 @@ int user_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
         sendto_ops_butone(NULL, &me,
                           ":%s WALLOPS :MODE for User %s From %s!%s",
                           me.name, parv[1],
+#ifndef HIDE_SERVERS_IPS
                           get_client_name(cptr, FALSE), sptr->name);
+#else
+                          get_client_name(cptr, MASK_IP), sptr->name);
+#endif
+                  /* while hiding the servers ips, lets send a server-sent
+                     wallop about it! good idea! -gnp */
+
       else
         sendto_one(sptr, form_str(ERR_USERSDONTMATCH),
                    me.name, parv[0]);
