@@ -3911,6 +3911,7 @@ int     m_sjoin(struct Client *cptr,
 		     (unsigned long) newts,
 		     chptr->chname,
 		     cptr->name);
+      newts = oldts;
     }
 #endif
 
