@@ -1569,6 +1569,7 @@ void read_clients()
   int	res, length, fd;
   register int i;
   int rr;
+  time_t	last_full_to_opers_notice = (time_t)0;
 #ifdef USE_FAST_FD_ISSET
   int fd_mask;
   int fd_offset;
@@ -1906,8 +1907,13 @@ void read_clients()
 	    if (fd >= (HARD_FDLIMIT - 10))
 	      {
 		ircstp->is_ref++;
-		sendto_realops("All connections in use. (%s)",
-			       get_client_name(cptr, TRUE));
+		/* slow down the whining to opers bit */
+		if((last_full_to_opers_notice + 10) <= NOW)
+		  {
+		    sendto_realops("All connections in use. (%s)",
+				   get_client_name(cptr, TRUE));
+		    last_full_to_opers_notice = NOW;
+		  }
 		(void)send(fd,
 			   "ERROR :All connections in use\r\n",
 			   32, 0);
