@@ -2217,7 +2217,8 @@ void initconf(int opt, FBFILE* file, int use_include)
 		memset(&vserv,0, sizeof(vserv));
 		vserv.sin_family = AF_INET;
 		vaddr = inet_addr(aconf->passwd);
-		bcopy((char *) &vaddr, (char *)&vserv.sin_addr, sizeof(struct in_addr));
+		memcpy( (void *)&vserv.sin_addr,
+			(void *) &vaddr, sizeof(struct in_addr));
 		specific_virtual_host = 1;
 	    }
 	  }
