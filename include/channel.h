@@ -65,6 +65,9 @@ struct Channel
   struct SLink*   banlist;
   struct SLink*   exceptlist;
   int             num_bed;  /* number of bans+exceptions+denies */
+#ifdef JUPE_CHANNEL
+  int		  juped;
+#endif  
   time_t          channelts;
 #ifdef FLUD
   time_t          fludblock;
@@ -148,7 +151,6 @@ extern void    set_channel_mode(struct Client *, struct Client *,
 
 #define MODE_LIMIT      0x2000  /* was 0x1000 */
 #define MODE_FLAGS      0x2fff  /* was 0x1fff */
-
 #ifdef NEED_SPLITCODE
 
 
@@ -160,10 +162,6 @@ extern int got_server_pong;
 #endif /* SPLIT_PONG */
 
 #endif /* NEED_SPLITCODE */
-
-#ifdef JUPE_CHANNEL
-#define MODE_JUPED      0x4000
-#endif
 
 /*
  * mode flags which take another parameter (With PARAmeterS)

@@ -613,9 +613,9 @@ int     can_send(struct Client *cptr, struct Channel *chptr)
   Link  *lp;
 
 #ifdef JUPE_CHANNEL
-  if (MyClient(cptr) && (chptr->mode.mode & MODE_JUPED))
+  if (MyClient(cptr) && chptr->juped)
     {
-      return (MODE_JUPED);
+      return 1;
     }
 #endif
 
@@ -1607,14 +1607,14 @@ void set_channel_mode(struct Client *cptr,
             {
               if (whatt == MODE_ADD)
                 {
-                  chptr->mode.mode |= MODE_JUPED;
+                  chptr->juped = 1;
                   sendto_realops("%s!%s@%s locally juping channel %s",
                                  sptr->name, sptr->username,
                                  sptr->host, chptr->chname);
                 }
               else if(whatt == MODE_DEL)
                 {
-                  chptr->mode.mode &= ~MODE_JUPED;
+                  chptr->juped = 0;
                   sendto_realops("%s!%s@%s locally unjuping channel %s",
                                  sptr->name, sptr->username,
                                  sptr->host, chptr->chname);
@@ -1893,13 +1893,13 @@ static  int     can_join(struct Client *sptr, struct Channel *chptr, char *key, 
   int ban_or_exception;
 
 #ifdef JUPE_CHANNEL
-  if( chptr->mode.mode & MODE_JUPED )
+  if(chptr->juped)
     {
       sendto_ops_flags(FLAGS_SPY,
              "User %s (%s@%s) is attempting to join locally juped channel %s",
                      sptr->name,
                      sptr->username, sptr->host,chptr->chname);
-      return (ERR_BADCHANNAME);
+      return (ERR_UNAVAILRESOURCE);
     }
 #endif
 
@@ -2066,7 +2066,7 @@ static  void    sub1_from_channel(struct Channel *chptr)
                          * It should never happen but...
                          */
 #ifdef JUPE_CHANNEL
-        if( chptr->mode.mode & MODE_JUPED )
+        if(chptr->juped)
           {
             while ((tmp = chptr->invites))
               del_invite(tmp->value.cptr, chptr);

@@ -2452,10 +2452,10 @@ static void initconf(FBFILE* file, int use_include)
               int len;
 
               if( (chptr = hash_find_channel(aconf->name, (aChannel *)NULL)) )
-                chptr->mode.mode |= MODE_JUPED;
+                chptr->juped = 1;
               else
                 {
-                  /* create a zero user channel, marked as MODE_JUPED
+                  /* create a zero user channel, marked as juped
                    * which just place holds the channel down.
                    */
 
@@ -2466,7 +2466,7 @@ static void initconf(FBFILE* file, int use_include)
                    * NOTE: strcpy ok since we already know the length
                    */
                   strcpy(chptr->chname, aconf->name);
-                  chptr->mode.mode = MODE_JUPED;
+                  chptr->juped;
                   if (channel)
                     channel->prevch = chptr;
                   chptr->prevch = NULL;
