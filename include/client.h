@@ -386,7 +386,7 @@ struct Client
 /*
  * flags macros.
  */
-#define IsPerson(x)             ((x)->user && IsClient(x))
+#define IsPerson(x)             (IsClient(x) && (x)->user)
 #define IsInvisible(x)          ((x)->flags & FLAGS_INVISIBLE)
 
 #define DoAccess(x)             ((x)->flags & FLAGS_CHKACCESS)

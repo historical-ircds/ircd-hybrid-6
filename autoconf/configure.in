@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_INIT(include/class.h)
 
 AC_CONFIG_AUX_DIR(autoconf)
-AC_CONFIG_HEADER(../include/setup.h ../zlib/setup.h)
+AC_CONFIG_HEADER(include/setup.h zlib/setup.h)
 
 PACKAGE=ircd-hybrid
 VERSION=6.0
@@ -31,15 +31,18 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS(sys/param.h unistd.h errno.h string.h strings.h sys/syslog.h stdlib.h stddef.h) 
 AC_CHECK_HEADER(malloc.h, AC_DEFINE(MALLOCH, <malloc.h>)) 
 
-dnl Check for stdarg.h - if we can't find it, fall back
-dnl on varargs.h. If varargs.h is missing as well, halt
-dnl configure
+dnl Check for stdarg.h - if we can't find it, halt configure
+AC_CHECK_HEADER(stdarg.h, , AC_MSG_ERROR(** stdarg.h could not be found - ircd-hybrid will not compile without it **))
 
 dnl Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
 AC_CHECK_FUNCS(index strerror strtoken strtok inet_addr inet_ntoa inet_netof inet_aton)
 AC_CHECK_FUNCS(gettimeofday lrand48 sigaction bzero bcmp bcopy)
 AC_CHECK_FUNCS(dn_skipname __dn_skipname getrusage times, break)
+
+dnl check for poll() call
+AC_CHECK_FUNC(poll, AC_DEFINE(USE_POLL),)
+
 dnl taken from ircd's Config script
 AC_MSG_CHECKING(for non-blocking socket implementation)
 AC_TRY_RUN(
@@ -181,9 +184,6 @@ dnl don't add more of these unless it's critical.  Trying to get rid of them.
 AC_MSG_CHECKING(operating system)
 case "$target" in
 *-solaris2*) AC_DEFINE(OS_SOLARIS2) AC_MSG_RESULT(Solaris 2.x) ;;
-*-aix*) AC_DEFINE(OS_AIX) AC_MSG_RESULT(AIX) ;;
-*-next*) AC_DEFINE(OS_NEXT) AC_MSG_RESULT(NeXT something) ;;
-*-mips*) AC_DEFINE(OS_MIPS) AC_MSG_RESULT(MIPS something) ;;
 *-sequent-ptx*) AC_DEFINE(OS_DYNIXPTX) AC_MSG_RESULT(Dynix PTX) ;;
 *-hpux*) AC_DEFINE(OS_HPUX) AC_MSG_RESULT(HP-UX) ;;
 *) AC_MSG_RESULT(nothing special required) ;;
