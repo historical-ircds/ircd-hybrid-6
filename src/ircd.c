@@ -63,6 +63,10 @@
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <sys/param.h>
 
 #if defined(HAVE_GETOPT_H)
 #include <getopt.h>
@@ -637,6 +641,64 @@ static void write_pidfile(void)
     log(L_ERROR, "Error opening pid file %s", PPATH);
 }
 
+/*
+ * check_pidfile
+ *
+ * inputs       - nothing
+ * output       - nothing
+ * side effects - reads pid from pidfile and checks if ircd is in process
+ *                list. if it is, gracefully exits
+ * -kre
+ */
+static void check_pidfile(void)
+{
+  int fd;
+  char buff[20];
+  pid_t pidfromfile;
+
+  if ((fd = open(PPATH, O_RDONLY)) >= 0 )
+  {
+    if (read(fd, buff, sizeof(buff)) == -1)
+    {
+      /* printf("NOTICE: problem reading from %s (%s)\n", PPATH,
+          strerror(errno)); */
+    }
+    else
+    {
+      pidfromfile = atoi(buff);
+      if (!kill(pidfromfile, 0))
+      {
+        printf("ERROR: daemon is already running\n");
+        exit(-1);
+      }
+    }
+    close(fd);
+  }
+  else
+  {
+    printf("ERROR: problem opening %s: %s\n", PPATH, strerror(errno));
+  }
+}
+
+/*
+ * setup_corefile
+ *
+ * inputs       - nothing
+ * output       - nothing
+ * side effects - setups corefile to system limits.
+ * -kre
+ */
+static void setup_corefile(void)
+{
+  struct rlimit rlim; /* resource limits */
+
+  /* Set corefilesize to maximum */
+  if (!getrlimit(RLIMIT_CORE, &rlim))
+  {
+    rlim.rlim_cur = rlim.rlim_max;
+    setrlimit(RLIMIT_CORE, &rlim);
+  }
+}
 
 int main(int argc, char *argv[])
 {
@@ -653,6 +715,17 @@ int main(int argc, char *argv[])
       fprintf(stderr, "ERROR: Clock Failure: %s\n", strerror(errno));
       exit(errno);
     }
+
+  /*
+   * Setup corefile size immediately after boot
+   */
+  setup_corefile();
+
+  /*
+   * Check if daemon is already running
+   */
+  check_pidfile();
+
   /* 
    * set initialVMTop before we allocate any memory
    */
