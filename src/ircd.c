@@ -786,7 +786,6 @@ int main(int argc, char *argv[])
   myargv = argv;
   umask(077);                /* better safe than sorry --SRB */
 
-  setuid(uid);
   parse_command_line(argc, argv); 
 
   if (chdir(ConfigFileEntry.dpath))
