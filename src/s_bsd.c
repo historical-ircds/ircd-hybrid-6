@@ -536,7 +536,6 @@ void	init_sys()
       !(bootopt & BOOT_STDERR))
     {
       int pid;
-#ifndef DEBUG_NO_FORK
       if( (pid = fork()) < 0)
 	{
 	  if ((fd = open("/dev/tty", O_RDWR)) >= 0)
@@ -545,7 +544,6 @@ void	init_sys()
 	}
       else if(pid > 0)
 	exit(0);
-#endif
 #ifdef TIOCNOTTY
       if ((fd = open("/dev/tty", O_RDWR)) >= 0)
 	{

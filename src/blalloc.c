@@ -334,37 +334,38 @@ int BlockHeapGarbageCollect(BlockHeap *bh)
        return 0;
      }
 
-   walker = last = bh->base;
-   while (walker)
+   last = NULL;
+   walker = bh->base;
+
+   /* This section rewritten Dec 10 1998 - Dianora */
+   while(walker)
      {
        int i;
        for (i = 0; i < bh->numlongs; i++)
 	 {
-	   if (walker->allocMap[i] != 0)
+	   if (walker->allocMap[i])
 	     break;
 	 }
       if (i == bh->numlongs)
 	{
-	  /* Check to make sure it isn't the last remaining block */
-	  if ( (walker == bh->base) && (walker->next == NULL) )
-            return 0;
-
 	  /* This entire block is free.  Remove it. */
-	  if (last == bh->base)
+	  free(walker->elems);
+	  free(walker->allocMap);
+
+	  if (last)
 	    {
-	      bh->base = walker->next;
+	      last->next = walker->next;
+	      free(walker);
+	      walker = last->next;
 	    }
 	  else
 	    {
-	      last->next = walker->next;
+	      bh->base = walker->next;
+	      free(walker);
+	      walker = bh->base;
 	    }
-	  free(walker->elems);
-	  free(walker->allocMap);
-	  tmpptr = walker->next;
-	  free(walker);
 	  bh->blocksAllocated--;
 	  bh->freeElems -= bh->elemsPerBlock;
-	  walker = tmpptr;
 	}
       else
 	{
