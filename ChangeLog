@@ -1,3 +1,8 @@
+*** 20010729_1 by db
+- removed prohibition on servers removing +o etc.
+
+
+
 *** 20010727_6 by leeh
 - drop TS_CURRENT to 3 till we can make a workaround for this bug..
 
