@@ -1,3 +1,7 @@
+*** 19990803_2 by lusky
+bumped patchlevel for new tarball
+
+
 *** 19990803_1 by lusky
 changed all occurances of USE_ALLOW_OP to NO_CHANOPS_WHEN_SPLIT
 fix to prevent coring on malformed conf lines
