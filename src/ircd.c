@@ -49,6 +49,9 @@ static char *rcs_version="$Id$";
 #ifdef  IDLE_CHECK
 int	idle_time = MIN_IDLETIME;
 #endif
+#ifdef  REJECT_HOLD
+int reject_held_fds=0;
+#endif
 
 #ifdef OPER_MOTD
 aMessageFile *opermotd=(aMessageFile *)NULL;
@@ -657,6 +660,9 @@ static	time_t	check_pings(time_t currenttime)
 	{
 	  if( timeofday > (cptr->firsttime + REJECT_HOLD_TIME) )
 	    {
+	      if( reject_held_fds )
+		reject_held_fds--;
+
 	      dying_clients[die_index] = cptr;
 	      dying_clients_reason[die_index++] = "reject held client";
 	      dying_clients[die_index] = (aClient *)NULL;
@@ -915,15 +921,12 @@ int	main(int argc, char *argv[])
       exit(errno);
     }
 
+  (void)memset( (void *)&Count, 0, sizeof(Count));
   Count.server = 1;	/* us */
-  Count.oper = 0;
-  Count.chan = 0;
-  Count.local = 0;
-  Count.total = 0;
-  Count.invisi = 0;
-  Count.unknown = 0;
-  Count.max_loc = 0;
-  Count.max_tot = 0;
+
+#ifdef REJECT_HOLD
+  reject_held_fds = 0;
+#endif
 
 /* this code by mika@cs.caltech.edu */
 /* it is intended to keep the ircd from being swapped out. BSD swapping

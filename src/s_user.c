@@ -86,6 +86,10 @@ extern void reset_sock_opts();
 #endif
 extern int lifesux;
 
+#ifdef REJECT_HOLD
+extern int reject_held_fds;		/* defined in ircd.c */
+#endif
+
 static char buf[BUFSIZE], buf2[BUFSIZE];
 static int user_modes[]		= { FLAGS_OPER, 'o',
 				FLAGS_LOCOP, 'O',
@@ -444,9 +448,6 @@ static	int	register_user(aClient *cptr,
   char	bottemp[HOSTLEN + 1];
   char  *type_of_bot;
 #endif
-#ifdef ANTI_SPAMBOT
-  char  spamchar = '\0';
-#endif
   char tmpstr2[512];
 #if defined(KLINE_WITH_REASON) && !defined(REJECT_HOLD)
   char safe_reason[MAX_REASON];
@@ -519,36 +520,37 @@ static	int	register_user(aClient *cptr,
 		  (void)strncpy(user->username, username, USERLEN);
 	      }
 	    
-	    /* Ok... if we are using REJECT_HOLD, I'm not going to dump
+	    /* Ok... if using REJECT_HOLD, I'm not going to dump
 	     * the client immediately, but just mark the client for exit
 	     * at some future time, .. this marking also disables reads/
 	     * writes from the client. i.e. the client is "hanging" onto
 	     * an fd without actually being able to do anything with it
 	     * I still send the usual messages about the k line, but its
 	     * not exited immediately.
-	     * My concern would be, someone attempting to deny service
-	     * attack would load up a bunch of clients all on the same
-	     * user@host expecting to use up fd's
 	     * - Dianora
 	     */
 	    
 	    reason = (reason) ? reason : "K-lined";
 #ifdef REJECT_HOLD
-	    SetRejectHold(cptr);
+	    if( (reject_held_fds != REJECT_HELD_MAX ) )
+	      {
+		SetRejectHold(cptr);
+		reject_held_fds++;
 #ifdef KLINE_WITH_REASON
-	    if(( p = strchr(reason, '|')) )
-	      *p = '\0';
+		if(( p = strchr(reason, '|')) )
+		  *p = '\0';
 
-	    sendto_one(sptr, ":%s NOTICE %s :*** K-lined for %s",
-		       me.name,cptr->name,reason);
+		sendto_one(sptr, ":%s NOTICE %s :*** K-lined for %s",
+			   me.name,cptr->name,reason);
 	    
-	    if(p)
-	      *p = '|';
+		if(p)
+		  *p = '|';
 #else
-	    sendto_one(sptr, ":%s NOTICE %s :*** K-lined",
-		       me.name,cptr->name);
+		sendto_one(sptr, ":%s NOTICE %s :*** K-lined",
+			   me.name,cptr->name);
 #endif
-	    return(0);
+		return(0);
+	      }
 #else
 	    ircstp->is_ref++;
 
@@ -572,16 +574,9 @@ static	int	register_user(aClient *cptr,
 	  break;
 	}
 
-#ifdef ANTI_SPAMBOT
-      /* This appears to be broken */
-      /* Check for single char in user->host -ThemBones */
-      if (*(user->host + 1) == '\0')
-         spamchar = *user->host;
-#endif
-
 #ifdef BOTCHECK
       /*
-       * We need to save this now, before we clobber it
+       * Need to save this now, before its clobbered
        */
       strncpyzt(bottemp, user->host, HOSTLEN);
 #endif
@@ -592,6 +587,7 @@ static	int	register_user(aClient *cptr,
 	  sendto_realops(
 			 "Invalid hostname for %s, dumping user %s",
 			 inetntoa((char *)&sptr->ip), sptr->name);
+	  ircstp->is_ref++;
 	  return exit_client(cptr, sptr, &me, "Invalid hostname");
 	}
 
@@ -625,6 +621,7 @@ static	int	register_user(aClient *cptr,
       else
 	strncpyzt(user->username, username, USERLEN+1);
 
+      /* password check */
       if (!BadPtr(aconf->passwd) &&
 	!StrEq(sptr->passwd, aconf->passwd))
 	{
@@ -635,6 +632,7 @@ static	int	register_user(aClient *cptr,
 	}
       memset((void *)sptr->passwd,0, sizeof(sptr->passwd));
 
+      /* report if user has &^>= etc. and set flags as needed in sptr */
       report_and_set_user_flags(sptr, aconf);
 
 #ifdef GLINES
@@ -710,101 +708,100 @@ static	int	register_user(aClient *cptr,
 			     "Sorry, server is full - try later");
 	}
 
-#ifdef ANTI_SPAMBOT
-      /* It appears, this is catching normal clients */
-  /* Reject single char user-given user->host's */
-  if (spamchar == 'x')
-  {
-    sendto_realops_lev(REJ_LEV,"Rejecting possible Spambot: %s (Single char user-given userhost: %c)",
-		       get_client_name(sptr,FALSE), spamchar);
-    ircstp->is_ref++;
-    return exit_client(cptr, sptr, sptr, "Spambot detected, rejected.");
-  }
-#endif
-
+      /* botcheck */
 #ifdef BOTCHECK
-  if(rejecting_bot(sptr,isbot,&type_of_bot))
-    {
-      if(IsBlined(sptr))
+      if(rejecting_bot(sptr,isbot,&type_of_bot))
 	{
-	  sendto_realops_lev(CCONN_LEV, "Possible %s: %s (%s@%s) [B-lined]",
-			     type_of_bot, nick, user, user->host);
+	  if(IsBlined(sptr))
+	    {
+	      sendto_realops_lev(CCONN_LEV,
+				 "Possible %s: %s (%s@%s) [B-lined]",
+				 type_of_bot, nick, user, user->host);
+	    }
+	  else
+	    {
+	      sendto_realops_lev(REJ_LEV, "Rejecting %s: %s",
+				 type_of_bot, get_client_name(sptr,FALSE));
+	      ircstp->is_ref++;
+	      return exit_client(cptr, sptr, sptr, type_of_bot );
+	    }
 	}
-      else
-	{
-	  sendto_realops_lev(REJ_LEV, "Rejecting %s: %s",
-			     type_of_bot, get_client_name(sptr,FALSE));
-	  ircstp->is_ref++;
-	  return exit_client(cptr, sptr, sptr, type_of_bot );
-	}
-    }
 #endif
-/* End of botcheck */
+      /* End of botcheck */
 
-  if (oldstatus == STAT_MASTER && MyConnect(sptr))
-    (void)m_oper(&me, sptr, 1, parv);
+      if (oldstatus == STAT_MASTER && MyConnect(sptr))
+	(void)m_oper(&me, sptr, 1, parv);
 
-  if ( !valid_username(user) )
-    {
-      sendto_realops_lev(REJ_LEV,"Invalid username: %s (%s@%s)",
-			 nick, user->username, user->host);
-      ircstp->is_ref++;
-      (void)ircsprintf(tmpstr2, "Invalid username [%s]",
-		       user->username);
-      return exit_client(cptr, sptr, &me, tmpstr2);
-    }
+      /* valid user name check */
 
-  if(!IsAnOper(sptr) && (aconf = find_special_conf(sptr->info,CONF_XLINE)) )
-    {
-      char *reason;
-      if(aconf->passwd)
-	reason = aconf->passwd;
-      else
-	reason = "NONE";
-
-      if(aconf->port)
+      if ( !valid_username(user) )
 	{
+	  sendto_realops_lev(REJ_LEV,"Invalid username: %s (%s@%s)",
+			     nick, user->username, user->host);
 	  ircstp->is_ref++;
-	  sendto_realops_lev(REJ_LEV,"X-line Rejecting [%s] [%s], user %s",
-			     sptr->info,
-			     reason,
-			     get_client_name(cptr, FALSE));
-      
-	  return exit_client(cptr, sptr, &me, "Bad user info");
+	  (void)ircsprintf(tmpstr2, "Invalid username [%s]",
+			   user->username);
+	  return exit_client(cptr, sptr, &me, tmpstr2);
 	}
-      else
-	sendto_realops_lev(REJ_LEV,"X-line Warning [%s] [%s], user %s",
-			   sptr->info,
-			   reason,
-			   get_client_name(cptr, FALSE));
-    }
+      /* end of valid user name check */
 
+      if(!IsAnOper(sptr))
+	{
+	  char *reason;
 
-  if(!IsAnOper(sptr) && find_q_line(nick,user->username,user->host)) 
-    {
-      sendto_realops_lev(REJ_LEV,
-			 "Quarantined nick [%s], dumping user %s",
-			 nick,get_client_name(cptr, FALSE));
+	  if ( (aconf = find_special_conf(sptr->info,CONF_XLINE)))
+	    {
+	      if(aconf->passwd)
+		reason = aconf->passwd;
+	      else
+		reason = "NONE";
+	      
+	      if(aconf->port)
+		{
+		  ircstp->is_ref++;
+		  sendto_realops_lev(REJ_LEV,
+				     "X-line Rejecting [%s] [%s], user %s",
+				     sptr->info,
+				     reason,
+				     get_client_name(cptr, FALSE));
+		  ircstp->is_ref++;      
+		  return exit_client(cptr, sptr, &me, "Bad user info");
+		}
+	      else
+		sendto_realops_lev(REJ_LEV,
+				   "X-line Warning [%s] [%s], user %s",
+				   sptr->info,
+				   reason,
+				   get_client_name(cptr, FALSE));
+	    }
+
+	  if((find_q_line(nick,user->username,user->host)))
+	    {
+	      sendto_realops_lev(REJ_LEV,
+				 "Quarantined nick [%s], dumping user %s",
+				 nick,get_client_name(cptr, FALSE));
       
-      return exit_client(cptr, sptr, &me, "quarantined nick");
-    }
+	      ircstp->is_ref++;      
+	      return exit_client(cptr, sptr, &me, "quarantined nick");
+	    }
+	}
 
 
-  sendto_realops_lev(CCONN_LEV,
-		     "Client connecting: %s (%s@%s) [%s] {%d}",
-		     nick,
-		     user->username,
-		     user->host,
-		     inetntoa((char *)&sptr->ip),
-		     get_client_class(sptr));
+      sendto_realops_lev(CCONN_LEV,
+			 "Client connecting: %s (%s@%s) [%s] {%d}",
+			 nick,
+			 user->username,
+			 user->host,
+			 inetntoa((char *)&sptr->ip),
+			 get_client_class(sptr));
 
-  if ((++Count.local) > Count.max_loc)
-    {
-      Count.max_loc = Count.local;
-      if (!(Count.max_loc % 10))
-	sendto_ops("New Max Local Clients: %d",
-		   Count.max_loc);
-    }
+      if ((++Count.local) > Count.max_loc)
+	{
+	  Count.max_loc = Count.local;
+	  if (!(Count.max_loc % 10))
+	    sendto_ops("New Max Local Clients: %d",
+		       Count.max_loc);
+	}
     }
   else
     strncpyzt(user->username, username, USERLEN+1);

@@ -184,10 +184,8 @@
 #define RPL_ENDOFTRACE       262
 #define RPL_LOAD2HI          263
 
-#ifdef CLIENT_COUNT
 #define RPL_LOCALUSERS       265
 #define RPL_GLOBALUSERS      266
-#endif
 
 /* numeric_replies */
 

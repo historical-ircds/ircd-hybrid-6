@@ -405,6 +405,7 @@
 
 /*
  * OPER_UMODES LOCOP_UMODES - set these to be the initial umodes when OPER'ing
+ * These can be over-ridden in ircd.conf file, with flags in last O field
  */
 #define OPER_UMODES   (FLAGS_OPER|FLAGS_WALLOP|FLAGS_SERVNOTICE|FLAGS_OPERWALL)
 #define LOCOP_UMODES   (FLAGS_LOCOP|FLAGS_WALLOP|FLAGS_SERVNOTICE)
@@ -452,15 +453,6 @@
  * that the 'new' access lets them.
  */
 #define	CMDLINE_CONFIG
-
-/* M4_PREPROC - run ircd.conf through m4 preprocessor
- * To use m4 as a preprocessor on the ircd.conf file, define M4_PREPROC.
- * The server will then call m4 each time it reads the ircd.conf file,
- * reading m4 output as the server's ircd.conf file.
- *
- * m4 support has been removed, The .include directive (see example.conf)
- * takes care of what the m4 support was mostly used for. 
- */
 
 /* USE_SYSLOG - log errors and such to syslog()
  * If you wish to have the server send 'vital' messages about server
@@ -722,11 +714,6 @@
 
 /* You shouldn't change anything below this line, unless absolutely needed. */
 
-/* VIRTUAL_HOST - bind to a specific IP address
- * This is no longer used.  Use the passwd field of the M: line to
- * bind to a specific virtual host
- */
-
 /* INITIAL_DBUFS - how many dbufs to preallocate
  */
 #define INITIAL_DBUFS 1000 /* preallocate 4 megs of dbufs */ 
@@ -941,15 +928,15 @@
  * clients that reconnect but are k-lined will have their connections
  * "held" for REJECT_HOLD_TIME seconds, they cannot PRIVMSG. The idea
  * is to keep a reconnecting client from forcing the ircd to re-scan
- * dich_conf. There is one possible serious hitch with this...
- * If it is a mass cloner, your attacker can "REJECT_HOLD" a number
- * of local fd's on your server. Against normal bots this code will
- * be a "win", against mass cloners, it could lose. 
+ * mtrie_conf.
  *
  */
   
 #undef REJECT_HOLD
 #define REJECT_HOLD_TIME 30 
+
+/* maximum number of fd's that will be used for reject holding */
+#define REJECT_HELD_MAX 25
 
 /*
  * OLD_Y_LIMIT
@@ -974,11 +961,6 @@
  * try 5 or 25. 5 for AIX and SUNOS, 25 should work better for other OS's
 */
 #define HYBRID_SOMAXCONN 25
-
-/* ANTI_IP_SPOOF removed. everyone has upgraded their OS,
- * and I don't like bloat
- * Dianora
- */
 
 /* DEBUGMODE is used mostly for internal development, it is likely
  * to make your client server very sluggish.
