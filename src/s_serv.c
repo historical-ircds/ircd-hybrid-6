@@ -5528,6 +5528,8 @@ int	m_trace(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
+      /* pacing for /trace is problemmatical */
+#ifdef 0
       if((last_used + PACE_WAIT) > NOW)
         {
           return 0;
@@ -5536,6 +5538,7 @@ int	m_trace(aClient *cptr,
         {
           last_used = NOW;
         }
+#endif
 
       if (parv[1] && !index(parv[1],'.') && (index(parv[1], '*')
           || index(parv[1], '?'))) /* bzzzt, no wildcard nicks for nonopers */

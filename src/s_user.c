@@ -671,6 +671,14 @@ static	int	register_user(aClient *cptr,
 	}
       memset((void *)sptr->passwd,0, sizeof(sptr->passwd));
 
+      /* If this user is being spoofed, tell them so */
+      if(IsConfDoSpoofIp(aconf))
+	{
+	  sendto_one(sptr,
+	      ":%s NOTICE %s :*** Spoofing your IP. congrats.",
+		     me.name,parv[0]);
+	}
+
       /* If this user is in the exception class, Set it "E lined" */
       if(IsConfElined(aconf))
 	{

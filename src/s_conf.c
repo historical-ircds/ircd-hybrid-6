@@ -215,8 +215,11 @@ int	attach_Iline(aClient *cptr,
 	{
 	  if(IsConfDoIdentd(aconf))
 	    SetDoId(cptr);
-
-	  strncpyzt(cptr->sockhost,host,sizeof(cptr->sockhost));
+	  
+	  if(IsConfDoSpoofIp(aconf))
+	    strncpyzt(cptr->sockhost,"127.0.0.1",sizeof(cptr->sockhost));
+	  else
+	    strncpyzt(cptr->sockhost,host,sizeof(cptr->sockhost));
 
 	  return(attach_iline(cptr,aconf));
 	}
@@ -1418,6 +1421,9 @@ static char *set_conf_flags(aConfItem *aconf,char *tmp)
     {
       switch(*tmp)
 	{
+	case '=':
+	  aconf->flags |= CONF_FLAGS_SPOOF_IP;
+	  break;
 	case '!':
 	  aconf->flags |= CONF_FLAGS_LIMIT_IP;
 	  break;
@@ -1886,7 +1892,7 @@ int 	initconf(int opt, int fd,int use_include)
 	{
 	  char *p;
 
-	  aconf->mask = aconf->host;
+	  DupString(aconf->mask,aconf->host);
 
 	  /* add_to_ip_ilines defined in mtrie_conf.c */
 
@@ -1901,10 +1907,12 @@ int 	initconf(int opt, int fd,int use_include)
 	      aconf->flags |= CONF_FLAGS_DO_IDENTD;
 	      *p = '\0';
 	      p++;
+	      MyFree(aconf->host);
 	      DupString(aconf->host,p);
 	    }
 	  else
 	    {
+	      MyFree(aconf->host);
 	      aconf->host = aconf->name;
 	      DupString(aconf->name,"*");
 	    }

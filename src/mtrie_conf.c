@@ -58,7 +58,7 @@
 static char *version="$Id$";
 #endif /* lint */
 
-#define MAXPREFIX (HOSTLEN+USERLEN+10)
+#define MAXPREFIX (HOSTLEN+USERLEN+15)
 
 /* internally defined functions */
 
@@ -1170,6 +1170,10 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
       for(found_conf = unsortable_list_ilines;
 	  found_conf;found_conf=found_conf->next)
 	{
+	  /* Non opers do not need to know about I lines that do spoofing */
+	  if(!IsAnOper(sptr) && IsConfDoSpoofIp(found_conf))
+	    continue;
+
 	  host = BadPtr(found_conf->host) ? null : found_conf->host;
 	  pass = BadPtr(found_conf->passwd) ? null : found_conf->passwd;
 	  name = BadPtr(found_conf->name) ? null : found_conf->name;
@@ -1264,6 +1268,8 @@ static char *show_iline_prefix(aClient *sptr,aConfItem *aconf,char *name)
     *prefix_ptr++ = '$';
   if (IsNoMatchIp(aconf))
     *prefix_ptr++ = '%';
+  if (IsConfDoSpoofIp(aconf))
+    *prefix_ptr++ = '=';
 
 #ifdef E_LINES_OPER_ONLY
   if(IsAnOper(sptr))
@@ -1341,6 +1347,12 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 		    }
 		  else
 		    {
+		      /* Non opers do not need to know about
+		       * I lines that do spoofing
+		       */
+		      if(!IsAnOper(sptr) && IsConfDoSpoofIp(aconf))
+			continue;
+
 		      c = 'I';
 #ifdef LITTLE_I_LINES
 		      if(IsConfLittleI(aconf))
@@ -1383,6 +1395,11 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 		    }
 		  else
 		    {
+		      /* Non opers do not need to know about
+		       * I lines that do spoofing
+		       */
+		      if(!IsAnOper(sptr) && IsConfDoSpoofIp(aconf))
+			continue;
 		      c = 'I';
 #ifdef LITTLE_I_LINES
 		      if(IsConfLittleI(aconf))

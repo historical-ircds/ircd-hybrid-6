@@ -3,7 +3,7 @@ RM=@RM@
 IRCDLIBS=@LIBS@ ../zlib/libz.a
 INCLUDEDIR=-I../include -I../zlib
 
-SRC_1 = bsd.c channel.c class.c dbuf.c mtrie_conf.c
+SRC_1 = bsd.c channel.c class.c dbuf.c mtrie_conf.c malloc-2.6.1.c
 SRC_2 = hash.c inet_addr.c ircd.c ircsprintf.c
 SRC_3 = list.c match.c packet.c parse.c res.c s_zip.c
 SRC_4 = s_auth.c s_bsd.c s_conf.c s_debug.c s_err.c s_misc.c s_numeric.c
