@@ -1424,6 +1424,7 @@ void set_channel_mode(struct Client *cptr,
            * -Dianora
            */
 
+#ifdef CHANMODE_E
         case 'e':
           if (whatt == MODE_QUERY || parc-- <= 0)
             {
@@ -1518,7 +1519,7 @@ void set_channel_mode(struct Client *cptr,
           *pbufw_new++ = ' ';
 
           break;
-
+#endif
 
           /* There is a nasty here... I'm supposed to have
            * CAP_DE before I can send exceptions to bans to a server.
@@ -3074,6 +3075,8 @@ int     count_channels(struct Client *sptr)
   return (count);
 }
 
+#ifdef USE_KNOCK
+
 /* m_knock
 **    parv[0] = sender prefix
 **    parv[1] = channel
@@ -3220,6 +3223,7 @@ int     m_knock(struct Client *cptr,
   }
   return 0;
 }
+#endif
 
 /*
 ** m_topic

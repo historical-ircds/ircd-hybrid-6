@@ -71,9 +71,10 @@ struct Capability captab[] = {
   { "ZIP",      CAP_ZIP },
 #endif
   { "QS",       CAP_QS },
+#ifdef CHANMODE_E
   { "EX",       CAP_EX },
+#endif
   { "CHW",      CAP_CHW },
-  { "DE",       CAP_DE },
   { 0,   0 }
 };
 
