@@ -1,3 +1,36 @@
+lusky       2001/12/08 02:06:20 EST	(20011208_10)
+
+  Modified files:
+    .                    configure 
+    adns                 internal.h 
+    autoconf             configure.in 
+    src                  dbuf.c fileio.c ircd_signal.c m_away.c 
+                         m_die.c m_oper.c m_quit.c m_restart.c 
+                         match.c packet.c restart.c 
+    tools                fixklines.c 
+  Log:
+  - fixed a ton of stdlib.h/string.h-needed compile warnings on RedHat7.1
+  - removed unneeded unistd.h and stdlib.h header checks from autoconf
+  
+  Revision  Changes    Path
+  1.5       +1 -0      ircd-hybrid-6/adns/internal.h
+  1.23      +2 -2      ircd-hybrid-6/autoconf/configure.in
+  1.24      +2 -2      ircd-hybrid-6/configure
+  1.19      +2 -1      ircd-hybrid-6/src/dbuf.c
+  1.6       +2 -1      ircd-hybrid-6/src/fileio.c
+  1.4       +2 -1      ircd-hybrid-6/src/ircd_signal.c
+  1.3       +2 -1      ircd-hybrid-6/src/m_away.c
+  1.5       +2 -1      ircd-hybrid-6/src/m_die.c
+  1.16      +2 -1      ircd-hybrid-6/src/m_oper.c
+  1.2       +2 -1      ircd-hybrid-6/src/m_quit.c
+  1.5       +2 -1      ircd-hybrid-6/src/m_restart.c
+  1.28      +1 -0      ircd-hybrid-6/src/match.c
+  1.24      +2 -1      ircd-hybrid-6/src/packet.c
+  1.11      +2 -1      ircd-hybrid-6/src/restart.c
+  1.5       +2 -1      ircd-hybrid-6/tools/fixklines.c
+
+
+
 lusky       2001/12/08 01:23:19 EST	(20011208_9)
 
   Modified files:
