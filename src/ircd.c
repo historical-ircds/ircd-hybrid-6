@@ -262,7 +262,7 @@ VOIDSIG s_restart()
 
 void	server_reboot()
 {
-  Reg	int	i;
+  int	i;
   
   sendto_ops("Aieeeee!!!  Restarting server... sbrk(0)-etext: %d",
 	(u_long)sbrk((size_t)0)-(u_long)sbrk0);
@@ -308,8 +308,8 @@ void	server_reboot()
 */
 static	time_t	try_connections(time_t currenttime)
 {
-  Reg	aConfItem *aconf;
-  Reg	aClient *cptr;
+  aConfItem *aconf;
+  aClient *cptr;
   aConfItem **pconf;
   int	connecting, confrq;
   time_t	next = 0;

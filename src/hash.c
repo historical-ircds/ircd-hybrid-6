@@ -166,7 +166,7 @@ void	clear_channel_hash_table()
  */
 int	add_to_client_hash_table(char *name, aClient *cptr)
 {
-  Reg	int	hashv;
+  int	hashv;
 
   hashv = hash_nick_name(name);
   cptr->hnext = (aClient *)clientTable[hashv].list;
@@ -181,7 +181,7 @@ int	add_to_client_hash_table(char *name, aClient *cptr)
  */
 int	add_to_channel_hash_table(char *name,aChannel *chptr)
 {
-  Reg	int	hashv;
+  int	hashv;
 
   hashv = hash_channel_name(name);
   chptr->hnextch = (aChannel *)channelTable[hashv].list;
@@ -196,8 +196,8 @@ int	add_to_channel_hash_table(char *name,aChannel *chptr)
  */
 int	del_from_client_hash_table(char *name,aClient *cptr)
 {
-  Reg	aClient	*tmp, *prev = NULL;
-  Reg	int	hashv;
+  aClient	*tmp, *prev = NULL;
+  int	hashv;
 
   hashv = hash_nick_name(name);
   for (tmp = (aClient *)clientTable[hashv].list; tmp; tmp = tmp->hnext)
@@ -232,8 +232,8 @@ int	del_from_client_hash_table(char *name,aClient *cptr)
  */
 int	del_from_channel_hash_table(char *name, aChannel *chptr)
 {
-  Reg	aChannel	*tmp, *prev = NULL;
-  Reg	int	hashv;
+  aChannel	*tmp, *prev = NULL;
+  int	hashv;
 
   hashv = hash_channel_name(name);
   for (tmp = (aChannel *)channelTable[hashv].list; tmp;
@@ -265,9 +265,9 @@ int	del_from_channel_hash_table(char *name, aChannel *chptr)
  */
 aClient	*hash_find_client(char *name, aClient *cptr)
 {
-  Reg	aClient	*tmp;
-  Reg	aClient	*prv = NULL;
-  Reg	aHashEntry	*tmp3;
+  aClient	*tmp;
+  aClient	*prv = NULL;
+  aHashEntry	*tmp3;
   int	hashv;
 
   hashv = hash_nick_name(name);
@@ -308,9 +308,9 @@ return (cptr);
  */
 aClient	*hash_find_nickserver(char *name, aClient *cptr)
 {
-  Reg	aClient	*tmp;
-  Reg	aClient	*prv = NULL;
-  Reg	aHashEntry	*tmp3;
+  aClient	*tmp;
+  aClient	*prv = NULL;
+  aHashEntry	*tmp3;
   int	hashv;
   char	*serv;
   
@@ -345,9 +345,9 @@ aClient	*hash_find_nickserver(char *name, aClient *cptr)
  */
 aClient	*hash_find_server(char *server,aClient *cptr)
 {
-  Reg	aClient	*tmp, *prv = NULL;
-  Reg	char	*t;
-  Reg	char	ch;
+  aClient	*tmp, *prv = NULL;
+  char	*t;
+  char	ch;
   aHashEntry	*tmp3;
 
   int hashv;
@@ -407,7 +407,7 @@ aClient	*hash_find_server(char *server,aClient *cptr)
 aChannel	*hash_find_channel(char *name,aChannel *chptr)
 {
   int	hashv;
-  Reg	aChannel	*tmp, *prv = NULL;
+  aChannel	*tmp, *prv = NULL;
   aHashEntry	*tmp3;
   
   hashv = hash_channel_name(name);

@@ -93,8 +93,8 @@ aClient *find_userhost(char *user,
 		       aClient *cptr,
 		       int *count)
 {
-  Reg	aClient	*c2ptr;
-  Reg	aClient	*res = cptr;
+  aClient	*c2ptr;
+  aClient	*res = cptr;
 
   *count = 0;
   if (collapse(user))
@@ -135,7 +135,7 @@ aClient *find_server(char *name, aClient *cptr)
 
 aClient *find_name(char *name, aClient *cptr)
 {
-  Reg aClient *c2ptr = cptr;
+  aClient *c2ptr = cptr;
 
   if (!name)
     return c2ptr;
@@ -169,7 +169,7 @@ aClient *find_name(char *name, aClient *cptr)
 */
 aClient *find_person(char *name, aClient *cptr)
 {
-  Reg	aClient	*c2ptr = cptr;
+  aClient	*c2ptr = cptr;
 
   c2ptr = find_client(name, c2ptr);
 
@@ -186,10 +186,10 @@ aClient *find_person(char *name, aClient *cptr)
  */
 int	parse(aClient *cptr, char *buffer, char *bufend)
 {
-  Reg	aClient *from = cptr;
-  Reg	char *ch, *s;
-  Reg	int	i, numeric = 0, paramcount;
-  Reg	struct Message *mptr;
+  aClient *from = cptr;
+  char *ch, *s;
+  int	i, numeric = 0, paramcount;
+  struct Message *mptr;
 
   Debug((DEBUG_DEBUG, "Parsing %s: %s",
 	 get_client_name(cptr, TRUE), buffer));
@@ -570,8 +570,8 @@ static struct Message *do_msg_tree(MESSAGE_TREE *mtree, char *prefix,
 
 static struct Message *tree_parse(char *cmd)
 {
-  Reg char r;
-  Reg MESSAGE_TREE *mtree = msg_tree_root;
+  char r;
+  MESSAGE_TREE *mtree = msg_tree_root;
 
   while ((r = *cmd++))
     {

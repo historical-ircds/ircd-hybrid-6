@@ -3806,8 +3806,8 @@ int	m_userhost(aClient *cptr,
 {
   char	*p = NULL;
   aClient	*acptr;
-  Reg	char	*s;
-  Reg	int	i, len;
+  char	*s;
+  int	i, len;
 
   if (parc > 2)
     (void)m_userhost(cptr, sptr, parc-1, parv+1);
@@ -3858,8 +3858,8 @@ int     m_usrip(aClient *cptr,
 {                  
   char    *p = NULL;
   aClient *acptr;
-  Reg     char    *s;
-  Reg     int     i, len; 
+  char    *s;
+  int     i, len; 
   
   if (parc > 2)
     (void)m_usrip(cptr, sptr, parc-1, parv+1);
@@ -3936,11 +3936,11 @@ int	m_ison(aClient *cptr,
 	       int parc,
 	       char *parv[])
 {
-  Reg	aClient *acptr;
-  Reg	char	*s, **pav = parv;
+  aClient *acptr;
+  char	*s, **pav = parv;
   char	*p = (char *)NULL;
-  Reg	int len;
-  Reg   int len2;
+  int len;
+  int len2;
 
   if (parc < 2)
     {
@@ -3982,9 +3982,9 @@ int	m_umode(aClient *cptr,
 		int parc,
 		char *parv[])
 {
-  Reg	int	flag;
-  Reg	int	*s;
-  Reg	char	**p, *m;
+  int	flag;
+  int	*s;
+  char	**p, *m;
   aClient *acptr;
   int	what, setflags;
   int   badflag = NO;	/* Only send one bad flag notice -Dianora */
@@ -4159,8 +4159,8 @@ void	send_umode(aClient *cptr,
 		   int sendmask,
 		   char *umode_buf)
 {
-  Reg	int	*s, flag;
-  Reg	char	*m;
+  int	*s, flag;
+  char	*m;
   int	what = MODE_NULL;
 
   /*
@@ -4215,7 +4215,7 @@ void	send_umode_out(aClient *cptr,
 		       aClient *sptr,
 		       int old)
 {
-  Reg    aClient *acptr;
+  aClient *acptr;
 
   send_umode(NULL, sptr, old, SEND_UMODES, buf);
 

@@ -136,7 +136,7 @@ extern int spam_time;	/* defined in s_serv.c */
  */
 static	int	list_length(Link *lp)
 {
-  Reg	int	count = 0;
+  int	count = 0;
 
   for (; lp; lp = lp->next)
     count++;
@@ -152,7 +152,7 @@ static	int	list_length(Link *lp)
 */
 aClient *find_chasing(aClient *sptr, char *user, int *chasing)
 {
-  Reg	aClient *who = find_client(user, (aClient *)NULL);
+  aClient *who = find_client(user, (aClient *)NULL);
   
   if (chasing)
     *chasing = 0;
@@ -200,7 +200,7 @@ static	char *make_nick_user_host(char *nick, char *name, char *host)
 {
   static char	namebuf[NICKLEN+USERLEN+HOSTLEN+6];
   int	n;
-  Reg	char	*ptr1,*ptr2;
+  char	*ptr1,*ptr2;
 
   ptr1 = namebuf;
   for(ptr2=check_string(nick),n=NICKLEN;*ptr2 && n--;)
@@ -222,8 +222,8 @@ static	char *make_nick_user_host(char *nick, char *name, char *host)
 
 static	int	add_banid(aClient *cptr, aChannel *chptr, char *banid)
 {
-  Reg	Link	*ban;
-  Reg	int	cnt = 0;
+  Link	*ban;
+  int	cnt = 0;
 
   if (MyClient(cptr))
     (void)collapse(banid);
@@ -295,8 +295,8 @@ static	int	add_banid(aClient *cptr, aChannel *chptr, char *banid)
 
 static	int	add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
 {
-  Reg	Link	*ex, *ban;
-  Reg	int	cnt = 0;
+  Link	*ex, *ban;
+  int	cnt = 0;
 
   if (MyClient(cptr))
     (void)collapse(eid);
@@ -563,7 +563,7 @@ static	int is_banned(aClient *cptr,aChannel *chptr)
  */
 static	void	add_user_to_channel(aChannel *chptr, aClient *who, int flags)
 {
-  Reg	Link *ptr;
+  Link *ptr;
 
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
   if( chptr->mode.mode & MODE_SPLIT )
@@ -603,8 +603,8 @@ static	void	add_user_to_channel(aChannel *chptr, aClient *who, int flags)
 
 void	remove_user_from_channel(aClient *sptr,aChannel *chptr,int was_kicked)
 {
-  Reg	Link	**curr;
-  Reg	Link	*tmp;
+  Link	**curr;
+  Link	*tmp;
 
   for (curr = &chptr->members; (tmp = *curr); curr = &tmp->next)
     if (tmp->value.cptr == sptr)
@@ -636,7 +636,7 @@ void	remove_user_from_channel(aClient *sptr,aChannel *chptr,int was_kicked)
 
 static	void	change_chan_flag(aChannel *chptr,aClient *cptr, int flag)
 {
-  Reg	Link *tmp;
+  Link *tmp;
 
   if ((tmp = find_user_link(chptr->members, cptr)))
    {
@@ -655,7 +655,7 @@ static	void	change_chan_flag(aChannel *chptr,aClient *cptr, int flag)
 
 static	void	set_deopped(aClient *cptr, aChannel *chptr,int flag)
 {
-  Reg	Link	*tmp;
+  Link	*tmp;
 
   if ((tmp = find_user_link(chptr->members, cptr)))
     if ((tmp->flags & flag) == 0)
@@ -664,7 +664,7 @@ static	void	set_deopped(aClient *cptr, aChannel *chptr,int flag)
 
 int	is_chan_op(aClient *cptr, aChannel *chptr)
 {
-  Reg	Link	*lp;
+  Link	*lp;
 
   if (chptr)
     if ((lp = find_user_link(chptr->members, cptr)))
@@ -675,7 +675,7 @@ int	is_chan_op(aClient *cptr, aChannel *chptr)
 
 int	is_deopped(aClient *cptr, aChannel *chptr)
 {
-  Reg	Link	*lp;
+  Link	*lp;
 
   if (chptr)
     if ((lp = find_user_link(chptr->members, cptr)))
@@ -686,7 +686,7 @@ int	is_deopped(aClient *cptr, aChannel *chptr)
 
 int	has_voice(aClient *cptr, aChannel *chptr)
 {
-  Reg	Link	*lp;
+  Link	*lp;
 
   if (chptr)
     if ((lp = find_user_link(chptr->members, cptr)))
@@ -697,7 +697,7 @@ int	has_voice(aClient *cptr, aChannel *chptr)
 
 int	can_send(aClient *cptr, aChannel *chptr)
 {
-  Reg	Link	*lp;
+  Link	*lp;
 
 #ifdef JUPE_CHANNEL
   if (MyClient(cptr) && (chptr->mode.mode & MODE_JUPED))
@@ -772,8 +772,8 @@ static	void	send_mode_list(aClient *cptr,
 			       int mask,
 			       char flag)
 {
-  Reg	Link	*lp;
-  Reg	char	*cp, *name;
+  Link	*lp;
+  char	*cp, *name;
   int	count = 0, send = 0;
   
   cp = modebuf + strlen(modebuf);
@@ -988,7 +988,7 @@ static	char	*pretty_mask(char *mask)
 
 static	char	*fix_key(char *arg)
 {
-  Reg	u_char	*s, *t, c;
+  u_char	*s, *t, c;
 
   /* No more stripping the 8th bit or checking
   ** for the +k bug... it's long dead.  -orab
@@ -2068,7 +2068,7 @@ static  void     set_mode(aClient *cptr,
 
 static	int	can_join(aClient *sptr, aChannel *chptr, char *key, int *flags)
 {
-  Reg	Link	*lp;
+  Link	*lp;
   int ban_or_exception;
 
 #ifdef JUPE_CHANNEL
@@ -2147,7 +2147,7 @@ static	aChannel *get_channel(aClient *cptr,
 			      char *chname,
 			      int flag)
 {
-  Reg	aChannel *chptr;
+  aChannel *chptr;
   int	len;
 
   if (BadPtr(chname))
@@ -2194,7 +2194,7 @@ static	aChannel *get_channel(aClient *cptr,
 
 static	void	add_invite(aClient *cptr,aChannel *chptr)
 {
-  Reg	Link	*inv, **tmp;
+  Link	*inv, **tmp;
 
   del_invite(cptr, chptr);
   /*
@@ -2233,7 +2233,7 @@ static	void	add_invite(aClient *cptr,aChannel *chptr)
  */
 void	del_invite(aClient *cptr,aChannel *chptr)
 {
-  Reg	Link	**inv, *tmp;
+  Link	**inv, *tmp;
 
   for (inv = &(chptr->invites); (tmp = *inv); inv = &tmp->next)
     if (tmp->value.cptr == cptr)
@@ -2258,7 +2258,7 @@ void	del_invite(aClient *cptr,aChannel *chptr)
 */
 static	void	sub1_from_channel(aChannel *chptr)
 {
-  Reg	Link *tmp;
+  Link *tmp;
   Link	*obtmp;
 
   if (--chptr->users <= 0)
@@ -2579,7 +2579,7 @@ static void check_still_split()
 
 void remove_empty_channels()
 {
-  Reg	Link *tmp;
+  Link *tmp;
   Link	*obtmp;
   aChannel *next_empty_channel;
 
@@ -2664,9 +2664,9 @@ int	m_join(aClient *cptr,
 	       char *parv[])
 {
   static char	jbuf[BUFSIZE];
-  Reg	Link	*lp;
-  Reg	aChannel *chptr = NULL;
-  Reg	char	*name, *key = NULL;
+  Link	*lp;
+  aChannel *chptr = NULL;
+  char	*name, *key = NULL;
   int	i, flags = 0;
 #ifdef USE_ALLOW_OP
   int   allow_op=YES;
@@ -3092,7 +3092,7 @@ int	m_part(aClient *cptr,
 	       int parc,
 	       char *parv[])
 {
-  Reg	aChannel *chptr;
+  aChannel *chptr;
   char	*p, *name;
 
   if (parc < 2 || parv[1][0] == '\0')
@@ -3333,8 +3333,8 @@ int	m_kick(aClient *cptr,
 
 int	count_channels(aClient *sptr)
 {
-  Reg	aChannel	*chptr;
-  Reg	int	count = 0;
+  aChannel	*chptr;
+  int	count = 0;
 
   for (chptr = channel; chptr; chptr = chptr->nextch)
     count++;
@@ -3361,7 +3361,7 @@ int	m_knock(aClient *cptr,
 	       int parc,
 	       char *parv[])
 {
-  Reg	aChannel	*chptr;
+  aChannel	*chptr;
   char	*p, *name;
 
   /* anti flooding code,
@@ -3873,9 +3873,9 @@ int	m_names( aClient *cptr,
 		 int parc,
 		 char *parv[])
 { 
-  Reg	aChannel *chptr;
-  Reg	aClient *c2ptr;
-  Reg	Link	*lp;
+  aChannel *chptr;
+  aClient *c2ptr;
+  Link	*lp;
   aChannel *ch2ptr = NULL;
   int	idx, flag = 0, len, mlen;
   char	*s, *para = parc > 1 ? parv[1] : NULL;
@@ -4074,9 +4074,9 @@ int	m_names( aClient *cptr,
 
 void	send_user_joins(aClient *cptr, aClient *user)
 {
-  Reg	Link	*lp;
-  Reg	aChannel *chptr;
-  Reg	int	cnt = 0, len = 0, clen;
+  Link	*lp;
+  aChannel *chptr;
+  int	cnt = 0, len = 0, clen;
   char	 *mask;
 
   *buf = ':';

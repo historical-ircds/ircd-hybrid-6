@@ -81,7 +81,7 @@ struct	stats	ircst, *ircstp = &ircst;
 char	*date(time_t clock) 
 {
   static	char	buf[80], plus;
-  Reg	struct	tm *lt, *gm;
+  struct	tm *lt, *gm;
   struct	tm	gmbuf;
   int	minswest;
 
@@ -119,7 +119,7 @@ char	*date(time_t clock)
 char    *smalldate(time_t clock)
 {
   static  char    buf[MAX_DATE_STRING];
-  Reg     struct  tm *lt, *gm;
+  struct  tm *lt, *gm;
   struct  tm      gmbuf;
 
   if (!clock)
@@ -172,7 +172,7 @@ char    *small_file_date(time_t clock)
 char	*myctime(time_t value)
 {
   static	char	buf[28];
-  Reg	char	*p;
+  char	*p;
 
   (void)strcpy(buf, ctime(&value));
   if ((p = (char *)strchr(buf, '\n')) != NULL)
@@ -342,7 +342,7 @@ char  *get_client_host(aClient *cptr)
  */
 void	get_sockhost(aClient *cptr,char *host)
 {
-  Reg	char	*s;
+  char	*s;
   if ((s = (char *)strchr(host, '@')))
     s++;
   else
@@ -410,8 +410,8 @@ aClient *from,	/* Client firing off this Exit, never NULL! */
 char	*comment	/* Reason for the exit */
                    )
 {
-  Reg	aClient	*acptr;
-  Reg	aClient	*next;
+  aClient	*acptr;
+  aClient	*next;
 #ifdef	FNAME_USERLOG
   time_t	on_for;
 #endif
@@ -751,9 +751,9 @@ static	void remove_dependents(aClient *cptr,
 			       char *comment,
 			       char *comment1)
 {
-  Reg	aClient *to;
-  Reg	int i;
-  Reg	aConfItem *aconf;
+  aClient *to;
+  int i;
+  aConfItem *aconf;
   static char myname[HOSTLEN+1];
 
   for (i=0; i<=highest_fd; i++)
@@ -797,8 +797,8 @@ static	void	exit_one_client(aClient *cptr,
 				aClient *from,
 				char *comment)
 {
-  Reg	aClient *acptr;
-  Reg	Link	*lp;
+  aClient *acptr;
+  Link	*lp;
 
   if (IsServer(sptr))
     {
@@ -903,8 +903,8 @@ static	void	exit_one_client(aClient *cptr,
 
 void	checklist()
 {
-  Reg	aClient	*acptr;
-  Reg	int	i,j;
+  aClient	*acptr;
+  int	i,j;
 
   if (!(bootopt & BOOT_AUTODIE))
     return;
@@ -930,9 +930,9 @@ void	initstats()
 
 void	tstats(aClient *cptr,char *name)
 {
-  Reg	aClient	*acptr;
-  Reg	int	i;
-  Reg	struct stats	*sp;
+  aClient	*acptr;
+  int	i;
+  struct stats	*sp;
   struct	stats	tmp;
 
   sp = &tmp;

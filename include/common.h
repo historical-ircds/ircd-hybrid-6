@@ -118,4 +118,4 @@ extern char *strtoken (char **, char *, char *);
 extern void flush_connections();
 extern struct SLink *find_user_link(/* struct SLink *, struct Client * */);
 
-#endif /* __common_includ_e_ */
+#endif /* __common_include__ */

@@ -95,8 +95,8 @@ static	int	dead_link(aClient *to, char *notice)
 void	flush_connections(int fd)
 {
 #ifdef SENDQ_ALWAYS
-  Reg	int	i;
-  Reg	aClient *cptr;
+  int	i;
+  aClient *cptr;
 
   if (fd == me.fd)
     {
@@ -806,7 +806,7 @@ va_dcl
 {
   va_list	vl;
 # endif
-  Reg	aClient *cptr;
+  aClient *cptr;
 
 # ifdef	USE_VARARGS
   va_start(vl);

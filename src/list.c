@@ -155,7 +155,7 @@ void outofmemory()
 */
 aClient	*make_client(aClient *from)
 {
-  Reg	aClient *cptr = NULL;
+  aClient *cptr = NULL;
 
   if (!from)
     { /* from is NULL */
@@ -254,7 +254,7 @@ void _free_client(aClient *cptr)
 */
 anUser *make_user(aClient *cptr)
 {
-  Reg	anUser	*user;
+  anUser	*user;
 
   user = cptr->user;
   if (!user)
@@ -277,7 +277,7 @@ anUser *make_user(aClient *cptr)
 
 aServer *make_server(aClient *cptr)
 {
-  Reg	aServer	*serv = cptr->serv;
+  aServer	*serv = cptr->serv;
 
   if (!serv)
     {
@@ -467,7 +467,7 @@ Link *find_channel_link(Link *lp, aChannel *chptr)
 
 Link *make_link()
 {
-  Reg	Link	*lp;
+  Link	*lp;
 
   lp = BlockHeapALLOC(free_Links,Link);
   if( lp == (Link *)NULL)
@@ -489,14 +489,13 @@ void _free_link(Link *lp)
 
 aClass *make_class()
 {
-  Reg	aClass	*tmp;
+  aClass	*tmp;
 
   tmp = (aClass *)MyMalloc(sizeof(aClass));
   return tmp;
 }
 
-void free_class(tmp)
-Reg	aClass	*tmp;
+void free_class(aClass *tmp)
 {
   MyFree((char *)tmp);
 }

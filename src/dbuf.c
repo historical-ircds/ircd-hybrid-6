@@ -78,10 +78,10 @@ void dbuf_init()
 static dbufbuf *dbuf_alloc()
 {
 #if defined(VALLOC) && !defined(DEBUGMODE)
-  Reg	dbufbuf	*dbptr, *db2ptr;
-  Reg	int	num;
+  dbufbuf	*dbptr, *db2ptr;
+  int	num;
 #else
-  Reg	dbufbuf *dbptr;
+  dbufbuf *dbptr;
 #endif
 
   dbufalloc++;
@@ -165,9 +165,9 @@ static int dbuf_malloc_error(dbuf *dyn)
 
 int	dbuf_put(dbuf *dyn,char *buf,int length)
 {
-  Reg	dbufbuf	**h, *d;
-  Reg	int	 off;
-  Reg	int	chunk;
+  dbufbuf	**h, *d;
+  int	 off;
+  int	chunk;
 
   off = (dyn->offset + dyn->length) % DBUFSIZ;
   /*nbr = (dyn->offset + dyn->length) / DBUFSIZ;>*/

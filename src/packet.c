@@ -51,8 +51,8 @@ static char *rcs_version = "$Id$";
 */
 int	dopacket(aClient *cptr, char *buffer, int length)
 {
-  Reg	char	*ch1;
-  Reg	char	*ch2;
+  char	*ch1;
+  char	*ch2;
   register char *cptrbuf;
   aClient	*acpt = cptr->acpt;
 #ifdef ZIP_LINKS

@@ -46,7 +46,7 @@ char **save;
 char *str, *fs;
 {
     char *pos = *save;	/* keep last position across calls */
-    Reg char *tmp;
+    char *tmp;
 
     if (str)
 	pos = str;		/* new string scan */

@@ -100,5 +100,4 @@ error You defined too many signal types in setup.h
 #  define HAVE_RELIABLE_SIGNALS
 #endif
 
-#define Reg register
 #endif /* DEFS_H_INCLUDED */

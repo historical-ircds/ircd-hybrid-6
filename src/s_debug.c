@@ -310,11 +310,11 @@ void	count_memory(aClient *cptr,char *nick)
   extern	aClass	*classes;
   extern	aConfItem	*conf;
   
-  Reg aClient *acptr;
-  Reg Link *link;
-  Reg aChannel *chptr;
-  Reg aConfItem *aconf;
-  Reg aClass *cltmp;
+  aClient *acptr;
+  Link *link;
+  aChannel *chptr;
+  aConfItem *aconf;
+  aClass *cltmp;
 
   int lc = 0;		/* local clients */
   int ch = 0;		/* channels */
