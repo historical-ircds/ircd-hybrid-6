@@ -378,6 +378,12 @@
  */
 #define CMDLINE_CONFIG
 
+/* INIT_LOG_LEVEL - what level of information is logged to ircd.log
+ * options are:
+ *   L_CRIT, L_ERROR, L_WARN, L_NOTICE, L_TRACE, L_INFO, L_DEBUG
+ */
+#define INIT_LOG_LEVEL L_NOTICE
+
 /* USE_SYSLOG - log errors and such to syslog()
  * If you wish to have the server send 'vital' messages about server
  * through syslog, define USE_SYSLOG. Only system errors and events critical
@@ -386,8 +392,6 @@
  * this option is used unless you tell the system administrator beforehand
  * and obtain their permission to send messages to the system log files.
  *
- * IT IS STRONGLY RECOMMENDED THAT YOU *DO* USE SYSLOG.  Many fatal ircd errors
- * are only logged to syslog.
  */
 #define USE_SYSLOG
 
