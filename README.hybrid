@@ -1,4 +1,4 @@
-+hybrid-6 (November 13,1998)
++hybrid-6 (11/25/1998)
 - non chanops cannot see +e
 - removed ANTI_IP_SPOOF (Dianora)
 - redid semantics of LITTLE_I_LINES. Clients who are i lined
@@ -9,9 +9,11 @@
 - fixed m_topic (Dianora)
 - fixed m_motd oper notice in the wrong place (Dianora)
 - fixed m_lusers, added send_lusers() (Dianora)
+- Fixed install script to try to create IRCDDIR if it doesn't exist
+- non-opers can now /trace nickname properly (Rodder)
 - These commands are flood controlled: VERSION, INFO, LINKS, STATS, HELP,
-  LUSERS, ADMIN, TRACE, MOTD
-- These functions are local-only to non-opers:
+  LUSERS, ADMIN, MOTD, WHOIS (remote only)
+- These functions are local-only for non-opers:
   INFO, LINK, STATS (except 'p'), HELP
 - removed pacing from m_time() (Dianora)
 - fixed remote m_info() for opers (Dianora)
@@ -72,16 +74,16 @@
   or /quote set autoconn ALL 0/1 enable/disable all autoconns (Dianora)
 
 +hybrid-5.3 (6/13/98)
-added NO_CHANOPS_WHEN_SPLIT code back in (Rodder/Dianora)
-fixed SEPARATE_QUOTE_KLINES_BY_DATE so it compiles (Rodder)
-removed LITTLE_I_LINES from config.h for now (Rodder)
-should compile on Linux/glibc now (Rodder)
+* added NO_CHANOPS_WHEN_SPLIT code back in (Rodder/Dianora)
+* fixed SEPARATE_QUOTE_KLINES_BY_DATE so it compiles (Rodder)
+* removed LITTLE_I_LINES from config.h for now (Rodder)
+* should compile on Linux/glibc now (Rodder)
 
 +hybrid-5.2p1 (5/12/98)
-removed uneeded variable in aClient (Dianora)
-added missing #ifdef's for USE_SYSLOG (Dianora)
-reverted to old check_pings() to fix high cpu usage (Rodder)
-fixed DEBUGMODE (Dianora)
+* removed uneeded variable in aClient (Dianora)
+* added missing #ifdef's for USE_SYSLOG (Dianora)
+* reverted to old check_pings() to fix high cpu usage (Rodder)
+* fixed DEBUGMODE (Dianora)
 
 +hybrid-5.2 (4/21/98) - The inevitable bug fix release
 -fixes
@@ -255,7 +257,7 @@ fixed DEBUGMODE (Dianora)
 +hybrid-2 (4/12/97):
 This is ircd2.8/th.v5a.3 with the WHO, WHOWAS, and IsMember() code
 from Comstud's irc2.8.21CSr29.  Please send email to Jon Lusky
-<irc@vol.com> if you find problems with it.
+<lusky@vol.com> if you find problems with it.
 
 Relevant excerpt from irc2.8.21+CSr29/README.CS:
 3) /whowas code totally rewritten.  This code is better than Avalon's

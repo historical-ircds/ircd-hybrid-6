@@ -2466,6 +2466,18 @@ int	m_whois(aClient *cptr,
       parv[1] = parv[2];
     }
 
+  if(!IsAnOper(sptr) && !MyConnect(sptr)) /* pace non local requests */
+    {
+      if((last_used + PACE_WAIT) > NOW)
+        {
+          return 0;
+        }
+      else
+        {
+          last_used = NOW;
+        }
+    }
+
   for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)
     {
       int	invis, showperson, member, wilds;
