@@ -113,6 +113,7 @@ extern int idle_time;			/* defined in ircd.c */
 extern	void	reset_sock_opts();
 #endif
 extern char *smalldate(time_t);		/* defined in s_misc.c */
+extern char *show_capabilities(aClient *); /* defined in s_misc.c */
 
 #if defined(GLINES) || defined(SEPARATE_QUOTE_KLINES_BY_DATE)
 extern char *small_file_date(time_t);	/* defined in s_misc.c */
@@ -1066,8 +1067,8 @@ int	m_server_estab(aClient *cptr)
  
   nextping = timeofday;
   /* ircd-hybrid-6 can do TS links, and  zipped links*/
-  sendto_ops("Link with %s established: (TS%s) link",
-	     inpath,(IsCapable(cptr, CAP_ZIP) ? ", zipped" : ""));
+  sendto_ops("Link with %s established: (%s) link",
+	     inpath,show_capabilities(cptr));
 
   (void)add_to_client_hash_table(cptr->name, cptr);
   /* doesnt duplicate cptr->serv if allocated this struct already */

@@ -2991,8 +2991,8 @@ int	m_knock(aClient *cptr,
       return 0;
     }
 
-  /* don't allow a knock if the user is banned, or the channel is private */
-  if ((chptr->mode.mode & MODE_PRIVATE) || is_banned(sptr, chptr))
+  /* don't allow a knock if the user is banned, or the channel is secret */
+  if ((chptr->mode.mode & MODE_SECRET) || is_banned(sptr, chptr))
     {
       sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN), me.name, parv[0],
 		 name);
@@ -3056,10 +3056,33 @@ int	m_knock(aClient *cptr,
 
   {
     char message[350];
-    sprintf(message,"KNOCK: %s (%s has knocked on the channel door)",
-	    chptr->chname, sptr->name);
+
+    /* bit of paranoid, be a shame if it cored for this -Dianora */
+    if(sptr->user)
+      sprintf(message,"KNOCK: %s (%s [%s@%s] has asked for an invite)",
+	      chptr->chname,
+	      sptr->name,
+	      sptr->user->username,
+	      sptr->user->host);
     sendto_channel_type_notice(cptr, chptr, MODE_CHANOP, message);
-			     
+
+    /* There is a problem with the code fragment below...
+     * The problem is, s_user.c checks to see if the sender
+     * is actually chanop on the channel
+     */
+
+    /* bit of paranoia, be a shame if it cored for this -Dianora */
+    /*
+    if(sptr->user)
+      sendto_channel_type(cptr, sptr, chptr, MODE_CHANOP,
+	  ":%s PRIVMSG @%s :KNOCK: %s (%s [%s@%s] has asked for an invite)",
+			  parv[0],
+			  chptr->chname,
+			  chptr->chname,
+			  sptr->name,
+			  sptr->user->username,
+			  sptr->user->host);
+			  */
   }
   return 0;
 }
@@ -3252,12 +3275,30 @@ int	m_invite(aClient *cptr,
        * INVITE other users to the channel when it is invite-only (+i). *
        * The NOTICE is sent from the local server.  -- David-R          */
 
-      if (chptr && (chptr->mode.mode & MODE_INVITEONLY))
+      /* Only allow this invite notice if the channel is also not +p
+       * -Dianora
+       */
+
+      if (chptr && (chptr->mode.mode & MODE_INVITEONLY)
+	  && !(chptr->mode.mode & MODE_PRIVATE))
 	{ 
+	  /*
 	  char message[300];
 	  sprintf(message, "INVITE: %s (%s invited %s)", chptr->chname, sptr->name, acptr->name);
 	  sendto_channel_type_notice(cptr, chptr, MODE_CHANOP,
 				     message);
+				     */
+	  /* bit of paranoia, be a shame if it cored for this -Dianora */
+	  if(acptr->user)
+	    sendto_channel_type(cptr, sptr, chptr, MODE_CHANOP,
+		      ":%s PRIVMSG @%s :INVITE: %s (%s invited %s [%s@%s])",
+				parv[0],
+				chptr->chname,
+				chptr->chname,
+				sptr->name,
+				acptr->name,
+				acptr->user->username,
+				acptr->user->host);
 	}
     }
 

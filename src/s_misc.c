@@ -58,7 +58,7 @@ extern aClient *serv_cptr_list;
 static void exit_one_client (aClient *,aClient *,aClient *,char *);
 static void recurse_send_quits(aClient *, aClient *, aClient *, char *, char *);
 static void remove_dependents (aClient *, aClient *, aClient *, char *, char *);
-static char *show_capabilities(aClient *);
+char *show_capabilities(aClient *);
 
 static	char	*months[] = {
 	"January",	"February",	"March",	"April",
@@ -1058,7 +1058,7 @@ void serv_info(aClient *cptr,char *name)
 	     (float)((float)me.receiveK / (float)uptime));
 }
 
-static char *show_capabilities(aClient *acptr)
+char *show_capabilities(aClient *acptr)
 {
   static char	msgbuf[BUFSIZE];
   register	struct Capability *cap;

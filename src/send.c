@@ -544,11 +544,8 @@ va_dcl
 # ifdef	USE_VARARGS
 	  sendto_prefix_one(acptr, from, pattern, vl);
 # else
-	  /*	  sendto_prefix_one(acptr, from, pattern, p1, p2,
-			    p3, p4, p5, p6, p7, p8); */
-
 	  sendto_prefix_one(acptr, from, pattern, p1, p2,
-			    lp->value.cptr->name, p4, p5, p6, p7, p8);
+			    p3, p4, p5, p6, p7, p8); 
 # endif
 #ifdef USE_SENTALONG
 	  sentalong[i] = 1;
@@ -558,28 +555,49 @@ va_dcl
 	}
       else
 	{
-	  /* Now check whether a message has been sent to this
-	   * remote link already */
-#ifdef USE_SENTALONG
-	  if (sentalong[i] == 0)
-#else
-	  if (sentalong[i] != current_serial)
-#endif
+	  /*
+	   * If the target's server can do CAP_CHW, only
+	   * one send is needed, otherwise, I do a bunch of
+	   * send's to each target on that server. (kludge)
+	   *
+	   * The USE_VARARGS is broken, we'll have to fix that later
+	   * -Dianora
+	   */
+	  if(!IsCapable(acptr->from,CAP_CHW))
 	    {
+#ifdef USE_VARARGS
+#error "Broken in send.c"
+#else
+	      sendto_prefix_one(acptr, from, pattern,
+			       p1, p2,
+			       lp->value.cptr->name,
+			       p4, p5, p6, p7, p8);
+#endif
+	    }
+	  else
+	    {
+	      /* Now check whether a message has been sent to this
+	       * remote link already
+	       */
+#ifdef USE_SENTALONG
+	      if (sentalong[i] == 0)
+#else
+		if (sentalong[i] != current_serial)
+#endif
+		  {
 # ifdef	USE_VARARGS
-	      sendto_prefix_one(acptr, from, pattern, vl);
+		    sendto_prefix_one(acptr, from, pattern, vl);
 # else
-	      /*	      sendto_prefix_one(acptr, from, pattern,
-				p1, p2, p3, p4,
-				p5, p6, p7, p8); */
-	      sendto_prefix_one(acptr, from, pattern, p1, p2,
-				lp->value.cptr->name, p4, p5, p6, p7, p8);
+		    sendto_prefix_one(acptr, from, pattern,
+				      p1, p2, p3, p4,
+				      p5, p6, p7, p8);
 # endif
 #ifdef USE_SENTALONG
-	      sentalong[i] = 1;
+		    sentalong[i] = 1;
 #else
-	      sentalong[i] = current_serial;
+		    sentalong[i] = current_serial;
 #endif
+		  }
 	    }
 	}
     }
