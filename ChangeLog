@@ -1,3 +1,15 @@
+lusky       2002/02/06 00:42:01 EST	(20020206_2)
+
+  Modified files:
+    include              patchlevel.h 
+  Log:
+  - revved patchlevel to -6rc6
+  
+  Revision  Changes    Path
+  1.150     +1 -1      ircd-hybrid-6/include/patchlevel.h
+
+
+
 androsyn    2002/02/05 23:56:15 EST	(20020206_1)
 
   Modified files:
