@@ -48,6 +48,7 @@ static char *rcs_version = "$Id$";
 #endif
 #include <sys/resource.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 
 /*
  * Stuff for poll()
@@ -86,6 +87,10 @@ extern fdlist default_fdlist;
 #define IN_LOOPBACKNET	0x7f
 #endif
 
+#ifndef INADDR_NONE
+#define INADDR_NONE ((unsigned int) 0xffffffff)
+#endif
+
 #if defined(MAXBUFFERS) && !defined(SEQUENT)
 int rcvbufmax = 0, sndbufmax = 0;
 #endif
@@ -98,7 +103,7 @@ extern struct sockaddr_in vserv;	/* defined in s_conf.c */
 extern aClient *serv_cptr_list;	/* defined in ircd.c */
 extern aClient *local_cptr_list;/* defined in ircd.c */
 extern aClient *oper_cptr_list; /* defined in ircd.c */
-extern int resfd;   /* defined in res.c */
+extern int ResolverFileDescriptor;   /* defined in res.c */
 
 
 aClient	*local[MAXCONNECTIONS];
@@ -191,6 +196,64 @@ void	report_error(char *text,aClient *cptr)
 	fprintf(stderr, "\n");
 	fflush(stderr);
     }
+}
+
+/*
+ * remove_hostent_references - remove local client references to hp
+ * scan the local client list for clients that are using the hostent
+ * if found, set the clients copy to 0
+ */
+void remove_hostent_references(const struct hostent* hp)
+{
+  int i;
+  aClient* cptr;
+  for (i = highest_fd; i > -1; --i) {
+    if ((cptr = local[i]) && (cptr->hostp == hp))
+      cptr->hostp = NULL;
+  }
+}
+
+/*
+ * client_dns_callback - called when resolver query finishes
+ * if the query resulted in a successful search, hp will contain
+ * a non-null pointer, otherwise hp will be null.
+ * set the client on it's way to a connection completion, regardless
+ * of success of failure
+ */
+static void client_dns_callback(void* vptr, struct hostent* hp)
+{
+  aClient* cptr = (aClient*) vptr;
+  del_queries(vptr);
+
+  if (hp) {
+    cptr->hostp = hp;
+#ifdef SHOW_HEADERS
+    sendheader(cptr, REPORT_FIN_DNS, R_fin_dns);
+  }
+  else {
+    sendheader(cptr, REPORT_FAIL_DNS, R_fail_dns);
+#endif
+  }
+  ClearDNS(cptr);
+  if (!DoingAuth(cptr))
+    SetAccess(cptr);
+}
+
+/*
+ * connect_dns_callback - called when resolver query finishes
+ * if the query resulted in a successful search, hp will contain
+ * a non-null pointer, otherwise hp will be null.
+ * if successful start the connection, otherwise notify opers
+ */
+static void connect_dns_callback(void* vptr, struct hostent* hp)
+{
+  aConfItem* aconf = (aConfItem*) vptr;
+  if (hp) {
+    memcpy(&aconf->ipnum, hp->h_addr, sizeof(struct in_addr));
+    connect_server(aconf, NULL, hp);
+  }
+  else
+    sendto_ops("Connect to %s failed: host lookup", aconf->host);
 }
 
 /*
@@ -480,7 +543,7 @@ void	init_sys()
 
   if (bootopt & BOOT_TTY)	/* debugging is going to a tty */
     {
-      resfd = init_resolver();
+      init_resolver();
       return;
     }
   (void)close(1);
@@ -520,7 +583,7 @@ void	init_sys()
     local[0] = NULL;
     }
 #endif /* __CYGWIN__ */
-  resfd = init_resolver();
+  init_resolver();
   return;
 }
 
@@ -695,8 +758,6 @@ int	check_server_init(aClient *cptr)
       aconf = count_cnlines(lp);
       if (aconf)
 	{
-	  Link	lin;
-	  
 	  /*
 	  ** Do a lookup for the CONF line *only* and not
 	  ** the server connection else we get stuck in a
@@ -705,11 +766,9 @@ int	check_server_init(aClient *cptr)
 	  ** well.
 	  */
 	  ClearAccess(cptr);
-	  lin.value.aconf = aconf;
-	  lin.flags = ASYNC_CONF;
 	  nextdnscheck = 1;
 	  Debug((DEBUG_DNS,"sv_ci:cache lookup (%s)",aconf->host));
-	  hp = gethost_byname(aconf->host, &lin);
+	  hp = conf_dns_lookup(aconf);
 	}
     }
   return check_server(cptr, hp, c_conf, n_conf, 0);
@@ -1210,7 +1269,6 @@ void	set_non_blocking(int fd,aClient *cptr)
  */
 aClient	*add_connection(aClient *cptr, int fd)
 {
-  Link	lin;
   aClient *acptr;
   aConfItem *aconf = NULL;
   acptr = make_client(NULL);
@@ -1223,6 +1281,7 @@ aClient	*add_connection(aClient *cptr, int fd)
    */
 
     {
+      struct DNSQuery query;
       struct	sockaddr_in addr;
       int	len = sizeof(struct sockaddr_in);
 
@@ -1263,11 +1322,11 @@ aClient	*add_connection(aClient *cptr, int fd)
       if(IsUnknown(acptr))
 	send(fd, REPORT_DO_DNS, R_do_dns, 0);
 #endif
-      lin.flags = ASYNC_CLIENT;
-      lin.value.cptr = acptr;
+      query.vptr = acptr;
+      query.callback = client_dns_callback;
       Debug((DEBUG_DNS, "lookup %s",
 	     inetntoa((char *)&addr.sin_addr)));
-      acptr->hostp = gethost_byaddr((char *)&acptr->ip, &lin);
+      acptr->hostp = gethost_byaddr((const char*)&acptr->ip, &query);
       if (!acptr->hostp)
 	SetDNS(acptr);
 #ifdef SHOW_HEADERS
@@ -1553,9 +1612,9 @@ int read_packet(aClient *cptr, int msg_ready)
 #endif
 	}
       
-      if (resfd >= 0)
+      if (ResolverFileDescriptor >= 0)
 	{
-	  FD_SET(resfd, read_set);
+	  FD_SET(ResolverFileDescriptor, read_set);
 	}
       wait.tv_sec = MIN(delay2, delay);
       wait.tv_usec = usec;
@@ -1593,11 +1652,11 @@ int read_packet(aClient *cptr, int msg_ready)
    * Check the name resolver
    */
 
-  if (resfd >= 0 && FD_ISSET(resfd, read_set))
+  if (ResolverFileDescriptor >= 0 && FD_ISSET(ResolverFileDescriptor, read_set))
     {
       do_dns_async();
       nfds--;
-      FD_CLR(resfd, read_set);
+      FD_CLR(ResolverFileDescriptor, read_set);
     }
 
   for (i=0; i<=highest_fd; i++)
@@ -1947,9 +2006,9 @@ int	read_message(time_t delay, fdlist *listp)
 	    PFD_SETW(i);
 	}
 
-      if (resfd >= 0)
+      if (ResolverFileDescriptor >= 0)
 	{
-	  PFD_SETR(resfd);
+	  PFD_SETR(ResolverFileDescriptor);
 	  res_pfd = pfd;
 	}
       wait.tv_sec = MIN(delay2, delay);
@@ -2149,7 +2208,7 @@ int	connect_server(aConfItem *aconf,
   int	errtmp, len;
 
   Debug((DEBUG_NOTICE,"Connect to %s[%s] @%s",
-	 aconf->user, aconf->host, inetntoa((char *)&aconf->ipnum)));
+	 aconf->user, aconf->host, inetntoa((char*)&aconf->ipnum)));
 
   if ((c2ptr = find_server(aconf->name, NULL)))
     {
@@ -2167,23 +2226,21 @@ int	connect_server(aConfItem *aconf,
    * If we dont know the IP# for this host and it is a hostname and
    * not a ip# string, then try and find the appropriate host record.
    */
-  if ( ( !aconf->ipnum.s_addr ) )
+  if (INADDR_NONE == aconf->ipnum.s_addr)
     {
-      Link    lin;
+      struct DNSQuery query;
       
-      lin.flags = ASYNC_CONNECT;
-      lin.value.aconf = aconf;
+      query.vptr     = aconf;
+      query.callback = connect_dns_callback;
       nextdnscheck = 1;
-      if ((aconf->ipnum.s_addr = inet_addr(aconf->host)) == -1)
+      if ((aconf->ipnum.s_addr = inet_addr(aconf->host)) == INADDR_NONE)
 	{
-	  aconf->ipnum.s_addr = 0;
-	  hp = gethost_byname(aconf->host, &lin);
+	  hp = gethost_byname(aconf->host, &query);
 	  Debug((DEBUG_NOTICE, "co_sv: hp %x ac %x na %s ho %s",
 		 hp, aconf, aconf->name, aconf->host));
 	  if (!hp)
 	    return 0;
-	  (void)memcpy( (void *)&aconf->ipnum, (void *)hp->h_addr,
-		sizeof(struct in_addr));
+	  memcpy(&aconf->ipnum, hp->h_addr, sizeof(struct in_addr));
 	}
     }
   cptr = make_client(NULL);
@@ -2343,9 +2400,9 @@ static	struct	sockaddr *connect_inet(aConfItem *aconf,
    * conf line, whether as a result of the hostname lookup or the ip#
    * being present instead. If we dont know it, then the connect fails.
    */
-  if (isdigit(*aconf->host) && (aconf->ipnum.s_addr == -1))
+  if (isdigit(*aconf->host) && INADDR_NONE == aconf->ipnum.s_addr)
     aconf->ipnum.s_addr = inet_addr(aconf->host);
-  if (aconf->ipnum.s_addr == -1)
+  if (INADDR_NONE == aconf->ipnum.s_addr)
     {
       hp = cptr->hostp;
       if (!hp)
@@ -2353,13 +2410,10 @@ static	struct	sockaddr *connect_inet(aConfItem *aconf,
 	  Debug((DEBUG_FATAL, "%s: unknown host", aconf->host));
 	  return NULL;
 	}
-      (void)memcpy((void *)&aconf->ipnum, (void *)hp->h_addr,
-	    sizeof(struct in_addr));
+      memcpy(&aconf->ipnum, hp->h_addr, sizeof(struct in_addr));
     }
-  (void)memcpy( (void *)&server.sin_addr, (void *)&aconf->ipnum,
-	sizeof(struct in_addr));
-  (void)memcpy((void *)&cptr->ip, (void *)&aconf->ipnum,
-	sizeof(struct in_addr));
+  server.sin_addr.s_addr = aconf->ipnum.s_addr;
+  cptr->ip.s_addr = aconf->ipnum.s_addr;
   server.sin_port = htons((aconf->port > 0) ? aconf->port : portnum);
   *lenp = sizeof(server);
   return	(struct sockaddr *)&server;
@@ -2373,66 +2427,14 @@ static	struct	sockaddr *connect_inet(aConfItem *aconf,
  */
 static void do_dns_async()
 {
-  static Link ln;
-  aClient *cptr;
-  aConfItem *aconf;
-  struct hostent *hp;
-  int bytes, packets = 0;
+  int bytes = 0;
+  int packets = 0;
 
-/*
-  if (ioctl(resfd, FIONREAD, &bytes) == -1)
-    bytes = 1;
-*/
   do {
-    ln.flags = -1;
-    hp = get_res((char *)&ln);
-    Debug((DEBUG_DNS,"%#x = get_res(%d,%#x)",
-	   hp, ln.flags, ln.value.cptr));
-    
-    switch (ln.flags)
-      {
-      case ASYNC_NONE :
-	/*
-	 * no reply was processed that was outstanding
-	 * or had a client still waiting.
-	 */
-	break;
-      case ASYNC_CLIENT :
-	if ((cptr = ln.value.cptr))
-	  {
-	    del_queries((char *)cptr);
-#ifdef SHOW_HEADERS
-	    sendheader(cptr, REPORT_FIN_DNS, R_fin_dns);
-#endif
-	    ClearDNS(cptr);
-	    cptr->hostp = hp;
-	    if (!DoingAuth(cptr))
-	      SetAccess(cptr);
-	  }
-	break;
-      case ASYNC_CONNECT :
-	aconf = ln.value.aconf;
-	if (hp && aconf)
-	  {
-	    (void)memcpy((void *)&aconf->ipnum, (void *)hp->h_addr,
-		  sizeof(struct in_addr));
-	    (void)connect_server(aconf, NULL, hp);
-	  }
-	else
-	  sendto_ops("Connect to %s failed: host lookup",
-		     (aconf) ? aconf->host : "unknown");
-	break;
-      case ASYNC_CONF :
-	aconf = ln.value.aconf;
-	if (hp && aconf)
-	  (void)memcpy((void *)&aconf->ipnum, (void *)hp->h_addr,
-		sizeof(struct in_addr));
-	break;
-      default :
-	break;
-      }
-    if (ioctl(resfd, FIONREAD, &bytes) == -1)
+    get_res();
+    if (ioctl(ResolverFileDescriptor, FIONREAD, &bytes) == -1)
       bytes = 0;
     packets++;
   }  while ((bytes > 0) && (packets < 10)); 
 }
+

@@ -304,7 +304,7 @@ void	send_usage(aClient *cptr, char *nick)
 }
 #endif
 
-void	count_memory(aClient *cptr,char *nick)
+void count_memory(aClient *cptr,char *nick)
 {
   extern	aChannel	*channel;
   extern	aClass	*classes;

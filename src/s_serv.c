@@ -59,9 +59,8 @@ static char *rcs_version = "$Id$";
 #include "mtrie_conf.h"
 #include "fdlist.h"
 #include "fileio.h"
+#include "res.h"
 
-/* internal variables */
-static	char	buf[BUFSIZE]; 
 
 /* external variables */
 
@@ -3283,6 +3282,7 @@ int	m_restart(aClient *cptr,
 		  int parc,
 		  char *parv[])
 {
+  char buf[BUFSIZE]; 
 #ifndef	LOCOP_RESTART
   if (!MyClient(sptr) || !IsOper(sptr))
 #else

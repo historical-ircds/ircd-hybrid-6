@@ -36,6 +36,7 @@ static char *rcs_version = "$Id$";
 #include <netdb.h>
 #include <signal.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #include "h.h"
 extern int rehashed;
 #include "mtrie_conf.h"
@@ -43,12 +44,16 @@ extern int rehashed;
 
 #include "res.h"    /* gethost_byname, gethost_byaddr */
 
+#ifndef INADDR_NONE
+#define INADDR_NONE ((unsigned int) 0xffffffff)
+#endif
+
 struct sockaddr_in vserv;
 char	specific_virtual_host;
 
 /* internally defined functions */
 
-static	int	lookup_confhost ( aConfItem * );
+static void lookup_confhost(aConfItem* aconf);
 static  int     SplitUserHost( aConfItem * );
 
 #ifdef LIMIT_UH
@@ -138,6 +143,27 @@ extern void do_pending_klines(void);
 #endif
 
 /*
+ * conf_dns_callback - called when resolver query finishes
+ * if the query resulted in a successful search, hp will contain
+ * a non-null pointer, otherwise hp will be null.
+ * if successful save hp in the conf item it was called with
+ */
+static void conf_dns_callback(void* vptr, struct hostent* hp)
+{
+  aConfItem* aconf = (aConfItem*) vptr;
+  if (hp)
+    memcpy(&aconf->ipnum, hp->h_addr, sizeof(struct in_addr));
+}
+
+struct hostent* conf_dns_lookup(aConfItem* aconf)
+{
+  struct DNSQuery query;
+  query.vptr     = aconf;
+  query.callback = conf_dns_callback;
+  return gethost_byname(aconf->host, &query);
+}
+
+/*
  * remove all conf entries from the client except those which match
  * the status field mask.
  */
@@ -183,7 +209,7 @@ int	attach_Iline(aClient *cptr,
       /*
        * XXX - this probably isn't needed, but ...
        */
-      add_local_domain(host, HOSTLEN - strlen(host));
+      add_local_domain(host, HOSTLEN);
       Debug((DEBUG_DNS, "a_il: %s->%s", sockhost, host));
     }
   else
@@ -2082,7 +2108,7 @@ void initconf(int opt, FBFILE* file, int use_include)
 	    }
 
 	  if (!(opt & BOOT_QUICK))
-	    (void)lookup_confhost(aconf);
+	    lookup_confhost(aconf);
 	}
       
       /* o: or O: line */
@@ -2378,56 +2404,38 @@ void do_include_conf()
 }
 
 /*
- * lookup_confhost
- *   Do (start) DNS lookups of all hostnames in the conf line and convert
- * an IP addresses in a.b.c.d number for to IP#s.
+ * lookup_confhost - start DNS lookups of all hostnames in the conf
+ * line and convert an IP addresses in a.b.c.d number for to IP#s.
  *
  */
-static int lookup_confhost(aConfItem *aconf)
+static void lookup_confhost(aConfItem* aconf)
 {
   struct hostent *hp;
-  Link ln;
   unsigned long ip;
   unsigned long mask;
 
   if (BadPtr(aconf->host) || BadPtr(aconf->name))
     {
-      if (aconf->ipnum.s_addr == -1)
-	memset((void *)&aconf->ipnum, 0, sizeof(struct in_addr));
       Debug((DEBUG_ERROR,"Host/server name error: (%s) (%s)",
 	     aconf->host, aconf->name));
-      return -1;
+      return;
     }
 
   /*
   ** Do name lookup now on hostnames given and store the
   ** ip numbers in conf structure.
   */
-
-  /*
-  ** Prepare structure in case we have to wait for a
-  ** reply which we get later and store away.
-  */
-  ln.value.aconf = aconf;
-  ln.flags = ASYNC_CONF;
-
-  if (is_address(aconf->host,&ip,&mask))
+  if (is_address(aconf->host, &ip, &mask))
     {
       aconf->ipnum.s_addr = htonl(ip);
     }
-  else if ((hp = gethost_byname(aconf->host, &ln)))
-    memcpy((void *)&(aconf->ipnum),(void *)hp->h_addr,
-	  sizeof(struct in_addr));
+  else if ((hp = conf_dns_lookup(aconf)))
+    memcpy(&aconf->ipnum, hp->h_addr, sizeof(struct in_addr));
   
-  if (aconf->ipnum.s_addr == -1)
-    memset((void *)&aconf->ipnum, 0, sizeof(struct in_addr));
-  {
+  if (INADDR_NONE == aconf->ipnum.s_addr) {
     Debug((DEBUG_ERROR,"Host/server name error: (%s) (%s)",
 	   aconf->host, aconf->name));
-    return -1;
   }
-  /* NOTREACHED */
-  return 0;
 }
 
 /*

@@ -30,12 +30,14 @@ static char *rcs_version="$Id$";
 #include "sys.h"
 #include "numeric.h"
 #include "msg.h"
+#include "res.h"
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <pwd.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <sys/socket.h>
 
 #undef RUSAGE_SELF 0
 #undef RUSAGE_CHILDREN /* hack for old slackware */

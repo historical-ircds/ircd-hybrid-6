@@ -30,6 +30,11 @@ static char *rcs_version = "$Id$";
 #include "h.h"
 #include "numeric.h"
 #include "blalloc.h"
+#include "res.h"
+
+#ifndef INADDR_NONE
+#define INADDR_NONE ((unsigned int) 0xffffffff)
+#endif
 
 extern int BlockHeapGarbageCollect(BlockHeap *);
 extern SetOptionsType GlobalSetOptions;
@@ -509,6 +514,7 @@ aConfItem *make_conf()
   /* aconf->clients = 0; */
   /* aconf->port = 0; */
   /* aconf->hold = 0; */
+  aconf->ipnum.s_addr = INADDR_NONE;
   Class(aconf) = 0;
   return (aconf);
 }

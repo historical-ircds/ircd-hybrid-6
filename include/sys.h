@@ -21,12 +21,16 @@
 
 #ifndef	__sys_include__
 #define __sys_include__
+#if 0
 #ifdef ISC202
 #include <net/errno.h>
 #else
 #include <sys/errno.h>
 #endif
+#endif /* 0 */
+
 #include "setup.h"
+#include <errno.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/param.h>

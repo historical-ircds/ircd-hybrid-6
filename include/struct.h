@@ -1077,7 +1077,7 @@ typedef struct
   int dronecount;
 #endif
 
-#if NEED_SPLITCODE
+#ifdef NEED_SPLITCODE
   time_t server_split_recovery_time;
   int split_smallnet_size;
   int split_smallnet_users;

@@ -75,12 +75,14 @@ extern	aClient	*find_server (char *, aClient *);
 extern	aClient	*find_service (char *, aClient *);
 extern	aClient	*find_userhost (char *, char *, aClient *, int *);
 
-extern	int	attach_conf (aClient *, aConfItem *);
+extern struct hostent* conf_dns_lookup(aConfItem* aconf);
+extern	int	  attach_conf (aClient *, aConfItem *);
 extern	aConfItem *attach_confs (aClient*, char *, int);
 extern	aConfItem *attach_confs_host (aClient*, char *, int);
 extern	int	  attach_Iline (aClient *, struct hostent *,char *,
 				char *,char **);
-extern	aConfItem *conf, *find_me (void);
+extern	aConfItem *conf;
+extern  aConfItem *find_me (void);
 extern  aConfItem *find_admin (void);
 extern	aConfItem *count_cnlines (Link *);
 extern	void	  det_confs_butmask (aClient *, int);
@@ -159,6 +161,7 @@ extern	void	get_my_name (aClient *, char *, int);
 extern	int	get_sockerr (aClient *);
 extern	int	inetport (aClient *, int, u_long);
 extern	void	init_sys ();
+extern  void    remove_hostent_references(const struct hostent* hp);
 extern	int	read_message (time_t, fdlist *);
 extern	void	report_error (char *, aClient *);
 extern	void	set_non_blocking (int, aClient *);
