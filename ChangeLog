@@ -1,3 +1,8 @@
+*** 19991213_1 by lusky
+another fix for dline bug (db)
+"E lines" weren't being honoured on connect for glines (db)
+
+
 *** 19991210_1 by lusky
 revved patchlevel to b116
 fix for quote dline's being treated as /8's (db)
