@@ -3054,11 +3054,13 @@ int	m_knock(aClient *cptr,
    * -Dianora
    */
 
-  sendto_channel_type(cptr, sptr, chptr, MODE_CHANOP,
-		      ":%s NOTICE %s :%s has knocked on the channel door.",
-		      sptr->name,
-		      chptr->chname,
-		      sptr->name);
+  {
+    char message[350];
+    sprintf(message,"KNOCK: %s (%s has knocked on the channel door)",
+	    chptr->chname, sptr->name);
+    sendto_channel_type_notice(cptr, chptr, MODE_CHANOP, message);
+			     
+  }
   return 0;
 }
 
@@ -3249,13 +3251,12 @@ int	m_invite(aClient *cptr,
       /* Send a NOTICE to all channel operators concerning chanops who  *
        * INVITE other users to the channel when it is invite-only (+i). *
        * The NOTICE is sent from the local server.  -- David-R          */
-      if (chptr && (chptr->mode.mode & MODE_INVITEONLY))
-	sendto_channel_type(cptr, &me, chptr, MODE_CHANOP,
-	  ":%s NOTICE %s :%s has invited %s to %s.",
-			    sptr->name,
-			    chptr->chname,
-			    parv[0],
-			    acptr->name, chptr->chname);
+      if (chptr && (chptr->mode.mode & MODE_INVITEONLY)) { 
+	char message[300];
+	sprintf(message, "INVITE: %s (%s invited %s)", chptr->chname, sptr->name, acptr->name);
+	sendto_channel_type_notice(cptr, chptr, MODE_CHANOP,
+				    message);
+      }
 
     }
 
