@@ -11,7 +11,6 @@
 #include "msg.h"
 #include "channel.h"
 #include "send.h"
-#include "fdlist.h"
 #include "ircd.h"
 #include "s_user.h"
 #include "s_err.h"

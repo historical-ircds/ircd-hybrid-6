@@ -88,13 +88,6 @@ fd_set  writeset;
 #define INADDR_NONE ((unsigned int) 0xffffffff)
 #endif
 
-extern fdlist serv_fdlist;
-
-#ifndef NO_PRIORITY
-extern fdlist busycli_fdlist;
-#endif
-extern fdlist default_fdlist;
-
 extern struct sockaddr_in vserv;               /* defined in s_conf.c */
 
 const char* const NONB_ERROR_MSG   = "set_non_blocking failed for %s:%s"; 
@@ -926,7 +919,7 @@ int connect_server(aConfItem *aconf, aClient* by, struct DNSReply* reply)
   SetConnecting(cptr);
 
   add_client_to_list(cptr);
-  addto_fdlist(cptr->fd, &default_fdlist);
+  fdlist_add(cptr->fd, FDL_DEFAULT);
   nextping = timeofday;
 
   return 1;
@@ -1018,7 +1011,7 @@ void close_connection(aClient *cptr)
       if (IsServer(cptr))
         zip_free(cptr);
 #endif
-      delfrom_fdlist(cptr->fd, &default_fdlist);
+      fdlist_delete(cptr->fd, FDL_ALL);
       close(cptr->fd);
       cptr->fd = -1;
       DBufClear(&cptr->sendQ);
@@ -1269,7 +1262,7 @@ static void error_exit_client(struct Client* cptr, int error)
  * write it out.
  */
 #ifndef USE_POLL
-int read_message(time_t delay, fdlist *listp)        /* mika */
+int read_message(time_t delay, unsigned char mask)        /* mika */
 
      /* Don't ever use ZERO here, unless you mean to poll
         and then you have to have sleep/wait somewhere 
@@ -1291,11 +1284,6 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
 
   now = timeofday;
 
-  /* if it is called with NULL we check all active fd's */
-  if (!listp) {
-    listp = &default_fdlist;
-  }
-
   for (res = 0;;)
     {
       FD_ZERO(read_set);
@@ -1314,10 +1302,7 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
       }
       for (i = 0; i <= highest_fd; i++)
         {
-          if (!listp->entry[i])
-            continue;
-
-          if (!(cptr = local[i]))
+          if (!(GlobalFDList[i] & mask) || !(cptr = local[i]))
             continue;
 
           /*
@@ -1405,10 +1390,7 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
   }
 
   for (i = 0; i <= highest_fd; i++) {
-    if (!listp->entry[i])
-      continue;
-
-    if (!(cptr = local[i]))
+    if (!(GlobalFDList[i] & mask) || !(cptr = local[i]))
       continue;
 
     /*
@@ -1516,7 +1498,7 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
 #define CONNECTFAST
 #endif
 
-int read_message(time_t delay, fdlist *listp)
+int read_message(time_t delay, unsigned char mask)
 {
   aClient*             cptr;
   int                  nfds;
@@ -1537,10 +1519,6 @@ int read_message(time_t delay, fdlist *listp)
   int                  rr;
   int                  rw;
   int                  i;
-
-  /* if it is called with NULL we check all active fd's */
-  if (!listp)
-    listp = &default_fdlist;
 
   for ( ; ; ) {
     nbr_pfds = 0;
@@ -1594,10 +1572,7 @@ int read_message(time_t delay, fdlist *listp)
      * set client descriptors
      */
     for (i = 0; i <= highest_fd; ++i) {
-      if (!listp->entry[i])
-        continue;
-
-      if (!(cptr = local[i]))
+      if (!(GlobalFDList[i] & mask) || !(cptr = local[i]))
         continue;
 
      /*

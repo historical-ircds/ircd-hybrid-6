@@ -75,16 +75,6 @@ extern int    server_was_split;
 
 int cold_start = YES;   /* set if the server has just fired up */
 
-/* fdlist's */
-fdlist serv_fdlist;
-fdlist oper_fdlist;
-
-#ifndef NO_PRIORITY
-fdlist busycli_fdlist;  /* high-priority clients */
-#endif
-
-fdlist default_fdlist;
-
 /* /quote set variables */
 struct SetOptions GlobalSetOptions;
 
@@ -944,12 +934,7 @@ int main(int argc, char *argv[])
   init_tree_parse(msgtab);      /* tree parse code (orabidoo) */
   NOW = time(NULL);
 
-  init_fdlist(&serv_fdlist);
-  init_fdlist(&oper_fdlist);
-  init_fdlist(&default_fdlist);
-#ifndef NO_PRIORITY
-  init_fdlist(&busycli_fdlist);
-#endif
+  fdlist_init();
 
   open_debugfile();
   NOW = time(NULL);
@@ -998,10 +983,6 @@ int main(int argc, char *argv[])
   syslog(LOG_NOTICE, "Server Ready");
 #endif
   NOW = time(NULL);
-
-#ifndef NO_PRIORITY
-  check_fdlists(time(NULL));
-#endif
 
   if((timeofday = time(NULL)) == -1)
     {
@@ -1148,15 +1129,15 @@ time_t io_loop(time_t delay)
    */
 
 #ifndef NO_PRIORITY
-  read_message(0, &serv_fdlist);
-  read_message(1, &busycli_fdlist);
+  read_message(0, FDL_SERVER);
+  read_message(1, FDL_BUSY);
   if (LIFESUX)
     {
-      read_message(1, &serv_fdlist);
+      read_message(1, FDL_SERVER);
       if (LIFESUX & 0x4)
         {       /* life really sucks */
-          read_message(1, &busycli_fdlist);
-          read_message(1, &serv_fdlist);
+          read_message(1, FDL_BUSY);
+          read_message(1, FDL_SERVER);
         }
       flush_server_connections();
     }
@@ -1188,12 +1169,12 @@ time_t io_loop(time_t delay)
     if ((lasttime + (LIFESUX + 1)) < timeofday)
       {
 #endif
-        read_message(delay, NULL); /*  check everything! */
+        read_message(delay, FDL_ALL); /*  check everything! */
         lasttime = timeofday;
       }
    }
 #else
-  read_message(delay, NULL); /*  check everything! */
+  read_message(delay, FDL_ALL); /*  check everything! */
   flush_server_connections();
 #endif
 
@@ -1225,6 +1206,10 @@ time_t io_loop(time_t delay)
 
   Debug((DEBUG_DEBUG,"About to return delay %d",delay));
   return delay;
+
+#ifndef NO_PRIORITY
+  fdlist_check(time(NULL));
+#endif
 }
 
 /*
@@ -1267,64 +1252,6 @@ static void open_debugfile()
     }
 #endif
 }
-
-#ifndef NO_PRIORITY
-/*
- * This is a pretty expensive routine -- it loops through
- * all the fd's, and finds the active clients (and servers
- * and opers) and places them on the "busy client" list
- */
-time_t check_fdlists(now)
-time_t now;
-{
-#ifdef CLIENT_SERVER
-#define BUSY_CLIENT(x)  (((x)->priority < 55) || (!LIFESUX && ((x)->priority < 75)))
-#else
-#define BUSY_CLIENT(x)  (((x)->priority < 40) || (!LIFESUX && ((x)->priority < 60)))
-#endif
-#define FDLISTCHKFREQ  2
-
-  register aClient *cptr;
-  register int i;
-
-  for (i=highest_fd; i >=0; i--)
-    {
-      busycli_fdlist.entry[i] = 0;
-
-      if (!(cptr=local[i])) continue;
-      if (IsServer(cptr) || IsAnOper(cptr))
-        {
-          busycli_fdlist.entry[i] = 1;
-          continue;
-        }
-      if (cptr->receiveM == cptr->lastrecvM)
-        {
-          cptr->priority += 2;  /* lower a bit */
-          if (cptr->priority > 90) cptr->priority = 90;
-          else if (BUSY_CLIENT(cptr))
-            {
-              busycli_fdlist.entry[i] = 1;
-            }
-          continue;
-        }
-      else
-        {
-          cptr->lastrecvM = cptr->receiveM;
-          cptr->priority -= 30; /* active client */
-          if (cptr->priority < 0)
-            {
-              cptr->priority = 0;
-              busycli_fdlist.entry[i] = 1;
-            }
-          else if (BUSY_CLIENT(cptr))
-            {
-              busycli_fdlist.entry[i] = 1;
-            }
-        }
-    }
-  return (now + FDLISTCHKFREQ + (LIFESUX + 1));
-}
-#endif
 
 /*
  * simple function added because its used more than once

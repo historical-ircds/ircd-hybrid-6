@@ -37,7 +37,7 @@
 #include "ircd.h"
 #include "s_misc.h"
 #include "struct.h"
-#include "fdlist.h"              /* default_fdlist */
+#include "fdlist.h"              /* fdlist_add */
 
 #include <netdb.h>               /* struct hostent */
 #include <string.h>
@@ -155,7 +155,7 @@ static void release_auth_client(struct Client* client)
     highest_fd = client->fd;
   local[client->fd] = client;
 
-  addto_fdlist(client->fd, &default_fdlist);
+  fdlist_add(client->fd, FDL_DEFAULT);
   add_client_to_list(client);
   
   SetAccess(client);

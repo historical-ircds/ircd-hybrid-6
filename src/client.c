@@ -771,7 +771,7 @@ const char* comment        /* Reason for the exit */
 #endif
       if (IsAnOper(sptr))
         {
-          delfrom_fdlist(sptr->fd, &oper_fdlist);
+          fdlist_delete(sptr->fd, FDL_OPER | FDL_BUSY);
           /* LINKLIST */
           /* oh for in-line functions... */
           {
@@ -824,7 +824,7 @@ const char* comment        /* Reason for the exit */
       if (IsServer(sptr))
         {
           Count.myserver--;
-          delfrom_fdlist(sptr->fd, &serv_fdlist);
+          fdlist_delete(sptr->fd, FDL_SERVER | FDL_BUSY);
 
           /* LINKLIST */
           /* oh for in-line functions... */

@@ -33,7 +33,6 @@
 #include "send.h"
 #include "dline_conf.h"
 #include "mtrie_conf.h"
-#include "fdlist.h"
 #include "fileio.h"
 #include "s_err.h"
 #include "ircd.h"
