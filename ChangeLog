@@ -1,3 +1,8 @@
+*** 20000514_1 by lusky
+workaround in client.c for major bug causing llist corruption and server coring
+vsendto_one cleanup in send.c
+
+
 *** 20000423_1 by lusky
 revved patchlevel to b125
 fixed to s_conf for DEBUG mode (db)
