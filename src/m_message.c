@@ -34,6 +34,7 @@
 #include "channel.h"
 #include "irc_string.h"
 #include "hash.h"
+#include "class.h"
 
 #include <string.h>
 

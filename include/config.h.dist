@@ -766,7 +766,7 @@
  * within 1 seconds. (I'm told it is usually that fast)
  * I'll do better next time, this is a Q&D -Dianora
  */
-#undef ANTI_DRONE_FLOOD
+#define ANTI_DRONE_FLOOD
 #define DEFAULT_DRONE_TIME 1
 #define DEFAULT_DRONE_COUNT 8
 
