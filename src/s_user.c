@@ -2473,6 +2473,9 @@ int     m_whois(aClient *cptr,
                       *buf = '\0';
                       len = 0;
                     }
+		  /*
+		  found_mode = user_channel_mode(acptr, chptr);
+		  if(found_mode &  */
                   if (is_chan_op(acptr, chptr))
                     *(buf + len++) = '@';
                   else if (has_voice(acptr, chptr))
