@@ -20,75 +20,75 @@
  * $Id$
  */
 
-#ifndef	__msg_include__
+#ifndef __msg_include__
 #define __msg_include__
 
-#define MSG_PRIVATE  "PRIVMSG"	/* PRIV */
-#define MSG_WHO      "WHO"	/* WHO  -> WHOC */
-#define MSG_WHOIS    "WHOIS"	/* WHOI */
-#define MSG_WHOWAS   "WHOWAS"	/* WHOW */
-#define MSG_USER     "USER"	/* USER */
-#define MSG_NICK     "NICK"	/* NICK */
-#define MSG_SERVER   "SERVER"	/* SERV */
-#define MSG_LIST     "LIST"	/* LIST */
-#define MSG_TOPIC    "TOPIC"	/* TOPI */
-#define MSG_INVITE   "INVITE"	/* INVI */
-#define MSG_VERSION  "VERSION"	/* VERS */
-#define MSG_QUIT     "QUIT"	/* QUIT */
-#define MSG_SQUIT    "SQUIT"	/* SQUI */
-#define MSG_KILL     "KILL"	/* KILL */
-#define MSG_INFO     "INFO"	/* INFO */
-#define MSG_LINKS    "LINKS"	/* LINK */
-#define MSG_STATS    "STATS"	/* STAT */
-#define MSG_USERS    "USERS"	/* USER -> USRS */
-#define MSG_HELP     "HELP"	/* HELP */
-#define MSG_ERROR    "ERROR"	/* ERRO */
-#define MSG_AWAY     "AWAY"	/* AWAY */
-#define MSG_CONNECT  "CONNECT"	/* CONN */
-#define MSG_PING     "PING"	/* PING */
-#define MSG_PONG     "PONG"	/* PONG */
-#define MSG_OPER     "OPER"	/* OPER */
-#define MSG_PASS     "PASS"	/* PASS */
-#define MSG_WALLOPS  "WALLOPS"	/* WALL */
-#define MSG_TIME     "TIME"	/* TIME */
-#define MSG_NAMES    "NAMES"	/* NAME */
-#define MSG_ADMIN    "ADMIN"	/* ADMI */
-#define MSG_TRACE    "TRACE"	/* TRAC */
+#define MSG_PRIVATE  "PRIVMSG"  /* PRIV */
+#define MSG_WHO      "WHO"      /* WHO  -> WHOC */
+#define MSG_WHOIS    "WHOIS"    /* WHOI */
+#define MSG_WHOWAS   "WHOWAS"   /* WHOW */
+#define MSG_USER     "USER"     /* USER */
+#define MSG_NICK     "NICK"     /* NICK */
+#define MSG_SERVER   "SERVER"   /* SERV */
+#define MSG_LIST     "LIST"     /* LIST */
+#define MSG_TOPIC    "TOPIC"    /* TOPI */
+#define MSG_INVITE   "INVITE"   /* INVI */
+#define MSG_VERSION  "VERSION"  /* VERS */
+#define MSG_QUIT     "QUIT"     /* QUIT */
+#define MSG_SQUIT    "SQUIT"    /* SQUI */
+#define MSG_KILL     "KILL"     /* KILL */
+#define MSG_INFO     "INFO"     /* INFO */
+#define MSG_LINKS    "LINKS"    /* LINK */
+#define MSG_STATS    "STATS"    /* STAT */
+#define MSG_USERS    "USERS"    /* USER -> USRS */
+#define MSG_HELP     "HELP"     /* HELP */
+#define MSG_ERROR    "ERROR"    /* ERRO */
+#define MSG_AWAY     "AWAY"     /* AWAY */
+#define MSG_CONNECT  "CONNECT"  /* CONN */
+#define MSG_PING     "PING"     /* PING */
+#define MSG_PONG     "PONG"     /* PONG */
+#define MSG_OPER     "OPER"     /* OPER */
+#define MSG_PASS     "PASS"     /* PASS */
+#define MSG_WALLOPS  "WALLOPS"  /* WALL */
+#define MSG_TIME     "TIME"     /* TIME */
+#define MSG_NAMES    "NAMES"    /* NAME */
+#define MSG_ADMIN    "ADMIN"    /* ADMI */
+#define MSG_TRACE    "TRACE"    /* TRAC */
 #define MSG_LTRACE   "LTRACE"   /* LTRA */
-#define MSG_NOTICE   "NOTICE"	/* NOTI */
-#define MSG_JOIN     "JOIN"	/* JOIN */
-#define MSG_PART     "PART"	/* PART */
-#define MSG_LUSERS   "LUSERS"	/* LUSE */
-#define MSG_MOTD     "MOTD"	/* MOTD */
-#define MSG_MODE     "MODE"	/* MODE */
-#define MSG_KICK     "KICK"	/* KICK */
-#define MSG_USERHOST "USERHOST"	/* USER -> USRH */
-#define MSG_ISON     "ISON"	/* ISON */
-#define MSG_USRIP    "USRIP"	/* USRIP */
-#define	MSG_REHASH   "REHASH"	/* REHA */
-#define	MSG_RESTART  "RESTART"	/* REST */
-#define	MSG_CLOSE    "CLOSE"	/* CLOS */
-#define	MSG_SVINFO   "SVINFO"	/* SVINFO */
-#define	MSG_SJOIN    "SJOIN"	/* SJOIN */
-#define MSG_CAPAB    "CAPAB"	/* CAPAB */
-#define	MSG_DIE	     "DIE"      /* DIE */
-#define	MSG_HASH     "HASH"	/* HASH */
-#define	MSG_DNS      "DNS"	/* DNS  -> DNSS */
+#define MSG_NOTICE   "NOTICE"   /* NOTI */
+#define MSG_JOIN     "JOIN"     /* JOIN */
+#define MSG_PART     "PART"     /* PART */
+#define MSG_LUSERS   "LUSERS"   /* LUSE */
+#define MSG_MOTD     "MOTD"     /* MOTD */
+#define MSG_MODE     "MODE"     /* MODE */
+#define MSG_KICK     "KICK"     /* KICK */
+#define MSG_USERHOST "USERHOST" /* USER -> USRH */
+#define MSG_ISON     "ISON"     /* ISON */
+#define MSG_USRIP    "USRIP"    /* USRIP */
+#define MSG_REHASH   "REHASH"   /* REHA */
+#define MSG_RESTART  "RESTART"  /* REST */
+#define MSG_CLOSE    "CLOSE"    /* CLOS */
+#define MSG_SVINFO   "SVINFO"   /* SVINFO */
+#define MSG_SJOIN    "SJOIN"    /* SJOIN */
+#define MSG_CAPAB    "CAPAB"    /* CAPAB */
+#define MSG_DIE      "DIE"      /* DIE */
+#define MSG_HASH     "HASH"     /* HASH */
+#define MSG_DNS      "DNS"      /* DNS  -> DNSS */
 #define MSG_OPERWALL "OPERWALL" /* OPERWALL */
 #define MSG_KLINE    "KLINE"    /* KLINE */
-#define MSG_UNKLINE  "UNKLINE"	/* UNKLINE */
-#define MSG_DLINE    "DLINE"	/* DLINE */
-#define	MSG_HTM      "HTM"	/* HTM */
-#define MSG_SET      "SET"	/* SET */
+#define MSG_UNKLINE  "UNKLINE"  /* UNKLINE */
+#define MSG_DLINE    "DLINE"    /* DLINE */
+#define MSG_HTM      "HTM"      /* HTM */
+#define MSG_SET      "SET"      /* SET */
 
 #define MSG_GLINE    "GLINE"    /* GLINE */
 
 
-#define MSG_LOCOPS   "LOCOPS"	/* LOCOPS */
+#define MSG_LOCOPS   "LOCOPS"   /* LOCOPS */
 #ifdef LWALLOPS
-#define MSG_LWALLOPS "LWALLOPS"	/* Same as LOCOPS */
+#define MSG_LWALLOPS "LWALLOPS" /* Same as LOCOPS */
 #endif /* LWALLOPS */
-#define MSG_KNOCK	   "KNOCK"  /* KNOCK */
+#define MSG_KNOCK          "KNOCK"  /* KNOCK */
 
 #define MAXPARA    15 
 
@@ -169,28 +169,28 @@ extern int m_set(aClient *,aClient *,int,char **);
 #ifdef MSGTAB
 
 struct Message msgtab[] = {
-#ifdef IDLE_FROM_MSG	/* reset idle time only if privmsg used */
-#ifdef IDLE_CHECK	/* reset idle time only if valid target for privmsg
-			   and target is not source */
+#ifdef IDLE_FROM_MSG    /* reset idle time only if privmsg used */
+#ifdef IDLE_CHECK       /* reset idle time only if valid target for privmsg
+                           and target is not source */
 
   /*                                        |-- allow use even when unreg.
-					    v	yes/no			*/
+                                            v   yes/no                  */
   { MSG_PRIVATE, m_private,  0, MAXPARA, 1, 0, 0, 0L },
 #else
   { MSG_PRIVATE, m_private,  0, MAXPARA, 1, 0, 1, 0L },
 #endif
 
   /*                                           ^
-					       |__ reset idle time when 1 */
-#else	/* IDLE_FROM_MSG */
-#ifdef	IDLE_CHECK	/* reset idle time on anything but privmsg */
+                                               |__ reset idle time when 1 */
+#else   /* IDLE_FROM_MSG */
+#ifdef  IDLE_CHECK      /* reset idle time on anything but privmsg */
   { MSG_PRIVATE, m_private,  0, MAXPARA, 1, 0, 1, 0L },
 #else
   { MSG_PRIVATE, m_private,  0, MAXPARA, 1, 0, 0, 0L },
   /*                                           ^
-					       |__ reset idle time when 0 */
-#endif	/* IDLE_CHECK */
-#endif	/* IDLE_FROM_MSG */
+                                               |__ reset idle time when 0 */
+#endif  /* IDLE_CHECK */
+#endif  /* IDLE_FROM_MSG */
 
   { MSG_NICK,    m_nick,     0, MAXPARA, 1, 1, 0, 0L },
   { MSG_NOTICE,  m_notice,   0, MAXPARA, 1, 0, 0, 0L },
@@ -224,7 +224,7 @@ struct Message msgtab[] = {
   { MSG_PONG,    m_pong,     0, MAXPARA, 1, 0, 1, 0L },
   { MSG_PING,    m_ping,     0, MAXPARA, 1, 0, 1, 0L },
 
-#endif	/* IDLE_FROM_MSG */
+#endif  /* IDLE_FROM_MSG */
 
   { MSG_ERROR,   m_error,    0, MAXPARA, 1, 1, 0, 0L },
   { MSG_KILL,    m_kill,     0, MAXPARA, 1, 0, 0, 0L },
@@ -278,9 +278,9 @@ struct Message msgtab[] = {
   { MSG_REHASH,  m_rehash,   0, MAXPARA, 1, 0, 0, 0L },
   { MSG_RESTART, m_restart,  0, MAXPARA, 1, 0, 0, 0L },
   { MSG_DIE, m_die,          0, MAXPARA, 1, 0, 0, 0L },
-  { MSG_HTM,	m_htm,	     0, MAXPARA, 1, 0, 0, 0L },
-  { MSG_SET,	m_set,	     0, MAXPARA, 1, 0, 0, 0L },
-  { MSG_TESTLINE,	m_testline,	     0, MAXPARA, 1, 0, 0, 0L },
+  { MSG_HTM,    m_htm,       0, MAXPARA, 1, 0, 0, 0L },
+  { MSG_SET,    m_set,       0, MAXPARA, 1, 0, 0, 0L },
+  { MSG_TESTLINE,       m_testline,          0, MAXPARA, 1, 0, 0, 0L },
   { (char *) 0, (int (*)()) 0 , 0, 0,    0, 0, 0, 0L }
 };
 

@@ -17,32 +17,32 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef	__channel_include__
+#ifndef __channel_include__
 #define __channel_include__
 
 struct Channel;
 
-#define CREATE 1	/* whether a channel should be
-			   created or just tested for existance */
+#define CREATE 1        /* whether a channel should be
+                           created or just tested for existance */
 
-#define	MODEBUFLEN	200
+#define MODEBUFLEN      200
 
-#define NullChn	((aChannel *)0)
+#define NullChn ((aChannel *)0)
 
-#define ChannelExists(n)	(find_channel(n, NullChn) != NullChn)
+#define ChannelExists(n)        (find_channel(n, NullChn) != NullChn)
 
 /* Maximum mode changes allowed per client, per server is different */
-#define	MAXMODEPARAMS	4
+#define MAXMODEPARAMS   4
 
 extern void sync_channels();
-extern	struct Channel *find_channel (char *, struct Channel *);
-extern	void	remove_user_from_channel (aClient *, aChannel *,int);
-extern	void	del_invite (aClient *, aChannel *);
-extern	void	send_user_joins (aClient *, aClient *);
-extern	int	can_send (aClient *, aChannel *);
-extern	int	is_chan_op (aClient *, aChannel *);
-extern	int	has_voice (aClient *, aChannel *);
-extern	int	count_channels (aClient *);
+extern  struct Channel *find_channel (char *, struct Channel *);
+extern  void    remove_user_from_channel (aClient *, aChannel *,int);
+extern  void    del_invite (aClient *, aChannel *);
+extern  void    send_user_joins (aClient *, aClient *);
+extern  int     can_send (aClient *, aChannel *);
+extern  int     is_chan_op (aClient *, aChannel *);
+extern  int     has_voice (aClient *, aChannel *);
+extern  int     count_channels (aClient *);
 extern  int     m_names(aClient *, aClient *,int, char **);
 
 #endif

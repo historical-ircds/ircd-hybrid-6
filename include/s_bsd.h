@@ -26,7 +26,7 @@
 #define INCLUDED_sys_types_h
 #endif
 
-#define READBUF_SIZE    16384	/* used in s_bsd *AND* s_zip.c ! */
+#define READBUF_SIZE    16384   /* used in s_bsd *AND* s_zip.c ! */
 
 struct Client;
 struct ConfItem;

@@ -98,17 +98,17 @@ extern const unsigned int CharAttrs[];
 #define CHANPFX_C 0x200
 
 #define IsChanPrefix(c) (CharAttrs[(unsigned char)(c)] & CHANPFX_C)
-#define	IsChanChar(c)   (CharAttrs[(unsigned char)(c)] & CHAN_C)
+#define IsChanChar(c)   (CharAttrs[(unsigned char)(c)] & CHAN_C)
 #define IsKWildChar(c)  (CharAttrs[(unsigned char)(c)] & KWILD_C)
-#define	IsNickChar(c)   (CharAttrs[(unsigned char)(c)] & NICK_C)
-#define	IsCntrl(c)      (CharAttrs[(unsigned char)(c)] & CNTRL_C)
+#define IsNickChar(c)   (CharAttrs[(unsigned char)(c)] & NICK_C)
+#define IsCntrl(c)      (CharAttrs[(unsigned char)(c)] & CNTRL_C)
 #define IsAlpha(c)      (CharAttrs[(unsigned char)(c)] & ALPHA_C)
 #define IsSpace(c)      (CharAttrs[(unsigned char)(c)] & SPACE_C)
 #define IsLower(c)      (IsAlpha((c)) && ((unsigned char)(c) > 0x5f))
 #define IsUpper(c)      (IsAlpha((c)) && ((unsigned char)(c) < 0x60))
 #define IsDigit(c)      (CharAttrs[(unsigned char)(c)] & DIGIT_C)
-#define	IsXDigit(c) (IsDigit(c) || 'a' <= (c) && (c) <= 'f' || \
-	'A' <= (c) && (c) <= 'F')
+#define IsXDigit(c) (IsDigit(c) || 'a' <= (c) && (c) <= 'f' || \
+        'A' <= (c) && (c) <= 'F')
 #define IsAlNum(c) (CharAttrs[(unsigned char)(c)] & (DIGIT_C | ALPHA_C))
 #define IsPrint(c) (CharAttrs[(unsigned char)(c)] & PRINT_C)
 #define IsAscii(c) ((unsigned char)(c) < 0x80)

@@ -72,14 +72,14 @@ extern unsigned char char_atribs[];
 #define PUNCT 8
 #define DIGIT 16
 #define SPACE 32
-#define	iscntrl(c) (char_atribs[(unsigned char)(c)]&CNTRL)
+#define iscntrl(c) (char_atribs[(unsigned char)(c)]&CNTRL)
 #define isalpha(c) (char_atribs[(unsigned char)(c)]&ALPHA)
 #define isspace(c) (char_atribs[(unsigned char)(c)]&SPACE)
 #define islower(c) ((char_atribs[(unsigned char)(c)]&ALPHA) && ((unsigned char)(c) > 0x5f))
 #define isupper(c) ((char_atribs[(unsigned char)(c)]&ALPHA) && ((unsigned char)(c) < 0x60))
 #define isdigit(c) (char_atribs[(unsigned char)(c)]&DIGIT)
-#define	isxdigit(c) (isdigit(c) || 'a' <= (c) && (c) <= 'f' || \
-	'A' <= (c) && (c) <= 'F')
+#define isxdigit(c) (isdigit(c) || 'a' <= (c) && (c) <= 'f' || \
+        'A' <= (c) && (c) <= 'F')
 #define isalnum(c) (char_atribs[(unsigned char)(c)]&(DIGIT|ALPHA))
 #define isprint(c) (char_atribs[(unsigned char)(c)]&PRINT)
 #define isascii(c) ((unsigned char)(c) >= 0 && (unsigned char)(c) <= 0x7f)

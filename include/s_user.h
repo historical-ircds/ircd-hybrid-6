@@ -30,9 +30,9 @@
 
 struct Client;
 
-extern	void	send_umode (struct Client *, struct Client *,
-			    int, int, char *);
-extern	void	send_umode_out (struct Client*, struct Client *, int);
+extern  void    send_umode (struct Client *, struct Client *,
+                            int, int, char *);
+extern  void    send_umode_out (struct Client*, struct Client *, int);
 extern int m_umode(struct Client *, struct Client *, int, char **);
 
 #endif

@@ -22,11 +22,11 @@ extern void report_matching_host_klines(struct Client *,char *);
 /* As ircd only allow 63 characters in a hostname, 100 is more than enough */
 #define MAX_TLD_STACK 100
 
-#define MAX_PIECE_LIST 32	/* number of chars to use in domain piece
-				 * "lookat" table. It has to be a multiple
-				 * of 2, 32 works well for 26 chars in
-				 * alphabet.
-				 */
+#define MAX_PIECE_LIST 32       /* number of chars to use in domain piece
+                                 * "lookat" table. It has to be a multiple
+                                 * of 2, 32 works well for 26 chars in
+                                 * alphabet.
+                                 */
 /*
  * What this is, is a modified trie
  * It will help if you read Knuth, Sorting and Searching, third volume
@@ -55,7 +55,7 @@ typedef struct domain_piece
   char *host_piece;
   struct ConfItem *conf_ptr;
   struct ConfItem *wild_conf_ptr;
-  int flags;		/* E_type I_type K_type */
+  int flags;            /* E_type I_type K_type */
   struct domain_piece *next_piece;
   struct domain_level *next_level;
 } DOMAIN_PIECE;

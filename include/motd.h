@@ -11,7 +11,7 @@
 #define INCLUDED_limits_h
 #endif
 
-#define MESSAGELINELEN 89	
+#define MESSAGELINELEN 89       
 
 typedef enum {
   USER_MOTD,
@@ -21,7 +21,7 @@ typedef enum {
 
 typedef struct MessageFileLineStruct
 {
-  char	line[MESSAGELINELEN + 1];
+  char  line[MESSAGELINELEN + 1];
   struct MessageFileLineStruct *next;
 }MessageFileLine;
 

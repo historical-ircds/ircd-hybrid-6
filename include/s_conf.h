@@ -24,6 +24,11 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.27  1999/07/20 09:11:21  db
+ * - moved getfield from parse.c to s_conf.c which is the only place its used
+ * - removed duplicate prototype from h.h , it was in dline_conf.h already
+ * - send.c needs s_zip.h included to know about ziplinks
+ *
  * Revision 1.26  1999/07/20 08:28:03  db
  * - more removal of stuff from h.h
  *
@@ -238,7 +243,7 @@ void remove_one_ip(unsigned long);
 extern struct ConfItem* make_conf(void);
 extern void             free_conf(struct ConfItem*);
 
-extern void 		read_conf_files(int cold);
+extern void             read_conf_files(int cold);
 
 extern struct DNSReply* conf_dns_lookup(struct ConfItem* aconf);
 extern int              attach_conf(struct Client*, struct ConfItem *);
@@ -270,10 +275,10 @@ extern struct ConfItem* find_special_conf(char *,int );
 extern struct ConfItem* find_is_klined(const char* host, 
                                        const char* name,
                                        unsigned long ip);
-extern	char	*show_iline_prefix(struct Client *,struct ConfItem *,char *);
+extern  char    *show_iline_prefix(struct Client *,struct ConfItem *,char *);
 extern void   GetPrintableaConfItem(struct ConfItem *,
-				    char **, char **, char **,
-				    char **, int *);
+                                    char **, char **, char **,
+                                    char **, int *);
 
 typedef enum {
   CONF_TYPE,
@@ -282,26 +287,26 @@ typedef enum {
 }KlineType;
 
 extern void write_kline_or_dline_to_conf_and_notice_opers(
-							  KlineType,
-							  struct Client *,
-							  struct Client *,
-							  char *,
-							  char *,
-							  char *,
-							  char *
-							  );
+                                                          KlineType,
+                                                          struct Client *,
+                                                          struct Client *,
+                                                          char *,
+                                                          char *,
+                                                          char *,
+                                                          char *
+                                                          );
 extern const char *get_conf_name(KlineType);
 extern int safe_write(struct Client *, const char *, int ,char *);
 
 typedef struct
 {
-  char *dpath;		/* DPATH if set from command line */
+  char *dpath;          /* DPATH if set from command line */
   char *configfile;
   char *klinefile;
   char *dlinefile;
 
 #ifdef GLINES
-  char	*glinefile;
+  char  *glinefile;
 #endif
 
   MessageFile helpfile;

@@ -18,11 +18,11 @@
  */
 #if defined(OS_SOLARIS2) && !defined( SOL20 )
 #  define SOL20 1
-#  define USE_POLL 1	/* Get around stupid select() limitations */
+#  define USE_POLL 1    /* Get around stupid select() limitations */
 #endif
 
 #if defined( BSD_RELIABLE_SIGNALS ) \
-	&& (defined( SYSV_UNRELIABLE_SIGNALS ) || defined( POSIX_SIGNALS ))
+        && (defined( SYSV_UNRELIABLE_SIGNALS ) || defined( POSIX_SIGNALS ))
 error You defined too many signal types in setup.h
 #elif defined( SYSV_UNRELIABLE_SIGNALS ) && defined( POSIX_SIGNALS )
 error You defined too many signal types in setup.h

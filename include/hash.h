@@ -18,7 +18,7 @@
  *
  *   $Id$
  */
-#ifndef	INCLUDED_hash_h
+#ifndef INCLUDED_hash_h
 #define INCLUDED_hash_h
 #ifndef INCLUDED_sys_types_h
 #include <sys/types.h>
@@ -69,7 +69,7 @@ extern struct Client* hash_find_client(const char* name,
 extern struct Client* hash_find_server(const char* name, 
                                        struct Client* client);
 
-#endif	/* INCLUDED_hash_h */
+#endif  /* INCLUDED_hash_h */
 
 
 

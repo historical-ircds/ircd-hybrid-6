@@ -58,11 +58,11 @@
  * This is how many 'buffer connections' we allow... 
  * Remember, MAX_BUFFER + MAX_CLIENTS can't exceed HARD_FDLIMIT :)
  */
-#define MAX_BUFFER	60
+#define MAX_BUFFER      60
 
 /* Don't change this... */
-#define HARD_FDLIMIT	(HARD_FDLIMIT_ - 10)
-#define MASTER_MAX	(HARD_FDLIMIT - MAX_BUFFER)
+#define HARD_FDLIMIT    (HARD_FDLIMIT_ - 10)
+#define MASTER_MAX      (HARD_FDLIMIT - MAX_BUFFER)
 /*******************************************************************/
 
 /* DPATH SPATH CPATH MPATH KPATH - directoy and files locations
@@ -92,13 +92,13 @@
 
 #define DPATH   "/usr/local/ircd/"
 #define SPATH   "/usr/local/ircd/ircd"
-#define	CPATH	"ircd.conf"
+#define CPATH   "ircd.conf"
 #define KPATH   "kline.conf"
 #define DLPATH  "kline.conf"
-#define	MPATH	"ircd.motd"
-#define	LPATH	"ircd.log"
-#define	PPATH	"ircd.pid"
-#define HPATH	"opers.txt"
+#define MPATH   "ircd.motd"
+#define LPATH   "ircd.log"
+#define PPATH   "ircd.pid"
+#define HPATH   "opers.txt"
 #define OPATH   "opers.motd"
 
 /* TS_MAX_DELTA and TS_WARN_DELTA -  allowed delta for TS when another
@@ -114,8 +114,8 @@
  * implementation.  Once pre-hybrid5.2 servers are eradicated, we can drop this
  * down to 90 seconds or so. --Rodder
  */
-#define TS_MAX_DELTA 600	/* seconds */
-#define TS_WARN_DELTA 30 	/* seconds */
+#define TS_MAX_DELTA 600        /* seconds */
+#define TS_WARN_DELTA 30        /* seconds */
 
 /* SLAVE_SERVERS - Use this to send LOCOPS and KLINES to servers you define
  * uses U: lines in ircd.conf, each server defined in an U: line
@@ -290,7 +290,7 @@
  * should be used instead of a channel, define this.
  */
 #define PACE_WALLOPS
-#define WALLOPS_WAIT 10	
+#define WALLOPS_WAIT 10 
 
 /* SHORT_MOTD
  * There are client ignoring the FORCE_MOTD MOTD numeric, there is
@@ -309,16 +309,16 @@
  * LUSERS on your server. On a large net this doesnt mean much, but on a
  * small net it might be an advantage to undefine it.
  */
-#define	SHOW_INVISIBLE_LUSERS
+#define SHOW_INVISIBLE_LUSERS
 
-#define	ZIP_LINKS		/* compress server-to-server links */
+#define ZIP_LINKS               /* compress server-to-server links */
 
 /* NO_DEFAULT_INVISIBLE - clients not +i by default
  * When defined, your users will not automatically be attributed with user
  * mode "i" (i == invisible). Invisibility means people dont showup in
  * WHO or NAMES unless they are on the same channel as you.
  */
-#undef	NO_DEFAULT_INVISIBLE
+#undef  NO_DEFAULT_INVISIBLE
 
 /*
  * The compression level used for zipped links. (Suggested values: 1 to 5)
@@ -369,14 +369,14 @@
  * to a leaf which just has 1 server (typically the uplink). Define this
  * correctly for performance reasons.
  */
-#undef	HUB
+#undef  HUB
 
 /* CMDLINE_CONFIG - allow conf-file to be specified on command line
  * NOTE: defining CMDLINE_CONFIG and installing ircd SUID or SGID is a MAJOR
  * security problem - they can use the "-f" option to read any files
  * that the 'new' access lets them.
  */
-#define	CMDLINE_CONFIG
+#define CMDLINE_CONFIG
 
 /* USE_SYSLOG - log errors and such to syslog()
  * If you wish to have the server send 'vital' messages about server
@@ -389,22 +389,22 @@
  * IT IS STRONGLY RECOMMENDED THAT YOU *DO* USE SYSLOG.  Many fatal ircd errors
  * are only logged to syslog.
  */
-#define	USE_SYSLOG
+#define USE_SYSLOG
 
 #if defined(__CYGWIN__)
 #undef USE_SYSLOG
 #endif
 
-#ifdef	USE_SYSLOG
+#ifdef  USE_SYSLOG
 /* SYSLOG_KILL SYSLOG_SQUIT SYSLOG_CONNECT SYSLOG_USERS SYSLOG_OPER
  * If you use syslog above, you may want to turn some (none) of the
  * spurious log messages for KILL,SQUIT,etc off.
  */
-#undef	SYSLOG_KILL	/* log all operator kills to syslog */
-#undef	SYSLOG_SQUIT	/* log all remote squits for all servers to syslog */
-#undef	SYSLOG_CONNECT	/* log remote connect messages for other all servs */
-#undef	SYSLOG_USERS	/* send userlog stuff to syslog */
-#undef	SYSLOG_OPER	/* log all users who successfully become an Op */
+#undef  SYSLOG_KILL     /* log all operator kills to syslog */
+#undef  SYSLOG_SQUIT    /* log all remote squits for all servers to syslog */
+#undef  SYSLOG_CONNECT  /* log remote connect messages for other all servs */
+#undef  SYSLOG_USERS    /* send userlog stuff to syslog */
+#undef  SYSLOG_OPER     /* log all users who successfully become an Op */
 #undef  SYSLOG_BLOCK_ALLOCATOR /* debug block allocator */
 
 /* LOG_FACILITY - facility to use for syslog()
@@ -419,7 +419,7 @@
  * define this if you want to use crypted passwords for operators in your
  * ircd.conf file.
  */
-#define	CRYPT_OPER_PASSWORD
+#define CRYPT_OPER_PASSWORD
 
 /* CRYPT_LINK_PASSWORD - use crypted N-line passwords in the ircd.conf
  * If you want to store encrypted passwords in N-lines for server links,
@@ -427,7 +427,7 @@
  * need not be the same for both, as long as hte opposite end has the
  * right password in the opposite line.
  */
-#undef	CRYPT_LINK_PASSWORD
+#undef  CRYPT_LINK_PASSWORD
 
 /* IDLE_FROM_MSG - Idle-time reset only from privmsg
  * Idle-time reset only from privmsg, if undefined idle-time
@@ -444,22 +444,22 @@
 /*  BUFFERPOOL - the maximum size of the total of all sendq's.
  *  Recommended value is four times MAXSENDQLENGTH.
  */
-#define	BUFFERPOOL     (4 * MAXSENDQLENGTH)
+#define BUFFERPOOL     (4 * MAXSENDQLENGTH)
 
 /* IRC_UID IRC_GID - user and group id ircd should switch to if run as root
  * If you start the server as root but wish to have it run as another user,
  * define IRC_UID to that UID.  This should only be defined if you are running
  * as root and even then perhaps not.
  */
-#define	IRC_UID 1001
-#define	IRC_GID 31
+#define IRC_UID 1001
+#define IRC_GID 31
 
 /* CLIENT_FLOOD - client excess flood threshold
  * this controls the number of bytes the server will allow a client to
  * send to the server without processing before disconnecting the client for
  * flooding it.  Values greater than 8000 make no difference to the server.
  */
-#define	CLIENT_FLOOD	2560
+#define CLIENT_FLOOD    2560
 
 /* NOISY_HTM - should HTM be noisy by default
  * should be YES or NO
@@ -667,13 +667,13 @@
  * This should be at *least* 3: 1 listen port, 1 dns port + 1 client
  */
 /* change the HARD_FDLIMIT_ instead */
-#define MAXCONNECTIONS	HARD_FDLIMIT
+#define MAXCONNECTIONS  HARD_FDLIMIT
 
 /* NICKNAMEHISTORYLENGTH - size of WHOWAS array
  * this defines the length of the nickname history.  each time a user changes
  * nickname or signs off, their old nickname is added to the top of the list.
  * NOTE: this is directly related to the amount of memory ircd will use whilst
- *	 resident and running - it hardly ever gets swapped to disk!  Memory
+ *       resident and running - it hardly ever gets swapped to disk!  Memory
  *       will be preallocated for the entire whowas array when ircd is started.
  */
 #define NICKNAMEHISTORYLENGTH 15000
@@ -681,7 +681,7 @@
 /* TIMESEC - Time interval to wait and if no messages have been received,
  * then check for PINGFREQUENCY and CONNECTFREQUENCY 
  */
-#define TIMESEC  5		/* Recommended value: 5 */
+#define TIMESEC  5              /* Recommended value: 5 */
 
 /* PINGFREQUENCY - ping frequency for idle connections
  * If daemon doesn't receive anything from any of its links within
@@ -689,13 +689,13 @@
  * an active link with a PING message. If no reply is received within
  * (PINGFREQUENCY * 2) seconds, then the connection will be closed.
  */
-#define PINGFREQUENCY    120	/* Recommended value: 120 */
+#define PINGFREQUENCY    120    /* Recommended value: 120 */
 
 /* CONNECTFREQUENCY - time to wait before auto-reconencting
  * If the connection to to uphost is down, then attempt to reconnect every 
  * CONNECTFREQUENCY  seconds.
  */
-#define CONNECTFREQUENCY 600	/* Recommended value: 600 */
+#define CONNECTFREQUENCY 600    /* Recommended value: 600 */
 
 /* HANGONGOODLINK and HANGONGOODLINK
  * Often net breaks for a short time and it's useful to try to
@@ -708,13 +708,13 @@
  * 1997/09/18 recommended values by ThemBones for modern Efnet
  */
 
-#define HANGONRETRYDELAY 60	/* Recommended value: 30-60 seconds */
-#define HANGONGOODLINK 3600	/* Recommended value: 30-60 minutes */
+#define HANGONRETRYDELAY 60     /* Recommended value: 30-60 seconds */
+#define HANGONGOODLINK 3600     /* Recommended value: 30-60 minutes */
 
 /* WRITEWAITDELAY - Number of seconds to wait for write to
  * complete if stuck.
  */
-#define WRITEWAITDELAY     10	/* Recommended value: 15 */
+#define WRITEWAITDELAY     10   /* Recommended value: 15 */
 
 /* CONNECTTIMEOUT -
  * Number of seconds to wait for a connect(2) call to complete.
@@ -722,7 +722,7 @@
  * CONNECTTIMEOUT - 10 seconds for its host to respond to an ident lookup
  * query and for a DNS answer to be retrieved.
  */
-#define	CONNECTTIMEOUT	30	/* Recommended value: 30 */
+#define CONNECTTIMEOUT  30      /* Recommended value: 30 */
 
 /* KILLCHASETIMELIMIT -
  * Max time from the nickname change that still causes KILL
@@ -733,7 +733,7 @@
 /* MAXCHANNELSPERUSER -
  * Max number of channels a user is allowed to join.
  */
-#define MAXCHANNELSPERUSER  10	/* Recommended value: 10 */
+#define MAXCHANNELSPERUSER  10  /* Recommended value: 10 */
 
 /* SENDQ_ALWAYS - should always be defined.
  * SendQ-Always causes the server to put all outbound data into the sendq and
@@ -742,7 +742,7 @@
  * There *shouldn't* be any problems with this method.
  * -avalon
  */
-#define	SENDQ_ALWAYS
+#define SENDQ_ALWAYS
 
 /* FLUD - CTCP Flood Detection and Protection
  * 
@@ -829,9 +829,9 @@
 #define ANTI_SPAM_EXIT_MESSAGE_TIME 300
 
 #ifdef FLUD
-#define FLUD_NUM	4	/* Number of flud messages to trip alarm */
-#define FLUD_TIME	3	/* Seconds in which FLUD_NUM msgs must occur */
-#define FLUD_BLOCK	15	/* Seconds to block fluds */
+#define FLUD_NUM        4       /* Number of flud messages to trip alarm */
+#define FLUD_TIME       3       /* Seconds in which FLUD_NUM msgs must occur */
+#define FLUD_BLOCK      15      /* Seconds to block fluds */
 #endif
 
 /* REJECT_HOLD 
@@ -892,7 +892,7 @@
  * for the G line to take effect.
  */
 #define GLINES
-#define GLINEFILE	"gline.log"
+#define GLINEFILE       "gline.log"
 
 /* GLINE_TIME - local expire time for GLINES
  * As configured here, a GLINE will last 12 hours
@@ -969,7 +969,7 @@ error CLIENT_FLOOD undefined.
 #define REPORT_DLINE_TO_USER
 
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-	defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
+        defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
 #define NEED_SPLITCODE
 #endif
 

@@ -32,18 +32,18 @@
  * $Id$
  */
 
-#ifndef	__whowas_include__
+#ifndef __whowas_include__
 #define __whowas_include__
 
 /*
 ** WHOWAS structure moved here from whowas.c
 */
 typedef struct aname {
-	anUser	*ww_user;
-	aClient	*ww_online;
-	time_t	ww_logout;
-	char	ww_nick[NICKLEN+1];
-	char	ww_info[REALLEN+1];
+        anUser  *ww_user;
+        aClient *ww_online;
+        time_t  ww_logout;
+        char    ww_nick[NICKLEN+1];
+        char    ww_info[REALLEN+1];
 } aName;
 
 /*
@@ -53,37 +53,37 @@ extern void initwhowas(void);
 
 /*
 ** add_history
-**	Add the currently defined name of the client to history.
-**	usually called before changing to a new name (nick).
-**	Client must be a fully registered user (specifically,
-**	the user structure must have been allocated).
+**      Add the currently defined name of the client to history.
+**      usually called before changing to a new name (nick).
+**      Client must be a fully registered user (specifically,
+**      the user structure must have been allocated).
 */
-void	add_history (aClient *, int);
+void    add_history (aClient *, int);
 
 /*
 ** off_history
-**	This must be called when the client structure is about to
-**	be released. History mechanism keeps pointers to client
-**	structures and it must know when they cease to exist. This
-**	also implicitly calls AddHistory.
+**      This must be called when the client structure is about to
+**      be released. History mechanism keeps pointers to client
+**      structures and it must know when they cease to exist. This
+**      also implicitly calls AddHistory.
 */
-void	off_history (aClient *);
+void    off_history (aClient *);
 
 /*
 ** get_history
-**	Return the current client that was using the given
-**	nickname within the timelimit. Returns NULL, if no
-**	one found...
+**      Return the current client that was using the given
+**      nickname within the timelimit. Returns NULL, if no
+**      one found...
 */
-aClient	*get_history (char *, time_t);
-					/* Nick name */
-					/* Time limit in seconds */
+aClient *get_history (char *, time_t);
+                                        /* Nick name */
+                                        /* Time limit in seconds */
 
-int	m_whowas (aClient *, aClient *, int, char *[]);
+int     m_whowas (aClient *, aClient *, int, char *[]);
 
 /*
 ** for debugging...counts related structures stored in whowas array.
 */
-void	count_whowas_memory (int *, u_long *);
+void    count_whowas_memory (int *, u_long *);
 
 #endif /* __whowas_include__ */

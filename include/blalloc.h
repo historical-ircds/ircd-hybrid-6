@@ -25,11 +25,11 @@
  * heap.
  */
 struct Block {
-  void*          elems;			/* Points to allocated memory */
-  void*          endElem;  		/* Points to last elem for boundck */
-  int            freeElems;		/* Number of available elems */
-  struct Block*  next;			/* Next in our chain of blocks */
-  unsigned long* allocMap;		/* Bitmap of allocated blocks */
+  void*          elems;                 /* Points to allocated memory */
+  void*          endElem;               /* Points to last elem for boundck */
+  int            freeElems;             /* Number of available elems */
+  struct Block*  next;                  /* Next in our chain of blocks */
+  unsigned long* allocMap;              /* Bitmap of allocated blocks */
 };
 
 typedef struct Block Block;
@@ -40,12 +40,12 @@ typedef struct Block Block;
  * memory heap.
  */
 struct BlockHeap {
-   size_t  elemSize; 			/* Size of each element to be stored */
-   int     elemsPerBlock;		/* Number of elements per block */
+   size_t  elemSize;                    /* Size of each element to be stored */
+   int     elemsPerBlock;               /* Number of elements per block */
    int     numlongs;                    /* Size of Block's allocMap array */
-   int     blocksAllocated;		/* Number of blocks allocated */
-   int     freeElems;			/* Number of free elements */
-   Block*  base; 			/* Pointer to first block */
+   int     blocksAllocated;             /* Number of blocks allocated */
+   int     freeElems;                   /* Number of free elements */
+   Block*  base;                        /* Pointer to first block */
 };
 
 typedef struct BlockHeap BlockHeap;
@@ -63,7 +63,7 @@ extern void*      BlockHeapAlloc(BlockHeap *bh);
 extern int        BlockHeapFree(BlockHeap *bh, void *ptr);
 extern int        BlockHeapGarbageCollect(BlockHeap *);
 
-extern void	  BlockHeapCountMemory(BlockHeap *bh,int *, int *);
+extern void       BlockHeapCountMemory(BlockHeap *bh,int *, int *);
 
 #define BlockHeapALLOC(bh, type)  ((type*) BlockHeapAlloc(bh))
 
