@@ -526,7 +526,7 @@ static int register_user(aClient *cptr, aClient *sptr,
        */
       strncpyzt(bottemp, sptr->host, HOSTLEN);
 #endif
-      /* strncpyzt(user->host, sptr->sockhost, HOSTLEN); */
+      /* strncpyzt(user->host, sptr->host, HOSTLEN); */
 
       if(!valid_hostname(sptr->host))
 	{
@@ -562,8 +562,7 @@ static int register_user(aClient *cptr, aClient *sptr,
 	}
 
       /* password check */
-      if (!BadPtr(aconf->passwd) &&
-	!StrEq(sptr->passwd, aconf->passwd))
+      if (!BadPtr(aconf->passwd) && 0 != strcmp(sptr->passwd, aconf->passwd))
 	{
 	  ircstp->is_ref++;
 	  sendto_one(sptr, err_str(ERR_PASSWDMISMATCH),
@@ -596,7 +595,7 @@ static int register_user(aClient *cptr, aClient *sptr,
             (((Count.local +1) >= (MAXCLIENTS - 5)) && !(IsFlined(sptr))))
 	{
 	  sendto_realops_lev(FULL_LEV, "Too many clients, rejecting %s[%s].",
-			     nick, sptr->sockhost);
+			     nick, sptr->host);
 	  ircstp->is_ref++;
 	  return exit_client(cptr, sptr, &me,
 			     "Sorry, server is full - try later");
@@ -801,7 +800,7 @@ static int register_user(aClient *cptr, aClient *sptr,
 	  sendto_one(cptr,
 		     ":%s KILL %s :%s (%s != %s[%s] USER from wrong direction)",
 		     me.name, sptr->name, me.name, user->server,
-		     acptr->from->name, acptr->from->sockhost);
+		     acptr->from->name, acptr->from->host);
 	  sptr->flags |= FLAGS_KILLED;
 	  return exit_client(sptr, sptr, &me,
 			     "USER server wrong direction");
@@ -2747,15 +2746,14 @@ int	m_quit(aClient *cptr,
 **	parv[1] = kill victim
 **	parv[2] = kill path
 */
-int	m_kill(aClient *cptr,
-	       aClient *sptr,
-	       int parc,
-	       char *parv[])
+int m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-  aClient *acptr;
-  char	*inpath = get_client_name(cptr,FALSE);
-  char	*user, *path, *killer;
-  int	chasing = 0;
+  aClient*    acptr;
+  const char* inpath = get_client_name(cptr,FALSE);
+  char*       user;
+  char*       path;
+  char*       killer;
+  int	      chasing = 0;
 
   if (parc < 2 || *parv[1] == '\0')
     {
@@ -2832,7 +2830,7 @@ int	m_kill(aClient *cptr,
       **	...!operhost!oper
       **	...!operhost!oper (comment)
       */
-      inpath = cptr->sockhost;
+      inpath = cptr->host;
       if (!BadPtr(path))
 	{
 	  (void)ircsprintf(buf, "%s%s (%s)",
@@ -3153,7 +3151,7 @@ int	m_oper(aClient *cptr,
 	}
       return 0;
     }
-  if (!(aconf = find_conf_exact(name, sptr->username, sptr->sockhost,
+  if (!(aconf = find_conf_exact(name, sptr->username, sptr->host,
 				CONF_OPS)) &&
       !(aconf = find_conf_exact(name, sptr->username,
 				inetntoa((char *)&cptr->ip), CONF_OPS)))
@@ -3165,7 +3163,7 @@ int	m_oper(aClient *cptr,
       	name, password, sptr->name, sptr->username, sptr->host);
 #else
       sendto_realops("Failed OPER attempt - host mismatch by %s (%s@%s)",
-		     parv[0], sptr->username, sptr->sockhost);
+		     parv[0], sptr->username, sptr->host);
 #endif /* SHOW_FAILED_OPER_PASSWD */
 #endif /* FAILED_OPER_NOTICE && SHOW_FAILED_OPER_ID */
       return 0;
@@ -3183,7 +3181,7 @@ int	m_oper(aClient *cptr,
 #endif  /* CRYPT_OPER_PASSWORD */
 
   if ((aconf->status & CONF_OPS) &&
-      StrEq(encr, aconf->passwd) && !attach_conf(sptr, aconf))
+      0 == strcmp(encr, aconf->passwd) && !attach_conf(sptr, aconf))
     {
       int old = (sptr->flags & ALL_UMODES);
       
@@ -3250,7 +3248,7 @@ int	m_oper(aClient *cptr,
 #else
       sendto_ops("%s (%s@%s) is now operator (%c)", parv[0],
 #endif /* CUSTOM_ERR */
-		 sptr->username, sptr->sockhost,
+		 sptr->username, sptr->host,
 		 IsOper(sptr) ? 'O' : 'o');
       send_umode_out(cptr, sptr, old);
       sendto_one(sptr, rpl_str(RPL_YOUREOPER), me.name, parv[0]);
@@ -3266,7 +3264,7 @@ int	m_oper(aClient *cptr,
 #if defined(USE_SYSLOG) && defined(SYSLOG_OPER)
 	syslog(LOG_INFO, "OPER (%s) (%s) by (%s!%s@%s)",
 	       name, encr,
-	       parv[0], sptr->username, sptr->sockhost);
+	       parv[0], sptr->username, sptr->host);
 #endif
 #ifdef FNAME_OPERLOG
 	{
@@ -3286,7 +3284,7 @@ int	m_oper(aClient *cptr,
 	      (void)ircsprintf(buf, "%s OPER (%s) (%s) by (%s!%s@%s)\n",
 			       myctime(timeofday), name, encr,
 			       parv[0], sptr->username,
-			       sptr->sockhost);
+			       sptr->host);
 	      (void)write(logfile, buf, strlen(buf));
 	      (void)close(logfile);
 	    }
@@ -3303,7 +3301,7 @@ int	m_oper(aClient *cptr,
       	name, password, sptr->name, sptr->username, sptr->host);
 #else
       sendto_realops("Failed OPER attempt by %s (%s@%s)",
-		     parv[0], sptr->username, sptr->sockhost);
+		     parv[0], sptr->username, sptr->host);
 #endif /* SHOW_FAILED_OPER_PASSWD */
 #endif
     }

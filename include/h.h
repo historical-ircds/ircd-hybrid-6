@@ -64,7 +64,7 @@ extern	int	has_voice (aClient *, aChannel *);
 extern	int	count_channels (aClient *);
 
 extern  aClient *find_chasing (aClient *, char *, int *);
-extern	aClient	*find_client (char *, aClient *);
+extern aClient* find_client(const char* name, aClient* client);
 extern	aClient	*find_name (char *, aClient *);
 extern	aClient	*find_person (char *, aClient *);
 extern	aClient	*find_server (char *, aClient *);
@@ -72,10 +72,10 @@ extern	aClient	*find_service (char *, aClient *);
 extern	aClient	*find_userhost (char *, char *, aClient *, int *);
 
 #ifdef  GLINES
-extern  aConfItem *find_gkill (aClient *);
-extern  aConfItem *find_is_glined(char *,char *);
+extern aConfItem* find_gkill(aClient* client);
+extern aConfItem* find_is_glined(const char* host, const char* name);
 #endif
-extern  aConfItem *find_is_klined(char *,char *,unsigned long);
+extern aConfItem *find_is_klined(char*, char *,unsigned long);
 
 /* hash d lines */
 unsigned long host_name_to_ip(char *, unsigned long *);
@@ -113,7 +113,6 @@ extern  char	*dlinefile;
 extern	char	*glinefile;
 #endif
 extern	char	*getfield (char *);
-extern	void    set_client_sockhost(aClient* client, const char* name); /* s_misc.c */
 extern	char	*rpl_str (int);
 extern  char 	*err_str (int);
 extern  char    *form_str (int);
@@ -155,9 +154,7 @@ extern	int	deliver_it (aClient *, char *, int);
 
 extern	int	check_registered (aClient *);
 extern	int	check_registered_user (aClient *);
-extern	char	*get_client_name (aClient *, int);
-extern	char	*get_client_host (aClient *);
-extern	char	*my_name_for_link (char *, aConfItem *);
+extern const char* my_name_for_link(const char* name, aConfItem* conf);
 extern	char	*myctime (time_t), *date (time_t);
 extern	int	exit_client (aClient *, aClient *, aClient *, char *);
 extern	void	initstats (void), tstats (aClient *, char *);
@@ -203,26 +200,25 @@ extern  void    GetPrintableaConfItem(aConfItem *, char **, char **, char **,
 extern	void	report_classes (aClient *);
 
 
-extern  int     zip_init (aClient *);
-extern  void    zip_free (aClient *);
-extern  char    *unzip_packet (aClient *, char *, int *);
-extern  char    *zip_buffer (aClient *, char *, int *, int);
+extern int     zip_init (aClient *);
+extern void    zip_free (aClient *);
+extern char    *unzip_packet (aClient *, char *, int *);
+extern char    *zip_buffer (aClient *, char *, int *, int);
 
-extern	void	clear_channel_hash_table (void);
-extern	void	clear_client_hash_table (void);
-extern	int	add_to_client_hash_table (char *, aClient *);
-extern	int	del_from_client_hash_table (char *, aClient *);
-extern	int	add_to_channel_hash_table (char *, aChannel *);
-extern	int	del_from_channel_hash_table (char *, aChannel *);
-extern	aChannel *hash_find_channel (char *, aChannel *);
-extern	aClient	*hash_find_client (char *, aClient *);
-extern	aClient	*hash_find_nickserver (char *, aClient *);
-extern	aClient	*hash_find_server (char *, aClient *);
+extern void	clear_channel_hash_table(void);
+extern void	clear_client_hash_table(void);
+extern void	add_to_client_hash_table(const char* name, aClient* client);
+extern int	del_from_client_hash_table(const char* name, aClient* client);
+extern void	add_to_channel_hash_table(const char* name, aChannel* chan);
+extern int	del_from_channel_hash_table(const char* name, aChannel* chan);
+extern aChannel* hash_find_channel(const char* name, aChannel* chan);
+extern aClient* hash_find_client(const char* name, aClient* client);
+extern aClient* hash_find_server(const char* name, aClient* client);
 
-extern	void	add_history (aClient *, int);
-extern	aClient	*get_history (char *, time_t);
-extern	void	initwhowas (void);
-extern	void	off_history (aClient *);
+extern void	add_history (aClient *, int);
+extern aClient	*get_history (char *, time_t);
+extern void	initwhowas (void);
+extern void	off_history (aClient *);
 
 extern	int	dopacket (aClient *, char *, int);
 

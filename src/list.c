@@ -99,7 +99,7 @@ void initlists()
      efnet these days, it can get up to 35k allocated */
 
   free_remote_aClients =
-     BlockHeapCreate((size_t)CLIENT_REMOTE_SIZE,CLIENTS_PREALLOCATE);
+     BlockHeapCreate((size_t)CLIENT_REMOTE_SIZE, CLIENTS_PREALLOCATE);
 
   /* Can't EVER have more than MAXCONNECTIONS number of local aClients */
 
@@ -108,13 +108,12 @@ void initlists()
 
   /* anUser structs are used by both local aClients, and remote aClients */
 
-  free_anUsers = BlockHeapCreate((size_t)sizeof(anUser),
-				 CLIENTS_PREALLOCATE+MAXCONNECTIONS);
+  free_anUsers = BlockHeapCreate(sizeof(anUser),
+				 CLIENTS_PREALLOCATE + MAXCONNECTIONS);
 
 #ifdef FLUD
   /* fludbot structs are used to track CTCP Flooders */
-  free_fludbots = BlockHeapCreate((size_t)sizeof(struct fludbot),
-				MAXCONNECTIONS);
+  free_fludbots = BlockHeapCreate(sizeof(struct fludbot), MAXCONNECTIONS);
 #endif /* FLUD */
 }
 
@@ -157,7 +156,7 @@ void outofmemory()
 **			associated with the client defined by
 **			'from'). ('from' is a local client!!).
 */
-aClient	*make_client(aClient *from)
+aClient* make_client(aClient* from)
 {
   aClient *cptr = NULL;
 
@@ -167,7 +166,8 @@ aClient	*make_client(aClient *from)
       if(cptr == (aClient *)NULL)
 	outofmemory();
 
-      memset((void *)cptr, 0, CLIENT_LOCAL_SIZE);
+      memset(cptr, 0, CLIENT_LOCAL_SIZE);
+      cptr->local_flag = 1;
       
       /* Note:  structure is zero (calloc) */
       cptr->from = cptr; /* 'from' of local client is self! */
@@ -205,7 +205,8 @@ aClient	*make_client(aClient *from)
       if(cptr == (aClient *)NULL)
 	outofmemory();
 
-      memset((void *)cptr, 0, CLIENT_REMOTE_SIZE);
+      memset(cptr, 0, CLIENT_REMOTE_SIZE);
+      /* cptr->local_flag = 0; */
 
       /* Note:  structure is zero (calloc) */
       cptr->from = from; /* 'from' of local client is self! */
@@ -228,7 +229,7 @@ void _free_client(aClient *cptr)
 {
   int retval = 0;
 
-  if(cptr->fd == -2)	
+  if(cptr->local_flag)	
     {
       retval = BlockHeapFree(free_local_aClients,cptr);
     }
@@ -255,7 +256,7 @@ void _free_client(aClient *cptr)
 ** 'make_user' add's an User information block to a client
 ** if it was not previously allocated.
 */
-anUser *make_user(aClient *cptr)
+anUser* make_user(aClient *cptr)
 {
   anUser	*user;
 
@@ -278,7 +279,7 @@ anUser *make_user(aClient *cptr)
 
 aServer *make_server(aClient *cptr)
 {
-  aServer	*serv = cptr->serv;
+  aServer* serv = cptr->serv;
 
   if (!serv)
     {

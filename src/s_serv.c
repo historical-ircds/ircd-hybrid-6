@@ -262,7 +262,7 @@ int	m_squit(aClient *cptr,
       if (acptr && IsMe(acptr))
 	{
 	  acptr = cptr;
-	  server = cptr->sockhost;
+	  server = cptr->host;
 	}
     }
   else
@@ -286,7 +286,7 @@ int	m_squit(aClient *cptr,
         }
       else
         {
-          server = cptr->sockhost;
+          server = cptr->host;
           acptr = cptr;
         }
     }
@@ -832,16 +832,19 @@ static void	sendnick_TS( aClient *cptr, aClient *acptr)
     }
 }
 
-int	m_server_estab(aClient *cptr)
+int m_server_estab(aClient *cptr)
 {
-  aChannel *chptr;
-  aClient	*acptr;
-  aConfItem	*aconf, *bconf;
-  char	*inpath, *host, *encr;
-  int	split;
+  aChannel*   chptr;
+  aClient*    acptr;
+  aConfItem*  aconf;
+  aConfItem*  bconf;
+  const char* inpath;
+  char*       host;
+  char*       encr;
+  int	      split;
 
   inpath = get_client_name(cptr,TRUE); /* "refresh" inpath with host */
-  split = irccmp(cptr->name, cptr->sockhost);
+  split = irccmp(cptr->name, cptr->host);
   host = cptr->name;
 
   if (!(aconf = find_conf(cptr->confs, host, CONF_NOCONNECT_SERVER)))
@@ -876,7 +879,7 @@ int	m_server_estab(aClient *cptr)
 #else
   encr = cptr->passwd;
 #endif  /* CRYPT_LINK_PASSWORD */
-  if (*aconf->passwd && !StrEq(aconf->passwd, encr))
+  if (*aconf->passwd && 0 != strcmp(aconf->passwd, encr))
     {
       ircstp->is_ref++;
       sendto_one(cptr, "ERROR :No Access (passwd mismatch) %s",
@@ -1023,7 +1026,7 @@ int	m_server_estab(aClient *cptr)
 	  /*
 	  sendto_one(acptr,":%s SERVER %s 2 :[%s] %s",
 		   me.name, cptr->name,
-		   cptr->sockhost, cptr->info);
+		   cptr->host, cptr->info);
 		   */
 
 	  /* DON'T give away the IP of the server here
@@ -1069,7 +1072,7 @@ int	m_server_estab(aClient *cptr)
 	  if (match(my_name_for_link(me.name, aconf), acptr->name))
 	    continue;
 	  split = (MyConnect(acptr) &&
-		   irccmp(acptr->name, acptr->sockhost));
+		   irccmp(acptr->name, acptr->host));
 
 	  /* DON'T give away the IP of the server here
 	   * if its a hub especially.
@@ -1084,7 +1087,7 @@ int	m_server_estab(aClient *cptr)
 	    sendto_one(cptr, ":%s SERVER %s %d :[%s] %s",
 		       acptr->serv->up, acptr->name,
 		       acptr->hopcount+1,
-		       acptr->sockhost, acptr->info);
+		       acptr->host, acptr->info);
 		       */
 	  else
 	    sendto_one(cptr, ":%s SERVER %s %d :%s",
@@ -1642,7 +1645,7 @@ int	m_stats(aClient *cptr,
 	if (IsAnOper(sptr))
 	  report_mtrie_conf_links(sptr, CONF_KILL);
 	else
-	  report_matching_host_klines(sptr,sptr->sockhost);
+	  report_matching_host_klines(sptr,sptr->host);
       valid_stats++;
       break;
 
@@ -2615,7 +2618,7 @@ int   m_set(aClient *cptr,
 		}
 	      MAXCLIENTS = new_value;
 	      sendto_realops("%s!%s@%s set new MAXCLIENTS to %d (%d current)",
-			     parv[0], sptr->username, sptr->sockhost, MAXCLIENTS, Count.local);
+			     parv[0], sptr->username, sptr->host, MAXCLIENTS, Count.local);
 	      return 0;
 	    }
 	  sendto_one(sptr, ":%s NOTICE %s :Current Maxclients = %d (%d)",
@@ -3034,7 +3037,7 @@ int   m_htm(aClient *cptr,
 	      sendto_one(sptr, ":%s NOTICE %s :NEW Max rate = %dk/s. Current = %.1fk/s",
 			 me.name, parv[0], LRV, currlife);
 	      sendto_realops("%s!%s@%s set new HTM rate to %dk/s (%.1fk/s current)",
-			     parv[0], sptr->username, sptr->sockhost,
+			     parv[0], sptr->username, sptr->host,
 			     LRV, currlife);
 	    }
 	  else 
@@ -3047,7 +3050,7 @@ int   m_htm(aClient *cptr,
               LIFESUX = 1;
               sendto_one(sptr, ":%s NOTICE %s :HTM is now ON.", me.name, parv[0]);
               sendto_ops("Entering high-traffic mode: Forced by %s!%s@%s",
-			 parv[0], sptr->username, sptr->sockhost);
+			 parv[0], sptr->username, sptr->host);
 	      LCF = 30;	/* 30s */
 	    }
 	  else if (!strcasecmp(command,"OFF"))
@@ -3056,7 +3059,7 @@ int   m_htm(aClient *cptr,
 	      LCF = LOADCFREQ;
               sendto_one(sptr, ":%s NOTICE %s :HTM is now OFF.", me.name, parv[0]);
               sendto_ops("Resuming standard operation: Forced by %s!%s@%s",
-			 parv[0], sptr->username, sptr->sockhost);
+			 parv[0], sptr->username, sptr->host);
             }
           else if (!strcasecmp(command,"QUIET"))
             {
@@ -3360,9 +3363,9 @@ int	m_trace(aClient *cptr,
   if(!IsAnOper(sptr) || !dow) /* non-oper traces must be full nicks */
                               /* lets also do this for opers tracing nicks */
     {
-      char      *name;
-      char 	*ip;
-      int       class;
+      const char* name;
+      char*       ip;
+      int         c_class;
 
       acptr = hash_find_client(tname,(aClient *)NULL);
       if(!acptr || !IsPerson(acptr)) 
@@ -3373,15 +3376,15 @@ int	m_trace(aClient *cptr,
 		     parv[0], tname);
           return 0;
         }
-      name = get_client_name(acptr,FALSE);
-      ip = inetntoa((char *)&acptr->ip);
+      name = get_client_name(acptr, FALSE);
+      ip = inetntoa((char*) &acptr->ip);
 
-      class = get_client_class(acptr);
+      c_class = get_client_class(acptr);
 
       if (IsAnOper(acptr))
         {
           sendto_one(sptr, form_str(RPL_TRACEOPERATOR),
-                     me.name, parv[0], class,
+                     me.name, parv[0], c_class,
 		     name, 
 		     IsAnOper(sptr)?ip:"127.0.0.1",
 		     now - acptr->lasttime,
@@ -3390,7 +3393,7 @@ int	m_trace(aClient *cptr,
       else
         {
           sendto_one(sptr,form_str(RPL_TRACEUSER),
-                     me.name, parv[0], class,
+                     me.name, parv[0], c_class,
 		     name, 
 		     IsIPHidden(acptr)?"127.0.0.1":ip,
 		     now - acptr->lasttime,
@@ -3438,9 +3441,9 @@ int	m_trace(aClient *cptr,
   /* report all direct connections */
   for (i = 0; i <= highest_fd; i++)
     {
-      char	*name;
-      char      *ip;
-      int	class;
+      const char* name;
+      char*       ip;
+      int         c_class;
       
       if (!(acptr = local[i])) /* Local Connection? */
 	continue;
@@ -3452,21 +3455,21 @@ int	m_trace(aClient *cptr,
 	continue;
       if (!dow && irccmp(tname, acptr->name))
 	continue;
-      name = get_client_name(acptr,FALSE);
-      ip = inetntoa((char *)&acptr->ip);
+      name = get_client_name(acptr, FALSE);
+      ip = inetntoa((char*) &acptr->ip);
 
-      class = get_client_class(acptr);
+      c_class = get_client_class(acptr);
       
       switch(acptr->status)
 	{
 	case STAT_CONNECTING:
 	  sendto_one(sptr, form_str(RPL_TRACECONNECTING), me.name,
-		     parv[0], class, name);
+		     parv[0], c_class, name);
 	  cnt++;
 	  break;
 	case STAT_HANDSHAKE:
 	  sendto_one(sptr, form_str(RPL_TRACEHANDSHAKE), me.name,
-		     parv[0], class, name);
+		     parv[0], c_class, name);
 	  cnt++;
 	  break;
 	case STAT_ME:
@@ -3474,7 +3477,7 @@ int	m_trace(aClient *cptr,
 	case STAT_UNKNOWN:
 /* added time -Taner */
 	  sendto_one(sptr, form_str(RPL_TRACEUNKNOWN),
-		     me.name, parv[0], class, name, ip,
+		     me.name, parv[0], c_class, name, ip,
 		     acptr->firsttime ? timeofday - acptr->firsttime : -1);
 	  cnt++;
 	  break;
@@ -3490,13 +3493,13 @@ int	m_trace(aClient *cptr,
 		sendto_one(sptr,
 			   form_str(RPL_TRACEOPERATOR),
 			   me.name,
-			   parv[0], class,
+			   parv[0], c_class,
 			   name, IsAnOper(sptr)?ip:"127.0.0.1",
 			   now - acptr->lasttime,
 			   (acptr->user)?(now - acptr->user->last):0);
 	      else
 		sendto_one(sptr,form_str(RPL_TRACEUSER),
-			   me.name, parv[0], class,
+			   me.name, parv[0], c_class,
 			   name,
 			   IsIPHidden(acptr)?"127.0.0.1":ip,
 			   now - acptr->lasttime,
@@ -3508,14 +3511,14 @@ int	m_trace(aClient *cptr,
 #if 0
 	  if (acptr->serv->user)
 	    sendto_one(sptr, form_str(RPL_TRACESERVER),
-		       me.name, parv[0], class, link_s[i],
+		       me.name, parv[0], c_class, link_s[i],
 		       link_u[i], name, acptr->serv->by,
 		       acptr->serv->user->username,
 		       acptr->serv->user->host, now - acptr->lasttime);
 	  else
 #endif
 	    sendto_one(sptr, form_str(RPL_TRACESERVER),
-		       me.name, parv[0], class, link_s[i],
+		       me.name, parv[0], c_class, link_s[i],
 		       link_u[i], name, *(acptr->serv->by) ?
 		       acptr->serv->by : "*", "*",
 		       me.name, now - acptr->lasttime);
@@ -3649,9 +3652,9 @@ int	m_ltrace(aClient *cptr,
   now = time(NULL);
   for (i = 0; i <= highest_fd; i++)
     {
-      char	*name;
-      char 	*ip;
-      int	class;
+      const char* name;
+      char*       ip;
+      int         c_class;
       
       if (!(acptr = local[i])) /* Local Connection? */
 	continue;
@@ -3663,16 +3666,16 @@ int	m_ltrace(aClient *cptr,
 	continue;
       if (!dow && irccmp(tname, acptr->name))
 	continue;
-      name = get_client_name(acptr,FALSE);
-      ip = inetntoa((char *)&acptr->ip);
+      name = get_client_name(acptr, FALSE);
+      ip = inetntoa((char*) &acptr->ip);
 
-      class = get_client_class(acptr);
+      c_class = get_client_class(acptr);
       
       switch(acptr->status)
 	{
 	case STAT_HANDSHAKE:
 	  sendto_one(sptr, form_str(RPL_TRACEHANDSHAKE), me.name,
-		     parv[0], class, name);
+		     parv[0], c_class, name);
 	  cnt++;
 	  break;
 	case STAT_ME:
@@ -3686,7 +3689,7 @@ int	m_ltrace(aClient *cptr,
 	      if (IsAnOper(acptr))
 		sendto_one(sptr,
 			   form_str(RPL_TRACEOPERATOR),
-			   me.name, parv[0], class,
+			   me.name, parv[0], c_class,
 			   name, 
 			   IsAnOper(sptr)?ip:"127.0.0.1", 
 			   now - acptr->lasttime,
@@ -3698,14 +3701,14 @@ int	m_ltrace(aClient *cptr,
 #if 0
 	  if (acptr->serv->user)
 	    sendto_one(sptr, form_str(RPL_TRACESERVER),
-		       me.name, parv[0], class, link_s[i],
+		       me.name, parv[0], c_class, link_s[i],
 		       link_u[i], name, acptr->serv->by,
 		       acptr->serv->user->username,
 		       acptr->serv->user->host, now - acptr->lasttime);
 	  else
 #endif
 	    sendto_one(sptr, form_str(RPL_TRACESERVER),
-		       me.name, parv[0], class, link_s[i],
+		       me.name, parv[0], c_class, link_s[i],
 		       link_u[i], name, *(acptr->serv->by) ?
 		       acptr->serv->by : "*", "*",
 		       me.name, now - acptr->lasttime);

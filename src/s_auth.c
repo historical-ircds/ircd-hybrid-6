@@ -189,7 +189,10 @@ static void auth_dns_callback(void* vptr, struct DNSReply* reply)
     }
   }
   else {
-    strncpy(auth->client->host, auth->client->sockhost, HOSTLEN);
+    /*
+     * this should have already been done by s_bsd.c in add_connection
+     */
+    strcpy(auth->client->host, auth->client->sockhost);
     sendheader(auth->client, REPORT_FAIL_DNS);
   }
   auth->client->host[HOSTLEN] = '\0';

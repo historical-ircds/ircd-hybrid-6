@@ -473,21 +473,7 @@ void flush_glines()
 aConfItem *find_gkill(aClient* cptr)
 {
   assert(0 != cptr);
-#if 0
-  char* host;
-  char* name;
-  
-  if (!cptr->user)
-    return 0;
-
-  host = cptr->sockhost;
-  name = cptr->username;
-
-  if (strlen(host)  > (size_t) HOSTLEN ||
-      (name ? strlen(name) : 0) > (size_t) HOSTLEN)
-    return (0);
-#endif
-  return (IsElined(cptr)) ? 0 : find_is_glined(cptr->sockhost, cptr->username);
+  return (IsElined(cptr)) ? 0 : find_is_glined(cptr->host, cptr->username);
 }
 
 /*
@@ -500,7 +486,7 @@ aConfItem *find_gkill(aClient* cptr)
  * thats expected to be done by caller.... *sigh* -Dianora
  */
 
-aConfItem *find_is_glined(char *host,char *name)
+aConfItem* find_is_glined(const char* host, const char* name)
 {
   aConfItem *kill_list_ptr;	/* used for the link list only */
   aConfItem *last_list_ptr;

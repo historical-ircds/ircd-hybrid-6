@@ -104,7 +104,7 @@ int check_registered(aClient* client)
  *        to internal buffer (nbuf). *NEVER* use the returned pointer
  *        to modify what it points!!!
  */
-char* get_client_name(aClient* client, int showip)
+const char* get_client_name(struct Client* client, int showip)
 {
   static char nbuf[HOSTLEN * 2 + USERLEN + 5];
   char        t_port[7];
@@ -137,7 +137,7 @@ char* get_client_name(aClient* client, int showip)
 
       /* Check for a port number, needed for listening ports */
       if (client->flags & FLAGS_LISTEN)
-        (void)sprintf(t_port, "/%u", client->port);
+        sprintf(t_port, "/%u", client->port);
 
       /* And finally, let's get the host information, ip or name */
       switch (showip)
@@ -149,14 +149,13 @@ char* get_client_name(aClient* client, int showip)
             strcpy(t_host, "255.255.255.255");
             break;
           default:
-            strcpy(t_host, client->sockhost);
+            strcpy(t_host, client->host);
         }
 
       /* Now we add everything together */
       /*      (void)ircsprintf(nbuf, "%s[%s%s%s%s]", client->name, t_id,
         t_user, t_host, t_port); */
-      (void)ircsprintf(nbuf, "%s[%s%s%s]", client->name,
-        t_user, t_host, t_port);
+      ircsprintf(nbuf, "%s[%s%s%s]", client->name, t_user, t_host, t_port);
     }
   else
     {
@@ -166,12 +165,12 @@ char* get_client_name(aClient* client, int showip)
       return client->name;
     }
 
-  if (irccmp(client->name, client->sockhost) || t_port[0])
+  if (irccmp(client->name, client->host) || t_port[0])
     return nbuf;
   return client->name;
 }
 
-char* get_client_host(aClient* client)
+const char* get_client_host(struct Client* client)
 {
   static char nbuf[HOSTLEN * 2 + USERLEN + 5];
   
@@ -185,33 +184,19 @@ char* get_client_host(aClient* client)
         {
           ircsprintf(nbuf, "%s[(+)%-.*s@%-.*s]",
                      client->name, USERLEN, client->username,
-                     HOSTLEN, client->dns_reply->hp->h_name);
+                     HOSTLEN, client->host);
         }
       else
         {
           ircsprintf(nbuf, "%s[%-.*s@%-.*s]",
                      client->name, USERLEN, client->username,
-                     HOSTLEN, client->dns_reply->hp->h_name);
+                     HOSTLEN, client->host);
         }
 
     }
   return nbuf;
- }
-
-
-/*
- * Form sockhost such that if the host is of form user@host, only the host
- * portion is copied.
- */
-void set_client_sockhost(aClient* client, const char* host)
-{
-  char        *s;
-  if ((s = strchr(host, '@')))
-    s++;
-  else
-    s = (char*) host;
-  strncpyzt(client->sockhost, s, sizeof(client->sockhost));
 }
+
 
 /*
 ** exit_client
@@ -413,12 +398,10 @@ char        *comment        /* Reason for the exit */
             {
               if (cptr != NULL && sptr != cptr)
                 sendto_one(sptr, "ERROR :Closing Link: %s %s (%s)",
-                           sptr->sockhost,
-                           sptr->name, comment);
+                           sptr->host, sptr->name, comment);
               else
                 sendto_one(sptr, "ERROR :Closing Link: %s (%s)",
-                           sptr->sockhost,
-                           comment);
+                           sptr->host, comment);
             }
           /*
           ** Currently only server connections can have
@@ -717,7 +700,7 @@ static        void        exit_one_client(aClient *cptr,
  * This is really odd - oh well, it just generates noise... -Taner
  *
  *      sendto_realops("%#x !in tab %s[%s]", sptr, sptr->name,
- *             sptr->from ? sptr->from->sockhost : "??host");
+ *             sptr->from ? sptr->from->host : "??host");
  *      sendto_realops("from = %#x", sptr->from);
  *      sendto_realops("next = %#x", sptr->next);
  *      sendto_realops("prev = %#x", sptr->prev);
@@ -727,7 +710,7 @@ static        void        exit_one_client(aClient *cptr,
 
       Debug((DEBUG_ERROR, "%#x !in tab %s[%s] %#x %#x %#x %d %d %#x",
              sptr, sptr->name,
-             sptr->from ? sptr->from->sockhost : "??host",
+             sptr->from ? sptr->from->host : "??host",
              sptr->from, sptr->next, sptr->prev, sptr->fd,
              sptr->status, sptr->user));
     }

@@ -251,14 +251,14 @@ void        det_confs_butmask(aClient *cptr,int mask)
  *  Cleaned up again Sept 7 1998 - Dianora
  */
 
-int attach_Iline(aClient *cptr, struct hostent *hp,
-                 char *sockhost, char *username, char **preason)
+int attach_Iline(aClient* cptr, struct hostent* hp,
+                 const char* sockhost, const char* username, char **preason)
 {
   aConfItem* aconf;
   aConfItem* gkill_conf;
   aConfItem* tkline_conf;
-  char             host[HOSTLEN + 3];
-  char             non_ident[USERLEN + 1];
+  char       host[HOSTLEN + 3];
+  char       non_ident[USERLEN + 1];
 
   host[HOSTLEN] = '\0';
 
@@ -304,10 +304,10 @@ int attach_Iline(aClient *cptr, struct hostent *hp,
 
   if(aconf)
     {
-      if(aconf->status & CONF_CLIENT)
+      if (aconf->status & CONF_CLIENT)
         {
 #ifdef GLINES
-          if ( (gkill_conf=find_gkill(cptr)) )
+          if ( (gkill_conf = find_gkill(cptr)) )
             {
               *preason = gkill_conf->passwd;
               sendto_one(cptr, ":%s NOTICE %s :*** G-lined",
@@ -324,23 +324,19 @@ int attach_Iline(aClient *cptr, struct hostent *hp,
             {
               /* abuse it, lose it. */
 #ifdef SPOOF_FREEFORM
-              sendto_realops("%s spoofing: %s as %s",
-                             cptr->name,host,aconf->name);
-              strncpyzt(cptr->sockhost,aconf->name,sizeof(cptr->sockhost));
+              sendto_realops("%s spoofing: %s as %s", cptr->name,
+                             host,aconf->name);
+              strncpy(cptr->host, aconf->name, HOSTLEN);
 #else
               /* default to oper.server.name.tld */
-              sendto_realops("%s spoofing: %s(%s) as oper.%s",
-                             cptr->name,host,
-                             inetntoa((char *)&cptr->ip),
-                             me.name);
-              strncpyzt(cptr->sockhost,"oper.",sizeof(cptr->sockhost));
-              strcat(cptr->sockhost,me.name);
+              sendto_realops("%s spoofing: %s(%s) as oper.%s", cptr->name, 
+                             host, inetntoa((char *)&cptr->ip), me.name);
+              strcpy(cptr->host, "oper.");
+              strncpy(&cptr->host[5], me.name, HOSTLEN - 5);
 #endif
               SetIPSpoof(cptr);
               SetIPHidden(cptr);
             }
-          else
-            strncpyzt(cptr->sockhost,host,sizeof(cptr->sockhost));
 
 #ifdef LIMIT_UH
           return(attach_iline(cptr,aconf,username));
@@ -2532,7 +2528,7 @@ aConfItem *find_kill(aClient* cptr)
   if (!cptr->user)
     return 0;
 
-  host = cptr->sockhost;
+  host = cptr->host;
   name = cptr->username;
   if (strlen(host)  > (size_t) HOSTLEN ||
       (name ? strlen(name) : 0) > (size_t) HOSTLEN)

@@ -354,14 +354,11 @@ struct Client
   unsigned int      flags2;	/* ugh. overflow */
   int	            fd;  	/* >= 0, for local clients */
   int	            hopcount;	/* number of servers to this 0 = local */
-  /* XXX - alignment? */
   short	            status;	/* Client type */
   char	            nicksent;
+  unsigned char     local_flag; /* if this is 1 this client is local */
   /*
    * client->name is the unique name for a client nick or host
-   * XXX - name only needs to be NICKLEN + 1 for clients, servers *should*
-   * be using the client->host field for unique identification, or better
-   * yet a completely different data structure.
    */
   char	            name[HOSTLEN + 1]; 
   /* 
@@ -454,13 +451,8 @@ struct Client
    * string, this field should be considered read-only once the connection
    * has been made. (set in s_bsd.c only)
    */
-#ifdef SOCKHOST_IS_IP
   char	            sockhost[HOSTIPLEN + 1]; /* This is the host name from the 
                                               socket ip address as string */
-#else
-  char	            sockhost[HOSTLEN + 1]; /* This is the host name from the 
-                                              socket ip address as string */
-#endif
   /*
    * XXX - there is no reason to save this, it should be checked when it's
    * received and not stored, this is not used after registration
@@ -481,5 +473,8 @@ struct Client
 
 #define	CLIENT_LOCAL_SIZE sizeof(struct Client)
 #define	CLIENT_REMOTE_SIZE offsetof(struct Client, count)
+
+extern const char* get_client_name(struct Client* client, int show_ip);
+extern const char* get_client_host(struct Client* client);
 
 #endif /* INCLUDED_client_h */

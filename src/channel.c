@@ -1694,14 +1694,14 @@ static  void     set_mode(aClient *cptr,
 		  chptr->mode.mode |= MODE_JUPED;
 		  sendto_realops("%s!%s@%s juping locally Channel %s)",
 				 sptr->name, sptr->username,
-				 sptr->sockhost, chptr->chname);
+				 sptr->host, chptr->chname);
 		}
 	      else if(whatt == MODE_DEL)
 		{
 		  chptr->mode.mode &= ~MODE_JUPED;
 		  sendto_realops("%s!%s@%s unjuping locally Channel %s)",
 				 sptr->name, sptr->username,
-				 sptr->sockhost, chptr->chname);
+				 sptr->host, chptr->chname);
 		}
 	    }
 	  break;

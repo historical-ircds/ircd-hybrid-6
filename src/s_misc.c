@@ -186,11 +186,11 @@ char        *myctime(time_t value)
  * Return wildcard name of my server name according to given config entry
  * --Jto
  */
-char        *my_name_for_link(char *name,aConfItem *aconf)
+const char* my_name_for_link(const char* name, aConfItem* aconf)
 {
-  static   char        namebuf[HOSTLEN];
-  register int        count = aconf->port;
-  register char        *start = name;
+  static char          namebuf[HOSTLEN];
+  register int         count = aconf->port;
+  register const char* start = name;
 
   if (count <= 0 || count > 5)
     return start;
@@ -198,13 +198,13 @@ char        *my_name_for_link(char *name,aConfItem *aconf)
   while (count-- && name)
     {
       name++;
-      name = (char *)strchr(name, '.');
+      name = strchr(name, '.');
     }
   if (!name)
     return start;
 
   namebuf[0] = '*';
-  (void)strncpy(&namebuf[1], name, HOSTLEN - 1);
+  strncpy(&namebuf[1], name, HOSTLEN - 1);
   namebuf[HOSTLEN - 1] = '\0';
   return namebuf;
 }

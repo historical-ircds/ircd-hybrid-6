@@ -1246,8 +1246,8 @@ normal user.\n");
     }
 
   aconf = find_me();
-  strncpyzt(me.name, aconf->host, sizeof(me.name));
-  strncpyzt(me.sockhost, aconf->host, sizeof(me.sockhost));
+  strncpy(me.name, aconf->host, HOSTLEN);
+  strncpy(me.host, aconf->host, HOSTLEN);
   me.hopcount = 0;
   me.confs = NULL;
   me.next = NULL;
@@ -1258,7 +1258,7 @@ normal user.\n");
   make_server(&me);
   me.serv->up = me.name;
   me.lasttime = me.since = me.firsttime = NOW;
-  (void)add_to_client_hash_table(me.name, &me);
+  add_to_client_hash_table(me.name, &me);
 
   check_class();
 #if 0
@@ -1546,49 +1546,35 @@ time_t io_loop(time_t delay)
  * set from the command line by -x, use /dev/null as the dummy logfile as long
  * as DEBUGMODE has been defined, else dont waste the fd.
  */
-static	void	open_debugfile()
+static void open_debugfile()
 {
 #ifdef	DEBUGMODE
   int	fd;
-  aClient	*cptr;
+  const char* name = LOGFILE;
 
   if (debuglevel >= 0)
     {
-      cptr = make_client(NULL);
-      cptr->fd = 2;
-      SetLog(cptr);
-      cptr->port = debuglevel;
-      cptr->flags = 0;
-      cptr->acpt = cptr;
-      local[2] = cptr;
-      (void)strcpy(cptr->sockhost, me.name);
-
-      (void)printf("isatty = %d ttyname = %#x\n",
-		   isatty(2), (u_long)ttyname(2));
+      printf("isatty = %d ttyname = %#x\n", isatty(2), ttyname(2));
       if (!(bootopt & BOOT_TTY)) /* leave debugging output on fd 2 */
 	{
-	  (void)truncate(LOGFILE, 0);
-	  if ((fd = open(LOGFILE, O_WRONLY | O_CREAT, 0600)) < 0) 
+	  truncate(name, 0);
+	  if ((fd = open(name, O_WRONLY | O_CREAT, 0600)) < 0) 
 	    if ((fd = open("/dev/null", O_WRONLY)) < 0)
 	      exit(-1);
 	  if (fd != 2)
 	    {
-	      (void)dup2(fd, 2);
-	      (void)close(fd); 
+	      dup2(fd, 2);
+	      close(fd); 
 	    }
-	  strncpyzt(cptr->name, LOGFILE, sizeof(cptr->name));
 	}
       else if (isatty(2) && ttyname(2))
-	strncpyzt(cptr->name, ttyname(2), sizeof(cptr->name));
+	name = ttyname(2);
       else
-	(void)strcpy(cptr->name, "FD2-Pipe");
+        name = "FD2-Pipe";
       Debug((DEBUG_FATAL, "Debug: File <%s> Level: %d at %s",
-	     cptr->name, cptr->port, myctime(time(NULL))));
+	     name, debuglevel, myctime(time(NULL))));
     }
-  else
-    local[2] = NULL;
 #endif
-  return;
 }
 
 static	void	setup_signals()

@@ -15,14 +15,9 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ *  $Id$
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)hash.c	2.10 03 Jul 1993 (C) 1991 Darren Reed";
-
-static char *rcs_version = "$Id$";
-#endif
-
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -92,7 +87,7 @@ static	aHashEntry	channelTable[CH_MAX];
  *
  */
 
-unsigned hash_nick_name(char *name)
+unsigned hash_nick_name(const char* name)
 {
   unsigned h = 0;
 
@@ -112,7 +107,7 @@ unsigned hash_nick_name(char *name)
  * is little or no point hashing on a full channel name which maybe 255 chars
  * long.
  */
-int	hash_channel_name(char *name)
+int hash_channel_name(const char* name)
 {
   register int i = 30;
   unsigned h = 0;
@@ -125,7 +120,7 @@ int	hash_channel_name(char *name)
   return(h & (CH_MAX-1));
 }
 
-unsigned int hash_whowas_name(char *name)
+unsigned int hash_whowas_name(const char* name)
 {
   unsigned h = 0;
 
@@ -142,35 +137,33 @@ unsigned int hash_whowas_name(char *name)
  *
  * Nullify the hashtable and its contents so it is completely empty.
  */
-void	clear_client_hash_table()
+void clear_client_hash_table()
 {
 #ifdef	DEBUGMODE
   clhits = 0;
   clmiss = 0;
   if(!clientTable)
-    clientTable = (aHashEntry *)MyMalloc(HASHSIZE *
-					sizeof(aHashEntry));
+    clientTable = (aHashEntry*) MyMalloc(HASHSIZE * sizeof(aHashEntry));
 #endif
-
-  memset((void *)clientTable, 0, sizeof(aHashEntry) * U_MAX);
+  memset(clientTable, 0, sizeof(aHashEntry) * U_MAX);
 }
 
-void	clear_channel_hash_table()
+void clear_channel_hash_table()
 {
 #ifdef	DEBUGMODE
   chmiss = 0;
   chhits = 0;
   if (!channelTable)
-    channelTable = (aHashEntry *)MyMalloc(CHANNELHASHSIZE *
+    channelTable = (aHashEntry*) MyMalloc(CHANNELHASHSIZE *
 					  sizeof(aHashEntry));
 #endif
-  memset((void *)channelTable, 0, sizeof(aHashEntry) * CH_MAX);
+  memset(channelTable, 0, sizeof(aHashEntry) * CH_MAX);
 }
 
 /*
  * add_to_client_hash_table
  */
-int	add_to_client_hash_table(char *name, aClient *cptr)
+void add_to_client_hash_table(const char* name, aClient *cptr)
 {
   int	hashv;
 
@@ -179,13 +172,12 @@ int	add_to_client_hash_table(char *name, aClient *cptr)
   clientTable[hashv].list = (void *)cptr;
   clientTable[hashv].links++;
   clientTable[hashv].hits++;
-  return 0;
 }
 
 /*
  * add_to_channel_hash_table
  */
-int	add_to_channel_hash_table(char *name,aChannel *chptr)
+void add_to_channel_hash_table(const char* name, aChannel* chptr)
 {
   int	hashv;
 
@@ -194,19 +186,19 @@ int	add_to_channel_hash_table(char *name,aChannel *chptr)
   channelTable[hashv].list = (void *)chptr;
   channelTable[hashv].links++;
   channelTable[hashv].hits++;
-  return 0;
 }
 
 /*
  * del_from_client_hash_table
  */
-int	del_from_client_hash_table(char *name,aClient *cptr)
+int del_from_client_hash_table(const char* name, aClient* cptr)
 {
-  aClient	*tmp, *prev = NULL;
-  int	hashv;
+  aClient* tmp;
+  aClient* prev = NULL;
+  int	   hashv;
 
   hashv = hash_nick_name(name);
-  for (tmp = (aClient *)clientTable[hashv].list; tmp; tmp = tmp->hnext)
+  for (tmp = (aClient*) clientTable[hashv].list; tmp; tmp = tmp->hnext)
     {
       if (tmp == cptr)
 	{
@@ -236,10 +228,11 @@ int	del_from_client_hash_table(char *name,aClient *cptr)
 /*
  * del_from_channel_hash_table
  */
-int	del_from_channel_hash_table(char *name, aChannel *chptr)
+int del_from_channel_hash_table(const char* name, aChannel* chptr)
 {
-  aChannel	*tmp, *prev = NULL;
-  int	hashv;
+  aChannel* tmp;
+  aChannel* prev = NULL;
+  int	    hashv;
 
   hashv = hash_channel_name(name);
   for (tmp = (aChannel *)channelTable[hashv].list; tmp;
@@ -269,7 +262,7 @@ int	del_from_channel_hash_table(char *name, aChannel *chptr)
 /*
  * hash_find_client
  */
-aClient	*hash_find_client(char *name, aClient *cptr)
+aClient* hash_find_client(const char* name, aClient* cptr)
 {
   aClient	*tmp;
   aClient	*prv = NULL;
@@ -282,7 +275,7 @@ aClient	*hash_find_client(char *name, aClient *cptr)
   /*
    * Got the bucket, now search the chain.
    */
-  for (tmp = (aClient *)tmp3->list; tmp; prv = tmp, tmp = tmp->hnext)
+  for (tmp = (aClient*) tmp3->list; tmp; prv = tmp, tmp = tmp->hnext)
     if (irccmp(name, tmp->name) == 0)
       {
 #ifdef	DEBUGMODE
@@ -310,58 +303,19 @@ return (cptr);
 }
 
 /*
- * hash_find_nickserver
- */
-aClient	*hash_find_nickserver(char *name, aClient *cptr)
-{
-  aClient	*tmp;
-  aClient	*prv = NULL;
-  aHashEntry	*tmp3;
-  int	hashv;
-  char	*serv;
-  
-  serv = index(name, '@');
-  *serv++ = '\0';
-  hashv = hash_nick_name(name);
-  tmp3 = &clientTable[hashv];
-
-  /*
-   * Got the bucket, now search the chain.
-   */
-  for (tmp = (aClient *)tmp3->list; tmp; prv = tmp, tmp = tmp->hnext)
-    if (irccmp(name, tmp->name) == 0 && tmp->user &&
-	irccmp(serv, tmp->user->server) == 0)
-      {
-#ifdef DEBUGMODE
-	clmiss++;
-#endif
-	*--serv = '\0';
-	return (tmp);
-      }
-
-#ifdef DEBUGMODE
-  clmiss++;
-#endif
-  *--serv = '\0';
-  return (cptr);
-}
-
-/*
  * hash_find_server
  */
-aClient	*hash_find_server(char *server,aClient *cptr)
+aClient* hash_find_server(const char* server, aClient* cptr)
 {
-  aClient	*tmp, *prv = NULL;
-  char	*t;
-  char	ch;
-  aHashEntry	*tmp3;
-
-  int hashv;
+  aClient*     tmp;
+  aClient*     prv = NULL;
+  aHashEntry*  tmp3;
+  int          hashv;
 
   hashv = hash_nick_name(server);
   tmp3 = &clientTable[hashv];
 
-  for (tmp = (aClient *)tmp3->list; tmp; prv = tmp, tmp = tmp->hnext)
+  for (tmp = (aClient*) tmp3->list; tmp; prv = tmp, tmp = tmp->hnext)
     {
       if (!IsServer(tmp) && !IsMe(tmp))
 	continue;
@@ -373,34 +327,6 @@ aClient	*hash_find_server(char *server,aClient *cptr)
 	  return(tmp);
 	}
     }
-  t = ((char *)server + strlen(server));
-  /*
-   * Whats happening in this next loop ? Well, it takes a name like
-   * foo.bar.edu and proceeds to earch for *.edu and then *.bar.edu.
-   * This is for checking full server names against masks although
-   * it isnt often done this way in lieu of using matches().
-   */
-  for (;;)
-    {
-      t--;
-      for (; t > server; t--)
-	if (*(t+1) == '.')
-	  break;
-      if (*t == '*' || t == server)
-	break;
-      ch = *t;
-      *t = '*';
-      /*
-       * Dont need to check IsServer() here since nicknames cant
-       *have *'s in them anyway.
-       */
-      if (((tmp = hash_find_client(t, cptr))) != cptr)
-	{
-	  *t = ch;
-	  return (tmp);
-	}
-      *t = ch;
-    }
 #ifdef	DEBUGMODE
   clmiss++;
 #endif
@@ -410,11 +336,12 @@ aClient	*hash_find_server(char *server,aClient *cptr)
 /*
  * hash_find_channel
  */
-aChannel	*hash_find_channel(char *name,aChannel *chptr)
+aChannel* hash_find_channel(const char* name, aChannel* chptr)
 {
-  int	hashv;
-  aChannel	*tmp, *prv = NULL;
-  aHashEntry	*tmp3;
+  int         hashv;
+  aChannel*   tmp;
+  aChannel*   prv = NULL;
+  aHashEntry* tmp3;
   
   hashv = hash_channel_name(name);
   tmp3 = &channelTable[hashv];
@@ -443,7 +370,7 @@ aChannel	*hash_find_channel(char *name,aChannel *chptr)
  * partially rewritten (finally) -Dianora
  */
 
-int	m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
+int m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
 {
   register	int	l, i;
   register	aHashEntry	*tab;

@@ -16,15 +16,9 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ *   $Id$
  */
-
-#ifndef lint
-static  char sccsid[] = "@(#)parse.c	2.30 17 Oct 1993 (C) 1988 University of Oulu, \
-Computing Center and Jarkko Oikarinen";
-
-static char *rcs_version = "$Id$";
-
-#endif
 #include "struct.h"
 #include "common.h"
 #define MSGTAB
@@ -65,18 +59,10 @@ static struct Message *tree_parse(char *);
 **	string and the search is the for server and user.
 */
 
-aClient *find_client(char *name, aClient *cptr)
+aClient* find_client(const char* name, aClient *cptr)
 {
   if (name)
     cptr = hash_find_client(name, cptr);
-
-  return cptr;
-}
-
-aClient	*find_nickserv( char *name, aClient *cptr)
-{
-  if (name)
-    cptr = hash_find_nickserver(name, cptr);
 
   return cptr;
 }
@@ -233,10 +219,6 @@ int	parse(aClient *cptr, char *buffer, char *bufend)
 	  if (!from || !match(from->name, sender))
 	    from = find_server(sender, (aClient *)NULL);
 
-	  else if (!from && strchr(sender, '@'))
-	    from = find_nickserv(sender, (aClient *)NULL);
-	  
-
 	  para[0] = sender;
 	  
 	  /* Hmm! If the client corresponding to the
@@ -247,8 +229,7 @@ int	parse(aClient *cptr, char *buffer, char *bufend)
 	   */
 	  if (!from)
 	    {
-	      Debug((DEBUG_ERROR,
-		     "Unknown prefix (%s)(%s) from (%s)",
+	      Debug((DEBUG_ERROR, "Unknown prefix (%s)(%s) from (%s)",
 		     sender, buffer, cptr->name));
 	      ircstp->is_unpf++;
 
@@ -259,8 +240,7 @@ int	parse(aClient *cptr, char *buffer, char *bufend)
 	  if (from->from != cptr)
 	    {
 	      ircstp->is_wrdi++;
-	      Debug((DEBUG_ERROR,
-		     "Message (%s) coming from (%s)",
+	      Debug((DEBUG_ERROR, "Message (%s) coming from (%s)",
 		     buffer, cptr->name));
 
 	      return cancel_clients(cptr, from, buffer);

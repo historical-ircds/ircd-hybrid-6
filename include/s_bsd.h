@@ -32,10 +32,10 @@ struct hostent;
 struct FDList;
 struct DNSReply;
 
-extern	int	highest_fd;
-extern	int	readcalls;
-extern	void    add_connection(struct Client* client, int);
-extern	int	add_listener (struct ConfItem* listener_conf);
+extern int	highest_fd;
+extern int	readcalls;
+extern void     add_connection(struct Client* client, int);
+extern void	add_listener (struct ConfItem* listener_conf);
 extern	int	check_client (struct Client* client, char *,char **);
 extern	int	check_server (struct Client* client, 
                               struct DNSReply* dns_reply,
@@ -51,7 +51,7 @@ extern	int	get_sockerr (struct Client *);
 extern	int	inetport (struct Client *, int, unsigned long);
 extern	void	init_sys();
 extern	int	read_message (time_t, struct FDList*);
-extern	void	report_error (char *, struct Client *);
+extern	void	report_error(const char* message, struct Client* client);
 extern	void	set_non_blocking (int, struct Client *);
 
 #endif /* INCLUDED_s_bsd_h */
