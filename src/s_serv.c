@@ -2517,7 +2517,7 @@ int	m_admin(aClient *cptr,
       sendto_one(sptr, form_str(RPL_ADMINLOC2),
 		 me.name, parv[0], aconf->passwd);
       sendto_one(sptr, form_str(RPL_ADMINEMAIL),
-		 me.name, parv[0], aconf->name);
+		 me.name, parv[0], aconf->user);
     }
   else
     sendto_one(sptr, form_str(ERR_NOADMININFO),

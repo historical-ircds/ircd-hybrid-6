@@ -2736,7 +2736,7 @@ int	m_quit(aClient *cptr,
   if (strlen(comment) > (size_t) TOPICLEN)
     comment[TOPICLEN] = '\0';
 
-#ifdef (ANTI_SPAM_EXIT_MESSAGE)
+#ifdef ANTI_SPAM_EXIT_MESSAGE
   if( !IsServer(sptr) && MyConnect(sptr) &&
      (sptr->firsttime + ANTI_SPAM_EXIT_MESSAGE_TIME) > NOW)
     comment = "Client Quit";

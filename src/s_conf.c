@@ -859,7 +859,7 @@ aConfItem *find_admin()
   aConfItem *aconf;
 
   for (aconf = conf; aconf; aconf = aconf->next)
-    if (aconf->status & CONF_ADMIN && aconf->name)
+    if (aconf->status & CONF_ADMIN && aconf->user)
       break;
   
   return (aconf);
