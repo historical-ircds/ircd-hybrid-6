@@ -1,3 +1,14 @@
+*** 20010804_1 by leeh
+- we are now TS5
+- added a doc describing the protocol changes
+- TS5 will do the following:
+  - TS rules are *always* obeyed, whether the channel is opless or not,
+    whereas TS3 would allow ops from a channel merge on an opless channel,
+    TS5 will NOT do this, the oldest channel will always win
+  - this behaviour is NOT a define, we cant support backward compatibility
+    now, so supporting it 6 months on doesnt make sense
+
+
 *** 20010803_1 by leeh
 - extended the check in get_client_name to cover handshaking/connecting
   servers
