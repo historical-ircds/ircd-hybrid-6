@@ -1,3 +1,8 @@
+*** 19990809_2 by lusky
+remove <sys/syslog.h> check from configure, assume <syslog.h> exists (sw)
+cleaned up attach_Iline some more (db)
+
+
 *** 19990809_1 by lusky
 bumped patchlevel to b95
 removed unneeded arg to attach_Iline and fixed tklines for non-resolving hosts
