@@ -253,8 +253,8 @@ int m_oper(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 #if !defined(CRYPT_OPER_PASSWORD) && (defined(FNAME_OPERLOG) || defined(SYSLOG_OPER))
         encr = "";
 #endif
-        log(L_TRACE, "OPER (%s) (%s) by (%s!%s@%s)",
-            name, encr, parv[0], sptr->username, sptr->host);
+        log(L_TRACE, "OPER %s by %s!%s@%s",
+            name, parv[0], sptr->username, sptr->host);
 #ifdef FNAME_OPERLOG
         {
           int     logfile;
@@ -270,19 +270,19 @@ int m_oper(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
               (logfile = open(FNAME_OPERLOG, O_WRONLY|O_APPEND)) != -1)
             {
               /* (void)alarm(0); */
-              ircsprintf(buf, "%s OPER (%s) (%s) by (%s!%s@%s)\n",
-                               myctime(CurrentTime), name, encr,
+              ircsprintf(buf, "%s OPER (%s) by (%s!%s@%s)\n",
+                               myctime(CurrentTime), name, 
                                parv[0], sptr->username,
                                sptr->host);
-              (void)write(logfile, buf, strlen(buf));
-              (void)close(logfile);
+              write(logfile, buf, strlen(buf));
+              close(logfile);
             }
         }
 #endif
     }
   else
     {
-      (void)detach_conf(sptr, aconf);
+      detach_conf(sptr, aconf);
       sendto_one(sptr,form_str(ERR_PASSWDMISMATCH),me.name, parv[0]);
 #ifdef FAILED_OPER_NOTICE
 #ifdef SHOW_FAILED_OPER_PASSWD
