@@ -3,6 +3,8 @@
 *** Newest entries at top
 
 version hybrid-6-b59   17-Apr-1999
+* missing ac2ptr_is_NULL check in m_ltrace
+-Rodder
 * if client is being spoofed in I line, don't show real IP to non opers
   in trace or stats L
 * consistently use 127.0.0.1 for spoofed/oper ip's	

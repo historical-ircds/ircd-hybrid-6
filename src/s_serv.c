@@ -6226,8 +6226,12 @@ int	m_ltrace(aClient *cptr,
 	aClient	*ac2ptr;
 	
 	ac2ptr = next_client(client, tname);
+	if (ac2ptr)
 	  sendto_one(sptr, rpl_str(RPL_TRACELINK), me.name, parv[0],
 		     version, debugmode, tname, ac2ptr->from->name);
+        else
+	  sendto_one(sptr, rpl_str(RPL_TRACELINK), me.name, parv[0],
+		     version, debugmode, tname, "ac2ptr_is_NULL!!");
 	return 0;
       }
     case HUNTED_ISME:
