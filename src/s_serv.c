@@ -2106,14 +2106,14 @@ int     m_trace(struct Client *cptr,
                            form_str(RPL_TRACEOPERATOR),
                            me.name,
                            parv[0], c_class,
-                           name, IsAnOper(sptr)?ip:"127.0.0.1",
+                           name, IsAnOper(sptr)?ip:(IsIPHidden(acptr)?"127.0.0.1":ip),
                            now - acptr->lasttime,
                            (acptr->user)?(now - acptr->user->last):0);
               else
                 sendto_one(sptr,form_str(RPL_TRACEUSER),
                            me.name, parv[0], c_class,
                            name,
-                           IsIPHidden(acptr)?"127.0.0.1":ip,
+                           IsAnOper(sptr)?ip:(IsIPHidden(acptr)?"127.0.0.1":ip),
                            now - acptr->lasttime,
                            (acptr->user)?(now - acptr->user->last):0);
               cnt++;
@@ -2298,7 +2298,7 @@ int     m_ltrace(struct Client *cptr,
                            form_str(RPL_TRACEOPERATOR),
                            me.name, parv[0], c_class,
                            name, 
-                           IsAnOper(sptr)?ip:"127.0.0.1", 
+                           IsAnOper(sptr)?ip:(IsIPHidden(acptr)?"127.0.0.1":ip), 
                            now - acptr->lasttime,
                            (acptr->user)?(now - acptr->user->last):0);
               cnt++;
