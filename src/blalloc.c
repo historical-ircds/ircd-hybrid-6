@@ -59,10 +59,6 @@ static void *get_block(size_t size)
 }
 #endif /* MAP_ANON */
 
-void initBlockHeap(void)
-{
-    return;
-}
 static void free_block(void *ptr, size_t size)
 {
     munmap(ptr, size);
@@ -70,6 +66,10 @@ static void free_block(void *ptr, size_t size)
 
 #else /* HAVE_MMAP */
 
+void initBlockHeap(void)
+{
+    return;
+}
 static void *get_block(size_t size)
 {
     return(MyMalloc(size));
