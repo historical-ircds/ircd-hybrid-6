@@ -1649,8 +1649,9 @@ int 	initconf(int opt, int fd)
       /*
       ** If conf line is a class definition, create a class entry
       ** for it and make the conf_line illegal and delete it.
+	** Negative class numbers are not accepted.
       */
-      if (aconf->status & CONF_CLASS)
+      if (aconf->status & CONF_CLASS && atoi(aconf->host) > -1)
 	{
 	  add_class(atoi(aconf->host), atoi(aconf->passwd),
 		    atoi(aconf->name), aconf->port,
@@ -1712,9 +1713,9 @@ int 	initconf(int opt, int fd)
 	    
 	    len = strlen(aconf->host) + 3; /* *@\0 = 3 */
 	    newhost = (char *)MyMalloc(len);
-	    *newhost++ = '*';
-	    *newhost++ = '@';
-	    strcpy(newhost,aconf->host);
+	    newhost[0] = '*';
+	    newhost[1] = '@';
+	    strcpy(newhost+2,aconf->host);
 	    MyFree(aconf->host);
 	    aconf->host = newhost;
 	  }

@@ -374,6 +374,7 @@ static int 	ckinitconf(int opt)
       /*
       ** If conf line is a class definition, create a class entry
       ** for it and make the conf_line illegal and delete it.
+	** This should not accept negative class numbers.
       */
       if (aconf->status & CONF_CLASS)
 	{
@@ -389,6 +390,11 @@ static int 	ckinitconf(int opt)
 	      (void)fprintf(stderr, "\t\t default: %d\n",
 			    MAXSENDQLENGTH);
 	      (void)sprintf(maxsendq, "%d", MAXSENDQLENGTH);
+	    }
+	  if (atoi(aconf->host) < 0)
+	    {
+		(void)fprintf(stderr,"\tERROR: negative class #\n");
+		continue;
 	    }
 	  else
 	      (void)sprintf(maxsendq, "%d", atoi(tmp));

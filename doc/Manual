@@ -336,7 +336,9 @@ command character.  It can be changed with "/cmdch <character>."
 
 This command can be used for altering the various modes of a channel
 (see the explanation of channel modes above). /mode command can only
-be issued by channel operators. 
+be issued by channel operators.  Use of the MODE command within and
+outside the channel is limited to one parameter (the channel name) to
+view the current modes.
 
 ** 6.4: Operator commands
 

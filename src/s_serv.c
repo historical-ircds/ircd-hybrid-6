@@ -883,12 +883,14 @@ int	m_server_estab(aClient *cptr)
   else
     {
       s = (char *)index(aconf->host, '@');
-      *s = '\0'; /* should never be NULL -- wanna bet? -Dianora */
+      if(s)
+	*s = '\0'; /* should never be NULL -- wanna bet? -Dianora */
       Debug((DEBUG_INFO, "Check Usernames [%s]vs[%s]",
 	     aconf->host, cptr->username));
       if (matches(aconf->host, cptr->username))
 	{
-	  *s = '@';
+	  if(s)
+	    *s = '@';
 	  ircstp->is_ref++;
 	  sendto_ops("Username mismatch [%s]v[%s] : %s",
 		     aconf->host, cptr->username,
@@ -896,7 +898,8 @@ int	m_server_estab(aClient *cptr)
 	  sendto_one(cptr, "ERROR :No Username Match");
 	  return exit_client(cptr, cptr, cptr, "Bad User");
 	}
-      *s = '@';
+      if(s)
+	*s = '@';
     }
   
   sendto_one(cptr, "SVINFO %d %d 0 :%ld", TS_CURRENT, TS_MIN,

@@ -500,7 +500,8 @@ static	void	channel_modes(aClient *cptr,
   if (chptr->mode.limit)
     {
       *mbuf++ = 'l';
-      if (IsMember(cptr, chptr) || IsServer(cptr))
+	if (!(chptr->mode.mode & MODE_SECRET ||
+	   chptr->mode.mode & MODE_PRIVATE))
 	(void)ircsprintf(pbuf, "%d ", chptr->mode.limit);
     }
   if (*chptr->mode.key)
@@ -2205,6 +2206,14 @@ int	m_invite(aClient *cptr,
       return 0;
     }
   clean_channelname((unsigned char *)parv[2]);
+
+  if (!IsChannelName(parv[2]))
+    {
+	if (MyClient(sptr))
+	   sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
+		parv[2]);
+	return 0;
+    }
 
   if (!(chptr = find_channel(parv[2], NullChn)))
     {
