@@ -92,7 +92,8 @@ m_away.o: m_away.c ../include/m_commands.h ../include/config.h \
  ../include/numeric.h ../include/send.h
 m_capab.o: m_capab.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
- ../include/dbuf.h ../include/irc_string.h ../include/s_serv.h
+ ../include/dbuf.h ../include/irc_string.h ../include/s_serv.h \
+ ../include/send.h
 m_close.o: m_close.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
@@ -103,22 +104,15 @@ m_connect.o: m_connect.c ../include/m_commands.h ../include/config.h \
  ../include/irc_string.h ../include/numeric.h ../include/s_bsd.h \
  ../include/s_conf.h ../include/fileio.h ../include/motd.h \
  ../include/s_log.h ../include/s_serv.h ../include/send.h
-m_cryptauth.o: m_cryptauth.c ../include/m_commands.h \
+m_cryptlink.o: m_cryptlink.c ../include/m_commands.h \
  ../include/config.h ../include/setup.h ../include/client.h \
  ../include/ircd_defs.h ../include/dbuf.h ../include/common.h \
  ../include/hash.h ../include/irc_string.h ../include/ircd.h \
- ../include/list.h ../include/numeric.h ../include/s_conf.h \
- ../include/fileio.h ../include/motd.h ../include/s_serv.h \
- ../include/s_stats.h ../include/scache.h ../include/send.h \
- ../include/struct.h ../include/s_log.h ../include/s_crypt.h
-m_cryptserv.o: m_cryptserv.c ../include/m_commands.h \
- ../include/config.h ../include/setup.h ../include/client.h \
- ../include/ircd_defs.h ../include/dbuf.h ../include/common.h \
- ../include/hash.h ../include/irc_string.h ../include/ircd.h \
- ../include/list.h ../include/numeric.h ../include/s_conf.h \
- ../include/fileio.h ../include/motd.h ../include/s_serv.h \
- ../include/s_stats.h ../include/scache.h ../include/send.h \
- ../include/struct.h ../include/s_bsd.h ../include/s_log.h
+ ../include/list.h ../include/numeric.h ../include/s_bsd.h \
+ ../include/s_conf.h ../include/fileio.h ../include/motd.h \
+ ../include/s_serv.h ../include/s_stats.h ../include/scache.h \
+ ../include/send.h ../include/struct.h ../include/s_log.h \
+ ../include/s_crypt.h
 m_die.o: m_die.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/irc_string.h \
@@ -391,8 +385,8 @@ s_crypt.o: s_crypt.c ../include/s_crypt.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/s_conf.h ../include/fileio.h \
  ../include/motd.h ../include/send.h ../include/common.h \
- ../include/s_serv.h ../include/ircd.h ../include/s_log.h \
- ../include/s_bsd.h
+ ../include/s_serv.h ../include/ircd.h ../include/irc_string.h \
+ ../include/s_log.h ../include/s_bsd.h
 s_debug.o: s_debug.c ../include/s_debug.h ../include/channel.h \
  ../include/config.h ../include/setup.h ../include/ircd_defs.h \
  ../include/class.h ../include/client.h ../include/dbuf.h \
