@@ -1989,7 +1989,12 @@ static void initconf(FBFILE* file, int use_include)
       */
 
       /*  Unless its a Y line itself, associate this with a class */
-      if (aconf->status & (CONF_CLIENT_MASK | CONF_LISTEN_PORT))
+      if ( aconf->status & CONF_LISTEN_PORT)
+	{
+	  if (aconf->host)
+            add_listener(aconf);
+	}
+      else if(aconf->status & CONF_CLIENT_MASK)
         {
           if (0 == ClassPtr(aconf))
             ClassPtr(aconf) = find_class(0);
@@ -1997,8 +2002,8 @@ static void initconf(FBFILE* file, int use_include)
             ClassPtr(aconf) = find_class(0);
         }
 
-      /* P: line or I: line */
-      if (aconf->status & (CONF_LISTEN_PORT | CONF_CLIENT))
+      /* I: line */
+      if (aconf->status & CONF_CLIENT)
         {
           aConfItem *bconf;
           
@@ -2023,8 +2028,6 @@ static void initconf(FBFILE* file, int use_include)
               free_conf(aconf);
               aconf = bconf;
             }
-          else if (aconf->host && aconf->status == CONF_LISTEN_PORT)
-            add_listener(aconf);
         }
 
       if (aconf->status & CONF_SERVER_MASK)
@@ -3215,7 +3218,7 @@ static void clear_out_old_conf(void)
 
     while ((tmp2 = *tmp))
       {
-	if (tmp2->clients || tmp2->status & CONF_LISTEN_PORT)
+	if (tmp2->clients)
 	  {
 	    /*
 	    ** Configuration entry is still in use by some
@@ -3223,7 +3226,7 @@ static void clear_out_old_conf(void)
 	    ** that it will be deleted when the last client
 	    ** exits...
 	    */
-	    if (!(tmp2->status & (CONF_LISTEN_PORT|CONF_CLIENT)))
+	    if (!(tmp2->status & CONF_CLIENT))
 	      {
 		*tmp = tmp2->next;
 		tmp2->next = NULL;
