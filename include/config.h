@@ -144,7 +144,7 @@
  *
  * If you do not wish to use this feature, leave LOCKFILE #undef 
  */
-#define LOCKFILE "/tmp/ircd.conf.lock"
+#define LOCKFILE "/usr/local/ircd/ircd.conf.lock"
 #define	CHECK_PENDING_KLINES	10	/* in minutes */
 
 /* SEPARATE_QUOTE_KLINES_BY_DATE
@@ -207,7 +207,7 @@
  * messages, define this.  Otherwise leave it undef'd for plain ole
  * boring messages.
  */
-#define CUSTOM_ERR
+#undef CUSTOM_ERR
 
 /* FAILED_OPER_NOTICE - send a notice to all opers when someone
  * tries to /oper and uses an incorrect password.
@@ -508,7 +508,7 @@
 #undef	LOCOP_DIE
 
 /*
- * OPER_UMODES LOCAOP_UMODES - set these to be the initial umodes when OPER'ing
+ * OPER_UMODES LOCOP_UMODES - set these to be the initial umodes when OPER'ing
  */
 #define OPER_UMODES   (FLAGS_OPER|FLAGS_WALLOP|FLAGS_SERVNOTICE|FLAGS_OPERWALL)
 #define LOCOP_UMODES   (FLAGS_LOCOP|FLAGS_WALLOP|FLAGS_SERVNOTICE)
@@ -548,7 +548,7 @@
  * to a leaf which just has 1 server (typically the uplink). Define this
  * correctly for performance reasons.
  */
-#define	HUB
+#undef	HUB
 
 /* R_LINES - support for R: LINES
  * The conf file now allows the existence of R lines, or
@@ -825,7 +825,7 @@
  * -Dianora
  */
 
-#define NO_PRIORITY
+#undef NO_PRIORITY
 
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 

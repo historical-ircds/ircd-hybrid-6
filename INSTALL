@@ -4,17 +4,14 @@ As of hybrid-4, the distribution uses gnu autoconf instead of the old
 Config script.  The Makefile has also been updated to include CFLAGS
 defines for popular modern OSes.
 
-0.  Read the README.hybrid file to find out about the cool new
-stuff in this version.
+0.  Read the ChangeLog file to find out about the exciting new
+features in this version.
 
-1.  Run the configure script.  It will setup include/setup.h and the
+1.  Run the configure script.  It will create include/setup.h and the
 Makefiles to match your system:
 	./configure
 
-2.  Edit the top level Makefile.  You WILL need to modify the CFLAGS.
-If you want "make install" to work, be sure to change IRCDDIR.
-
-3.  Edit the the "include/config.h" file.  This allows you to change
+2.  Edit the the "include/config.h" file.  This allows you to change
 various options of how the ircd will operate.  Notes: "HARD_FDLIMIT_"
 and "INIT_MAXCLIENTS" must be less than the maximum file descriptors
 per process allowed by your kernel, and must be <= FD_SETSIZE (usually
@@ -22,10 +19,10 @@ defined in system includes, but may need to overridden in the Makefile.
 Note that the old OS definitions are gone, autoconf handles this now.
 Finally set the various PATH's to where you are going to stick this stuff.
 
-4.  "make" should build ircd.
+3.  "make" should build ircd.
 
-5.  "make install" should sorta work now if you defined the IRCDDIR
-in the Makefile.
+4.  "make install" to install the server and tools in the path defined
+in config.h.
 
 
 HOW TO GET HELP:

@@ -115,5 +115,27 @@ else
    ./install-sh -c opers.txt ${HPATH};
 fi
 
+# install mkpasswd
+if [ ! -f ${DPATH}/mkpasswd ]; then
+  echo installing mkpasswd as ${DPATH}/mkpasswd
+  ./install-sh -c tools/mkpasswd ${DPATH}/mkpasswd;
+else
+   echo installing mkpasswd as ${DPATH}/mkpasswd
+   echo previous mkpasswd saved as mkpasswd.old
+   mv ${DPATH}/mkpasswd ${DPATH}/mkpasswd.old
+   ./install-sh -c tools/mkpasswd ${DPATH}/mkpasswd;
+fi 
+
+# install viconf
+if [ ! -f ${DPATH}/viconf ]; then
+  echo installing viconf as ${DPATH}/viconf
+  ./install-sh -c tools/viconf ${DPATH}/viconf;
+else
+   echo installing viconf as ${DPATH}/viconf
+   echo previous viconf saved as viconf.old
+   mv ${DPATH}/viconf ${DPATH}/viconf.old
+   ./install-sh -c tools/viconf ${DPATH}/viconf;
+fi
+
 # finished.
 echo install complete!

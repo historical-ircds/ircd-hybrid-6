@@ -144,7 +144,7 @@
  *
  * If you do not wish to use this feature, leave LOCKFILE #undef 
  */
-#define LOCKFILE "/tmp/ircd.conf.lock"
+#define LOCKFILE "/usr/local/ircd/ircd.conf.lock"
 #define	CHECK_PENDING_KLINES	10	/* in minutes */
 
 /* SEPARATE_QUOTE_KLINES_BY_DATE
@@ -207,7 +207,7 @@
  * messages, define this.  Otherwise leave it undef'd for plain ole
  * boring messages.
  */
-#define CUSTOM_ERR
+#undef CUSTOM_ERR
 
 /* FAILED_OPER_NOTICE - send a notice to all opers when someone
  * tries to /oper and uses an incorrect password.
@@ -342,7 +342,7 @@
  * being KLINED very little difference, but you have been forewarned
  *
  */
-#undef KLINE_WITH_REASON
+#define KLINE_WITH_REASON
 
 /*
  * If KLINE_WITH_CONNECTION_CLOSED is defined and KLINE_WITH_REASON
@@ -396,15 +396,12 @@
 #define F_LINES_OPER_ONLY
 
 /* STATS_NOTICE - See a notice when a user does a /stats
- * Some people find this invasive and with the STAT command on PACE throttle
- * the server shouldn't suffer but lusers stat for different reasons and many
- * times it's been a prelude to some other form of attack. -Wintrhawk
  *
- * Bah. You don't need this its extra noise, the users can't
- * flood a server anyway, and its an invasion of privacy. -Dianora
- * YOUR CHOICE ;-)
+ * This is left on by default.
+ * Members of the development team were split on supporting the
+ * default here.
  */
-#define_this_or_undef_this STATS_NOTICE
+#define STATS_NOTICE
 
 /* LINKS_NOTICE - See a notice when a user does a /links
  * its always defined now
@@ -511,7 +508,7 @@
 #undef	LOCOP_DIE
 
 /*
- * OPER_UMODES LOCAOP_UMODES - set these to be the initial umodes when OPER'ing
+ * OPER_UMODES LOCOP_UMODES - set these to be the initial umodes when OPER'ing
  */
 #define OPER_UMODES   (FLAGS_OPER|FLAGS_WALLOP|FLAGS_SERVNOTICE|FLAGS_OPERWALL)
 #define LOCOP_UMODES   (FLAGS_LOCOP|FLAGS_WALLOP|FLAGS_SERVNOTICE)
@@ -551,7 +548,7 @@
  * to a leaf which just has 1 server (typically the uplink). Define this
  * correctly for performance reasons.
  */
-#define	HUB
+#undef	HUB
 
 /* R_LINES - support for R: LINES
  * The conf file now allows the existence of R lines, or
@@ -699,7 +696,7 @@
  * if there are no servers presently connected to this server
  * opers are not affected. 
  */
-#undef NO_CHANOPS_WHEN_SPLIT
+#define NO_CHANOPS_WHEN_SPLIT
 
 /*
  * NO_JOIN_ON_SPLIT
@@ -716,7 +713,7 @@
  * server is split from net until rejoin. i.e. if the channel
  * was +i before this server split, it remains +i during the split
  */
-#define PRESERVE_CHANNEL_ON_SPLIT
+#undef PRESERVE_CHANNEL_ON_SPLIT
 
 /*
  * SPLIT_SMALLNET_SIZE defines what constitutes a split from 
@@ -765,7 +762,7 @@
  *
  * IDLE_IGNORE will prevent the server from idle'ing clients connected from
  * the listed IP#s.  This should probably be moved into a .conf file entry
- * at some point in the future. 
+ * at some point in the future.
  * It has been. add '<' to I line prefix
  *
  * OPER_IDLE allows operators to remain idle when they idle
@@ -828,7 +825,7 @@
  * -Dianora
  */
 
-#define NO_PRIORITY
+#undef NO_PRIORITY
 
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 
@@ -1159,6 +1156,7 @@
  *       number of params.  If anyone has a solution to this, please notify
  *       the maintainer.
  */
+
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #ifdef __EMX__

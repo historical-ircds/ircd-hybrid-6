@@ -42,3 +42,14 @@ distclean: clean
 install: build
 	@echo "Please do a make install from the top level directory"
 
+# DO NOT DELETE
+
+chkconf.o: ../include/struct.h ../include/config.h ../include/setup.h
+chkconf.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
+chkconf.o: ../include/class.h ../include/dbuf.h ../include/common.h
+chkconf.o: ../include/sys.h ../include/numeric.h ../include/h.h
+chkconf.o: ../include/mtrie_conf.h ../include/fdlist.h
+mkpasswd.o: ../include/sys.h ../include/setup.h ../zlib/zlib.h
+mkpasswd.o: ../zlib/zconf.h
+viconf.o: ../include/config.h ../include/setup.h ../include/defs.h
+viconf.o: ../include/sys.h ../zlib/zlib.h ../zlib/zconf.h
