@@ -669,4 +669,5 @@ int adns__rereadconfig(adns_state ads)
   adns__consistency(ads,0,cc_entex);
   return 0;
 }
-                                    
+
+
