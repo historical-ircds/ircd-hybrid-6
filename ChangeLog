@@ -1,3 +1,8 @@
+*** 19990831_1 by lusky
+bumped patchlevel to b102
+left over aconf->user gets freed twice, causing some malloc packages to leave their lunch all over the disk.... NULL things after every free (db)
+
+
 *** 19990829_1 by lusky
 fix for umode +O (jk)
 
