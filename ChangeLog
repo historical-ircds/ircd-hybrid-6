@@ -1,3 +1,15 @@
+db          2001/12/10 21:05:38 EST	(20011211_0)
+
+  Modified files:
+    src                  s_conf.c 
+  Log:
+  - unused variable. removed.
+  
+  Revision  Changes    Path
+  1.229     +0 -1      ircd-hybrid-6/src/s_conf.c
+
+
+
 db          2001/12/10 14:51:49 EST	(20011210_7)
 
   Modified files:
