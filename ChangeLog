@@ -1,3 +1,9 @@
+*** 20010620_1 by db
+- umm just a bit too severe on the IP hiding, showing 255.255.255.255
+  for everything breaks vbots on tcm's.
+
+
+
 *** 20010619_5 by leeh
 - added NO_FAKE_GLINES, to stop spoofed glines
 - heavy work on mo_gline(), not checking remote glines for invalid chars,
