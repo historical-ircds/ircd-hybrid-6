@@ -1,3 +1,9 @@
+*** 20000410_1 by lusky
+chan mode +p/+s fix (ejb)
+use MAX_SETBACK_TIME for threshold of clock jump--now 1800secs (db)
+unneeded va_end() broke compile on some OSes (db)
+
+
 *** 20000402_1 by lusky
 fixed bug that caused only the first connection in a class to be tried
   i.e. if you had several C: lines in one =class= only the first
