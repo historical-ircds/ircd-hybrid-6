@@ -19,9 +19,7 @@ Question, does this mean we'll now send back 'invalid mode char', to +d's?
 
 
 *** 20010701_1 by greg
-Backing out some commit diane did about +d, it borked the -6 tree.
-
-Diane: feel free to surgically remove +d again, BUT, don't break the tree.
+Backing out a commit for +d, it borked the -6 tree.
 
 
 *** 20010630_2 by greg
