@@ -2,40 +2,82 @@ ircd-hybrid-6 INSTALL
 ---------------------
 $Id$
 
-As of hybrid-4, the distribution uses gnu autoconf instead of the old
-Config script. 
+hybrid-6 relies upon GNU autoconf.  The following is a transcript of
+recommended procedures that users/administrators of hybrid-6 should
+follow when building and tuning the daemon:
 
-0.  Read the RELNOTES and ChangeLog files to find out about the
-exciting new features in this version.  Changes to ircd.conf are
-documented in doc/example.conf.
+1.  MOST IMPORTANTLY:  Please read "RELNOTES" and "ChangeLog" to get
+    an idea of what bugs were fixed, features were added, or variables
+    were changed.  Changes to ircd.conf are documented in doc/example.conf.
 
-1.  Run the configure script.  It will create include/setup.h and the
-Makefiles to match your system:
-	./configure
+2.  Run the "configure" script.  It will create "include/setup.h" and the
+    Makefiles to match your system:
 
-2.  Edit the the "include/config.h" file.  This allows you to change
-various options of how the ircd will operate.  Notes: "HARD_FDLIMIT_"
-and "INIT_MAXCLIENTS" must be less than the maximum file descriptors
-per process allowed by your kernel, and must be <= FD_SETSIZE (usually
-defined in system includes, but may need to overridden in the Makefile.
-Note that the old OS definitions are gone, autoconf handles this now.
-Finally set the various PATHs to where you are going to install the ircd.
-Do not install the ircd to "."--the install script is not designed to
-install ircd properly on top of the existing source tree.
+      ./configure
 
-3.  "make" should build ircd.
+    If you wish to enable support for encrypted server-to-server links,
+    you will need to have OpenSSL 0.9.6 (or newer) installed on the
+    system.  For the impatient, simply try running "configure" as follows:
 
-4.  "make install" to install the server and tools in the path defined
-in config.h.
+      ./configure --enable-openssl
+
+    It is recommended that all administrators wishing to use encrypted
+    links read "doc/README.openssl" prior to mindlessly enabling this
+    function.
+
+3.  Edit the "include/config.h" file.  This allows you to change
+    various options of how the ircd will operate.  Please make note of
+    the following variables in "include/config.h", as they are common
+    faultpoints for administrators who are learning how to tune their
+    daemon:
+
+      HARD_FDLIMIT_
+      INIT_MAXCLIENTS
+
+    These two variables **MUST BE LESS** than the maximum number of
+    file descriptors **PER PROCESS** permitted by your kernel, and MUST
+    be <= FD_SETSIZE (usually defined in system includes, but may need to
+    be override by editing the Makefile).  Each operating system handles
+    the descriptor definitions differently; in the case of FreeBSD, please
+    use sysctl(8) to check the following MIBs for their values:
+
+      kern.maxfiles
+      kern.maxfilesperproc
+
+    Please remember that when starting the daemon, that shell limits
+    may be imposed.  Check these by becoming the user who the daemon runs
+    as, and depending upon your shell, use "limit" or "ulimit -a" to check
+    what values are currently imposed.  For "limit," look at the number
+    after the "descriptor" description.  For "ulimit -a," look at the
+    number after the "open files" description.  Understand that this is
+    the MAXIMUM number of descriptors (sockets AND open files) which
+    that user can have.  If you believe your daemon is experiencing this
+    (high CPU usage is usually a sign), try using utilties like "ktrace"
+    or "truss" on the running ircd process to find out what troubles it
+    might be having.
+
+    Note that the old OS definitions are gone; autoconf handles this.
+
+    Finally, set the various PATHs to where you are going to install the
+    ircd.  Do NOT install the ircd to "." -- the install script is not
+    designed to install ircd properly on top of the existing source tree.
+    Doing this will in turn make quite a mess.
+
+4.  "make" should build ircd.
+
+5.  "make install" to install the server and tools in the path defined
+    in config.h (DPATH).
 
 
 HOW TO GET HELP:
 ----------------
-Send Check or Money Order to...  just kidding!  Commerical support
-for ircd-hybrid is not available at this time.  There is now a
-mailing list for general discussion of Hybrid.  To subscribe
-to the Hybrid List, send email to listmanager@the-project.org with
-a single line in the body containing "subscribe hybrid".
+Send Check or Money Order to...  just kidding!  Commerical support for
+ircd-hybrid is not available at this time.
+
+However, all hope is not lost; the Hybrid Mailing List is available for
+general help, and/or questions.  To subscribe, please send Email to
+listmanager@the-project.org with a single line in the body containing
+"subscribe hybrid".
 
 If hybrid crashes on you, PLEASE CONTACT ircd-hybrid@the-project.org
 ASAP with a backtrace of the core.  The hybrid team can't fix bugs if
