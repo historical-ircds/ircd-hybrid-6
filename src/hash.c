@@ -453,7 +453,7 @@ int	m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
   char  result_buf[256];
   aHashEntry	*table;
   char  hash_log_file[256];
-  int   out;
+  int   out = 0;
   char timebuffer[MAX_DATE_STRING];
   struct tm *tmptr;
 

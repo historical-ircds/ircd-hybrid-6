@@ -566,7 +566,7 @@ static	int	register_user(aClient *cptr,
 		  strncpyzt(user->username, username, USERLEN + 1);
 		}
 	    }
-
+	}
 #ifndef FOLLOW_IDENT_RFC
       else if (IsGotId(sptr) && *sptr->username != '-')
 	strncpyzt(user->username, sptr->username, USERLEN + 1);

@@ -19,6 +19,7 @@
  *
  *   $Id$
  */
+
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -26,6 +27,23 @@
 #include "class.h"
 #include <stdio.h>
 #include "numeric.h"
+#include "send.h"
+
+#ifdef HAVE_STDARG_H
+
+#include <stdarg.h>
+
+#else
+
+/*
+ * If stdarg.h is not present, varargs.h MUST be present, or
+ * configure would have halted with an error.
+ * -wnder
+ */
+
+#include <varargs.h>
+
+#endif /* HAVE_STDARG_H */
 
 
 /* LINKLIST */
@@ -37,6 +55,10 @@ extern aClient *serv_cptr_list;
 
 static	char	sendbuf[2048];
 static	int	send_message (aClient *, char *, int);
+
+static  void vsendto_prefix_one(register aClient *, register aClient *, char *, va_list);
+static  void vsendto_one(aClient *, char *, va_list);
+static  void vsendto_realops(char *, va_list);
 
 #ifdef USE_SENTALONG
 static	int	sentalong[MAXCONNECTIONS];
@@ -63,20 +85,26 @@ int format(char *,char *,char *,char *,char *,char *,char *,char *,
 **	Also, the notice is skipped for "uninteresting" cases,
 **	like Persons and yet unknown connections...
 */
-static	int	dead_link(aClient *to, char *notice)
+
+static int
+dead_link(aClient *to, char *notice)
+
 {
-  to->flags |= FLAGS_DEADSOCKET;
-  /*
-   * If because of BUFFERPOOL problem then clean dbuf's now so that
-   * notices don't hurt operators below.
-   */
-  DBufClear(&to->recvQ);
-  DBufClear(&to->sendQ);
-  if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
-    sendto_ops(notice, get_client_name(to, FALSE));
-  Debug((DEBUG_ERROR, notice, get_client_name(to, FALSE)));
-  return -1;
-}
+	to->flags |= FLAGS_DEADSOCKET;
+
+	/*
+	 * If because of BUFFERPOOL problem then clean dbuf's now so that
+	 * notices don't hurt operators below.
+	 */
+	DBufClear(&to->recvQ);
+	DBufClear(&to->sendQ);
+	if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
+		sendto_ops(notice, get_client_name(to, FALSE));
+
+	Debug((DEBUG_ERROR, notice, get_client_name(to, FALSE)));
+
+	return (-1);
+} /* dead_link() */
 
 /*
 ** flush_connections
@@ -87,21 +115,25 @@ static	int	dead_link(aClient *to, char *notice)
 **	client and try to send it. if we cant send it, it goes into the sendQ
 **	-avalon
 */
-void	flush_connections(int fd)
+
+void
+flush_connections(int fd)
+
 {
 #ifdef SENDQ_ALWAYS
-  int	i;
-  aClient *cptr;
+	int i;
+	aClient*cptr;
 
-  if (fd == me.fd)
-    {
-      for (i = highest_fd; i >= 0; i--)
-	if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
-	  (void)send_queued(cptr);
-    }
-  else if (fd >= 0 && (cptr = local[fd]) && DBufLength(&cptr->sendQ) > 0)
-    (void)send_queued(cptr);
-#endif
+	if (fd == me.fd)
+	{
+		for (i = highest_fd; i >= 0; i--)
+			if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
+				(void)send_queued(cptr);
+	}
+	else if (fd >= 0 && (cptr = local[fd]) && DBufLength(&cptr->sendQ) > 0)
+		(void)send_queued(cptr);
+
+#endif /* SENDQ_ALWAYS */
 }
 
 
@@ -363,278 +395,260 @@ int	send_queued(aClient *to)
 /*
 ** send message to single client
 */
-#ifndef	USE_VARARGS
-/*VARARGS*/
-void	sendto_one(to, pattern, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12)
+
+#ifdef HAVE_STDARG_H
+
+void
+sendto_one(aClient *to, char *pattern, ...)
+
+#else
+
+void
+sendto_one(to, pattern, va_alist)
+
 aClient *to;
-char	*pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8, *p9, *p10, *p11, *p12;
-{
-#else
-void	sendto_one(to, pattern, va_alist)
-aClient	*to;
-char	*pattern;
+char *pattern;
 va_dcl
+
+#endif /* HAVE_STDARG_H */
+
 {
-  va_list	vl;
-#endif
+	va_list	args;
 
-  int len; /* used for the length of the current message */
+	MyVaStart(args, pattern);
 
-#ifdef	USE_VARARGS
-  va_start(vl);
-  (void)vsprintf(sendbuf, pattern, vl);
-  va_end(vl);
+	vsendto_one(to, pattern, args);
+
+	va_end(args);
+} /* sendto_one() */
+
+/*
+vsendto_one()
+ Backend for sendto_one() - send string with variable
+arguements to client 'to'
+-wnder
+*/
+
+static void
+vsendto_one(aClient *to, char *pattern, va_list args)
+
+{
+	int len; /* used for the length of the current message */
+
+	if (to->from)
+		to = to->from;
+
+	if (to->fd < 0)
+	{
+		Debug((DEBUG_ERROR,
+			"Local socket %s with negative fd... AARGH!",
+			to->name));
+	}
+	else if (IsMe(to))
+	{
+		sendto_ops("Trying to send [%s] to myself!", sendbuf);
+		return;
+	}
+
+	len = vsprintf(sendbuf, pattern, args);
+
+	/*
+	 * from rfc1459
+	 *
+	 * IRC messages are always lines of characters terminated with a CR-LF
+	 * (Carriage Return - Line Feed) pair, and these messages shall not
+	 * exceed 512 characters in length, counting all characters including
+	 * the trailing CR-LF. Thus, there are 510 characters maximum allowed
+	 * for the command and its parameters.  There is no provision for
+	 * continuation message lines.  See section 7 for more details about
+	 * current implementations.
+	 */
+
+	/*
+	 * We have to get a \r\n\0 onto sendbuf[] somehow to satisfy
+	 * the rfc. We must assume sendbuf[] is defined to be 513
+	 * bytes - a maximum of 510 characters, the CR-LF pair, and
+	 * a trailing \0, as stated in the rfc. Now, if len is greater
+	 * than the third-to-last slot in the buffer, an overflow will
+	 * occur if we try to add three more bytes, if it has not
+	 * already occured. In that case, simply set the last three
+	 * bytes of the buffer to \r\n\0. Otherwise, we're ok. My goal
+	 * is to get some sort of vsnprintf() function operational
+	 * for this routine, so we never again have a possibility
+	 * of an overflow.
+	 * -wnder
+	 */
+	if (len > 510)
+	{
+		sendbuf[510] = '\r';
+		sendbuf[511] = '\n';
+		sendbuf[512] = '\0';
+		len = 512;
+	}
+	else
+	{
+		sendbuf[len++] = '\r';
+		sendbuf[len++] = '\n';
+		sendbuf[len] = '\0';
+	}
+
+	Debug((DEBUG_SEND,"Sending [%s] to %s",sendbuf,to->name));
+
+	(void)send_message(to, sendbuf, len);
+} /* vsendto_one() */
+
+#ifdef HAVE_STDARG_H
+
+void
+sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr, char *pattern, ...)
+
 #else
-  len=format(sendbuf, pattern, p1, p2, p3, p4, p5, p6,
-	     p7, p8, p9, p10, p11, p12);
-#endif
-  Debug((DEBUG_SEND,"Sending [%s] to %s",sendbuf,to->name));
 
-  if (to->from)
-    to = to->from;
-  if (to->fd < 0)
-    {
-      Debug((DEBUG_ERROR,
-	     "Local socket %s with negative fd... AARGH!",
-	     to->name));
-    }
-  else if (IsMe(to))
-    {
-      sendto_ops("Trying to send [%s] to myself!", sendbuf);
-      return;
-    }
+void
+sendto_channel_butone(one, from, chptr, pattern, va_alist)
 
-  /* from rfc1459
-
-   IRC messages are always lines of characters terminated with a CR-LF
-   (Carriage Return - Line Feed) pair, and these messages shall not
-   exceed 512 characters in length, counting all characters including
-   the trailing CR-LF. Thus, there are 510 characters maximum allowed
-   for the command and its parameters.  There is no provision for
-   continuation message lines.  See section 7 for more details about
-   current implementations.
-
-   */
-
-#ifdef USE_VARARGS
-  (void)strcat(sendbuf, NEWLINE);
-  len = strlen(sendbuf);
-#else
-  /* Satisfy RFC, all sends should be \r \n */
-  sendbuf[len++] = '\r';
-  sendbuf[len++] = '\n';
-  sendbuf[len] = '\0';
-#endif
-
-  if(len > 512)	/* procrustean solution */
-    {
-      sendbuf[510] = '\r';
-      sendbuf[511] = '\n';
-      sendbuf[512] = '\0';
-      len = 512;
-    }
-
-  (void)send_message(to, sendbuf, len);
-}
-
-# ifndef	USE_VARARGS
-/*VARARGS*/
-void	sendto_channel_butone(one, from, chptr, pattern,
-			      p1, p2, p3, p4, p5, p6, p7, p8)
 aClient *one, *from;
 aChannel *chptr;
-char	*pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8;
-{
-# else
-void	sendto_channel_butone(one, from, chptr, pattern, va_alist)
-aClient	*one, *from;
-aChannel *chptr;
-char	*pattern;
+char *pattern;
 va_dcl
+
+#endif /* HAVE_STDARG_H */
+
 {
-  va_list	vl;
-# endif
-  register	Link	*lp;
-  register	aClient *acptr;
-  register	int	i;
-  
-# ifdef	USE_VARARGS
-  va_start(vl);
-# endif
+	va_list	args;
+	register Link *lp;
+	register aClient *acptr;
+	register int index; /* index of sentalong[] to flag client as having received message */
 
-#ifdef USE_SENTALONG
-  memset((void *)sentalong, 0, sizeof(sentalong));
-#else
-  current_serial++;
-#endif
+	MyVaStart(args, pattern);
 
-  for (lp = chptr->members; lp; lp = lp->next)
-    {
-      acptr = lp->value.cptr;
-      if (acptr->from == one)
-	continue;	/* ...was the one I should skip */
-      i = acptr->from->fd;
-      if (MyConnect(acptr) && IsRegisteredUser(acptr))
+	++current_serial;
+
+	for (lp = chptr->members; lp; lp = lp->next)
 	{
-# ifdef	USE_VARARGS
-	  sendto_prefix_one(acptr, from, pattern, vl);
-# else
-	  sendto_prefix_one(acptr, from, pattern, p1, p2,
-			    p3, p4, p5, p6, p7, p8);
-# endif
-#ifdef USE_SENTALONG
-	  sentalong[i] = 1;
-#else
-	  sentalong[i] = current_serial;
-#endif
-	}
-      else
-	{
-	  /* Now check whether a message has been sent to this
-	   * remote link already */
-#ifdef USE_SENTALONG
-	  if (sentalong[i] == 0)
-#else
-          if(sentalong[i] != current_serial)
-#endif
-	    {
-# ifdef	USE_VARARGS
-	      sendto_prefix_one(acptr, from, pattern, vl);
-# else
-	      sendto_prefix_one(acptr, from, pattern,
-				p1, p2, p3, p4,
-				p5, p6, p7, p8);
-# endif
-#ifdef USE_SENTALONG
-	      sentalong[i] = 1;
-#else
-	      sentalong[i] = current_serial;
-#endif
-	    }
-	}
-    }
-# ifdef	USE_VARARGS
-  va_end(vl);
-# endif
-  return;
-}
+		acptr = lp->value.cptr;
 
-# ifndef	USE_VARARGS
-/*VARARGS*/
-void	sendto_channel_type(one, from, chptr, type,  pattern,
-			      p1, p2, p3, p4, p5, p6, p7, p8)
+		if (acptr->from == one)
+			continue;	/* ...was the one I should skip */
+
+		index = acptr->from->fd;
+		if (MyConnect(acptr) && IsRegisteredUser(acptr))
+		{
+			vsendto_prefix_one(acptr, from, pattern, args);
+			sentalong[index] = current_serial;
+		}
+		else
+		{
+			/*
+			 * Now check whether a message has been sent to this
+			 * remote link already
+			 */
+			if(sentalong[index] != current_serial)
+			{
+				vsendto_prefix_one(acptr, from, pattern, args);
+				sentalong[index] = current_serial;
+			}
+		}
+	}
+
+	va_end(args);
+} /* sendto_channel_butone() */
+
+#ifdef HAVE_STDARG_H
+
+void
+sendto_channel_type(aClient *one, aClient *from, aChannel *chptr, int type, char *pattern, ...)
+
+#else
+
+void
+sendto_channel_type(one, from, chptr, type, pattern, va_alist)
+
 aClient *one, *from;
 aChannel *chptr;
 int type;
-char	*pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8;
-{
-# else
-void	sendto_channel_type(one, from, chptr, type, pattern, va_alist)
-aClient	*one, *from;
-int type;
-aChannel *chptr;
-char	*pattern;
+char *pattern;
 va_dcl
+
+#endif /* HAVE_STDARG_H */
+
 {
-  va_list	vl;
-# endif
-  register	Link	*lp;
-  register	aClient *acptr;
-  register	int	i;
-  
-# ifdef	USE_VARARGS
-  va_start(vl);
-# endif
+	va_list	args;
+	register Link *lp;
+	register aClient *acptr;
+	register int i;
 
-#ifdef USE_SENTALONG
-  memset((void *)sentalong,0,sizeof(sentalong));
-#else
-  current_serial++;
-#endif
+	MyVaStart(args, pattern);
 
-  for (lp = chptr->members; lp; lp = lp->next)
-    {
-      if (!(lp->flags & type))
-	continue;
+	++current_serial;
 
-      acptr = lp->value.cptr;
-      if (acptr->from == one)
-	continue;
-
-      i = acptr->from->fd;
-      if (MyConnect(acptr) && IsRegisteredUser(acptr))
+	for (lp = chptr->members; lp; lp = lp->next)
 	{
-# ifdef	USE_VARARGS
-	  sendto_prefix_one(acptr, from, pattern, vl);
-# else
-	  sendto_prefix_one(acptr, from, pattern, p1, p2,
-			    p3, p4, p5, p6, p7, p8); 
-# endif
-#ifdef USE_SENTALONG
-	  sentalong[i] = 1;
-#else
-	  sentalong[i] = current_serial;
-#endif
-	}
-      else
-	{
-	  /*
-	   * If the target's server can do CAP_CHW, only
-	   * one send is needed, otherwise, I do a bunch of
-	   * send's to each target on that server. (kludge)
-	   *
-	   * The USE_VARARGS is broken, we'll have to fix that later
-	   * -Dianora
-	   */
-	  if(!IsCapable(acptr->from,CAP_CHW))
-	    {
-#ifdef USE_VARARGS
-#error "Broken in send.c"
-#else
-	      /* kludge in a built in chan wall for older servers */
+		if (!(lp->flags & type))
+			continue;
 
-	      sendto_prefix_one(acptr, from,
-				":%s NOTICE %s :%s",
-				p1,
-				/* ignore p2, replace with NOTICE */
-				/* ignore p3, replace with username */
-				lp->value.cptr->name,
-				/* p4 is message "payload" */
-				p4);
-#endif
-	    }
-	  else
-	    {
-	      /* Now check whether a message has been sent to this
-	       * remote link already
-	       */
-#ifdef USE_SENTALONG
-	      if (sentalong[i] == 0)
-#else
-		if (sentalong[i] != current_serial)
-#endif
-		  {
-# ifdef	USE_VARARGS
-		    sendto_prefix_one(acptr, from, pattern, vl);
-# else
-		    sendto_prefix_one(acptr, from, pattern,
-				      p1, p2, p3, p4,
-				      p5, p6, p7, p8);
-# endif
-#ifdef USE_SENTALONG
-		    sentalong[i] = 1;
-#else
-		    sentalong[i] = current_serial;
-#endif
-		  }
-	    }
-	}
-    }
-# ifdef	USE_VARARGS
-  va_end(vl);
-# endif
-  return;
-}
+		acptr = lp->value.cptr;
+		if (acptr->from == one)
+			continue;
+
+		i = acptr->from->fd;
+		if (MyConnect(acptr) && IsRegisteredUser(acptr))
+		{
+			vsendto_prefix_one(acptr, from, pattern, args);
+			sentalong[i] = current_serial;
+		}
+		else
+		{
+		#if 0
+			/*
+			 * We have to remove this kludge since it is not
+			 * compatible with stdarg.h - if we call va_arg()
+			 * several times to grab the p1 and p4, it will work
+			 * short-term, but the next time we hit a local
+			 * client and call vsendto_prefix_one(), 'args'
+			 * will be basically null, causing a core dump.
+			 * -wnder
+			 *
+			 */
+
+			/*
+			 * If the target's server can do CAP_CHW, only
+			 * one send is needed, otherwise, I do a bunch of
+			 * send's to each target on that server. (kludge)
+			 *
+			 * The USE_VARARGS is broken, we'll have to fix that later
+			 * -Dianora
+			 */
+			if(!IsCapable(acptr->from,CAP_CHW))
+			{
+				/* kludge in a built in chan wall for older servers */
+
+				sendto_prefix_one(acptr, from,
+					":%s NOTICE %s :%s",
+					p1,
+					/* ignore p2, replace with NOTICE */
+					/* ignore p3, replace with username */
+					lp->value.cptr->name,
+					/* p4 is message "payload" */
+					p4);
+			}
+			else
+			{
+		#endif /* 0 */
+
+			/* Now check whether a message has been sent to this
+			 * remote link already
+			 */
+			if (sentalong[i] != current_serial)
+			{
+				vsendto_prefix_one(acptr, from, pattern, args);
+				sentalong[i] = current_serial;
+			}
+		}
+	} /* for (lp = chptr->members; lp; lp = lp->next) */
+
+	va_end(args);
+} /* sendto_channel_type() */
 
 
 /* 
@@ -644,7 +658,9 @@ va_dcl
 ** used in knock/invite/privmsg@+/notice@+
 ** -good
 */
-void	sendto_channel_type_notice(aClient *from, aChannel *chptr, int type, char *message)
+void
+sendto_channel_type_notice(aClient *from, aChannel *chptr, int type, char *message)
+
 {
   register	Link	*lp;
   register	aClient *acptr;
@@ -676,37 +692,46 @@ void	sendto_channel_type_notice(aClient *from, aChannel *chptr, int type, char *
  *
  * Send a message to all connected servers except the client 'one'.
  */
-# ifndef	USE_VARARGS
-/*VARARGS*/
-void	sendto_serv_butone(one, pattern, p1, p2, p3, p4, p5, p6, p7, p8)
+
+#ifdef HAVE_STDARG_H
+
+void
+sendto_serv_butone(aClient *one, char *pattern, ...)
+
+#else
+
+void
+sendto_serv_butone(one, pattern, va_alist)
+
 aClient *one;
-char	*pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8;
-{
-# else
-void	sendto_serv_butone(one, pattern, va_alist)
-aClient	*one;
-char	*pattern;
+char *pattern;
 va_dcl
+
+#endif /* HAVE_STDARG_H */
+
 {
-  va_list	vl;
-# endif
-  register	aClient *cptr;
+	va_list args;
+	register aClient *cptr;
 
-  /* USE_VARARGS IS BROKEN someone volunteer to fix it :-) -Dianora */
-# ifdef	USE_VARARGS
-  va_start(vl);
-# endif
+	/*
+	 * USE_VARARGS IS BROKEN someone volunteer to fix it :-) -Dianora
+	 *
+	 * fixed! :-)
+	 * -wnder
+	 */
 
-  /* LINKLIST */
+	MyVaStart(args, pattern);
 
-  for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
-    {
-      if ((one && cptr == one->from)) 
-	continue;
-      sendto_one(cptr, pattern, p1, p2, p3, p4, p5, p6, p7, p8);
-    }
-  return;
-}
+	for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
+	{
+		if (one && (cptr == one->from))
+			continue;
+
+		vsendto_one(cptr, pattern, args);
+	}
+
+	va_end(args);
+} /* sendto_serv_butone() */
 
 /*
  * sendto_common_channels()
@@ -714,185 +739,55 @@ va_dcl
  * Sends a message to all people (excluding user) on local server who are
  * in same channel with user.
  */
-# ifndef	USE_VARARGS
-/*VARARGS*/
-void	sendto_common_channels(user, pattern, p1, p2, p3, p4,
-				p5, p6, p7, p8)
+
+#ifdef HAVE_STDARG_H
+
+void
+sendto_common_channels(aClient *user, char *pattern, ...)
+
+#else
+
+void
+sendto_common_channels(user, pattern, va_alist)
+
 aClient *user;
-char	*pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8;
-{
-# else
-void	sendto_common_channels(user, pattern, va_alist)
-aClient	*user;
-char	*pattern;
+char *pattern;
 va_dcl
+
+#endif /* HAVE_STDARG_H */
+
 {
-  va_list	vl;
-# endif
-  register Link *channels;
-  register Link *users;
-  register aClient *cptr;
+	va_list args;
+	register Link *channels;
+	register Link *users;
+	register aClient *cptr;
+
+  MyVaStart(args, pattern);
   
-# ifdef	USE_VARARGS
-  va_start(vl);
-# endif
+	++current_serial;
+	if (user->fd >= 0)
+		sentalong[user->fd] = current_serial;
 
-#ifdef USE_SENTALONG
-  memset((void *)sentalong,0,sizeof(sentalong));
-
-  if (user->fd >= 0)
-    sentalong[user->fd] = 1;
-#else
-  current_serial++;
-  if (user->fd >= 0)
-    sentalong[user->fd] = current_serial;
-#endif
-
-  if (user->user)
-    for (channels=user->user->channel;channels;channels=channels->next)
-      for(users=channels->value.chptr->members;users;users=users->next)
+	if (user->user)
 	{
-	  cptr = users->value.cptr;
-#ifdef USE_SENTALONG
-	  if (!MyConnect(cptr) || sentalong[cptr->fd])
-	    continue;
-	  sentalong[cptr->fd]++;
-#else
-	  if (!MyConnect(cptr) || (sentalong[cptr->fd] == current_serial))
-	    continue;
-	  sentalong[cptr->fd] = current_serial;
-#endif
-# ifdef	USE_VARARGS
-	  sendto_prefix_one(cptr, user, pattern, vl);
-# else
-	  sendto_prefix_one(cptr, user, pattern,
-			    p1, p2, p3, p4, p5, p6, p7, p8);
-# endif
+		for (channels = user->user->channel; channels; channels = channels->next)
+			for(users = channels->value.chptr->members; users; users = users->next)
+			{
+				cptr = users->value.cptr;
+				if (!MyConnect(cptr) || (sentalong[cptr->fd] == current_serial))
+					continue;
+
+				sentalong[cptr->fd] = current_serial;
+
+				vsendto_prefix_one(cptr, user, pattern, args);
+			}
 	}
-  if (MyConnect(user))
-# ifdef	USE_VARARGS
-    sendto_prefix_one(user, user, pattern, vl);
-  va_end(vl);
-# else
-  sendto_prefix_one(user, user, pattern, p1, p2, p3, p4,
-		    p5, p6, p7, p8);
-# endif
-  return;
-}
 
-/*
- * sendto_cap_serv_butone
- *
- * Send a message to servers other than 'one' which have capability cap
- */
-# ifndef	USE_VARARGS
-/*VARARGS*/
-void	sendto_cap_serv_butone(cap, one, pattern, p1, p2, p3, p4, p5, p6, p7, p8, p9)
-int	cap;
-aClient *one;
-char	*pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8, *p9;
-{
-# else
-void	sendto_cap_serv_butone(cap, one, pattern, va_alist)
-int	cap;
-aClient	*one;
-char	*pattern;
-va_dcl
-{
-  va_list	vl;
-# endif
-  aClient *cptr;
+	if (MyConnect(user))
+		vsendto_prefix_one(user, user, pattern, args);
 
-# ifdef	USE_VARARGS
-  va_start(vl);
-# endif
-
-  /* USE_VARARGS IS BROKEN someone volunteer to fix it :-) -Dianora */
-
-  for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
-    {
-      if ((one && cptr == one->from)) 
-	continue;
-      if(!IsCapable(cptr,cap))
-	continue;
-      sendto_one(cptr, pattern, p1, p2, p3, p4, p5, p6, p7, p8);
-    }
-  return;
-}
-
-#ifdef FLUD
-# ifndef USE_VARARGS
-void    sendto_channel_butlocal(one, from, chptr, pattern,
-                              p1, p2, p3, p4, p5, p6, p7, p8)
-aClient *one, *from;
-aChannel *chptr;
-char    *pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8;
-{               
-# else  
-void    sendto_channel_butlocal(one, from, chptr, pattern, va_alist)
-aClient *one, *from;
-aChannel *chptr;
-char    *pattern;
-va_dcl
-{
-  va_list vl;
-# endif
-  register    Link    *lp;
-  register    aClient *acptr;
-  register    int     i;
-#ifdef USE_SENTALONG
-  int	sentalong[MAXCONNECTIONS];
-#else
-  unsigned long sentalong[MAXCONNECTIONS];
-#endif
-
-# ifdef USE_VARARGS
-  va_start(vl);
-# endif
-#ifdef USE_SENTALONG
-  memset((void *)sentalong,0,sizeof(sentalong));
-#else
-  current_serial++;
-#endif
-
-  for (lp = chptr->members; lp; lp = lp->next)
-    {
-      acptr = lp->value.cptr;
-      if (acptr->from == one)
-	continue;       /* ...was the one I should skip */
-      i = acptr->from->fd;
-      if (!MyFludConnect(acptr))
-	{
-	  /* Now check whether a message has been sent to this
-	   * remote link already */
-#ifdef USE_SENTALONG
-	  if (sentalong[i] == 0)
-#else
-	  if (sentalong[i] != current_serial)
-#endif
-	    {
-# ifdef USE_VARARGS
-	      sendto_prefix_one(acptr, from, pattern, vl);
-# else
-	      sendto_prefix_one(acptr, from, pattern,
-				p1, p2, p3, p4,
-				p5, p6, p7, p8);
-# endif
-#ifdef USE_SENTALONG
-	      sentalong[i] = 1;
-#else
-	      sentalong[i] = current_serial;
-#endif
-	    }
-	}
-    }
-# ifdef USE_VARARGS
-  va_end(vl);
-# endif
-  return;
-}
-#endif /* FLUD */
-
+	va_end(args);
+} /* sendto_common_channels() */
 
 /*
  * sendto_channel_butserv
@@ -900,41 +795,37 @@ va_dcl
  * Send a message to all members of a channel that are connected to this
  * server.
  */
-#ifndef	USE_VARARGS
-/*VARARGS*/
-void	sendto_channel_butserv(chptr, from, pattern, p1, p2, p3,
-			       p4, p5, p6, p7, p8)
-aChannel *chptr;
-aClient *from;
-char	*pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8;
-{
+
+#ifdef HAVE_STDARG_H
+
+void
+sendto_channel_butserv(aChannel *chptr, aClient *from, char *pattern, ...)
+
 #else
-void	sendto_channel_butserv(chptr, from, pattern, va_alist)
+
+void
+sendto_channel_butserv(chptr, from, pattern, va_alist)
+
 aChannel *chptr;
 aClient *from;
-char	*pattern;
+char *pattern;
 va_dcl
+
+#endif /* HAVE_STDARG_H */
+
 {
-  va_list	vl;
-#endif
-  register	Link	*lp;
-  register	aClient	*acptr;
+	va_list args;
+	register Link *lp;
+	register aClient *acptr;
 
-#ifdef	USE_VARARGS
-  for (va_start(vl), lp = chptr->members; lp; lp = lp->next)
-    if (MyConnect(acptr = lp->value.cptr))
-      sendto_prefix_one(acptr, from, pattern, vl);
-  va_end(vl);
-#else
-  for (lp = chptr->members; lp; lp = lp->next)
-    if (MyConnect(acptr = lp->value.cptr))
-      sendto_prefix_one(acptr, from, pattern,
-			p1, p2, p3, p4,
-			p5, p6, p7, p8);
-#endif
+	MyVaStart(args, pattern);
 
-  return;
-}
+	for (lp = chptr->members; lp; lp = lp->next)
+		if (MyConnect(acptr = lp->value.cptr))
+			vsendto_prefix_one(acptr, from, pattern, args);
+
+	va_end(args);
+} /* sendto_channel_butserv() */
 
 /*
 ** send a msg to all ppl on servers/hosts that match a specified mask
@@ -943,13 +834,15 @@ va_dcl
 ** addition -- Armin, 8jun90 (gruner@informatik.tu-muenchen.de)
 */
 
-static int match_it(const aClient *one, const char *mask, int what)
+static int
+match_it(const aClient *one, const char *mask, int what)
+
 {
   if(what == MATCH_HOST)
     return match(mask, one->user->host);
   else
     return match(mask, one->user->server);
-}
+} /* match_it() */
 
 /*
  * sendto_match_servs
@@ -957,42 +850,46 @@ static int match_it(const aClient *one, const char *mask, int what)
  * send to all servers which match the mask at the end of a channel name
  * (if there is a mask present) or to all if no mask.
  */
-#ifndef	USE_VARARGS
-/*VARARGS*/
-void	sendto_match_servs(chptr, from, format, p1,p2,p3,p4,p5,p6,p7,p8,p9)
-aChannel *chptr;
-aClient	*from;
-char	*format, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8, *p9;
-{
+
+#ifdef HAVE_STDARG_H
+
+void
+sendto_match_servs(aChannel *chptr, aClient *from, char *pattern, ...)
+
 #else
-void	sendto_match_servs(chptr, from, format, va_alist)
+
+void
+sendto_match_servs(chptr, from, pattern, va_alist)
+
 aChannel *chptr;
-aClient	*from;
-char	*format;
+aClient *from;
+char *pattern;
 va_dcl
+
+#endif /* HAVE_STDARG_H */
+
 {
-  va_list	vl;
-#endif
-  register aClient	*cptr;
+	va_list args;
+	register aClient *cptr;
 
-#ifdef	USE_VARARGS
-  va_start(vl);
-#endif
+	MyVaStart(args, pattern);
 
-  if (chptr)
-    {
-      if (*chptr->chname == '&')
-	return;
-    }
+	if (chptr)
+	{
+		if (*chptr->chname == '&')
+			return;
+	}
 
-  for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
-    {
-      if (cptr == from)
-        continue;
-      sendto_one(cptr, format, p1, p2, p3, p4, p5, p6, p7, p8, p9);
-    }
-  return;
-}
+	for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
+	{
+		if (cptr == from)
+			continue;
+
+		vsendto_one(cptr, pattern, args);
+	}
+
+	va_end(args);
+} /* sendto_match_servs() */
 
 /*
  * sendto_match_cap_servs
@@ -1000,48 +897,50 @@ va_dcl
  * send to all servers which match the mask at the end of a channel name
  * (if there is a mask present) or to all if no mask, and match the capability
  */
-#ifndef	USE_VARARGS
-/*VARARGS*/
-void	sendto_match_cap_servs(chptr, from, cap, format, p1,p2,p3,p4,p5,p6,p7,p8,p9)
-aChannel *chptr;
-aClient	*from;
-int     cap;
-char	*format, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8, *p9;
-{
+
+#ifdef HAVE_STDARG_H
+
+void
+sendto_match_cap_servs(aChannel *chptr, aClient *from, int cap, char *pattern, ...)
+
 #else
-void	sendto_match_cap_servs(chptr, from, cap, format, va_alist)
+
+void
+sendto_match_cap_servs(chptr, from, cap, pattern, va_alist)
+
 aChannel *chptr;
-aClient	*from;
-int     cap;
-char	*format;
+aClient *from;
+int cap;
+char *pattern;
 va_dcl
+
+#endif /* HAVE_STDARG_H */
+
 {
-  va_list	vl;
-#endif
-  register aClient	*cptr;
+	va_list args;
+	register aClient *cptr;
 
-#ifdef	USE_VARARGS
-  va_start(vl);
-#endif
+	MyVaStart(args, pattern);
 
-  /* USE_VARARGS IS BROKEN someone volunteer to fix it :-) -Dianora */
+	if (chptr)
+	{
+		if (*chptr->chname == '&')
+			return;
+	}
 
-  if (chptr)
-    {
-      if (*chptr->chname == '&')
-	return;
-    }
+	for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
+	{
+		if (cptr == from)
+			continue;
 
-  for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
-    {
-      if (cptr == from)
-        continue;
-      if(!IsCapable(cptr,cap))
-	continue;
-      sendto_one(cptr, format, p1, p2, p3, p4, p5, p6, p7, p8, p9);
-    }
-  return;
-}
+		if(!IsCapable(cptr, cap))
+			continue;
+
+		vsendto_one(cptr, pattern, args);
+	}
+
+	va_end(args);
+} /* sendto_match_cap_servs() */
 
 /*
  * sendto_match_butone
@@ -1049,122 +948,77 @@ va_dcl
  * Send to all clients which match the mask in a way defined on 'what';
  * either by user hostname or user servername.
  */
-#ifndef	USE_VARARGS
-/*VARARGS*/
-void	sendto_match_butone(one, from, mask, what, pattern,
-			    p1, p2, p3, p4, p5, p6, p7, p8)
-aClient *one, *from;
-int	what;
-char	*mask, *pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8;
-{
+
+#ifdef HAVE_STDARG_H
+
+void
+sendto_match_butone(aClient *one, aClient *from, char *mask, int what, char *pattern, ...)
+
 #else
-void	sendto_match_butone(one, from, mask, what, pattern, va_alist)
+
+void
+sendto_match_butone(one, from, mask, what, pattern, va_alist)
+
 aClient *one, *from;
-int	what;
-char	*mask, *pattern;
+char *mask;
+int what;
+char *pattern;
 va_dcl
+
+#endif /* HAVE_STDARG_H */
+
 {
-  va_list	vl;
-#endif
+	va_list args;
+	register aClient *cptr;
 
-  register	aClient *cptr, *acptr;
-  
-#ifdef	USE_VARARGS
-  va_start(vl);
-#endif
+	MyVaStart(args, pattern);
 
-  /* scan the local clients */
-  for(cptr = local_cptr_list; cptr; cptr = cptr->next_local_client)
-    {
-      if (cptr == one)	/* must skip the origin !! */
-	continue;
-      if (match_it(cptr, mask, what))
+	/* scan the local clients */
+	for(cptr = local_cptr_list; cptr; cptr = cptr->next_local_client)
 	{
-#ifdef	USE_VARARGS
-	  sendto_prefix_one(cptr, from, pattern, vl);
-	  va_end(vl);
-#else
-	  sendto_prefix_one(cptr, from, pattern,
-			    p1, p2, p3, p4, p5, p6, p7, p8);
-#endif
+		if (cptr == one)	/* must skip the origin !! */
+			continue;
+
+		if (match_it(cptr, mask, what))
+			vsendto_prefix_one(cptr, from, pattern, args);
 	}
-    }
 
-  /* Now scan servers */
-  for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
-    {
-      if (cptr == one)	/* must skip the origin !! */
-	continue;
-      /*
-       * scan all clients, if there is at least one client that
-       * matches the mask, and is on this server, send
-       * *one* message to the server, and let that server deal
-       * with sending it to all the clients that match on that server.
-       */
+	/* Now scan servers */
+	for (cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
+	{
+		if (cptr == one) /* must skip the origin !! */
+			continue;
 
-      for (acptr = GlobalClientList; acptr; acptr = acptr->next)
-	if (IsRegisteredUser(acptr)
-	    && match_it(acptr, mask, what)
-	    && acptr->from == cptr)
-	  {
+		/*
+		 * The old code looped through every client on the
+		 * network for each server to check if the
+		 * server (cptr) has at least 1 client matching
+		 * the mask, using something like:
+		 *
+		 * for (acptr = GlobalClientList; acptr; acptr = acptr->next)
+		 *	if (IsRegisteredUser(acptr) &&
+		 *			match_it(acptr, mask, what) &&
+		 *			(acptr->from == cptr))
+		 *   vsendto_prefix_one(cptr, from, pattern, args);
+		 *
+		 * That way, we wouldn't send the message to
+		 * a server who didn't have a matching client.
+		 * However, on a network such as EFNet, that
+		 * code would have looped through about 50
+		 * servers, and in each loop, loop through
+		 * about 50k clients as well, calling match()
+		 * in each nested loop. That is a very bad
+		 * thing cpu wise - just send the message
+		 * to every connected server and let that
+		 * server deal with it.
+		 * -wnder
+		 */
 
-	    /* a person on that server matches the mask, so we
-	    ** send *one* msg to that server ...
-	    */
+		vsendto_prefix_one(cptr, from, pattern, args);
+	} /* for (cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client) */
 
-#ifdef	USE_VARARGS
-	    sendto_prefix_one(cptr, from, pattern, vl);
-	    va_end(vl);
-#else
-	    sendto_prefix_one(cptr, from, pattern,
-			      p1, p2, p3, p4, p5, p6, p7, p8);
-	    break;
-	  }
-#endif
-    }
-  return;
-}
-
-/*
- * sendto_all_butone.
- *
- * Send a message to all connections except 'one'. The basic wall type
- * message generator.
- */
-#ifndef	USE_VARARGS
-/*VARARGS*/
-void	sendto_all_butone(one, from, pattern, p1, p2, p3, p4, p5, p6, p7, p8)
-aClient *one, *from;
-char	*pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8;
-{
-#else
-void	sendto_all_butone(one, from, pattern, va_alist)
-aClient *one, *from;
-char	*pattern;
-va_dcl
-{
-  va_list	vl;
-#endif
-
-  register	aClient *cptr;
-
-#ifdef USE_VARARGS
-  va_start(vl);
-#endif
-
-  for (cptr = local_cptr_list; cptr; cptr = cptr->next_local_client)
-    {
-      if (!IsMe(cptr) && one != cptr)
-#ifdef USE_VARARGS
-      sendto_prefix_one(cptr, from, pattern, vl);
-      va_end(vl);
-#else
-      sendto_prefix_one(cptr, from, pattern,
-			p1, p2, p3, p4, p5, p6, p7, p8);
-#endif
-    }
-  return;
-}
+	va_end(args);
+} /* sendto_match_butone() */
 
 /*
  * sendto_ops_lev
@@ -1175,74 +1029,75 @@ va_dcl
  *    2 = bot rejection               (+r)
  *    3 = server kills		      (+k)
  */
-#ifndef       USE_VARARGS
-/*VARARGS*/
-void  sendto_ops_lev(lev, pattern, p1, p2, p3, p4, p5, p6, p7, p8)
-int   lev;
-char  *pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8;
-{
+
+#ifdef HAVE_STDARG_H
+
+void
+sendto_ops_lev(int lev, char *pattern, ...)
+
 #else
-void  sendto_ops_lev(lev, pattern, va_alist)
-int   lev;
-char  *pattern;
+
+void
+sendto_ops_lev(lev, pattern, va_alist)
+
+int lev;
+char *pattern;
 va_dcl
+
+#endif /* HAVE_STDARG_H */
+
 {
-  va_list vl;
-#endif
-  register    aClient *cptr;
-  char   nbuf[1024];
+	va_list args;
+	register aClient *cptr;
+	char nbuf[1024];
 
-#ifdef        USE_VARARGS
-  va_start(vl);
-#endif
+	MyVaStart(args, pattern);
 
-  for(cptr = local_cptr_list; cptr; cptr = cptr->next_local_client)
-      {
-	switch (lev)
-	  {
-	  case CCONN_LEV:
-	    if (!SendCConnNotice(cptr) || !IsAnOper(cptr))
-	      continue;
-	    break;
-	  case REJ_LEV:
-	    if (!SendRejNotice(cptr) || !IsAnOper(cptr))
-	      continue;
-	    break;
-	  case SKILL_LEV:
-	    if (!SendSkillNotice(cptr))
-	      continue;
-	    break;
-	  case FULL_LEV:
-	    if (!SendFullNotice(cptr) || !IsAnOper(cptr))
-	      continue;
-	    break;
-	  case SPY_LEV: 
-	    if (!SendSpyNotice(cptr) || !IsAnOper(cptr))
-	      continue;
-	    break;
-	  case DEBUG_LEV:
-	    if (!SendDebugNotice(cptr) || !IsAnOper(cptr))
-	      continue;
-	    break;
-	  case NCHANGE_LEV:
-	    if (!SendNickChange(cptr) || !IsAnOper(cptr))
-	      continue;
-	    break;
-	  default: /* this is stupid, but oh well */
-	    if (!SendServNotice(cptr)) continue;
-	  }
-	(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
-			 me.name, cptr->name);
-	(void)strncat(nbuf, pattern,
-		      sizeof(nbuf) - strlen(nbuf));
+	for(cptr = local_cptr_list; cptr; cptr = cptr->next_local_client)
+	{
+		switch (lev)
+		{
+			case CCONN_LEV:
+				if (!SendCConnNotice(cptr) || !IsAnOper(cptr))
+					continue;
+				break;
+			case REJ_LEV:
+				if (!SendRejNotice(cptr) || !IsAnOper(cptr))
+					continue;
+				break;
+			case SKILL_LEV:
+				if (!SendSkillNotice(cptr))
+					continue;
+				break;
+			case FULL_LEV:
+				if (!SendFullNotice(cptr) || !IsAnOper(cptr))
+					continue;
+				break;
+			case SPY_LEV: 
+				if (!SendSpyNotice(cptr) || !IsAnOper(cptr))
+					continue;
+				break;
+			case DEBUG_LEV:
+				if (!SendDebugNotice(cptr) || !IsAnOper(cptr))
+					continue;
+				break;
+			case NCHANGE_LEV:
+				if (!SendNickChange(cptr) || !IsAnOper(cptr))
+					continue;
+				break;
+			default: /* this is stupid, but oh well */
+				if (!SendServNotice(cptr)) continue;
+		} /* switch (lev) */
 
-#ifdef        USE_VARARGS
-	sendto_one(cptr, nbuf, va_alist);
-#else
-	sendto_one(cptr, nbuf, p1, p2, p3, p4, p5, p6, p7, p8);
-#endif
-      }
-  return;
+		(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
+			me.name, cptr->name);
+
+		(void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
+
+		vsendto_one(cptr, nbuf, args);
+	} /* for(cptr = local_cptr_list; cptr; cptr = cptr->next_local_client) */
+
+	va_end(args);
 }  /* sendto_ops_lev */
 
 /*
@@ -1250,40 +1105,43 @@ va_dcl
  *
  *	Send to *local* ops only.
  */
-#ifndef	USE_VARARGS
-/*VARARGS*/
-void	sendto_ops(pattern, p1, p2, p3, p4, p5, p6, p7, p8)
-char	*pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8;
-{
+
+#ifdef HAVE_STDARG_H
+
+void
+sendto_ops(char *pattern, ...)
+
 #else
-void	sendto_ops(pattern, va_alist)
-char	*pattern;
+
+void
+sendto_ops(pattern, va_alist)
+
+char *pattern;
 va_dcl
+
+#endif /* HAVE_STDARG_H */
+
 {
-  va_list	vl;
-#endif
-  register	aClient *cptr;
-  char	nbuf[1024];
+	va_list args;
+	register aClient *cptr;
+	char nbuf[1024];
 
-#ifdef	USE_VARARGS
-  va_start(vl);
-#endif
+	MyVaStart(args, pattern);
 
-  for(cptr = local_cptr_list; cptr; cptr = cptr->next_local_client)
-    if(SendServNotice(cptr))
-      {
-	(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
-			 me.name, cptr->name);
-	(void)strncat(nbuf, pattern,
-		      sizeof(nbuf) - strlen(nbuf));
-#ifdef	USE_VARARGS
-	sendto_one(cptr, nbuf, va_alist);
-#else
-	sendto_one(cptr, nbuf, p1, p2, p3, p4, p5, p6, p7, p8);
-#endif
-      }
-  return;
-}
+	for (cptr = local_cptr_list; cptr; cptr = cptr->next_local_client)
+	{
+		if (SendServNotice(cptr))
+		{
+			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
+				me.name, cptr->name);
+			(void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
+
+			vsendto_one(cptr, nbuf, args);
+		}
+	}
+
+	va_end(args);
+} /* sendto_ops() */
 
 
 /*
@@ -1292,68 +1150,57 @@ va_dcl
 ** one - client not to send message to
 ** from- client which message is from *NEVER* NULL!!
 */
-#ifndef	USE_VARARGS
-/*VARARGS*/
-void	sendto_ops_butone(one, from, pattern, p1, p2, p3, p4, p5, p6, p7, p8)
-aClient *one, *from;
-char	*pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8;
-{
+
+#ifdef HAVE_STDARG_H
+
+void
+sendto_ops_butone(aClient *one, aClient *from, char *pattern, ...)
+
 #else
-void	sendto_ops_butone(one, from, pattern, va_alist)
+
+void
+sendto_ops_butone(one, from, pattern, va_alist)
+
 aClient *one, *from;
-char	*pattern;
+char *pattern;
 va_dcl
+
+#endif /* HAVE_STDARG_H */
+
 {
-  va_list	vl;
-#endif
-  register	int	i;
-  register	aClient *cptr;
+	va_list args;
+	register int index;
+	register aClient *cptr;
 
-#ifdef	USE_VARARGS
-  va_start(vl);
-#endif
+	MyVaStart(args, pattern);
 
-#ifdef USE_SENTALONG
-  memset((void *)sentalong,0,sizeof(sentalong));
-#else
-  current_serial++;
-#endif
+	++current_serial;
 
-  for (cptr = GlobalClientList; cptr; cptr = cptr->next)
-    {
-      if (!SendWallops(cptr))
-	continue;
+	for (cptr = GlobalClientList; cptr; cptr = cptr->next)
+	{
+		if (!SendWallops(cptr))
+			continue;
+
 /* we want wallops
-   if (MyClient(cptr) && !(IsServer(from) || IsMe(from)))
-   continue;
+		if (MyClient(cptr) && !(IsServer(from) || IsMe(from)))
+			continue;
 */
-      i = cptr->from->fd;	/* find connection oper is on */
 
-#ifdef USE_SENTALONG
-      if (sentalong[i])	/* sent message along it already ? */
-	continue;
-#else
-      if (sentalong[i] == current_serial)
-	continue;
-#endif
-      if (cptr->from == one)
-	continue;	/* ...was the one I should skip */
-#ifdef USE_SENTALONG
-      sentalong[i] = 1;
-#else
-      sentalong[i] = current_serial;
-#endif
-# ifdef	USE_VARARGS
-      sendto_prefix_one(cptr->from, from, pattern, vl);
-    }
-  va_end(vl);
-# else
-  sendto_prefix_one(cptr->from, from, pattern,
-		    p1, p2, p3, p4, p5, p6, p7, p8);
-    }
-# endif
-  return;
-}
+		index = cptr->from->fd; /* find connection oper is on */
+
+		if (sentalong[index] == current_serial)
+			continue;
+
+		if (cptr->from == one)
+			continue;	/* ...was the one I should skip */
+
+		sentalong[index] = current_serial;
+
+		vsendto_prefix_one(cptr->from, from, pattern, args);
+	}
+
+	va_end(args);
+} /* sendto_ops_butone() */
 
 /*
 ** sendto_wallops_butone
@@ -1361,111 +1208,109 @@ va_dcl
 ** one - client not to send message to
 ** from- client which message is from *NEVER* NULL!!
 */
-#ifndef USE_VARARGS
-/*VARARGS*/
-void    sendto_wallops_butone(one, from, pattern, p1, p2, p3, p4, p5, p6, p7, p8)
-aClient *one, *from;
-char    *pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8;
-{
+
+#ifdef HAVE_STDARG_H
+
+void
+sendto_wallops_butone(aClient *one, aClient *from, char *pattern, ...)
+
 #else
-void    sendto_wallops_butone(one, from, pattern, va_alist)
+
+void
+sendto_wallops_butone(one, from, pattern, va_alist)
+
 aClient *one, *from;
-char    *pattern;
+char *pattern;
 va_dcl
+
+#endif /* HAVE_STDARG_H */
+
 {
-  va_list vl;
-#endif
-  register     int     i;
-  register     aClient *cptr;
+	va_list args;
+	register int index;
+	register aClient *cptr;
 
-#ifdef  USE_VARARGS
-  va_start(vl);
-#endif
-#ifdef USE_SENTALONG
-  memset((void *)sentalong,0,sizeof(sentalong));
-#else
-  current_serial++;
-#endif
+	MyVaStart(args, pattern);
 
-  for (cptr = GlobalClientList; cptr; cptr = cptr->next)
-    {
-      if (!SendWallops(cptr))
-	continue;
-      if (!(IsServer(from) || IsMe(from)) &&
-	  MyClient(cptr) && !IsOper(cptr))
-	continue;
-      if (MyClient(cptr) && !IsAnOper(cptr) &&
-	  !(IsServer(from) || IsMe(from)))
-	continue;
-      i = cptr->from->fd;     /* find connection oper is on */
-#ifdef USE_SENTALONG
-      if (sentalong[i])       /* sent message along it already ? */
-	continue;
-#else
-      if (sentalong[i] == current_serial)
-	continue;
-#endif
-      if (cptr->from == one)
-	continue;       /* ...was the one I should skip */
-#ifdef USE_SENTALONG
-      sentalong[i] = 1;
-#else
-      sentalong[i] = current_serial;
-#endif
+	++current_serial;
 
-# ifdef USE_VARARGS
-      sendto_prefix_one(cptr->from, from, pattern, vl);
-    }
-  va_end(vl);
-# else
-  sendto_prefix_one(cptr->from, from, pattern,
-                                  p1, p2, p3, p4, p5, p6, p7, p8);
-  }
-# endif
-  return;
-}
+	for (cptr = GlobalClientList; cptr; cptr = cptr->next)
+	{
+		if (!SendWallops(cptr))
+			continue;
+
+		if (!(IsServer(from) || IsMe(from)) &&
+				MyClient(cptr) && !IsOper(cptr))
+			continue;
+
+		if (MyClient(cptr) && !IsAnOper(cptr) &&
+				!(IsServer(from) || IsMe(from)))
+			continue;
+
+		/* find connection oper is on */
+		index = cptr->from->fd;
+
+		if (sentalong[index] == current_serial)
+			continue;
+
+		if (cptr->from == one)
+			continue; /* ...was the one I should skip */
+
+		sentalong[index] = current_serial;
+
+		vsendto_prefix_one(cptr->from, from, pattern, args);
+	}
+
+	va_end(args);
+} /* sendto_wallops_butone() */
 
 /*
 ** send_operwall -- Send Wallop to All Opers on this server
 **
 */
 
-void    send_operwall(aClient *from, char *type_message,char *message)
+void
+send_operwall(aClient *from, char *type_message, char *message)
+
 {
-  char sender[NICKLEN+USERLEN+HOSTLEN+5];
-  aClient *acptr;
-  anUser *user;
-  
+	char sender[NICKLEN + USERLEN + HOSTLEN + 5];
+	aClient *acptr;
+	anUser *user;
 
-  if (!from || !message)
-    return;
-  if (!IsPerson(from))
-    return;
-  user = from->user;
-  (void)strcpy(sender, from->name);
-  if (*user->username) 
-    {
-      (void)strcat(sender, "!");
-      (void)strcat(sender, user->username);
-    }
-  if (*user->host && !MyConnect(from)) 
-    {
-      (void)strcat(sender, "@");
-      (void)strcat(sender, user->host);
-    }
-  else if (*user->host && MyConnect(from))
-    {
-      (void)strcat(sender, "@");
-      (void)strcat(sender, from->sockhost);
-    }
+	if (!from || !message)
+		return;
 
-  for(acptr = oper_cptr_list; acptr; acptr = acptr->next_oper_client)
-    {
-      if (!SendOperwall(acptr))
-	continue; /* has to be oper if in this linklist */
-      sendto_one(acptr, ":%s WALLOPS :%s - %s", sender, type_message, message);
-    }
-}
+	if (!IsPerson(from))
+		return;
+
+	user = from->user;
+	(void)strcpy(sender, from->name);
+
+	if (*user->username) 
+	{
+		(void)strcat(sender, "!");
+		(void)strcat(sender, user->username);
+	}
+
+	if (*user->host && !MyConnect(from)) 
+	{
+		(void)strcat(sender, "@");
+		(void)strcat(sender, user->host);
+	}
+	else if (*user->host && MyConnect(from))
+	{
+		(void)strcat(sender, "@");
+		(void)strcat(sender, from->sockhost);
+	}
+
+	for (acptr = oper_cptr_list; acptr; acptr = acptr->next_oper_client)
+	{
+		if (!SendOperwall(acptr))
+			continue; /* has to be oper if in this linklist */
+
+		sendto_one(acptr, ":%s WALLOPS :%s - %s", sender, type_message, message);
+	}
+} /* send_operwall() */
 
 /*
  * to - destination client
@@ -1473,108 +1318,154 @@ void    send_operwall(aClient *from, char *type_message,char *message)
  *
  * NOTE: NEITHER OF THESE SHOULD *EVER* BE NULL!!
  * -avalon
+ *
  */
-#ifndef	USE_VARARGS
-/*VARARGS*/
-void	sendto_prefix_one(to, from, pattern, p1, p2, p3, p4, p5, p6, p7, p8)
-register	aClient *to;
-register	aClient *from;
-char	*pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8;
-{
-#else
-void	sendto_prefix_one(to, from, pattern, va_alist)
-register	aClient *to;
-register	aClient *from;
-char	*pattern;
-va_dcl
-{
-  va_list	vl;
-#endif
-  static	char	sender[HOSTLEN+NICKLEN+USERLEN+5];
-  register	anUser	*user;
-  char	*par;
-  static	char	temp[1024];
-  int	flag = 0;
 
-#ifdef	USE_VARARGS
-  va_start(vl);
-  par = va_arg(vl, char *);
+#ifdef HAVE_STDARG_H
+
+void
+sendto_prefix_one(register aClient *to, register aClient *from, char *pattern, ...)
+
 #else
-  par = p1;
+
+void
+sendto_prefix_one(to, from, pattern, va_alist)
+
+register aClient *to, *from;
+char *pattern;
+va_dcl
+
+#endif /* HAVE_STDARG_H */
+
+{
+	va_list args;
+
+#ifdef HAVE_STDARG_H
+	va_start(args, pattern);
+#else
+	va_start(args);
 #endif
+
+	vsendto_prefix_one(to, from, pattern, args);
+
+	va_end(args);
+} /* sendto_prefix_one() */
+
+/*
+vsendto_prefix_one()
+ Backend to sendto_prefix_one(). stdarg.h does not work
+well when variadic functions pass their arguements to other
+variadic functions, so we can call this function in those
+situations.
+ This function must ALWAYS be passed a string of the form:
+":%s COMMAND <other args>"
+
+-wnder
+*/
+
+static void
+vsendto_prefix_one(register aClient *to, register aClient *from,
+                   char *pattern, va_list args)
+
+{
+	static char sender[HOSTLEN + NICKLEN + USERLEN + 5];
+	register anUser *user;
+	char *par;
+	static char temp[1024];
+	int flag;
+
+	par = va_arg(args, char *);
 
 /* Optimize by checking if (from && to) before everything */
-  if (to && from)
-    {
-      if (!MyClient(from) && IsPerson(to) && (to->from == from->from))
+	if (to && from)
 	{
-	  if (IsServer(from))
-	    {
-#ifdef	USE_VARARGS
-	      (void)ircsprintf(temp, pattern, par, vl);
-	      va_end(vl);
-#else
-	      (void)ircsprintf(temp, pattern, par, p2, p3,
-			       p4, p5, p6, p7, p8);
-#endif
-	      sendto_ops(
-		"Send message (%s) to %s[%s] dropped from %s(Fake Dir)",
-			 temp,
-			 to->name, to->from->name, from->name);
-	      return;
-	    }
-	  sendto_ops("Ghosted: %s[%s@%s] from %s[%s@%s] (%s)",
-		     to->name, to->user->username, to->user->host,
-		     from->name, from->user->username, from->user->host,
-		     to->from->name);
-	  sendto_serv_butone(NULL, ":%s KILL %s :%s (%s[%s@%s] Ghosted %s)",
-			     me.name, to->name, me.name, to->name,
-			     to->user->username, to->user->host, to->from->name);
-	  to->flags |= FLAGS_KILLED;
-	  (void)exit_client(NULL, to, &me, "Ghosted client");
-	  if (IsPerson(from))
-	    sendto_one(from, err_str(ERR_GHOSTEDCLIENT),
-		       me.name, from->name, to->name, to->user->username,
-		       to->user->host, to->from);
-	  return;
-	}
-      if (MyClient(to) && IsPerson(from) && !irccmp(par, from->name))
-	{
-	  user = from->user;
-	  (void)strcpy(sender, from->name);
-	  if (user)
-	    {
-	      if (*user->username)
+		flag = 0;
+		if (!MyClient(from) && IsPerson(to) && (to->from == from->from))
 		{
-		  (void)strcat(sender, "!");
-		  (void)strcat(sender, user->username);
-		}
-	      if (*user->host && !MyConnect(from))
+			if (IsServer(from))
+			{
+				(void)ircsprintf(temp, pattern, par, args);
+				va_end(args);
+
+				sendto_ops(
+					"Send message (%s) to %s[%s] dropped from %s(Fake Dir)",
+					temp, to->name, to->from->name, from->name);
+				return;
+			}
+
+			sendto_ops("Ghosted: %s[%s@%s] from %s[%s@%s] (%s)",
+				to->name, to->user->username, to->user->host,
+				from->name, from->user->username, from->user->host,
+				to->from->name);
+
+			sendto_serv_butone(NULL, ":%s KILL %s :%s (%s[%s@%s] Ghosted %s)",
+				me.name, to->name, me.name, to->name,
+				to->user->username, to->user->host, to->from->name);
+
+			to->flags |= FLAGS_KILLED;
+
+			(void)exit_client(NULL, to, &me, "Ghosted client");
+
+			if (IsPerson(from))
+				sendto_one(from, err_str(ERR_GHOSTEDCLIENT),
+					me.name, from->name, to->name, to->user->username,
+					to->user->host, to->from);
+
+			return;
+		} /* if (!MyClient(from) && IsPerson(to) && (to->from == from->from)) */
+
+		if (MyClient(to) && IsPerson(from) && !irccmp(par, from->name))
 		{
-		  (void)strcat(sender, "@");
-		  (void)strcat(sender, user->host);
-		  flag = 1;
-		}
-	    }
-	  /*
-	  ** flag is used instead of index(sender, '@') for speed and
-	  ** also since username/nick may have had a '@' in them. -avalon
-	  */
-	  if (!flag && MyConnect(from) && *user->host)
-	    {
-	      (void)strcat(sender, "@");
-	      (void)strcat(sender, from->sockhost);
-	    }
-	  par = sender;
-	}
-    } /* if (from && to) */
-#ifdef	USE_VARARGS
-  sendto_one(to, pattern, par, vl);
-  va_end(vl);
-#else
-  sendto_one(to, pattern, par, p2, p3, p4, p5, p6, p7, p8);
-#endif
-}
+			user = from->user;
+			(void)strcpy(sender, from->name);
+
+			if (user)
+			{
+				if (*user->username)
+				{
+					(void)strcat(sender, "!");
+					(void)strcat(sender, user->username);
+				}
+
+				if (*user->host && !MyConnect(from))
+				{
+					(void)strcat(sender, "@");
+					(void)strcat(sender, user->host);
+					flag = 1;
+				}
+			}
+
+			/*
+			** flag is used instead of index(sender, '@') for speed and
+			** also since username/nick may have had a '@' in them. -avalon
+			*/
+			if (!flag && MyConnect(from) && *user->host)
+			{
+				(void)strcat(sender, "@");
+				(void)strcat(sender, from->sockhost);
+			}
+
+			par = sender;
+		} /* if (user) */
+	} /* if (from && to) */
+
+	/*
+	 * Assume pattern is of the form: ":%s COMMAND ...",
+	 * so jump past the ":%s " after we insert our new
+	 * prefix
+	 */
+	sprintf(temp, ":%s %s",
+		par,
+		&pattern[4]);
+
+	/*
+	 * temp[] is now a modified version of pattern - pattern
+	 * used to be: ":%s COMMAND ..."
+	 * temp is now: ":nick!user@host COMMAND ..."
+	 */
+
+	vsendto_one(to, temp, args);
+} /* vsendto_prefix_one() */
 
 int format(char *outp,char *formp,char *in0p,char *in1p,char *in2p,
 	char *in3p,char *in4p,char *in5p,char *in6p,char *in7p,
@@ -1694,126 +1585,144 @@ int format(char *outp,char *formp,char *in0p,char *in1p,char *in2p,
   return (wp-outp);
 }
 
- /*
-  * sendto_realops
-  *
-  *    Send to *local* ops only but NOT +s nonopers.
-  */
-#ifndef       USE_VARARGS
-void  sendto_realops(pattern, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10)
-char  *pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8, *p9, *p10;
-{
+/*
+ * sendto_realops
+ *
+ *    Send to *local* ops only but NOT +s nonopers.
+ */
+
+#ifdef HAVE_STDARG_H
+
+void
+sendto_realops(char *pattern, ...)
+
 #else
-void  sendto_realops(pattern, va_alist)
-char  *pattern;
+
+void
+sendto_realops(pattern, va_alist)
+
+char *pattern;
 va_dcl
+
+#endif /* HAVE_STDARG_H */
+
 {
-  va_list vl;
-#endif
-  register aClient	*cptr;
-  char		nbuf[1024];
+	va_list args;
 
+	MyVaStart(args, pattern);
 
-#ifdef        USE_VARARGS
-  va_start(vl);
-#endif
+	vsendto_realops(pattern, args);
 
-  for(cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client)
-    {
-      if (SendServNotice(cptr))
+	va_end(vl);
+} /* sendto_realops() */
+
+/*
+vsendto_realops()
+ Send the given string to local operators (not +s)
+*/
+
+static void
+vsendto_realops(char *pattern, va_list args)
+
+{
+	register aClient *cptr;
+	char nbuf[1024];
+
+	for (cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client)
 	{
-	  (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
-			   me.name, cptr->name);
-	  (void)strncat(nbuf, pattern,
-			sizeof(nbuf) - strlen(nbuf));
-#ifdef        USE_VARARGS
-	  sendto_one(cptr, nbuf, va_alist);
-#else
-	  sendto_one(cptr, nbuf, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
-#endif
-	}
-    }
-#ifdef        USE_VARARGS
-  va_end(vl);
-#endif
-  return;
-}
+		if (SendServNotice(cptr))
+		{
+			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
+				me.name, cptr->name);
+			(void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
 
- /*
-  * sendto_realops_lev
-  *
-  *    Send to *local* ops only but NOT +s nonopers at a certain level
-  */
-#ifndef       USE_VARARGS
-void  sendto_realops_lev(lev, pattern, p1, p2, p3, p4, p5, p6, p7, p8)
-int	lev;
-char  *pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8;
-{
+			vsendto_one(cptr, nbuf, args);
+		}
+	}
+} /* vsendto_realops() */
+
+/*
+ * sendto_realops_lev
+ *
+ *    Send to *local* ops only but NOT +s nonopers at a certain level
+ */
+
+#ifdef HAVE_STDARG_H
+
+void
+sendto_realops_lev(int lev, char *pattern, ...)
+
 #else
-void  sendto_realops_lev(lev, pattern, va_alist)
-int	lev;
-char  *pattern;
+
+void
+sendto_realops_lev(lev, pattern, va_alist)
+
+int lev;
+char *pattern;
 va_dcl
+
+#endif /* HAVE_STDARG_H */
+
 {
-  va_list vl;
-#endif
-  register aClient	*cptr;
-  char		nbuf[1024];
+	va_list args;
+	register aClient *cptr;
+	char nbuf[1024];
 
+	MyVaStart(args, pattern);
 
-#ifdef        USE_VARARGS
-  va_start(vl);
-#endif
-
-  for(cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client)
-    {
-      switch (lev)
+	for (cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client)
 	{
-	case CCONN_LEV:
-	  if (!SendCConnNotice(cptr))
-	    continue;
-	  break;
-	case REJ_LEV:
-	  if (!SendRejNotice(cptr))
-	    continue;
-	  break;
-	case SKILL_LEV: /* This should not be sent, since this can go to
-			   normal people */
-	  if (!SendSkillNotice(cptr))
-	    continue;
-	  break;
-	case FULL_LEV:
-	  if (!SendFullNotice(cptr))
-	    continue;
-	  break;
-	case SPY_LEV:
-	  if (!SendSpyNotice(cptr))
-	    continue;
-	  break;
-	case DEBUG_LEV:
-	  if (!SendDebugNotice(cptr))
-	    continue;
-	  break;
-	case NCHANGE_LEV:
-	  if (!SendNickChange(cptr))
-	    continue;
-	  break;
-	}
-      (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
-		       me.name, cptr->name);
-      (void)strncat(nbuf, pattern,
-		    sizeof(nbuf) - strlen(nbuf));
-#ifdef        USE_VARARGS
-      sendto_one(cptr, nbuf, va_alist);
-#else
-      sendto_one(cptr, nbuf, p1, p2, p3, p4, p5, p6, p7, p8);
-#endif
-    }
-#ifdef        USE_VARARGS
-  va_end(vl);
-#endif
-  return;
-}
+		switch (lev)
+		{
+			case CCONN_LEV:
+				if (!SendCConnNotice(cptr))
+					continue;
+				break;
+
+			case REJ_LEV:
+				if (!SendRejNotice(cptr))
+					continue;
+				break;
+
+			/*
+			 * This should not be sent, since this can go to
+			 * normal people
+			 */
+			case SKILL_LEV:
+				if (!SendSkillNotice(cptr))
+					continue;
+				break;
+				
+			case FULL_LEV:
+				if (!SendFullNotice(cptr))
+					continue;
+				break;
+				
+			case SPY_LEV:
+				if (!SendSpyNotice(cptr))
+					continue;
+				break;
+				
+			case DEBUG_LEV:
+				if (!SendDebugNotice(cptr))
+					continue;
+				break;
+
+			case NCHANGE_LEV:
+				if (!SendNickChange(cptr))
+					continue;
+				break;
+		} /* switch (lev) */
+
+		(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
+			me.name, cptr->name);
+		(void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
+
+		vsendto_one(cptr, nbuf, args);
+	} /* for (cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client) */
+
+	va_end(args);
+} /* sendto_realops_lev() */
 
 
 /*
@@ -1822,109 +1731,112 @@ va_dcl
 **      every 5 seconds)
 */
  
-#ifndef USE_VARARGS
-/*VARARGS*/
-void    ts_warn(pattern, p1, p2, p3, p4, p5, p6, p7, p8)
-char    *pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8;
-{
+#ifdef HAVE_STDARG_H
+
+void
+ts_warn(char *pattern, ...)
+
 #else
-void    ts_warn(pattern, va_alist)
-char    *pattern;
+
+void
+ts_warn(pattern, va_alist)
+
+char *pattern;
 va_dcl
+
+#endif /* HAVE_STDARG_H */
+ 
 {
-        va_list vl; 
-#endif
-        static  ts_val last = 0;
-        static  int warnings = 0;
-        register ts_val now;
+	va_list args;
+	static ts_val last = 0;
+	static int warnings = 0;
+	register ts_val now;
+
+	MyVaStart(args, pattern);
  
-#ifdef  USE_VARARGS 
-        va_start(vl);
-#endif
- 
-        /*
-        ** if we're running with TS_WARNINGS enabled and someone does
-        ** something silly like (remotely) connecting a nonTS server,
-        ** we'll get a ton of warnings, so we make sure we don't send
-        ** more than 5 every 5 seconds.  -orabidoo
-        */
+	/*
+	** if we're running with TS_WARNINGS enabled and someone does
+	** something silly like (remotely) connecting a nonTS server,
+	** we'll get a ton of warnings, so we make sure we don't send
+	** more than 5 every 5 seconds.  -orabidoo
+	*/
+
 	/*
 	 * hybrid servers always do TS_WARNINGS -Dianora
 	 */
-        now = time(NULL);
-        if (now - last < 5)
-            {
-                if (++warnings > 5)
-                        return;
-            }
-        else
-            {
-                last = now;
-                warnings = 0;
-            }
- 
-#ifdef  USE_VARARGS
-        sendto_realops(pattern, va_alist);
-#else
-        sendto_realops(pattern, p1, p2, p3, p4, p5, p6, p7, p8);
-#endif
-        return;
-}
+	now = time(NULL);
+	if (now - last < 5)
+	{
+		if (++warnings > 5)
+			return;
+	}
+	else
+	{
+		last = now;
+		warnings = 0;
+	}
 
-void	flush_server_connections()
-  {
-    aClient *cptr;
+	vsendto_realops(pattern, args);
 
-    for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
-      if (DBufLength(&cptr->sendQ) > 0)
-	(void)send_queued(cptr);
-  }
+	va_end(args);
+} /* ts_warn() */
 
-#ifdef SLAVE_SERVERS 
+void
+flush_server_connections()
+{
+	aClient *cptr;
+
+	for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
+		if (DBufLength(&cptr->sendQ) > 0)
+			(void)send_queued(cptr);
+} /* flush_server_connections() */
+
+#ifdef SLAVE_SERVERS
+
 extern aConfItem *u_conf;
 
-int sendto_slaves(aClient *one,
-		  char *message,
-		  char *nick,
-		  int parc,
-		  char *parv[])
-  {
-    aClient *acptr;
-    aConfItem *aconf;
+int
+sendto_slaves(aClient *one, char *message, char *nick, int parc, char *parv[])
 
-    for(acptr = serv_cptr_list; acptr; acptr = acptr->next_server_client)
-      {
-	if( one == acptr )
-	  continue;
+{
+	aClient *acptr;
+	aConfItem *aconf;
 
-	for(aconf = u_conf; aconf; aconf= aconf->next)
-	  {
-	    if (match(acptr->name,aconf->name))
-	      {
-		if(parc > 3)
-		  sendto_one(acptr,":%s %s %s %s %s :%s",
-			     me.name,
-			     message,
-			     nick,
-			     parv[1],
-			     parv[2],
-			     parv[3]);
-		else if(parc > 2)
-		  sendto_one(acptr,":%s %s %s %s :%s",
-			     me.name,
-			     message,
-			     nick,
-			     parv[1],
-			     parv[2]);
-		else if(parc > 1)
-		  sendto_one(acptr,":%s %s %s :%s",
-			     me.name,
-			     message,
-			     nick,
-			     parv[1]);
-	      }
-	  }
-      }
-    return 0;
-  }
-#endif
+	for(acptr = serv_cptr_list; acptr; acptr = acptr->next_server_client)
+	{
+		if (one == acptr)
+			continue;
+
+		for (aconf = u_conf; aconf; aconf = aconf->next)
+		{
+			if (match(acptr->name,aconf->name))
+			{ 
+				if(parc > 3)
+					sendto_one(acptr,":%s %s %s %s %s :%s",
+						me.name,
+						message,
+						nick,
+						parv[1],
+						parv[2],
+						parv[3]);
+				else if(parc > 2)
+					sendto_one(acptr,":%s %s %s %s :%s",
+						me.name,
+						message,
+						nick,
+						parv[1],
+						parv[2]);
+				else if(parc > 1)
+					sendto_one(acptr,":%s %s %s :%s",
+						me.name,
+						message,
+						nick,
+						parv[1]);
+			} /* if (match(acptr->name,aconf->name)) */
+		} /* for (aconf = u_conf; aconf; aconf = aconf->next) */
+	} /* for(acptr = serv_cptr_list; acptr; acptr = acptr->next_server_client) */
+
+	return 0;
+} /* sendto_slaves() */
+
+#endif /* SLAVE_SERVERS */

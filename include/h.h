@@ -148,57 +148,15 @@ extern	int	send_queued (aClient *);
 
 /* Missing definitions */
 /*VARARGS*/
-extern  void	sendto_ops_lev();		/* defined in send.c */
-extern  void	sendto_realops_lev();		/* defined in send.c */
-extern  void	sendto_realops();		/* defined in send.c */
-extern  void	send_operwall(aClient *,char *,char *);	/* defined in send.c */
-extern  void	sendto_wallops_butone();	/* defined in send.c */
 extern  void    send_capabilities(aClient *,int);
 extern  int	is_address(char *,unsigned long *,unsigned long *); 
 extern  void	do_include_conf();
 extern  void	del_client_from_llist(aClient **, aClient *);
-extern	void	sendto_channel_type_notice(aClient *, aChannel *, int, char *);
 extern	aConfItem	*match_Dline(unsigned long);
 extern	int	show_lusers(aClient *, aClient *, int, char **);
 extern	int	nickkilldone(aClient *, aClient *, int, char **,ts_val,char *);
 extern	char	*show_iline_prefix(aClient *,aConfItem *,char *);
-extern	int sendto_slaves(aClient *, char *, char *, int, char **);
 /* END Missing definitions */
-
-/*VARARGS2*/
-extern	void	sendto_one();
-/*VARARGS4*/
-extern	void	sendto_channel_butone();
-/*VARARGS5*/
-extern	void	sendto_channel_type();
-/*VARARGS2*/
-extern	void	sendto_serv_butone();
-
-/*VARARGS3*/
-extern	void	sendto_cap_serv_butone();
-
-/*VARARGS3*/
-extern  void	sendto_match_cap_servs();
-
-/*VARARGS2*/
-extern	void	sendto_common_channels();
-/*VARARGS3*/
-extern	void	sendto_channel_butserv();
-/*VARARGS3*/
-extern	void	sendto_match_servs();
-/*VARARGS5*/
-extern	void	sendto_match_butone();
-/*VARARGS3*/
-extern	void	sendto_all_butone();
-/*VARARGS1*/
-extern	void	sendto_ops();
-/*VARARGS1*/
-extern	void	ts_warn();
-/*VARARGS3*/
-extern	void	sendto_ops_butone();
-/*VARARGS3*/
-extern	void	sendto_prefix_one();
-extern	void	vsendto_prefix_one();
 
 extern	int	writecalls, writeb[];
 extern	int	deliver_it (aClient *, char *, int);
