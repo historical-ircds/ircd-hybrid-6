@@ -236,7 +236,6 @@ static void init_sys(int boot_daemon)
         }
       printf("Value of FD_SETSIZE is %d\n", FD_SETSIZE);
 #endif /* USE_POLL */
-      printf("Value of NOFILE is %d\n", NOFILE);
     }
 #endif        /* RLIMIT_FD_MAX */
 
