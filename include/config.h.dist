@@ -711,8 +711,8 @@
    
 /* ----------------- not approved on EFnet section -------------------- 
  *
- * if you are not an efnet admin, you might want to define some of
- * these.. --fl_
+ * if you are an efnet admin, some of these are not officially supported,
+ * so you may want to undef some -- fl_
  */
 
 /* GLINES - global Kline-like bans
@@ -739,7 +739,7 @@
 /* Ignore bogus timestamps from other servers. Yes this will desync
  * the network, but it will allow chanops to resync with a valid non TS 0
  */
-#undef IGNORE_BOGUS_TS
+#define IGNORE_BOGUS_TS
 
 /* CHANMODE_E
  * /mode #channel +e allows you to add exceptions to bans.
@@ -757,12 +757,12 @@
  * stop server "+e patches" and desyncs across a hub where leaf servers
  * +e lists differ.   --fl_
  */
-#undef CHANMODE_E
+#define CHANMODE_E
 
 /* USE_KNOCK
  * KNOCK allows users to send a "knock" to a +i channel.
  */
-#undef USE_KNOCK
+#define USE_KNOCK
 
 /* -------------- END NOT APPROVED ON EFNET SECTION --------------------- */
 
