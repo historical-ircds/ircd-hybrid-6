@@ -3,6 +3,10 @@
 *** Newest entries at top
 
 version hybrid-6-b60   29-Apr-1999
+* fixed major bug in mtrie code. I lines would be treated as K lines
+  in some cases. 2-May-1999
+
+version hybrid-6-b60   29-Apr-1999
 * if server split time is 0, i.e. split code is disabled, dont'
   put the server into split mode, this can leave 0 member channels
   lying around after a split.

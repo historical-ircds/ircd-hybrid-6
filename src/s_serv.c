@@ -3584,6 +3584,7 @@ int   m_set(aClient *cptr,
                              me.name, parv[0]);
                   return 0;
                 }
+	      /* sygma found it, the hard way */
 	      if(newval > MAX_SERVER_SPLIT_RECOVERY_TIME)
 		{
 		  sendto_one(sptr,

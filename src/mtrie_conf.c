@@ -596,12 +596,12 @@ static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
  * This would necessitate logic changes in sortable()
  *
  */
-
 static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 				     char *host_piece,char *user)
 {
   aConfItem *first_aconf=(aConfItem *)NULL;
   aConfItem *second_aconf=(aConfItem *)NULL;
+  aConfItem *aconf=(aConfItem *)NULL;
   DOMAIN_PIECE *ptr;
   DOMAIN_PIECE *pptr;
   DOMAIN_PIECE *piece_ptr;
@@ -614,21 +614,20 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
     {
       if(!match(ptr->host_piece,host_piece) && (ptr->flags & flags))
 	{
+	  first_aconf = (aConfItem *)NULL;
 	  for(pptr = ptr; pptr; pptr=pptr->next_piece)
 	    {
 	      if(first_aconf)
 		break;
-
-	      if(pptr->conf_ptr)
+	      else if(pptr->conf_ptr)
 		{
-		  first_aconf = pptr->conf_ptr;
+		  aconf= pptr->conf_ptr;
 		  if( (!matches(pptr->host_piece,host_piece)) &&
-		      (!matches(first_aconf->name,user)))
+		      (!matches(aconf->name,user)) &&
+		      (aconf->status & flags) )
 		    {
-		      break;
+		      first_aconf = aconf;
 		    }
-		  else
-		    first_aconf = (aConfItem *)NULL;
 		}
 	    }
 
@@ -642,7 +641,8 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 	    {
 	      if(!pptr->wild_conf_ptr)
 		continue;
-	      second_aconf = pptr->wild_conf_ptr;
+	      if(pptr->wild_conf_ptr->status & flags)
+		second_aconf = pptr->wild_conf_ptr;
 	    }
 	}
     }
