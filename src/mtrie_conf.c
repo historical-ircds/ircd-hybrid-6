@@ -67,15 +67,15 @@ static void report_dup(char,aConfItem *);
 static int sortable(char *,char *);
 static void tokenize_and_stack(char *,char *);
 static void create_sub_mtrie(DOMAIN_LEVEL *,aConfItem *,int,char *);
-static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *,char *,char *,char *,int);
+static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *,char *,char *,int);
 char *show_iline_prefix(aClient *,aConfItem *,char *);
 static DOMAIN_PIECE *find_or_add_host_piece(DOMAIN_LEVEL *,int,char *);
 static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *,int,char *,char *);
-static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *,int,char *,char *,char *);
+static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *,int,char *,char *);
 static void find_or_add_user_piece(DOMAIN_PIECE *,aConfItem *,int,char *);
-static aConfItem *find_user_piece(DOMAIN_PIECE *,char *,char *,char *);
+static aConfItem *find_user_piece(DOMAIN_PIECE *,char *,char *);
 
-static aConfItem *look_in_unsortable_ilines(char *,char *,char *);
+static aConfItem *look_in_unsortable_ilines(char *,char *);
 static aConfItem *look_in_unsortable_klines(char *,char *);
 static aConfItem *find_wild_card_iline(char *);
 
@@ -485,14 +485,13 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
  * inputs	- pointer to current level 
  *		- piece of domain name being looked for
  *		- username
- *		- password
  * output	- pointer to next DOMAIN_LEVEL to use
  * side effects -
  *
  */
 
 static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr,
-		     char *host_piece,char *user,char *pass)
+		     char *host_piece,char *user)
 {
   DOMAIN_PIECE *ptr;
   aConfItem *aconf=(aConfItem *)NULL;
@@ -510,25 +509,9 @@ static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr,
       if( (!matches(ptr->host_piece,host_piece)) &&
 	  (!matches(aconf->name,user)))
 	{
-	  if(pass && *pass)
-	    {
-	      if(strcasecmp(aconf->passwd,pass))
-		{
-		  match = NO;
-		}
-	      else
-		{
-		  match = YES;
-		  if(aconf->flags & CONF_FLAGS_E_LINED)
-		    return(aconf);
-		}
-	    }
-	  else
-	    {
-	      match = YES;
-	      if(aconf->flags & CONF_FLAGS_E_LINED)
-		return(aconf);
-	    }
+	  match = YES;
+	  if(aconf->flags & CONF_FLAGS_E_LINED)
+	    return(aconf);
 	}
     }
 
@@ -615,7 +598,7 @@ static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
  */
 
 static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
-				     char *host_piece,char *user,char *pass)
+				     char *host_piece,char *user)
 {
   aConfItem *first_aconf=(aConfItem *)NULL;
   aConfItem *second_aconf=(aConfItem *)NULL;
@@ -642,15 +625,6 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 		  if( (!matches(pptr->host_piece,host_piece)) &&
 		      (!matches(first_aconf->name,user)))
 		    {
-		      /* This is actually where a well placed
-		       * goto could have gone. What that means is,
-		       * I need to rewrite this someday.
-		       */
-		      if(pass && *pass)
-			{
-			  if(strcasecmp(first_aconf->passwd,pass))
-			    first_aconf = (aConfItem *)NULL;
-			}
 		      break;
 		    }
 		  else
@@ -702,7 +676,7 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 
  */
 
-aConfItem *find_matching_mtrie_conf(char *host,char *user,char *pass,
+aConfItem *find_matching_mtrie_conf(char *host,char *user,
 				    unsigned long ip)
 {
   aConfItem *iline_aconf_unsortable=(aConfItem *)NULL;
@@ -716,7 +690,7 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,char *pass,
    * special cases like *@*ppp* first
    */
 
-  iline_aconf_unsortable = look_in_unsortable_ilines(host,user,pass);
+  iline_aconf_unsortable = look_in_unsortable_ilines(host,user);
 
   /* an E lined I line is always accepted first
    * there is no point checking for a k-line
@@ -755,7 +729,7 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,char *pass,
       saved_stack_pointer = -1;
       first_kline_trie_list = (DOMAIN_LEVEL *)NULL;
 
-      iline_aconf = find_sub_mtrie(trie_list,host,user,pass,CONF_CLIENT);
+      iline_aconf = find_sub_mtrie(trie_list,host,user,CONF_CLIENT);
 
       /* If either an E line or K line is found, there is no need
        * to go any further. If there wasn't an I line found,
@@ -853,13 +827,13 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,char *pass,
       if(first_kline_trie_list)
 	{
 	  stack_pointer = saved_stack_pointer;
-	  kline_aconf = find_sub_mtrie(first_kline_trie_list,host,user,pass,
+	  kline_aconf = find_sub_mtrie(first_kline_trie_list,host,user,
 				       CONF_KILL);
 	}
       else
 	{
 	  stack_pointer = top_of_stack;
-	  kline_aconf = find_sub_mtrie(trie_list,host,user,pass,CONF_KILL);
+	  kline_aconf = find_sub_mtrie(trie_list,host,user,CONF_KILL);
 	}
     }
   else
@@ -894,7 +868,7 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,char *pass,
  */
 
 static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
-				 char *host,char *user,char *pass,int flags)
+				 char *host,char *user,int flags)
 {
   DOMAIN_PIECE *cur_piece;
   DOMAIN_PIECE *cur_wild_piece;
@@ -913,7 +887,7 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
       /* This handles: "*foobar.com" type of kline "*.bar.com" type of kline
        */
 
-      aconf = find_wild_host_piece(cur_level,flags,cur_dns_piece,user,pass);
+      aconf = find_wild_host_piece(cur_level,flags,cur_dns_piece,user);
       if(aconf && aconf->status & CONF_KILL)
 	return(aconf);
 
@@ -929,7 +903,7 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
       cur_piece = find_host_piece(cur_level,flags,cur_dns_piece,user);
       if(!cur_piece)
 	{
-	  aconf = find_wild_host_piece(cur_level,flags,cur_dns_piece,user,pass);
+	  aconf = find_wild_host_piece(cur_level,flags,cur_dns_piece,user);
 	  if(aconf)
 	    return(aconf);
 	  else
@@ -944,26 +918,26 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
     }
 
   if(stack_pointer == 0)
-    return(find_user_piece(cur_piece,cur_dns_piece,user,pass));
+    return(find_user_piece(cur_piece,cur_dns_piece,user));
 
   if(cur_piece->next_level)
     cur_level = cur_piece->next_level;
   else
     {
-      aconf = find_wild_host_piece(cur_level,flags,cur_dns_piece,user,pass);
+      aconf = find_wild_host_piece(cur_level,flags,cur_dns_piece,user);
 
-      if(aconf = find_user_piece(cur_piece,cur_dns_piece,user,pass))
+      if(aconf = find_user_piece(cur_piece,cur_dns_piece,user))
 	return(aconf);
       else
 	{
 
 	  if(!cur_piece)
 	    return((aConfItem *)NULL);
-	  return(find_user_piece(cur_piece,cur_dns_piece,user,pass));
+	  return(find_user_piece(cur_piece,cur_dns_piece,user));
 	}
     }
 
-  return(find_sub_mtrie(cur_level,host,user,pass,flags));
+  return(find_sub_mtrie(cur_level,host,user,flags));
 }
 
 
@@ -1116,14 +1090,13 @@ static void tokenize_and_stack(char *tokenized,char *p)
  *
  * inputs	- host name
  * 		- username
- *		- password
  * output	- aConfItem pointer or NULL
  * side effects -
  *
  * scan the link list of unsortable patterns
  */
 
-static aConfItem *look_in_unsortable_ilines(char *host,char *user,char *pass)
+static aConfItem *look_in_unsortable_ilines(char *host,char *user)
 {
   aConfItem *found_conf;
 
@@ -1132,10 +1105,6 @@ static aConfItem *look_in_unsortable_ilines(char *host,char *user,char *pass)
       if(!matches(found_conf->host,host) &&
 	 !matches(found_conf->name,user))
 	{
-	  if(pass && *pass)
-	    if(!matches(found_conf->passwd,pass))
-	       return(found_conf);
-	  else
 	    return(found_conf);
 	}
     }

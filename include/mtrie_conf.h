@@ -10,7 +10,7 @@
 #include "struct.h"
 
 extern void add_mtrie_conf_entry(aConfItem *,int);
-extern aConfItem *find_matching_mtrie_conf(char *,char *,char *,unsigned long);
+extern aConfItem *find_matching_mtrie_conf(char *,char *,unsigned long);
 extern void report_mtrie_conf_links(aClient *,int);
 extern void clear_mtrie_conf_links(void);
 extern void report_matching_host_klines(aClient *,char *);
