@@ -2367,9 +2367,6 @@ static int SplitUserHost(aConfItem *aconf)
  * output	- NONE
  * side effect	-
  * hash in any .include conf files listed in the conf file
- * I do them =after= the conf file is read in, because dgets
- * is non re-entrant. This has the side effect of ordering
- * things a bit differently then one might expect.
  * -Dianora
  */
 
