@@ -1,3 +1,15 @@
+db          2001/12/10 01:53:08 EST	(20011210_4)
+
+  Modified files:
+    src                  s_conf.c 
+  Log:
+  - fix oper_reason for tklines
+  
+  Revision  Changes    Path
+  1.228     +12 -10    ircd-hybrid-6/src/s_conf.c
+
+
+
 db          2001/12/10 01:43:11 EST	(20011210_3)
 
   Modified files:
