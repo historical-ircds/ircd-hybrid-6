@@ -1,3 +1,15 @@
+db          2002/01/14 15:29:51 EST	(20020114_3)
+
+  Modified files:
+    src                  s_user.c 
+  Log:
+  - fixed bug with local sending of modes
+  
+  Revision  Changes    Path
+  1.247     +5 -1      ircd-hybrid-6/src/s_user.c
+
+
+
 db          2002/01/14 08:35:31 EST	(20020114_2)
 
   Modified files:
