@@ -1,3 +1,12 @@
+*** 19990810_1 by lusky
+revved patchlevel to b96
+fixed bug with NO_JOIN_ON_SPLIT on a coldstart
+FLAGS_SPY was being checked against old flags in m_whois, its now umodes (db)
+%lu screws up idle times as seen by a lot of scripts, notably bitchx (db)
+added include for stdlib.h to mkpasswd.c
+moved rcs Id into comments in fixklines.c
+
+
 *** 19990809_2 by lusky
 remove <sys/syslog.h> check from configure, assume <syslog.h> exists (sw)
 cleaned up attach_Iline some more (db)
