@@ -176,8 +176,8 @@ void add_to_client_hash_table(const char* name, struct Client* cptr)
   hashv = hash_nick_name(name);
   cptr->hnext = (struct Client*) clientTable[hashv].list;
   clientTable[hashv].list = (void*) cptr;
-  clientTable[hashv].links++;
-  clientTable[hashv].hits++;
+  ++clientTable[hashv].links;
+  ++clientTable[hashv].hits;
 }
 
 /*
@@ -218,7 +218,7 @@ void del_from_client_hash_table(const char* name, struct Client* cptr)
           if (prev)
             prev->hnext = tmp->hnext;
           else
-            clientTable[hashv].list = (void *)tmp->hnext;
+            clientTable[hashv].list = (void*) tmp->hnext;
           tmp->hnext = NULL;
 
           assert(clientTable[hashv].links > 0);
@@ -246,7 +246,7 @@ void del_from_channel_hash_table(const char* name, struct Channel* chptr)
   assert(0 != chptr);
 
   hashv = hash_channel_name(name);
-  tmp = (struct Channel*)channelTable[hashv].list;
+  tmp = (struct Channel*) channelTable[hashv].list;
 
   for ( ; tmp; tmp = tmp->hnextch)
     {
@@ -255,7 +255,7 @@ void del_from_channel_hash_table(const char* name, struct Channel* chptr)
           if (prev)
             prev->hnextch = tmp->hnextch;
           else
-            channelTable[hashv].list=(void*)tmp->hnextch;
+            channelTable[hashv].list = (void*) tmp->hnextch;
           tmp->hnextch = NULL;
 
           assert(channelTable[hashv].links > 0);
@@ -275,8 +275,8 @@ struct Client* hash_find_client(const char* name, struct Client* cptr)
 {
   struct Client* tmp;
   unsigned int   hashv;
-
   assert(0 != name);
+
   hashv = hash_nick_name(name);
   tmp = (struct Client*) clientTable[hashv].list;
   /*
@@ -286,12 +286,12 @@ struct Client* hash_find_client(const char* name, struct Client* cptr)
     if (irccmp(name, tmp->name) == 0)
       {
 #ifdef        DEBUGMODE
-        clhits++;
+        ++clhits;
 #endif
         return tmp;
       }
 #ifdef        DEBUGMODE
-  clmiss++;
+  ++clmiss;
 #endif
 return cptr;
 
@@ -369,7 +369,7 @@ struct Client* hash_find_server(const char* name, struct Client* cptr)
       if (irccmp(name, tmp->name) == 0)
         {
 #ifdef        DEBUGMODE
-          clhits++;
+          ++clhits;
 #endif
           return tmp;
         }
@@ -378,7 +378,7 @@ struct Client* hash_find_server(const char* name, struct Client* cptr)
   tmp = hash_find_masked_server(name, cptr);
 #ifdef        DEBUGMODE
   if (tmp == cptr)
-    clmiss++;
+    ++clmiss;
 #endif
   return tmp;
 }
@@ -399,12 +399,12 @@ struct Channel* hash_find_channel(const char* name, struct Channel* chptr)
     if (irccmp(name, tmp->chname) == 0)
       {
 #ifdef        DEBUGMODE
-        chhits++;
+        ++chhits;
 #endif
         return tmp;
       }
 #ifdef        DEBUGMODE
-  chmiss++;
+  ++chmiss;
 #endif
   return chptr;
 }
