@@ -814,6 +814,19 @@
  */
 #define WINTRHAWK
 
+/*
+ * comstud and I have both noted that solaris 2.5 at least, takes a hissy
+ * fit if you don't read a fd that becomes ready right away. Unfortunately
+ * the dog3 priority code relies upon not having to read a ready fd right away.
+ * If you have HTM mode set low as it is normally, the server will
+ * eventually grind to a halt.
+ * Don't complain if Solaris lags if you don't define this. I warned you.
+ *
+ * -Dianora
+ */
+
+#define NO_PRIORITY
+
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 
 /* You shouldn't change anything below this line, unless absolutely needed. */

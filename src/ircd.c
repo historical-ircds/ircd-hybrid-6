@@ -1566,6 +1566,7 @@ time_t io_loop(time_t delay)
    }
 #else
   (void)read_message(delay, NULL); /*  check everything! */
+  flush_server_connections();
 #endif
 
   /*
