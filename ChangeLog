@@ -1,3 +1,8 @@
+*** 19991208_1 by lusky
+revved patchlevel to b115
+DNS coring problem is fixed!! (db)
+
+
 *** 19991115_2 by lusky
 added USE_LOGFILE to config.h
 added MFLAGS to toplevel Makefile.in so I can do parallel makes
