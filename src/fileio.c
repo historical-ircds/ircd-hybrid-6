@@ -26,6 +26,7 @@
 #include <fcntl.h>  /* O_RDONLY, O_WRONLY, ... */
 #include <unistd.h> /* read, write, open, close */
 #include <assert.h> /* assert */
+#include <string.h>
 
 #define FB_EOF  0x01
 #define FB_FAIL 0x02

@@ -38,6 +38,7 @@
 typedef unsigned char byte;
 
 #include <stdarg.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <unistd.h>
 #include <signal.h>

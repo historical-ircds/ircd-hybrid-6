@@ -12,6 +12,7 @@
 #include "s_log.h"
 
 #include <unistd.h>
+#include <stdlib.h>
 
 /* external var */
 extern char** myargv;

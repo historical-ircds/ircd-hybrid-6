@@ -28,6 +28,7 @@
 #include "numeric.h"
 #include "s_serv.h"
 #include "send.h"
+#include <string.h>
 
 /*
  * m_functions execute protocol messages on this server:

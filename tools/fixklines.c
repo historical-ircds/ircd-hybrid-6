@@ -32,6 +32,7 @@ Typical usage:
 #include <sys/types.h>
 #include <sys/time.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 #define MAXLINE 1024
 #define YES 1

@@ -31,6 +31,7 @@
 #include "irc_string.h"
 
 #include <assert.h>
+#include <string.h>
 
 /*
 ** dopacket

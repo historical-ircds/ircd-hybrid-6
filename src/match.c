@@ -28,6 +28,7 @@
 #include "irc_string.h"
 #include "config.h"      /* RFC1035_ANAL */
 #include <assert.h>
+#include <string.h>
 
 /*
 **  Compare if a given string (name) matches the given

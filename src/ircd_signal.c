@@ -25,6 +25,7 @@
 #include "s_log.h"
 #include "send.h"         /* flush_connections */
 
+#include <stdlib.h>
 #include <signal.h>
 
 /*

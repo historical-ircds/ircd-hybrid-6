@@ -37,6 +37,7 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 
 #if defined(CRYPT_OPER_PASSWORD) && defined(HAVE_CRYPT_H)
 #include <crypt.h>

@@ -30,6 +30,7 @@
 #include "s_bsd.h"
 #include "s_log.h"
 #include "send.h"
+#include <stdlib.h>
 
 /*
  * m_functions execute protocol messages on this server:

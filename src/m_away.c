@@ -30,6 +30,7 @@
 #include "send.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 /*
  * m_functions execute protocol messages on this server:
