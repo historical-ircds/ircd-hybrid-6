@@ -497,7 +497,7 @@ static	int	register_user(aClient *cptr,
 	  {
 	    if(sptr->user)
 	      {
-		if (sptr->flags & FLAGS_DOID && !(sptr->flags & FLAGS_GOTID))
+		if (IsNeedId(sptr) && !IsGotId(sptr))
 		  {
 		    *user->username = '~';
 		    strncpy(&user->username[1], username, USERLEN);
@@ -540,14 +540,14 @@ static	int	register_user(aClient *cptr,
 	}
 
       aconf = sptr->confs->value.aconf;
-      if ((sptr->flags & FLAGS_DOID) && !(sptr->flags & FLAGS_GOTID))
+      if (IsNeedId(sptr) && !IsGotId(sptr))
 	{
 	  /* because username may point to user->username */
-	  char	temp[USERLEN+1];
+	  char	temp[USERLEN + 1];
 	  
-	  strncpyzt(temp, username, USERLEN+1);
+	  strncpyzt(temp, username, USERLEN + 1);
 	  *user->username = '~';
-	  (void)strncpy(&user->username[1], temp, USERLEN);
+	  strncpy(&user->username[1], temp, USERLEN);
 	  user->username[USERLEN] = '\0';
 
 	  if(aconf && IsNeedIdentd(aconf))
@@ -559,12 +559,12 @@ static	int	register_user(aClient *cptr,
 	    }
 	  if(aconf && IsNoTilde(aconf))
 	    {
-	      strncpyzt(user->username, username, USERLEN+1);
+	      strncpyzt(user->username, username, USERLEN + 1);
 	    }
 	}
 #ifndef FOLLOW_IDENT_RFC
-      else if (sptr->flags & FLAGS_GOTID && *sptr->username != '-')
-	strncpyzt(user->username, sptr->username, USERLEN+1);
+      else if (IsGotId(sptr) && *sptr->username != '-')
+	strncpyzt(user->username, sptr->username, USERLEN + 1);
 #endif
       else
 	strncpyzt(user->username, username, USERLEN+1);

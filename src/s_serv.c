@@ -19,16 +19,9 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ *   $Id$
  */
-
-#ifndef lint
-static  char sccsid[] = "@(#)s_serv.c	2.55 2/7/94 (C) 1988 University of Oulu, \
-Computing Center and Jarkko Oikarinen";
-
-
-static char *rcs_version = "$Id$";
-#endif
-
 
 #define CAPTAB
 #include "struct.h"
@@ -916,7 +909,7 @@ int	m_server_estab(aClient *cptr)
   memset((void *)cptr->passwd, 0,sizeof(cptr->passwd));
 
   /* Its got identd , since its a server */
-  cptr->flags |= FLAGS_GOTID;
+  SetGotId(cptr);
 
 #ifndef	HUB
   /* Its easy now, if there is a server in my link list

@@ -278,7 +278,7 @@ int	attach_Iline(aClient *cptr,
       strncpy(host, sockhost, HOSTLEN);
     }
 
-  if(cptr->flags & FLAGS_GOTID)
+  if (IsGotId(cptr))
     {
       aconf = find_matching_mtrie_conf(host,cptr->username,
 				       ntohl(cptr->ip.s_addr));
@@ -291,7 +291,7 @@ int	attach_Iline(aClient *cptr,
   else
     {
       non_ident[0] = '~';
-      strncpy(&non_ident[1],username, USERLEN-1);
+      strncpy(&non_ident[1],username, USERLEN - 1);
       non_ident[USERLEN] = '\0';
       aconf = find_matching_mtrie_conf(host,non_ident,
 				       ntohl(cptr->ip.s_addr));
@@ -317,7 +317,7 @@ int	attach_Iline(aClient *cptr,
 #endif	/* GLINES */
 
 	  if(IsConfDoIdentd(aconf))
-	    SetDoId(cptr);
+	    SetNeedId(cptr);
 
 	  /* Thanks for spoof idea amm */
 	  if(IsConfDoSpoofIp(aconf))
@@ -574,7 +574,7 @@ static int count_users_on_this_ip(IP_ENTRY *ip_list,
     {
       if(ptr->value.cptr->user)
 	{
-	  if(this_client->flags & FLAGS_GOTID)
+	  if (IsGotId(this_client))
 	    {
 	      if(!strcasecmp(ptr->value.cptr->user->username,username))
 		  count++;

@@ -17,6 +17,15 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  *   $Id$
+ *
+ * Changes:
+ *   July 6, 1999 - Rewrote most of the code here. When a client connects
+ *     to the server and passes initial socket validation checks, it
+ *     is owned by this module (auth) which returns it to the rest of the
+ *     server when dns and auth queries are finished. Until the client is
+ *     released, the server does not know it exists and does not process
+ *     any messages from it.
+ *     --Bleep  Thomas Helvey <tomh@inxpress.net>
  */
 #include "s_auth.h"
 #include "struct.h"
@@ -32,6 +41,86 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <assert.h>
+
+#ifdef USE_REPORT_MACROS
+/*
+ * moved these here from struct.h, this is the only place they're used
+ * Changed: Added CR's 1459 sez CRLF is the record terminator
+ * NOTE: These macros do not reduce the space required for these strings.
+ * Notably, the Solaris compiler does not fold string constants so you will
+ * get a new copy of the string for every location it's used in. 
+ */
+#define REPORT_DO_DNS    "NOTICE AUTH :*** Looking up your hostname...\r\n"
+#define REPORT_FIN_DNS   "NOTICE AUTH :*** Found your hostname\r\n"
+#define REPORT_FIN_DNSC  "NOTICE AUTH :*** Found your hostname, cached\r\n"
+#define REPORT_FAIL_DNS  "NOTICE AUTH :*** Couldn't look up your hostname\r\n"
+#define REPORT_DO_ID     "NOTICE AUTH :*** Checking Ident\r\n"
+#define REPORT_FIN_ID    "NOTICE AUTH :*** Got Ident response\r\n"
+#define REPORT_FAIL_ID   "NOTICE AUTH :*** No Ident response\r\n"
+/*
+ * We don't want to calculate these every time they are used :)
+ * NOTE: Macros just do text replacement, if the compiler is brain dead
+ * this will get computed anyways, replacement != optimization, it's still
+ * up to the compiler to get it right. None of these buy anything but
+ * notational convenience.
+ */
+#define R_do_dns   (sizeof(REPORT_DO_DNS)   - 1)
+#define R_fin_dns  (sizeof(REPORT_FIN_DNS)  - 1)
+#define R_fin_dnsc (sizeof(REPORT_FIN_DNSC) - 1)
+#define R_fail_dns (sizeof(REPORT_FAIL_DNS) - 1)
+#define R_do_id    (sizeof(REPORT_DO_ID)    - 1)
+#define R_fin_id   (sizeof(REPORT_FIN_ID)   - 1)
+#define R_fail_id  (sizeof(REPORT_FAIL_ID)  - 1)
+/*
+ * sendheader from orabidoo TS4
+ * Changed, if a client is here, it's unknown
+ */
+#define sendheader(cptr, msg, len) \
+   send((cptr)->fd, (msg), (len), 0)
+/*
+ * Using the above macros the preprocesor will substitute the text:
+ * sendheader(client, REPORT_DNS, R_do_dns);
+ * with the text:
+ * send(client->fd, "NOTICE AUTH :*** Looking up your hostname...\r\n", \
+ * (sizeof("NOTICE AUTH :*** Looking up your hostname...\r\n") - 1));
+ * It can be observed by the preceding that what you see is not always
+ * what you get, or what you wanted when you try to use the preprocessor 
+ * for optimization.
+ *
+ * Sorry 'bout the rant, but many people have notions about preprocessors
+ * that are simply incorrect. --Bleep
+ */
+#else
+/*
+ * a bit different approach
+ */
+static struct {
+  const char* message;
+  size_t      length;
+} HeaderMessages [] = {
+  /* 12345678901234567890123456789012345678901234567890123456 */
+  { "NOTICE AUTH :*** Looking up your hostname...\r\n",    46 },
+  { "NOTICE AUTH :*** Found your hostname\r\n",            38 },
+  { "NOTICE AUTH :*** Found your hostname, cached\r\n",    46 },
+  { "NOTICE AUTH :*** Couldn't look up your hostname\r\n", 49 },
+  { "NOTICE AUTH :*** Checking Ident\r\n",                 33 },
+  { "NOTICE AUTH :*** Got Ident response\r\n",             37 },
+  { "NOTICE AUTH :*** No Ident response\r\n",              36 }
+};
+
+typedef enum {
+  REPORT_DO_DNS,
+  REPORT_FIN_DNS,
+  REPORT_FIN_DNSC,
+  REPORT_FAIL_DNS,
+  REPORT_DO_ID,
+  REPORT_FIN_ID,
+  REPORT_FAIL_ID
+} ReportType;
+
+#define sendheader(c, r) \
+   send((c)->fd, HeaderMessages[(r)].message, HeaderMessages[(r)].length, 0)
+#endif
 
 struct AuthRequest* AuthPollList = 0; /* GLOBAL - auth queries pending io */
 
@@ -130,10 +219,18 @@ static void auth_dns_callback(void* vptr, struct hostent* hp)
      * need to restart the dns query.
      */
     auth->client->hostp = hp;
+#ifdef USE_REPORT_MACROS
     sendheader(auth->client, REPORT_FIN_DNS, R_fin_dns);
+#else
+    sendheader(auth->client, REPORT_FIN_DNS);
+#endif
   }
   else
+#ifdef USE_REPORT_MACROS
     sendheader(auth->client, REPORT_FAIL_DNS, R_fail_dns);
+#else
+    sendheader(auth->client, REPORT_FAIL_DNS);
+#endif
 
   if (!IsDoingAuth(auth)) {
     release_auth_client(auth->client);
@@ -153,7 +250,11 @@ static void auth_error(struct AuthRequest* auth)
   auth->fd = -1;
 
   ClearAuth(auth);
+#ifdef USE_REPORT_MACROS
   sendheader(auth->client, REPORT_FAIL_ID, R_fail_id);
+#else
+  sendheader(auth->client, REPORT_FAIL_ID);
+#endif
 
   unlink_auth_request(auth, &AuthPollList);
 
@@ -196,7 +297,11 @@ static int start_auth_query(struct AuthRequest* auth)
     return 0;
   }
 
+#ifdef USE_REPORT_MACROS
   sendheader(auth->client, REPORT_DO_ID, R_do_id);
+#else
+  sendheader(auth->client, REPORT_DO_ID);
+#endif
   set_non_blocking(fd, auth->client);
 
   /* 
@@ -230,7 +335,11 @@ static int start_auth_query(struct AuthRequest* auth)
        */
       alarm(0);
       close(fd);
+#ifdef USE_REPORT_MACROS
       sendheader(auth->client, REPORT_FAIL_ID, R_fail_id);
+#else
+      sendheader(auth->client, REPORT_FAIL_ID);
+#endif
       return 0;
     }
   }
@@ -243,60 +352,60 @@ static int start_auth_query(struct AuthRequest* auth)
 }
 
 /*
- * GetValidIdent
+ * GetValidIdent - parse ident query reply from identd server
  * 
  * Inputs        - pointer to ident buf
  * Output        - NULL if no valid ident found, otherwise pointer to name
  * Side effects        -
  */
-static char *GetValidIdent(char *buf)
+static char* GetValidIdent(char *buf)
 {
   int   remp = 0;
   int   locp = 0;
-  char  *colon1Ptr;
-  char  *colon2Ptr;
-  char  *colon3Ptr;
-  char  *commaPtr;
-  char  *remotePortString;
+  char* colon1Ptr;
+  char* colon2Ptr;
+  char* colon3Ptr;
+  char* commaPtr;
+  char* remotePortString;
 
   /* All this to get rid of a sscanf() fun. */
   remotePortString = buf;
   
   colon1Ptr = strchr(remotePortString,':');
   if(!colon1Ptr)
-    return((char *)NULL);
+    return 0;
 
   *colon1Ptr = '\0';
   colon1Ptr++;
   colon2Ptr = strchr(colon1Ptr,':');
   if(!colon2Ptr)
-    return((char *)NULL);
+    return 0;
 
   *colon2Ptr = '\0';
   colon2Ptr++;
   commaPtr = strchr(remotePortString, ',');
 
   if(!commaPtr)
-    return((char *)NULL);
+    return 0;
 
   *commaPtr = '\0';
   commaPtr++;
 
   remp = atoi(remotePortString);
   if(!remp)
-    return((char *)NULL);
+    return 0;
               
   locp = atoi(commaPtr);
   if(!locp)
-    return((char *)NULL);
+    return 0;
 
   /* look for USERID bordered by first pair of colons */
-  if(!strstr(colon1Ptr,"USERID"))
-    return((char *)NULL);
+  if(!strstr(colon1Ptr, "USERID"))
+    return 0;
 
   colon3Ptr = strchr(colon2Ptr,':');
   if(!colon3Ptr)
-    return((char *)NULL);
+    return 0;
   
   *colon3Ptr = '\0';
   colon3Ptr++;
@@ -304,6 +413,9 @@ static char *GetValidIdent(char *buf)
   return(colon3Ptr);
 }
 
+/*
+ * start_auth - starts auth (identd) and dns queries for a client
+ */
 void start_auth(struct Client* client)
 {
   struct DNSQuery     query;
@@ -316,12 +428,20 @@ void start_auth(struct Client* client)
   query.vptr     = auth;
   query.callback = auth_dns_callback;
 
+#ifdef USE_REPORT_MACROS
   sendheader(client, REPORT_DO_DNS, R_do_dns);
+#else
+  sendheader(client, REPORT_DO_DNS);
+#endif
   Debug((DEBUG_DNS, "lookup %s", inetntoa((char *)&addr.sin_addr)));
 
   client->hostp = gethost_byaddr((const char*) &client->ip, &query);
   if (client->hostp)
+#ifdef USE_REPORT_MACROS
     sendheader(client, REPORT_FIN_DNSC, R_fin_dnsc);
+#else
+    sendheader(client, REPORT_FIN_DNSC);
+#endif
   else
     SetDNSPending(auth);
 
@@ -350,10 +470,18 @@ void timeout_auth_queries(time_t now)
       if (-1 < auth->fd)
         close(auth->fd);
 
+#ifdef USE_REPORT_MACROS
       sendheader(auth->client, REPORT_FAIL_ID, R_fail_id);
+#else
+      sendheader(auth->client, REPORT_FAIL_ID);
+#endif
       if (IsDNSPending(auth)) {
         delete_resolver_queries(auth);
+#ifdef USE_REPORT_MACROS
         sendheader(auth->client, REPORT_FAIL_DNS, R_fail_dns);
+#else
+        sendheader(auth->client, REPORT_FAIL_DNS);
+#endif
       }
       Debug((DEBUG_NOTICE,"DNS/AUTH timeout %s",
              get_client_name(auth->client,TRUE)));
@@ -368,7 +496,11 @@ void timeout_auth_queries(time_t now)
     auth_next = auth->next;
     if (auth->timeout < timeofday) {
       delete_resolver_queries(auth);
+#ifdef USE_REPORT_MACROS
       sendheader(auth->client, REPORT_FAIL_DNS, R_fail_dns);
+#else
+      sendheader(auth->client, REPORT_FAIL_DNS);
+#endif
       Debug((DEBUG_NOTICE,"DNS timeout %s",
              get_client_name(auth->client,TRUE)));
 
@@ -468,7 +600,11 @@ void read_auth_reply(struct AuthRequest* auth)
     strcpy(auth->client->username, "unknown");
   }
   else {
+#ifdef USE_REPORT_MACROS
     sendheader(auth->client, REPORT_FIN_ID, R_fin_id);
+#else
+    sendheader(auth->client, REPORT_FIN_ID);
+#endif
     ++ircstp->is_asuc;
     SetGotId(auth->client);
     Debug((DEBUG_INFO, "got username [%s]", ruser));
