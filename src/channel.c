@@ -3309,14 +3309,6 @@ int     m_names( struct Client *cptr,
   if(!MyConnect(sptr))
     return 0;
 
-  /*
-   * names is called by m_join() when client joins a channel,
-   * hence I cannot easily rate limit it.. perhaps that won't
-   * be necessary now that remote names is prohibited.
-   *
-   * -Dianora
-   */
-
   mlen = strlen(me.name) + NICKLEN + 7;
 
   if (!BadPtr(para))
@@ -3339,17 +3331,13 @@ int     m_names( struct Client *cptr,
                   s++;
                   *s = '\0';
                 }
-              sendto_realops("POSSIBLE /names abuser %s [%s]",
-                             para,
-                             get_client_name(sptr,FALSE));
               sendto_one(sptr, form_str(ERR_TOOMANYTARGETS),
                          me.name, sptr->name, "NAMES",1);
               return 0;
             }
         }
 
-      s = strchr(para, ',');
-      if (s)
+      if ((s = strchr(para, ',')) != NULL)
         *s = '\0';
       if (!check_channel_name(para))
         { 
