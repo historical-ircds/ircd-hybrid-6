@@ -375,12 +375,15 @@ struct Client* hash_find_server(const char* name, struct Client* cptr)
         }
     }
   
+#ifndef DEBUGMODE
+  return hash_find_masked_server(name, cptr);
+
+#else /* DEBUGMODE */
   tmp = hash_find_masked_server(name, cptr);
-#ifdef        DEBUGMODE
   if (tmp == cptr)
     ++clmiss;
-#endif
   return tmp;
+#endif
 }
 
 /*
