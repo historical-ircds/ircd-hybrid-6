@@ -1,3 +1,11 @@
+*** 20000402_1 by lusky
+fixed bug that caused only the first connection in a class to be tried
+  i.e. if you had several C: lines in one =class= only the first
+  C: line was ever used. This is code that was #ifdef'd out from original
+  hybrid-5 (db)
+revved patchlevel to b122
+
+
 *** 20000206_1 by lusky
 fixed spaces in src/Makefile.in (db)
 
