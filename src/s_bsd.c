@@ -45,7 +45,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <signal.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netdb.h>
@@ -1010,7 +1009,7 @@ void close_connection(aClient *cptr)
   }
   if (cptr->fd >= 0)
     {
-      flush_connections(cptr->fd);
+      flush_connections(cptr);
       local[cptr->fd] = NULL;
 #ifdef ZIP_LINKS
         /*

@@ -24,37 +24,8 @@
 #include "ircd.h"
 
 #include <errno.h>
-#include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-
-void dummy(int sig)
-{
-#if !defined(POSIX_SIGNALS)
-  signal(SIGALRM, dummy);
-  signal(SIGPIPE, dummy);
-# ifdef SIGWINCH
-  signal(SIGWINCH, dummy);
-# endif
-#endif
-
-#if 0 /* POSIX signals reinstall handlers themselves */
-  struct  sigaction       act;
-
-  act.sa_handler = dummy;
-  act.sa_flags = 0;
-  sigemptyset(&act.sa_mask);
-  sigaddset(&act.sa_mask, SIGALRM);
-  sigaddset(&act.sa_mask, SIGPIPE);
-#  ifdef SIGWINCH
-  sigaddset(&act.sa_mask, SIGWINCH);
-  sigaction(SIGWINCH, &act, NULL);
-#  endif
-  sigaction(SIGALRM, &act, NULL);
-  sigaction(SIGPIPE, &act, NULL);
-#endif /* 0 */
-}
-
 
 /*
  * deliver_it

@@ -86,7 +86,6 @@ int     max_client_count = 1;
 
 extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 
-
 /* Local function prototypes */
 static void show_servers(aClient *);
 static void show_opers(aClient *); 
@@ -3027,10 +3026,7 @@ int   m_htm(aClient *cptr,
 ** m_rehash
 **
 */
-int     m_rehash(aClient *cptr,
-                 aClient *sptr,
-                 int parc,
-                 char *parv[])
+int m_rehash(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
   int found = NO;
 
@@ -3138,7 +3134,7 @@ int     m_rehash(aClient *cptr,
           syslog(LOG_NOTICE, "REHASH From %s\n", get_client_name(sptr, FALSE));
 #endif
           dline_in_progress = 1;
-          return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q')?2:0) : 0);
+          return rehash(cptr, sptr, 0);
         }
       if(found)
         {
@@ -3175,7 +3171,7 @@ int     m_rehash(aClient *cptr,
 #ifdef USE_SYSLOG
       syslog(LOG_NOTICE, "REHASH From %s\n", get_client_name(sptr, FALSE));
 #endif
-      return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q')?2:0) : 0);
+      return rehash(cptr, sptr, 0);
     }
   return 0; /* shouldn't ever get here */
 }
@@ -3713,13 +3709,10 @@ int     m_close(aClient *cptr,
   return 0;
 }
 
-int     m_die(aClient *cptr,
-              aClient *sptr,
-              int parc,
-              char *parv[])
+int m_die(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-  aClient       *acptr;
-  int   i;
+  aClient* acptr;
+  int      i;
 
   if (!MyClient(sptr) || !IsAnOper(sptr))
     {
@@ -3770,7 +3763,12 @@ int     m_die(aClient *cptr,
         sendto_one(acptr, ":%s ERROR :Terminated by %s",
                    me.name, get_client_name(sptr, HIDEME));
     }
-  (void)s_die();
+  flush_connections(0);
+  /* 
+   * this is a normal exit, tell the os it's ok 
+   */
+  exit(0);
+  /* NOT REACHED */
   return 0;
 }
 

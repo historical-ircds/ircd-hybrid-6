@@ -20,6 +20,7 @@
  * $Id$
  */
 #include "ircd.h"
+#include "ircd_signal.h"
 #include "struct.h"
 #include "common.h"
 #include "dline_conf.h"
@@ -49,7 +50,6 @@
 #include <errno.h>
 #include <time.h>
 #include <pwd.h>
-#include <signal.h>
 #include <fcntl.h>
 #include <sys/file.h>
 #include <sys/stat.h>
@@ -108,10 +108,10 @@ static void initialize_message_files(void);
 static time_t io_loop(time_t);
 
 char**  myargv;
-int     dorehash = 0;
+int     dorehash   = 0;
 int     debuglevel = -1;        /* Server debug level */
-int     bootopt = 0;            /* Server boot option flags */
-char*   debugmode = "";         /*  -"-    -"-   -"-  */
+int     bootopt    = 0;         /* Server boot option flags */
+char*   debugmode  = "";        /*  -"-    -"-   -"-  */
 
 extern void* edata;
 
@@ -121,21 +121,6 @@ int     dline_in_progress = NO; /* killing off matching D lines ? */
 time_t  nextconnect = 1;        /* time for next try_connections call */
 time_t  nextping = 1;           /* same as above for check_pings() */
 int     autoconn = 1;           /* allow auto conns or not */
-
-#ifdef  PROFIL
-extern  etext();
-
-void s_monitor()
-{
-  static int mon = 0;
-
-  moncontrol(mon);
-  mon = 1 - mon;
-#if !defined(POSIX_SIGNALS)
-  signal(SIGUSR1, s_monitor);
-#endif
-}
-#endif
 
 /*
  * try_connections
@@ -748,12 +733,6 @@ int main(int argc, char *argv[])
   uid = getuid();
   euid = geteuid();
 
-#ifdef  PROFIL
-  monstartup(0, etext);
-  moncontrol(1);
-  signal(SIGUSR1, s_monitor);
-#endif
-
   ConfigFileEntry.dpath = DPATH;
 
   ConfigFileEntry.configfile = CPATH;   /* Server configuration file */
@@ -1242,7 +1221,7 @@ time_t io_loop(time_t delay)
   ** have data in them (or at least try to flush)
   ** -avalon
   */
-  flush_connections(me.fd);
+  flush_connections(0);
 
   Debug((DEBUG_DEBUG,"About to return delay %d",delay));
   return delay;

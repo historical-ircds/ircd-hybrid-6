@@ -40,7 +40,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#include <signal.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -1568,17 +1567,11 @@ int rehash_dump(aClient *sptr)
  * as a result of an operator issuing this command, else assume it has been
  * called as a result of the server receiving a HUP signal.
  */
-int rehash(aClient *cptr,aClient *sptr,int sig)
+int rehash(aClient *cptr,aClient *sptr, int sig)
 {
-  if (sig == SIGHUP)
-    {
-      sendto_ops("Got signal SIGHUP, reloading ircd conf. file");
-#ifdef        ULTRIX
-      if (fork() > 0)
-        exit(0);
-      write_pidfile();
-#endif
-    }
+  if (sig)
+    sendto_ops("Got signal SIGHUP, reloading ircd conf. file");
+
   read_conf_files(NO);
   close_listeners();
   flush_deleted_I_P();

@@ -162,7 +162,6 @@ LockedFile(const char *filename)
                  * pid - it could be a remnant left over from a
                  * crashed editor or system reboot etc.
                  */
-
                 killret = kill(atoi(buffer), SIGCHLD);
                 if (killret == 0)
                 {
