@@ -42,8 +42,8 @@
 /***************** MAKE SURE THIS IS CORRECT!!!!!!!!! **************/
 /* ONLY EDIT "HARD_FDLIMIT_" and "INIT_MAXCLIENTS" */
 
-/* You may also need to hand edit the Makefile to increase
- * the value of FD_SETSIZE 
+/* You may also need to hand edit the Makefile to increase the value
+ * of FD_SETSIZE
  */
 
 /* These ultra low values pretty much guarantee the server will
@@ -61,11 +61,11 @@
 #define MAX_BUFFER      60
 
 #if defined(__CYGWIN__)
-#undef HARD_FDLIMIT_
+#undef  HARD_FDLIMIT_
 #define HARD_FDLIMIT_   64
-#undef INIT_MAXCLIENTS
+#undef  INIT_MAXCLIENTS
 #define INIT_MAXCLIENTS 20
-#undef MAX_BUFFER
+#undef  MAX_BUFFER
 #define MAX_BUFFER      10
 #endif /* __CYGWIN__ */
 
@@ -97,7 +97,7 @@
  * DLPATH = dline conf file
  *
  * OMOTD = path to MOTD for opers
- * 
+ *
  * For /restart to work, SPATH needs to be a full pathname
  * (unless "." is in your exec path). -Rodder
  * Leave KPATH undefined if you want klines in main conf file.
@@ -124,7 +124,7 @@
  * Define this to prevent non chanops from seeing what ops a channel has
  * NOT ADEQUATELY TESTED YET, DON'T USE ON PRODUCTION NETWORK --Rodder
  */
-/* #undef HIDE_OPS */
+/* #undef  HIDE_OPS */
 
 /* SERVERHIDE
  * Define this to prevent users from seeing what server a user is on.
@@ -132,7 +132,7 @@
  * TRACE and LTRACE, and prevents hunting by nickname for non-opers.
  * NOT ADEQUATELY TESTED YET, DON'T USE ON PRODUCTION NETWORK --Rodder
  */
-/* #undef SERVERHIDE */
+/* #undef  SERVERHIDE */
 
 /* HIDE_SERVERS_IPS
  * Define this to prevent opers from seeing the IP of a server.
@@ -143,14 +143,14 @@
 
 /* HIDE_ERROR_MESSAGES
  * ERROR messages coming from servers can sometimes have IPs in them.
- * This will not show any error messages that are received, a 
+ * This will not show any error messages that are received, a
  * consequence being you may not see squit reasons..
  */
 #define HIDE_ERROR_MESSAGES
 
 /* NETWORK_NAME
  * Displayed in place of the servername when SERVERHIDE is enabled
- */   
+ */
 #define NETWORK_NAME "EFnet"
 
 /* NETWORK_DESC
@@ -164,13 +164,13 @@
  *
  * If the difference between my clock and the other server's clock is
  * greater than TS_MAX_DELTA, I send out a warning and drop the links.
- * 
+ *
  * If the difference is less than TS_MAX_DELTA, I just sends out a warning
  * but don't drop the link.
  *
  * TS_MAX_DELTA currently set to 30 minutes to deal with older timedelta
- * implementation.  Once pre-hybrid5.2 servers are eradicated, we can drop this
- * down to 90 seconds or so. --Rodder
+ * implementation.  Once pre-hybrid5.2 servers are eradicated, we can drop
+ * this down to 90 seconds or so. --Rodder
  */
 #define TS_MAX_DELTA 300        /* seconds */
 #define TS_WARN_DELTA 30        /* seconds */
@@ -181,7 +181,7 @@
  * accept K-lines from those servers.
  * This is useful for sites with more than one client server.
  */
-#undef SLAVE_SERVERS
+#undef  SLAVE_SERVERS
 
 /* FNAME_USERLOG and FNAME_OPERLOG - logs of local USERS and OPERS
  * Define this filename to maintain a list of persons who log
@@ -205,12 +205,12 @@
  * Defining this will allow periods in ident replies.  Use of this is
  * strongly discouraged on public networks
  */
-#undef ALLOW_DOT_IN_IDENT
+#undef  ALLOW_DOT_IN_IDENT
 
 /* MAX_MULTI_MESSAGES
- * Maximum number of recipients to a PRIVMSG.  Any more than MAX_MULTI_MESSAGES
- * will not be sent.  If MAX_MULTI_MESSAGES is 1, then any PRIVMSG with a ',' in
- * the target will be rejected
+ * Maximum number of recipients to a PRIVMSG.  Any more than
+ * MAX_MULTI_MESSAGES will not be sent.  If MAX_MULTI_MESSAGES is 1, then
+ * any PRIVMSG with a ',' in the target will be rejected.
  */
 #define MAX_MULTI_MESSAGES 2
 
@@ -234,7 +234,7 @@
  * or if you wish to customize the  messages, define this.
  * Otherwise leave it undef'd for plain ole boring messages.
  */
-#undef CUSTOM_ERR
+#undef  CUSTOM_ERR
 
 /* FAILED_OPER_NOTICE - send a notice to all opers when someone
  * tries to /oper and uses an incorrect password.
@@ -244,12 +244,12 @@
 /* SHOW_FAILED_OPER_ID - if FAILED_OPER_NOTICE is defined, also notify when
  * a client fails to oper because of a identity mismatch (wrong host or nick)
  */
-#undef SHOW_FAILED_OPER_ID
+#undef  SHOW_FAILED_OPER_ID
 
 /* SHOW_FAILED_OPER_PASSWD - if FAILED_OPER_NOTICE is defined, also show the
  * attempted passwd
  */
-#undef SHOW_FAILED_OPER_PASSWD
+#undef  SHOW_FAILED_OPER_PASSWD
 
 /* CLIENT_SERVER - Don't be so fascist about idle clients ;)
  * changes behaviour of HTM code to make clients lag less.
@@ -275,7 +275,7 @@
 #define ANTI_NICK_FLOOD
 /* defaults allow 5 nick changes in 20 seconds */
 #define MAX_NICK_TIME 20
-#define MAX_NICK_CHANGES 5 
+#define MAX_NICK_CHANGES 5
 
 /* DO_IDENTD - check identd
  * if you undefine this, ircd will never check identd regardless of
@@ -353,7 +353,7 @@
  * seeing STATS p requests, look below for the answer to that
  * argument.
  */
-#undef STATS_NOTICE
+#undef  STATS_NOTICE
 
 /* STATS_P_NOTICE - See STATS p requests only, when STATS_NOTICE
  * is undefined.  This allows opers to see requests by users for
@@ -362,12 +362,13 @@
  */
 #define STATS_P_NOTICE
 
-/* WHOIS_NOTICE - Shows a notice to an oper when a user does a
- * /whois on them
+/* WHOIS_NOTICE - Shows a notice to an oper when a client does a /whois
+ * on them, assuming the client is on the same server as the oper (eg.
+ * a local /whois).
  * Why do opers need this at all? Its an invasion of privacy. bah.
  * you don't need this. -Dianora
  */
-#undef WHOIS_NOTICE
+#undef  WHOIS_NOTICE
 
 /* WHOIS_WAIT - minimum seconds between remote use of WHOIS before
  * max use count is reset
@@ -388,14 +389,14 @@
  * Undefine PACE_WALLOPS to disable
  */
 #define PACE_WALLOPS
-#define WALLOPS_WAIT 10 
+#define WALLOPS_WAIT 10
 
 /* SHORT_MOTD
  * There are client ignoring the FORCE_MOTD MOTD numeric, there is
  * no point forcing MOTD on connecting clients IMO. Give them a short
  * NOTICE telling them they should read the motd, and leave it at that.
  */
-#undef SHORT_MOTD
+#undef  SHORT_MOTD
 
 /* NO_OPER_FLOOD - disable flood control for opers
  * define this to remove flood control for opers
@@ -408,7 +409,7 @@
  * an initial burst, this removes such a delay. BE CAREFUL WITH
  * THIS.
  */
-#undef TRUE_NO_OPER_FLOOD
+#undef  TRUE_NO_OPER_FLOOD
 
 /* SHOW_INVISIBLE_LUSERS - show invisible clients in LUSERS
  * As defined this will show the correct invisible count for anyone who does
@@ -437,7 +438,7 @@
  * Above 4 will only give a rather marginal increase in compression for a
  * large increase in CPU usage.
  */
-#define ZIP_LEVEL       2
+#define ZIP_LEVEL 2
 
 /*
  * OPER_UMODES LOCOP_UMODES - set these to be the initial umodes when OPER'ing
@@ -491,7 +492,7 @@
  * this option is used unless you tell the system administrator beforehand
  * and obtain their permission to send messages to the system log files.
  */
-#undef USE_SYSLOG
+#undef  USE_SYSLOG
 
 #ifdef  USE_SYSLOG
 /* SYSLOG_KILL SYSLOG_SQUIT SYSLOG_CONNECT SYSLOG_USERS SYSLOG_OPER
@@ -530,7 +531,7 @@
 /* IDLE_FROM_MSG - Idle-time reset only from privmsg
  * Idle-time reset only from privmsg, if undefined idle-time
  * is reset from everything except ping/pong.
- * 
+ *
  */
 #define IDLE_FROM_MSG
 
@@ -572,22 +573,22 @@
  */
 
 /* NO_CHANOPS_ON_SPLIT
+ *
  * When this is defined, users will not be chanopped on empty channels
  * if there are no servers presently connected to this server
- * opers are not affected. 
+ * opers are not affected.
  */
-#undef NO_CHANOPS_ON_SPLIT
+#undef  NO_CHANOPS_ON_SPLIT
 
-/* 
- * NO_JOIN_ON_SPLIT
- * 
+/* NO_JOIN_ON_SPLIT
+ *
  * When this is defined, users will not be allowed to join channels
  * while the server is split.
  */
-#undef NO_JOIN_ON_SPLIT
+#undef  NO_JOIN_ON_SPLIT
 
 /*
- * SPLIT_SMALLNET_SIZE defines what constitutes a split from 
+ * SPLIT_SMALLNET_SIZE defines what constitutes a split from
  * the net. for a leaf, 5 is fine. If the number of servers seen
  * on the net gets less than 5, a split is deemed to have happened.
  */
@@ -626,9 +627,8 @@
  * i.e. you can have 10 clients all with different usernames, but each user
  * can only connect once. Each non-idented client counts as the same user
  * i.e. ~a and ~b result in a count of two.
- *
  */
-#undef LIMIT_UH
+#undef  LIMIT_UH
 
 /* IDLE_CHECK
  * If this is defined, each client is checked for excessive idleness
@@ -644,11 +644,11 @@
  * beyond the idle limit
  */
 #undef  IDLE_CHECK
-#define IDLE_TIME 60
+#define IDLE_TIME  60
 #define OPER_IDLE
 
 /* SEND_FAKE_KILL_TO_CLIENT - make the client think it's being /KILL'ed
- * 
+ *
  * This was originally intended to prevent clients from reconnecting to the
  * server after being dropped for idleness.  It can probably be used for
  * other events too.
@@ -658,15 +658,15 @@
  * on UMich.Edu hosts.
  */
 #define SEND_FAKE_KILL_TO_CLIENT
- 
+
 /*
  * Limited Trace - Reports only link and oper traces even when O:line is
  * active.
  *
  * Displays only Oper, Serv, Link, and Class reports even if the O-line is
- * active.  Useful for just showing pertinent info of a specific server. 
+ * active.  Useful for just showing pertinent info of a specific server.
  * Note however that if the target server is not running this option then
- * you will still receive a normal trace output. 
+ * you will still receive a normal trace output.
  */
 #define LTRACE
 
@@ -679,7 +679,7 @@
 
 /*
  * Define this to enable WintrHawk "styling"
- * Currently this shows the actual quit message on the Client exiting 
+ * Currently this shows the actual quit message on the Client exiting
  * notice, rather than the error or "Client Quit"
  */
 #define WINTRHAWK
@@ -694,8 +694,7 @@
  *
  * -Dianora
  */
-
-#undef NO_PRIORITY
+#undef  NO_PRIORITY
 
 /* LITTLE_I_LINE support
  * clients with a little i instead of an I in their I line
@@ -707,9 +706,9 @@
  * This will disallow TS3 servers from linking
  * (see README.HYBRID6.1-CHANGES for more details)
  */
-#undef TS5_ONLY
+#undef  TS5_ONLY
 
-/* ----------------- not approved on EFnet section -------------------- 
+/* ----------------- not approved on EFnet section --------------------
  *
  * if you are an efnet admin, some of these are not officially supported, so
  * you may want to undef some -- fl_
@@ -721,7 +720,7 @@
  * three different servers must do the identical GLINE in order
  * for the G line to take effect.
  */
-#undef GLINES
+#undef  GLINES
 #define GLINEFILE       "gline.log"
 
 /* GLINE_TIME - local expire time for GLINES
@@ -734,7 +733,7 @@
  * dont exist.  This could possibly have an impact with services,
  * so its #undef'd by default.
  */
-#undef NO_FAKE_GLINES
+#undef  NO_FAKE_GLINES
 
 /* Ignore bogus timestamps from other servers. Yes this will desync
  * the network, but it will allow chanops to resync with a valid non TS 0
@@ -772,7 +771,7 @@
 
 /* INITIAL_DBUFS - how many dbufs to preallocate
  */
-#define INITIAL_DBUFS 4000 /* preallocate 16 megs of dbufs */ 
+#define INITIAL_DBUFS 4000 /* preallocate 16 megs of dbufs */
 
 /* MAXBUFFERS - increase socket buffers
  *
@@ -794,7 +793,7 @@
 #define MAXCONNECTIONS  HARD_FDLIMIT
 
 /* TIMESEC - Time interval to wait and if no messages have been received,
- * then check for PINGFREQUENCY and CONNECTFREQUENCY 
+ * then check for PINGFREQUENCY and CONNECTFREQUENCY
  */
 #define TIMESEC  5              /* Recommended value: 5 */
 
@@ -810,7 +809,7 @@
 #define PINGFREQUENCY    120    /* Recommended value: 120 */
 
 /* CONNECTFREQUENCY - time to wait before auto-reconnecting
- * If the connection to to uphost is down, then attempt to reconnect every 
+ * If the connection to to uphost is down, then attempt to reconnect every
  * CONNECTFREQUENCY  seconds.
  *
  * This only specifies the default for class 0
@@ -828,13 +827,13 @@
  * 1997/09/18 recommended values by ThemBones for modern EFnet
  */
 
-#define HANGONGOODLINK 3600     /* Recommended value: 30-60 minutes */
+#define HANGONGOODLINK   3600   /* Recommended value: 30-60 minutes */
 #define HANGONRETRYDELAY 60     /* Recommended value: 30-60 seconds */
 
 /* WRITEWAITDELAY - Number of seconds to wait for write to
  * complete if stuck.
  */
-#define WRITEWAITDELAY     15   /* Recommended value: 15 */
+#define WRITEWAITDELAY   15     /* Recommended value: 15 */
 
 /* CONNECTTIMEOUT -
  * Number of seconds to wait for a connect(2) call to complete.
@@ -842,13 +841,13 @@
  * CONNECTTIMEOUT - 10 seconds for its host to respond to an ident lookup
  * query and for a DNS answer to be retrieved.
  */
-#define CONNECTTIMEOUT  30      /* Recommended value: 30 */
+#define CONNECTTIMEOUT   30     /* Recommended value: 30 */
 
 /* KILLCHASETIMELIMIT -
  * Max time from the nickname change that still causes KILL
  * automatically to switch for the current nick of that user. (seconds)
  */
-#define KILLCHASETIMELIMIT 90   /* Recommended value: 90 */
+#define KILLCHASETIMELIMIT  90  /* Recommended value: 90 */
 
 /* MAXCHANNELSPERUSER -
  * Max number of channels a user is allowed to join.
@@ -865,7 +864,7 @@
 #define SENDQ_ALWAYS
 
 /* FLUD - CTCP Flood Detection and Protection
- * 
+ *
  * This enables server CTCP flood detection and protection for local clients.
  * It works well against fludnets and flood clones.  The effect of this code
  * on server CPU and memory usage is minimal, however you may not wish to
@@ -887,15 +886,16 @@
  * I'll do better next time, this is a Q&D -Dianora
  */
 #define ANTI_DRONE_FLOOD
-#define DEFAULT_DRONE_TIME 1
+#define DEFAULT_DRONE_TIME  1
 #define DEFAULT_DRONE_COUNT 8
 
 /* JUPE_CHANNEL - jupes a channel from being joined on this server only
- * if added to Q lines e.g. Q:\#packet_channel:Tired of packets
+ * if added to Q lines e.g. Q:\#packet_channel:Tired of packets.
+ * This also enables local channel mode +j.
  */
-#undef JUPE_CHANNEL
+#undef  JUPE_CHANNEL
 
-/* 
+/*
  * ANTI_SPAMBOT
  * if ANTI_SPAMBOT is defined try to discourage spambots
  * The defaults =should= be fine for the timers/counters etc.
@@ -921,18 +921,18 @@
  * the join/leave counter is decremented each time a LEAVE is done
  *
  */
-#define MIN_JOIN_LEAVE_TIME  60
+#define MIN_JOIN_LEAVE_TIME   60
 #define MAX_JOIN_LEAVE_COUNT  25
-#define OPER_SPAM_COUNTDOWN   5 
+#define OPER_SPAM_COUNTDOWN   5
 #define JOIN_LEAVE_COUNT_EXPIRE_TIME 120
 
 /*
- * If ANTI_SPAMBOT_WARN_ONLY is #define'd 
+ * If ANTI_SPAMBOT_WARN_ONLY is #define'd
  * Warn opers about possible spambots only, do not disable
  * JOIN and PRIVMSG if possible spambot is noticed
  * Depends on your policies.
  */
-#undef ANTI_SPAMBOT_WARN_ONLY
+#undef  ANTI_SPAMBOT_WARN_ONLY
 
 /* ANTI_SPAM_EXIT_MESSAGE
  *
@@ -944,32 +944,30 @@
  * (idea due to ThaDragon, I just couldn't find =his= code)
  * - Dianora
  */
-#undef ANTI_SPAM_EXIT_MESSAGE
+#undef  ANTI_SPAM_EXIT_MESSAGE
 /* 300 is five minutes, seems reasonable */
 #define ANTI_SPAM_EXIT_MESSAGE_TIME 300
 
 #ifdef FLUD
-#define FLUD_NUM        4       /* Number of flud messages to trip alarm */
-#define FLUD_TIME       3       /* Seconds in which FLUD_NUM msgs must occur */
-#define FLUD_BLOCK      15      /* Seconds to block fluds */
+#define FLUD_NUM        4     /* Number of flud messages to trip alarm */
+#define FLUD_TIME       3     /* Seconds in which FLUD_NUM msgs must occur */
+#define FLUD_BLOCK      15    /* Seconds to block fluds */
 #endif
 
-/* REJECT_HOLD 
+/* REJECT_HOLD
  * clients that reconnect but are k-lined will have their connections
  * "held" for REJECT_HOLD_TIME seconds, they cannot PRIVMSG. The idea
  * is to keep a reconnecting client from forcing the ircd to re-scan
  * mtrie_conf.
  *
  */
-  
-#undef REJECT_HOLD
-#define REJECT_HOLD_TIME 30 
+#undef  REJECT_HOLD
+#define REJECT_HOLD_TIME 30
 
 /* maximum number of fd's that will be used for reject holding */
 #define REJECT_HELD_MAX 25
 
-/*
- * OLD_Y_LIMIT
+/* OLD_Y_LIMIT
  *
  * #define this if you prefer the old behaviour of I lines
  * the default behaviour is to limit the total number of clients
@@ -983,20 +981,20 @@
  *
  * -Dianora
 */
-#undef OLD_Y_LIMIT
+#undef  OLD_Y_LIMIT
 
 /*
  * If the OS has SOMAXCONN use that value, otherwise
  * Use the value in HYBRID_SOMAXCONN for the listen(); backlog
  * try 5 or 25. 5 for AIX and SUNOS, 25 should work better for other OS's
-*/
+ */
 #define HYBRID_SOMAXCONN 25
 
 /* DEBUGMODE is used mostly for internal development, it is likely
  * to make your client server very sluggish.
  * You usually shouldn't need this. -Dianora
 */
-#undef DEBUGMODE               /* define DEBUGMODE to enable debugging mode.*/
+#undef  DEBUGMODE           /* define DEBUGMODE to enable debugging mode.*/
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MAX_CLIENTS INIT_MAXCLIENTS
