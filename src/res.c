@@ -778,7 +778,7 @@ proc_answer(struct reslist *request, HEADER* header,
    * unless there is something to put in it.
    */
 
-  if (request->he.buf != NULL)
+  if (request->he.buf == NULL)
   {
     request->he.buf = (char*) MyMalloc(MAXGETHOSTLEN + 1);
     request->he.buf[MAXGETHOSTLEN] = '\0';
