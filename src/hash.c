@@ -439,7 +439,6 @@ aChannel	*hash_find_channel(char *name,aChannel *chptr)
 
 int	m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
 {
-#ifdef DEBUGMODE
   register	int	l, i;
   register	aHashEntry	*tab;
   int	deepest = 0, deeplink = 0, showlist = 0, tothits = 0;
@@ -448,7 +447,6 @@ int	m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
   char	ch;
   char  result_buf[256];
   aHashEntry	*table;
-#endif
   char  hash_log_file[256];
   int   out;
   char timebuffer[MAX_DATE_STRING];
@@ -483,10 +481,7 @@ int	m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
 	  iphash_stats(cptr,sptr,parc,parv,out);
 	  return 0;
 	}
-#ifndef	DEBUGMODE
-    }
-#endif
-#ifdef	DEBUGMODE
+
       ch = *parv[1];
       if (islower(ch))
 	{
@@ -521,6 +516,7 @@ int	m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
 
   for (i = 0; i < 10; i++)
     link_pop[i] = 0;
+
   for (i = 0; i < size; i++)
     {
       tab = &table[i];
@@ -669,78 +665,33 @@ int	m_hash(aClient *cptr,aClient *sptr,int parc,char *parv[])
 		       parv[0], l, i, tmp->chname);
 	return (0);
       }
+#ifdef DEBUGMODE
     case 'S' :
-#endif
-      return 0;
-#ifdef	DEBUGMODE
-    case 'z' :
-      {
-	register aClient *acptr;
 
-	if (parc <= 2)
-	  return 0;
-	l = atoi(parv[2]);
-	if (l < 256)
-	  return 0;
-	MyFree((char *)clientTable);
-	clientTable = (aHashEntry *)MyMalloc(sizeof(aHashEntry) * l);
-	HASHSIZE = l;
-	clear_client_hash_table();
-	for (acptr = client; acptr; acptr = acptr->next)
-	  {
-	    acptr->hnext = NULL;
-	    (void)add_to_client_hash_table(acptr->name, acptr);
-	  }
-	sendto_one(sptr, "NOTICE %s :HASHSIZE now %d", parv[0], l);
-	break;
-      }
-    case 'Z' :
-      {
-	register aChannel *acptr;
-	
-	if (parc <= 2)
-	  return 0;
-	l = atoi(parv[2]);
-	if (l < 256)
-	  return 0;
-	MyFree((char *)channelTable);
-	channelTable = (aHashEntry *)MyMalloc(sizeof(aHashEntry) * l);
-	CHANNELHASHSIZE = l;
-	clear_channel_hash_table();
-	for (acptr = channel; acptr; acptr = acptr->nextch)
-	  {
-	    acptr->hnextch = NULL;
-	    (void)add_to_channel_hash_table(acptr->chname, acptr);
-	  }
-	sendto_one(sptr, "NOTICE %s :CHANNELHASHSIZE now %d",
-		   parv[0], l);
-	break;
-      }
-    default :
-      break;
-    }
-  sendto_one(sptr,"NOTICE %s :Entries Hashed: %d NonEmpty: %d of %d",
-	     parv[0], totlink, used_now, size);
-  if (!used_now)
-    used_now = 1;
-  sendto_one(sptr,"NOTICE %s :Hash Ratio (av. depth): %f %Full: %f",
-	     parv[0], (float)((1.0 * totlink) / (1.0 * used_now)),
-	     (float)((1.0 * used_now) / (1.0 * size)));
-  sendto_one(sptr,"NOTICE %s :Deepest Link: %d Links: %d",
-	     parv[0], deeplink, deepest);
-  if (!used)
-    used = 1;
-  sendto_one(sptr,"NOTICE %s :Total Hits: %d Unhit: %d Av Hits: %f",
-	     parv[0], tothits, size-used,
-	     (float)((1.0 * tothits) / (1.0 * used)));
-  sendto_one(sptr,"NOTICE %s :Entry Most Hit: %d Hits: %d",
-	     parv[0], mosthit, mosthits);
-  sendto_one(sptr,"NOTICE %s :Client hits %d miss %d",
-	     parv[0], clhits, clmiss);
-  sendto_one(sptr,"NOTICE %s :Channel hits %d miss %d",
-	     parv[0], chhits, chmiss);
-  return 0;
+      sendto_one(sptr,"NOTICE %s :Entries Hashed: %d NonEmpty: %d of %d",
+		 parv[0], totlink, used_now, size);
+      if (!used_now)
+	used_now = 1;
+      sendto_one(sptr,"NOTICE %s :Hash Ratio (av. depth): %f %Full: %f",
+		 parv[0], (float)((1.0 * totlink) / (1.0 * used_now)),
+		 (float)((1.0 * used_now) / (1.0 * size)));
+      sendto_one(sptr,"NOTICE %s :Deepest Link: %d Links: %d",
+		 parv[0], deeplink, deepest);
+      if (!used)
+	used = 1;
+      sendto_one(sptr,"NOTICE %s :Total Hits: %d Unhit: %d Av Hits: %f",
+		 parv[0], tothits, size-used,
+		 (float)((1.0 * tothits) / (1.0 * used)));
+      sendto_one(sptr,"NOTICE %s :Entry Most Hit: %d Hits: %d",
+		 parv[0], mosthit, mosthits);
+      sendto_one(sptr,"NOTICE %s :Client hits %d miss %d",
+		 parv[0], clhits, clmiss);
+      sendto_one(sptr,"NOTICE %s :Channel hits %d miss %d",
+		 parv[0], chhits, chmiss);
+      return 0;
 #endif
+    }
+  return 0;
 }
 
 
