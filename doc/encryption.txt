@@ -7,6 +7,9 @@ Setting up an encrypted link.
 #define CRYPT_LINKS_CNPREFIX '@'
 #define CRYPT_LINKS_PRIVATEKEYFILE "private.key"
 
+  Note:  CRYPT_LINKS_PRIVATEKEYFILE is deprecated... The
+  private key should now be named <server name in M:>.key.
+
   Do the "make" and "make install"
 
   If you get problems with missing crypto functions when
@@ -23,7 +26,8 @@ Setting up an encrypted link.
   encryption, *guard the keys*, don't leave them floating
   around on your boxes ;)
 
-  Copy the private.key to your ircd directory and give the 
+  Copy the private.key to your ircd directory, and name it
+  with the name of the server followed by .key and give the 
   public.key to the serveradmin you're about to link to.
   Now, get your peers public key file, name it e.g.
   irc.server.com.pubkey and put it in your ircd directory.
