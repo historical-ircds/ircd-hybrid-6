@@ -579,18 +579,6 @@ static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 	}
     }
 
-  index = '*'&(MAX_PIECE_LIST-1);
-  piece_ptr = level_ptr->piece_list[index];
-
-  for(ptr=piece_ptr;ptr;ptr=ptr->next_piece)
-    {
-      if( ((ptr->host_piece[0] == '*') && (ptr->host_piece[1] == '\0'))
-	  && (ptr->flags & flags))
-	{
-	  return(ptr);
-	}
-    }
-
   return((DOMAIN_PIECE *)NULL);
 }
 
@@ -620,10 +608,7 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
   DOMAIN_PIECE *piece_ptr;
   int index;
   
-  if(*host_piece != '*')
-    return((aConfItem *)NULL);
-
-  index = *host_piece&(MAX_PIECE_LIST-1);
+  index = '*'&(MAX_PIECE_LIST-1);
   piece_ptr = level_ptr->piece_list[index];
   
   for(ptr=piece_ptr;ptr;ptr=ptr->next_piece)
@@ -638,7 +623,7 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 	      if( (!matches(pptr->host_piece,host_piece)) &&
 		  (!matches(aconf->name,user)))
 		{
-		  if(aconf->flags & flags)
+		  if(aconf->status & flags)
 		    {
 		      return(aconf);
 		    }
@@ -974,9 +959,13 @@ static int sortable(char *tokenized,char *p)
 	    }
 	  break;
 
-	case 1:
+	case 1:			/* state 1, sit here until '\0' or '*' seen */
 	  if(*p == '\0')	
-	    return(-1);		/* followed by null terminator is sortable */
+	    {
+	      *d = '\0';
+	      dns_stack[stack_pointer++] = tokenized;
+	      return(-1);	/* followed by null terminator is sortable */
+	    }
 	  else if(*p == '*')	/* '*' followed by another '*' is unsortable */
 	    return(0);
 	  else if(*p == '.')	/* this is a "*.foo" type kline */
@@ -986,29 +975,30 @@ static int sortable(char *tokenized,char *p)
 	      tokenized = d+1;
 	    }
 	  else
-	    *d = *p;
+	    *d = *p;		/* just keep copying, building this token */
 	  break;
 	 
-	case 2:
-	  if(*p == '\0')	/* state 2, sit here if no '*' seen and */
+	case 2:			/* state 2, sit here if no '*' seen and */
+	  if(*p == '\0')	
 	    {
-	      *d = '\0';
+	      *d = '\0';	/* if null terminator seen, its sortable */
 	      dns_stack[stack_pointer++] = tokenized;
-	      return(-1);	/* if null terminator seen, its sortable */
+	      return(-1);	
 	    }
-	  else if(*p == '*')
+	  else if(*p == '*')	/* its "blah*blah" or "blah*"
+				   which is not sortable */
 	    {
-	      /* its "blah*blah/or blah*" which is not sortable*/
+
 	      return(0);
 	    }
-	  else if (*p == '.')
+	  else if(*p == '.')	/* push another piece on stack */
 	    {
 	      *d = '\0';
 	      dns_stack[stack_pointer++] = tokenized;
 	      tokenized = d+1;
 	    }
 	  else
-	    *d = *p;
+	    *d = *p;		/* just keep copying, building this token */
 	  break;
 	 
 	default:
