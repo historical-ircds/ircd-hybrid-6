@@ -1,3 +1,8 @@
+*** 20010603_6 by db
+- don't show spoofs even to opers if SPOOF_NOTICE is not set
+
+
+
 *** 20010603_5 by db
 - backported A1kmm's patch to fix tsinfo
 
