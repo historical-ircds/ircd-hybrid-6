@@ -65,52 +65,54 @@
 
 /* internally defined functions */
 
-static void report_dup(char,aConfItem *);
+static void report_dup(char,struct ConfItem *);
 static int sortable(char *,char *);
 static void tokenize_and_stack(char* tokenized_out, const char* host);
-static void create_sub_mtrie(DOMAIN_LEVEL *,aConfItem *,int,char *);
-static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *, const char* host,
+static void create_sub_mtrie(DOMAIN_LEVEL *,struct ConfItem *,int,char *);
+static struct ConfItem *find_sub_mtrie(DOMAIN_LEVEL *, const char* host,
                                  const char* user, int);
-char *show_iline_prefix(aClient *,aConfItem *,char *);
+char *show_iline_prefix(struct Client *,struct ConfItem *,char *);
 static DOMAIN_PIECE *find_or_add_host_piece(DOMAIN_LEVEL *,int,char *);
 static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *,int,char *,
                                      const char* host);
-static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *,int,char *, 
+static struct ConfItem *find_wild_host_piece(DOMAIN_LEVEL *,int,char *, 
                                        const char* user);
-static void find_or_add_user_piece(DOMAIN_PIECE *,aConfItem *,int,char *);
-static aConfItem *find_user_piece(DOMAIN_PIECE *,int,char *, const char* user);
+static void find_or_add_user_piece(DOMAIN_PIECE *,struct ConfItem *,int,char *);
+static struct ConfItem *find_user_piece(DOMAIN_PIECE *,int,char *, const char* user);
 
-static aConfItem* look_in_unsortable_ilines(const char* host, const char* user);
-static aConfItem* look_in_unsortable_klines(const char* host, const char* user);
-static aConfItem* find_wild_card_iline(const char* user);
+static struct ConfItem* look_in_unsortable_ilines(const char* host, const char* user);
+static struct ConfItem* look_in_unsortable_klines(const char* host, const char* user);
+static struct ConfItem* find_wild_card_iline(const char* user);
 
-static void report_sub_mtrie(aClient *sptr,int,DOMAIN_LEVEL *);
-static void report_unsortable_klines(aClient *,char *);
+static void report_sub_mtrie(struct Client *sptr,int,DOMAIN_LEVEL *);
+static void report_unsortable_klines(struct Client *,char *);
 static void clear_sub_mtrie(DOMAIN_LEVEL *);
-static aConfItem *find_matching_ip_i_line(unsigned long);
+static struct ConfItem *find_matching_ip_i_line(char *user, unsigned long);
 
 static int stack_pointer;              /* dns piece stack */
 static char *dns_stack[MAX_TLD_STACK];
 
-static DOMAIN_LEVEL *trie_list=(DOMAIN_LEVEL *)NULL;
-static DOMAIN_LEVEL *first_kline_trie_list=(DOMAIN_LEVEL *)NULL;
+static DOMAIN_LEVEL *trie_list = NULL;
+static DOMAIN_LEVEL *first_kline_trie_list = NULL;
 static int saved_stack_pointer;
 
-static aConfItem *last_found_iline_aconf=(aConfItem *)NULL;
+static struct ConfItem *last_found_iline_aconf = NULL;
 
-static aConfItem *unsortable_list_ilines = (aConfItem *)NULL;
-static aConfItem *unsortable_list_klines = (aConfItem *)NULL;
-static aConfItem *wild_card_ilines = (aConfItem *)NULL;
-static aConfItem *ip_i_lines=(aConfItem *)NULL;
+static struct ConfItem *unsortable_list_ilines = NULL;
+static struct ConfItem *unsortable_list_klines = NULL;
+static struct ConfItem *wild_card_ilines = NULL;
+static struct ConfItem *ip_i_lines = NULL;
 
 /* add_mtrie_conf_entry
  *
- * inputs       - 
+ * inputs       - pointer to ConfItem
+ *		- type of kline/iline
  * output       - NONE
  * side effects -
  */
 
-void add_mtrie_conf_entry(aConfItem *aconf,int flags)
+void 
+add_mtrie_conf_entry(struct ConfItem *aconf,int flags)
 {
   char tokenized_host[HOSTLEN+1];
   unsigned long ip_host;
@@ -193,7 +195,7 @@ void add_mtrie_conf_entry(aConfItem *aconf,int flags)
       break;
     }
 
-  if(trie_list == (DOMAIN_LEVEL *)NULL)
+  if(trie_list == NULL)
     {
       trie_list = (DOMAIN_LEVEL *)MyMalloc(sizeof(DOMAIN_LEVEL));
       memset((void *)trie_list,0,sizeof(DOMAIN_LEVEL));
@@ -213,7 +215,8 @@ void add_mtrie_conf_entry(aConfItem *aconf,int flags)
  * output       - NONE
  * side effects -
  */
-void add_ip_Iline( struct ConfItem *aconf )
+void 
+add_ip_Iline( struct ConfItem *aconf )
 {
   aconf->next = ip_i_lines;
   ip_i_lines = aconf;
@@ -232,8 +235,9 @@ void add_ip_Iline( struct ConfItem *aconf )
  * create a sub mtrie tree entry
  */
 
-static void create_sub_mtrie(DOMAIN_LEVEL *cur_level,
-                             aConfItem *aconf,
+static void 
+create_sub_mtrie(DOMAIN_LEVEL *cur_level,
+                             struct ConfItem *aconf,
                              int flags,
                              char *host)
 {
@@ -254,7 +258,7 @@ static void create_sub_mtrie(DOMAIN_LEVEL *cur_level,
 
   cur_level = last_piece->next_level;
 
-  if(cur_level == (DOMAIN_LEVEL *)NULL)
+  if(cur_level == NULL)
     {
       cur_level = (DOMAIN_LEVEL *)MyMalloc(sizeof(DOMAIN_LEVEL));
       memset((void *)cur_level,0,sizeof(DOMAIN_LEVEL));
@@ -274,7 +278,8 @@ static void create_sub_mtrie(DOMAIN_LEVEL *cur_level,
  *
  */
 
-static DOMAIN_PIECE *find_or_add_host_piece(DOMAIN_LEVEL *level_ptr,
+static DOMAIN_PIECE *
+find_or_add_host_piece(DOMAIN_LEVEL *level_ptr,
                                      int flags,char *host_piece)
 {
   DOMAIN_PIECE *piece_ptr;
@@ -287,7 +292,7 @@ static DOMAIN_PIECE *find_or_add_host_piece(DOMAIN_LEVEL *level_ptr,
   pindex = *host_piece&(MAX_PIECE_LIST-1);
   piece_ptr = level_ptr->piece_list[pindex];
 
-  if(piece_ptr == (DOMAIN_PIECE *)NULL)
+  if(piece_ptr == NULL)
     {
       cur_piece = (DOMAIN_PIECE *)MyMalloc(sizeof(DOMAIN_PIECE));
       memset((void *)cur_piece,0,sizeof(DOMAIN_PIECE));
@@ -297,7 +302,7 @@ static DOMAIN_PIECE *find_or_add_host_piece(DOMAIN_LEVEL *level_ptr,
       return(cur_piece);
     }
 
-  last_ptr = (DOMAIN_PIECE *)NULL;
+  last_ptr = NULL;
 
   for(ptr=piece_ptr; ptr; ptr = ptr->next_piece)
     {
@@ -332,24 +337,25 @@ static DOMAIN_PIECE *find_or_add_host_piece(DOMAIN_LEVEL *level_ptr,
  * inputs       - pointer to current level 
  *              - piece of domain name being looked for
  *              - flags
- *              - aconf pointer to an aConfItem 
+ *              - aconf pointer to an struct ConfItem 
  * output       - pointer to next DOMAIN_LEVEL to use
  * side effects -
  *
  */
 
-static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
-                                   aConfItem *aconf,
+static void 
+find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
+                                   struct ConfItem *aconf,
                                    int flags,
                                    char *host_piece)
 {
   DOMAIN_PIECE *ptr;
   DOMAIN_PIECE *new_ptr;
   DOMAIN_PIECE *last_ptr;
-  aConfItem *found_aconf;
+  struct ConfItem *found_aconf;
   char *user;
 
-  last_ptr = (DOMAIN_PIECE *)NULL;
+  last_ptr = NULL;
   user = aconf->user;
 
   if((user[0] == '*') && (user[1] == '\0') &&
@@ -500,13 +506,14 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
  *
  */
 
-static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr, int flags,
+static struct ConfItem *
+find_user_piece(DOMAIN_PIECE *piece_ptr, int flags,
                      char *host_piece, const char* user)
 {
   DOMAIN_PIECE *ptr;
-  aConfItem *aconf=NULL;
-  aConfItem *first_aconf=NULL;
-  aConfItem *wild_aconf=NULL;
+  struct ConfItem *aconf=NULL;
+  struct ConfItem *first_aconf=NULL;
+  struct ConfItem *wild_aconf=NULL;
 
   wild_aconf = piece_ptr->wild_conf_ptr;
 
@@ -568,7 +575,8 @@ static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr, int flags,
  *
  */
 
-static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
+static DOMAIN_PIECE *
+find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
                                      char *host_piece, const char* user)
 {
   DOMAIN_PIECE *ptr;
@@ -576,7 +584,7 @@ static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
   int pindex;
 
   if(!level_ptr)
-    return((DOMAIN_PIECE *)NULL);
+    return(NULL);
   
   pindex = *host_piece&(MAX_PIECE_LIST-1);
   piece_ptr = level_ptr->piece_list[pindex];
@@ -589,7 +597,7 @@ static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
         }
     }
 
-  return((DOMAIN_PIECE *)NULL);
+  return(NULL);
 }
 
 /* find_wild_host_piece
@@ -597,7 +605,7 @@ static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
  * inputs       - pointer to current level 
  *              - piece of domain name being looked for
  *              - usename
- * output       - aConfItem or NULL
+ * output       - struct ConfItem or NULL
  * side effects -
  * 
  * Eventually the mtrie code could be extended to deal with
@@ -608,12 +616,13 @@ static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
  * This would necessitate logic changes in sortable()
  *
  */
-static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
+static struct ConfItem *
+find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
                                      char *host_piece, const char* user)
 {
-  aConfItem *first_aconf=NULL;
-  aConfItem *wild_aconf=NULL;
-  aConfItem *aconf=NULL;
+  struct ConfItem *first_aconf=NULL;
+  struct ConfItem *wild_aconf=NULL;
+  struct ConfItem *aconf=NULL;
   DOMAIN_PIECE *ptr;
   DOMAIN_PIECE *pptr;
   DOMAIN_PIECE *piece_ptr;
@@ -626,8 +635,8 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
     {
       if(match(ptr->host_piece,host_piece) && (ptr->flags & flags))
         {
-          first_aconf = (aConfItem *)NULL;
-          wild_aconf = (aConfItem *)NULL;
+          first_aconf = NULL;
+          wild_aconf = NULL;
 
           for(pptr = ptr; pptr; pptr=pptr->next_piece)
             {
@@ -693,18 +702,19 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
  *
  * inputs       - host name
  *              - user name
- * output       - pointer to aConfItem that corresponds to user/host pair
+ * output       - pointer to struct ConfItem that corresponds to user/host pair
  *                or NULL if not found
  * side effects - NONE
 
  */
 
-aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
+struct ConfItem *
+find_matching_mtrie_conf(const char* host, const char* user,
                                     unsigned long ip)
 {
-  aConfItem *iline_aconf_unsortable = NULL;
-  aConfItem *iline_aconf = NULL;
-  aConfItem *kline_aconf = NULL;
+  struct ConfItem *iline_aconf_unsortable = NULL;
+  struct ConfItem *iline_aconf = NULL;
+  struct ConfItem *kline_aconf = NULL;
   char tokenized_host[HOSTLEN + 1];
   int top_of_stack = 0;
 
@@ -726,7 +736,7 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
       tokenize_and_stack(tokenized_host, host);
       top_of_stack = stack_pointer;
       saved_stack_pointer = -1;
-      first_kline_trie_list = (DOMAIN_LEVEL *)NULL;
+      first_kline_trie_list = NULL;
 
       iline_aconf = find_sub_mtrie(trie_list, host, user, CONF_CLIENT);
     }
@@ -740,7 +750,7 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
     {
       if(ip)
 	{
-	  iline_aconf= find_matching_ip_i_line(ip);
+	  iline_aconf= find_matching_ip_i_line(user, ip);
 	  
 	  if(iline_aconf)
 	    {
@@ -763,7 +773,7 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
    */
 
   if(!iline_aconf)
-    return((aConfItem *)NULL);
+    return(NULL);
   else
     {
       if(iline_aconf->flags & CONF_FLAGS_E_LINED)
@@ -788,7 +798,7 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
    * - Dianora
    */
 
-  kline_aconf = (aConfItem *)NULL;
+  kline_aconf = (struct ConfItem *)NULL;
 
   if(trie_list)
     {
@@ -829,22 +839,23 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
  *              - hostname piece
  *              - username
  *              - flags flags to match for
- * output       - pointer to aConfItem or NULL
+ * output       - pointer to struct ConfItem or NULL
  * side effects -
  */
 
-static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
-                                 const char* host, const char* user,int flags)
+static struct ConfItem*
+find_sub_mtrie(DOMAIN_LEVEL *cur_level,
+	       const char* host, const char* user,int flags)
 {
   DOMAIN_PIECE *cur_piece;
   char *cur_dns_piece;
-  aConfItem *aconf=(aConfItem *)NULL;
-  aConfItem *aconf_user=(aConfItem *)NULL;
+  struct ConfItem *aconf = NULL;
+  struct ConfItem *aconf_user = NULL;
 
   cur_dns_piece = dns_stack[--stack_pointer];
 
   if(!cur_dns_piece)
-    return((aConfItem *)NULL);
+    return(NULL);
 
   if(flags & CONF_KILL)
     {
@@ -859,7 +870,7 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
       /* no k-line yet, so descend deeper yet if possible */
       cur_piece = find_host_piece(cur_level,flags,cur_dns_piece,user);
       if(!cur_piece)
-        return((aConfItem *)NULL);
+        return(NULL);
     }
   else
     {
@@ -906,7 +917,7 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
     }
 
   /* NOT REACHED */
-  return((aConfItem *)NULL);
+  return(NULL);
 }
 
 
@@ -922,7 +933,8 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
  */
 
 
-static int sortable(char *tokenized,char *p)
+static int 
+sortable(char *tokenized,char *p)
 {
   int  state=0;
   char *d;              /* destination */
@@ -1026,7 +1038,8 @@ static int sortable(char *tokenized,char *p)
  * scanning for sortability.
  */
 
-static void tokenize_and_stack(char* tokenized, const char* p)
+static void 
+tokenize_and_stack(char* tokenized, const char* p)
 {
   char* d = tokenized;
   assert(0 != d);
@@ -1059,15 +1072,16 @@ static void tokenize_and_stack(char* tokenized, const char* p)
  *
  * inputs       - host name
  *              - username
- * output       - aConfItem pointer or NULL
+ * output       - struct ConfItem pointer or NULL
  * side effects -
  *
  * scan the link list of unsortable patterns
  */
 
-static aConfItem *look_in_unsortable_ilines(const char* host, const char* user)
+static struct ConfItem *
+look_in_unsortable_ilines(const char* host, const char* user)
 {
-  aConfItem *found_conf;
+  struct ConfItem *found_conf;
 
   for(found_conf=unsortable_list_ilines;found_conf;found_conf=found_conf->next)
     {
@@ -1077,7 +1091,7 @@ static aConfItem *look_in_unsortable_ilines(const char* host, const char* user)
             return(found_conf);
         }
     }
-  return((aConfItem *)NULL);
+  return(NULL);
 }
 
 /*
@@ -1085,15 +1099,16 @@ static aConfItem *look_in_unsortable_ilines(const char* host, const char* user)
  *
  * inputs       - host name
  *              - username
- * output       - aConfItem pointer or NULL
+ * output       - struct ConfItem pointer or NULL
  * side effects -
  *
  * scan the link list of unsortable patterns
  */
 
-static aConfItem *look_in_unsortable_klines(const char* host, const char* user)
+static struct ConfItem *
+look_in_unsortable_klines(const char* host, const char* user)
 {
-  aConfItem *found_conf;
+  struct ConfItem *found_conf;
 
   for(found_conf=unsortable_list_klines;found_conf;found_conf=found_conf->next)
     {
@@ -1101,35 +1116,36 @@ static aConfItem *look_in_unsortable_klines(const char* host, const char* user)
          match(found_conf->user,user))
         return(found_conf);
     }
-  return((aConfItem *)NULL);
+  return(NULL);
 }
 
 /*
  * find_wild_card_iline()
  *
  * inputs       - username
- * output       - aConfItem pointer or NULL
+ * output       - struct ConfItem pointer or NULL
  * side effects -
  *
  * scan the link list of top level domain *
  */
 
-static aConfItem* find_wild_card_iline(const char* user)
+static struct ConfItem *
+find_wild_card_iline(const char* user)
 {
-  aConfItem *found_conf;
+  struct ConfItem *found_conf;
 
   for(found_conf=wild_card_ilines;found_conf;found_conf=found_conf->next)
     {
       if(match(found_conf->user,user))
         return(found_conf);
     }
-  return((aConfItem *)NULL);
+  return(NULL);
 }
 
 /*
  * report_matching_host_klines
  *
- * inputs       - pointer to aClient to send reply to
+ * inputs       - pointer to struct Client to send reply to
  *              - hostname to match
  * output       - NONE
  * side effects -
@@ -1140,7 +1156,8 @@ static aConfItem* find_wild_card_iline(const char* user)
  * K lines.
  */
 
-void report_matching_host_klines(aClient *sptr,char *host)
+void 
+report_matching_host_klines(struct Client *sptr,char *host)
 {
   DOMAIN_PIECE *cur_piece;
   DOMAIN_LEVEL *cur_level;
@@ -1176,7 +1193,7 @@ void report_matching_host_klines(aClient *sptr,char *host)
 
   cur_piece = find_host_piece(trie_list,CONF_KILL,cur_dns_piece,"*");
 
-  if(cur_piece == (DOMAIN_PIECE *)NULL)
+  if(cur_piece == NULL)
     return;
 
   if(!(cur_piece->flags & CONF_KILL))
@@ -1193,7 +1210,7 @@ void report_matching_host_klines(aClient *sptr,char *host)
 
   cur_piece = find_host_piece(cur_level,CONF_KILL,cur_dns_piece,"*");
 
-  if(cur_piece == (DOMAIN_PIECE *)NULL)
+  if(cur_piece == NULL)
     return;
 
   if(!(cur_piece->flags & CONF_KILL))
@@ -1219,9 +1236,10 @@ void report_matching_host_klines(aClient *sptr,char *host)
  * side effects - report the klines in the unsortable list
  */
 
-static void report_unsortable_klines(aClient *sptr,char *need_host)
+static void 
+report_unsortable_klines(struct Client *sptr,char *need_host)
 {
-  aConfItem *found_conf;
+  struct ConfItem *found_conf;
   char *host, *pass, *user, *name;
   char *p;
   int port;
@@ -1234,7 +1252,7 @@ static void report_unsortable_klines(aClient *sptr,char *need_host)
       /* Hide any comment following a '|' seen in the password field */
       if(match(host,need_host))
         {
-          p = (char *)NULL;
+          p = NULL;
           if(!IsAnOper(sptr))
             {
               p = strchr(pass,'|');
@@ -1254,15 +1272,15 @@ static void report_unsortable_klines(aClient *sptr,char *need_host)
 /*
  * report_mtrie_conf_links()
  *
- * inputs       - aClient pointer
+ * inputs       - struct Client pointer
  *              - flags type either CONF_KILL or CONF_CLIENT
  * output       - none
  * side effects - report I lines/K lines found in the mtrie
  */
 
-void report_mtrie_conf_links(aClient *sptr, int flags)
+void report_mtrie_conf_links(struct Client *sptr, int flags)
 {
-  aConfItem *found_conf;
+  struct ConfItem *found_conf;
   char *name, *host, *pass, *user, *p;
   int  port;
   char c;               /* conf char used for CONF_CLIENT only */
@@ -1357,7 +1375,7 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
           get_printable_conf(found_conf, &name, &host, &pass, &user, &port);
 
           /* Hide any comment following a '|' seen in the password field */
-          p = (char *)NULL;
+          p = NULL;
           if(!IsAnOper(sptr))
             {
               p = strchr(pass,'|');
@@ -1377,15 +1395,15 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
 /*
  * show_iline_prefix()
  *
- * inputs       - pointer to aClient requesting output
- *              - pointer to aConfItem 
+ * inputs       - pointer to struct Client requesting output
+ *              - pointer to struct ConfItem 
  *              - name to which iline prefix will be prefixed to
  * output       - pointer to static string with prefixes listed in ascii form
  * side effects - NONE
  */
 
 /* urgh. now used also in dline_conf.c */
-char *show_iline_prefix(aClient *sptr,aConfItem *aconf,char *name)
+char *show_iline_prefix(struct Client *sptr,struct ConfItem *aconf,char *name)
 {
   static char prefix_of_host[MAXPREFIX];
   char *prefix_ptr;
@@ -1450,10 +1468,11 @@ char *show_iline_prefix(aClient *sptr,aConfItem *aconf,char *name)
  * report sub mtrie entries recursively
  */
 
-static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
+static void 
+report_sub_mtrie(struct Client *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 {
   DOMAIN_PIECE *dp_ptr;
-  aConfItem *aconf;
+  struct ConfItem *aconf;
   int i;
   char *name, *host, *pass, *user, *p;
   int  port;
@@ -1482,7 +1501,7 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
                       /* Hide any comment following a '|' seen in the
                        * password field
                        */
-                      p = (char *)NULL;
+                      p = NULL;
                       if(!IsAnOper(sptr))
                         {
                           p = strchr(pass,'|');
@@ -1541,7 +1560,7 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 
                   if (aconf->status == CONF_KILL)
                     {
-                      p = (char *)NULL;
+                      p = NULL;
                       if(!IsAnOper(sptr))
                         {
                           p = strchr(pass,'|');
@@ -1603,13 +1622,13 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 
 void clear_mtrie_conf_links()
 {
-  aConfItem *found_conf;
-  aConfItem *found_conf_next;
+  struct ConfItem *found_conf;
+  struct ConfItem *found_conf_next;
 
   if(trie_list)
     {
       clear_sub_mtrie(trie_list);
-      trie_list = (DOMAIN_LEVEL *)NULL;
+      trie_list = NULL;
     }
 
   for(found_conf=unsortable_list_ilines;
@@ -1624,7 +1643,7 @@ void clear_mtrie_conf_links()
       else
         free_conf(found_conf);
     }
-  unsortable_list_ilines = (aConfItem *)NULL;
+  unsortable_list_ilines = NULL;
 
   for(found_conf=unsortable_list_klines;
       found_conf;found_conf=found_conf_next)
@@ -1632,7 +1651,7 @@ void clear_mtrie_conf_links()
       found_conf_next = found_conf->next;
       free_conf(found_conf);
     }
-  unsortable_list_klines = (aConfItem *)NULL;
+  unsortable_list_klines = NULL;
 
   for(found_conf=wild_card_ilines;
       found_conf;found_conf=found_conf_next)
@@ -1643,7 +1662,7 @@ void clear_mtrie_conf_links()
       else
         free_conf(found_conf);
     }
-  wild_card_ilines = (aConfItem *)NULL;
+  wild_card_ilines = NULL;
 
   for(found_conf = ip_i_lines; found_conf;
       found_conf = found_conf_next)
@@ -1658,7 +1677,7 @@ void clear_mtrie_conf_links()
       else
         free_conf(found_conf);
     }
-  ip_i_lines = (aConfItem *)NULL;
+  ip_i_lines = NULL;
 }
 
 /*
@@ -1673,7 +1692,7 @@ static void clear_sub_mtrie(DOMAIN_LEVEL *dl_ptr)
 {
   DOMAIN_PIECE *dp_ptr;
   DOMAIN_PIECE *next_dp_ptr;
-  aConfItem *conf_ptr;
+  struct ConfItem *conf_ptr;
   int i;
 
   if(!dl_ptr)
@@ -1716,37 +1735,40 @@ static void clear_sub_mtrie(DOMAIN_LEVEL *dl_ptr)
 /*
  * find_matching_ip_i_line()
  * 
- * inputs       - unsigned long IP in host order
- * output       - aConfItem pointer if found, NULL if not
+ * inputs       - user name
+ *		- unsigned long IP in host order
+ * output       - struct ConfItem pointer if found, NULL if not
  * side effects -
  * search the ip_i_line link list
- * looking for a match, return aConfItem pointer if found 
+ * looking for a match, return struct ConfItem pointer if found 
  */
 
-static aConfItem *find_matching_ip_i_line(unsigned long host_ip)
+static struct ConfItem *
+find_matching_ip_i_line(char *user, unsigned long host_ip)
 {
-  aConfItem *aconf;
+  struct ConfItem *aconf;
 
   for( aconf = ip_i_lines; aconf; aconf = aconf->next)
     {
-      if((host_ip & aconf->ip_mask) == aconf->ip)
+      if (((host_ip & aconf->ip_mask) == aconf->ip) &&
+	  match(found_conf->user,user))
         return(aconf);
     }
-  return((aConfItem *)NULL);
+  return(NULL);
 }
 
 /*
  * report_dup()
  *
  * input        - char type
- *              - pointer to aConfItem
+ *              - pointer to struct ConfItem
  * output       - NONE
  * side effects -
  * report a duplicate conf item found in the mtrie
  *
  */
 
-static void report_dup(char type,aConfItem *aconf)
+static void report_dup(char type,struct ConfItem *aconf)
 {
   char *name, *host, *pass, *user;
   int port;
