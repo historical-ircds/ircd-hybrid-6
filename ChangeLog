@@ -1,3 +1,25 @@
+leeh        2001/12/13 18:16:41 EST	(20011213_1)
+
+  Modified files:
+    include              ircd.h numeric.h s_misc.h 
+    src                  ircd.c m_version.c messages.tab 
+                         messages_cust.tab s_misc.c s_user.c 
+  Log:
+  - added RPL_ISUPPORT (005), ripped from Hwys patch
+  
+  Revision  Changes    Path
+  1.21      +1 -0      ircd-hybrid-6/include/ircd.h
+  1.20      +2 -1      ircd-hybrid-6/include/numeric.h
+  1.8       +2 -1      ircd-hybrid-6/include/s_misc.h
+  1.161     +2 -0      ircd-hybrid-6/src/ircd.c
+  1.9       +7 -1      ircd-hybrid-6/src/m_version.c
+  1.22      +1 -1      ircd-hybrid-6/src/messages.tab
+  1.21      +1 -1      ircd-hybrid-6/src/messages_cust.tab
+  1.73      +23 -1     ircd-hybrid-6/src/s_misc.c
+  1.243     +1 -0      ircd-hybrid-6/src/s_user.c
+
+
+
 db          2001/12/13 00:21:24 EST	(20011213_0)
 
   Modified files:
