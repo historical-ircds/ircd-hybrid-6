@@ -1,3 +1,9 @@
+*** 20011129_10 by db
+Lee is right. /stats j should be /stats q like hybrid-7. done deal.
+Also removed the unnecessary (char *) cast on the NULLs in the message tables
+
+
+
 *** 20011129_9 by db
 - Adds /stats F /stats J
   added proper RPL_STATSJLINE in numerics.h and in messages.tab
