@@ -1,3 +1,9 @@
+*** 20010805_2 by jdc
+- Removed unused variables in m_gline().
+- Extra () to define truth in invalid_wildcard().
+- Renamed 'local' to 'local_client' to avoid shadowing in invalid_gline().
+
+
 *** 20010805_1 by leeh
 - removed some #if 0'd code that doesnt need to be there
 
