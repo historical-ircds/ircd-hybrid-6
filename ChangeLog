@@ -46,17 +46,6 @@ test commit to new repository
 
 
 
-*** 20010727_6 by leeh
-- drop TS_CURRENT to 3 till we can make a workaround for this bug..
-
-
-*** 20010727_5 by leeh
-- TS_CURRENT is now 4
-- if sptr's ts version is > 3, older ts always wins
-  else any ts wins on an opless channel
-- sptr->serv->tsversion is the first param from SVINFO, their ts version
-
-
 *** 20010727_4 by jdc
 - Whoops, typo (chat != char ;-) ).
 
@@ -66,15 +55,6 @@ test commit to new repository
     Removed the trailing space during link-time or anything involving
     listing capabilities.  Also added error check for links without
     caps.
-
-
-*** 20010727_2 by leeh
-- added a warning about the NO_HACK_OPS code, it needs to be network
-  wide or not defined
-
-
-*** 20010727_1 by leeh
-- finished off the NO_HACK_OPS code
 
 
 *** 20010726_2 by leeh
@@ -186,30 +166,6 @@ massive cleanup of gcc warnings
 
 
 
-*** 20010710_2 by jdc
-- More stuff for encrypted link removal.
-
-
-
-*** 20010710_1 by jdc
-- Complete removal of encrypted link (CRYPTLINK) support; this includes
-  RSA authentication.
-
-
-
-*** 20010708_4 by db
-- reverted KSERVER changes. NOT DISCUSSED, NOT APPROVED
-
-
-
-*** 20010708_3 by a1kmm
-- The first phase of adding KSERVER.
-
-
-*** 20010708_2 by a1kmm
-- Had better change the path in mkkeypair back...
-
-
 *** 20010708_1 by a1kmm
 - Remove P-lines when they are not in use on rehash.
 
@@ -241,26 +197,6 @@ Updated the docs for greg's changed...
 
 
 
-*** 20010704_8 by greg
-Uh. Right ..
-
-- config.h	
-		made CRYPT_LINKS_PRIVATEKEYFILE deprecated, documented other
-		cryptlinks related options
-		prefer the me.name.key format. much cleaner.
-- include/m_info.h
-		show PRIVATEKEYFILE define as 'NONE' if no override
-- src/s_crypt.c	
-		made PRIVATEKEYFILE deprecated in favor of me.name
-
-TODO:
-- make ircd.pid stuff multi-ircd-in-one-dir friendly
-- keys not 2048 bits long? more descriptive errors?
-- more testing
-- more testing
-- rc to lightning/solidstreaming
-
-
 *** 20010704_7 by db
 - reformatted hard to read code. grrrr why do people do 
   function () { ?
@@ -277,166 +213,6 @@ Added make lint...that won't be very fun to clean up though
 
 *** 20010704_4 by wcampbel
 Updated .depend
-
-
-*** 20010704_3 by jdc
-- include/config.h
-    * Forgot to add CRYPT_LINKS_CIPHERPREFIX to this file, not just
-      config.h.dist.
-
-
-
-*** 20010704_2 by jdc
-- src/m_cryptlink.c
-    * Woohoo!  Found the bug in question; old code was sending the old
-      method (eg. "CRYPTLINK AUTH CAST/128/128") when it shouldn't have
-      been printing keysize at all.  Now prints "CRYPTLINK AUTH CAST/128"
-      like it should.  :-)
-
-
-
-*** 20010704_1 by jdc
-The Monster Update(tm) for hybrid-6 and cryptlinks.
-
-NOTE:  This apparently should work with hybrid-7, but it has one minor
-bug which I have yet to be able to figure out.  Other than that, the
-actual authentication seems to be working fine; there's got to be a
-missing line of code somewhere, or something not being initialised right;
-something like that.  An example of this problem (pentarou.parodius.com
-is hybrid-6 with this code):
-
-*** Connecting to 255.255.255.255[hybrid.best.net].9000
-*** Notice -- Link with hybrid.best.net[unknown@255.255.255.255] established: (TS ZIP QS EX CHW ENC:CAST/128,CAST/128) link
-*** Notice -- inflate() error(-3): unknown compression method
-*** Notice -- hybrid.best.net was connected for 1 seconds.  0/1 sendK/recvK.
-*** Notice -- Server hybrid.best.net split from pentarou.parodius.com
-
-It looks to me as if the connection is being terminated immediately after
-zlib kicks in.  The other end of the link (hybrid.best.net) shows one
-obvious error which should be the key to fixing this bug:
-
-*** Notice -- Unauthorized server connection attempt from pentarou.parodius.com: Invalid cipher
-
-Please note despite the zlib-style error, I ***STRONGLY*** doubt it has
-anything to do with zlib.  Either way, I'm submitting this because it's a
-_MUCH_ further along than before, and it actually does work except for the
-one small bug.  :-)  I believe the bug might be in s_serv.c somewhere
-(particularly with the "ENC:" stuff), but someone will have to go over all
-of this alongside me to figure out where the real bug is.  Once it's
-squashed, we're practically ready to go!
-
-- doc/cryptlink.txt
-    * Updated with the latest protocol information (same as hybrid-7s).
-
-- doc/example.conf
-    * Properly document how to use the new "," cipher pre-requisite in
-      the passwd field.
-
-- include/client.h
-    * Changed "ciphers" definition from char * to struct CipherDef *.
-
-- include/m_commands.h
-    * Removed definitons for m_cryptauth and m_cryptserv.
-    * Added definition for m_cryptlink.
-
-- include/msg.h
-    * Removed references to MSG_CRYPTAUTH and MSG_CRYPTSERV.
-    * Added reference to MSG_CRYPTLINK.
-
-- include/s_conf.h
-    * Added to ConfItem: rsa_public_keyfile definition (filename of keyfile).
-    * Added to ConfItem: struct CipherDef *cipher (pointer into Cipher[] for
-                         the per-conf definition of a cipher).
-
-- include/s_crypt.h
-    * Removed CRYPT_CIPHERNAMELENGTH.  Silly.
-    * Changed definition of CipherDef structure.  Moved from a typedef to
-      an actual struct.
-    * Changed extern definition for Ciphers[] table to be struct.  Goes
-      hand in hand with the above entry.
-    * Changed return type for crypt_selectcipher().  Now returns a pointer
-      to a CipherDef structure.
-    * Added function crypt_parse_conf().
-    * Cosmetical changes.
-
-- src/Makefile.in
-    * Removal of src/cryptauth.c and src/cryptserv.c.
-
-- src/channel.c
-    * --UNRELATED TO CRYPTLINKS--: Moved definition of register t2 to
-      ensure it only got used when it needed (due to -Wunused).
-
-- src/m_capab.c
-    * Removed "," delimited support across the wire for cipher autoneg.
-    * Changed methodology alongside "ENC:" comprehension during CAPAB.
-
-- src/m_cryptauth.c
-  src/m_cryptserv.c
-    * Both removed.  NOTE: I DO HAVE THESE LAYING AROUND IN A BACKUP
-                     SOURCE TREE!  For debugging the above bug, I figured
-                     we might need them!
-
-- src/m_cryptlink.c
-    * Added.
-    * Very simple to understand too; the functions are all practically
-      identical, so if you wrote this code, it should still make sense to
-      you.
-    * Like in -7, we now use a table for SERV and AUTH lookup.  Great for
-      expansion.
-
-- src/s_bsd.c
-    * Moved from "CRYPTSERV %s %s :%s" to "CRYPTLINK SERV ...".
-    * Cosmetical changes.
-
-- src/s_conf.c
-    * Initialised the new rsa_public_keyfile and cipher ConfItem entries.
-      Both default to NULL (as they should).
-    * Added MyFree() entry for rsa_public_keyfile.
-    * Added support for crypt_parse_conf() call during processing of C/N
-      line phase.
-    * Added log()s for bad C/N-line entries.
-    * Cosmetical changes and comments.
-
-- src/s_crypt.c
-    * Moved cipher names from things like "3DES" to "3DES/128".  This way,
-      code all over the place in other portions does not have to permutate
-      the actual keysize and the string using ircsprintf().  This was silly
-      in the first place, IMHO, since we already stored the keysize and the
-      strings both.
-    * crypt_selectcipher() re-written to go through the Ciphers[] table
-      a lot more effectively; goes alongside with the above entry too.
-    * Removed unnecessary free() of cptr->ciphers.  No need for this any
-      longer, since we just point right into the Ciphers[] table now.
-      Ain't this what pointers are for?  ;-)
-    * crypt_initserver() MAJORLY rehauled.  Tons of log() calls and new
-      error messages in the case there's a problem.  Re-written due to the
-      change from "char *ciphers" to "struct CipherDef *cipher".
-    * Changed errorhandling slightly, so that things would be more proper
-      ("if ... == NULL" vs. "if (!...)" in some cases).
-    * Added crypt_parse_conf().  This is the magic function which actually
-      parses the passwd entries in the C/N lines themselves and appropriate
-      splits up the fields, assigning them to rsa_public_keyfile and
-      cipher for ConfItem entries respectively.  I'm kind-of proud of this,
-      even though it may not look like much.  :-)  The reason is that we
-      were previously doing all of the parsing in crypt_initserver() -- a
-      silly idea!
-    * Cosmetical changes.
-
-- src/s_serv.c
-    * Moved away from printing all of the available ciphers we had during
-      the "ENC:" phase to simply printing the name of the one supported in
-      cptr.  This was a major bug anyways -- it printed ALL THE CIPHERS IN
-      THE TABLE, regardless if we actually supported them or not.  Ugh.
-    * No more "%s/%i,%s/%i" garbage (see first change entry above for
-      s_crypt.c).
-    * Cosmetical changes.
-
-- src/send.c
-    * --UNRELATED TO CRYPTLINKS--: Renamed "index" variable to "lindex,"
-      to keep from conflicting with system-wide function index() and
-      global variables.
-    * Cosmetical changes.
-
 
 
 *** 20010703_2 by wcampbel
@@ -521,19 +297,6 @@ m_kill.c	- slight typo in the SERVERHIDE code. resulted in locals
 s_user.c	- modified the nick collide code to, instead of doing a
 		get_client_name in the resulting kills at all, just use
 		cptr->name
-
-
-*** 20010630_1 by greg
-Well well well.  Take a look at this one.
-
-I know why asymetric ciphers didn't work, someone was decrypt()'ing the blocks
-we get from the foreign user using the cipher we're supposed to send outbound.
-
-*cough* Fortunately einride's code doesn't report decryption errors! So,
-we either let the connection ping timeout, or we invariably cored trying to 
-decrypt a block with the wrong cipher.
-
-How could this have eluded us for so long? :)
 
 
 *** 20010626_1 by db
@@ -669,9 +432,6 @@ I did the following:
 		doesn't get sent anymore, which is bad for people who wonder
 		where their server went
 - m_kline.c	some typos
-- m_cryptauth.c	whee, another get_client_name twice in one call .. god bless
-		those statics.
-- m_cryptserv.c	same thing as above .. watch those statics
 - client.c/channel.c
 		modified some words and typos and such
 
@@ -714,12 +474,6 @@ to be done: s_{bsd,auth,misc,..} ok. on the other hand.
 to be done: a lot of files should be audited for this.
             just doing a grep for get_client_name shows some calls on sptr's
             with TRUE/FALSE instead of MASK_IP
-
-
-*** 20010616_2 by jdc
-* Updated INSTALL; better explanation, and mentions encrypted links
-  via OpenSSL.
-* Added doc/README.openssl for hybrid-6.
 
 
 *** 20010616_1 by db
@@ -790,48 +544,20 @@ submitted by Walter Campbell
 
 
 
-*** 20010609_3 by jdc
-* Removal of cipher priority information for config.h.  This isn't
-  applicable anymore.
-
-
-
 *** 20010609_2 by jdc
 * Forgot to remove one extra line due to previous debugging session
   with Hwy.  Line 452 needed to be deleted.  Oops.
 
 
 
-*** 20010609_1 by jdc
-- Fixes for cipher autoselection.  Order of ciphers was wrong; they
-  were being tested in order of best ("most secure") to worst.  The
-  last match is always picked, which would've been DES/56 on most
-  systems.
-- BF/256 and BF/128 would've never been made available; #ifdef was actually
-  a #ifndef (s_crypt.h).  Oops.
-
-
-
 *** 20010608_3 by db
 From Walter Campbell
 
-1.  Updated example.conf for the cryptlinks patch
-2.  Fixed a compilation issue with the bogus TS patch
-3.  Cleaned up the make depend's
-4.  Fixed a core with CRYPT_LINKS and INFO
-5.  Use /dev/urandom for the random block in mkkeypair, this is not quite
-    as secure, but works on almost all systems
-6.  Updated .depend
-7.  Changed the patchlevel to 6.1b1
+1.  Fixed a compilation issue with the bogus TS patch
+2.  Cleaned up the make depend's
+3.  Updated .depend
+4.  Changed the patchlevel to 6.1b1
 
-
-
-*** 20010608_2 by kreator
-- oops, forgot to do the same with config.h.dist as with config.h
-
-
-*** 20010608_1 by kreator
-- add simple support for EGD seeding of OpenSSL PRNG
 
 
 *** 20010607_5 by db
@@ -959,14 +685,6 @@ patches from Walter Campbell
 
 
 
-*** 20010605_3 by davidt
-corrected e-mail addres for cryptlinks coder in ChangeLog
-
-*** 20010605_2 by db
-- moved mkkeypair from src into tools where it belongs
-
-
-
 *** 20010605_1 by kreator
 - add check_pidfile() that will check if daemon is already running
 - add setup_corefile() that will setup corefilesize to system max
@@ -974,71 +692,6 @@ corrected e-mail addres for cryptlinks coder in ChangeLog
 
 *** 20010604_12 by db
 - added UNKNOWN_TIME set to 20 seconds
-
-
-
-*** 20010604_11 by jdc
-* Round 2 of the cryptlinks modifications.  --enable-openssl and
-  --disable-openssl now added to the configure option list.  I'll
-  describe how they work via a small chart:
-
-  +------------+------------+-------------+-----------------------+
-  | Arguments  | SSL found? | CRYPT_LINKS | Result                |
-  +------------+------------+-------------+-----------------------+
-  | None       | Yes        | #define     | Cryptlinks enabled    |
-  +------------+------------+-------------+-----------------------+
-  | None       | No         | #define     | Error during 'make'   |
-  +------------+------------+-------------+-----------------------+
-  | None       | Yes        | #undef      | No cryptlink support  |
-  +------------+------------+-------------+-----------------------+
-  | None       | No         | #undef      | No cryptlink support  |
-  +------------+------------+-------------+-----------------------+
-  | --enable-  | Yes        | #define     | Cryptlinks enabled    |
-  |   openssl  |            |             |                       |
-  +------------+------------+-------------+-----------------------+
-  | --enable-  | No         | #define     | Error during 'make'   |
-  |   openssl  |            |             |                       |
-  +------------+------------+-------------+-----------------------+
-  | --enable-  | Yes        | #undef      | No cryptlink support  |
-  |   openssl  |            |             |                       |
-  +------------+------------+-------------+-----------------------+
-  | --enable-  | No         | #undef      | No cryptlink support  |
-  |   openssl  |            |             |                       |
-  +------------+------------+-------------+-----------------------+
-  | --disable- | N/A        | N/A         | No cryptlink support  |
-  |   openssl  |            |             |                       |
-  +------------+------------+-------------+-----------------------+
-    * CRYPT_LINKS can be #define or #undef'd in config.h.
-    * OpenSSL must be version 0.9.6 or higher.  This is because previous
-      versions of OpenSSL did not return error-codes during the
-      encryption process.  <0.9.6 is deprecated and will not work.
-
-  If --enable-openssl does not find OpenSSL for you, and you DO have
-  a working copy of it on your system, try using the =DIR specifier
-  to --enable-openssl (i.e. --enable-openssl=/usr/local/someplace).
-
-  configure looks for the file PATH/include/opensslv.h.  This is how
-  it figures out if PATH is legitimate or not.
-
-
-
-*** 20010604_10 by jdc
-* Removed all of this "cipher priority" crap.  I'm sorry folks, but
-  this is silly.  The priority is now defined by the order of the
-  cipher definition in src/s_crypt.c.  I assume the best order is
-  the following, and therefore this is how they're used now:
-  Blowfish(256), Blowfish(128), CAST, IDEA, RC5(16), RC5(12), RC5(8),
-  3DES, DES.
-
-  The reason for this is because the previous method was not taking
-  into account who had what ciphers based upon what autoconf said.
-  I.e. #error's would be stated for ciphers which you didn't have,
-  assuming they were #define'd in config.h.  Now just rely upon the
-  autoconf values ENTIRELY.  Yay.
-
-* Changed Makefile.in to provide full warning flags for "developers" if
-  need be.  We have a __TON__ of warnings, folks.  We should try to
-  clean these up before the next release.
 
 
 
@@ -1052,10 +705,6 @@ corrected e-mail addres for cryptlinks coder in ChangeLog
 Wow, I feel cool or something.
 
 Plugged myself into contributors. Maybe I should start looking at -7...
-
-
-*** 20010604_7 by leeh
-- commited cryptserv now the conflicts are gone
 
 
 *** 20010604_6 by leeh
