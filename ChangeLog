@@ -1,3 +1,9 @@
+*** 20010702_3 by leeh
+- removed MODE_JUPED and added juped to the channel struct.. this stops
+  locally juped channels being removed when we get a burst with a lower TS
+  its now chptr->juped
+
+
 *** 20010702_2 by leeh
 - 437 == ERR_UNAVAILRESOURCE (ill be using this later :P)
 
