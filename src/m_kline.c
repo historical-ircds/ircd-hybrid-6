@@ -21,9 +21,9 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-
+#ifndef lint
 static char *rcs_version = "$Id$";
-
+#endif
 
 #include "struct.h"
 
@@ -60,7 +60,7 @@ static char *rcs_version = "$Id$";
 extern int rehashed;
 extern int dline_in_progress;	/* defined in ircd.c */
 int bad_tld(char *);
-extern safe_write(aClient *,char *,char *,int,char *);
+extern int safe_write(aClient *,char *,char *,int,char *);
 extern char *smalldate(time_t);		/* defined in s_misc.c */
 
 /* Local function prototypes */
@@ -78,6 +78,14 @@ struct pkl {
 } *pending_klines = NULL;
 
 time_t	pending_kline_time = 0;
+#endif
+
+#ifdef SLAVE_SERVERS
+extern aConfItem *find_special_conf(char *,int); /* defined in s_conf.c */
+#endif
+
+#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
+extern char *small_file_date(time_t);  /* defined in s_misc.c */
 #endif
 
 /*

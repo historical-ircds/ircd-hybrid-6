@@ -2,6 +2,8 @@
 *** Newest entries at top
 
 version hybrid-6-b85 21-Jun-1999
+* fixed a few compile warnings related to the s_serv.c split
+-Rodder
 * Massive changes to conf formatting, preformatted user@host entries
 * fixed Q lines to allow multiple user@host separated by ,
 * removed obsolete resolver code

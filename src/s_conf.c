@@ -1709,7 +1709,7 @@ int 	initconf(int opt, int fd,int use_include)
   aConfItem *include_conf = NULL;
   unsigned long ip;
   unsigned long ip_mask;
-  int sendq;
+  int sendq = 0;
 
   (void)dgets(-1, NULL, 0); /* make sure buffer is at empty pos */
   while ((i = dgets(fd, line, sizeof(line) - 1)) > 0)
