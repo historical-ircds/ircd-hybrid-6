@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.5  1999/07/24 21:10:45  tomh
+ * attempt to fix memory usage reporting for sbrk calls, still needs work??
+ *
  * Revision 1.4  1999/07/23 07:02:42  tomh
  * remove sbrk, replace with get_maxrss
  *
@@ -50,8 +53,6 @@ struct Client;
 
 extern void send_usage(struct Client*, char *);
 extern void count_memory (struct Client *, char *);
-extern size_t get_maxrss(void);
-extern size_t get_vm_top(void);
 
 extern	void	debug(int, char *, ...);
 
