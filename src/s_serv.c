@@ -905,7 +905,7 @@ static int m_server_estab(aClient *cptr)
     ClearCap(cptr, CAP_ZIP);
 #endif /* ZIP_LINKS */
 
-  sendto_one(cptr,"SVINFO %d %d 0 :%lu", TS_CURRENT, TS_MIN, timeofday);
+  sendto_one(cptr,"SVINFO %d %d 0 :%lu", TS_CURRENT, TS_MIN, CurrentTime);
   
   det_confs_butmask(cptr, CONF_LEAF|CONF_HUB|CONF_NOCONNECT_SERVER);
   /*
@@ -940,7 +940,7 @@ static int m_server_estab(aClient *cptr)
 
   fdlist_add(cptr->fd, FDL_SERVER | FDL_BUSY);
 
-  nextping = timeofday;
+  nextping = CurrentTime;
   /* ircd-hybrid-6 can do TS links, and  zipped links*/
   sendto_ops("Link with %s established: (%s) link",
              inpath,show_capabilities(cptr));
@@ -1162,7 +1162,7 @@ int     m_links(aClient *cptr,
       if(!MyConnect(sptr))
         return 0;
 
-      if((last_used + PACE_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > CurrentTime)
         {
           /* safe enough to give this on a local connect only */
           sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,parv[0]);
@@ -1170,7 +1170,7 @@ int     m_links(aClient *cptr,
         }
       else
         {
-          last_used = NOW;
+          last_used = CurrentTime;
         }
     }
 
@@ -1423,7 +1423,7 @@ int     m_stats(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
-      if((last_used + PACE_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > CurrentTime)
         {
           /* safe enough to give this on a local connect only */
           if(MyClient(sptr))
@@ -1432,7 +1432,7 @@ int     m_stats(aClient *cptr,
         }
       else
         {
-          last_used = NOW;
+          last_used = CurrentTime;
         }
     }
 
@@ -1479,10 +1479,10 @@ int     m_stats(aClient *cptr,
           if (!(doall || wilds) && irccmp(name, acptr->name))
             continue;
 
-          /* I've added a sanity test to the "timeofday - acptr->since"
-           * occasionally, acptr->since is larger than timeofday.
+          /* I've added a sanity test to the "CurrentTime - acptr->since"
+           * occasionally, acptr->since is larger than CurrentTime.
            * The code in parse.c "randomly" increases the "since",
-           * which means acptr->since is larger then timeofday at times,
+           * which means acptr->since is larger then CurrentTime at times,
            * this gives us very high odd number.. 
            * So, I am going to return 0 for ->since if this happens.
            * - Dianora
@@ -1501,8 +1501,8 @@ int     m_stats(aClient *cptr,
                      (int)DBufLength(&acptr->sendQ),
                      (int)acptr->sendM, (int)acptr->sendK,
                      (int)acptr->receiveM, (int)acptr->receiveK,
-                     timeofday - acptr->firsttime,
-                     (timeofday > acptr->since) ? (timeofday - acptr->since):0,
+                     CurrentTime - acptr->firsttime,
+                     (CurrentTime > acptr->since) ? (CurrentTime - acptr->since):0,
                      IsServer(acptr) ? show_capabilities(acptr) : "-");
               }
             else
@@ -1514,8 +1514,8 @@ int     m_stats(aClient *cptr,
                      (int)DBufLength(&acptr->sendQ),
                      (int)acptr->sendM, (int)acptr->sendK,
                      (int)acptr->receiveM, (int)acptr->receiveK,
-                     timeofday - acptr->firsttime,
-                     (timeofday > acptr->since) ? (timeofday - acptr->since):0,
+                     CurrentTime - acptr->firsttime,
+                     (CurrentTime > acptr->since) ? (CurrentTime - acptr->since):0,
                      IsServer(acptr) ? show_capabilities(acptr) : "-");
                  else
                   sendto_one(sptr, Lformat, me.name,
@@ -1526,8 +1526,8 @@ int     m_stats(aClient *cptr,
                      (int)DBufLength(&acptr->sendQ),
                      (int)acptr->sendM, (int)acptr->sendK,
                      (int)acptr->receiveM, (int)acptr->receiveK,
-                     timeofday - acptr->firsttime,
-                     (timeofday > acptr->since) ? (timeofday - acptr->since):0,
+                     CurrentTime - acptr->firsttime,
+                     (CurrentTime > acptr->since) ? (CurrentTime - acptr->since):0,
                      IsServer(acptr) ? show_capabilities(acptr) : "-");
               }
         }
@@ -1662,7 +1662,7 @@ int     m_stats(aClient *cptr,
       {
         time_t now;
         
-        now = timeofday - me.since;
+        now = CurrentTime - me.since;
         sendto_one(sptr, form_str(RPL_STATSUPTIME), me.name, parv[0],
                    now/86400, (now/3600)%24, (now/60)%60, now%60);
         sendto_one(sptr, form_str(RPL_STATSCONN), me.name, parv[0],
@@ -1798,7 +1798,7 @@ int     m_help(aClient *cptr,
   if(!IsAnOper(sptr))
     {
       /* HELP is always local */
-      if((last_used + PACE_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > CurrentTime)
         {
           /* safe enough to give this on a local connect only */
           sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,parv[0]);
@@ -1806,7 +1806,7 @@ int     m_help(aClient *cptr,
         }
       else
         {
-          last_used = NOW;
+          last_used = CurrentTime;
         }
     }
 
@@ -1840,7 +1840,7 @@ int      m_lusers(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
-      if((last_used + PACE_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > CurrentTime)
         {
           /* safe enough to give this on a local connect only */
           if(MyClient(sptr))
@@ -1849,7 +1849,7 @@ int      m_lusers(aClient *cptr,
         }
       else
         {
-          last_used = NOW;
+          last_used = CurrentTime;
         }
     }
 
@@ -1889,9 +1889,9 @@ int show_lusers(aClient *cptr,
   c_count  = Count.total-Count.invisi;
   s_count  = Count.server;
   o_count  = Count.oper;
-  if (forced || (timeofday > last_time+LUSERS_CACHE_TIME))
+  if (forced || (CurrentTime > last_time+LUSERS_CACHE_TIME))
     {
-      last_time = timeofday;
+      last_time = CurrentTime;
       /* only recount if more than a second has passed since last request */
       /* use LUSERS_CACHE_TIME instead... */
       s_count = 0; c_count = 0; u_count = 0; i_count = 0;
@@ -2200,13 +2200,13 @@ int     m_wallops(aClient *cptr,
     {
 
 #ifdef PACE_WALLOPS
-      if( MyClient(sptr) && ((last_used_wallops + WALLOPS_WAIT) > NOW) )
+      if( MyClient(sptr) && ((last_used_wallops + WALLOPS_WAIT) > CurrentTime) )
         {
           sendto_one(sptr, ":%s NOTICE %s :Oh, one of those annoying opers who doesn't know how to use a channel",
                      me.name,parv[0]);
           return 0;
         }
-      last_used_wallops = NOW;
+      last_used_wallops = CurrentTime;
 #endif
 
       send_operwall(sptr, "WALLOPS", message);
@@ -2332,13 +2332,13 @@ int     m_operwall(aClient *cptr,
     }
 
 #ifdef PACE_WALLOPS
-  if( MyClient(sptr) && ((last_used_wallops + WALLOPS_WAIT) > NOW) )
+  if( MyClient(sptr) && ((last_used_wallops + WALLOPS_WAIT) > CurrentTime) )
     {
       sendto_one(sptr, ":%s NOTICE %s :Oh, one of those annoying opers who doesn't know how to use a channel",
                  me.name,parv[0]); 
       return 0;
     }
-  last_used_wallops = NOW;
+  last_used_wallops = CurrentTime;
 #endif
 
   sendto_serv_butone(IsServer(cptr) ? cptr : NULL, ":%s OPERWALL :%s",
@@ -2379,7 +2379,7 @@ int     m_admin(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
-      if((last_used + PACE_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > CurrentTime)
         {
           /* safe enough to give this on a local connect only */
           if(MyClient(sptr))
@@ -2387,7 +2387,7 @@ int     m_admin(aClient *cptr,
           return 0;
         }
       else
-        last_used = NOW;
+        last_used = CurrentTime;
     }
 
   if (hunt_server(cptr,sptr,":%s ADMIN :%s",1,parc,parv) != HUNTED_ISME)
@@ -3243,7 +3243,7 @@ int     m_trace(aClient *cptr,
     {
       /* pacing for /trace is problemmatical */
 #if PACE_TRACE
-      if((last_used + PACE_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > CurrentTime)
         {
           /* safe enough to give this on a local connect only */
           if(MyClient(sptr))
@@ -3252,7 +3252,7 @@ int     m_trace(aClient *cptr,
         }
       else
         {
-          last_used = NOW;
+          last_used = CurrentTime;
         }
 #endif
 
@@ -3393,7 +3393,7 @@ int     m_trace(aClient *cptr,
 /* added time -Taner */
           sendto_one(sptr, form_str(RPL_TRACEUNKNOWN),
                      me.name, parv[0], c_class, name, ip,
-                     acptr->firsttime ? timeofday - acptr->firsttime : -1);
+                     acptr->firsttime ? CurrentTime - acptr->firsttime : -1);
           cnt++;
           break;
         case STAT_CLIENT:
@@ -3809,7 +3809,7 @@ static void show_opers(aClient *cptr)
                                           cptr2->confs->value.aconf->port),
                      cptr2->name,
                      cptr2->username, cptr2->host,
-                     timeofday - cptr2->user->last);
+                     CurrentTime - cptr2->user->last);
         }
       else
         {
@@ -3818,7 +3818,7 @@ static void show_opers(aClient *cptr)
                      IsOper(cptr2) ? 'O' : 'o',
                      cptr2->name,
                      cptr2->username, cptr2->host,
-                     timeofday - cptr2->user->last);
+                     CurrentTime - cptr2->user->last);
         }
     }
 
@@ -3846,7 +3846,7 @@ static void show_servers(aClient *cptr)
       sendto_one(cptr, ":%s %d %s :%s (%s!%s@%s) Idle: %d",
                  me.name, RPL_STATSDEBUG, cptr->name, cptr2->name,
                  (cptr2->serv->by[0] ? cptr2->serv->by : "Remote."), 
-                 "*", "*", timeofday - cptr2->lasttime);
+                 "*", "*", CurrentTime - cptr2->lasttime);
 
       /*
        * NOTE: moving the username and host to the client struct

@@ -1497,7 +1497,7 @@ int rehash_dump(aClient *sptr)
   char timebuffer[MAX_DATE_STRING];
   struct tm *tmptr;
 
-  tmptr = localtime(&NOW);
+  tmptr = localtime(&CurrentTime);
   strftime(timebuffer, MAX_DATE_STRING, "%Y%m%d%H%M", tmptr);
   (void)sprintf(ircd_dump_file,"%s/ircd.conf.%s",
                 DPATH,timebuffer);
@@ -2257,7 +2257,7 @@ static void initconf(FBFILE* file, int use_include)
                   chptr->nextch = channel;
                   channel = chptr;
                   /* JIC */
-                  chptr->channelts = NOW;
+                  chptr->channelts = CurrentTime;
                   (void)add_to_channel_hash_table(aconf->name, chptr);
                   Count.chan++;
                 }
@@ -2475,7 +2475,7 @@ static aConfItem* find_tkline(const char* host, const char* user)
 
       while(kill_list_ptr)
         {
-          if(kill_list_ptr->hold <= NOW)        /* a kline has expired */
+          if(kill_list_ptr->hold <= CurrentTime)        /* a kline has expired */
             {
               if(temporary_klines == kill_list_ptr)
                 {
@@ -2598,7 +2598,7 @@ void report_temp_klines(aClient *sptr)
 
       while(kill_list_ptr)
         {
-          if(kill_list_ptr->hold <= NOW)        /* kline has expired */
+          if(kill_list_ptr->hold <= CurrentTime)        /* kline has expired */
             {
               if(temporary_klines == kill_list_ptr)
                 {
@@ -3493,7 +3493,7 @@ get_conf_name(KlineType type)
   else if(type == KLINE_TYPE)
     {
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-      tmptr = localtime(&NOW);
+      tmptr = localtime(&CurrentTime);
       strftime(timebuffer, MAX_DATE_STRING, "%Y%m%d", tmptr);
       ircsprintf(filenamebuf, "%s.%s", ConfigFileEntry.klinefile, timebuffer);
       return(filenamebuf);

@@ -83,7 +83,8 @@ ConfigFileEntryType ConfigFileEntry;
 
 struct  Counter Count;
 
-time_t  NOW;
+time_t  CurrentTime;            /* GLOBAL - current system timestamp */
+int     ServerRunning;          /* GLOBAL - server execution state */
 aClient me;                     /* That's me */
 
 aClient* GlobalClientList = 0;  /* Pointer to beginning of Client list */
@@ -444,8 +445,8 @@ static  time_t  check_pings(time_t currenttime)
 #ifdef OPER_IDLE
               !IsAnOper(cptr) &&
 #endif /* OPER_IDLE */
-              !IsIdlelined(cptr) &&
-              ((timeofday - cptr->user->last) > IDLETIME))
+              !IsIdlelined(cptr) && 
+              ((CurrentTime - cptr->user->last) > IDLETIME))
             {
               aConfItem *aconf;
 
@@ -462,7 +463,7 @@ static  time_t  check_pings(time_t currenttime)
               DupString(aconf->passwd, "idle exceeder" );
               DupString(aconf->name, cptr->user->username);
               aconf->port = 0;
-              aconf->hold = timeofday + 60;
+              aconf->hold = CurrentTime + 60;
               add_temp_kline(aconf);
               sendto_realops("Idle time limit exceeded for %s - temp k-lining",
                          get_client_name(cptr,FALSE));
@@ -474,7 +475,7 @@ static  time_t  check_pings(time_t currenttime)
 #ifdef REJECT_HOLD
       if (IsRejectHeld(cptr))
         {
-          if( timeofday > (cptr->firsttime + REJECT_HOLD_TIME) )
+          if( CurrentTime > (cptr->firsttime + REJECT_HOLD_TIME) )
             {
               if( reject_held_fds )
                 reject_held_fds--;
@@ -570,7 +571,7 @@ static  time_t  check_pings(time_t currenttime)
 
       if (IsUnknown(cptr))
         {
-          if (cptr->firsttime ? ((timeofday - cptr->firsttime) > 100) : 0)
+          if (cptr->firsttime ? ((CurrentTime - cptr->firsttime) > 100) : 0)
             {
               dying_clients[die_index] = cptr;
               dying_clients_reason[die_index++] = "Connection Timed Out";
@@ -678,7 +679,7 @@ static int bad_command()
 #define LOADCFREQ 5     /* every 5s */
 #define LOADRECV 40     /* 40k/s */
 
-int LRV = LOADRECV;
+int    LRV = LOADRECV;
 time_t LCF = LOADCFREQ;
 float currlife = 0.0;
 
@@ -689,11 +690,12 @@ int main(int argc, char *argv[])
   time_t      delay = 0;
   aConfItem*  aconf;
 
+  ServerRunning = 0;
   memset(&me, 0, sizeof(me));
   GlobalClientList = &me;       /* Pointer to beginning of Client list */
   cold_start = YES;             /* set when server first starts up */
 
-  if((timeofday = time(NULL)) == -1)
+  if ((CurrentTime = time(NULL)) == -1)
     {
       fprintf(stderr,"ERROR: Clock Failure (%d)\n", errno);
       exit(errno);
@@ -895,7 +897,7 @@ int main(int argc, char *argv[])
       /* setgid/setuid previous usage noted unsafe by ficus@neptho.net
        */
 
-      if(setgid(IRC_GID) < 0)
+      if (setgid(IRC_GID) < 0)
         {
           fprintf(stderr,"ERROR: can't setgid(%d)\n", IRC_GID);
           exit(-1);
@@ -912,7 +914,7 @@ int main(int argc, char *argv[])
       fprintf(stderr,
               "ERROR: do not run ircd setuid root. " \
               "Make it setuid a normal user.\n");
-      exit(-1);
+      return -1;
 # endif 
             } 
 #endif /*CHROOTDIR/UID/GID*/
@@ -932,14 +934,11 @@ int main(int argc, char *argv[])
   initwhowas();
   initstats();
   init_tree_parse(msgtab);      /* tree parse code (orabidoo) */
-  NOW = time(NULL);
 
   fdlist_init();
-
   open_debugfile();
-  NOW = time(NULL);
 
-  if((timeofday = time(NULL)) == -1)
+  if ((CurrentTime = time(NULL)) == -1)
     {
 #ifdef USE_SYSLOG
       syslog(LOG_WARNING, "Clock Failure (%d), TS can be corrupted", errno);
@@ -970,7 +969,7 @@ int main(int argc, char *argv[])
   SetMe(&me);
   make_server(&me);
   me.serv->up = me.name;
-  me.lasttime = me.since = me.firsttime = NOW;
+  me.lasttime = me.since = me.firsttime = CurrentTime;
   add_to_client_hash_table(me.name, &me);
 
   check_class();
@@ -982,17 +981,11 @@ int main(int argc, char *argv[])
 #ifdef USE_SYSLOG
   syslog(LOG_NOTICE, "Server Ready");
 #endif
-  NOW = time(NULL);
 
-  if((timeofday = time(NULL)) == -1)
-    {
-#ifdef USE_SYSLOG
-      syslog(LOG_WARNING, "Clock Failure (%d), TS can be corrupted", errno);
-#endif
-      sendto_ops("Clock Failure (%d), TS can be corrupted", errno);
-    }
-  while (1)
+  ServerRunning = 1;
+  while (ServerRunning)
     delay = io_loop(delay);
+  return 0;
 }
 
 time_t io_loop(time_t delay)
@@ -1003,8 +996,8 @@ time_t io_loop(time_t delay)
   static int    lrv       = 0;
   time_t        lasttimeofday;
 
-  lasttimeofday = timeofday;
-  if((timeofday = time(NULL)) == -1)
+  lasttimeofday = CurrentTime;
+  if ((CurrentTime = time(NULL)) == -1)
     {
 #ifdef USE_SYSLOG
       syslog(LOG_WARNING, "Clock Failure (%d), TS can be corrupted", errno);
@@ -1012,22 +1005,20 @@ time_t io_loop(time_t delay)
       sendto_ops("Clock Failure (%d), TS can be corrupted", errno);
     }
 
-  if (timeofday < lasttimeofday)
+  if (CurrentTime < lasttimeofday)
     {
       ircsprintf(to_send, "System clock is running backwards - (%d < %d)",
-                 timeofday, lasttimeofday);
+                 CurrentTime, lasttimeofday);
       report_error(to_send, me.name, 0);
     }
-  else if((lasttimeofday + 60) < timeofday)
+  else if ((lasttimeofday + 60) < CurrentTime)
     {
       ircsprintf(to_send,
                  "System clock was reset into the future - (%d+60 > %d)",
-                 timeofday, lasttimeofday);
+                 CurrentTime, lasttimeofday);
       report_error(to_send, me.name, 0);
-      sync_channels(timeofday - lasttimeofday);
+      sync_channels(CurrentTime - lasttimeofday);
     }
-
-  NOW = timeofday;
 
   /*
    * This chunk of code determines whether or not
@@ -1039,10 +1030,10 @@ time_t io_loop(time_t delay)
    * as well as allows forced on (long LCF), etc...
    */
   
-  if ((timeofday - lasttime) >= LCF)
+  if ((CurrentTime - lasttime) >= LCF)
     {
       lrv = LRV * LCF;
-      lasttime = timeofday;
+      lasttime = CurrentTime;
       currlife = (float)((long)me.receiveK - lastrecvK)/(float)LCF;
       if (((long)me.receiveK - lrv) > lastrecvK )
         {
@@ -1050,9 +1041,9 @@ time_t io_loop(time_t delay)
             {
               LIFESUX = 1;
 
-              if(NOISYHTM)
+              if (NOISYHTM)
                 {
-                  (void)sprintf(to_send, 
+                  sprintf(to_send, 
                         "Entering high-traffic mode - (%.1fk/s > %dk/s)",
                                 (float)currlife, LRV);
                   sendto_ops(to_send);
@@ -1062,13 +1053,12 @@ time_t io_loop(time_t delay)
             {
               LIFESUX++;                /* Ok, life really sucks! */
               LCF += 2;                 /* Wait even longer */
-              if(NOISYHTM) 
+              if (NOISYHTM) 
                 {
-                  (void)sprintf(to_send,
+                  sprintf(to_send,
                         "Still high-traffic mode %d%s (%d delay): %.1fk/s",
                                 LIFESUX,
-                                (LIFESUX & 0x04) ?
-                                " (TURBO)" : "",
+                                (LIFESUX & 0x04) ?  " (TURBO)" : "",
                                 (int)LCF, (float)currlife);
                   sendto_ops(to_send);
                 }
@@ -1080,7 +1070,7 @@ time_t io_loop(time_t delay)
           if (LIFESUX)
             {
               LIFESUX = 0;
-              if(NOISYHTM)
+              if (NOISYHTM)
                 sendto_ops("Resuming standard operation . . . .");
             }
         }
@@ -1093,12 +1083,12 @@ time_t io_loop(time_t delay)
   ** active C lines, this call to Tryconnections is
   ** made once only; it will return 0. - avalon
   */
-  if (nextconnect && timeofday >= nextconnect)
-    nextconnect = try_connections(timeofday);
+  if (nextconnect && CurrentTime >= nextconnect)
+    nextconnect = try_connections(CurrentTime);
   /*
    * DNS checks, use smaller of resolver delay or next ping
    */
-  delay = IRCD_MIN(timeout_resolver(timeofday), nextping);
+  delay = IRCD_MIN(timeout_resolver(CurrentTime), nextping);
   /*
   ** take the smaller of the two 'timed' event times as
   ** the time of next event (stops us being late :) - avalon
@@ -1106,7 +1096,7 @@ time_t io_loop(time_t delay)
   */
   if (nextconnect)
     delay = IRCD_MIN(nextping, nextconnect);
-  delay -= timeofday;
+  delay -= CurrentTime;
   /*
   ** Adjust delay to something reasonable [ad hoc values]
   ** (one might think something more clever here... --msa)
@@ -1141,7 +1131,7 @@ time_t io_loop(time_t delay)
         }
       flush_server_connections();
     }
-  if((timeofday = time(NULL)) == -1)
+  if ((CurrentTime = time(NULL)) == -1)
     {
 #ifdef USE_SYSLOG
       syslog(LOG_WARNING, "Clock Failure (%d), TS can be corrupted", errno);
@@ -1162,15 +1152,14 @@ time_t io_loop(time_t delay)
   {
     static time_t lasttime=0;
 #ifdef CLIENT_SERVER
-    if (!LIFESUX || (lasttime + LIFESUX)
-        < timeofday)
+    if (!LIFESUX || (lasttime + LIFESUX) < CurrentTime)
       {
 #else
-    if ((lasttime + (LIFESUX + 1)) < timeofday)
+    if ((lasttime + (LIFESUX + 1)) < CurrentTime)
       {
 #endif
         read_message(delay, FDL_ALL); /*  check everything! */
-        lasttime = timeofday;
+        lasttime = CurrentTime;
       }
    }
 #else
@@ -1187,9 +1176,9 @@ time_t io_loop(time_t delay)
   ** ping times) --msa
   */
 
-  if (timeofday >= nextping) {
-    nextping = check_pings(timeofday);
-    timeout_auth_queries(timeofday);
+  if (CurrentTime >= nextping) {
+    nextping = check_pings(CurrentTime);
+    timeout_auth_queries(CurrentTime);
   }
 
   if (dorehash && !LIFESUX)
@@ -1204,12 +1193,13 @@ time_t io_loop(time_t delay)
   */
   flush_connections(0);
 
+#ifndef NO_PRIORITY
+  fdlist_check(CurrentTime);
+#endif
+
   Debug((DEBUG_DEBUG,"About to return delay %d",delay));
   return delay;
 
-#ifndef NO_PRIORITY
-  fdlist_check(time(NULL));
-#endif
 }
 
 /*
@@ -1309,7 +1299,7 @@ static void initialize_global_set_options(void)
  SPLITDELAY = (DEFAULT_SERVER_SPLIT_RECOVERY_TIME * 60);
  SPLITNUM = SPLIT_SMALLNET_SIZE;
  SPLITUSERS = SPLIT_SMALLNET_USER_SIZE;
- server_split_time = timeofday;
+ server_split_time = CurrentTime;
 #endif
 
  /* End of global set options */

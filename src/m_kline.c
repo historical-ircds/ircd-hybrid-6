@@ -712,11 +712,11 @@ m_kline(aClient *cptr,
                  "Temporary K-line %d min. - %s (%s)",
                  temporary_kline_time,reason,current_date);
       DupString(aconf->passwd, buffer );
-      aconf->hold = timeofday + temporary_kline_time_seconds;
+      aconf->hold = CurrentTime + temporary_kline_time_seconds;
       add_temp_kline(aconf);
       rehashed = YES;
       dline_in_progress = NO;
-      nextping = timeofday;
+      nextping = CurrentTime;
       sendto_realops("%s added temporary %d min. K-Line for [%s@%s] [%s]",
                  parv[0], temporary_kline_time, user, host, reason);
       return 0;
@@ -815,7 +815,7 @@ m_kline(aClient *cptr,
 
   rehashed = YES;
   dline_in_progress = NO;
-  nextping = timeofday;
+  nextping = CurrentTime;
   return 0;
 } /* m_kline() */
 
@@ -1256,6 +1256,6 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
   */
   rehashed = YES;
   dline_in_progress = YES;
-  nextping = timeofday;
+  nextping = CurrentTime;
   return 0;
 } /* m_dline() */

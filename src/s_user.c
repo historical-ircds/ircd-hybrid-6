@@ -443,7 +443,7 @@ static int register_user(aClient *cptr, aClient *sptr,
   assert(0 != sptr);
   assert(sptr->username != username);
 
-  user->last = timeofday;
+  user->last = CurrentTime;
   parv[0] = sptr->name;
   parv[1] = parv[2] = NULL;
 
@@ -780,7 +780,7 @@ static int register_user(aClient *cptr, aClient *sptr,
           sendto_one(sptr,"NOTICE %s :*** Notice -- server is currently in split-mode",nick);
         }
 
-      nextping = timeofday;
+      nextping = CurrentTime;
 #endif
 
 
@@ -1069,7 +1069,7 @@ static int nickkilldone(aClient *cptr, aClient *sptr, int parc,
         sptr->tsinfo = newts;
       else
         {
-          newts = sptr->tsinfo = timeofday;
+          newts = sptr->tsinfo = CurrentTime;
           ts_warn("Remote nick %s introduced without a TS", nick);
         }
       /* copy the nick in place */
@@ -1111,15 +1111,15 @@ static int nickkilldone(aClient *cptr, aClient *sptr, int parc,
       ** on that channel. Propagate notice to other servers.
       */
       if (irccmp(parv[0], nick))
-        sptr->tsinfo = newts ? newts : timeofday;
+        sptr->tsinfo = newts ? newts : CurrentTime;
 
       if(MyConnect(sptr) && IsRegisteredUser(sptr))
         {     
 #ifdef ANTI_NICK_FLOOD
 
-          if( (sptr->last_nick_change + MAX_NICK_TIME) < NOW)
+          if( (sptr->last_nick_change + MAX_NICK_TIME) < CurrentTime)
             sptr->number_of_nick_changes = 0;
-          sptr->last_nick_change = NOW;
+          sptr->last_nick_change = CurrentTime;
             sptr->number_of_nick_changes++;
 
           if(sptr->number_of_nick_changes <= MAX_NICK_CHANGES)
@@ -1169,7 +1169,7 @@ static int nickkilldone(aClient *cptr, aClient *sptr, int parc,
 
       /* This had to be copied here to avoid problems.. */
       strcpy(sptr->name, nick);
-      sptr->tsinfo = timeofday;
+      sptr->tsinfo = CurrentTime;
       if (sptr->user)
         {
           char buf[USERLEN + 1];
@@ -1751,7 +1751,7 @@ static  int     m_message(aClient *cptr,
 #ifdef  IDLE_CHECK
       /* reset idle time for message only if target exists */
       if(MyClient(sptr) && sptr->user)
-        sptr->user->last = timeofday;
+        sptr->user->last = CurrentTime;
 #endif
 #ifdef FLUD
       if(!notice)
@@ -1809,7 +1809,7 @@ static  int     m_message(aClient *cptr,
 #ifdef  IDLE_CHECK
           /* reset idle time for message only if target exists */
           if(MyClient(sptr) && sptr->user)
-            sptr->user->last = timeofday;
+            sptr->user->last = CurrentTime;
 #endif
 #ifdef FLUD
           if(!notice)
@@ -1851,7 +1851,7 @@ static  int     m_message(aClient *cptr,
 #ifdef  IDLE_CHECK
       /* reset idle time for message only if target exists */
       if(MyClient(sptr) && sptr->user)
-        sptr->user->last = timeofday;
+        sptr->user->last = CurrentTime;
 #endif
 #ifdef FLUD
       if(!notice && MyConnect(acptr))
@@ -1862,10 +1862,10 @@ static  int     m_message(aClient *cptr,
 #ifdef ANTI_DRONE_FLOOD
       if(MyConnect(acptr) && IsClient(sptr) && !IsAnOper(sptr) && DRONETIME)
         {
-          if((acptr->first_received_message_time+DRONETIME) < NOW)
+          if((acptr->first_received_message_time+DRONETIME) < CurrentTime)
             {
               acptr->received_number_of_privmsgs=1;
-              acptr->first_received_message_time = NOW;
+              acptr->first_received_message_time = CurrentTime;
               acptr->drone_noticed = 0;
             }
           else
@@ -1934,7 +1934,7 @@ static  int     m_message(aClient *cptr,
       if (sptr != acptr)
         {
           if(sptr->user)
-            sptr->user->last = timeofday;
+            sptr->user->last = CurrentTime;
         }
 #endif
       return 0;
@@ -2336,7 +2336,7 @@ int     m_whois(aClient *cptr,
 
   if(!IsAnOper(sptr) && !MyConnect(sptr)) /* pace non local requests */
     {
-      if((last_used + WHOIS_WAIT) > NOW)
+      if((last_used + WHOIS_WAIT) > CurrentTime)
         {
           /* Unfortunately, returning anything to a non local
            * request =might= increase sendq to be usable in a split hack
@@ -2346,7 +2346,7 @@ int     m_whois(aClient *cptr,
         }
       else
         {
-          last_used = NOW;
+          last_used = CurrentTime;
         }
     }
 
@@ -2471,7 +2471,7 @@ int     m_whois(aClient *cptr,
           if (acptr->user && MyConnect(acptr))
             sendto_one(sptr, form_str(RPL_WHOISIDLE),
                        me.name, parv[0], name,
-                       timeofday - user->last,
+                       CurrentTime - user->last,
                        acptr->firsttime);
           sendto_one(sptr, form_str(RPL_ENDOFWHOIS), me.name, parv[0], parv[1]);
           return 0;
@@ -2598,7 +2598,7 @@ int     m_whois(aClient *cptr,
           if (acptr->user && MyConnect(acptr))
             sendto_one(sptr, form_str(RPL_WHOISIDLE),
                        me.name, parv[0], name,
-                       timeofday - user->last,
+                       CurrentTime - user->last,
                        acptr->firsttime);
         }
       if (!found)
@@ -2748,7 +2748,7 @@ int     m_quit(aClient *cptr,
 
 #ifdef ANTI_SPAM_EXIT_MESSAGE
   if( !IsServer(sptr) && MyConnect(sptr) &&
-     (sptr->firsttime + ANTI_SPAM_EXIT_MESSAGE_TIME) > NOW)
+     (sptr->firsttime + ANTI_SPAM_EXIT_MESSAGE_TIME) > CurrentTime)
     comment = "Client Quit";
 #endif
   return IsServer(sptr) ? 0 : exit_client(cptr, sptr, sptr, comment);
@@ -3298,7 +3298,7 @@ int     m_oper(aClient *cptr,
             {
               /* (void)alarm(0); */
               ircsprintf(buf, "%s OPER (%s) (%s) by (%s!%s@%s)\n",
-                               myctime(timeofday), name, encr,
+                               myctime(CurrentTime), name, encr,
                                parv[0], sptr->username,
                                sptr->host);
               (void)write(logfile, buf, strlen(buf));

@@ -44,14 +44,14 @@ m_info(aClient *cptr, aClient *sptr, int parc, char *parv[])
       /* reject non local requests */
       if (!MyConnect(sptr))
         return 0;
-      if ((last_used + PACE_WAIT) > NOW)
+      if ((last_used + PACE_WAIT) > CurrentTime)
       {
         /* safe enough to give this on a local connect only */
         sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,parv[0]);
         return 0;
       }
       else
-        last_used = NOW;
+        last_used = CurrentTime;
     } /* if (!IsAnOper(sptr)) */
 
     while (*text)

@@ -97,7 +97,6 @@ const char* const SETBUF_ERROR_MSG = "set_sock_buffers failed for server %s:%s";
 aClient*       local[MAXCONNECTIONS];
 
 int            highest_fd = 0;
-time_t         timeofday;
 
 static struct sockaddr_in mysk;
 static char               readBuf[READBUF_SIZE];
@@ -920,7 +919,7 @@ int connect_server(aConfItem *aconf, aClient* by, struct DNSReply* reply)
 
   add_client_to_list(cptr);
   fdlist_add(cptr->fd, FDL_DEFAULT);
-  nextping = timeofday;
+  nextping = CurrentTime;
 
   return 1;
 }
@@ -941,7 +940,7 @@ void close_connection(aClient *cptr)
       ircstp->is_sbr += cptr->receiveB;
       ircstp->is_sks += cptr->sendK;
       ircstp->is_skr += cptr->receiveK;
-      ircstp->is_sti += timeofday - cptr->firsttime;
+      ircstp->is_sti += CurrentTime - cptr->firsttime;
       if (ircstp->is_sbs > 2047)
         {
           ircstp->is_sks += (ircstp->is_sbs >> 10);
@@ -980,7 +979,7 @@ void close_connection(aClient *cptr)
       ircstp->is_cbr += cptr->receiveB;
       ircstp->is_cks += cptr->sendK;
       ircstp->is_ckr += cptr->receiveK;
-      ircstp->is_cti += timeofday - cptr->firsttime;
+      ircstp->is_cti += CurrentTime - cptr->firsttime;
       if (ircstp->is_cbs > 2047)
         {
           ircstp->is_cks += (ircstp->is_cbs >> 10);
@@ -1095,7 +1094,7 @@ static int parse_client_queued(struct Client* cptr)
   int done   = 0;
 
   while (DBufLength(&cptr->recvQ) && !NoNewLine(cptr) &&
-	 ((cptr->status < STAT_UNKNOWN) || (cptr->since - timeofday < 10))) {
+	 ((cptr->status < STAT_UNKNOWN) || (cptr->since - CurrentTime < 10))) {
     /*
      * If it has become registered as a Server
      * then skip the per-message parsing below.
@@ -1180,7 +1179,7 @@ static int read_packet(struct Client *cptr)
     return 1;
 #endif
 
-  cptr->lasttime = timeofday;
+  cptr->lasttime = CurrentTime;
   if (cptr->lasttime > cptr->since)
     cptr->since = cptr->lasttime;
   cptr->flags &= ~(FLAGS_PINGSENT | FLAGS_NONL);
@@ -1234,7 +1233,7 @@ static void error_exit_client(struct Client* cptr, int error)
          cptr->fd, current_error, error));
   if (IsServer(cptr) || IsHandshake(cptr))
     {
-      int connected = timeofday - cptr->firsttime;
+      int connected = CurrentTime - cptr->firsttime;
       
       if (0 == error)
         sendto_ops("Server %s closed the connection",
@@ -1282,7 +1281,7 @@ int read_message(time_t delay, unsigned char mask)        /* mika */
   struct Listener*    listener = 0;
   int                 i;
 
-  now = timeofday;
+  now = CurrentTime;
 
   for (res = 0;;)
     {
@@ -1336,7 +1335,7 @@ int read_message(time_t delay, unsigned char mask)        /* mika */
 
       nfds = select(MAXCONNECTIONS, read_set, write_set, 0, &wait);
 
-      if ((timeofday = time(NULL)) == -1)
+      if ((CurrentTime = time(NULL)) == -1)
         {
 #ifdef USE_SYSLOG
           syslog(LOG_WARNING, "Clock Failure (%d), TS can be corrupted", errno);
@@ -1560,7 +1559,7 @@ int read_message(time_t delay, unsigned char mask)
       * be allocated quickly enough... - Comstud
       */
       listener->index = -1;
-      if (timeofday > (listener->last_accept + 2)) {
+      if (CurrentTime > (listener->last_accept + 2)) {
         listener->index = nbr_pfds;
         PFD_SETR(listener->fd);
       }

@@ -468,7 +468,7 @@ int m_hash(struct Client *cptr, struct Client *sptr,int parc,char *parv[])
         }
       else if(!irccmp(parv[1],"Diphash"))
         {
-          tmptr = localtime(&NOW);
+          tmptr = localtime(&CurrentTime);
           strftime(timebuffer, MAX_DATE_STRING, "%Y%m%d%H%M", tmptr);
           (void)sprintf(hash_log_file,"%s/hash/iphash.%s",
                         DPATH,timebuffer);
@@ -497,7 +497,7 @@ int m_hash(struct Client *cptr, struct Client *sptr,int parc,char *parv[])
         }
       if (ch == 'L' || ch == 'l')
         {
-          tmptr = localtime(&NOW);
+          tmptr = localtime(&CurrentTime);
           strftime(timebuffer, MAX_DATE_STRING, "%Y%m%d%H%M", tmptr);
           sprintf(hash_log_file,"%s/hash/%cdump.%s",
                         DPATH,ch,timebuffer);

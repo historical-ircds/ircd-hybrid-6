@@ -331,7 +331,7 @@ int init_resolver(void)
 {
 
 #ifdef  LRAND48
-  srand48(timeofday);
+  srand48(CurrentTime);
 #endif
   /*
    * XXX - we don't really need to do this, all of these are static
@@ -438,7 +438,7 @@ static ResRQ* make_request(const struct DNSQuery* query)
   request = (ResRQ*) MyMalloc(sizeof(ResRQ));
   memset(request, 0, sizeof(ResRQ));
 
-  request->sentat  = timeofday;
+  request->sentat  = CurrentTime;
   request->retries = 3;
   request->resend  = 1;
   request->timeout = 4;    /* start at 4 and exponential inc. */
@@ -1539,7 +1539,7 @@ static aCache* make_cache(ResRQ* request)
   }
   else
     cp->ttl = request->ttl;
-  cp->expireat = timeofday + cp->ttl;
+  cp->expireat = CurrentTime + cp->ttl;
 #ifdef DEBUG
   Debug((DEBUG_INFO,"make_cache:made cache %#x", cp));
 #endif
@@ -1558,7 +1558,7 @@ static void rem_cache(aCache* ocp)
   assert(0 != ocp);
 
   if (0 < ocp->reply.ref_count) {
-    ocp->expireat = timeofday + AR_TTL;
+    ocp->expireat = CurrentTime + AR_TTL;
     return;
   }
   hp = &ocp->he.h;
@@ -1639,7 +1639,7 @@ int m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[])
     for(cp = cacheTop; cp; cp = cp->list_next) {
       hp = &cp->he.h;
       sendto_one(sptr, "NOTICE %s :Ex %d ttl %d host %s(%s)",
-                 parv[0], cp->expireat - timeofday, cp->ttl,
+                 parv[0], cp->expireat - CurrentTime, cp->ttl,
                  hp->h_name, inetntoa(hp->h_addr));
       for (i = 0; hp->h_aliases[i]; i++)
         sendto_one(sptr,"NOTICE %s : %s = %s (CN)",

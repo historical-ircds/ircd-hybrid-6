@@ -9,6 +9,7 @@
 #include "client.h"  /* struct Client */
 #include "ircd.h"    /* GlobalSetOptions */
 #include "s_bsd.h"   /* highest_fd */
+#include "config.h"  /* option settings */
 #include <string.h>
 #include <assert.h>
 

@@ -321,7 +321,7 @@ int     m_gline(aClient *cptr,
       
       DupString(aconf->passwd, buffer);
       DupString(aconf->name, user);
-      aconf->hold = timeofday + GLINE_TIME;
+      aconf->hold = CurrentTime + GLINE_TIME;
       add_gline(aconf);
       
       sendto_realops("%s!%s@%s on %s has triggered gline for [%s@%s] [%s]",
@@ -335,7 +335,7 @@ int     m_gline(aClient *cptr,
       
       rehashed = YES;
       dline_in_progress = NO;
-      nextping = timeofday;
+      nextping = CurrentTime;
 
       return 0;
     }
@@ -372,7 +372,7 @@ static void log_gline_request(
       return;
     }
 
-  tmptr = localtime(&NOW);
+  tmptr = localtime(&CurrentTime);
   strftime(timebuffer, MAX_DATE_STRING, "%Y/%m/%d %H:%M:%S", tmptr);
 
   ircsprintf(buffer,
@@ -416,7 +416,7 @@ static void log_gline(aClient *sptr,
       return;
     }
 
-  tmptr = localtime(&NOW);
+  tmptr = localtime(&CurrentTime);
   strftime(timebuffer, MAX_DATE_STRING, "%Y/%m/%d %H:%M:%S", tmptr);
 
   ircsprintf(buffer,"#Gline for %s@%s %s added by the following\n",
@@ -534,7 +534,7 @@ struct ConfItem* find_is_glined(const char* host, const char* name)
 
       while(kill_list_ptr)
         {
-          if(kill_list_ptr->hold <= NOW)        /* a gline has expired */
+          if(kill_list_ptr->hold <= CurrentTime)  /* a gline has expired */
             {
               if(glines == kill_list_ptr)
                 {
@@ -642,7 +642,7 @@ void report_glines(aClient *sptr)
 
       while(kill_list_ptr)
         {
-          if(kill_list_ptr->hold <= NOW)        /* gline has expired */
+          if(kill_list_ptr->hold <= CurrentTime)   /* gline has expired */
             {
               if(glines == kill_list_ptr)
                 {
@@ -710,7 +710,7 @@ static void expire_pending_glines()
 
   while(gline_pending_ptr)
     {
-      if( (gline_pending_ptr->last_gline_time + GLINE_PENDING_EXPIRE) <= NOW )
+      if( (gline_pending_ptr->last_gline_time + GLINE_PENDING_EXPIRE) <= CurrentTime )
         {
           if(last_gline_pending_ptr)
             last_gline_pending_ptr->next = gline_pending_ptr->next;
@@ -760,8 +760,8 @@ static void add_new_majority_gline(const char* oper_nick,
   DupString(pending->reason1, reason);
   pending->reason2 = NULL;
 
-  pending->last_gline_time = NOW;
-  pending->time_request1 = NOW;
+  pending->last_gline_time = CurrentTime;
+  pending->time_request1 = CurrentTime;
 
   pending->next = pending_glines;
   pending_glines = pending;
@@ -850,8 +850,8 @@ static int majority_gline(aClient *sptr,
               strncpy_irc(gline_pending_ptr->oper_host2, oper_host, HOSTLEN);
               DupString(gline_pending_ptr->reason2, reason);
               gline_pending_ptr->oper_server2 = find_or_add(oper_server);
-              gline_pending_ptr->last_gline_time = NOW;
-              gline_pending_ptr->time_request1 = NOW;
+              gline_pending_ptr->last_gline_time = CurrentTime;
+              gline_pending_ptr->time_request1 = CurrentTime;
               return NO;
             }
         }

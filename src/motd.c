@@ -56,7 +56,7 @@ int m_motd(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
   if(!IsAnOper(sptr))
     {
-      if((last_used + PACE_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > CurrentTime)
         {
           /* safe enough to give this on a local connect only */
           if(MyClient(sptr))
@@ -64,7 +64,7 @@ int m_motd(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
           return 0;
         }
       else
-        last_used = NOW;
+        last_used = CurrentTime;
     }
 
   if (hunt_server(cptr, sptr, ":%s MOTD :%s", 1,parc,parv)!=HUNTED_ISME)

@@ -183,7 +183,7 @@ void tstats(aClient *cptr,char *name)
           sp->is_sbr += acptr->receiveB;
           sp->is_sks += acptr->sendK;
           sp->is_skr += acptr->receiveK;
-          sp->is_sti += timeofday - acptr->firsttime;
+          sp->is_sti += CurrentTime - acptr->firsttime;
           sp->is_sv++;
           if (sp->is_sbs > 1023)
             {
@@ -203,7 +203,7 @@ void tstats(aClient *cptr,char *name)
           sp->is_cbr += acptr->receiveB;
           sp->is_cks += acptr->sendK;
           sp->is_ckr += acptr->receiveK;
-          sp->is_cti += timeofday - acptr->firsttime;
+          sp->is_cti += CurrentTime - acptr->firsttime;
           sp->is_cl++;
           if (sp->is_cbs > 1023)
             {
@@ -293,8 +293,8 @@ void serv_info(aClient *cptr,char *name)
                    (int)DBufLength(&acptr->sendQ),
                    (int)acptr->sendM, (int)acptr->sendK,
                    (int)acptr->receiveM, (int)acptr->receiveK,
-                   timeofday - acptr->firsttime,
-                   (timeofday > acptr->since) ? (timeofday - acptr->since): 0,
+                   CurrentTime - acptr->firsttime,
+                   (CurrentTime > acptr->since) ? (CurrentTime - acptr->since): 0,
                    IsServer(acptr) ? show_capabilities(acptr) : "-" );
       else
         {
@@ -303,8 +303,8 @@ void serv_info(aClient *cptr,char *name)
                      (int)DBufLength(&acptr->sendQ),
                      (int)acptr->sendM, (int)acptr->sendK,
                      (int)acptr->receiveM, (int)acptr->receiveK,
-                     timeofday - acptr->firsttime,
-                     (timeofday > acptr->since)?(timeofday - acptr->since): 0,
+                     CurrentTime - acptr->firsttime,
+                     (CurrentTime > acptr->since)?(CurrentTime - acptr->since): 0,
                      IsServer(acptr) ? show_capabilities(acptr) : "-" );
         }
       j++;
@@ -318,7 +318,7 @@ void serv_info(aClient *cptr,char *name)
   sendto_one(cptr, ":%s %d %s :Recv total : %7.2f %s",
              me.name, RPL_STATSDEBUG, name, _GMKv(receiveK), _GMKs(receiveK));
 
-  uptime = (timeofday - me.since);
+  uptime = (CurrentTime - me.since);
   sendto_one(cptr, ":%s %d %s :Server send: %7.2f %s (%4.1f K/s)",
              me.name, RPL_STATSDEBUG, name, _GMKv(me.sendK), _GMKs(me.sendK),
              (float)((float)me.sendK / (float)uptime));

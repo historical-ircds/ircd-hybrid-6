@@ -113,7 +113,7 @@ struct Client* make_client(struct Client* from)
       cptr->local_flag = 1;
 
       cptr->from  = cptr; /* 'from' of local client is self! */
-      cptr->since = cptr->lasttime = cptr->firsttime = timeofday;
+      cptr->since = cptr->lasttime = cptr->firsttime = CurrentTime;
 
 #ifdef NULL_POINTER_NOT_ZERO
 #ifdef FLUD
@@ -230,7 +230,7 @@ static void update_client_exit_stats(struct Client* cptr)
               sendto_ops("Netsplit detected, split-mode activated");
               server_was_split = YES;
             }
-          server_split_time = NOW;
+          server_split_time = CurrentTime;
         }
 #endif
     }
@@ -863,7 +863,7 @@ const char* comment        /* Reason for the exit */
                                sptr->sockhost);
         }
 #ifdef FNAME_USERLOG
-          on_for = timeofday - sptr->firsttime;
+          on_for = CurrentTime - sptr->firsttime;
 # if defined(USE_SYSLOG) && defined(SYSLOG_USERS)
           if (IsPerson(sptr))
             syslog(LOG_NOTICE, "%s (%3ld:%02ld:%02ld): %s!%s@%s %ld/%ld\n",
@@ -908,11 +908,11 @@ const char* comment        /* Reason for the exit */
                 /*
                  * Resync the file evey 10 seconds
                  */
-                if (timeofday - lasttime > 10)
+                if (CurrentTime - lasttime > 10)
                   {
                     (void)close(logfile);
                     logfile = -1;
-                    lasttime = timeofday;
+                    lasttime = CurrentTime;
                   }
               }
           }
@@ -960,10 +960,10 @@ const char* comment        /* Reason for the exit */
       if (sptr->servptr == &me)
         {
           sendto_ops("%s was connected for %d seconds.  %d/%d sendK/recvK.",
-                     sptr->name, timeofday - sptr->firsttime,
+                     sptr->name, CurrentTime - sptr->firsttime,
                      sptr->sendK, sptr->receiveK);
 #ifdef USE_SYSLOG
-          syslog(LOG_NOTICE, "%s was connected for %d seconds.  %d/%d sendK/recvK.", sptr->name, timeofday - sptr->firsttime, sptr->sendK, sptr->receiveK);
+          syslog(LOG_NOTICE, "%s was connected for %d seconds.  %d/%d sendK/recvK.", sptr->name, CurrentTime - sptr->firsttime, sptr->sendK, sptr->receiveK);
 #endif
 
               /* Just for paranoia... this shouldn't be necessary if the

@@ -202,7 +202,7 @@ void send_usage(aClient *cptr, char *nick)
       return;
     }
   secs = rus.ru_utime.tv_sec + rus.ru_stime.tv_sec;
-  rup = timeofday - me.since;
+  rup = CurrentTime - me.since;
   if (secs == 0)
     secs = 1;
 

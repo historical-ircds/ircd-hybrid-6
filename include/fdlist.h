@@ -5,11 +5,8 @@
  */
 #ifndef INCLUDED_fdlist_h
 #define INCLUDED_fdlist_h
-#ifndef INCLUDED_config_h
-#include "config.h"       /* MAXCONNECTIONS */
-#endif
 #ifndef INCLUDED_sys_types_h
-#include <sys/types.h>
+#include <sys/types.h>         /* time_t */
 #define INCLUDED_sys_types_h
 #endif
 

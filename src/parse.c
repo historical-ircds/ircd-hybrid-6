@@ -424,10 +424,10 @@ int parse(aClient *cptr, char *buffer, char *bufend)
 
 #ifdef IDLE_FROM_MSG
   if (IsRegisteredUser(cptr) && mptr->reset_idle)
-    from->user->last = timeofday;
+    from->user->last = CurrentTime;
 #else
   if (IsRegisteredUser(cptr) && !mptr->reset_idle)
-    from->user->last = timeofday;
+    from->user->last = CurrentTime;
 #endif
   
   /* don't allow other commands while a list is blocked. since we treat

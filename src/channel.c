@@ -264,7 +264,7 @@ static  int     add_banid(aClient *cptr, aChannel *chptr, char *banid)
     }
 #endif
 
-  ban->value.banptr->when = timeofday;
+  ban->value.banptr->when = CurrentTime;
 
 #else
 
@@ -346,7 +346,7 @@ static  int     add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
     }
 #endif
 
-  ex->value.banptr->when = timeofday;
+  ex->value.banptr->when = CurrentTime;
 
 #else
 
@@ -415,7 +415,7 @@ static  int     add_denyid(aClient *cptr, aChannel *chptr, char *banid)
     }
 #endif
 
-  ban->value.banptr->when = timeofday;
+  ban->value.banptr->when = CurrentTime;
 
 #else
 
@@ -2409,7 +2409,7 @@ static aChannel* get_channel(aClient *cptr, char *chname, int flag)
       if (Count.myserver == 0)
         chptr->locally_created = YES;
       chptr->keep_their_modes = YES;
-      chptr->channelts = timeofday;     /* doesn't hurt to set it here */
+      chptr->channelts = CurrentTime;     /* doesn't hurt to set it here */
       add_to_channel_hash_table(chname, chptr);
       Count.chan++;
     }
@@ -2845,7 +2845,7 @@ static void clear_denies_allows(aClient *sptr, aChannel *chptr)
 
 static void check_still_split()
 {
-  if((server_split_time + SPLITDELAY) < NOW)
+  if((server_split_time + SPLITDELAY) < CurrentTime)
     {
       if((Count.server >= SPLITNUM) &&
 #ifdef SPLIT_PONG
@@ -2865,7 +2865,7 @@ static void check_still_split()
         }
       else
         {
-          server_split_time = NOW; /* still split */
+          server_split_time = CurrentTime; /* still split */
           server_was_split = YES;
         }
     }
@@ -3113,7 +3113,7 @@ int     m_join(aClient *cptr,
                 {
                   int t_delta;
 
-                  if( (t_delta = (NOW - sptr->last_leave_time)) >
+                  if( (t_delta = (CurrentTime - sptr->last_leave_time)) >
                       JOIN_LEAVE_COUNT_EXPIRE_TIME)
                     {
                       int decrement_count;
@@ -3126,13 +3126,13 @@ int     m_join(aClient *cptr,
                     }
                   else
                     {
-                      if((NOW - (sptr->last_join_time)) < SPAMTIME)
+                      if((CurrentTime - (sptr->last_join_time)) < SPAMTIME)
                         {
                           /* oh, its a possible spambot */
                           sptr->join_leave_count++;
                         }
                     }
-                  sptr->last_leave_time = NOW;
+                  sptr->last_leave_time = CurrentTime;
                 }
             }
 #endif
@@ -3182,7 +3182,7 @@ int     m_join(aClient *cptr,
                          me.name, parv[0], name);
 #ifdef ANTI_SPAMBOT
               if(successful_join_count)
-                sptr->last_join_time = NOW;
+                sptr->last_join_time = CurrentTime;
 #endif
               return 0;
             }
@@ -3307,7 +3307,7 @@ int     m_join(aClient *cptr,
       */
       if (MyClient(sptr) && (flags & CHFL_CHANOP) )
         {
-          chptr->channelts = timeofday;
+          chptr->channelts = CurrentTime;
 #ifdef USE_ALLOW_OP
           if(allow_op)
             {
@@ -3380,7 +3380,7 @@ int     m_join(aClient *cptr,
 
 #ifdef ANTI_SPAMBOT
   if(MyConnect(sptr) && successful_join_count)
-    sptr->last_join_time = NOW;
+    sptr->last_join_time = CurrentTime;
 #endif
   return 0;
 }
@@ -3424,7 +3424,7 @@ int     m_part(aClient *cptr,
             {
               int t_delta;
 
-              if( (t_delta = (NOW - sptr->last_leave_time)) >
+              if( (t_delta = (CurrentTime - sptr->last_leave_time)) >
                   JOIN_LEAVE_COUNT_EXPIRE_TIME)
                 {
                   int decrement_count;
@@ -3437,13 +3437,13 @@ int     m_part(aClient *cptr,
                 }
               else
                 {
-                  if( (NOW - (sptr->last_join_time)) < SPAMTIME)
+                  if( (CurrentTime - (sptr->last_join_time)) < SPAMTIME)
                     {
                       /* oh, its a possible spambot */
                       sptr->join_leave_count++;
                     }
                 }
-              sptr->last_leave_time = NOW;
+              sptr->last_leave_time = CurrentTime;
             }
         }
 #endif
@@ -3735,10 +3735,10 @@ int     m_knock(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
-      if((last_used + PACE_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > CurrentTime)
         return 0;
       else
-        last_used = NOW;
+        last_used = CurrentTime;
     }
 
   /* flood control individual clients on KNOCK
@@ -3749,16 +3749,16 @@ int     m_knock(aClient *cptr,
    */
 
   /* opers are not flow controlled here */
-  if( !IsAnOper(sptr) && (sptr->last_knock + KNOCK_DELAY) > NOW)
+  if( !IsAnOper(sptr) && (sptr->last_knock + KNOCK_DELAY) > CurrentTime)
     {
       sendto_one(sptr,":%s NOTICE %s :*** Notice -- Wait %d seconds before another knock",
                  me.name,
                  sptr->name,
-                 KNOCK_DELAY - (NOW - sptr->last_knock));
+                 KNOCK_DELAY - (CurrentTime - sptr->last_knock));
       return 0;
     }
 
-  sptr->last_knock = NOW;
+  sptr->last_knock = CurrentTime;
 
   sendto_one(sptr,":%s NOTICE %s :*** Notice -- Your KNOCK has been delivered",
                  me.name,
@@ -3875,7 +3875,7 @@ int     m_topic(aClient *cptr,
                * strlen(sptr->name) > NICKLEN
                */
               strncpy_irc(chptr->topic_nick, sptr->name, NICKLEN);
-              chptr->topic_time = timeofday;
+              chptr->topic_time = CurrentTime;
 #endif
               sendto_match_servs(chptr, cptr,":%s TOPIC %s :%s",
                                  parv[0], chptr->chname,
@@ -4104,10 +4104,10 @@ int     m_list(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
-      if(((last_used + PACE_WAIT) > NOW) && (!IsDoingList(sptr)))
+      if(((last_used + PACE_WAIT) > CurrentTime) && (!IsDoingList(sptr)))
         return 0;
       else
-        last_used = NOW;
+        last_used = CurrentTime;
     }
 
   /* right.. if we are already involved in a "blocked" /list, we will simply

@@ -79,7 +79,7 @@ void add_history(aClient* cptr, int online)
       del_whowas_from_list(&WHOWASHASH[who->hashv], who);
     }
   who->hashv = hash_whowas_name(cptr->name);
-  who->logoff = NOW;
+  who->logoff = CurrentTime;
   /*
    * NOTE: strcpy ok here, the sizes in the client struct MUST
    * match the sizes in the whowas struct
@@ -126,7 +126,7 @@ aClient *get_history(char *nick,time_t timelimit)
   aWhowas *temp;
   int blah;
 
-  timelimit = NOW - timelimit;
+  timelimit = CurrentTime - timelimit;
   blah = hash_whowas_name(nick);
   temp = WHOWASHASH[blah];
   for(;temp;temp=temp->next)
@@ -192,13 +192,13 @@ int     m_whowas(aClient *cptr,
 
   if(!IsAnOper(sptr) && !MyConnect(sptr)) /* pace non local requests */
     {
-      if((last_used + WHOIS_WAIT) > NOW)
+      if((last_used + WHOIS_WAIT) > CurrentTime)
         {
           return 0;
         }
       else
         {
-          last_used = NOW;
+          last_used = CurrentTime;
         }
     }
 
