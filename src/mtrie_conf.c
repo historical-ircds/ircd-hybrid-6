@@ -1240,22 +1240,19 @@ static void
 report_unsortable_klines(struct Client *sptr,char *need_host)
 {
   struct ConfItem *found_conf;
-  char *host, *pass, *oper_reason, *user, *name;
+  char *host, *pass, *user, *name;
   int port;
 
   for(found_conf = unsortable_list_klines;
       found_conf;found_conf=found_conf->next)
     {
-      get_printable_conf(found_conf, &name, &host, &pass, &oper_reason,
-			 &user, &port);
+      get_printable_conf(found_conf, &name, &host, &pass, &user, &port);
 
       if(match(host,need_host))
         {
-	  if (!IsAnOper(sptr))
-	    *oper_reason = '\0';
 	  sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
 		     sptr->name, 'K', host,
-		     name, pass, oper_reason);
+		     name, pass);
         }
     }
 }
@@ -1273,7 +1270,7 @@ report_unsortable_klines(struct Client *sptr,char *need_host)
 void report_mtrie_conf_links(struct Client *sptr, int flags)
 {
   struct ConfItem *found_conf;
-  char *name, *host, *pass, *oper_reason, *user;
+  char *name, *host, *pass, *user;
   int  port;
   char c;               /* conf char used for CONF_CLIENT only */
 
@@ -1297,8 +1294,7 @@ void report_mtrie_conf_links(struct Client *sptr, int flags)
 	  if(IsConfDoSpoofIp(found_conf))
 	    continue;
 #endif
-          get_printable_conf(found_conf, &name, &host, 
-			     &pass, &oper_reason, &user, &port );
+          get_printable_conf(found_conf, &name, &host, &pass, &user, &port );
 
           c = 'I';
 #ifdef LITTLE_I_LINES
@@ -1318,8 +1314,7 @@ void report_mtrie_conf_links(struct Client *sptr, int flags)
       for(found_conf = wild_card_ilines;
           found_conf;found_conf=found_conf->next)
         {
-          get_printable_conf(found_conf, &name, &host,
-			     &pass, &oper_reason, &user, &port);
+          get_printable_conf(found_conf, &name, &host, &pass, &user, &port);
 
           c = 'I';
 #ifdef LITTLE_I_LINES
@@ -1339,8 +1334,7 @@ void report_mtrie_conf_links(struct Client *sptr, int flags)
       for(found_conf = ip_i_lines;
           found_conf;found_conf=found_conf->next)
         {
-          get_printable_conf(found_conf, &name, &host, &pass,
-			     &oper_reason, &user, &port );
+          get_printable_conf(found_conf, &name, &host, &pass, &user, &port );
 
           if(!(found_conf->status&CONF_CLIENT))
             continue;
@@ -1367,14 +1361,11 @@ void report_mtrie_conf_links(struct Client *sptr, int flags)
       for(found_conf = unsortable_list_klines;
           found_conf;found_conf=found_conf->next)
         {
-          get_printable_conf(found_conf, &name, &host, &pass,
-			     &oper_reason, &user, &port);
+          get_printable_conf(found_conf, &name, &host, &pass, &user, &port);
 
-          if(!IsAnOper(sptr))
-	    *oper_reason = '\0';
 	  sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
 		     sptr->name, 'K', host,
-		     user, pass, oper_reason);
+		     user, pass);
         }
     }
 }
@@ -1455,7 +1446,7 @@ report_sub_mtrie(struct Client *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
   DOMAIN_PIECE *dp_ptr;
   struct ConfItem *aconf;
   int i;
-  char *name, *host, *pass, *oper_reason, *user;
+  char *name, *host, *pass, *user;
   int  port;
   char c='\0';
 
@@ -1475,19 +1466,16 @@ report_sub_mtrie(struct Client *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
               if(aconf->status & flags)
                 {
                   get_printable_conf(aconf, &name, &host, &pass,
-				     &oper_reason, &user, &port);
+				     &user, &port);
                   if (aconf->status == CONF_KILL)
                     {
-                      if(!IsAnOper(sptr))
-			*oper_reason = '\0';
-
 		      sendto_one(sptr, form_str(RPL_STATSKLINE),
 				 me.name,
 				 sptr->name,
 				 'K',
 				 host,
 				 user,
-				 pass, oper_reason);
+				 pass);
                     }
                   else
                     {
@@ -1527,19 +1515,17 @@ report_sub_mtrie(struct Client *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
               if(aconf->status & flags)
                 {
                   get_printable_conf(aconf, &name, &host, &pass,
-				     &oper_reason, &user, &port);
+				     &user, &port);
 
                   if (aconf->status == CONF_KILL)
                     {
-		      if (!IsAnOper(sptr))
-			*oper_reason = '\0';
                       sendto_one(sptr, form_str(RPL_STATSKLINE),
                                  me.name,
                                  sptr->name,
                                  'K',
                                  host,
                                  user,
-                                 pass, oper_reason);
+                                 pass);
                     }
                   else
                     {
@@ -1734,10 +1720,10 @@ find_matching_ip_i_line(char *user, unsigned long host_ip)
 
 static void report_dup(char type, struct ConfItem *aconf)
 {
-  char *name, *host, *pass, *oper_reason, *user;
+  char *name, *host, *pass, *user;
   int port;
 
-  get_printable_conf(aconf, &name, &host, &pass, &oper_reason, &user, &port);
+  get_printable_conf(aconf, &name, &host, &pass, &user, &port);
 
   sendto_realops("DUP: %c: (%s@%s) pass %s name %s port %d",
                  type,user,host,pass,name,port);

@@ -247,8 +247,7 @@ extern struct ConfItem* find_is_klined(const char* host,
                                        unsigned long ip);
 extern char* show_iline_prefix(struct Client *,struct ConfItem *,char *);
 extern void get_printable_conf(struct ConfItem *,
-			       char **, char **, char **, char **,
-			       char **, int *);
+			       char **, char **, char **, char **, int *);
 extern void report_configured_links(struct Client* cptr, int mask);
 extern void report_specials(struct Client* sptr, int flags, int numeric);
 extern void report_qlines(struct Client* cptr);

@@ -274,7 +274,6 @@ void report_configured_links(struct Client* sptr, int mask)
   struct LinkReport* p;
   char*              host;
   char*              pass;
-  char*		     oper_reason;
   char*              user;
   char*              name;
   int                port;
@@ -287,8 +286,7 @@ void report_configured_links(struct Client* sptr, int mask)
             break;
         if(p->conf_type == 0)return;
 
-        get_printable_conf(tmp, &name, &host, &pass, &oper_reason, 
-			   &user, &port);
+        get_printable_conf(tmp, &name, &host, &pass, &user, &port);
 
         if(mask & (CONF_CONNECT_SERVER|CONF_NOCONNECT_SERVER))
           {
@@ -373,7 +371,6 @@ void report_specials(struct Client* sptr, int flags, int numeric)
   char*            name;
   char*            host;
   char*            pass;
-  char*		   oper_reason;
   char*            user;
   int              port;
 
@@ -386,8 +383,7 @@ void report_specials(struct Client* sptr, int flags, int numeric)
   for (aconf = this_conf; aconf; aconf = aconf->next)
     if (aconf->status & flags)
       {
-        get_printable_conf(aconf, &name, &host, &pass, &oper_reason,
-			   &user, &port);
+        get_printable_conf(aconf, &name, &host, &pass, &user, &port);
 
         sendto_one(sptr, form_str(numeric),
                    me.name,
@@ -1504,7 +1500,6 @@ void report_qlines(aClient *sptr)
   char *host;
   char *user;
   char *pass;
-  char *oper_reason;
   char *name;
   int port;
 
@@ -1517,8 +1512,7 @@ void report_qlines(aClient *sptr)
 
       for (aconf=qp->confList;aconf;aconf = aconf->next)
         {
-          get_printable_conf(aconf, &name, &host, &pass, 
-			     &oper_reason, &user, &port);
+          get_printable_conf(aconf, &name, &host, &pass, &user, &port);
           
           sendto_one(sptr, form_str(RPL_STATSQLINE),
                      me.name, sptr->name, 'Q', name, user, host, pass);
@@ -1537,7 +1531,7 @@ void clear_juped_channels()
   aQlineItem *qp;
   struct ConfItem *aconf;
   struct Channel *chptr;
-  char *host, *user, *pass, *oper_reason, *name;
+  char *host, *user, *pass, *name;
   int port;
 
   for(qp = q_conf; qp; qp = qp->next)
@@ -1547,8 +1541,7 @@ void clear_juped_channels()
 
     for(aconf = qp->confList; aconf; aconf = aconf->next)
     {
-      get_printable_conf(aconf, &name, &host, &pass,
-                         &oper_reason, &user, &port);
+      get_printable_conf(aconf, &name, &host, &pass, &user, &port);
 
       if((*name == '#') && (chptr = hash_find_channel(name, NULL)))
         chptr->juped = 0;
@@ -1710,7 +1703,6 @@ int rehash_dump(aClient *sptr)
   struct tm *tmptr;
   char *host;
   char *pass;
-  char *oper_reason;
   char *user;
   char *name;
   int  port;
@@ -1737,8 +1729,7 @@ int rehash_dump(aClient *sptr)
   for(aconf = ConfigItemList; aconf; aconf = aconf->next)
     {
       aClass* class_ptr = ClassPtr(aconf);
-      get_printable_conf(aconf, &name, &host, &pass,
-			 &oper_reason, &user, & port );
+      get_printable_conf(aconf, &name, &host, &pass, &user, & port );
 
       if(aconf->status == CONF_CONNECT_SERVER)
         {
@@ -2964,7 +2955,6 @@ show_temp_klines(aClient *sptr, struct ConfItem * tklist)
   char *host;
   char *user;
   char *reason;
-  char *oper_reason;
 
   kill_list_ptr = last_list_ptr = tklist;
 
@@ -3011,18 +3001,7 @@ show_temp_klines(aClient *sptr, struct ConfItem * tklist)
           else
             reason = "No Reason";
 
-	  if(kill_list_ptr->oper_reason)
-	    oper_reason = kill_list_ptr->oper_reason;
-	  else
-	    oper_reason = "";
-
-          if(IsAnOper(sptr))
-            {
-              sendto_one(sptr,form_str(RPL_STATSKLINE), me.name,
-                         sptr->name, 'k' , host, user, reason, oper_reason);
-            }
-          else
-            sendto_one(sptr,form_str(RPL_STATSKLINE), me.name,
+	  sendto_one(sptr,form_str(RPL_STATSKLINE), me.name,
                        sptr->name, 'k' , host, user, reason, "");
 
           last_list_ptr = kill_list_ptr;
@@ -3453,7 +3432,7 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
   struct ConfItem *aconf;
   unsigned long ip;
   unsigned long host_mask;
-  char *host, *pass, *oper_reason, *user, *name, *given_host, *given_name, *p;
+  char *host, *pass, *user, *name, *given_host, *given_name, *p;
   int port;
 
   if (!MyClient(sptr) || !IsAnOper(sptr))
@@ -3473,8 +3452,7 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
               aconf = match_Dline(ip);
               if( aconf )
                 {
-                  get_printable_conf(aconf, &name, &host, &pass,
-				     &oper_reason, &user, &port);
+                  get_printable_conf(aconf, &name, &host, &pass, &user, &port);
                   sendto_one(sptr, 
                          ":%s NOTICE %s :D-line host [%s] pass [%s]",
                          me.name, parv[0], 
@@ -3502,8 +3480,7 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
       if(aconf != NULL) 
         {
-          get_printable_conf(aconf, &name, &host, &pass, &oper_reason,
-			     &user, &port);
+          get_printable_conf(aconf, &name, &host, &pass, &user, &port);
       
           if(aconf->status & CONF_KILL) 
             {
@@ -3568,15 +3545,13 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
  */
 
 void get_printable_conf(struct ConfItem *aconf, char **name, char **host,
-                        char **pass, char **oper_reason,
-			char **user,int *port)
+                        char **pass, char **user,int *port)
 {
   static  char        null[] = "<NULL>";
 
   *name = BadPtr(aconf->name) ? null : aconf->name;
   *host = BadPtr(aconf->host) ? null : aconf->host;
   *pass = BadPtr(aconf->passwd) ? null : aconf->passwd;
-  *oper_reason = BadPtr(aconf->oper_reason) ? "" : aconf->oper_reason;
   *user = BadPtr(aconf->user) ? null : aconf->user;
   *port = (int)aconf->port;
 }
