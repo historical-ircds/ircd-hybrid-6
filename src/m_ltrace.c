@@ -304,8 +304,11 @@ int     m_ltrace(struct Client *cptr,
       sendto_one(sptr, form_str(RPL_TRACESERVER),
                  me.name, parv[0], 0, link_s[me.fd],
                  link_u[me.fd], me.name, "*", "*", me.name);
+      sendto_one(sptr, form_str(RPL_ENDOFTRACE),me.name,
+                 parv[0],tname);
       return 0;
     }
+  sendto_one(sptr, form_str(RPL_ENDOFTRACE),me.name, parv[0],tname);
   return 0;
 }
 #endif /* LTRACE */

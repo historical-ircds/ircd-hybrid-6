@@ -89,11 +89,7 @@ const char serveropts[] = {
   'I',
 #endif
 #ifdef  OPER_KILL
-# ifdef  LOCAL_KILL_ONLY
-  'k',
-# else
   'K',
-# endif
 #endif
 #ifdef  IDLE_FROM_MSG
   'M',

@@ -3004,6 +3004,7 @@ char *oper_privs_as_string(aClient *cptr,int port)
     {
       if(cptr)
         SetOperK(cptr);
+      *privs_ptr++ = 'K';
     }
   else
     *privs_ptr++ = 'k';

@@ -241,6 +241,12 @@ Info MyInformation[] = {
 
   { "HARD_FDLIMIT_", "", HARD_FDLIMIT_, "Maximum Number of File Descriptors Available" },
 
+#ifdef HIDE_OPS
+  { "HIDE_OPS", "ON", 0, "Hide chanop status from non-chanops" },
+#else
+  { "HIDE_OPS", "OFF", 0, "Hide chanop status from non-chanops" },
+#endif /* HIDE_OPS */
+
 #ifdef HPATH
   { "HPATH", HPATH, 0, "Path to Operator Help File" },
 #else
@@ -379,6 +385,18 @@ Info MyInformation[] = {
 #else
   { "MPATH", "NONE", 0, "Path to MOTD File" },
 #endif /* MPATH */
+
+#ifdef NETWORK_NAME
+  { "NETWORK_NAME", NETWORK_NAME, 0, "Network name" },
+#else
+  { "NETWORK_NAME", "NONE", 0, "Network name" },
+#endif /* NETWORK_NAME */
+
+#ifdef NETWORK_DESC
+  { "NETWORK_DESC", NETWORK_DESC, 0, "Network description" },
+#else
+  { "NETWORK_DESC", "NONE", 0, "Network description" },
+#endif /* NETWORK_DESC */
 
   { "NICKNAMEHISTORYLENGTH", "", NICKNAMEHISTORYLENGTH, "Size of WHOWAS Array" },
 
@@ -519,6 +537,12 @@ Info MyInformation[] = {
 #else
   { "SEPARATE_QUOTE_KLINES_BY_DATE", "OFF", 0, "Read/Write K-lines According to Date" },
 #endif /* SEPARATE_QUOTE_KLINES_BY_DATE */
+
+#ifdef SERVERHIDE
+  { "SERVERHIDE", "ON", 0, "Hide server info from users" },
+#else
+  { "SERVERHIDE", "OFF", 0, "Hide server info from users" },
+#endif /* SERVERHIDE */
 
 #ifdef SHORT_MOTD
   { "SHORT_MOTD", "ON", 0, "Notice Clients They should Read MOTD" },
