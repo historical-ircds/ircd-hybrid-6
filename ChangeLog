@@ -1,3 +1,7 @@
+*** 20010805_3 by leeh
+- moved reason = parv[2]; up a step
+
+
 *** 20010805_2 by jdc
 - Removed unused variables in m_gline().
 - Extra () to define truth in invalid_wildcard().
