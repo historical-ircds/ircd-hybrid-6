@@ -1514,6 +1514,9 @@ const char* comment        /* Reason for the exit */
 #else
                (sptr->flags & FLAGS_NORMALEX) ?  "Client Quit" : comment,
 #endif /* WINTRHAWK */
+#ifndef SPOOF_NOTICE
+                               IsIPHidden(sptr) ? "255.255.255.255" :
+#endif /* !SPOOF_NOTICE */
                                sptr->sockhost);
         }
 #ifdef FNAME_USERLOG
