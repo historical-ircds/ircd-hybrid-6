@@ -447,7 +447,7 @@ static  char *  replies[] = {
 /* 405 ERR_TOOMANYCHANNELS, */  ":%s 405 %s %s :You have joined too many channels",
 /* 406 ERR_WASNOSUCHNICK, */    ":%s 406 %s %s :There was no such nickname",
 /* 407 ERR_TOOMANYTARGETS, */
-                ":%s 407 %s %s :Too many recipients. Only %d processed",
+                ":%s 407 %s %s :Duplicate recipients. No message delivered.",
 /* 408 */       NULL,
 /* 409 ERR_NOORIGIN, */         ":%s 409 %s :No origin specified",
 /* 410 */       NULL,

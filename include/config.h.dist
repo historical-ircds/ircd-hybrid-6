@@ -226,13 +226,6 @@
  */
 #undef  ALLOW_DOT_IN_IDENT
 
-/* MAX_MULTI_MESSAGES
- * Maximum number of recipients to a PRIVMSG.  Any more than
- * MAX_MULTI_MESSAGES will not be sent.  If MAX_MULTI_MESSAGES is 1, then
- * any PRIVMSG with a ',' in the target will be rejected.
- */
-#define MAX_MULTI_MESSAGES 2
-
 /* WARN_NO_NLINE
  * Define this if you want ops to get noticed about "things" trying to
  * connect as servers that don't have N: lines.  Twits with misconfigured

@@ -403,8 +403,6 @@ Info MyInformation[] = {
   { "MAX_JOIN_LEAVE_COUNT", "", MAX_JOIN_LEAVE_COUNT, "Anti SpamBot Parameter" },
 #endif /* ANTI_SPAMBOT */
 
-  { "MAX_MULTI_MESSAGES", "", MAX_MULTI_MESSAGES, "Maximum targets per PRIVMSG" },
-
 #ifdef ANTI_NICK_FLOOD
   { "MAX_NICK_CHANGES", "", MAX_NICK_CHANGES, "Maximum Nick Changes Allowed" },
   { "MAX_NICK_TIME", "", MAX_NICK_TIME, "Time Window for MAX_NICK_CHANGES" },
