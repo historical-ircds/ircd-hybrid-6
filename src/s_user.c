@@ -1105,7 +1105,7 @@ static	int	register_user(aClient *cptr,
 		  sendto_one(sptr, rpl_str(RPL_CREATED),me.name,nick,creation);
 		  sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, parv[0],
 			     me.name, version);
-		  (void)m_lusers(sptr, sptr, 1, parv);
+		  (void)show_lusers(sptr, sptr, 1, parv);
 
 		  sendto_one(sptr,"NOTICE %s :*** Notice -- motd was last changed at %s",
 			     nick, motd_last_changed_date);

@@ -46,6 +46,7 @@ static	int	send_message (aClient *, char *, int);
 #ifdef USE_SENTALONG
 static	int	sentalong[MAXCONNECTIONS];
 #else
+static	unsigned long sentalong[MAXCONNECTIONS];
 static unsigned long current_serial=0L;
 #endif
 
@@ -457,7 +458,7 @@ va_dcl
 #ifdef USE_SENTALONG
 	  sentalong[i] = 1;
 #else
-	  acptr->serial_number = current_serial;
+	  sentalong[i] = current_serial;
 #endif
 	}
       else
@@ -467,7 +468,7 @@ va_dcl
 #ifdef USE_SENTALONG
 	  if (sentalong[i] == 0)
 #else
-          if(acptr->serial_number != current_serial)
+          if(sentalong[i] != current_serial)
 #endif
 	    {
 # ifdef	USE_VARARGS
@@ -480,7 +481,7 @@ va_dcl
 #ifdef USE_SENTALONG
 	      sentalong[i] = 1;
 #else
-	      acptr->serial_number = current_serial;
+	      sentalong[i] = current_serial;
 #endif
 	    }
 	}
@@ -543,7 +544,7 @@ va_dcl
 #ifdef USE_SENTALONG
 	  sentalong[i] = 1;
 #else
-	  acptr->serial_number = current_serial;
+	  sentalong[i] = current_serial;
 #endif
 	}
       else
@@ -553,7 +554,7 @@ va_dcl
 #ifdef USE_SENTALONG
 	  if (sentalong[i] == 0)
 #else
-	  if (acptr->serial_number != current_serial)
+	  if (sentalong[i] != current_serial)
 #endif
 	    {
 # ifdef	USE_VARARGS
@@ -566,7 +567,7 @@ va_dcl
 #ifdef USE_SENTALONG
 	      sentalong[i] = 1;
 #else
-	      acptr->serial_number = current_serial;
+	      sentalong[i] = current_serial;
 #endif
 	    }
 	}
@@ -650,7 +651,8 @@ va_dcl
     sentalong[user->fd] = 1;
 #else
   current_serial++;
-  user->serial_number = current_serial;
+  if (user->fd >= 0)
+    sentalong[user->fd] = current_serial;
 #endif
 
   if (user->user)
@@ -663,9 +665,9 @@ va_dcl
 	    continue;
 	  sentalong[cptr->fd]++;
 #else
-	  if (!MyConnect(cptr) || (cptr->serial_number == current_serial))
+	  if (!MyConnect(cptr) || (sentalong[cptr->fd] == current_serial))
 	    continue;
-	  cptr->serial_number = current_serial;
+	  sentalong[cptr->fd] = current_serial;
 #endif
 # ifdef	USE_VARARGS
 	  sendto_prefix_one(cptr, user, pattern, vl);
@@ -747,6 +749,8 @@ va_dcl
   register    int     i;
 #ifdef USE_SENTALONG
   int	sentalong[MAXCONNECTIONS];
+#else
+  unsigned long sentalong[MAXCONNECTIONS];
 #endif
 
 # ifdef USE_VARARGS
@@ -771,7 +775,7 @@ va_dcl
 #ifdef USE_SENTALONG
 	  if (sentalong[i] == 0)
 #else
-	  if (acptr->serial_number != current_serial)
+	  if (sentalong[i] != current_serial)
 #endif
 	    {
 # ifdef USE_VARARGS
@@ -784,7 +788,7 @@ va_dcl
 #ifdef USE_SENTALONG
 	      sentalong[i] = 1;
 #else
-	      acptr->serial_number = current_serial;
+	      sentalong[i] = current_serial;
 #endif
 	    }
 	}
@@ -1236,7 +1240,7 @@ va_dcl
       if (sentalong[i])	/* sent message along it already ? */
 	continue;
 #else
-      if (cptr->serial_number == current_serial)
+      if (sentalong[i] == current_serial)
 	continue;
 #endif
       if (cptr->from == one)
@@ -1244,7 +1248,7 @@ va_dcl
 #ifdef USE_SENTALONG
       sentalong[i] = 1;
 #else
-      cptr->serial_number = current_serial;
+      sentalong[i] = current_serial;
 #endif
 # ifdef	USE_VARARGS
       sendto_prefix_one(cptr->from, from, pattern, vl);
@@ -1305,7 +1309,7 @@ va_dcl
       if (sentalong[i])       /* sent message along it already ? */
 	continue;
 #else
-      if (cptr->serial_number == current_serial)
+      if (sentalong[i] == current_serial)
 	continue;
 #endif
       if (cptr->from == one)
@@ -1313,7 +1317,7 @@ va_dcl
 #ifdef USE_SENTALONG
       sentalong[i] = 1;
 #else
-      cptr->serial_number = current_serial;
+      sentalong[i] = current_serial;
 #endif
 
 # ifdef USE_VARARGS
