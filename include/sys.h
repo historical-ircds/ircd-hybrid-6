@@ -94,7 +94,7 @@ extern	VOIDSIG	dummy();
 #ifdef	OS_SOLARIS2
 extern	int	gethostname(char *, int);
 extern	long	random();
-extern	int	srandom(unsigned int);
+extern	void	srandom(unsigned);
 #endif /* OS_SOLARIS2 */
 
 #ifdef	NO_U_TYPES
