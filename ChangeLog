@@ -22,6 +22,16 @@ I started this file to keep track of changes made in hybrid-6,
 beginning with b37.  We are in VERY HIGH SPEED development mode,
 so it's important to keep track of this. =)
 
+version hybrid-6-b40    21-Jan-1999
+* redid m_invite for better sanity testing, you can no longer
+  invite users to a non-existent channel for example.
+* Don't send SJOIN's for zero length MODE_SPLIT channels (Mortiis)
+* redid m_sjoin for MODE_SPLIT channels treat it as a brand new channel
+* fixed broken NO_JOIN_ON_SPLIT to only care about channels that had
+  existed before a split
+
+-Dianora
+
 version hybrid-6-b39	20-Jan-1999
 * sanity test m_gline parc argument count, older hybrid-5 servers
   with buggy GLINE can core new hybrid-6 correct GLINE code 

@@ -1836,8 +1836,8 @@ va_dcl
         ** more than 5 every 5 seconds.  -orabidoo
         */
 	/*
-	th+hybrid servers always do TS_WARNINGS -Dianora
-	*/
+	 * hybrid servers always do TS_WARNINGS -Dianora
+	 */
         now = time(NULL);
         if (now - last < 5)
             {

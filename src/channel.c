@@ -2120,9 +2120,14 @@ static	void	sub1_from_channel(aChannel *chptr)
 
   if (--chptr->users <= 0)
     {
+      chptr->users = 0;	/* if chptr->users < 0, make sure it sticks at 0
+			 * It should never happen but...
+			 */
+
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
       if(server_was_split)
 	{
+
 	  /* If I haven't already stuck this channel into the
 	   * link list, stick it in now.
 	   */
@@ -2140,6 +2145,10 @@ static	void	sub1_from_channel(aChannel *chptr)
 	   */
 	  while ((tmp = chptr->invites))
 	    del_invite(tmp->value.cptr, chptr);
+
+#ifdef FLUD
+	  free_fluders(NULL, chptr);
+#endif
 	}
       else
 #endif
@@ -2403,7 +2412,9 @@ static void check_still_split()
  * inputs	- none
  * output	- none
  * side effects	- remove all channels on empty_channel_list that have
- * 		  no members, clear link list
+ * no members, clear link list.
+ * each aChannel next_empty_channel gets zeroed as I go through,
+ * this is actually unnecessary but nicer for debugging.
  */
 
 void remove_empty_channels()
@@ -2472,7 +2483,10 @@ void remove_empty_channels()
 	  MyFree((char *)chptr);
 	  Count.chan--;
 	}
+      else
+	chptr->next_empty_channel = (aChannel *)NULL;
     }
+  empty_channel_list = (aChannel *)NULL;
 }
 #endif
 
@@ -3381,40 +3395,57 @@ int	m_invite(aClient *cptr,
       return -1;
     }
 
+  /* A little sanity test here */
+  if(!sptr->user)
+    return 0;
+
   if (!(acptr = find_person(parv[1], (aClient *)NULL)))
     {
       sendto_one(sptr, err_str(ERR_NOSUCHNICK),
 		 me.name, parv[0], parv[1]);
       return 0;
     }
+
   clean_channelname((unsigned char *)parv[2]);
 
   if (!IsChannelName(parv[2]))
     {
-	if (MyClient(sptr))
-	   sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
-		      parv[2]);
-	return 0;
+      if (MyClient(sptr))
+	sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL),
+		   me.name, parv[0], parv[2]);
+      return 0;
     }
+
+  /* Do not send local channel invites to users if they are not on the
+   * same server as the person sending the INVITE message.  -- David-R
+   */
+  /* Possibly should be an error sent to sptr */
+  if (!MyConnect(acptr) && (parv[2][0] == '&'))
+    return 0;
 
   if (!(chptr = find_channel(parv[2], NullChn)))
     {
-      sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s",
-			parv[0], parv[1], parv[2]);
+      if (MyClient(sptr))
+	sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL),
+		   me.name, parv[0], parv[2]);
       return 0;
     }
-  
-  if (chptr && !IsMember(sptr, chptr))
+
+  /* By this point, chptr is non NULL */  
+
+  if (!IsMember(sptr, chptr))
     {
-      sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
-		 me.name, parv[0], parv[2]);
-      return -1;
+      if (MyClient(sptr))
+	sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
+		   me.name, parv[0], parv[2]);
+      return 0;
     }
 
   if (IsMember(acptr, chptr))
     {
-      sendto_one(sptr, err_str(ERR_USERONCHANNEL),
-		 me.name, parv[0], parv[1], parv[2]);
+      if (MyClient(sptr))
+	sendto_one(sptr, err_str(ERR_USERONCHANNEL),
+		   me.name, parv[0], parv[1], parv[2]);
       return 0;
     }
 
@@ -3423,20 +3454,14 @@ int	m_invite(aClient *cptr,
       need_invite = YES;
       if (!is_chan_op(sptr, chptr))
 	{
-	  sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-		     me.name, parv[0], chptr->chname);
-	  return -1;
-	}
-      else if (!IsMember(sptr, chptr))
-	{
-	  sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-		     me.name, parv[0],
-		     ((chptr) ? (chptr->chname) : parv[2]));
+	  if (MyClient(sptr))
+	    sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+		       me.name, parv[0], parv[2]);
 	  return -1;
 	}
     }
 
-  if (MyConnect(sptr))
+  if (MyConnect(sptr) && need_invite)
     {
       sendto_one(sptr, rpl_str(RPL_INVITING), me.name, parv[0],
 		 acptr->name, ((chptr) ? (chptr->chname) : parv[2]));
@@ -3487,21 +3512,11 @@ int	m_invite(aClient *cptr,
 	}
     }
 
-  /* don't attach anything to the invite links if don't need_invite
-   * to channel, i.e. channel is not +i. If it goes +i after the invite
-   * tough. -Dianora
-   */
+  if(MyConnect(acptr) && need_invite)
+    add_invite(acptr, chptr);
 
-  /* Do not send local channel invites to users if they are not on the *
-   * same server as the person sending the INVITE message.  -- David-R */
-  if (!MyConnect(acptr) && (*chptr->chname == '&'))
-    return 0;
-
-  if (MyConnect(acptr))
-    if (chptr && sptr->user && is_chan_op(sptr, chptr) && need_invite)
-      add_invite(acptr, chptr);
-  sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s",parv[0],
-		    acptr->name, ((chptr) ? (chptr->chname) : parv[2]));
+  sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s",
+		    parv[0], acptr->name, parv[2]);
   return 0;
 }
 
@@ -3643,7 +3658,7 @@ int	m_names( aClient *cptr,
 		  s++;
 		  *s = '\0';
 		}
-	      sendto_realops("/names abuser %s [%s]",
+	      sendto_realops("POSSIBLE /names abuser %s [%s]",
 			     para,
 			     get_client_name(sptr,FALSE));
 	      sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
@@ -3826,12 +3841,14 @@ int	m_sjoin(aClient *cptr,
   Link	*l;
   int	args = 0, haveops = 0, keep_our_modes = 1, keep_new_modes = 1;
   int   doesop = 0, what = 0, pargs = 0, fl, people = 0, isnew;
-  int ip;
+  /* loop unrolled this is now redundant */
+  /*  int ip; */
   register	char *s, *s0;
   static	char numeric[16], sjbuf[BUFSIZE];
   char	*mbuf = modebuf, *t = sjbuf, *p;
 
-
+  /* loop unrolled, this is now redundant */
+  /*
   static	FLAG_ITEM	flags[] = {
     {MODE_PRIVATE,    'p'},
     {MODE_SECRET,     's'},
@@ -3840,6 +3857,7 @@ int	m_sjoin(aClient *cptr,
     {MODE_TOPICLIMIT, 't'},
     {MODE_INVITEONLY, 'i'},
     {0x0, 0x0} };
+    */
 
   if (IsClient(sptr) || parc < 5)
     return 0;
@@ -3886,11 +3904,6 @@ int	m_sjoin(aClient *cptr,
 
   isnew = ChannelExists(parv[2]) ? 0 : 1;
   chptr = get_channel(sptr, parv[2], CREATE);
-  /* locally created channels do not get created from SJOIN's
-   * any SJOIN destroys the locally_created flag
-   *
-   * -Dianora
-   */
 
   /*
    * bogus ban removal code.
@@ -3918,6 +3931,12 @@ int	m_sjoin(aClient *cptr,
   
   chptr->keep_their_modes = YES;
 
+  /* locally created channels do not get created from SJOIN's
+   * any SJOIN destroys the locally_created flag
+   *
+   * -Dianora
+   */
+
   chptr->locally_created = NO;
   oldts = chptr->channelts;
 
@@ -3928,7 +3947,12 @@ int	m_sjoin(aClient *cptr,
 
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
   if( (chptr->mode.mode & MODE_SPLIT) && (chptr->users == 0))
-    chptr->mode.mode = 0;
+    {
+      chptr->mode.mode = 0;
+      chptr->channelts = 0;
+      oldts = 0;
+      isnew = 1;
+    }
 #endif
 
   /* If the TS goes to 0 for whatever reason, flag it
@@ -3981,13 +4005,21 @@ int	m_sjoin(aClient *cptr,
 
       if (haveops)
 	keep_new_modes = NO;
-
       if (doesop && !haveops)
 	{
 	  chptr->channelts = tstosend = newts;
-	  if (MyConnect(sptr))
-	    ts_warn("Hacked ops on opless channel: %s",
-		    chptr->chname);
+
+	  /* Only warn of Hacked ops if the channel already
+	   * existed on this side.
+	   * This should drop the number of warnings down dramatically
+	   */
+
+	  if (MyConnect(sptr) && !isnew)
+	    {
+	      sendto_realops("Hacked ops from %s on opless channel: %s",
+			     sptr->name,
+			     chptr->chname);
+	    }
 	}
       else
 	tstosend = oldts;
@@ -4004,6 +4036,9 @@ int	m_sjoin(aClient *cptr,
 	strcpy(mode.key, oldmode->key);
     }
 
+  /* This loop unrolled below for speed
+   */
+  /*
   for (ip = 0; flags[ip].mode; ip++)
     if ((flags[ip].mode & mode.mode) && !(flags[ip].mode & oldmode->mode))
       {
@@ -4014,7 +4049,66 @@ int	m_sjoin(aClient *cptr,
 	  }
 	*mbuf++ = flags[ip].letter;
       }
+      */
 
+  if((MODE_PRIVATE    & mode.mode) && !(MODE_PRIVATE    & oldmode->mode))
+    {
+      if (what != 1)
+	{
+	  *mbuf++ = '+';
+	  what = 1;
+	}
+      *mbuf++ = 'p';
+    }
+  if((MODE_SECRET     & mode.mode) && !(MODE_SECRET     & oldmode->mode))
+    {
+      if (what != 1)
+	{
+	  *mbuf++ = '+';
+	  what = 1;
+	}
+      *mbuf++ = 's';
+    }
+  if((MODE_MODERATED  & mode.mode) && !(MODE_MODERATED  & oldmode->mode))
+    {
+      if (what != 1)
+	{
+	  *mbuf++ = '+';
+	  what = 1;
+	}
+      *mbuf++ = 'm';
+    }
+  if((MODE_NOPRIVMSGS & mode.mode) && !(MODE_NOPRIVMSGS & oldmode->mode))
+    {
+      if (what != 1)
+	{
+	  *mbuf++ = '+';
+	  what = 1;
+	}
+      *mbuf++ = 'n';
+    }
+  if((MODE_TOPICLIMIT & mode.mode) && !(MODE_TOPICLIMIT & oldmode->mode))
+    {
+      if (what != 1)
+	{
+	  *mbuf++ = '+';
+	  what = 1;
+	}
+      *mbuf++ = 't';
+    }
+  if((MODE_INVITEONLY & mode.mode) && !(MODE_INVITEONLY & oldmode->mode))
+    {
+      if (what != 1)
+	{
+	  *mbuf++ = '+';
+	  what = 1;		/* This one is actually redundant now */
+	}
+      *mbuf++ = 'i';
+    }
+
+  /* This loop unrolled below for speed
+   */
+  /*
   for (ip = 0; flags[ip].mode; ip++)
     if ((flags[ip].mode & oldmode->mode) && !(flags[ip].mode & mode.mode))
       {
@@ -4025,6 +4119,62 @@ int	m_sjoin(aClient *cptr,
 	  }
 	*mbuf++ = flags[ip].letter;
       }
+      */
+  if((MODE_PRIVATE    & oldmode->mode) && !(MODE_PRIVATE    & mode.mode))
+    {
+      if (what != -1)
+	{
+	  *mbuf++ = '-';
+	  what = -1;
+	}
+      *mbuf++ = 'p';
+    }
+  if((MODE_SECRET     & oldmode->mode) && !(MODE_SECRET     & mode.mode))
+    {
+      if (what != -1)
+	{
+	  *mbuf++ = '-';
+	  what = -1;
+	}
+      *mbuf++ = 's';
+    }
+  if((MODE_MODERATED  & oldmode->mode) && !(MODE_MODERATED  & mode.mode))
+    {
+      if (what != -1)
+	{
+	  *mbuf++ = '-';
+	  what = -1;
+	}
+      *mbuf++ = 'm';
+    }
+  if((MODE_NOPRIVMSGS & oldmode->mode) && !(MODE_NOPRIVMSGS & mode.mode))
+    {
+      if (what != -1)
+	{
+	  *mbuf++ = '-';
+	  what = -1;
+	}
+      *mbuf++ = 'n';
+    }
+  if((MODE_TOPICLIMIT & oldmode->mode) && !(MODE_TOPICLIMIT & mode.mode))
+    {
+      if (what != -1)
+	{
+	  *mbuf++ = '-';
+	  what = -1;
+	}
+      *mbuf++ = 't';
+    }
+  if((MODE_INVITEONLY & oldmode->mode) && !(MODE_INVITEONLY & mode.mode))
+    {
+      if (what != -1)
+	{
+	  *mbuf++ = '-';
+	  what = -1;
+	}
+      *mbuf++ = 'i';
+    }
+
   if (oldmode->limit && !mode.limit)
     {
       if (what != -1)
