@@ -522,10 +522,11 @@ static	char *	replies[] = {
 /* 475 ERR_BADCHANNELKEY, */	":%s 475 %s %s :Cannot join channel (+k)",
 /* 476 ERR_BADCHANMASK, */	":%s 476 %s %s :Bad Channel Mask",
 /* 477 ERR_MODELESS, */		":%s 477 %s %s :Channel does not support modes",
-/* 478 ERR_BANLISTFULL, */	":%s 478 %s :Channel ban list is full",
-
-/* 479 ERR_JUPEDCHAN, */	":%s 479 %s :Channel is locally juped",
-/* 480 */	(char *)NULL,
+/* 478 ERR_BANLISTFULL, */	":%s 478 %s %s %s :Channel ban list is full",
+/* 479 ERR_BADCHANNAME */
+                ":%s 479 %s %s :Cannot join channel (illegal name)",
+/* 480 ERR_JUPEDCHAN, */
+                ":%s 480 %s %s :Cannot join channel (locally juped)",
 /* 481 ERR_NOPRIVILEGES, */
 		":%s 481 %s :I don't THINK so, homez... you ain't got what it takes. (IRC operator)",
 /* 482 ERR_CHANOPRIVSNEEDED, */	":%s 482 %s %s :You can't do that thing, when you don't have that swing (You're not channel operator)",

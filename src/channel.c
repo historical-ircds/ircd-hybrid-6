@@ -84,7 +84,7 @@ static	int     is_banned (aClient *, aChannel *);
 static	void	set_mode (aClient *, aClient *, aChannel *, int, char **);
 static	void	sub1_from_channel (aChannel *);
 
-void	clean_channelname(unsigned char *);
+int	clean_channelname(unsigned char *, aClient *);
 void	del_invite (aClient *, aChannel *);
 
 /* static functions used in set_mode */
@@ -701,9 +701,7 @@ int	can_send(aClient *cptr, aChannel *chptr)
 #ifdef JUPE_CHANNEL
   if (MyClient(cptr) && (chptr->mode.mode & MODE_JUPED))
     {
-      sendto_one(cptr, err_str(ERR_JUPEDCHAN),
-		 me.name, cptr->name, "PRIVMSG");
-      return (MODE_NOPRIVMSGS);
+      return (MODE_JUPED);
     }
 #endif
 
@@ -931,7 +929,13 @@ int	m_mode(aClient *cptr,
   /* Now, try to find the channel in question */
   if (parc > 1)
     {
-      clean_channelname((unsigned char *)parv[1]);
+    if(clean_channelname((unsigned char *)parv[1],sptr))
+      { 
+        sendto_one(sptr, err_str(ERR_BADCHANNAME),
+                   me.name, parv[0], (unsigned char *)parv[1]);
+        return 0;
+      }
+
       chptr = find_channel(parv[1], NullChn);
       if (chptr == NullChn)
 	return m_umode(cptr, sptr, parc, parv);
@@ -2073,8 +2077,6 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key, int *flags)
 	     "User %s (%s@%s) is attemping to join locally juped channel %s",
 		     sptr->name,
 		     sptr->user->username, sptr->user->host,chptr->chname);
-      sendto_one(sptr, err_str(ERR_JUPEDCHAN),
-		 me.name, sptr->name, "JOIN");
       return (ERR_JUPEDCHAN);
     }
 #endif
@@ -2106,7 +2108,7 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key, int *flags)
 ** Remove bells and commas from channel name
 */
 
-void	clean_channelname(unsigned char *name)
+int	clean_channelname(unsigned char *name, aClient *sptr)
 {
   unsigned char *cn;
   
@@ -2115,8 +2117,11 @@ void	clean_channelname(unsigned char *name)
      * Find bad characters and remove them, also check for
      * characters in the '\0' -> ' ' range, but +127   -Taner
      */
-    if (*cn == '\007' || *cn == ' ' || *cn == ',' || (*cn > 127 && *cn <= 160))
+    if (*cn == '\007' || *cn == ' ' || *cn == ',' || 
+        (MyClient(sptr) && (*cn > 127) && (*cn <= 160)))
       {
+	return 1;
+#if 0
 	*cn = '\0';
 	/* pathological case only on longest channel name.
 	** If not dealt with here, causes desynced channel ops
@@ -2128,7 +2133,9 @@ void	clean_channelname(unsigned char *name)
 	name[CHANNELLEN] = '\0';
 
 	return;
+#endif /* 0 */
       }
+      return 0;
 }
 
 /*
@@ -2704,7 +2711,12 @@ int	m_join(aClient *cptr,
   for (i = 0, name = strtoken(&p, parv[1], ","); name;
        name = strtoken(&p, (char *)NULL, ","))
     {
-      clean_channelname((unsigned char *)name);
+      if (clean_channelname((unsigned char *)name, sptr))
+        {
+          sendto_one(sptr, err_str(ERR_BADCHANNAME),
+                       me.name, parv[0], (unsigned char *)name);
+          continue;
+        }
       if (*name == '&' && !MyConnect(sptr))
 	continue;
       if (*name == '0' && !atoi(name))
@@ -2958,10 +2970,11 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 
       if (MyConnect(sptr) && (i = can_join(sptr, chptr, key, &flags)))
 	{
-	  sendto_one(sptr,
+/*	  sendto_one(sptr,
 		     ":%s %d %s %s :Sorry, cannot join channel.",
-		     me.name, i, parv[0], name);
-
+		     me.name, i, parv[0], name); */
+          sendto_one(sptr,
+                    err_str(i), me.name, parv[0], name);
 #ifdef ANTI_SPAMBOT
 	  if(successful_join_count > 0)
 	    successful_join_count--;
@@ -3624,7 +3637,12 @@ int	m_invite(aClient *cptr,
       return 0;
     }
 
-  clean_channelname((unsigned char *)parv[2]);
+  if (clean_channelname((unsigned char *)parv[2],sptr))
+    { 
+      sendto_one(sptr, err_str(ERR_BADCHANNAME),
+                 me.name, parv[0], (unsigned char *)parv[2]);
+      return 0;
+    }
 
   if (!IsChannelName(parv[2]))
     {
@@ -3916,7 +3934,13 @@ int	m_names( aClient *cptr,
       s = strchr(para, ',');
       if (s)
 	*s = '\0';
-      clean_channelname((unsigned char *)para);
+      if (clean_channelname((unsigned char *)para,sptr))
+    	{ 
+          sendto_one(sptr, err_str(ERR_BADCHANNAME),
+                     me.name, parv[0], (unsigned char *)para);
+          return 0;
+        }
+
       ch2ptr = find_channel(para, (aChannel *)NULL);
     }
 
@@ -4152,6 +4176,13 @@ int	m_sjoin(aClient *cptr,
     return 0;
   if (!IsChannelName(parv[2]))
     return 0;
+
+  if(clean_channelname((unsigned char *)parv[2],sptr))
+     { 
+       sendto_one(sptr, err_str(ERR_BADCHANNAME),
+                  me.name, parv[0], (unsigned char *)parv[2]);
+       return 0;
+     }
 
   /* comstud server did this, SJOIN's for
    * local channels can't happen.

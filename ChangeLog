@@ -1,9 +1,18 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
+
+version hybrid-6-b80
+* fixed "cannot join" numerics to display full error messages
+* fixed ERR_BANLISTFULL to include channel name and banid
+* reject non-RFC channel names from clients and servers instead
+  of truncating (new numeric 479 coordinated with the other major nets)
+-Rodder
+
 version hybrid-6-b79
 * fixed compile problems if SPLIT_PONG was undefined
 * more cleanup
 * moved TIMED_K's to broken section of conf
+-Rodder
 
 version hybrid-6-b78   2-Jun-1999
 * renamed mycmp() to irccmp() and myncmp() to ircncmp()
