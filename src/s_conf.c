@@ -1520,6 +1520,7 @@ void report_qlines(aClient *sptr)
     }
 }
 
+#ifdef JUPE_CHANNEL
 /* clear_juped_channels()
  *
  * inputs       -
@@ -1548,7 +1549,8 @@ void clear_juped_channels()
     }
   }
 }
-       
+#endif /* JUPE_CHANNEL */
+
 /*
  * add_q_line
  *
@@ -3539,7 +3541,9 @@ void read_conf_files(int cold)
 
   if(!cold)
   {
+#ifdef JUPE_CHANNEL
     clear_juped_channels();
+#endif /* JUPE_CHANNEL */
     clear_out_old_conf();
   }
 

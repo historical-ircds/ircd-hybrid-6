@@ -1022,6 +1022,6 @@
 #define MIN_IDLETIME 1800
 #endif
 
-#define CONFIG_H_LEVEL_6_1
+#define CONFIG_H_LEVEL_6_3
 
 #endif /* INCLUDED_config_h */

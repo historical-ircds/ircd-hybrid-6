@@ -23,9 +23,6 @@
  *
  *   $Id$
  */
-#ifdef GLINES
-#include "m_gline.h"
-#endif
 #include "m_commands.h"
 #include "channel.h"
 #include "client.h"
@@ -41,6 +38,9 @@
 #include "s_misc.h"
 #include "send.h"
 #include "struct.h"
+#ifdef GLINES
+#include "m_gline.h"
+#endif
 
 #include <stdio.h>
 #include <time.h>

@@ -372,8 +372,6 @@ time_t check_pings(time_t currenttime)
 #ifdef GLINES
                   if( (aconf = find_gkill(cptr,cptr->username)) )
                     {
-		      char *p;
-
                       sendto_realops("G-line active for %s",
                                  get_client_name(cptr, FALSE));
 
@@ -468,7 +466,7 @@ time_t check_pings(time_t currenttime)
               !IsIdlelined(cptr) && 
               ((CurrentTime - cptr->user->last) > IDLETIME))
             {
-              struct ConfItem *aconf;
+              struct ConfItem *tmpaconf;
 
               dying_clients[die_index] = cptr;
               dying_clients_reason[die_index++] = "Idle time limit exceeded";
@@ -477,14 +475,14 @@ time_t check_pings(time_t currenttime)
 #endif /* SEND_FAKE_KILL_TO_CLIENT && IDLE_CHECK */
               dying_clients[die_index] = (struct Client *)NULL;
 
-              aconf = make_conf();
-              aconf->status = CONF_KILL;
-              DupString(aconf->host, cptr->host);
-              DupString(aconf->passwd, "Idle time limit exceeded" );
-              DupString(aconf->name, cptr->username);
-              aconf->port = 0;
-              aconf->hold = CurrentTime + 60;
-              add_temp_kline(aconf);
+              tmpaconf = make_conf();
+              tmpaconf->status = CONF_KILL;
+              DupString(tmpaconf->host, cptr->host);
+              DupString(tmpaconf->passwd, "Idle time limit exceeded" );
+              DupString(tmpaconf->name, cptr->username);
+              tmpaconf->port = 0;
+              tmpaconf->hold = CurrentTime + 60;
+              add_temp_kline(tmpaconf);
               sendto_realops("Idle time limit exceeded for %s - temp k-lining",
                          get_client_name(cptr,FALSE));
               continue;         /* and go examine next fd/cptr */

@@ -2904,8 +2904,8 @@ int     m_knock(struct Client *cptr,
     }
 
   /* don't allow a knock if the user is banned, or the channel is secret */
-  if (knock_local && (chptr->mode.mode & MODE_SECRET) || 
-      (is_banned(sptr, chptr) == CHFL_BAN) )
+  if (knock_local && ((chptr->mode.mode & MODE_SECRET) || 
+      (is_banned(sptr, chptr) == CHFL_BAN)) )
     {
       sendto_one(sptr, form_str(ERR_CANNOTSENDTOCHAN), me.name, parv[0],
                  name);
