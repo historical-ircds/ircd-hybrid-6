@@ -156,8 +156,8 @@ struct Client
   short	            status;	/* Client type */
   char	            nicksent;
   unsigned char     local_flag; /* if this is 1 this client is local */
-  unsigned short    listprogress; /* where were we when the /list blocked? */
-  unsigned int      listprogress2; /* where in the current bucket were we? */
+  short    listprogress; /* where were we when the /list blocked? */
+  int      listprogress2; /* where in the current bucket were we? */
 
   /*
    * client->name is the unique name for a client nick or host
