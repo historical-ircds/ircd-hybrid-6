@@ -248,7 +248,7 @@ int	attach_Iline(aClient *cptr,
   /* Slow down the reconnectors who are rejected */
 
 #ifdef REJECT_HOLD
-  setRejectHold(cptr);
+  SetRejectHold(cptr);
 #endif
 
   return -1;	/* -1 on no match *bleh* */
@@ -323,11 +323,11 @@ void clear_ip_hash_table()
   int n_left_to_allocate = MAXCONNECTIONS;
 
   /* ok. if the sizeof the struct isn't aligned with that of the
-     smallest guaranteed valid pointer (void *), then align it
-     ya. you could just turn 'size' into a #define. do it. :-)
-
-     -Dianora
-     */
+   * smallest guaranteed valid pointer (void *), then align it
+   * ya. you could just turn 'size' into a #define. do it. :-)
+   *
+   * -Dianora
+   */
 
   size = sizeof(IP_ENTRY) + (sizeof(IP_ENTRY) & (sizeof(void*) - 1) );
 

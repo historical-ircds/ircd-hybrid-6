@@ -1511,6 +1511,8 @@ static  void     set_mode(aClient *cptr,
 	   */
 
 	case 'i' :
+	  if (whatt == MODE_QUERY)	/* shouldn't happen. */
+	    break;
 	  if (!isok)
 	    {
 	      if (MyClient(sptr) && !errsent(SM_ERR_NOOPS, &errors_sent))
@@ -1549,6 +1551,10 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
+
+	      while ( (lp = chptr->invites) )
+		del_invite(lp->value.cptr, chptr);
+
 #ifdef OLD_NON_RED
 	      if(chptr->mode.mode & MODE_INVITEONLY)
 #endif
@@ -2116,6 +2122,12 @@ static	void	sub1_from_channel(aChannel *chptr)
       else
 #endif
 	{
+	  /*
+	   * Now, find all invite links from channel structure
+	   */
+	  while ((tmp = chptr->invites))
+	    del_invite(tmp->value.cptr, chptr);
+
 	  tmp = chptr->banlist;
 	  while (tmp)
 	    {
