@@ -36,6 +36,7 @@
  *
  * $Id$
  */
+#include "config.h"
 #include "struct.h"
 #include "common.h"
 #include "numeric.h"
@@ -54,7 +55,10 @@
 #include <stdlib.h>
 
 #ifdef NEED_SPLITCODE
+
 static void check_still_split();
+int server_was_split;
+int got_server_pong;
 
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 aChannel *empty_channel_list=(aChannel*)NULL;

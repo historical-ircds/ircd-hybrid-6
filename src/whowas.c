@@ -47,7 +47,7 @@ static void del_whowas_from_list(aWhowas **,aWhowas *);
 aWhowas WHOWAS[NICKNAMEHISTORYLENGTH];
 aWhowas *WHOWASHASH[WW_MAX];
 
-int whowas_next = 0;
+static int whowas_next = 0;
 
 static unsigned int hash_whowas_name(const char* name)
 {

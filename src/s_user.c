@@ -155,12 +155,6 @@ void free_fluders(aClient *,aChannel *);
 void free_fludees(aClient *);
 #endif
 
-#ifdef NEED_SPLITCODE
-extern int server_was_split;               /* defined in channel.c */
-#if defined(SPLIT_PONG)
-extern int got_server_pong;
-#endif
-#endif
 
 /*
 ** m_functions execute protocol messages on this server:
