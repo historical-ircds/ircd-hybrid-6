@@ -16,7 +16,7 @@ CPPFLAGS = ${INCLUDES} @CPPFLAGS@
 #
 
 SRCS = \
-	adns.o \
+	adns.c \
 	blalloc.c \
 	channel.c \
 	class.c \
