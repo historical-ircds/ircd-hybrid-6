@@ -108,41 +108,6 @@ struct  Counter {
         int     max_tot;        /* MAX global clients */
 };
 
-
-
-
-/* Macros for aConfItem */
-
-#define IsLimitIp(x)            ((x)->flags & CONF_FLAGS_LIMIT_IP)
-#define IsNoTilde(x)            ((x)->flags & CONF_FLAGS_NO_TILDE)
-#define IsNeedIdentd(x)         ((x)->flags & CONF_FLAGS_NEED_IDENTD)
-#define IsPassIdentd(x)         ((x)->flags & CONF_FLAGS_PASS_IDENTD)
-#define IsNoMatchIp(x)          ((x)->flags & CONF_FLAGS_NOMATCH_IP)
-#define IsConfElined(x)         ((x)->flags & CONF_FLAGS_E_LINED)
-#define IsConfBlined(x)         ((x)->flags & CONF_FLAGS_B_LINED)
-#define IsConfFlined(x)         ((x)->flags & CONF_FLAGS_F_LINED)
-
-#ifdef IDLE_CHECK
-#define IsConfIdlelined(x)      ((x)->flags & CONF_FLAGS_IDLE_LINED)
-#endif
-
-#define IsConfDoIdentd(x)       ((x)->flags & CONF_FLAGS_DO_IDENTD)
-#define IsConfDoSpoofIp(x)      ((x)->flags & CONF_FLAGS_SPOOF_IP)
-#ifdef LITTLE_I_LINES
-#define IsConfLittleI(x)        ((x)->flags & CONF_FLAGS_LITTLE_I_LINE)
-#endif
-
-/* port definitions for Opers */
-
-#define CONF_OPER_GLOBAL_KILL 1
-#define CONF_OPER_REMOTE      2
-#define CONF_OPER_UNKLINE     4
-#define CONF_OPER_GLINE       8
-#define CONF_OPER_N          16
-#define CONF_OPER_K          32
-#define CONF_OPER_REHASH     64
-#define CONF_OPER_DIE       128
-
 /*
  * statistics structures
  */
