@@ -1,3 +1,7 @@
+*** 19991113_2 by lusky
+revved patchlevel to b114
+
+
 *** 19991113_1 by lusky
 rewrote the way chanwall was being handled, by moving where the varargs code had to be used (db)
 m_userhost old behaviour restored, but rewritten. Need to support
