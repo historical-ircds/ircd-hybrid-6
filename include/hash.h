@@ -20,7 +20,6 @@
 /*
 $Id$
  */
-/* This is all DOUGH_HASH now - Dianora */
 
 #ifndef	__hash_include__
 #define __hash_include__
@@ -31,32 +30,20 @@ typedef	struct	hashentry {
 	void	*list;
 	} aHashEntry;
 
-/* Taner had BITS_PER_COL 4 BITS_PER_COL_MASK 0xF - Dianora */
-
-#define BITS_PER_COL 3
-#define BITS_PER_COL_MASK 0x7
-#define MAX_SUB     (1<<BITS_PER_COL)
-
 /* Client hash table */
 /* used in hash.c */
 
-#define U_MAX_INITIAL  8192
-#define U_MAX_INITIAL_MASK (U_MAX_INITIAL-1)
-#define U_MAX (U_MAX_INITIAL*MAX_SUB)
+#define U_MAX 65536
 
 /* Channel hash table */
 /* used in hash.c */
 
-#define CH_MAX_INITIAL  2048
-#define CH_MAX_INITIAL_MASK (CH_MAX_INITIAL-1)
-#define CH_MAX (CH_MAX_INITIAL*MAX_SUB)
+#define CH_MAX 16384
 
 /* Who was hash table */
 /* used in whowas.c */
 
-#define WW_MAX_INITIAL  16
-#define WW_MAX_INITIAL_MASK (WW_MAX_INITIAL-1)
-#define WW_MAX (WW_MAX_INITIAL*MAX_SUB)
+#define WW_MAX 65536
 
 #endif	/* __hash_include__ */
 

@@ -184,10 +184,9 @@ int	attach_Iline(aClient *cptr,
 		     char *username,
 		     char **preason)
 {
-  register aConfItem *aconf;
-  register aConfItem *tkline_conf;
-  register char *hname;
-  /*  static	char	user[USERLEN+3]; */
+  aConfItem *aconf;
+  aConfItem *tkline_conf;
+   char *hname;
   char	host[HOSTLEN+3];
   char	fullname[HOSTLEN+1];
   char	non_ident[USERLEN+1];
@@ -1149,8 +1148,8 @@ aConfItem *find_conf_entry(aConfItem *aconf, int mask)
  */
 aConfItem *find_special_conf(char *to_find, int mask)
 {
-  register aConfItem *aconf;
-  register aConfItem *this_conf;
+  aConfItem *aconf;
+  aConfItem *this_conf;
 
   if(mask & CONF_XLINE)
     this_conf = x_conf;
@@ -1379,8 +1378,8 @@ static void makeQlineEntry(aQlineItem *qp, aConfItem *aconf, char *uath)
  */
 void clear_special_conf(aConfItem **this_conf)
 {
-  register aConfItem *aconf;
-  register aConfItem *next_aconf;
+  aConfItem *aconf;
+  aConfItem *next_aconf;
 
   for (aconf = *this_conf; aconf; aconf = next_aconf)
     {
@@ -1403,7 +1402,7 @@ void clear_special_conf(aConfItem **this_conf)
 
 int	rehash_dump(aClient *sptr,char *parv0)
 {
-  register aConfItem *aconf;
+  aConfItem *aconf;
   FBFILE* out;
   char ircd_dump_file[256];
   char result_buf[256];
@@ -1478,10 +1477,10 @@ int	rehash_dump(aClient *sptr,char *parv0)
  */
 int rehash(aClient *cptr,aClient *sptr,int sig)
 {
-  register aConfItem **tmp = &conf, *tmp2;
-  register aClass	*cltmp;
-  register aClient	*acptr;
-  register	int	i;
+  aConfItem **tmp = &conf, *tmp2;
+  aClass	*cltmp;
+  aClient	*acptr;
+  int	i;
   int	ret = 0;
   FBFILE* file = 0;
 
@@ -2406,7 +2405,7 @@ void do_include_conf()
  * an IP addresses in a.b.c.d number for to IP#s.
  *
  */
-static	int	lookup_confhost(aConfItem *aconf)
+static int lookup_confhost(aConfItem *aconf)
 {
   struct hostent *hp;
   Link ln;
@@ -2426,14 +2425,6 @@ static	int	lookup_confhost(aConfItem *aconf)
   ** Do name lookup now on hostnames given and store the
   ** ip numbers in conf structure.
   */
-  if (!is_address(aconf->host,&ip,&mask))
-    {
-      if (aconf->ipnum.s_addr == -1)
-	memset((void *)&aconf->ipnum, 0, sizeof(struct in_addr));
-      Debug((DEBUG_ERROR,"Host/server name error: (%s) (%s)",
-	     aconf->host, aconf->name));
-      return -1;
-    }
 
   /*
   ** Prepare structure in case we have to wait for a

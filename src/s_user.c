@@ -219,7 +219,7 @@ extern int got_server_pong;
 aClient *next_client(aClient *next,	/* First client to check */
 		     char *ch)		/* search string (may include wilds) */
 {
-  Reg	aClient	*tmp = next;
+  aClient	*tmp = next;
 
   next = find_client(ch, tmp);
   if (tmp && tmp->prev == next)
@@ -240,7 +240,7 @@ aClient *next_client(aClient *next,	/* First client to check */
 aClient *next_client_double(aClient *next,	/* First client to check */
 			    char *ch)	/* search string (may include wilds) */
 {
-  Reg	aClient	*tmp = next;
+  aClient	*tmp = next;
 
   next = find_client(ch, tmp);
   if (tmp && tmp->prev == next)
@@ -383,7 +383,7 @@ int	hunt_server(aClient *cptr,
 
 static	int do_nick_name(char *nick)
 {
-  Reg char *ch;
+  char *ch;
 
   if (*nick == '-' || isdigit(*nick)) /* first character in [0..9-] */
     return 0;
@@ -476,7 +476,7 @@ static	int	register_user(aClient *cptr,
 			      char *nick,
 			      char *username)
 {
-  Reg	aConfItem *aconf;
+  aConfItem *aconf;
   char	*parv[3];
   static  char ubuf[12];
   char	*p;
@@ -930,9 +930,9 @@ static	int	register_user(aClient *cptr,
     (void)m_oper(&me, sptr, 1, parv);
 #if defined(NO_MIXED_CASE) || defined(NO_SPECIAL)
   {
-    register char *tmpstr;
+    char *tmpstr;
     u_char c, cc;
-    register int lower, upper, special;
+    int lower, upper, special;
 		
     lower = upper = special = cc = 0;
 
@@ -1828,8 +1828,8 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
       (void)add_to_client_hash_table(nick, sptr);
       if (parc > 8)
 	{
-	  Reg	int *s, flag;
-	  Reg	char *m;
+	  int *s, flag;
+	  char *m;
 	  
 	  /*
 	  ** parse the usermodes -orabidoo
@@ -1991,8 +1991,8 @@ static	int	m_message(aClient *cptr,
 			  char *parv[],
 			  int notice)
 {
-  Reg	aClient	*acptr;
-  Reg	char	*s;
+  aClient	*acptr;
+  char	*s;
   aChannel *chptr;
   char	*nick, *server, *p, *cmd, *host;
   int type=0;
@@ -2530,9 +2530,9 @@ int	m_who(aClient *cptr,
 	      int parc,
 	      char *parv[])
 {
-  Reg	aClient *acptr;
-  Reg	char	*mask = parc > 1 ? parv[1] : NULL;
-  Reg	Link	*lp;
+  aClient *acptr;
+  char	*mask = parc > 1 ? parv[1] : NULL;
+  Link	*lp;
   aChannel *chptr;
   aChannel *mychannel = NULL;
   char	*channame = NULL;
@@ -2704,8 +2704,8 @@ int	m_whois(aClient *cptr,
     "<Unknown>",	/* host */
     "<Unknown>"		/* server */
   };
-  Reg	Link	*lp;
-  Reg	anUser	*user;
+  Link	*lp;
+  anUser	*user;
   aClient *acptr, *a2cptr;
   aChannel *chptr;
   char	*nick, *name;
@@ -3112,7 +3112,7 @@ int	m_quit(aClient *cptr,
 	       int parc,
 	       char *parv[])
 {
-  register char *comment = (parc > 1 && parv[1]) ? parv[1] : cptr->name;
+  char *comment = (parc > 1 && parv[1]) ? parv[1] : cptr->name;
 
 /*  What is this doing here?
  *   -Taner
@@ -3375,7 +3375,7 @@ int	m_away(aClient *cptr,
 	       int parc,
 	       char *parv[])
 {
-  Reg	char	*away, *awy2 = parv[1];
+  char	*away, *awy2 = parv[1];
 
   /* make sure the user exists */
   if (!(sptr->user))

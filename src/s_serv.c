@@ -270,9 +270,9 @@ int	m_squit(aClient *cptr,
 		int parc,
 		char *parv[])
 {
-  Reg	aConfItem *aconf;
+  aConfItem *aconf;
   char	*server;
-  Reg	aClient	*acptr;
+  aClient	*acptr;
   char	*comment = (parc > 2 && parv[2]) ? parv[2] : cptr->name;
 
   if (!IsPrivileged(sptr))
@@ -462,9 +462,9 @@ int	m_svinfo(aClient *cptr,
 */
 int	m_capab(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-  register	struct Capability *cap;
+  struct Capability *cap;
   char	*p;
-  Reg	char *s;
+  char *s;
 
   if ((!IsUnknown(cptr) && !IsHandshake(cptr)) || parc < 2)
     return 0;
@@ -496,7 +496,7 @@ int	m_capab(aClient *cptr, aClient *sptr, int parc, char *parv[])
 */
 void send_capabilities(aClient *cptr,int use_zip)
 {
-  register struct Capability *cap;
+  struct Capability *cap;
   char	msgbuf[BUFSIZE];
 
   msgbuf[0] = '\0';
@@ -534,7 +534,7 @@ int	m_server(aClient *cptr,
 		 int parc,
 		 char *parv[])
 {
-  Reg	int	i;
+  int	i;
   char	info[REALLEN+1];
   /*  char *inpath; */
   char  *host;
@@ -883,9 +883,9 @@ static void	sendnick_TS( aClient *cptr, aClient *acptr)
 
 int	m_server_estab(aClient *cptr)
 {
-  Reg	aChannel *chptr;
-  Reg	aClient	*acptr;
-  Reg	aConfItem	*aconf, *bconf;
+  aChannel *chptr;
+  aClient	*acptr;
+  aConfItem	*aconf, *bconf;
   char	*inpath, *host, *encr;
   int	split;
 
@@ -1695,10 +1695,7 @@ int	m_stats(aClient *cptr,
       break;
 
     case 'M' : case 'm' :
-/* original behaviour was not to report the command, if the command hadn't
-   been used. I'm going to always report the command instead -Dianora */
       for (mptr = msgtab; mptr->cmd; mptr++)
-/*	if (mptr->count) */
 	  sendto_one(sptr, form_str(RPL_STATSCOMMANDS),
 		     me.name, parv[0], mptr->cmd,
 		     mptr->count, mptr->bytes);
@@ -1758,7 +1755,7 @@ int	m_stats(aClient *cptr,
 
     case 'u' :
       {
-	register time_t now;
+	time_t now;
 	
 	now = timeofday - me.since;
 	sendto_one(sptr, form_str(RPL_STATSUPTIME), me.name, parv[0],
@@ -1861,7 +1858,7 @@ int	m_error(aClient *cptr,
 		int parc,
 		char *parv[])
 {
-  Reg	char	*para;
+  char	*para;
 
   para = (parc > 1 && *parv[1] != '\0') ? parv[1] : "<>";
   
@@ -1894,7 +1891,7 @@ int	m_help(aClient *cptr,
 	       char *parv[])
 {
   int i;
-  register aMessageFile *helpfile_ptr;
+  aMessageFile *helpfile_ptr;
   static time_t last_used=0L;
 
   if(!IsAnOper(sptr))
@@ -2275,17 +2272,18 @@ int	m_connect(aClient *cptr,
       syslog(LOG_DEBUG, "CONNECT From %s : %s %s", parv[0], parv[1], parv[2] ? parv[2] : "");
 #endif
     }
+
   aconf->port = port;
   switch (retval = connect_server(aconf, sptr, NULL))
     {
     case 0:
       sendto_one(sptr,
-		 ":%s NOTICE %s :*** Connecting to %s[%s].",
-		 me.name, parv[0], aconf->host, aconf->name);
+		 ":%s NOTICE %s :*** Connecting to %s[%s].%d",
+		 me.name, parv[0], aconf->host, aconf->name, aconf->port);
       break;
     case -1:
-      sendto_one(sptr, ":%s NOTICE %s :*** Couldn't connect to %s.",
-		 me.name, parv[0], aconf->host);
+      sendto_one(sptr, ":%s NOTICE %s :*** Couldn't connect to %s.%d",
+		 me.name, parv[0], aconf->host,aconf->port);
       break;
     case -2:
       sendto_one(sptr, ":%s NOTICE %s :*** Host %s is unknown.",
@@ -2371,7 +2369,7 @@ int     m_locops(aClient *cptr,
   char *message = NULL;
 #ifdef SLAVE_SERVERS
   char *slave_oper;
-  register aClient *acptr;
+  aClient *acptr;
 #endif
 
 #ifdef SLAVE_SERVERS
@@ -3349,8 +3347,8 @@ int	m_trace(aClient *cptr,
 		int parc,
 		char *parv[])
 {
-  Reg	int	i;
-  Reg	aClient	*acptr = NULL;
+  int	i;
+  aClient	*acptr = NULL;
   aClass	*cltmp;
   char	*tname;
   int	doall, link_s[MAXCONNECTIONS], link_u[MAXCONNECTIONS];
@@ -3646,8 +3644,8 @@ int	m_ltrace(aClient *cptr,
 		int parc,
 		char *parv[])
 {
-  Reg	int	i;
-  Reg	aClient	*acptr = NULL;
+  int	i;
+  aClient	*acptr = NULL;
   char	*tname;
   int	doall, link_s[MAXCONNECTIONS], link_u[MAXCONNECTIONS];
   int	cnt = 0, wilds, dow;
@@ -3871,7 +3869,7 @@ int send_motd(aClient *cptr,
 	  char *parv[],
 	      aMessageFile *motd)
 {
-  register aMessageFile *temp;
+  aMessageFile *temp;
 
   if (motd == (aMessageFile *)NULL)
     {
@@ -3911,7 +3909,7 @@ int send_oper_motd(aClient *cptr,
 	  char *parv[],
 	      aMessageFile *motd)
 {
-  register aMessageFile *temp;
+  aMessageFile *temp;
   
   if (opermotd == (aMessageFile *)NULL)
     {
@@ -4017,8 +4015,8 @@ void read_amotd()
  */
 int read_message_file(char *filename,aMessageFile **ptr)
 {
-  register aMessageFile *mptr;
-  register aMessageFile	*temp, *last;
+  aMessageFile *mptr;
+  aMessageFile	*temp, *last;
   char		buffer[MESSAGELINELEN], *tmp;
   FBFILE* file;
   
@@ -4075,8 +4073,8 @@ int	m_close(aClient *cptr,
 		int parc,
 		char *parv[])
 {
-  Reg	aClient	*acptr;
-  Reg	int	i;
+  aClient	*acptr;
+  int	i;
   int	closed = 0;
 
   if (!MyOper(sptr))
@@ -4107,8 +4105,8 @@ int	m_die(aClient *cptr,
 	      int parc,
 	      char *parv[])
 {
-  Reg	aClient	*acptr;
-  Reg	int	i;
+  aClient	*acptr;
+  int	i;
 
 #ifndef	LOCOP_DIE
   if (!MyClient(sptr) || !IsOper(sptr))

@@ -113,8 +113,8 @@ aClient *get_history(char *nick,time_t timelimit)
 void    count_whowas_memory(int *wwu,
 			    u_long *wwum)
 {
-  register aWhowas *tmp;
-  register int i;
+  aWhowas *tmp;
+  int i;
   int     u = 0;
   u_long  um = 0;
 
@@ -141,8 +141,8 @@ int     m_whowas(aClient *cptr,
 		 int parc,
 		 char *parv[])
 {
-  register aWhowas *temp;
-  register int cur = 0;
+  aWhowas *temp;
+  int cur = 0;
   int     max = -1, found = 0;
   char    *p, *nick;
 /*  char    *s; */
@@ -212,7 +212,7 @@ int     m_whowas(aClient *cptr,
 
 void    initwhowas()
 {
-  register int i;
+  int i;
 
   for (i=0;i<NICKNAMEHISTORYLENGTH;i++)
     {

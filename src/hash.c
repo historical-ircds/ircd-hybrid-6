@@ -86,23 +86,16 @@ look in whowas.c for the missing ...[WW_MAX]; entry
  *
  */
 
-unsigned hash_nick_name(nname)
-     char *nname;
+unsigned hash_nick_name(char *name)
 {
-  Reg unsigned hash = 0;
-  Reg int hash2 = 0;
-  Reg int ret;
-  Reg char lower;
-  while (*nname)
+  unsigned h = 0;
+
+  while (*name)
     {
-      lower = tolower(*nname);
-      hash = (hash << 1) + lower;
-      hash2 = (hash2 >> 1) + lower;
-      nname++;
+      h = (h << 4) - (h + (unsigned char)tolower(*name++));
     }
-  ret = ((hash & U_MAX_INITIAL_MASK) << BITS_PER_COL) +
-    (hash2 & BITS_PER_COL_MASK);
-  return ret;
+
+  return(h & (U_MAX-1));
 }
 
 /*
@@ -115,45 +108,31 @@ unsigned hash_nick_name(nname)
  */
 int	hash_channel_name(char *name)
 {
-  register unsigned char *hname = (unsigned char *)name;
-  register unsigned int hash = 0;
-  register int hash2 = 0;
-  register char lower;
   register int i = 30;
+  unsigned h = 0;
 
-  while(*hname && --i)
+  while (*name && --i)
     {
-      lower = tolower(*hname);
-      hash = (hash << 1) + lower;
-      hash2 = (hash2 >> 1) + lower;
-      hname++;
+      h = (h << 4) - (h + (unsigned char)tolower(*name++));
     }
-  return ((hash & CH_MAX_INITIAL_MASK) << BITS_PER_COL) +
-    (hash2 & BITS_PER_COL_MASK);
+
+  return(h & (CH_MAX-1));
 }
 
 unsigned int hash_whowas_name(char *name)
 {
-  register unsigned char *nname = (unsigned char *) name;
-  register unsigned int hash = 0;
-  register int hash2 = 0;
-  register int ret;
-  register char lower;
-  
-  while (*nname)
+  unsigned h = 0;
+
+  while (*name)
     {
-      lower = tolower(*nname);
-      hash = (hash << 1) + lower;
-      hash2 = (hash2 >> 1) + lower;
-      nname++;
+      h = (h << 4) - (h + (unsigned char)tolower(*name++));
     }
-  ret = ((hash & WW_MAX_INITIAL_MASK) << BITS_PER_COL) +
-    (hash2 & BITS_PER_COL_MASK);
-  return ret;
+
+  return(h & (WW_MAX-1));
 }
 
 /*
- * clear_*_hash_table
+ * clear_client_hash_table
  *
  * Nullify the hashtable and its contents so it is completely empty.
  */
