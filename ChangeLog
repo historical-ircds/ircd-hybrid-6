@@ -1,3 +1,15 @@
+db          2001/12/10 03:03:50 EST	(20011210_6)
+
+  Modified files:
+    src                  m_kline.c 
+  Log:
+  - include oper_reason in dlines
+  
+  Revision  Changes    Path
+  1.70      +2 -0      ircd-hybrid-6/src/m_kline.c
+
+
+
 db          2001/12/10 02:18:55 EST	(20011210_5)
 
   Modified files:
