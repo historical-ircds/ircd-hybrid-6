@@ -1,3 +1,10 @@
+*** 20011130_1 by db
+- remove BOTCHECK.
+  It is obsolete in todays efnet world. Its functionality is replaced
+  by X lines anyway.
+
+
+
 *** 20011129_16 by wcampbel
 Corrected the application of the TKLINE expire patch, apparently diff
 created two sections that looked identical.
