@@ -1,3 +1,7 @@
+*** 20010810_2 by leeh
+- added documentation for TS5
+
+
 *** 20010810_1 by leeh
 - wrapped TS5 in #ifdef's
   I need to add doc/ts5.txt later
