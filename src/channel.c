@@ -1516,7 +1516,9 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
+#ifdef OLD_NON_RED
 	      if(!(chptr->mode.mode & MODE_INVITEONLY))
+#endif
 		{
 		  chptr->mode.mode |= MODE_INVITEONLY;
 		  *mbufw++ = '+';
@@ -1529,7 +1531,9 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
+#ifdef OLD_NON_RED
 	      if(chptr->mode.mode & MODE_INVITEONLY)
+#endif
 		{
 		  chptr->mode.mode &= ~MODE_INVITEONLY;
 		  *mbufw++ = '-';
@@ -1564,7 +1568,9 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
+#ifdef OLD_NON_RED
 	      if(!(chptr->mode.mode & MODE_MODERATED))
+#endif
 		{
 		  chptr->mode.mode |= MODE_MODERATED;
 		  *mbufw++ = '+';
@@ -1577,7 +1583,9 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
+#ifdef OLD_NON_RED
 	      if(chptr->mode.mode & MODE_MODERATED)
+#endif
 		{
 		  chptr->mode.mode &= ~MODE_MODERATED;
 		  *mbufw++ = '-';
@@ -1612,7 +1620,9 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
+#ifdef OLD_NON_RED
 	      if(!(chptr->mode.mode & MODE_NOPRIVMSGS))
+#endif
 		{
 		  chptr->mode.mode |= MODE_NOPRIVMSGS;
 		  *mbufw++ = '+';
@@ -1625,7 +1635,9 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
+#ifdef OLD_NON_RED
 	      if(chptr->mode.mode & MODE_NOPRIVMSGS)
+#endif
 		{
 		  chptr->mode.mode &= ~MODE_NOPRIVMSGS;
 		  *mbufw++ = '-';
@@ -1677,7 +1689,9 @@ static  void     set_mode(aClient *cptr,
 		  chptr->mode.mode &= ~MODE_SECRET;
 		}
 #endif
+#ifdef OLD_NON_RED
 	      if(!(chptr->mode.mode & MODE_PRIVATE))
+#endif
 		{
 		  chptr->mode.mode |= MODE_PRIVATE;
 		  *mbufw++ = '+';
@@ -1690,7 +1704,9 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
+#ifdef OLD_NON_RED
 	      if(chptr->mode.mode & MODE_PRIVATE)
+#endif
 		{
 		  chptr->mode.mode &= ~MODE_PRIVATE;
 		  *mbufw++ = '-';
@@ -1744,7 +1760,9 @@ static  void     set_mode(aClient *cptr,
 		  chptr->mode.mode &= ~MODE_PRIVATE;
 		}
 #endif
+#ifdef OLD_NON_RED
 	      if(!(chptr->mode.mode & MODE_SECRET))
+#endif
 		{
 		  chptr->mode.mode |= MODE_SECRET;
 		  *mbufw++ = '+';
@@ -1757,7 +1775,9 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
+#ifdef OLD_NON_RED
 	      if(chptr->mode.mode & MODE_SECRET)
+#endif
 		{
 		  chptr->mode.mode &= ~MODE_SECRET;
 		  *mbufw++ = '-';
@@ -1792,7 +1812,9 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
+#ifdef OLD_NON_RED
 	      if(!(chptr->mode.mode & MODE_TOPICLIMIT))
+#endif
 		{
 		  chptr->mode.mode |= MODE_TOPICLIMIT;
 		  *mbufw++ = '+';
@@ -1805,7 +1827,9 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
+#ifdef OLD_NON_RED
 	      if(chptr->mode.mode & MODE_TOPICLIMIT)
+#endif
 		{
 		  chptr->mode.mode &= ~MODE_TOPICLIMIT;
 		  *mbufw++ = '-';
