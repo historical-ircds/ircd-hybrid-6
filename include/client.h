@@ -461,7 +461,7 @@ struct Client
 #define SetOperDie(x)           ((x)->flags2 |= FLAGS2_OPER_DIE)
 #define IsOperDie(x)            ((x)->flags2 & FLAGS2_OPER_DIE)
 #define SetOperRehash(x)        ((x)->flags2 |= FLAGS2_OPER_REHASH)
-#define IsOperRehash(x)         ((x)->flags2 &= FLAGS2_OPER_REHASH)
+#define IsOperRehash(x)         ((x)->flags2 & FLAGS2_OPER_REHASH)
 #define CBurst(x)		((x)->flags2 & FLAGS2_CBURST)
 
 /*

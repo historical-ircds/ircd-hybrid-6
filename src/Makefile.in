@@ -42,6 +42,7 @@ SRCS = \
 	packet.c \
 	parse.c \
 	res.c \
+	restart.c \
 	s_auth.c \
 	s_bsd.c \
 	s_conf.c \

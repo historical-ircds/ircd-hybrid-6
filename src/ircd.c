@@ -36,6 +36,7 @@
 #include "send.h"
 #include "hash.h"
 #include "fdlist.h"
+#include "restart.h"
 
 #include <string.h>
 #include <time.h>
@@ -90,17 +91,15 @@ aClient *local_cptr_list = NULL;
 aClient *oper_cptr_list  = NULL;
 aClient *serv_cptr_list  = NULL;
 
-void	    server_reboot();
-void	    restart(char*);
 static void open_debugfile();
-static void setup_signals();
 static void write_pidfile(void);
 
 static void initialize_global_set_options(void);
 static void initialize_message_files(void);
 static time_t io_loop(time_t);
 
-static char **myargv;
+char    **myargv;
+int	dorehash = 0;
 
 int	portnum = -1;	              /* Server port number, listening this */
 
@@ -110,7 +109,7 @@ char	*debugmode = "";		/*  -"-    -"-   -"-  */
 
 extern  void *edata;
 
-static	int	dorehash = 0;
+
 int     rehashed = YES;
 int     dline_in_progress = NO;	/* killing off matching D lines ? */
 time_t	nextconnect = 1;	/* time for next try_connections call */
@@ -131,92 +130,6 @@ void s_monitor()
 #endif
 }
 #endif
-
-void s_die()
-{
-  flush_connections(me.fd);
-#ifdef	USE_SYSLOG
-  syslog(LOG_CRIT, "Server killed By SIGTERM");
-#endif
-  exit(-1);
-}
-
-static void s_rehash()
-{
-  dorehash = 1;
-#if !defined(POSIX_SIGNALS)
-  signal(SIGHUP, s_rehash);	/* sysV -argv */
-#endif
-}
-
-void restart(char *mesg)
-{
-  static int was_here = NO; /* redundant due to restarting flag below */
-
-  if (was_here)
-    abort();
-  was_here = YES;
-
-#ifdef	USE_SYSLOG
-  syslog(LOG_WARNING, "Restarting Server because: %s, memory data limit: %ld",
-         mesg, edata );
-#endif
-  if (bootopt & BOOT_STDERR)
-    {
-      fprintf(stderr, "Restarting Server because: %s, memory: %ld\n",
-	      mesg, (unsigned long)edata);
-    }
-  server_reboot();
-}
-
-void s_restart()
-{
-  static int restarting = 0;
-
-#ifdef	USE_SYSLOG
-  syslog(LOG_WARNING, "Server Restarting on SIGINT");
-#endif
-  if (restarting == 0)
-    {
-      /* Send (or attempt to) a dying scream to oper if present */
-
-      restarting = 1;
-      server_reboot();
-    }
-}
-
-void server_reboot()
-{
-  int i;
-  
-  sendto_ops("Aieeeee!!!  Restarting server... memory: %d",
-	     edata );
-
-  Debug((DEBUG_NOTICE,"Restarting server..."));
-  flush_connections(me.fd);
-
-#ifdef USE_SYSLOG
-  closelog();
-#endif
-
-  for (i = 3; i < MAXCONNECTIONS; i++)
-    close(i);
-  if (!(bootopt & (BOOT_TTY | BOOT_DEBUG | BOOT_STDERR)))
-    close(2);
-  close(1);
-  close(0);
-  execv(SPATH, myargv);
-
-#ifdef USE_SYSLOG
-  /* Have to reopen since it has been closed above */
-  openlog(myargv[0], LOG_PID|LOG_NDELAY, LOG_FACILITY);
-  syslog(LOG_CRIT, "execv(%s,%s) failed: %m\n", SPATH, myargv[0]);
-  closelog();
-#endif
-  Debug((DEBUG_FATAL,"Couldn't restart server: %s", strerror(errno)));
-  exit(-1);
-}
-
 
 /*
  * try_connections
@@ -1365,62 +1278,6 @@ static void open_debugfile()
       Debug((DEBUG_FATAL, "Debug: File <%s> Level: %d at %s",
 	     name, debuglevel, myctime(time(NULL))));
     }
-#endif
-}
-
-static	void	setup_signals()
-{
-#ifdef	POSIX_SIGNALS
-  struct	sigaction act;
-
-  act.sa_handler = SIG_IGN;
-  act.sa_flags = 0;
-  sigemptyset(&act.sa_mask);
-  sigaddset(&act.sa_mask, SIGPIPE);
-  sigaddset(&act.sa_mask, SIGALRM);
-# ifdef	SIGWINCH
-  sigaddset(&act.sa_mask, SIGWINCH);
-  sigaction(SIGWINCH, &act, NULL);
-# endif
-  sigaction(SIGPIPE, &act, NULL);
-  act.sa_handler = dummy;
-  sigaction(SIGALRM, &act, NULL);
-  act.sa_handler = s_rehash;
-  sigemptyset(&act.sa_mask);
-  sigaddset(&act.sa_mask, SIGHUP);
-  sigaction(SIGHUP, &act, NULL);
-  act.sa_handler = s_restart;
-  sigaddset(&act.sa_mask, SIGINT);
-  sigaction(SIGINT, &act, NULL);
-  act.sa_handler = s_die;
-  sigaddset(&act.sa_mask, SIGTERM);
-  sigaction(SIGTERM, &act, NULL);
-
-#else
-# ifndef	HAVE_RELIABLE_SIGNALS
-  signal(SIGPIPE, dummy);
-#  ifdef	SIGWINCH
-  signal(SIGWINCH, dummy);
-#  endif
-# else
-#  ifdef	SIGWINCH
-  signal(SIGWINCH, SIG_IGN);
-#  endif
-  signal(SIGPIPE, SIG_IGN);
-# endif
-  signal(SIGALRM, dummy);   
-  signal(SIGHUP, s_rehash);
-  signal(SIGTERM, s_die); 
-  signal(SIGINT, s_restart);
-#endif
-
-#ifdef RESTARTING_SYSTEMCALLS
-  /*
-  ** At least on Apollo sr10.1 it seems continuing system calls
-  ** after signal is the default. The following 'siginterrupt'
-  ** should change that default to interrupting calls.
-  */
-  siginterrupt(SIGALRM, 1);
 #endif
 }
 
