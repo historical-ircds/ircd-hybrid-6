@@ -1,3 +1,15 @@
+db          2001/12/13 18:50:47 EST	(20011213_2)
+
+  Modified files:
+    src                  m_set.c 
+  Log:
+  - committed hwy's comment change
+  
+  Revision  Changes    Path
+  1.7       +7 -1      ircd-hybrid-6/src/m_set.c
+
+
+
 leeh        2001/12/13 18:16:41 EST	(20011213_1)
 
   Modified files:
