@@ -1,3 +1,15 @@
+androsyn    2002/06/12 15:31:24 EDT	(20020612_0)
+
+  Modified files:
+    src                  sprintf_irc.c 
+  Log:
+  Make %lu return 0 for 0 and not 000000000
+  
+  Revision  Changes    Path
+  1.12      +6 -0      ircd-hybrid-6/src/sprintf_irc.c
+
+
+
 androsyn    2002/04/28 04:13:05 EDT	(20020428_0)
 
   Modified files:
