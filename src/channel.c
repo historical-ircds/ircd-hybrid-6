@@ -1611,9 +1611,19 @@ static  void     set_mode(aClient *cptr,
 	  if(IsAnOper(sptr))
 	    {
 	      if (whatt == MODE_ADD)
-		chptr->mode.mode |= MODE_JUPED;
+		{
+		  chptr->mode.mode |= MODE_JUPED;
+		  sendto_realops("%s!%s@%s juping locally Channel %s)",
+				 sptr->name, sptr->user->username,
+				 sptr->sockhost, chptr->chname);
+		}
 	      else if(whatt == MODE_DEL)
-		chptr->mode.mode &= ~MODE_JUPED;
+		{
+		  chptr->mode.mode &= ~MODE_JUPED;
+		  sendto_realops("%s!%s@%s unjuping locally Channel %s)",
+				 sptr->name, sptr->user->username,
+				 sptr->sockhost, chptr->chname);
+		}
 	    }
 	  break;
 #endif
@@ -1971,6 +1981,10 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key)
 #ifdef JUPE_CHANNEL
   if( chptr->mode.mode & MODE_JUPED )
     {
+      sendto_ops_lev(SPY_LEV,
+	     "User %s (%s@%s) is attemping to join locally juped channel %s",
+		     sptr->name,
+		     sptr->user->username, sptr->user->host,chptr->chname);
       sendto_one(sptr, err_str(ERR_JUPEDCHAN),
 		 me.name, sptr->name, "JOIN");
       return (ERR_JUPEDCHAN);

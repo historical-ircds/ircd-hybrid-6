@@ -2,6 +2,10 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b63   6-May-1999
+* SPY_LEVEL notices for clients attempting to join juped channel
+* sendto_realop notices when mode +/-j #channel is used
+	
 version hybrid-6-b62   4-May-1999
 * Added ANTI_DRONE_FLOOD code	
 * Added Channel jupe code, Q line of form Q:\#channel:reason

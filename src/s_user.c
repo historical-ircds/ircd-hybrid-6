@@ -1537,6 +1537,13 @@ int	m_nick(aClient *cptr,
   ** Note: From this point forward it can be assumed that
   ** acptr != sptr (point to different client structures).
   */
+
+#ifdef NICK_KILL_LOCALLY
+  if(IsServer(cptr))
+    sendto_serv_butone(cptr, ":%s NICK %s :%ld",
+		       parv[0], nick, sptr->tsinfo);
+#endif
+
   /*
   ** If the older one is "non-person", the new entry is just
   ** allowed to overwrite it. Just silently drop non-person,
@@ -1557,10 +1564,13 @@ int	m_nick(aClient *cptr,
 	    sendto_ops("Nick Collision on %s(%s(NOUSER) <- %s!%s@%s)(TS:%s)",
 		   acptr->name, acptr->from->name, parv[1], parv[5], parv[6],
 		   cptr->name);
+
+#ifndef NICK_KILL_LOCALLY
 	    sendto_serv_butone(NULL, /* all servers */
 			   ":%s KILL %s :%s (%s(NOUSER) <- %s!%s@%s)(TS:%s)", me.name,
 			   acptr->name, me.name, acptr->from->name, parv[1], parv[5],
 			   parv[6], cptr->name);
+#endi
 	    acptr->flags |= FLAGS_KILLED;
 	    /* Having no USER struct should be ok... */
 	    return exit_client(cptr, acptr, &me,
@@ -1614,6 +1624,7 @@ int	m_nick(aClient *cptr,
 	  ircstp->is_kill++;
 	  sendto_one(acptr, err_str(ERR_NICKCOLLISION),
 		     me.name, acptr->name, acptr->name);
+#ifndef NICK_KILL_LOCALLY
 	  sendto_serv_butone(NULL, /* all servers */
 			     ":%s KILL %s :%s (%s <- %s)",
 			     me.name, acptr->name, me.name,
@@ -1623,6 +1634,7 @@ int	m_nick(aClient *cptr,
 			     ** the other info would be lost
 			     */
 			     get_client_name(cptr, FALSE));
+#endif
 	  acptr->flags |= FLAGS_KILLED;
 	  return exit_client(cptr, acptr, &me, "Nick collision");
 	}
@@ -1648,11 +1660,15 @@ int	m_nick(aClient *cptr,
 	      ircstp->is_kill++;
 	      sendto_one(acptr, err_str(ERR_NICKCOLLISION),
 			 me.name, acptr->name, acptr->name);
+
+#ifndef NICK_KILL_LOCALLY
 	      sendto_serv_butone(sptr, /* all servers but sptr */
 				 ":%s KILL %s :%s (%s <- %s)",
 				 me.name, acptr->name, me.name,
 				 acptr->from->name,
 				 get_client_name(cptr, FALSE));
+#endif
+
 	      acptr->flags |= FLAGS_KILLED;
 	      (void)exit_client(cptr, acptr, &me, "Nick collision");
 	      return nickkilldone(cptr,sptr,parc,parv,newts,nick);
@@ -1675,15 +1691,20 @@ int	m_nick(aClient *cptr,
       ircstp->is_kill++;
       sendto_one(acptr, err_str(ERR_NICKCOLLISION),
 		 me.name, acptr->name, acptr->name);
+
+#ifndef NICK_KILL_LOCALLY
       sendto_serv_butone(NULL, /* KILL old from outgoing servers */
 			 ":%s KILL %s :%s (%s(%s) <- %s)",
 			 me.name, sptr->name, me.name, acptr->from->name,
 			 acptr->name, get_client_name(cptr, FALSE));
+#endif
       ircstp->is_kill++;
+#ifndef NICK_KILL_LOCALLY
       sendto_serv_butone(NULL, /* Kill new from incoming link */
 			 ":%s KILL %s :%s (%s <- %s(%s))",
 			 me.name, acptr->name, me.name, acptr->from->name,
 			 get_client_name(cptr, FALSE), sptr->name);
+#endif
       acptr->flags |= FLAGS_KILLED;
       (void)exit_client(NULL, acptr, &me, "Nick collision(new)");
       sptr->flags |= FLAGS_KILLED;
@@ -1706,10 +1727,12 @@ int	m_nick(aClient *cptr,
 		       sptr->name, acptr->name, acptr->from->name,
 		       get_client_name(cptr, FALSE));
 	  ircstp->is_kill++;
+#ifndef NICK_KILL_LOCALLY
 	  sendto_serv_butone(cptr, /* KILL old from outgoing servers */
 			     ":%s KILL %s :%s (%s(%s) <- %s)",
 			     me.name, sptr->name, me.name, acptr->from->name,
 			     acptr->name, get_client_name(cptr, FALSE));
+#endif
 	  sptr->flags |= FLAGS_KILLED;
 	  if (sameuser)
 	    return exit_client(cptr, sptr, &me, "Nick collision(old)");
@@ -1730,11 +1753,13 @@ int	m_nick(aClient *cptr,
 	  ircstp->is_kill++;
 	  sendto_one(acptr, err_str(ERR_NICKCOLLISION),
 		     me.name, acptr->name, acptr->name);
+#ifndef NICK_KILL_LOCALLY
 	  sendto_serv_butone(sptr, /* all servers but sptr */
 			     ":%s KILL %s :%s (%s <- %s)",
 			     me.name, acptr->name, me.name,
 			     acptr->from->name,
 			     get_client_name(cptr, FALSE));
+#endif
 	  acptr->flags |= FLAGS_KILLED;
 	  (void)exit_client(cptr, acptr, &me, "Nick collision");
 	  /* goto nickkilldone; */
