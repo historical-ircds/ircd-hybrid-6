@@ -477,11 +477,11 @@ void clear_ip_hash_table()
 /* 
  * find_or_add_ip()
  *
- * inputs                - cptr
- *                        - name
+ * inputs	- cptr
+ *              - name
  *
- * output                - pointer to an IP_ENTRY element
- * side effects        -
+ * output       - pointer to an IP_ENTRY element
+ * side effects -
  *
  * If the ip # was not found, a new IP_ENTRY is created, and the ip
  * count set to 0.
@@ -604,10 +604,10 @@ static int count_users_on_this_ip(IP_ENTRY *ip_list,
  *
  * inputs        - unsigned long IP address value
  * output        - NONE
- * side effects        - ip address listed, is looked up in ip hash table
- *                  and number of ip#'s for that ip decremented.
- *                  if ip # count reaches 0, the IP_ENTRY is returned
- *                  to the free_ip_enties link list.
+ * side effects  - ip address listed, is looked up in ip hash table
+ *                 and number of ip#'s for that ip decremented.
+ *                 if ip # count reaches 0, the IP_ENTRY is returned
+ *                 to the free_ip_enties link list.
  */
 
 #ifdef LIMIT_UH
@@ -691,10 +691,9 @@ void remove_one_ip(unsigned long ip_in)
  * hash_ip()
  * 
  * input        - unsigned long ip address
- * output        - integer value used as index into hash table
- * side effects        - hopefully, none
+ * output       - integer value used as index into hash table
+ * side effects - hopefully, none
  */
-
 
 static int hash_ip(unsigned long ip)
 {
@@ -709,9 +708,9 @@ static int hash_ip(unsigned long ip)
  * count_ip_hash
  *
  * inputs        - pointer to counter of number of ips hashed 
- *                - pointer to memory used for ip hash
+ *               - pointer to memory used for ip hash
  * output        - returned via pointers input
- * side effects        - NONE
+ * side effects  - NONE
  *
  * number of hashed ip #'s is counted up, plus the amount of memory
  * used in the hash.
@@ -1214,7 +1213,10 @@ aConfItem *find_conf_entry(aConfItem *aconf, int mask)
 /*
  * find_special_conf
  *
- * - looks for a match on name field
+ * inputs	- pointer to char string to find
+ * 		- mask of type of conf to compare on
+ * output	- NULL or pointer to found aConfItem
+ * side effects	- looks for a match on name field
  */
 aConfItem *find_special_conf(char *to_find, int mask)
 {
@@ -1246,7 +1248,11 @@ aConfItem *find_special_conf(char *to_find, int mask)
 /*
  * find_q_line
  *
- * - looks for matches on Q lined nick
+ * inputs	- nick to find
+ *		- user to match
+ *		- host to mask
+ * output	- YES if found, NO if not found
+ * side effects	- looks for matches on Q lined nick
  */
 int find_q_line(char *nickToFind,char *user,char *host)
 {
@@ -1311,6 +1317,13 @@ static void clear_q_lines()
   q_conf = (aQlineItem *)NULL;
 }
 
+/*
+ * report_qlines
+ *
+ * inputs	- pointer to client to report to
+ * output	- none
+ * side effects	- all Q lines are listed to client 
+ */
 
 void report_qlines(aClient *sptr)
 {
@@ -1468,8 +1481,12 @@ static void clear_special_conf(aConfItem **this_conf)
   return;
 }
 
-
 /*
+ * rehash_dump
+ *
+ * inputs	- pointer to client requesting rehash dump
+ * output	-
+ * side effects	-
  * partially reconstruct an ircd.conf file (tsk tsk, you should have
  * been making backups;but we've all done it)
  * I just cull out the N/C/O/o/A lines, you'll have to finish
@@ -1478,7 +1495,7 @@ static void clear_special_conf(aConfItem **this_conf)
  * -Dianora
  */
 
-int rehash_dump(aClient *sptr,char *parv0)
+int rehash_dump(aClient *sptr)
 {
   aConfItem *aconf;
   FBFILE* out;
@@ -1495,12 +1512,12 @@ int rehash_dump(aClient *sptr,char *parv0)
   if ((out = fbopen(ircd_dump_file, "a")) == 0)
     {
       sendto_one(sptr, ":%s NOTICE %s :Problem opening %s ",
-                 me.name, parv0, ircd_dump_file);
+                 me.name, sptr->name, ircd_dump_file);
       return -1;
     }
   else
     sendto_one(sptr, ":%s NOTICE %s :Dump ircd.conf to %s ",
-               me.name, parv0, ircd_dump_file);
+               me.name, sptr->name, ircd_dump_file);
 
   for(aconf = ConfigItemList; aconf; aconf = aconf->next)
     {

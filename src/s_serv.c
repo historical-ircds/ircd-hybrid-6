@@ -3169,7 +3169,7 @@ int	m_rehash(aClient *cptr,
       else if(irccmp(parv[1],"dump") == 0)
 	{
 	  sendto_ops("%s is dumping conf file",parv[0]);
-	  rehash_dump(sptr,parv[0]);
+	  rehash_dump(sptr);
 	  found = YES;
 	}
       else if(irccmp(parv[1],"dlines") == 0)

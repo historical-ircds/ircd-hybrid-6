@@ -93,7 +93,6 @@ extern  void	report_glines(aClient *);	/* defined in m_gline.c */
 
 extern	int	find_restrict (aClient *);
 extern	int	rehash (aClient *, aClient *, int);
-extern  int	rehash_dump (aClient *,char *);
 extern  int     lock_kline_file ();
 extern  void    report_error_on_tty(const char* message); /* ircd.c */
 
