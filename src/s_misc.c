@@ -402,46 +402,4 @@ char *show_capabilities(aClient *acptr)
 }
 
 
-/*
- * show_servers
- *
- * inputs        - aClient pointer to client to show server list to
- *                - name of client
- * output        - NONE
- * side effects        -
- */
-
-void show_servers(aClient *cptr, char *name)
-{
-  register aClient *cptr2;
-  register int j=0;                /* used to count servers */
-
-  for(cptr2 = serv_cptr_list; cptr2; cptr2 = cptr2->next_server_client)
-    {
-      j++;
-      sendto_one(cptr, ":%s %d %s :%s (%s!%s@%s) Idle: %d",
-                 me.name, RPL_STATSDEBUG, name, cptr2->name,
-                 (cptr2->serv->by[0] ? cptr2->serv->by : "Remote."), 
-                 "*", "*", timeofday - cptr2->lasttime);
-#if 0
-      sendto_one(cptr, ":%s %d %s :%s (%s!%s@%s) Idle: %d",
-                 me.name, RPL_STATSDEBUG, name, cptr2->name,
-                 (cptr2->serv->by[0] ? cptr2->serv->by : "Remote."), 
-                 ((cptr2->serv->user) ? cptr2->serv->user->username : "*"), 
-                 ((cptr2->serv->user) ? cptr2->serv->user->host : "*"), 
-                 timeofday - cptr2->lasttime);
-      /*
-       * NOTE: moving the username and host to the client struct
-       * makes the names in the server->user struct no longer available
-       * IMO this is not a big problem because as soon as the user that
-       * started the connection leaves the user info has to go away
-       * anyhow. Simply showing the nick should be enough here.
-       * --Bleep
-       */ 
-#endif
-    }
-
-  sendto_one(cptr, ":%s %d %s :%d Server%s", me.name, RPL_STATSDEBUG,
-             name, j, (j==1) ? "" : "s");
-}
 

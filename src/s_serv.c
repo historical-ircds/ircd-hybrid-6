@@ -101,10 +101,10 @@ extern char *small_file_date(time_t);	/* defined in s_misc.c */
 #endif
 
 extern void s_die(void);		/* defined in ircd.c as VOIDSIG */
-extern void show_servers(aClient *,char *); /* defined in s_misc.c */
 extern void count_memory(aClient *,char *); /* defined in s_debug.c */
 
 /* Local function prototypes */
+static void show_servers(aClient *);
 static void show_opers(aClient *); 
 static void set_autoconn(aClient *,char *,char *,int);
 static void report_specials(aClient *,int,int);
@@ -1710,7 +1710,7 @@ int	m_stats(aClient *cptr,
       }
 
     case 'v' : case 'V' :
-      show_servers(sptr, parv[0]);
+      show_servers(sptr);
       valid_stats++;
       break;
 
@@ -3894,5 +3894,41 @@ static void show_opers(aClient *cptr)
     }
 
   sendto_one(cptr, ":%s %d %s :%d OPER%s", me.name, RPL_STATSDEBUG,
+             cptr->name, j, (j==1) ? "" : "s");
+}
+
+/*
+ * show_servers
+ *
+ * inputs        - aClient pointer to client to show server list to
+ *               - name of client
+ * output        - NONE
+ * side effects        -
+ */
+
+static void show_servers(aClient *cptr)
+{
+  register aClient *cptr2;
+  register int j=0;                /* used to count servers */
+
+  for(cptr2 = serv_cptr_list; cptr2; cptr2 = cptr2->next_server_client)
+    {
+      j++;
+      sendto_one(cptr, ":%s %d %s :%s (%s!%s@%s) Idle: %d",
+                 me.name, RPL_STATSDEBUG, cptr->name, cptr2->name,
+                 (cptr2->serv->by[0] ? cptr2->serv->by : "Remote."), 
+                 "*", "*", timeofday - cptr2->lasttime);
+
+      /*
+       * NOTE: moving the username and host to the client struct
+       * makes the names in the server->user struct no longer available
+       * IMO this is not a big problem because as soon as the user that
+       * started the connection leaves the user info has to go away
+       * anyhow. Simply showing the nick should be enough here.
+       * --Bleep
+       */ 
+    }
+
+  sendto_one(cptr, ":%s %d %s :%d Server%s", me.name, RPL_STATSDEBUG,
              cptr->name, j, (j==1) ? "" : "s");
 }
