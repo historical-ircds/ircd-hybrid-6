@@ -1211,7 +1211,7 @@ static void initialize_global_set_options(void)
 }
 
 /*
- * initalialize_message_files
+ * initialize_message_files
  *
  * inputs       - none
  * output       - none

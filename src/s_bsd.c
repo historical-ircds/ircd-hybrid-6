@@ -72,10 +72,8 @@
 fd_set*  read_set;
 fd_set*  write_set;
 
-#ifndef HAVE_FD_ALLOC
 fd_set  readset;
 fd_set  writeset;
-#endif
 
 #endif /* USE_POLL_ */
 
@@ -324,9 +322,7 @@ void init_sys()
             "recompile with -DFD_SETSIZE=%d\n", MAXCONNECTIONS);
           exit(-1);
         }
-#ifndef HAVE_FD_ALLOC
       printf("Value of FD_SETSIZE is %d\n", FD_SETSIZE);
-#endif
 #endif /* USE_POLL */
       printf("Value of NOFILE is %d\n", NOFILE);
     }
