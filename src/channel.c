@@ -943,14 +943,20 @@ static  void     set_mode(aClient *cptr,
    * grrrr for now I'll stick the params into pbufw without ID's
    * -Dianora
    */
+  /* *sigh* FOR YOU Roger, and ONLY for you ;-)
+   * lets stick mode/params that only the newer servers will understand
+   * into modebuf_new/parabuf_new 
+   */
+
+  char	modebuf_new[MODEBUFLEN];
+  char	parabuf_new[MODEBUFLEN];
 
   char	*mbufw = modebuf, *mbuf2w = modebuf2;
   char	*pbufw = parabuf, *pbuf2w = parabuf2;
-  int	curr_type, fm_type = 0;  
-	  /* 0 = none,
-	   * 1 = other modes of different types that can mix 
-	   * on a single mode change from the user
-	   */
+
+  char  *mbufw_new = modebuf_new;
+  char  *pbufw_new = parabuf_new;
+
   int	ischop, isok, isdeop, chan_op;
 
   chan_op = is_chan_op(sptr, chptr);
@@ -1168,9 +1174,9 @@ static  void     set_mode(aClient *cptr,
 	   * But that would mean I'd have to keep two strings
 	   * one for local clients, and one for remote servers,
 	   * one with the 'e' strings, one without.
-	   * I'm not going to bother, the remote server will complain
-	   * but I won't worry about it. I will however, not
-	   * send the 'e' strings in the connect burst at least.
+	   * I added another parameter buf and mode buf for "new"
+	   * capabilities.
+	   *
 	   * -Dianora
 	   */
 
@@ -1245,13 +1251,25 @@ static  void     set_mode(aClient *cptr,
 		((whatt & MODE_DEL) && !del_exceptid(chptr, arg))))
 	    break;
 
+	  /* This stuff can go back in when all servers understand +e 
+	   * with the pbufw_new nonsense removed -Dianora
+	   */
+
+	  /*
 	  *mbufw++ = plus;
 	  *mbufw++ = 'e';
 	  strcpy(pbufw, arg);
 	  pbufw += strlen(pbufw);
 	  *pbufw++ = ' ';
+	  */
 	  len += tmp + 1;
 	  opcnt++;
+
+	  *mbufw_new++ = plus;
+	  *mbufw_new++ = 'e';
+	  strcpy(pbufw_new, arg);
+	  pbufw_new += strlen(pbufw_new);
+	  *pbufw_new++ = ' ';
 
 	  break;
 
@@ -1309,7 +1327,7 @@ static  void     set_mode(aClient *cptr,
 
 
 	  /* Ignore colon at beginning of ban string.
-	   * Unfortunately,  I can't ignore all such strings,
+	   * Unfortunately, I can't ignore all such strings,
 	   * because otherwise the channel could get desynced.
 	   * I can at least, stop local clients from placing a ban
 	   * with a leading colon.
@@ -1414,6 +1432,9 @@ static  void     set_mode(aClient *cptr,
 	  /* Traditionally, these are handled separately
 	   * but I decided to combine them all into this one case
 	   * statement keeping it all sane
+	   *
+	   * The disadvantage is a lot more code duplicated ;-/
+	   *
 	   * -Dianora
 	   */
 
@@ -1708,19 +1729,33 @@ static  void     set_mode(aClient *cptr,
   ** together and send it along.
   */
 
-  *mbufw = *mbuf2w = *pbufw = *pbuf2w = '\0';
+  *mbufw = *mbuf2w = *pbufw = *pbuf2w = *mbufw_new = *pbufw_new = '\0';
   collapse_signs(modebuf);
 /*  collapse_signs(modebuf2); */
+  collapse_signs(modebuf_new);
 
-  if (!*modebuf)
-    return;
+  if(*modebuf)
+    {
+      sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", 
+			   sptr->name, chptr->chname,
+			   modebuf, parabuf);
 
-  sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", 
+      sendto_match_servs(chptr, cptr, ":%s MODE %s %s %s",
 			 sptr->name, chptr->chname,
 			 modebuf, parabuf);
-  sendto_match_servs(chptr, cptr, ":%s MODE %s %s %s",
-		     sptr->name, chptr->chname,
-		     modebuf, parabuf);
+    }
+
+  if(*modebuf_new)
+    {
+      sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", 
+			     sptr->name, chptr->chname,
+			     modebuf_new, parabuf_new);
+
+      sendto_match_cap_servs(chptr, cptr, CAP_EX, ":%s MODE %s %s %s",
+			     sptr->name, chptr->chname,
+			     modebuf_new, parabuf_new);
+    }
+
 		     
   return;
 }

@@ -209,6 +209,9 @@ extern	void	sendto_serv_butone();
 /*VARARGS3*/
 extern	void	sendto_cap_serv_butone();
 
+/*VARARGS3*/
+extern  void	sendto_match_cap_servs();
+
 /*VARARGS2*/
 extern	void	sendto_common_channels();
 /*VARARGS3*/

@@ -831,6 +831,55 @@ va_dcl
 }
 
 /*
+ * sendto_match_cap_servs
+ *
+ * send to all servers which match the mask at the end of a channel name
+ * (if there is a mask present) or to all if no mask, and match the capability
+ */
+#ifndef	USE_VARARGS
+/*VARARGS*/
+void	sendto_match_cap_servs(chptr, from, cap, format, p1,p2,p3,p4,p5,p6,p7,p8,p9)
+aChannel *chptr;
+aClient	*from;
+int     cap;
+char	*format, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8, *p9;
+{
+#else
+void	sendto_match_cap_servs(chptr, from, cap, format, va_alist)
+aChannel *chptr;
+aClient	*from;
+int     cap;
+char	*format;
+va_dcl
+{
+  va_list	vl;
+#endif
+  register aClient	*cptr;
+
+#ifdef	USE_VARARGS
+  va_start(vl);
+#endif
+
+  /* USE_VARARGS IS BROKEN someone volunteer to fix it :-) -Dianora */
+
+  if (chptr)
+    {
+      if (*chptr->chname == '&')
+	return;
+    }
+
+  for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
+    {
+      if (cptr == from)
+        continue;
+      if(!IsCapable(cptr,cap))
+	continue;
+      sendto_one(cptr, format, p1, p2, p3, p4, p5, p6, p7, p8, p9);
+    }
+  return;
+}
+
+/*
  * sendto_match_butone
  *
  * Send to all clients which match the mask in a way defined on 'what';
