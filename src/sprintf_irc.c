@@ -350,6 +350,8 @@ vsprintf_irc(register char *str, register const char *format,
 			    
 			    *str++ = (v1/10) + '0';
 			    *str++ = v1%10 + '0';
+
+			    continue;
 			  }
 
 			if (c == 'd')
