@@ -1125,6 +1125,15 @@ static	int	register_user(aClient *cptr,
 	        }
 #endif
 
+	      if(!IsAnOper(sptr) && find_conf_name(sptr->info,CONF_XLINE))
+		{
+		  sendto_realops("Bad user info [%s], dumping user %s",
+				 sptr->info,get_client_name(cptr, FALSE));
+
+		  return exit_client(cptr, sptr, &me, "Bad user info");
+
+		}
+
 #if defined(EXTRA_BOT_NOTICES) && defined(BOT_GCOS_WARN)
 
 		  sprintf(botgecos, "/msg %s hello", nick);
@@ -1295,6 +1304,15 @@ int	m_nick(aClient *cptr,
   if (MyConnect(sptr) && (s = (char *)index(parv[1], '~')))
     *s = '\0';
   strncpyzt(nick, parv[1], NICKLEN+1);
+
+  if(!IsAnOper(sptr) && find_conf_name(nick,CONF_QUARANTINED_NICK))
+    {
+      sendto_realops("Quarantined nick [%s], dumping user %s",
+		     nick,get_client_name(cptr, FALSE));
+
+      return exit_client(cptr, sptr, &me, "quarantined nick");
+    }
+
   /*
    * if do_nick_name() returns a null name OR if the server sent a nick
    * name and do_nick_name() changed it in some way (due to rules of nick

@@ -123,6 +123,7 @@ extern void count_memory(aClient *,char *);
 static int isnumber(char *);	/* return 0 if not, else return number */
 static char *cluster(char *);
 static void set_autoconn(aClient *,char *,char *,int);
+static void report_specials(aClient *,int,int);
 
 int send_motd(aClient *,aClient *,int, char **,aMessageFile *); 
 static int safe_write(aClient *,char *,char *,int,char *);
@@ -1861,6 +1862,27 @@ static	void	report_configured_links(aClient *sptr,int mask)
   return;
 }
 
+static	void	report_specials(aClient *sptr,int flags,int numeric)
+{
+  static	char	null[] = "<NULL>";
+  aConfItem *aconf;
+  char	*pass, *host;
+
+  for (aconf = conf; aconf; aconf = aconf->next)
+    if (aconf->status & flags)
+      {
+	host = BadPtr(aconf->host) ? null : aconf->host;
+	pass = BadPtr(aconf->passwd) ? null : aconf->passwd;
+
+	sendto_one(sptr, rpl_str(numeric),
+		   me.name,
+		   sptr->name,
+		   host,
+		   pass);
+
+      }
+}
+
 /*
 ** m_stats
 **      parv[0] = sender prefix
@@ -2100,8 +2122,14 @@ int	m_stats(aClient *cptr,
       break;
 
     case 'Q' : case 'q' :
-      sendto_one(sptr,":%s NOTICE %s :This server does not support Q lines",
-               me.name, parv[0]);
+      if(!IsAnOper(sptr))
+	sendto_one(sptr,":%s NOTICE %s :This server does not support Q lines",
+		   me.name, parv[0]);
+      else
+	{
+	  report_specials(sptr,CONF_QUARANTINED_NICK,RPL_STATSQLINE);
+	  valid_stats++;
+	}
       break;
 
     case 'R' : case 'r' :
@@ -2148,6 +2176,14 @@ int	m_stats(aClient *cptr,
       show_servers(sptr, parv[0]);
       valid_stats++;
       break;
+
+    case 'x' : case 'X' :
+      if(IsAnOper(sptr))
+	{
+	  report_specials(sptr,CONF_XLINE,RPL_STATSXLINE);
+	  valid_stats++;
+	}
+      break;;
 
     case 'Y' : case 'y' :
       report_classes(sptr);

@@ -1,4 +1,5 @@
-+hybrid-6 (9/19/98)
++hybrid-6 (9/23/98)
+- Q lines are back, quarantine nick, X line reject gecos info (Dianora)
 - allow users who are invited to walk through any bans/limits (David-R)
 - disallow class -1 in conf file (David-R)
 - allow mode outside channel to see mode limit (David-R)

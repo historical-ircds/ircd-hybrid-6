@@ -159,8 +159,7 @@
 
 #define RPL_UMODEIS          221
 
-#define RPL_STATSBLINE	     222
-#define RPL_STATSELINE	     223
+#define RPL_STATSXLINE	     222
 #define RPL_STATSFLINE	     224
 #define RPL_STATSDLINE	     225
 
