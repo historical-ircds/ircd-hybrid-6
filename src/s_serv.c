@@ -81,6 +81,7 @@ extern int lifesux;		/* defined in ircd.c */
 extern int rehashed;		/* defined in ircd.c */
 extern int dline_in_progress;	/* defined in ircd.c */
 extern int autoconn;		/* defined in ircd.c */
+extern int spare_fd;		/* defined in ircd.c */
 
 #ifdef HIGHEST_CONNECTION
 int     max_connection_count = 1, max_client_count = 1;
@@ -5125,6 +5126,7 @@ int	m_rehash(aClient *cptr,
 		 int parc,
 		 char *parv[])
 {
+  char  sparemsg[80];
   int found = NO;
 
 #ifndef	LOCOP_REHASH
@@ -5146,9 +5148,20 @@ int	m_rehash(aClient *cptr,
       if(mycmp(parv[1],"DNS") == 0)
 	{
 	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], "DNS");
-	  restart_resolver();	/* re-read /etc/resolv.conf */
-	  sendto_ops("%s is rehashing DNS while whistling innocently",
-		 parv[0]);
+          sendto_ops("%s is rehashing DNS while whistling innocently",
+                 parv[0]);
+	  flush_cache();	/* flush the dns cache */
+	  close(spare_fd);
+	  res_init();		/* re-read /etc/resolv.conf */
+	  spare_fd = open("/dev/null",O_RDONLY,0);
+          if ((spare_fd < 0) || (spare_fd > 256))
+            {
+              ircsprintf(sparemsg,"invalid spare_fd %d",spare_fd);
+              restart(sparemsg);
+            }
+	  return 0;
+	  restart_resolver();	/* re-read /etc/resolv.conf AGAIN?
+				   and close/re-open res socket */
 	  found = YES;
 	}
       else if(mycmp(parv[1],"TKLINES") == 0)

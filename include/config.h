@@ -104,8 +104,8 @@
  * -Dianora
  */
 
-#define DPATH   "./"
-#define SPATH   "./ircd"
+#define DPATH   "/usr/local/ircd/"
+#define SPATH   "/usr/local/ircd/ircd"
 #define	CPATH	"ircd.conf"
 #define KPATH   "kline.conf"
 #define	MPATH	"ircd.motd"

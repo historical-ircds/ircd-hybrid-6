@@ -47,8 +47,8 @@
 /***************** MAKE SURE THIS IS CORRECT!!!!!!!!! **************/
 /* ONLY EDIT "HARD_FDLIMIT_" and "INIT_MAXCLIENTS" */
 
-#define HARD_FDLIMIT_   1024
-#define INIT_MAXCLIENTS 800
+#define HARD_FDLIMIT_   512
+#define INIT_MAXCLIENTS 400
 
 /*
  * This is how many 'buffer connections' we allow... 
@@ -92,9 +92,9 @@
  * SPATH = server executable,
  * CPATH = conf file,
  * MPATH = MOTD
- * KPATH = kline conf file 
  * APATH = alternate MOTD for multi-lingual servers
  * i.e. /motd A for second motd
+ * KPATH = kline conf file 
  * 
  * For /restart to work, SPATH needs to be a full pathname
  * (unless "." is in your exec path). -Rodder
@@ -385,16 +385,8 @@
  * its always defined now
  */
 
-/* LINK_WAIT - minimum seconds between use of LINKS
- * Allow a links request only every LINK_WAIT seconds to
- * discourage link lookers. IMO its still legit for "normal" non-opers
- * to do /links but not too often -Dianora
- */
-#define LINK_WAIT 10
-
-/* MOTD_WAIT - minimum seconds between use of MOTD
- * Allow a motd request only every MOTD_WAIT seconds to
- * discourage motd flooders
+/* MOTD_WAIT - minimum seconds between use of MOTD, INFO, HELP, LINKS
+ * before max use count is reset 
  * -Dianora
  */
 #define MOTD_WAIT 10
@@ -459,12 +451,12 @@
  */
 #define	NO_DEFAULT_INVISIBLE
 
-/* NO_DEFAULT_INVISIBLE - clients not +i by default
- * When defined, your users will not automatically be attributed with user
- * mode "i" (i == invisible). Invisibility means people dont showup in
- * WHO or NAMES unless they are on the same channel as you.
+/*
+ * The compression level used for zipped links. (Suggested values: 1 to 5)
+ * Above 4 will only give a rather marginal increase in compression for a
+ * large increase in CPU usage.
  */
-#define	NO_DEFAULT_INVISIBLE
+#define ZIP_LEVEL       2
 
 /* OPER_KILL OPER_REHASH OPER_RESTART OPER_DIE OPER_REMOTE -
  *      restrict what local global-Opers can do
@@ -529,7 +521,7 @@
  * to a leaf which just has 1 server (typically the uplink). Define this
  * correctly for performance reasons.
  */
-#undef	HUB
+#define	HUB
 
 /* R_LINES - support for R: LINES
  * The conf file now allows the existence of R lines, or
@@ -686,8 +678,6 @@
  * When this is defined, channel modes are preserved when this
  * server is split from net until rejoin. i.e. if the channel
  * was +i before this server split, it remains +i during the split
- *
- * DO NOT USE JUST YET on EFNET (It desyncs channels)
  */
 #define PRESERVE_CHANNEL_ON_SPLIT
 
@@ -715,10 +705,12 @@
  * This adds some CPU... you might not want to use this on a large server.
  * However, if defined, and a client is discovered idling more than
  * IDLE_TIME minutes, it is t-klined for 1 minute to discourage
- * reconnects.
+ * reconnects. The idle time is settable via /quote set
+ * /quote set idletime
+ *
  * -Dianora
  */
-#define IDLE_CHECK
+#undef IDLE_CHECK
 #define IDLE_TIME 30
 
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
@@ -993,9 +985,9 @@
 
 /* DEBUGMODE is used mostly for internal development, it is likely
  * to make your client server very sluggish.
- * You usually shouldn't need this. -db
+ * You usually shouldn't need this. -Dianora
 */
-#undef  DEBUGMODE               /* define DEBUGMODE to enable debugging mode.*/
+#undef DEBUGMODE               /* define DEBUGMODE to enable debugging mode.*/
 
 /* DEBUG_NO_FORK is used to stop the daemon from doing a fork(), makes it
  * easier for gdb. You won't need this unless you are planning on
@@ -1015,14 +1007,15 @@
  * when this is defined, 3 completely different opers from
  * three different servers must do the identical GLINE in order
  * for the G line to take effect.
- * this code is broken right now, it will be fixed in the next release
  */
-#undef GLINES
+#define GLINES
+#define GLINEFILE	"gline.log"
 
 /* GLINE_TIME - local expire time for GLINES
  * As configured here, a GLINE will last 12 hours
  */
 #define GLINE_TIME      (12*3600)
+
 /* ----------------- archaic and/or broken section -------------------- */
 #undef DNS_DEBUG
 
@@ -1110,6 +1103,11 @@ error CLIENT_FLOOD undefined.
 #else
 #  define Debug(x) ;
 #  define LOGFILE "/dev/null"
+#endif
+
+/* If using ANTI_SPAMBOT_EXTRA =must= also use ANTI_SPAMBOT */
+#ifdef ANTI_SPAMBOT_EXTRA
+#define ANTI_SPAMBOT
 #endif
 
 #define REPORT_DLINE_TO_USER

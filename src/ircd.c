@@ -139,6 +139,7 @@ time_t	nextping = 1;		/* same as above for check_pings() */
 time_t	nextdnscheck = 0;	/* next time to poll dns to force timeouts */
 time_t	nextexpire = 1;		/* next expire run on the dns cache */
 int	autoconn = 1;		/* allow auto conns or not */
+int	spare_fd = 0;		/* fd to be saved for special circumstances */
 
 #ifdef	PROFIL
 extern	etext();
@@ -203,6 +204,11 @@ void	restart(char *mesg)
      mesg,(u_long)sbrk((size_t)0)-(u_long)sbrk0);
 #endif
   server_reboot();
+  if (bootopt & BOOT_STDERR)
+    {
+      fprintf(stderr, "Restarting Server because: %s, sbrk(0)-etext: %d\n",
+        mesg,(u_long)sbrk((size_t)0)-(u_long)sbrk0);
+    }
 }
 
 VOIDSIG s_restart()
@@ -842,6 +848,12 @@ int	main(int argc, char *argv[])
       exit(-1);
     }
   res_init();
+  spare_fd=open("/dev/null",O_RDONLY,0); /* save this fd for rehash dns */
+  if (spare_fd < 0)
+    {
+      perror("cannot save spare_fd");
+      exit(-1);
+    }
   if (chroot(DPATH))
     {
       (void)fprintf(stderr,"ERROR:  Cannot chdir/chroot\n");

@@ -48,6 +48,7 @@ static char *rcs_version = "$Id$";
 #include <utmp.h>
 #include <sys/resource.h>
 
+extern int spare_fd;		/* defined in ircd.c */
 
 /*
  * Stuff for poll()
@@ -142,13 +143,21 @@ static	char	readbuf[READBUF_SIZE];
 void	add_local_domain(char *hname,int size)
 {
 #ifdef RES_INIT
+  char	sparemsg[80];
   /* try to fix up unqualified names */
   if (!strchr(hname, '.'))
     {
       if (!(_res.options & RES_INIT))
 	{
 	  Debug((DEBUG_DNS,"res_init()"));
+	  close(spare_fd);
 	  res_init();
+	  spare_fd = open("/dev/null",O_RDONLY,0);
+	  if ((spare_fd < 0) || (spare_fd > 256))
+	    {
+	      ircsprintf(sparemsg,"invalid spare_fd %d",spare_fd);
+	      restart(sparemsg);
+	    }
 	}
       if (_res.defdname[0])
 	{
@@ -164,6 +173,8 @@ void	add_local_domain(char *hname,int size)
 ** Cannot use perror() within daemon. stderr is closed in
 ** ircd and cannot be used. And, worse yet, it might have
 ** been reassigned to a normal connection...
+** 
+** Actually stderr is still there IFF ircd was run with -s --Rodder
 */
 
 /*
@@ -204,12 +215,12 @@ void	report_error(char *text,aClient *cptr)
   sendto_realops_lev(DEBUG_LEV,text, host, strerror(errtmp));
 #ifdef USE_SYSLOG
   syslog(LOG_WARNING, text, host, strerror(errtmp));
-  if (bootopt & BOOT_STDERR)
-  {
-    fprintf(stderr, text, host, strerror(errtmp));
-    fprintf(stderr, "\n");
-  }
 #endif
+  if (bootopt & BOOT_STDERR)
+    {
+	fprintf(stderr, text, host, strerror(errtmp));
+	fprintf(stderr, "\n");
+    }
 }
 
 /*

@@ -14,6 +14,8 @@
 #include <signal.h>
 #include <sys/time.h>
 #include <sys/socket.h>
+#include <fcntl.h>
+
 #include "nameser.h"
 #include "resolv.h"
 #include "inet.h"
@@ -35,6 +37,7 @@ extern	int	res_mkquery (int, char *, int, int, char *, int,
 extern	int	errno, h_errno;
 extern	int	highest_fd;
 extern	aClient	*local[];
+extern	int	spare_fd;
 
 static	char	hostbuf[HOSTLEN+1];
 static	int	incache = 0;
@@ -87,6 +90,7 @@ static	struct	resinfo {
 int	init_resolver(int op)
 {
   int	ret = 0;
+  char  sparemsg[80];
 
 #ifdef	LRAND48
   srand48(timeofday);
@@ -98,7 +102,14 @@ int	init_resolver(int op)
     }
   if (op & RES_CALLINIT)
     {
+      close(spare_fd);
       ret = res_init();
+      spare_fd = open("/dev/null",O_RDONLY,0);
+      if ((spare_fd < 0) || (spare_fd > 256))
+        {
+          ircsprintf(sparemsg,"invalid spare_fd %d",spare_fd);
+          restart(sparemsg);
+        }
       if (!_res.nscount)
 	{
 	  _res.nscount = 1;
@@ -133,9 +144,17 @@ int restart_resolver()
 {
   int ret = 0;
   int on = 0;
+  char sparemsg[80];
 
   flush_cache();	/* flush the dns cache */
+  close(spare_fd);
   ret = res_init();
+  spare_fd = open("/dev/null",O_RDONLY,0);
+  if ((spare_fd < 0) || (spare_fd > 256))
+    {
+      ircsprintf(sparemsg,"invalid spare_fd %d",spare_fd);
+      restart(sparemsg);
+    }
   (void)close(resfd);
   ret = resfd = socket(AF_INET, SOCK_DGRAM, 0);
   (void) setsockopt(ret, SOL_SOCKET, SO_BROADCAST,
