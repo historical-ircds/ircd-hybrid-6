@@ -1030,9 +1030,9 @@ static  char    *fix_key(char *arg)
 
   for (s = t = (u_char *)arg; (c = *s); s++)
     {
-      if (c != ':' && c > 0x20)
+      c &= 0x7f;
+      if (c != ':' && c > ' ')
       {
-	c &= 0x7f;
         *t++ = c;
       }
     }
