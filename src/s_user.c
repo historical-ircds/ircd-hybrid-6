@@ -482,6 +482,10 @@ static	int	register_user(aClient *cptr,
   parv[0] = sptr->name;
   parv[1] = parv[2] = NULL;
 
+  /* pointed out by Mortiis, never be too careful */
+  if(strlen(username) > USERLEN)
+    username[USERLEN] = '\0';
+
   reason = (char *)NULL;
 
   if (MyConnect(sptr))
@@ -1269,9 +1273,6 @@ static	int	register_user(aClient *cptr,
 		     nick, sptr->hopcount+1, sptr->tsinfo, ubuf,
 		     user->username, user->host, user->server,
 		     sptr->info);
-  if (ubuf[1])
-    send_umode_out(cptr, sptr, 0);
-  
   return 0;
 }
 

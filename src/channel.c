@@ -3251,13 +3251,14 @@ int	m_invite(aClient *cptr,
       /* Send a NOTICE to all channel operators concerning chanops who  *
        * INVITE other users to the channel when it is invite-only (+i). *
        * The NOTICE is sent from the local server.  -- David-R          */
-      if (chptr && (chptr->mode.mode & MODE_INVITEONLY)) { 
-	char message[300];
-	sprintf(message, "INVITE: %s (%s invited %s)", chptr->chname, sptr->name, acptr->name);
-	sendto_channel_type_notice(cptr, chptr, MODE_CHANOP,
-				    message);
-      }
 
+      if (chptr && (chptr->mode.mode & MODE_INVITEONLY))
+	{ 
+	  char message[300];
+	  sprintf(message, "INVITE: %s (%s invited %s)", chptr->chname, sptr->name, acptr->name);
+	  sendto_channel_type_notice(cptr, chptr, MODE_CHANOP,
+				     message);
+	}
     }
 
   /* don't attach anything to the invite links if don't need_invite
