@@ -1193,7 +1193,11 @@ static  void     set_mode(aClient *cptr,
   /* *sigh* FOR YOU Roger, and ONLY for you ;-)
    * lets stick mode/params that only the newer servers will understand
    * into modebuf_new/parabuf_new 
+   * even worse!  nodebuf_newer/parabuf_newer <-- for CAP_DE       
    */
+
+  char  modebuf_newer[MODEBUFLEN];
+  char  parabuf_newer[MODEBUFLEN];
 
   char  modebuf_new[MODEBUFLEN];
   char  parabuf_new[MODEBUFLEN];
@@ -1203,6 +1207,9 @@ static  void     set_mode(aClient *cptr,
 
   char  *mbufw_new = modebuf_new;
   char  *pbufw_new = parabuf_new;
+
+  char  *mbufw_newer = modebuf_newer;
+  char  *pbufw_newer = parabuf_newer;
 
   int   ischop;
   int   isok;
@@ -1678,11 +1685,11 @@ static  void     set_mode(aClient *cptr,
           len += tmp + 1;
           opcnt++;
 
-          *mbufw_new++ = plus;
-          *mbufw_new++ = 'd';
-          strcpy(pbufw_new, arg);
-          pbufw_new += strlen(pbufw_new);
-          *pbufw_new++ = ' ';
+          *mbufw_newer++ = plus;
+          *mbufw_newer++ = 'd';
+          strcpy(pbufw_newer, arg);
+          pbufw_newer += strlen(pbufw_newer);
+          *pbufw_newer++ = ' ';
 
           break;
 
@@ -2249,10 +2256,13 @@ static  void     set_mode(aClient *cptr,
   ** together and send it along.
   */
 
-  *mbufw = *mbuf2w = *pbufw = *pbuf2w = *mbufw_new = *pbufw_new = '\0';
+  *mbufw = *mbuf2w = *pbufw = *pbuf2w = *mbufw_new = *pbufw_new = 
+  *mbufw_newer = *pbufw_newer = '\0';
+
   collapse_signs(modebuf);
 /*  collapse_signs(modebuf2); */
   collapse_signs(modebuf_new);
+  collapse_signs(modebuf_newer);
 
   if(*modebuf)
     {
@@ -2274,6 +2284,15 @@ static  void     set_mode(aClient *cptr,
       sendto_match_cap_servs(chptr, cptr, CAP_EX, ":%s MODE %s %s %s",
                              sptr->name, chptr->chname,
                              modebuf_new, parabuf_new);
+    }
+  if(*modebuf_newer)
+    {
+      sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
+                             sptr->name, chptr->chname,
+                             modebuf_newer, parabuf_newer);
+      sendto_match_cap_servs(chptr, cptr, CAP_DE, ":%s MODE %s %s %s",
+                             sptr->name, chptr->chname,
+                             modebuf_newer, parabuf_newer);
     }
 
                      
