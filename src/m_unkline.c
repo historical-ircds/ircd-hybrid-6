@@ -100,7 +100,6 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
 
   char	*user,*host;
   char  *p;
-  int   nread;
   int   error_on_write = NO;
   mode_t oldumask;
 

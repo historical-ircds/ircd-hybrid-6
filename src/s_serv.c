@@ -251,7 +251,7 @@ int	m_version(aClient *cptr,
      {
        if (hunt_server(cptr,sptr,":%s VERSION :%s",1,parc,parv)==HUNTED_ISME)
 	 sendto_one(sptr, form_str(RPL_VERSION), me.name,
-		    parv[0], version, debugmode, me.name, serveropts);
+		    parv[0], version, serno, debugmode, me.name, serveropts);
      }
    else
      sendto_one(sptr, rpl_str(RPL_VERSION), me.name,

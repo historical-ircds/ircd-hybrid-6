@@ -904,7 +904,6 @@ int	main(int argc, char *argv[])
   int	portarg = 0;
   uid_t	uid, euid;
   time_t	delay = 0;
-  int fd;
   FBFILE* file = 0;      /* initconf */
 
   aConfItem *aconf;
