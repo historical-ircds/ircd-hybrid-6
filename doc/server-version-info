@@ -10,10 +10,12 @@ here they are:
 'A'	SENDQ_ALWAYS
 'C'	CMDLINE_CONFIG
 'D'	DEBUGMODE
+'e'	CHANMODE_E
+'g'	NO_FAKE_GLINES
 'G'	GLINES
 'H'	HUB
 'i'	SHOW_INVISIBLE_LUSERS
-'I'	NO_DEFAULT_INVISIBLE
+'K'	USE_KNOCK
 'M'	IDLE_FROM_MSG
 'p'	CRYPT_OPER_PASSWORD
 'P'	CRYPT_LINK_PASSWORD
@@ -22,6 +24,8 @@ here they are:
 'Z'	ZIP_LINKS
 
 'TS'    Supports TS
-'3'     TS Version 3
+'3'     TS Version 3 (Gives ops on splits, on opless channels)
+'5'	TS Version 5 (Impossible to gain ops after a netsplit)
 'o'     TS Only
 'w'     TS Warnings
+'c'	TS Current and higher only.

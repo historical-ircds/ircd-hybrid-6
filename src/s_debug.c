@@ -114,6 +114,9 @@ const char serveropts[] = {
 /* th+hybrid servers ALWAYS do TS_WARNINGS */
   'o',
   'w',
+#ifdef TS5_ONLY
+  'c',
+#endif  
   '\0'
 };
 
