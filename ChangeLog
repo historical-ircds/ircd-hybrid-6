@@ -1,3 +1,10 @@
+*** 20000608_2 by lusky
+FLAGS_LOCOP was missing from ALL_UMODES, preventing +O from being displayed
+  in a user's mode.
+show_users() cache rebuild wasn't counting locops, causing "Oper count
+  off by" errors.
+
+
 *** 20000608_1 by lusky
 revved patchlevel to b128
 misc server notice fixes (gp)
