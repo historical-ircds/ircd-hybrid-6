@@ -623,17 +623,12 @@ do_query_name(const struct DNSQuery* query,
   hname[HOSTLEN] = '\0';
   add_local_domain(hname, HOSTLEN);
 
-  if (request != NULL)
+  if (request == NULL)
   {
     request       = make_request(query);
     request->type = T_A;
     request->name = (char*) MyMalloc(strlen(hname) + 1);
     strcpy(request->name, hname);
-  }
-  else
-  {
-    /* XXX if request _is_ NULL is there any point calling query_name? */
-    return;
   }
 
   query_name(hname, C_IN, T_A, request);
@@ -656,16 +651,11 @@ do_query_number(const struct DNSQuery* query,
              (unsigned int)(cp[3]), (unsigned int)(cp[2]),
              (unsigned int)(cp[1]), (unsigned int)(cp[0]));
 
-  if (request != NULL)
+  if (request == NULL)
   {
     request              = make_request(query);
     request->type        = T_PTR;
     request->addr.s_addr = addr->s_addr;
-  }
-  else
-  {
-    /* XXX if request _is_ NULL is there any point calling query_name? */
-    return;
   }
 
   query_name(ipbuf, C_IN, T_PTR, request);
@@ -982,7 +972,7 @@ proc_answer(struct reslist *request, HEADER* header,
            * ignore duplicate ptr records
            */
 
-          if (hp->h_name != NULL)
+          if (hp->h_name == NULL)
           {
             strcpy(name, hostbuf);
             hp->h_name = name;
@@ -1178,7 +1168,7 @@ get_res(void)
   Debug((DEBUG_INFO,"get_res:Proc answer = %d",a));
 #endif
 
-  if (answer_count != 0)
+  if (answer_count)
   {
     if (request->type == T_PTR)
     {
