@@ -1,3 +1,28 @@
+wcampbel    2001/12/06 23:51:36 EST	(20011207_5)
+
+  Modified files:
+    .                    RELNOTES 
+    doc                  server-version-info 
+    include              m_info.h 
+    src                  m_rehash.c 
+  Added files:
+    adns                 .cvsignore 
+  Log:
+  Removed an instance of "Hybrid-7" in RELNOTES
+  Updated server-version-info
+  Audited the /quote INFO notices
+  Documented REHASH DLINES
+  Added a .cvsignore to adns/
+  
+  Revision  Changes    Path
+  1.7       +7 -6      ircd-hybrid-6/RELNOTES
+  1.1       +1 -0      ircd-hybrid-6/adns/.cvsignore (new)
+  1.8       +2 -2      ircd-hybrid-6/doc/server-version-info
+  1.24      +54 -7     ircd-hybrid-6/include/m_info.h
+  1.9       +5 -5      ircd-hybrid-6/src/m_rehash.c
+
+
+
 db          2001/12/06 23:26:21 EST	(20011207_4)
 
   Modified files:
