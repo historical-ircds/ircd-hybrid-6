@@ -38,7 +38,6 @@
 
 #include <string.h>
 
-static int fix_message_target(char *to_string, char *target);
 
 /*
  * m_functions execute protocol messages on this server:
@@ -148,15 +147,11 @@ static  int     m_message(struct Client *cptr,
 #endif
 #endif
 #ifdef NO_DUPE_MULTI_MESSAGES
-  /* function to fix nick,nick,nick bug.  this will remove duped targets
-     to cut down on flooding a little bit.
-	-pro
-  */
-
-  nick = (char *) malloc(1024);
-  fix_message_target(parv[1], nick);
+      if (strchr(parv[1],','))
+        parv[1] = canonize(parv[1]);
 #endif
     }
+
 
   /*
   ** channels are privmsg'd a lot more than other clients, moved up here
@@ -541,45 +536,4 @@ int     m_notice(struct Client *cptr,
                  char *parv[])
 {
   return m_message(cptr, sptr, parc, parv, 1);
-}
-
-/*
-** fix_message_target
-**	to_string = list of PRIVMSG targets
-**	target = char pointer where the new target list should be copied
-*/
-
-static int fix_message_target(char *to_string, char *target) {
-  char *new[10], buff[MAX_MULTI_MESSAGES*CHANNELLEN+MAX_MULTI_MESSAGES*NICKLEN];
-  char *p, *q;
-  int size=0, a, b, c;
-
-  /* yes I realize that buff[]s size is going to be overkill 99.99% of the time,
-     but we are only talking bytes of memory, and it is the safest way. */
-
-  q = to_string;
-  while ((p = strchr(q, ','))) {
-    *p = '\0';
-    new[size] = (char *) malloc(strlen(q));
-    if (new[size] == NULL) return -1;
-    sprintf(new[size], "%s", q);
-    q = p+1;
-    ++size;
-  }
-  for(a=0;a<size;++a)
-  for(b=a+1;b<size;++b) {
-    snprintf(buff, sizeof(buff), "%s@", new[a]);
-    if (!strcasecmp(new[a], new[b]) || !strncasecmp(new[b], buff, strlen(buff))) {
-      for(c=b;c<size-1;++c) strcpy(new[c], new[c+1]);
-      --size;
-    }
-  }
-  for(a=0;a<size;++a)
-    if (a == 0) sprintf(target, "%s,", new[a]);
-    else {
-      strcat(target, new[a]);
-      strcat(target, ",");
-    }
-  target[strlen(target)-1] = 0;
-  return 1;
 }
