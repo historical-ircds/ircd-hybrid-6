@@ -449,7 +449,6 @@ int crypt_selectcipher(char *ciphers) {
 
     for (cipherIndex = 0; Ciphers[cipherIndex].name[0]; cipherIndex++)
     {
-          Ciphers[cipherIndex].name);
       if (!strcmp(Ciphers[cipherIndex].name, cipher) &&
          (Ciphers[cipherIndex].keysize == atoi(keysize)))
       {
