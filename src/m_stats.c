@@ -138,6 +138,11 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   char*           name;
   static time_t   last_used = 0;
 
+  if(!IsClient(sptr))
+    {
+      return 0;
+    }
+
   if(!IsAnOper(sptr))
     {
       if((last_used + PACE_WAIT) > CurrentTime)
