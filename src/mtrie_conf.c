@@ -1385,6 +1385,11 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 		    }
 		  else
 		    {
+		      c = 'I';
+#ifdef LITTLE_I_LINES
+		      if(IsConfLittleI(aconf))
+			c = 'i';
+#endif
 		      sendto_one(sptr, rpl_str(RPL_STATSILINE),
 				 me.name,
 				 sptr->name,

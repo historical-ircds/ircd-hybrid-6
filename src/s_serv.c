@@ -2517,12 +2517,13 @@ int	 m_lusers(aClient *cptr,
 
   static time_t last_used=0L;
 
+  if (parc > 2)
+    if(hunt_server(cptr, sptr, ":%s LUSERS %s :%s", 2, parc, parv)
+       != HUNTED_ISME)
+      return 0;
+
   if(!IsAnOper(sptr))
     {
-      /* reject non local requests */
-      if(!MyConnect(sptr))
-	return 0;
-
       if((last_used + MOTD_WAIT) > NOW)
 	return 0;
       else
@@ -2543,10 +2544,6 @@ int show_lusers(aClient *cptr,
   int forced;
   aClient *acptr;
 
-  if (parc > 2)
-    if(hunt_server(cptr, sptr, ":%s LUSERS %s :%s", 2, parc, parv)
-       != HUNTED_ISME)
-      return 0;
 /*  forced = (parc >= 2); */
   forced = (IsAnOper(sptr) && (parc > 3));
 
@@ -3003,31 +3000,6 @@ int	m_time(aClient *cptr,
   return 0;
 }
 
-
-/*
-** m_admin
-**	parv[0] = sender prefix
-**	parv[1] = servername
-*/
-int	m_admin(aClient *cptr,
-		aClient *sptr,
-		int parc,
-		char *parv[])
-{
-  aConfItem *aconf;
-  /* anti flooding code,
-   * I did have this in parse.c with a table lookup
-   * but I think this will be less inefficient doing it in each
-   * function that absolutely needs it
-   * -Dianora
-   */
-
-  static time_t last_used=0L;
-
-  if (hunt_server(cptr,sptr,":%s ADMIN :%s",1,parc,parv) != HUNTED_ISME)
-    return 0;
-}
-
 /*
 ** m_admin
 **	parv[0] = sender prefix
@@ -3049,6 +3021,9 @@ int	m_admin(aClient *cptr,
   static time_t last_used=0L;
   static int last_count=0;
 
+  if (hunt_server(cptr,sptr,":%s ADMIN :%s",1,parc,parv) != HUNTED_ISME)
+    return 0;
+
   if(!IsAnOper(sptr))
     {
       if((last_used + MOTD_WAIT) > NOW)
@@ -3057,8 +3032,6 @@ int	m_admin(aClient *cptr,
 	last_used = NOW;
     }
 
-  if (hunt_server(cptr,sptr,":%s ADMIN :%s",1,parc,parv) != HUNTED_ISME)
-    return 0;
   if (IsPerson(sptr))
     sendto_realops_lev(SPY_LEV, "ADMIN requested by %s (%s@%s) [%s]", sptr->name,
 		       sptr->user->username, sptr->user->host, sptr->user->server);
