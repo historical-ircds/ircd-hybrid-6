@@ -1077,8 +1077,7 @@ typedef struct
   int dronecount;
 #endif
 
-#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-	defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
+#if NEED_SPLITCODE
   time_t server_split_recovery_time;
   int split_smallnet_size;
   int split_smallnet_users;

@@ -1892,7 +1892,7 @@ int	read_message(time_t delay, fdlist *listp)
 
 	  if (!(cptr = local[i]))
 	    continue;
-	  if (!
+
 	  if (IsLog(cptr))
 	    continue;
 	  if (DoingAuth(cptr))

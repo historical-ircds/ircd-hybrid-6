@@ -5,21 +5,16 @@ INCLUDEDIR=-I../include -I../zlib
 
 mkpasswd_SOURCES = mkpasswd.c
 mkpasswd_OBJECTS = mkpasswd.o
-chkconf_SOURCES = chkconf.c
-chkconf_OBJECTS = chkconf.o
 viconf_SOURCES = viconf.c
 viconf_OBJECTS = viconf.o
 fixklines_SOURCES = fixklines.c
 fixklines_OBJECT = fixklines.o
 
-all_OBJECTS = $(viconf_OBJECTS) $(mkpasswd_OBJECTS) $(chkconf_OBJECTS) ${fixklines_OBJECT}
+all_OBJECTS = $(viconf_OBJECTS) $(mkpasswd_OBJECTS) ${fixklines_OBJECT}
 
 all: viconf chkconf mkpasswd fixklines
 
 build: all
-
-chkconf: $(chkconf_OBJECTS)
-	$(CC) -o chkconf $(chkconf_OBJECTS) ${IRCDLIBS}
 
 mkpasswd: $(mkpasswd_OBJECTS)
 	$(CC) -o mkpasswd $(mkpasswd_OBJECTS) $(IRCDLIBS)
@@ -44,11 +39,6 @@ install: build
 
 # DO NOT DELETE
 
-chkconf.o: ../include/struct.h ../include/config.h ../include/setup.h
-chkconf.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
-chkconf.o: ../include/class.h ../include/dbuf.h ../include/common.h
-chkconf.o: ../include/sys.h ../include/numeric.h ../include/h.h
-chkconf.o: ../include/mtrie_conf.h ../include/fdlist.h
 mkpasswd.o: ../include/sys.h ../include/setup.h ../zlib/zlib.h
 mkpasswd.o: ../zlib/zconf.h
 viconf.o: ../include/config.h ../include/setup.h ../include/defs.h

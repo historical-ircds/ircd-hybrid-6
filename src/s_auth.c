@@ -34,6 +34,8 @@ static char *rcs_version = "$Id$";
 #include <fcntl.h>
 #include "h.h"
 
+extern fdlist default_fdlist;
+
 static void authsenderr(aClient *);	/* locally defined */
 
 /*
@@ -73,6 +75,7 @@ void	start_auth(aClient *cptr)
       cptr->authfd = -1;
       return;
     }
+
 #ifdef SHOW_HEADERS
   sendheader(cptr, REPORT_DO_ID, R_do_id);
 #endif
@@ -104,7 +107,7 @@ void	start_auth(aClient *cptr)
   sock.sin_port = htons(113);
   sock.sin_family = AF_INET;
 
-/*	(void)alarm((unsigned)4);*/
+  (void)alarm((unsigned)4);
   if (connect(cptr->authfd, (struct sockaddr *)&sock,
 	      sizeof(sock)) == -1 && errno != EINPROGRESS)
     {
@@ -112,7 +115,7 @@ void	start_auth(aClient *cptr)
       /*
        * No error report from this...
        */
-      /*		(void)alarm((unsigned)0);*/
+      (void)alarm((unsigned)0);
 
       (void)close(cptr->authfd);
       cptr->authfd = -1;
@@ -124,7 +127,8 @@ void	start_auth(aClient *cptr)
 #endif
       return;
     }
-  /*	(void)alarm((unsigned)0);*/
+  (void)alarm((unsigned)0);
+  /*   addto_fdlist(cptr->authfd, &default_fdlist); */
   SetStartAuth(cptr);
   if (cptr->authfd > highest_fd)
     highest_fd = cptr->authfd;
@@ -179,7 +183,7 @@ void	send_authports(aClient *cptr)
 }
 
 
-/*
+/*
 authsenderr()
 
 input		- pointer to aClient
@@ -260,6 +264,7 @@ void	read_authports(aClient *cptr)
       *ruser = '\0';
     }
 
+  /*  delfrom_fdlist(cptr->authfd, &default_fdlist); */
   (void)close(cptr->authfd);
 
   if (cptr->authfd == highest_fd)

@@ -2685,8 +2685,6 @@ static int do_user(char *nick,
 
   user = make_user(sptr);
   oflags = sptr->flags;
-/* changed the goto into if-else...   -Taner */
-/* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ GOOD FOR YOU Taner!!! - Dianora */
 
   if (!MyConnect(sptr))
     {

@@ -91,7 +91,7 @@ fdlist oper_fdlist;
 fdlist busycli_fdlist;	/* high-priority clients */
 #endif
 
-fdlist default_fdlist;  /* just the number of the entry */
+fdlist default_fdlist;
 
 SetOptionsType GlobalSetOptions;
 
