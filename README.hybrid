@@ -1,4 +1,5 @@
 +hybrid-6 (October 12,1998)
+- added OPER_MOTD code, when oper opers up they get an unique motd (Dianora)
 - track maximum dbuf usage in stats Z
 - OS/2 mods from Roger Haskins (nth.tech@iname.com) (Rodder)
 - spare_fd kludge to fix rehash DNS on Solaris (Rodder)
