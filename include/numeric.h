@@ -18,6 +18,12 @@
  *
  * $Id$
  */
+#ifndef INCLUDED_numeric_h
+#define INCLUDED_numeric_h
+#ifndef INCLUDED_config_h
+#include "config.h"
+#endif
+
 #ifdef TOPIC_INFO
 # define RPL_TOPICWHOTIME 333
 #endif
@@ -118,6 +124,12 @@
  * Added ERR_UNKNOWNMODE...
  * Added ERR_CANNOTSENDTOCHAN...
  */
+
+/*
+ * form_str - return a format string for a message number
+ * messages are defined below
+ */
+extern const char* form_str(int);
 
 /*
  * Reserve numerics 000-099 for server-client connections where the client
@@ -337,3 +349,5 @@
 
 #define ERR_GHOSTEDCLIENT    503
 #define ERR_LAST_ERR_MSG     504
+
+#endif /* INCLUDED_numeric_h */
