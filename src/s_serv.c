@@ -5490,35 +5490,8 @@ int	m_trace(aClient *cptr,
   char	*tname;
   int	doall, link_s[MAXCONNECTIONS], link_u[MAXCONNECTIONS];
   int	cnt = 0, wilds, dow;
-
-  /* anti flooding code,
-   * I did have this in parse.c with a table lookup
-   * but I think this will be less inefficient doing it in each
-   * function that absolutely needs it
-   * -Dianora
-   */
-
   static time_t last_trace=0L;
   static time_t last_used=0L;
-
-  if(!IsAnOper(sptr))
-    {
-      if((last_used + PACE_WAIT) > NOW)
-	return 0;
-      else
-	last_used = NOW;
-    }
-
-  if(!IsAnOper(sptr))
-    {
-      if (parv[1] && !index(parv[1],'.') && (index(parv[1], '*')
-          || index(parv[1], '?'))) /* bzzzt, no wildcard nicks for nonopers */
-        {
-          sendto_one(sptr, rpl_str(RPL_ENDOFTRACE),me.name,
-                     parv[0], parv[1]);
-          return 0;
-        }
-    }
 
   if (parc > 2)
     if (hunt_server(cptr, sptr, ":%s TRACE %s :%s",
@@ -5528,7 +5501,9 @@ int	m_trace(aClient *cptr,
   if (parc > 1)
     tname = parv[1];
   else
-    tname = me.name;
+    {
+      tname = me.name;
+    }
 
   switch (hunt_server(cptr, sptr, ":%s TRACE :%s", 1, parc, parv))
     {
@@ -5549,6 +5524,26 @@ int	m_trace(aClient *cptr,
       break;
     default:
       return 0;
+    }
+
+  if(!IsAnOper(sptr))
+    {
+      if((last_used + PACE_WAIT) > NOW)
+        {
+          return 0;
+        }
+      else
+        {
+          last_used = NOW;
+        }
+
+      if (parv[1] && !index(parv[1],'.') && (index(parv[1], '*')
+          || index(parv[1], '?'))) /* bzzzt, no wildcard nicks for nonopers */
+        {
+          sendto_one(sptr, rpl_str(RPL_ENDOFTRACE),me.name,
+                     parv[0], parv[1]);
+          return 0;
+        }
     }
 
   sendto_realops_lev(SPY_LEV, "trace requested by %s (%s@%s) [%s]",
