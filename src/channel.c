@@ -1903,14 +1903,14 @@ void set_channel_mode(struct Client *cptr,
               if (whatt == MODE_ADD)
                 {
                   chptr->mode.mode |= MODE_JUPED;
-                  sendto_realops("%s!%s@%s juping locally Channel %s",
+                  sendto_realops("%s!%s@%s locally juping channel %s",
                                  sptr->name, sptr->username,
                                  sptr->host, chptr->chname);
                 }
               else if(whatt == MODE_DEL)
                 {
                   chptr->mode.mode &= ~MODE_JUPED;
-                  sendto_realops("%s!%s@%s unjuping locally Channel %s",
+                  sendto_realops("%s!%s@%s locally unjuping channel %s",
                                  sptr->name, sptr->username,
                                  sptr->host, chptr->chname);
                 }
