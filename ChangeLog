@@ -1,3 +1,7 @@
+*** 20000824_2 by lusky
+- changed Q:line behaviour for NICKs to just return ERR_ERRONEUSNICKNAME
+
+
 *** 20000824_1 by lusky
 - server_estab() - mask IP in the op notices, but log the real ip
 - disable wildcards in WHOIS (configurable for now)
