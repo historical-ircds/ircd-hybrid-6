@@ -31,7 +31,6 @@ extern struct DNSReply* gethost_byname(const char* name,
                                        const struct DNSQuery* req);
 extern struct DNSReply* gethost_byaddr(const char* name, 
                                        const struct DNSQuery* req);
-extern void            flush_cache(void);
 extern int	       init_resolver(void);
 extern void            restart_resolver(void);
 extern time_t          timeout_resolver(time_t now);
