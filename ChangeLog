@@ -1,3 +1,8 @@
+*** 20010607_2 by davidt
+- Another round of OpenSSL fixes; check for the functions used in hybrid-6,
+  not the ones used in hybrid-7, which does it a different way...
+
+
 *** 20010607_1 by kreator
 - fixed OpenSSL support that b0rked in the meantime
 
