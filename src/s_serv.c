@@ -2031,9 +2031,12 @@ int     m_trace(struct Client *cptr,
   if (doall)
    {
     for (acptr = GlobalClientList; acptr; acptr = acptr->next)
+     {
 #ifdef  SHOW_INVISIBLE_LUSERS
       if (IsPerson(acptr))
-        link_u[acptr->from->fd]++;
+        {
+          link_u[acptr->from->fd]++;
+        }
 #else
       if (IsPerson(acptr) &&
         (!IsInvisible(acptr) || IsAnOper(sptr)))
@@ -2041,15 +2044,15 @@ int     m_trace(struct Client *cptr,
           link_u[acptr->from->fd]++;
         }
 #endif
+      else
+        {
+          if (IsServer(acptr))
+            {
+              link_s[acptr->from->fd]++;
+            }
+        }
+     }
    }
-  else
-    {
-      if (IsServer(acptr))
-      {
-        link_s[acptr->from->fd]++;
-      }
-    }
-
   /* report all direct connections */
   for (i = 0; i <= highest_fd; i++)
     {
