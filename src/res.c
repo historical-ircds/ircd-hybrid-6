@@ -26,6 +26,7 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include <arpa/nameser.h>
 #include <resolv.h>

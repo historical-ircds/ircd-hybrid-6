@@ -45,12 +45,14 @@
 #include "m_gline.h"
 #include "scache.h"
 #include "s_misc.h"
+#include "s_zip.h"
 
 #include <string.h>
 #include <errno.h>
 #include <time.h>
 #include <pwd.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
@@ -112,8 +114,6 @@ int     dorehash   = 0;
 int     debuglevel = -1;        /* Server debug level */
 int     bootopt    = 0;         /* Server boot option flags */
 char*   debugmode  = "";        /*  -"-    -"-   -"-  */
-
-extern void* edata;
 
 
 int     rehashed = YES;

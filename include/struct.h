@@ -58,11 +58,6 @@
 # include "ircd_defs.h"
 #endif
 
-#ifndef INCLUDED_zlib_h
-# include "zlib.h"
-# define INCLUDED_zlib_h
-#endif
-
 #ifndef INCLUDED_client_h
 # include "client.h"
 #endif
@@ -135,24 +130,6 @@ typedef struct Whowas
   struct Whowas *cprev; /* for client struct linked list */
 }aWhowas;
 
-
-#ifdef ZIP_LINKS
-/* the minimum amount of data needed to trigger compression */
-#define ZIP_MINIMUM     4096
-
-/* the maximum amount of data to be compressed (can actually be a bit more) */
-#define ZIP_MAXIMUM     8192    /* WARNING: *DON'T* CHANGE THIS!!!! */
-
-struct Zdata {
-        z_stream        *in;            /* input zip stream data */
-        z_stream        *out;           /* output zip stream data */
-        char            inbuf[ZIP_MAXIMUM]; /* incoming zipped buffer */
-        char            outbuf[ZIP_MAXIMUM]; /* outgoing (unzipped) buffer */
-        int             incount;        /* size of inbuf content */
-        int             outcount;       /* size of outbuf content */
-};
-
-#endif /* ZIP_LINKS */
 
 /* Macros for aConfItem */
 

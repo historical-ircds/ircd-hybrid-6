@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.3  1999/07/23 02:38:30  db
+ * - more include file fixes
+ *
  * Revision 1.2  1999/07/21 05:20:52  db
  * - you guessed it, more cleanups. removed undefined function that had
  *   a prototype in h.h cool
@@ -35,11 +38,16 @@
  * - moved prototype for send_usage() into s_debug.h
  *
  */
+#ifndef INCLUDED_sys_types_h
+#include <sys/types.h>       /* size_t */
+#define INCLUDED_sys_types_h
+#endif
 
 struct Client;
 
 extern void send_usage(struct Client*, char *);
-extern	void	count_memory (struct Client *, char *);
+extern void count_memory (struct Client *, char *);
+extern size_t get_maxrss(void);
 
 extern	void	debug(int, char *, ...);
 

@@ -18,6 +18,7 @@
  *
  *   $Id$
  */
+#include "s_zip.h"
 #include "struct.h"
 #include "send.h"
 #include "irc_string.h"

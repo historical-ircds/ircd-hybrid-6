@@ -47,8 +47,6 @@ extern  void    count_whowas_memory(int *, u_long *);
 extern  void    count_ip_hash(int *,u_long *);    /* defined in s_conf.c */
 extern  int     maxdbufblocks;                    /* defined in dbuf.c */
 
-extern  void   *edata;
-
 /*
  * Option string.  Must be before #ifdef DEBUGMODE.
  */
@@ -168,7 +166,13 @@ debug(int level, char *format, ...)
         errno = err;
 } /* debug() */
 
-
+size_t get_maxrss(void)
+{
+  struct rusage r;
+  if (getrusage(RUSAGE_SELF, &r))
+    return 0;
+  return r.ru_maxrss;
+}
 
 /*
  * This is part of the STATS replies. There is no offical numeric for this
@@ -177,10 +181,11 @@ debug(int level, char *format, ...)
  * different field names for "struct rusage".
  * -avalon
  */
-void    send_usage(aClient *cptr, char *nick)
+void send_usage(aClient *cptr, char *nick)
 {
-  struct        rusage  rus;
-  time_t        secs, rup;
+  struct rusage  rus;
+  time_t         secs;
+  time_t         rup;
 #ifdef  hz
 # define hzz hz
 #else
@@ -188,9 +193,6 @@ void    send_usage(aClient *cptr, char *nick)
 #  define hzz HZ
 # else
   int   hzz = 1;
-#  ifdef HPUX
-  hzz = (int)sysconf(_SC_CLK_TCK);
-#  endif
 # endif
 #endif
 
@@ -238,14 +240,6 @@ void    send_usage(aClient *cptr, char *nick)
 
 void count_memory(aClient *cptr,char *nick)
 {
-  /*
-   * XXX - BAD idea... include the headers
-   */
-#if 0
-  extern        aChannel* channel;
-  extern        aClass*   classes;
-#endif
-  
   aClient *acptr;
   Link *link;
   aChannel *chptr;
@@ -483,9 +477,8 @@ void count_memory(aClient *cptr,char *nick)
   tot += flud_memory_allocated;
 #endif
 
-  sendto_one(cptr, ":%s %d %s :TOTAL: %d Available Memory: %u Current sbrk(0) %u",
-             me.name, RPL_STATSDEBUG, nick, tot,
-             (unsigned long)edata, sbrk(0) );
+  sendto_one(cptr, ":%s %d %s :TOTAL: %d Current max RSS: %u",
+             me.name, RPL_STATSDEBUG, nick, tot, get_maxrss());
 
   return;
 }

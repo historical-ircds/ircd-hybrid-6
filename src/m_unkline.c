@@ -41,6 +41,7 @@
 
 #include <time.h>
 #include <string.h>
+#include <unistd.h>
 
 extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 
