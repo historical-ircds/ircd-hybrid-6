@@ -134,15 +134,15 @@ COMMAND         - USAGE and DESCRIPTION
                   registered yet.
 
   DIE           - DIE [reason]
-                   Terminates the IRC server with optional reason 
-                   [reason]
+                  Terminates the IRC server with optional reason 
+                  [reason]
 
 + HASH          - HASH
                   Shows some stats about ircd's internal hashes.
 
 + DNS           - DNS
                   Shows some stats about ircd's asynchronous resolving
-                   code
+                  code
 
 + KLINE         - KLINE <nick|user@host> :[reason]
                   Adds a KLINE to the ircd.conf or klines.conf file which

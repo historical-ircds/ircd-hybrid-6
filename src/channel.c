@@ -76,10 +76,6 @@ typedef struct
   char letter;
 }FLAG_ITEM;
 
-/*
-** number of seconds to add to all readings of time() when making TS's
-** -orabidoo
-*/
 
 static	char	*PartFmt = ":%s PART %s";
 /*
@@ -626,9 +622,6 @@ static	void	channel_modes(aClient *cptr,
 /*
  * only used to send +b and +e now 
  *
- * unlike orabidoo, I'm going to send the exception list in all
- * cases, and well, just let our uplink toss them if it doesn't
- * understand them.
  */
 
 static	void	send_mode_list(aClient *cptr,
@@ -926,7 +919,12 @@ static  void     set_mode(aClient *cptr,
   int	errors_sent = 0, opcnt = 0, len = 0, tmp, nusers;
   int	keychange = 0, limitset = 0;
   int	whatt = MODE_ADD, the_mode = 0;
-  int   done_s_or_p = NO, done_i = NO, done_m = NO, done_n = NO, done_t = NO;
+#ifdef OLD_P_S
+  int   done_s_or_p = NO;
+#else
+  int	done_s = NO, done_p = NO;
+#endif
+  int	done_i = NO, done_m = NO, done_n = NO, done_t = NO;
   aClient *who;
   Link	*lp;
   char	*curr = parv[0], c, *arg, plus = '+', *tmpc;
@@ -1156,12 +1154,14 @@ static  void     set_mode(aClient *cptr,
 	      break;
 	    }
 
+#ifdef OLD_MODE_K
 	  if ((whatt == MODE_ADD) && (*chptr->mode.key))
 	    {
 	      sendto_one(sptr, err_str(ERR_KEYSET), me.name, 
 			 sptr->name, chptr->chname);
 	      break;
 	    }
+#endif
 
 	  /* don't check the arg when removing the key */
 	  if (whatt == MODE_DEL)
@@ -1181,6 +1181,27 @@ static  void     set_mode(aClient *cptr,
 	  if (len + tmp + 2 >= MODEBUFLEN)
 	    break;
 
+#ifndef OLD_MODE_K
+	  /* if there is already a key, and the client is adding one
+	   * remove the old one, then add the new one
+	   */
+
+	  if((whatt == MODE_ADD) && *chptr->mode.key)
+	    {
+	      /* If the key is the same, don't do anything */
+
+	      if(!strcmp(chptr->mode.key,arg))
+		break;
+
+	      sendto_channel_butserv(chptr, sptr, ":%s MODE %s -k %s", 
+				     sptr->name, chptr->chname,
+				     chptr->mode.key);
+
+	      sendto_match_servs(chptr, cptr, ":%s MODE %s -k %s",
+				 sptr->name, chptr->chname,
+				 chptr->mode.key);
+	    }
+#endif
 	  *mbufw++ = plus;
 	  *mbufw++ = 'k';
 	  strcpy(pbufw, arg);
@@ -1495,21 +1516,27 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
-	      chptr->mode.mode |= MODE_INVITEONLY;
-	      *mbufw++ = '+';
-	      *mbufw++ = 'i';
-	      len += 2;
-	      opcnt++;
+	      if(!(chptr->mode.mode & MODE_INVITEONLY))
+		{
+		  chptr->mode.mode |= MODE_INVITEONLY;
+		  *mbufw++ = '+';
+		  *mbufw++ = 'i';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  else
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
-	      chptr->mode.mode &= ~MODE_INVITEONLY;
-	      *mbufw++ = '-';
-	      *mbufw++ = 'i';
-	      len += 2;
-	      opcnt++;
+	      if(chptr->mode.mode & MODE_INVITEONLY)
+		{
+		  chptr->mode.mode &= ~MODE_INVITEONLY;
+		  *mbufw++ = '-';
+		  *mbufw++ = 'i';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  break;
 
@@ -1537,21 +1564,27 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
-	      chptr->mode.mode |= MODE_MODERATED;
-	      *mbufw++ = '+';
-	      *mbufw++ = 'm';
-	      len += 2;
-	      opcnt++;
+	      if(!(chptr->mode.mode & MODE_MODERATED))
+		{
+		  chptr->mode.mode |= MODE_MODERATED;
+		  *mbufw++ = '+';
+		  *mbufw++ = 'm';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  else
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
-	      chptr->mode.mode &= ~MODE_MODERATED;
-	      *mbufw++ = '-';
-	      *mbufw++ = 'm';
-	      len += 2;
-	      opcnt++;
+	      if(chptr->mode.mode & MODE_MODERATED)
+		{
+		  chptr->mode.mode &= ~MODE_MODERATED;
+		  *mbufw++ = '-';
+		  *mbufw++ = 'm';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  break;
 
@@ -1579,21 +1612,27 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
-	      chptr->mode.mode |= MODE_NOPRIVMSGS;
-	      *mbufw++ = '+';
-	      *mbufw++ = 'n';
-	      len += 2;
-	      opcnt++;
+	      if(!(chptr->mode.mode & MODE_NOPRIVMSGS))
+		{
+		  chptr->mode.mode |= MODE_NOPRIVMSGS;
+		  *mbufw++ = '+';
+		  *mbufw++ = 'n';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  else
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
-	      chptr->mode.mode &= ~MODE_NOPRIVMSGS;
-	      *mbufw++ = '-';
-	      *mbufw++ = 'n';
-	      len += 2;
-	      opcnt++;
+	      if(chptr->mode.mode & MODE_NOPRIVMSGS)
+		{
+		  chptr->mode.mode &= ~MODE_NOPRIVMSGS;
+		  *mbufw++ = '-';
+		  *mbufw++ = 'n';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  break;
 
@@ -1608,11 +1647,17 @@ static  void     set_mode(aClient *cptr,
 
 	  if(MyClient(sptr))
 	    {
+#ifdef OLD_P_S
 	      if(done_s_or_p)
 		break;
 	      else
 		done_s_or_p = YES;
-
+#else
+	      if(done_p)
+		break;
+	      else
+		done_p = YES;
+#endif
 	      if ( opcnt >= MAXMODEPARAMS)
 		break;
 	    }
@@ -1621,6 +1666,7 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
+#ifdef OLD_P_S
 	      if(chptr->mode.mode & MODE_SECRET)
 		{
 		  if (len + 2 >= MODEBUFLEN)
@@ -1630,21 +1676,28 @@ static  void     set_mode(aClient *cptr,
 		  len += 2;
 		  chptr->mode.mode &= ~MODE_SECRET;
 		}
-	      chptr->mode.mode |= MODE_PRIVATE;
-	      *mbufw++ = '+';
-	      *mbufw++ = 'p';
-	      len += 2;
-	      opcnt++;
+#endif
+	      if(!(chptr->mode.mode & MODE_PRIVATE))
+		{
+		  chptr->mode.mode |= MODE_PRIVATE;
+		  *mbufw++ = '+';
+		  *mbufw++ = 'p';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  else
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
-	      chptr->mode.mode &= ~MODE_PRIVATE;
-	      *mbufw++ = '-';
-	      *mbufw++ = 'p';
-	      len += 2;
-	      opcnt++;
+	      if(chptr->mode.mode & MODE_PRIVATE)
+		{
+		  chptr->mode.mode &= ~MODE_PRIVATE;
+		  *mbufw++ = '-';
+		  *mbufw++ = 'p';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  break;
 
@@ -1661,11 +1714,17 @@ static  void     set_mode(aClient *cptr,
 
 	  if(MyClient(sptr))
 	    {
+#ifdef OLD_P_S
 	      if(done_s_or_p)
 		break;
 	      else
 		done_s_or_p = YES;
-
+#else
+	      if(done_s)
+		break;
+	      else
+		done_s = YES;
+#endif
 	      if ( opcnt >= MAXMODEPARAMS)
 		break;
 	    }
@@ -1674,6 +1733,7 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
+#ifdef OLD_P_S
 	      if(chptr->mode.mode & MODE_PRIVATE)
 		{
 		  if (len + 2 >= MODEBUFLEN)
@@ -1683,22 +1743,28 @@ static  void     set_mode(aClient *cptr,
 		  len += 2;
 		  chptr->mode.mode &= ~MODE_PRIVATE;
 		}
-
-	      chptr->mode.mode |= MODE_SECRET;
-	      *mbufw++ = '+';
-	      *mbufw++ = 's';
-	      len += 2;
-	      opcnt++;
+#endif
+	      if(!(chptr->mode.mode & MODE_SECRET))
+		{
+		  chptr->mode.mode |= MODE_SECRET;
+		  *mbufw++ = '+';
+		  *mbufw++ = 's';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  else
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
-	      chptr->mode.mode &= ~MODE_SECRET;
-	      *mbufw++ = '-';
-	      *mbufw++ = 's';
-	      len += 2;
-	      opcnt++;
+	      if(chptr->mode.mode & MODE_SECRET)
+		{
+		  chptr->mode.mode &= ~MODE_SECRET;
+		  *mbufw++ = '-';
+		  *mbufw++ = 's';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  break;
 
@@ -1726,21 +1792,27 @@ static  void     set_mode(aClient *cptr,
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
-	      chptr->mode.mode |= MODE_TOPICLIMIT;
-	      *mbufw++ = '+';
-	      *mbufw++ = 't';
-	      len += 2;
-	      opcnt++;
+	      if(!(chptr->mode.mode & MODE_TOPICLIMIT))
+		{
+		  chptr->mode.mode |= MODE_TOPICLIMIT;
+		  *mbufw++ = '+';
+		  *mbufw++ = 't';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  else
 	    {
 	      if (len + 2 >= MODEBUFLEN)
 		break;
-	      chptr->mode.mode &= ~MODE_TOPICLIMIT;
-	      *mbufw++ = '-';
-	      *mbufw++ = 't';
-	      len += 2;
-	      opcnt++;
+	      if(chptr->mode.mode & MODE_TOPICLIMIT)
+		{
+		  chptr->mode.mode &= ~MODE_TOPICLIMIT;
+		  *mbufw++ = '-';
+		  *mbufw++ = 't';
+		  len += 2;
+		  opcnt++;
+		}
 	    }
 	  break;
 
