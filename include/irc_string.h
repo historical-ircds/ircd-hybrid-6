@@ -60,7 +60,7 @@ extern char* strncpy_irc(char* s1, const char* s2, size_t n);
  * clean_string - cleanup control and high ascii characters
  * -Dianora
  */
-extern char* clean_string(char* dest, const char* src, size_t len);
+extern char* clean_string(char* dest, const unsigned char* src, size_t len);
 
 extern const char* myctime(time_t);
 extern char*       strtoken(char** save, char* str, char* fs);

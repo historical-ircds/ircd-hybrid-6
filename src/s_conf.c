@@ -2249,6 +2249,7 @@ static void initconf(FBFILE* file, int use_include)
               sendto_realops("Bad O/o line host %s", aconf->host);
               free_conf(aconf);
               aconf = NULL;
+	      continue;
             }
         }
 

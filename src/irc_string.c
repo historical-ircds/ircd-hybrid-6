@@ -95,7 +95,7 @@ void* MyRealloc(void* x, size_t y)
  * annoying opers, lets clean up what is sent to all opers
  * -Dianora
  */
-char* clean_string(char* dest, const char* src, size_t len)
+char* clean_string(char* dest, const unsigned char* src, size_t len)
 {
   char* d    = dest; 
   char* endp = dest + len - 1;
