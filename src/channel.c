@@ -3671,7 +3671,7 @@ int     m_sjoin(struct Client *cptr,
       newts = oldts;
     }
 #endif
-
+  
   if (isnew)
     chptr->channelts = tstosend = newts;
   else if (newts == 0 || oldts == 0)
@@ -3689,8 +3689,22 @@ int     m_sjoin(struct Client *cptr,
   /* their TS is newer, ignore all their modes, tstosend is our ts */
   else
   {
-    keep_new_modes = NO;
-    tstosend = oldts;
+
+    /* if the channel is juped locally, and has no users, we need to use
+     * their ts, whether its older or not, else we'll create a ts desync
+     * when we dont even have users.. --fl_
+     */
+#ifdef JUPE_CHANNEL
+    if(chptr->juped && chptr->users == 0)
+      chptr->channelts = tstosend = newts;
+    else
+    {
+#endif    
+      keep_new_modes = NO;
+      tstosend = oldts;
+#ifdef JUPE_CHANNEL
+    }
+#endif    
   }
 
   if (!keep_new_modes)
