@@ -28,16 +28,17 @@
  *     --Bleep  Thomas Helvey <tomh@inxpress.net>
  */
 #include "s_auth.h"
-#include "send.h"
 #include "client.h"
 #include "common.h"
-#include "numeric.h"
-#include "s_bsd.h"
-#include "res.h"
-#include "ircd.h"
-#include "s_misc.h"
-#include "struct.h"
 #include "fdlist.h"              /* fdlist_add */
+#include "irc_string.h"
+#include "ircd.h"
+#include "numeric.h"
+#include "res.h"
+#include "s_bsd.h"
+#include "s_misc.h"
+#include "send.h"
+#include "struct.h"
 
 #include <netdb.h>               /* struct hostent */
 #include <string.h>

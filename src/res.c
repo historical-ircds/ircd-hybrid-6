@@ -11,13 +11,14 @@
  *     --Bleep (Thomas Helvey <tomh@inxpress.net>)
  */
 #include "res.h"
-#include "numeric.h"
-#include "s_bsd.h"
-#include "struct.h"
-#include "ircd.h"
 #include "common.h"
-#include "send.h"
+#include "irc_string.h"
+#include "ircd.h"
+#include "numeric.h"
 #include "restart.h"
+#include "s_bsd.h"
+#include "send.h"
+#include "struct.h"
 
 #include <assert.h>
 #include <string.h>

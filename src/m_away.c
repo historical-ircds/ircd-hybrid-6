@@ -24,10 +24,12 @@
  */
 #include "m_commands.h"
 #include "client.h"
+#include "irc_string.h"
 #include "ircd.h"
 #include "numeric.h"
-#include "s_serv.h"
 #include "send.h"
+
+#include <stdlib.h>
 
 /*
  * m_functions execute protocol messages on this server:

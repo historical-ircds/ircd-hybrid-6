@@ -22,16 +22,18 @@
  * $Id$
  */
 #include "struct.h"
-#include "common.h"
-#include "numeric.h"
 #include "blalloc.h"
-#include "res.h"
-#include "class.h"
-#include "send.h"
-#include "list.h"
 #include "channel.h"
-#include "restart.h"
+#include "class.h"
+#include "common.h"
+#include "irc_string.h"
+#include "list.h"
 #include "mtrie_conf.h"
+#include "numeric.h"
+#include "res.h"
+#include "restart.h"
+#include "send.h"
+
 #include <string.h>
 #include <stdlib.h>
 

@@ -23,17 +23,19 @@
  *
  * $Id$
  */
+#include "dbuf.h"
+#include "common.h"
+#include "irc_string.h"
+#include "struct.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-#include "struct.h"
-#include "common.h"
 
-#if !defined(VALLOC) && !defined(valloc)
-#define valloc malloc
-#endif
-
-int     dbufalloc = 0, dbufblocks = 0, maxdbufalloc = 0, maxdbufblocks = 0;
-static  dbufbuf *freelist = NULL;
+int             dbufalloc = 0;
+int             dbufblocks = 0;
+int             maxdbufalloc = 0;
+int             maxdbufblocks = 0;
+static dbufbuf* freelist = NULL;
 
 /* This is a dangerous define because a broken compiler will set DBUFSIZ
 ** to 4, which will work but will be very inefficient. However, there

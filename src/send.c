@@ -23,6 +23,7 @@
 #include "channel.h"
 #include "class.h"
 #include "common.h"
+#include "irc_string.h"
 #include "ircd.h"
 #include "m_commands.h"
 #include "numeric.h"

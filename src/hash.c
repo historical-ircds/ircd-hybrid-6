@@ -19,13 +19,14 @@
  *  $Id$
  */
 #include "s_conf.h"
-#include "hash.h"
 #include "channel.h"
-#include "struct.h"
 #include "common.h"
-#include "numeric.h"
+#include "hash.h"
+#include "irc_string.h"
 #include "ircd.h"
+#include "numeric.h"
 #include "send.h"
+#include "struct.h"
 
 #include <assert.h>
 #include <fcntl.h>     /* O_RDWR ... */

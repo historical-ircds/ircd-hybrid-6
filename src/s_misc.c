@@ -23,15 +23,16 @@
  *  $Id$
  */
 #include "s_misc.h"
-#include "s_conf.h"
-#include "struct.h"
-#include "res.h"
 #include "common.h"
-#include "numeric.h"
+#include "irc_string.h"
 #include "ircd.h"
+#include "numeric.h"
+#include "res.h"
 #include "s_bsd.h"
+#include "s_conf.h"
 #include "s_serv.h"
 #include "send.h"
+#include "struct.h"
 
 #include <string.h>
 #include <fcntl.h>

@@ -22,22 +22,21 @@
  *
  *  $Id$
  */
-
-#include "config.h"
-#include "struct.h"
-#include "common.h"
-#include "numeric.h"
+#include "m_gline.h"
 #include "channel.h"
+#include "common.h"
+#include "config.h"
+#include "dline_conf.h"
+#include "irc_string.h"
+#include "ircd.h"
+#include "m_kline.h"
+#include "mtrie_conf.h"
+#include "numeric.h"
 #include "s_conf.h"
 #include "s_misc.h"
-#include "send.h"
-#include "ircd.h"
 #include "scache.h"
-#include "dline_conf.h"
-#include "mtrie_conf.h"
-
-#include "m_kline.h"
-#include "m_gline.h"
+#include "send.h"
+#include "struct.h"
 
 #include <assert.h>
 #include <string.h>

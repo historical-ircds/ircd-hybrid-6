@@ -23,18 +23,19 @@
  *
  *   $Id$
  */
-#include "struct.h"
-
-#include "common.h"
-#include "numeric.h"
+#include "m_commands.h"
 #include "channel.h"
-#include "s_conf.h"
-#include "send.h"
+#include "common.h"
 #include "dline_conf.h"
-#include "mtrie_conf.h"
 #include "fileio.h"
+#include "irc_string.h"
 #include "ircd.h"
+#include "mtrie_conf.h"
+#include "numeric.h"
+#include "s_conf.h"
 #include "s_misc.h"
+#include "send.h"
+#include "struct.h"
 
 #include <time.h>
 #include <string.h>

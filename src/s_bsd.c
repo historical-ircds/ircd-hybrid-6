@@ -24,6 +24,7 @@
 #include "common.h"
 #include "config.h"
 #include "fdlist.h"
+#include "irc_string.h"
 #include "ircd.h"
 #include "list.h"
 #include "listener.h"

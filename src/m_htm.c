@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, src/m_ison.c
+ *   IRC - Internet Relay Chat, src/m_htm.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
  *
@@ -24,14 +24,13 @@
  */
 #include "m_commands.h"
 #include "client.h"
+#include "common.h"
 #include "irc_string.h"
 #include "ircd.h"
 #include "numeric.h"
 #include "send.h"
 
-#include <string.h>
-
-
+#include <stdlib.h>
 /*
  * m_functions execute protocol messages on this server:
  *
@@ -89,56 +88,84 @@
  *                      non-NULL pointers.
  */
 
-/*
- * m_ison added by Darren Reed 13/8/91 to act as an efficent user indicator
- * with respect to cpu/bandwidth used. Implemented for NOTIFY feature in
- * clients. Designed to reduce number of whois requests. Can process
- * nicknames in batches as long as the maximum buffer length.
- *
- * format:
- * ISON :nicklist
- */
-/*
- * Take care of potential nasty buffer overflow problem 
- * -Dianora
- *
- */
 
-
-int m_ison(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
+#define LOADCFREQ 5
+/*
+ * m_htm - HTM command handler
+ * high traffic mode info
+ */
+int m_htm(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
-  struct Client *acptr;
-  char  *s, **pav = parv;
-  char  *p = (char *)NULL;
-  int len;
-  int len2;
-  static char buf[BUFSIZE];
+  char *command;
 
-  if (parc < 2)
+  if (!MyClient(sptr) || !IsOper(sptr))
     {
-      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
-                 me.name, parv[0], "ISON");
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
-
-  ircsprintf(buf, form_str(RPL_ISON), me.name, *parv);
-  len = strlen(buf);
-  if (!IsOper(cptr))
-    cptr->priority +=20; /* this keeps it from moving to 'busy' list */
-  for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, (char *)NULL, " "))
-    if ((acptr = find_person(s, NULL)))
-      {
-        len2 = strlen(acptr->name);
-        if((len + len2 + 5) < sizeof(buf)) /* make sure can never overflow  */
-          {                                /* allow for extra ' ','\0' etc. */
-            (void)strcat(buf, acptr->name);
-            len += len2;
-            (void)strcat(buf, " ");
-            len++;
-          }
-        else
-          break;
-      }
-  sendto_one(sptr, "%s", buf);
+  sendto_one(sptr,
+        ":%s NOTICE %s :HTM is %s(%d), %s. Max rate = %dk/s. Current = %.1fk/s",
+          me.name, parv[0], LIFESUX ? "ON" : "OFF", LIFESUX,
+          NOISYHTM ? "NOISY" : "QUIET",
+          LRV, currlife);
+  if (parc > 1)
+    {
+      command = parv[1];
+      if (!irccmp(command,"TO"))
+        {
+          if (parc > 2)
+            {
+              int new_value = atoi(parv[2]);
+              if (new_value < 10)
+                {
+                  sendto_one(sptr, ":%s NOTICE %s :\002Cannot set LRV < 10!\002",
+                             me.name, parv[0]);
+                }
+              else
+                LRV = new_value;
+              sendto_one(sptr, ":%s NOTICE %s :NEW Max rate = %dk/s. Current = %.1fk/s",
+                         me.name, parv[0], LRV, currlife);
+              sendto_realops("%s!%s@%s set new HTM rate to %dk/s (%.1fk/s current)",
+                             parv[0], sptr->username, sptr->host,
+                             LRV, currlife);
+            }
+          else 
+            sendto_one(sptr, ":%s NOTICE %s :LRV command needs an integer parameter",me.name, parv[0]);
+        }
+      else
+        {
+          if (!irccmp(command,"ON"))
+            {
+              LIFESUX = 1;
+              sendto_one(sptr, ":%s NOTICE %s :HTM is now ON.", me.name, parv[0]);
+              sendto_ops("Entering high-traffic mode: Forced by %s!%s@%s",
+                         parv[0], sptr->username, sptr->host);
+              LCF = 30; /* 30s */
+            }
+          else if (!irccmp(command,"OFF"))
+            {
+              LIFESUX = 0;
+              LCF = LOADCFREQ;
+              sendto_one(sptr, ":%s NOTICE %s :HTM is now OFF.", me.name, parv[0]);
+              sendto_ops("Resuming standard operation: Forced by %s!%s@%s",
+                         parv[0], sptr->username, sptr->host);
+            }
+          else if (!irccmp(command,"QUIET"))
+            {
+              sendto_ops("HTM is now QUIET");
+              NOISYHTM = NO;
+            }
+          else if (!irccmp(command,"NOISY"))
+            {
+              sendto_ops("HTM is now NOISY");
+              NOISYHTM = YES;
+            }
+          else
+            sendto_one(sptr,
+                       ":%s NOTICE %s :Commands are:HTM [ON] [OFF] [TO int] [QUIET] [NOISY]",
+                       me.name, parv[0]);
+        }
+    }
   return 0;
 }
+

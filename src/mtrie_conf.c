@@ -46,14 +46,15 @@
  * $Id$
  */
 #include "mtrie_conf.h"
-#include "numeric.h"
-#include "common.h"
-#include "struct.h"
-#include "s_conf.h"
 #include "class.h"
-#include "ircd.h"
-#include "send.h"
+#include "common.h"
 #include "dline_conf.h"
+#include "irc_string.h"
+#include "ircd.h"
+#include "numeric.h"
+#include "s_conf.h"
+#include "send.h"
+#include "struct.h"
 
 #include <string.h>
 #include <stdlib.h>

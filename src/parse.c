@@ -19,17 +19,20 @@
  *
  *   $Id$
  */
-#include "struct.h"
+#include "parse.h"
+#include "channel.h"
 #include "common.h"
+#include "hash.h"
+#include "irc_string.h"
+#include "ircd.h"
+#include "numeric.h"
+#include "s_misc.h"
+#include "send.h"
+#include "struct.h"
+
 #define MSGTAB
 #include "msg.h"
 #undef MSGTAB
-#include "numeric.h"
-#include "ircd.h"
-#include "s_misc.h"
-#include "send.h"
-#include "hash.h"
-#include "channel.h"
 
 #include <string.h>
 #include <stdlib.h>

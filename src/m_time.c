@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, src/m_ison.c
+ *   IRC - Internet Relay Chat, src/m_version.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
  *
@@ -24,13 +24,11 @@
  */
 #include "m_commands.h"
 #include "client.h"
-#include "irc_string.h"
 #include "ircd.h"
 #include "numeric.h"
+#include "s_misc.h"
+#include "s_serv.h"
 #include "send.h"
-
-#include <string.h>
-
 
 /*
  * m_functions execute protocol messages on this server:
@@ -89,56 +87,17 @@
  *                      non-NULL pointers.
  */
 
-/*
- * m_ison added by Darren Reed 13/8/91 to act as an efficent user indicator
- * with respect to cpu/bandwidth used. Implemented for NOTIFY feature in
- * clients. Designed to reduce number of whois requests. Can process
- * nicknames in batches as long as the maximum buffer length.
- *
- * format:
- * ISON :nicklist
- */
-/*
- * Take care of potential nasty buffer overflow problem 
- * -Dianora
- *
- */
 
-
-int m_ison(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
+/*
+ * m_time
+ *      parv[0] = sender prefix
+ *      parv[1] = servername
+ */
+int m_time(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
-  struct Client *acptr;
-  char  *s, **pav = parv;
-  char  *p = (char *)NULL;
-  int len;
-  int len2;
-  static char buf[BUFSIZE];
-
-  if (parc < 2)
-    {
-      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
-                 me.name, parv[0], "ISON");
-      return 0;
-    }
-
-  ircsprintf(buf, form_str(RPL_ISON), me.name, *parv);
-  len = strlen(buf);
-  if (!IsOper(cptr))
-    cptr->priority +=20; /* this keeps it from moving to 'busy' list */
-  for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, (char *)NULL, " "))
-    if ((acptr = find_person(s, NULL)))
-      {
-        len2 = strlen(acptr->name);
-        if((len + len2 + 5) < sizeof(buf)) /* make sure can never overflow  */
-          {                                /* allow for extra ' ','\0' etc. */
-            (void)strcat(buf, acptr->name);
-            len += len2;
-            (void)strcat(buf, " ");
-            len++;
-          }
-        else
-          break;
-      }
-  sendto_one(sptr, "%s", buf);
+  if (hunt_server(cptr,sptr,":%s TIME :%s",1,parc,parv) == HUNTED_ISME)
+    sendto_one(sptr, form_str(RPL_TIME), me.name,
+               parv[0], me.name, date(0));
   return 0;
 }
+

@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, src/m_ison.c
+ *   IRC - Internet Relay Chat, src/m_restart.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
  *
@@ -24,13 +24,13 @@
  */
 #include "m_commands.h"
 #include "client.h"
+#include "common.h"
 #include "irc_string.h"
 #include "ircd.h"
 #include "numeric.h"
+#include "restart.h"
 #include "send.h"
-
-#include <string.h>
-
+#include "struct.h" /* XXX - syslog */
 
 /*
  * m_functions execute protocol messages on this server:
@@ -90,55 +90,33 @@
  */
 
 /*
- * m_ison added by Darren Reed 13/8/91 to act as an efficent user indicator
- * with respect to cpu/bandwidth used. Implemented for NOTIFY feature in
- * clients. Designed to reduce number of whois requests. Can process
- * nicknames in batches as long as the maximum buffer length.
- *
- * format:
- * ISON :nicklist
- */
-/*
- * Take care of potential nasty buffer overflow problem 
- * -Dianora
+ * m_restart
  *
  */
-
-
-int m_ison(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
+int     m_restart(struct Client *cptr,
+                  struct Client *sptr,
+                  int parc,
+                  char *parv[])
 {
-  struct Client *acptr;
-  char  *s, **pav = parv;
-  char  *p = (char *)NULL;
-  int len;
-  int len2;
-  static char buf[BUFSIZE];
-
-  if (parc < 2)
+  char buf[BUFSIZE]; 
+  if (!MyClient(sptr) || !IsAnOper(sptr))
     {
-      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
-                 me.name, parv[0], "ISON");
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
 
-  ircsprintf(buf, form_str(RPL_ISON), me.name, *parv);
-  len = strlen(buf);
-  if (!IsOper(cptr))
-    cptr->priority +=20; /* this keeps it from moving to 'busy' list */
-  for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, (char *)NULL, " "))
-    if ((acptr = find_person(s, NULL)))
-      {
-        len2 = strlen(acptr->name);
-        if((len + len2 + 5) < sizeof(buf)) /* make sure can never overflow  */
-          {                                /* allow for extra ' ','\0' etc. */
-            (void)strcat(buf, acptr->name);
-            len += len2;
-            (void)strcat(buf, " ");
-            len++;
-          }
-        else
-          break;
-      }
-  sendto_one(sptr, "%s", buf);
-  return 0;
+  if ( !IsOperDie(sptr) )
+    {
+      sendto_one(sptr,":%s NOTICE %s: You have no D flag", me.name, parv[0]);
+      return 0;
+    }
+
+#ifdef USE_SYSLOG
+  syslog(LOG_WARNING, "Server RESTART by %s\n",
+         get_client_name(sptr,FALSE));
+#endif
+  ircsprintf(buf, "Server RESTART by %s", get_client_name(sptr, TRUE));
+  restart(buf);
+  return 0; /*NOT REACHED*/
 }
+

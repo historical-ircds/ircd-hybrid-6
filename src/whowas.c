@@ -18,16 +18,17 @@
 *
 *   $Id$
 */
-#include "struct.h"
-#include "ircd_defs.h"
 #include "whowas.h"
 #include "common.h"
-#include "numeric.h"
-#include "ircd.h"
-#include "send.h"
 #include "hash.h"
-#include "s_user.h"
+#include "irc_string.h"
+#include "ircd.h"
+#include "ircd_defs.h"
+#include "numeric.h"
 #include "s_serv.h"
+#include "s_user.h"
+#include "send.h"
+#include "struct.h"
 
 #include <assert.h>
 #include <string.h>

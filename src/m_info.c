@@ -7,6 +7,7 @@
 #include "m_info.h"
 #include "channel.h"
 #include "common.h"
+#include "irc_string.h"
 #include "ircd.h"
 #include "numeric.h"
 #include "s_serv.h"
