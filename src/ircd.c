@@ -40,12 +40,13 @@
 #include "restart.h"
 
 #include <string.h>
+#include <errno.h>
 #include <time.h>
-#include <sys/file.h>
-#include <sys/stat.h>
 #include <pwd.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <sys/file.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
 
 #ifdef SETUID_ROOT

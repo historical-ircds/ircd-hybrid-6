@@ -27,6 +27,7 @@
 #include "send.h"
 
 #include <stdarg.h>
+#include <errno.h>
 
 extern	void	count_whowas_memory(int *, u_long *);
 extern  void    count_ip_hash(int *,u_long *);	  /* defined in s_conf.c */

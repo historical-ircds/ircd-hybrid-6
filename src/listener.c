@@ -28,6 +28,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <netdb.h>
 #include <sys/socket.h>

@@ -21,6 +21,7 @@
  */
 #include "s_bsd.h"
 #include "listener.h"
+#include "config.h"
 #include "struct.h"
 #include "common.h"
 #include "res.h"

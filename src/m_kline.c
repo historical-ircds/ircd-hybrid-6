@@ -40,6 +40,7 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <string.h>
+#include <errno.h>
 
 extern int rehashed;
 extern int dline_in_progress;	/* defined in ircd.c */
