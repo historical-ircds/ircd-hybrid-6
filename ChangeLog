@@ -2,7 +2,7 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 	
-version hybrid-6-b44    30-Jan-1999
+version hybrid-6-b44    31-Jan-1999
 * (s_bsd.c) fixed a botch with rr = 0 causing bizarre behaviour under solaris
   (ping time outs etc.) due to a mis-cut and paste from the select code
 * (s_bsd.c) redid read_packet() to use msg_ready again
@@ -17,6 +17,15 @@ version hybrid-6-b44    30-Jan-1999
   the M: line for outbound connects
 * fixed the STATS_NOTICE invalid directive.  made it #define by default.
 -FlashMan
+* channel has to be +ip to show invite notices "p is for paranoid
+  and thats good enough for me" too many complaints. I think this
+  is a reasonable way of doing it for now.
+* s_bsd.c moved some code around in in connect_inet() to remove
+  a redundant if(specific_virtual_host). Also moved the error check
+  on socket open logically where it should be.
+* fixed the USE_FAST_FD_ISSET botch I introduced, corrected an unforseen
+  error thats been there for a while.
+-Dianora
 	
 version hybrid-6-b43    24-Jan-1999
 * reworked io_loop dropping CPU load significantly, this is still something 

@@ -1631,6 +1631,7 @@ void read_clients()
 	  FD_SET(cptr->authfd, read_set);
 	  if (cptr->flags & FLAGS_WRAUTH)
 	    FD_SET(cptr->authfd, write_set);
+
 #ifdef USE_FAST_FD_ISSET
 	  fd_mask <<= 1;
 	  if(!fd_mask)
@@ -1661,12 +1662,6 @@ void read_clients()
 	    {
 #ifdef USE_FAST_FD_ISSET
 	      read_set->fds_bits[fd_offset] |= fd_mask;
-	      fd_mask <<= 1;
-	      if(!fd_mask)
-		{
-		  fd_offset++;
-		  fd_mask = 1;
-		}
 #else
 	      FD_SET(i, read_set);
 #endif
@@ -1837,9 +1832,7 @@ void read_clients()
 	      nfds--;
 	      read_authports(cptr);
 	    }
-          continue;
 	}
-
 
       /*
        * Now see if there's a connection pending...
@@ -2046,11 +2039,21 @@ void read_clients()
 	}
 #ifdef USE_FAST_FD_ISSET
       if((read_set->fds_bits[fd_offset] & fd_mask) && length > 0)
+	{
+	  fd_mask <<= 1;
+	  if(!fd_mask)
+	    {
+	      fd_offset++;
+	      fd_mask = 1;
+	    }
+	  continue;
+	}
 #else
       if (!FD_ISSET(i, read_set) && length > 0)
 	continue;
 #endif
       nfds--;
+
 #ifdef USE_FAST_FD_ISSET
       if (length > 0)
 	{
@@ -2595,25 +2598,25 @@ static	struct	sockaddr *connect_inet(aConfItem *aconf,
    * with it so if it fails its useless.
    */
   cptr->fd = socket(AF_INET, SOCK_STREAM, 0);
-  if (cptr->fd >= (HARD_FDLIMIT - 10))
-    {
-      sendto_realops("No more connections allowed (%s)", cptr->name);
-      return NULL;
-    }
-  mysk.sin_port = 0;
-  mysk.sin_family = AF_INET;
-  memset((void *)&server, 0, sizeof(server));
-  server.sin_family = AF_INET;
-  get_sockhost(cptr, aconf->host);
-
-  if (specific_virtual_host == 1)
-    mysk.sin_addr = vserv.sin_addr;
 
   if (cptr->fd == -1)
     {
       report_error("opening stream socket to server %s:%s", cptr);
       return NULL;
     }
+
+  if (cptr->fd >= (HARD_FDLIMIT - 10))
+    {
+      sendto_realops("No more connections allowed (%s)", cptr->name);
+      return NULL;
+    }
+
+  mysk.sin_port = 0;
+  mysk.sin_family = AF_INET;
+  memset((void *)&server, 0, sizeof(server));
+  server.sin_family = AF_INET;
+  get_sockhost(cptr, aconf->host);
+
   /*
   ** Bind to a local IP# (with unknown port - let unix decide) so
   ** we have some chance of knowing the IP# that gets used for a host
@@ -2624,18 +2627,20 @@ static	struct	sockaddr *connect_inet(aConfItem *aconf,
      leading to a freezing select() on this side for some time.
      */
   if (specific_virtual_host)
-  {
-  /*
-  ** No, we do bind it if we have virtual host support. If we don't
-  ** explicitly bind it, it will default to IN_ADDR_ANY and we lose
-  ** due to the other server not allowing our base IP --smg
-  */	
-    if (bind(cptr->fd, (struct sockaddr *)&mysk, sizeof(mysk)) == -1)
-      {
-        report_error("error binding to local port for %s:%s", cptr);
-        return NULL;
-      }
-  }
+    {
+      mysk.sin_addr = vserv.sin_addr;
+
+      /*
+      ** No, we do bind it if we have virtual host support. If we don't
+      ** explicitly bind it, it will default to IN_ADDR_ANY and we lose
+      ** due to the other server not allowing our base IP --smg
+      */	
+      if (bind(cptr->fd, (struct sockaddr *)&mysk, sizeof(mysk)) == -1)
+	{
+	  report_error("error binding to local port for %s:%s", cptr);
+	  return NULL;
+	}
+    }
   /*
    * By this point we should know the IP# of the host listed in the
    * conf line, whether as a result of the hostname lookup or the ip#
