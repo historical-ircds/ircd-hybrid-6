@@ -203,7 +203,7 @@ void _free_client(struct Client* cptr)
     result = BlockHeapFree(localClientFreeList, cptr);
   }
   else
-    result = BlockHeapFree(localClientFreeList, cptr);
+    result = BlockHeapFree(remoteClientFreeList, cptr);
 
   assert(0 == result);
   if (result)
