@@ -3957,6 +3957,7 @@ static void show_ports(aClient *sptr)
 		 sptr->name,
 		 'P',
 		 listener->port,
+		 listener->name,
 		 listener->ref_count,
 		 listener->active);
     }
