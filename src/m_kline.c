@@ -22,6 +22,7 @@
  *
  *   $Id$
  */
+#include "m_commands.h"
 #include "m_kline.h"
 #include "channel.h"
 #include "class.h"
@@ -685,11 +686,11 @@ m_kline(aClient *cptr,
 #ifdef NON_REDUNDANT_KLINES
   if( (aconf = find_matching_mtrie_conf(host,user,(unsigned long)ip)) )
      {
-       char *reason;
+       char *nrkreason;
 
        if( aconf->status & CONF_KILL )
          {
-           reason = aconf->passwd ? aconf->passwd : "<No Reason>";
+           nrkreason = aconf->passwd ? aconf->passwd : "<No Reason>";
 #ifdef SLAVE_SERVERS
            if(!IsServer(sptr))
 #endif
@@ -698,7 +699,7 @@ m_kline(aClient *cptr,
                         me.name,
                         parv[0],
                         user,host,
-                        aconf->user,aconf->host,reason);
+                        aconf->user,aconf->host,nrkreason);
            return 0;
          }
      }
@@ -1163,20 +1164,20 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifdef NON_REDUNDANT_KLINES
   if( (aconf = match_Dline(ip_host)) )
      {
-       char *reason;
-       reason = aconf->passwd ? aconf->passwd : "<No Reason>";
+       char *nrkreason;
+       nrkreason = aconf->passwd ? aconf->passwd : "<No Reason>";
        if(IsConfElined(aconf))
          sendto_one(sptr, ":%s NOTICE %s :[%s] is (E)d-lined by [%s] - %s",
                     me.name,
                     parv[0],
                     host,
-                    aconf->host,reason);
+                    aconf->host,nrkreason);
          else
            sendto_one(sptr, ":%s NOTICE %s :[%s] already D-lined by [%s] - %s",
                       me.name,
                       parv[0],
                       host,
-                      aconf->host,reason);
+                      aconf->host,nrkreason);
       return 0;
        
      }

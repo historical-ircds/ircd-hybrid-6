@@ -4,6 +4,7 @@
  * $Id$
  */
 #define DEFINE_M_INFO_DATA
+#include "m_commands.h"
 #include "m_info.h"
 #include "channel.h"
 #include "client.h"

@@ -68,7 +68,7 @@ static char buffer[1024];  /* ZZZ must this be so big? must it be here? */
  *
  * NOTE: parse() should not be called recusively by any other functions!
  */
-int parse(aClient *cptr, char *buffer, char *bufend)
+int parse(aClient *cptr, char *pbuffer, char *bufend)
 {
   aClient *from = cptr;
   char  *ch;
@@ -79,7 +79,7 @@ int parse(aClient *cptr, char *buffer, char *bufend)
   struct Message *mptr;
 
   Debug((DEBUG_DEBUG, "Parsing %s: %s",
-         get_client_name(cptr, TRUE), buffer));
+         get_client_name(cptr, TRUE), pbuffer));
 
   if (IsDead(cptr))
     return -1;
@@ -87,7 +87,7 @@ int parse(aClient *cptr, char *buffer, char *bufend)
   s = sender;
   *s = '\0';
 
-  for (ch = buffer; *ch == ' '; ch++)   /* skip spaces */
+  for (ch = pbuffer; *ch == ' '; ch++)   /* skip spaces */
     /* null statement */ ;
 
   para[0] = from->name;
@@ -136,10 +136,10 @@ int parse(aClient *cptr, char *buffer, char *bufend)
           if (!from)
             {
               Debug((DEBUG_ERROR, "Unknown prefix (%s)(%s) from (%s)",
-                     sender, buffer, cptr->name));
+                     sender, pbuffer, cptr->name));
               ServerStats->is_unpf++;
 
-              remove_unknown(cptr, sender, buffer);
+              remove_unknown(cptr, sender, pbuffer);
 
               return -1;
             }
@@ -147,9 +147,9 @@ int parse(aClient *cptr, char *buffer, char *bufend)
             {
               ServerStats->is_wrdi++;
               Debug((DEBUG_ERROR, "Message (%s) coming from (%s)",
-                     buffer, cptr->name));
+                     pbuffer, cptr->name));
 
-              return cancel_clients(cptr, from, buffer);
+              return cancel_clients(cptr, from, pbuffer);
             }
         }
       while (*ch == ' ')
@@ -205,7 +205,7 @@ int parse(aClient *cptr, char *buffer, char *bufend)
           ** Hm, when is the buffer empty -- if a command
           ** code has been found ?? -Armin
           */
-          if (buffer[0] != '\0')
+          if (pbuffer[0] != '\0')
             {
               if (IsPerson(from))
                 sendto_one(from,
@@ -606,8 +606,8 @@ static  int     cancel_clients(aClient *cptr,
 }
 
 static  void    remove_unknown(aClient *cptr,
-                               char *sender,
-                               char *buffer)
+                               char *psender,
+                               char *pbuffer)
 {
   if (!IsRegistered(cptr))
     return;
@@ -616,8 +616,8 @@ static  void    remove_unknown(aClient *cptr,
     {
       sendto_realops_flags(FLAGS_DEBUG,
                  "Weirdness: Unknown client prefix (%s) from %s, Ignoring %s",
-                         buffer,
-                         get_client_name(cptr, FALSE), sender);
+                         pbuffer,
+                         get_client_name(cptr, FALSE), psender);
       return;
     }
 
@@ -631,23 +631,23 @@ static  void    remove_unknown(aClient *cptr,
    * user on the other server which needs to be removed. -avalon
    * Tell opers about this. -Taner
    */
-  if (!strchr(sender, '.'))
+  if (!strchr(psender, '.'))
     sendto_one(cptr, ":%s KILL %s :%s (%s(?) <- %s)",
-               me.name, sender, me.name, sender,
+               me.name, psender, me.name, psender,
                cptr->name);
   else
     {
 #ifdef HIDE_SERVERS_IPS
       sendto_realops_flags(FLAGS_DEBUG,
               "Unknown prefix (%s) from %s, Squitting %s",
-	      buffer, get_client_name(cptr, MASK_IP), sender);
+	      pbuffer, get_client_name(cptr, MASK_IP), psender);
       sendto_one(cptr, ":%s SQUIT %s :(Unknown prefix (%s) from %s)",
-      		 me.name, sender, buffer, get_client_name(cptr, MASK_IP));
+      		 me.name, psender, pbuffer, get_client_name(cptr, MASK_IP));
 #else		 
       sendto_realops_flags(FLAGS_DEBUG,
-        "Unknown prefix (%s) from %s, Squitting %s", buffer, get_client_name(cptr, FALSE), sender);
+        "Unknown prefix (%s) from %s, Squitting %s", pbuffer, get_client_name(cptr, FALSE), psender);
       sendto_one(cptr, ":%s SQUIT %s :(Unknown prefix (%s) from %s)",
-                 me.name, sender, buffer, get_client_name(cptr, FALSE));
+                 me.name, psender, pbuffer, get_client_name(cptr, FALSE));
 #endif		 
     }
 }

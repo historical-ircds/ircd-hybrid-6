@@ -501,16 +501,16 @@ static time_t io_loop(time_t delay)
    *    -Taner
    */
   {
-    static time_t lasttime=0;
+    static time_t lslasttime=0;
 #ifdef CLIENT_SERVER
-    if (!LIFESUX || (lasttime + LIFESUX) < CurrentTime)
+    if (!LIFESUX || (lslasttime + LIFESUX) < CurrentTime)
       {
 #else
-    if ((lasttime + (LIFESUX + 1)) < CurrentTime)
+    if ((lslasttime + (LIFESUX + 1)) < CurrentTime)
       {
 #endif
         read_message(delay, FDL_ALL); /*  check everything! */
-        lasttime = CurrentTime;
+        lslasttime = CurrentTime;
       }
    }
 #else

@@ -195,6 +195,7 @@ extern ConfigFileEntryType ConfigFileEntry;    /* GLOBAL - defined in ircd.c */
 
 extern void clear_ip_hash_table(void);
 extern void iphash_stats(struct Client *,struct Client *,int,char **,int);
+extern void count_ip_hash(int *,u_long *);
 
 #ifdef LIMIT_UH
 void remove_one_ip(struct Client *);
@@ -222,6 +223,7 @@ extern struct ConfItem* find_first_nline(struct SLink* lp);
 extern void             det_confs_butmask (struct Client *, int);
 extern int              detach_conf (struct Client *, struct ConfItem *);
 extern struct ConfItem* det_confs_butone (struct Client *, struct ConfItem *);
+extern struct ConfItem* find_conf_entry(struct ConfItem *, int);
 extern struct ConfItem* find_conf_exact(const char* name, const char* user, 
                                         const char* host, int statmask);
 extern struct ConfItem* find_conf_name(struct SLink* lp, const char* name, 

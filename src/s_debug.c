@@ -48,7 +48,6 @@
 
 
 extern  void    count_whowas_memory(int *, u_long *);
-extern  void    count_ip_hash(int *,u_long *);    /* defined in s_conf.c */
 extern  int     maxdbufblocks;                    /* defined in dbuf.c */
 
 /*
@@ -187,7 +186,7 @@ void send_usage(aClient *cptr, char *nick)
 void count_memory(aClient *cptr,char *nick)
 {
   aClient *acptr;
-  Link *link;
+  Link *gen_link;
   aChannel *chptr;
   aConfItem *aconf;
   aClass *cltmp;
@@ -258,7 +257,7 @@ void count_memory(aClient *cptr,char *nick)
       if (MyConnect(acptr))
         {
           lc++;
-          for (link = acptr->confs; link; link = link->next)
+          for (gen_link = acptr->confs; gen_link; gen_link = gen_link->next)
             lcc++;
         }
       else
@@ -266,11 +265,11 @@ void count_memory(aClient *cptr,char *nick)
       if (acptr->user)
         {
           us++;
-          for (link = acptr->user->invited; link;
-               link = link->next)
+          for (gen_link = acptr->user->invited; gen_link;
+               gen_link = gen_link->next)
             usi++;
-          for (link = acptr->user->channel; link;
-               link = link->next)
+          for (gen_link = acptr->user->channel; gen_link;
+               gen_link = gen_link->next)
             usc++;
           if (acptr->user->away)
             {
@@ -286,19 +285,19 @@ void count_memory(aClient *cptr,char *nick)
     {
       ch++;
       chm += (strlen(chptr->chname) + sizeof(aChannel));
-      for (link = chptr->members; link; link = link->next)
+      for (gen_link = chptr->members; gen_link; gen_link = gen_link->next)
         chu++;
-      for (link = chptr->invites; link; link = link->next)
+      for (gen_link = chptr->invites; gen_link; gen_link = gen_link->next)
         chi++;
-      for (link = chptr->banlist; link; link = link->next)
+      for (gen_link = chptr->banlist; gen_link; gen_link = gen_link->next)
         {
           chb++;
-          chbm += (strlen(link->value.cp)+1+sizeof(Link));
+          chbm += (strlen(gen_link->value.cp)+1+sizeof(Link));
         #ifdef BAN_INFO
-        	if (link->value.banptr->banstr)
-        		chbm += strlen(link->value.banptr->banstr);
-        	if (link->value.banptr->who)
-        		chbm += strlen(link->value.banptr->who);
+        	if (gen_link->value.banptr->banstr)
+        		chbm += strlen(gen_link->value.banptr->banstr);
+        	if (gen_link->value.banptr->who)
+        		chbm += strlen(gen_link->value.banptr->who);
         #endif /* BAN_INFO */
         }
     }

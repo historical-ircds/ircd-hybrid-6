@@ -46,6 +46,30 @@ aConfItem *leftover = NULL;
 /* defined in mtrie_conf.c */
 extern char *show_iline_prefix(aClient *,aConfItem *,char *);
 
+/* do these belong here? */
+void walk_the_dlines(aClient *, struct ip_subtree *);
+void walk_the_ip_Klines(aClient *,struct ip_subtree *, char, int);
+struct ip_subtree *new_ip_subtree(unsigned long,
+                                  unsigned long,
+                                  aConfItem *,
+                                  struct ip_subtree *,
+                                  struct ip_subtree *);
+struct ip_subtree *insert_ip_subtree(struct ip_subtree *, 
+                                     struct ip_subtree *);
+struct ip_subtree *find_ip_subtree(struct ip_subtree *,
+                                   unsigned long );
+struct ip_subtree *delete_ip_subtree(struct ip_subtree *,
+                                     unsigned long,
+                                     unsigned long,
+                                     aConfItem **);
+aConfItem *trim_Dlines(aConfItem *);
+aConfItem *trim_ip_Klines(aConfItem *, int);
+aConfItem *trim_ip_Elines(aConfItem *, int);
+struct ip_subtree *destroy_ip_subtree(struct ip_subtree *);
+aConfItem *find_exception(unsigned long);
+aConfItem *rescan_dlines(aConfItem *);
+
+
 
 /*
  * new_ip_subtree - just makes a new node 
@@ -66,8 +90,6 @@ struct ip_subtree *new_ip_subtree(unsigned long ip,
   return temp;
 }
 
-void walk_the_dlines(aClient *, struct ip_subtree *);
-void walk_the_ip_Klines(aClient *,struct ip_subtree *, char, int);
 /*
  * insert_ip_subtree - insert a node or tree into the specified tree.
  * Make sure that collisions have been removed ahead of time.

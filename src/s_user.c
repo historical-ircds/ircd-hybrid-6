@@ -22,6 +22,7 @@
  *
  *  $Id$
  */
+#include "m_commands.h"
 #include "s_user.h"
 #include "channel.h"
 #include "class.h"
@@ -238,7 +239,7 @@ int show_lusers(struct Client *cptr, struct Client *sptr,
 #define LUSERS_CACHE_TIME 180
   static long last_time=0;
   static int    s_count = 0, c_count = 0, u_count = 0, i_count = 0;
-  static int    o_count = 0, m_client = 0, m_server = 0;
+  static int    o_count = 0, m_client = 0, m_servers = 0;
   int forced;
   struct Client *acptr;
 
@@ -248,20 +249,20 @@ int show_lusers(struct Client *cptr, struct Client *sptr,
 /* (void)collapse(parv[1]); */
 
   Count.unknown = 0;
-  m_server = Count.myserver;
-  m_client = Count.local;
-  i_count  = Count.invisi;
-  u_count  = Count.unknown;
-  c_count  = Count.total-Count.invisi;
-  s_count  = Count.server;
-  o_count  = Count.oper;
+  m_servers = Count.myserver;
+  m_client  = Count.local;
+  i_count   = Count.invisi;
+  u_count   = Count.unknown;
+  c_count   = Count.total-Count.invisi;
+  s_count   = Count.server;
+  o_count   = Count.oper;
   if (forced || (CurrentTime > last_time+LUSERS_CACHE_TIME))
     {
       last_time = CurrentTime;
       /* only recount if more than a second has passed since last request */
       /* use LUSERS_CACHE_TIME instead... */
       s_count = 0; c_count = 0; u_count = 0; i_count = 0;
-      o_count = 0; m_client = 0; m_server = 0;
+      o_count = 0; m_client = 0; m_servers = 0;
 
       for (acptr = GlobalClientList; acptr; acptr = acptr->next)
         {
@@ -269,7 +270,7 @@ int show_lusers(struct Client *cptr, struct Client *sptr,
             {
             case STAT_SERVER:
               if (MyConnect(acptr))
-                m_server++;
+                m_servers++;
             case STAT_ME:
               s_count++;
               break;
@@ -313,12 +314,12 @@ int show_lusers(struct Client *cptr, struct Client *sptr,
        */
       if (!forced)
         {
-          if (m_server != Count.myserver)
+          if (m_servers != Count.myserver)
             {
               sendto_realops_flags(FLAGS_DEBUG, 
                                  "Local server count off by %d",
-                                 Count.myserver - m_server);
-              Count.myserver = m_server;
+                                 Count.myserver - m_servers);
+              Count.myserver = m_servers;
             }
           if (s_count != Count.server)
             {
@@ -380,7 +381,7 @@ int show_lusers(struct Client *cptr, struct Client *sptr,
     sendto_one(sptr, form_str(RPL_LUSERCHANNELS),
                me.name, parv[0], Count.chan);
   sendto_one(sptr, form_str(RPL_LUSERME),
-             me.name, parv[0], m_client, m_server);
+             me.name, parv[0], m_client, m_servers);
   sendto_one(sptr, form_str(RPL_LOCALUSERS), me.name, parv[0],
              Count.local, Count.max_loc);
   sendto_one(sptr, form_str(RPL_GLOBALUSERS), me.name, parv[0],
@@ -391,9 +392,9 @@ int show_lusers(struct Client *cptr, struct Client *sptr,
              Count.totalrestartcount);
   if (m_client > MaxClientCount)
     MaxClientCount = m_client;
-  if ((m_client + m_server) > MaxConnectionCount)
+  if ((m_client + m_servers) > MaxConnectionCount)
     {
-      MaxConnectionCount = m_client + m_server;
+      MaxConnectionCount = m_client + m_servers;
     }
 
   return 0;
@@ -743,14 +744,14 @@ static int register_user(aClient *cptr, aClient *sptr,
 
       if(!IsAnOper(sptr))
         {
-          char *reason;
+          char *xreason;
 
           if ( (aconf = find_special_conf(sptr->info,CONF_XLINE)))
             {
               if(aconf->passwd)
-                reason = aconf->passwd;
+                xreason = aconf->passwd;
               else
-                reason = "NONE";
+                xreason = "NONE";
               
               if(aconf->port)
                 {
@@ -759,7 +760,7 @@ static int register_user(aClient *cptr, aClient *sptr,
                       sendto_realops_flags(FLAGS_REJ,
                                            "X-line Rejecting [%s] [%s], user %s",
                                            sptr->info,
-                                           reason,
+                                           xreason,
                                            get_client_name(cptr, FALSE));
                     }
                   ServerStats->is_ref++;      
@@ -769,7 +770,7 @@ static int register_user(aClient *cptr, aClient *sptr,
                 sendto_realops_flags(FLAGS_REJ,
                                    "X-line Warning [%s] [%s], user %s",
                                    sptr->info,
-                                   reason,
+                                   xreason,
                                    get_client_name(cptr, FALSE));
             }
          }

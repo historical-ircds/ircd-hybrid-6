@@ -128,7 +128,7 @@ void show_ports(struct Client* sptr)
 
 static int inetport(struct Listener* listener)
 {
-  struct sockaddr_in sin;
+  struct sockaddr_in port_sin;
   int                fd;
   int                opt = 1;
 
@@ -163,10 +163,10 @@ static int inetport(struct Listener* listener)
    * Bind a port to listen for new connections if port is non-null,
    * else assume it is already open and try get something from it.
    */
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_addr   = listener->addr;
-  sin.sin_port   = htons(listener->port);
+  memset(&port_sin, 0, sizeof(port_sin));
+  port_sin.sin_family = AF_INET;
+  port_sin.sin_addr   = listener->addr;
+  port_sin.sin_port   = htons(listener->port);
 
   if (INADDR_ANY != listener->addr.s_addr) {
     struct hostent* hp;
@@ -180,7 +180,7 @@ static int inetport(struct Listener* listener)
     }
   }
 
-  if (bind(fd, (struct sockaddr*) &sin, sizeof(sin))) {
+  if (bind(fd, (struct sockaddr*) &port_sin, sizeof(port_sin))) {
     report_error("binding listener socket %s:%s", 
                  get_listener_name(listener), errno);
     close(fd);

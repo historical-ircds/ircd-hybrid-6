@@ -100,6 +100,7 @@ extern void    del_invite (struct Client *, struct Channel *);
 extern void    send_user_joins (struct Client *, struct Client *);
 extern int     can_send (struct Client *, struct Channel *);
 extern int     is_chan_op (struct Client *, struct Channel *);
+extern int     is_deopped (struct Client *, struct Channel *);
 extern int     has_voice (struct Client *, struct Channel *);
 extern int     user_channel_mode(struct Client *, struct Channel *);
 extern int     count_channels (struct Client *);

@@ -22,6 +22,7 @@
  *
  *  $Id$
  */
+#include "m_commands.h"
 #include "m_gline.h"
 #include "channel.h"
 #include "client.h"

@@ -18,6 +18,7 @@
  *
  *  $Id$
  */
+#include "m_commands.h"
 #include "s_conf.h"
 #include "channel.h"
 #include "client.h"

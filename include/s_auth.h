@@ -70,6 +70,7 @@ extern void start_auth(struct Client *);
 extern void timeout_auth_queries(time_t now);
 extern void read_auth_reply(struct AuthRequest* req);
 extern void send_auth_query(struct AuthRequest* req);
+extern void free_auth_request(struct AuthRequest* request);
 
 #endif /* INCLUDED_s_auth_h */
 

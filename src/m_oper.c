@@ -222,9 +222,9 @@ int m_oper(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
       if(cptr->confs)
         {
-          struct ConfItem *aconf;
-          aconf = cptr->confs->value.aconf;
-          operprivs = oper_privs_as_string(cptr,aconf->port);
+          struct ConfItem *paconf;
+          paconf = cptr->confs->value.aconf;
+          operprivs = oper_privs_as_string(cptr,paconf->port);
         }
       else
         operprivs = "";

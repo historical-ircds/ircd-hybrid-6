@@ -11,6 +11,7 @@
 #include "numeric.h"
 #include "send.h"
 #include "struct.h"
+#include "scache.h"
 
 
 #include <assert.h>

@@ -53,7 +53,9 @@ extern void        accept_connection(struct Listener* listener);
 extern void        add_listener(int port, const char* vaddr_ip);
 extern void        close_listener(struct Listener* listener);
 extern void        close_listeners(void);
+extern void        free_listener(struct Listener* listener);
 extern const char* get_listener_name(const struct Listener* listener);
+extern struct Listener* make_listener(int port, struct in_addr addr);
 extern void        mark_listeners_closing(void);
 extern void        show_ports(struct Client* client);
 

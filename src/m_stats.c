@@ -130,7 +130,7 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
   struct Message* mptr;
   struct Client*  acptr;
-  char            stat = parc > 1 ? parv[1][0] : '\0';
+  char            statcmd = parc > 1 ? parv[1][0] : '\0';
   int             i;
   int             doall = 0;
   int             wilds = 0;
@@ -175,7 +175,7 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   else
     name = me.name;
 
-  switch (stat)
+  switch (statcmd)
     {
     case 'L' : case 'l' :
       /*
@@ -223,7 +223,7 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
             {
               sendto_one(sptr, Lformat, me.name,
                      RPL_STATSLINKINFO, parv[0],
-                     (IsUpper(stat)) ?
+                     (IsUpper(statcmd)) ?
                      get_client_name(acptr, TRUE) :
                      get_client_name(acptr, FALSE),
                      (int)DBufLength(&acptr->sendQ),
@@ -249,7 +249,7 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
                  else
                   sendto_one(sptr, Lformat, me.name,
                      RPL_STATSLINKINFO, parv[0],
-                     (IsUpper(stat)) ?
+                     (IsUpper(statcmd)) ?
                      get_client_name(acptr, TRUE) :
                      get_client_name(acptr, FALSE),
                      (int)DBufLength(&acptr->sendQ),
@@ -509,10 +509,10 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       break;
 
     default :
-      stat = '*';
+      statcmd = '*';
       break;
     }
-  sendto_one(sptr, form_str(RPL_ENDOFSTATS), me.name, parv[0], stat);
+  sendto_one(sptr, form_str(RPL_ENDOFSTATS), me.name, parv[0], statcmd);
 
   /* personally, I don't see why opers need to see stats requests
    * at all. They are just "noise" to an oper, and users can't do
@@ -523,11 +523,11 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 #ifdef STATS_NOTICE
   if (valid_stats)
     {
-      if ( (stat == 'L') || (stat == 'l') )
+      if ( (statcmd == 'L') || (statcmd == 'l') )
         {
           sendto_realops_flags(FLAGS_SPY,
                 "STATS %c requested by %s (%s@%s) [%s] on %s%s",
-                stat,
+                statcmd,
                 sptr->name,
                 sptr->username,
                 sptr->host,
@@ -540,7 +540,7 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
         {
           sendto_realops_flags(FLAGS_SPY,
                 "STATS %c requested by %s (%s@%s) [%s]%s",
-                stat,
+                statcmd,
                 sptr->name,
                 sptr->username,
                 sptr->host,
@@ -551,7 +551,7 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
     }
 #else
 #ifdef STATS_P_NOTICE
-  if (stat == 'p')
+  if (statcmd == 'p')
     sendto_realops_flags(FLAGS_SPY,
                          "STATS p requested by %s (%s@%s) [%s]",
                          sptr->name, sptr->username, sptr->host,

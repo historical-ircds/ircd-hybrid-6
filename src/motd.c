@@ -22,6 +22,7 @@
  *
  *   $Id$
  */
+#include "m_commands.h"
 #include "motd.h"
 #include "ircd.h"
 #include "s_bsd.h"

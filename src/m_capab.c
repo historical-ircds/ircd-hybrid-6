@@ -98,7 +98,6 @@ int m_capab(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   struct Capability *cap;
   char* p;
   char* s;
-  struct CipherDef *cdef = NULL;
 
   if ((!IsUnknown(cptr) && !IsHandshake(cptr)) || parc < 2)
     return 0;
