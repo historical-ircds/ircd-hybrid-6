@@ -673,24 +673,11 @@
  * When this is defined, channel modes are preserved when this
  * server is split from net until rejoin. i.e. if the channel
  * was +i before this server split, it remains +i during the split
+ *
+ * DO NOT USE JUST YET on EFNET (It desyncs channels)
  */
 #define PRESERVE_CHANNEL_ON_SPLIT
 
-/*
- * comstud and I have both noted that solaris 2.5 at least, takes a hissy
- * fit if you don't read a fd that becomes ready right away. Unfortunately
- * the dog3 priority code relies upon not having to read a ready fd right away.
- * If you have HTM mode set low as it is normally, the server will
- * eventually grind to a halt. Personally, I think the server is 
- * faster without some of the CPU expensive manipulation some of the
- * priority code does. Your choice. but it has to be defined for SOLARIS
- * Try it and see. compare.
- * Don't complain if Solaris lags if you don't define this. I warned you.
- *
- * -Dianora
- */
-
-#undef LIMIT_UH
 
 /* IDLE_CHECK
  * If this is defined, each client is checked for excessive idleness
@@ -979,6 +966,11 @@
 */
 #undef  DEBUGMODE               /* define DEBUGMODE to enable debugging mode.*/
 
+/* DEBUG_NO_FORK is used to stop the daemon from doing a fork(), makes it
+ * easier for gdb. You won't need this unless you are planning on
+ * debugging ircd. -Dianora
+ */
+#undef DEBUG_NO_FORK
 
 /* ----------------- not approved on EFnet section -------------------- */
 /* GLINES - global Kline-like bans

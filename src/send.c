@@ -1233,6 +1233,10 @@ register char f;
 	      }
 	    rp = inp[++i];                  /* get the next parameter */
 	    break;
+	  case 'c':
+	    *wp++ = (char)rp;
+	    rp = inp[++i];
+	    break;
 	  case 'd':
 	    {
 	      register int myint,quotient;

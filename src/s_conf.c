@@ -1488,12 +1488,6 @@ int 	initconf(int opt, int fd)
 	  aconf->status = CONF_ADMIN;
 	  break;
 
-	case 'B':
-	case 'b':
-	  Debug((DEBUG_ERROR,
-		 "Error in config file: B lines no longer supported");
-	  break;
-
 	case 'C': /* Server where I should try to connect */
 	case 'c': /* in case of lp failures             */
 	  ccount++;
@@ -1506,18 +1500,6 @@ int 	initconf(int opt, int fd)
 	  break;
 	case 'D': /* Deny lines (immediate refusal) */
 	  aconf->status = CONF_DLINE;
-	  break;
-
-	case 'E':
-	case 'e':
-	  Debug((DEBUG_ERROR,
-		 "Error in config file: E lines no longer supported");
-	  break;
-
-	case 'F':
-	case 'f':
-	  Debug((DEBUG_ERROR,
-		 "Error in config file: F lines no longer supported");
 	  break;
 
 	case 'H': /* Hub server line */

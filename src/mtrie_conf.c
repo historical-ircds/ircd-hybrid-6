@@ -707,7 +707,7 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
       if(iline_aconf && (iline_aconf->status & (CONF_ELINE|CONF_KILL)))
 	return(iline_aconf);
     }
-  else	/* There IS no trie */
+  else
     {
       iline_aconf= find_wild_card_iline(user);
 

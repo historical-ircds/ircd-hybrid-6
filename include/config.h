@@ -973,7 +973,7 @@
  * to make your client server very sluggish.
  * You usually shouldn't need this. -Dianora
 */
-#define DEBUGMODE               /* define DEBUGMODE to enable debugging mode.*/
+#undef DEBUGMODE               /* define DEBUGMODE to enable debugging mode.*/
 
 /* DEBUG_NO_FORK is used to stop the daemon from doing a fork(), makes it
  * easier for gdb. You won't need this unless you are planning on

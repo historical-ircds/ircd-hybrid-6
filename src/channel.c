@@ -971,6 +971,15 @@ static	int	set_mode(aClient *cptr,
 	    break;
 	  if (whatt == MODE_ADD)
 	    {
+	      /* Ignore colon at beginning of ban string
+	       * unfortunately,  I can't ignore all such strings
+	       * because otherwise the channel gets desynced.
+	       * but I can at least stop local clients from placing it
+	       * -Dianora
+	       */
+
+	      if(MyClient(sptr) && (*parv[0] == ':'))
+		break;
 	      lp = &chops[opcnt++];
 	      lp->value.cp = *parv;
 	      lp->flags = MODE_ADD|MODE_BAN;
@@ -1591,9 +1600,10 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 	    {
 	      if(sptr->join_leave_count >= spam_num)
 		{
-		  sendto_realops("User %s (%s@%s) is a possible spambot",
-				 sptr->name,
-				 sptr->user->username, sptr->user->host);
+		  sendto_ops_lev(SPY_LEV,
+				     "User %s (%s@%s) is a possible spambot",
+				     sptr->name,
+				     sptr->user->username, sptr->user->host);
 		  sptr->oper_warn_count_down = OPER_SPAM_COUNTDOWN;
 		}
 	      else
@@ -1697,7 +1707,8 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
  
               if(sptr->oper_warn_count_down == 0)
                 {
-                  sendto_realops("User %s (%s@%s) trying to join %s is a possible spambot",
+                  sendto_ops_lev(SPY_LEV,
+		    "User %s (%s@%s) trying to join %s is a possible spambot",
                              sptr->name,
                              sptr->user->username,
 			     sptr->user->host,
@@ -1846,7 +1857,7 @@ int	m_part(aClient *cptr,
 	{
 	  if(sptr->join_leave_count >= spam_num)
 	    {
-	      sendto_realops("User %s (%s@%s) is a possible spambot",
+	      sendto_ops_lev(SPY_LEV,"User %s (%s@%s) is a possible spambot",
 			 sptr->name,
 			 sptr->user->username, sptr->user->host);
 	      sptr->oper_warn_count_down = OPER_SPAM_COUNTDOWN;

@@ -239,36 +239,14 @@ int	m_version(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
+      /* reject non local requests */
+      if(!MyConnect(sptr))
+	return 0;
+
       if((last_used + MOTD_WAIT) > NOW)
-	{
-	  last_used = NOW;
-	  if(last_count >= MOTD_MAX)
-	    return 0;
-	  else
-	    {
-	      if(last_count < MOTD_MAX)
-		last_count++;
-	    }
-	}
+	return 0;
       else
-	{
-	  if(last_count > 0)
-	    {
-	      int dec_count;
-	      if( NOW <= last_used)	/* eek! clock is running
-					 * backwards or something!
-					 */
-		return 0;
-	      
-	      dec_count = (NOW - last_used) / MOTD_WAIT;
-	      
-	      if(dec_count > last_count)
-		last_count = 0;
-	      else
-		last_count -= dec_count;
-	    }
-	  last_used = NOW;
-	}
+	last_used = NOW;
     }
 
   if(IsAnOper(sptr))
@@ -1106,36 +1084,14 @@ int	m_info(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
+      /* reject non local requests */
+      if(!MyConnect(sptr))
+	return 0;
+
       if((last_used + MOTD_WAIT) > NOW)
-	{
-	  last_used = NOW;
-	  if(last_count >= MOTD_MAX)
-	    return 0;
-	  else
-	    {
-	      if(last_count < MOTD_MAX)
-		last_count++;
-	    }
-	}
+	return 0;
       else
-	{
-	  if(last_count > 0)
-	    {
-	      int dec_count;
-	      if( NOW <= last_used)	/* eek! clock is running
-					 * backwards or something!
-					 */
-		return 0;
-	      
-	      dec_count = (NOW - last_used) / MOTD_WAIT;
-	      
-	      if(dec_count > last_count)
-		last_count = 0;
-	      else
-		last_count -= dec_count;
-	    }
-	  last_used = NOW;
-	}
+	last_used = NOW;
     }
 
   sendto_realops_lev(SPY_LEV, "info requested by %s (%s@%s) [%s]",
@@ -1738,36 +1694,14 @@ int	m_links(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
+      /* reject non local requests */
+      if(!MyConnect(sptr))
+	return 0;
+
       if((last_used + MOTD_WAIT) > NOW)
-	{
-	  last_used = NOW;
-	  if(last_count >= MOTD_MAX)
-	    return 0;
-	  else
-	    {
-	      if(last_count < MOTD_MAX)
-		last_count++;
-	    }
-	}
+	return 0;
       else
-	{
-	  if(last_count > 0)
-	    {
-	      int dec_count;
-	      if( NOW <= last_used)	/* eek! clock is running
-					 * backwards or something!
-					 */
-		return 0;
-	      
-	      dec_count = (NOW - last_used) / MOTD_WAIT;
-	      
-	      if(dec_count > last_count)
-		last_count = 0;
-	      else
-		last_count -= dec_count;
-	    }
-	  last_used = NOW;
-	}
+	last_used = NOW;
     }
 
   if (parc > 2)
@@ -1971,36 +1905,17 @@ int	m_stats(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
+      /* reject non local requests
+       * but in this case allow stats p
+       */
+      if( !((stat == 'p') || (stat == 'P')) &&
+	  !MyConnect(sptr))
+	return 0;
+
       if((last_used + MOTD_WAIT) > NOW)
-	{
-	  last_used = NOW;
-	  if(last_count >= MOTD_MAX)
-	    return 0;
-	  else
-	    {
-	      if(last_count < MOTD_MAX)
-		last_count++;
-	    }
-	}
+	return 0;
       else
-	{
-	  if(last_count > 0)
-	    {
-	      int dec_count;
-	      if( NOW <= last_used)	/* eek! clock is running
-					 * backwards or something!
-					 */
-		return 0;
-	      
-	      dec_count = (NOW - last_used) / MOTD_WAIT;
-	      
-	      if(dec_count > last_count)
-		last_count = 0;
-	      else
-		last_count -= dec_count;
-	    }
-	  last_used = NOW;
-	}
+	last_used = NOW;
     }
 
   if (hunt_server(cptr,sptr,":%s STATS %s :%s",2,parc,parv)!=HUNTED_ISME)
@@ -2328,36 +2243,14 @@ int	m_help(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
+      /* reject non local requests */
+      if(!MyConnect(sptr))
+	return 0;
+
       if((last_used + MOTD_WAIT) > NOW)
-	{
-	  last_used = NOW;
-	  if(last_count >= MOTD_MAX)
-	    return 0;
-	  else
-	    {
-	      if(last_count < MOTD_MAX)
-		last_count++;
-	    }
-	}
+	return 0;
       else
-	{
-	  if(last_count > 0)
-	    {
-	      int dec_count;
-	      if( NOW <= last_used)	/* eek! clock is running
-					 * backwards or something!
-					 */
-		return 0;
-	      
-	      dec_count = (NOW - last_used) / MOTD_WAIT;
-	      
-	      if(dec_count > last_count)
-		last_count = 0;
-	      else
-		last_count -= dec_count;
-	    }
-	  last_used = NOW;
-	}
+	last_used = NOW;
     }
 
   if ( !IsAnOper(sptr) || (helpfile == (aMessageFile *)NULL))
@@ -2400,6 +2293,28 @@ int	 m_lusers(aClient *cptr,
   static int	o_count = 0, m_client = 0, m_server = 0;
   int forced;
   aClient *acptr;
+  /* anti flooding code,
+   * I did have this in parse.c with a table lookup
+   * but I think this will be less inefficient doing it in each
+   * function that absolutely needs it
+   * -Dianora
+   */
+
+  static time_t last_used=0L;
+  static int last_count=0;
+
+  if(!IsAnOper(sptr))
+    {
+      /* reject non local requests */
+      if(!MyConnect(sptr))
+	return 0;
+
+      if((last_used + MOTD_WAIT) > NOW)
+	return 0;
+      else
+	last_used = NOW;
+    }
+
 
   if (parc > 2)
     if(hunt_server(cptr, sptr, ":%s LUSERS %s :%s", 2, parc, parv)
@@ -2852,36 +2767,14 @@ int	m_time(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
+      /* reject non local requests */
+      if(!MyConnect(sptr))
+	return 0;
+
       if((last_used + MOTD_WAIT) > NOW)
-	{
-	  last_used = NOW;
-	  if(last_count >= MOTD_MAX)
-	    return 0;
-	  else
-	    {
-	      if(last_count < MOTD_MAX)
-		last_count++;
-	    }
-	}
+	return 0;
       else
-	{
-	  if(last_count > 0)
-	    {
-	      int dec_count;
-	      if( NOW <= last_used)	/* eek! clock is running
-					 * backwards or something!
-					 */
-		return 0;
-	      
-	      dec_count = (NOW - last_used) / MOTD_WAIT;
-	      
-	      if(dec_count > last_count)
-		last_count = 0;
-	      else
-		last_count -= dec_count;
-	    }
-	  last_used = NOW;
-	}
+	last_used = NOW;
     }
 
   if (hunt_server(cptr,sptr,":%s TIME :%s",1,parc,parv) == HUNTED_ISME)
@@ -2915,35 +2808,9 @@ int	m_admin(aClient *cptr,
   if(!IsAnOper(sptr))
     {
       if((last_used + MOTD_WAIT) > NOW)
-	{
-	  last_used = NOW;
-	  if(last_count >= MOTD_MAX)
-	    return 0;
-	  else
-	    {
-	      if(last_count < MOTD_MAX)
-		last_count++;
-	    }
-	}
+	return 0;
       else
-	{
-	  if(last_count > 0)
-	    {
-	      int dec_count;
-	      if( NOW <= last_used)	/* eek! clock is running
-					 * backwards or something!
-					 */
-		return 0;
-	      
-	      dec_count = (NOW - last_used) / MOTD_WAIT;
-	      
-	      if(dec_count > last_count)
-		last_count = 0;
-	      else
-		last_count -= dec_count;
-	    }
-	  last_used = NOW;
-	}
+	last_used = NOW;
     }
 
   if (hunt_server(cptr,sptr,":%s ADMIN :%s",1,parc,parv) != HUNTED_ISME)
@@ -5263,39 +5130,17 @@ int	m_trace(aClient *cptr,
   if(!IsAnOper(sptr))
     {
       if((last_used + MOTD_WAIT) > NOW)
-	{
-	  last_used = NOW;
-	  if(last_count >= MOTD_MAX)
-	    return 0;
-	  else
-	    {
-	      if(last_count < MOTD_MAX)
-		last_count++;
-	    }
-	}
+	return 0;
       else
-	{
-	  if(last_count > 0)
-	    {
-	      int dec_count;
-	      if( NOW <= last_used)	/* eek! clock is running
-					 * backwards or something!
-					 */
-		return 0;
-	      
-	      dec_count = (NOW - last_used) / MOTD_WAIT;
-	      
-	      if(dec_count > last_count)
-		last_count = 0;
-	      else
-		last_count -= dec_count;
-	    }
-	  last_used = NOW;
-	}
+	last_used = NOW;
     }
 
   if(!IsAnOper(sptr))
     {
+      /* reject non local requests */
+      if(!MyConnect(sptr))
+	return 0;
+
       if((last_trace + MOTD_WAIT) > NOW)
 	{
 	  return 0;
@@ -5508,36 +5353,14 @@ int	m_motd(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
+      /* reject non local requests */
+      if(!MyConnect(sptr))
+	return 0;
+
       if((last_used + MOTD_WAIT) > NOW)
-	{
-	  last_used = NOW;
-	  if(last_count >= MOTD_MAX)
-	    return 0;
-	  else
-	    {
-	      if(last_count < MOTD_MAX)
-		last_count++;
-	    }
-	}
+	return 0;
       else
-	{
-	  if(last_count > 0)
-	    {
-	      int dec_count;
-	      if( NOW <= last_used)	/* eek! clock is running
-					 * backwards or something!
-					 */
-		return 0;
-	      
-	      dec_count = (NOW - last_used) / MOTD_WAIT;
-	      
-	      if(dec_count > last_count)
-		last_count = 0;
-	      else
-		last_count -= dec_count;
-	    }
-	  last_used = NOW;
-	}
+	last_used = NOW;
     }
 
 
