@@ -2944,9 +2944,58 @@ int     m_locops(aClient *cptr,
                   int parc,
                   char *parv[])
 {
-  char    *message;
+  char *message;
+#ifdef SLAVE_SERVERS
+  char *slave_oper;
+  char *nick;
+  char *p;
+  register aClient *acptr;
+#endif
 
+#ifdef SLAVE_SERVERS
+  if(IsServer(sptr))
+    {
+      if(!find_special_conf(sptr->name,CONF_ULINE))
+	{
+	  sendto_realops("received Unauthorized locops from %s",sptr->name);
+	  return 0;
+	}
+
+      if(parc > 2)
+	{
+	  slave_oper = parv[1];
+	  nick = slave_oper;
+	  p = strchr(nick,'!');
+	  if(p)
+	    *p = '\0';
+	  else
+	    return 0;
+	  if ((acptr = hash_find_client(nick,(aClient *)NULL)))
+	    {
+	      if(!IsPerson(acptr))
+		return 0;
+	    }
+	  else
+	    return 0;
+
+	  if(parv[2])
+	    {
+	      message = parv[2];
+	      send_operwall(acptr, "SLOCOPS", message);
+	    }
+	  else
+	    return 0;
+	}
+    }
+  else
+    {
+      message = parc > 1 ? parv[1] : NULL;
+    }
+#else
+  if(IsServer(sptr))
+    return 0;
   message = parc > 1 ? parv[1] : NULL;
+#endif
 
   if (BadPtr(message))
     {
@@ -2955,12 +3004,22 @@ int     m_locops(aClient *cptr,
       return 0;
     }
 
-  if (!IsServer(sptr) && MyConnect(sptr) && !IsAnOper(sptr))
+
+  if(MyConnect(sptr) && IsAnOper(sptr))
+    {
+#ifdef SLAVE_SERVERS
+      sendto_slaves("LOCOPS",cptr,sptr,
+		    sptr->name,sptr->user->username,
+		    sptr->user->host,parc,parv);
+#endif
+      send_operwall(sptr, "LOCOPS", message);
+    }
+  else
     {
       sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return(0);
     }
-  send_operwall(sptr, "LOCOPS", message);
+
   return(0);
 }
 
@@ -3976,41 +4035,70 @@ int     m_kline(aClient *cptr,
   int temporary_kline_time=0;	/* -Dianora */
   time_t temporary_kline_time_seconds=0;
   char *argv;
-
-#ifdef NO_LOCAL_KLINE
-  if (!MyClient(sptr) || !IsOper(sptr))
-    {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-      return 0;
-    }
-#else
-  if (!MyClient(sptr) || !IsAnOper(sptr))
-    {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-      return 0;
-    }
+#ifdef SLAVE_SERVERS
+  char *slave_oper;
 #endif
-
-  if(!IsSetOperK(sptr))
-    {
-      sendto_one(sptr,":%s NOTICE %s :You have no K flag",me.name,parv[0]);
-      return 0;
-    }
-
-  if ( parc < 2 )
-    {
-      sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		 me.name, parv[0], "KLINE");
-      return 0;
-    }
 
 #ifdef SLAVE_SERVERS
-  if(IsAnOper(sptr))
-    sendto_slaves("KLINE",cptr,sptr,parc,parv);
   if(IsServer(sptr))
-    sendto_realops("received kline from %s parc %d parv[0] %s %s %s",
-		   sptr->name,parc,parv[0],parv[1],parv[2]);
+    {
+      sendto_realops("received kline from %s",
+		     sptr->name,parv[0]);
+
+      if(parc < 2)	/* pick up actual oper who placed kline */
+	return 0;
+
+      slave_oper = parv[1];	/* make it look like normal local kline */
+      parc--;
+      parv++;
+
+      if ( parc < 2 )
+	return 0;
+      if(!find_special_conf(sptr->name,CONF_ULINE))
+	{
+	  sendto_realops("received Unauthorized kline from %s",sptr->name);
+	  return 0;
+	}
+    }
+  else
 #endif
+    {
+#ifdef NO_LOCAL_KLINE
+      if (!MyClient(sptr) || !IsOper(sptr))
+	{
+	  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+	  return 0;
+	}
+#else
+      if (!MyClient(sptr) || !IsAnOper(sptr))
+	{
+	  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+	  return 0;
+	}
+#endif
+
+      if(!IsSetOperK(sptr))
+	{
+	  sendto_one(sptr,":%s NOTICE %s :You have no K flag",me.name,parv[0]);
+	  return 0;
+	}
+
+      if ( parc < 2 )
+	{
+	  sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+		     me.name, parv[0], "KLINE");
+	  return 0;
+	}
+
+#ifdef SLAVE_SERVERS
+      if(MyConnect(sptr) && IsAnOper(sptr))
+	{
+	  sendto_slaves("KLINE",cptr,sptr,
+			sptr->name,sptr->user->username,
+			sptr->user->host,parc,parv);
+	}
+#endif
+    }
 
   argv = parv[1];
 
@@ -4018,8 +4106,11 @@ int     m_kline(aClient *cptr,
     {
       if(parc < 3)
 	{
-	  sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		     me.name, parv[0], "KLINE");
+#ifdef SLAVE_SERVERS
+	  if(!IsServer(sptr))
+#endif	  
+	     sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+			me.name, parv[0], "KLINE");
 	  return 0;
 	}
       if(temporary_kline_time > (24*60))
@@ -4064,17 +4155,23 @@ int     m_kline(aClient *cptr,
 
       if (IsServer(acptr))
 	{
-	  sendto_one(sptr,
-	     ":%s NOTICE %s :Can't KLINE a server, use @'s where appropriate",
-		     me.name, parv[0]);
+#ifdef SLAVE_SERVERS
+	  if(!IsServer(sptr))
+#endif
+	    sendto_one(sptr,
+              ":%s NOTICE %s :Can't KLINE a server, use @'s where appropriate",
+		       me.name, parv[0]);
 	  return 0;
 	}
 
       if(IsElined(acptr))
 	{
-	  sendto_one(sptr,
-		     ":%s NOTICE %s :%s is E-lined",me.name,parv[0],
-		     acptr->name);
+#ifdef SLAVE_SERVERS
+	  if(!IsServer(sptr))
+#endif
+	    sendto_one(sptr,
+		       ":%s NOTICE %s :%s is E-lined",me.name,parv[0],
+		       acptr->name);
 	  return 0;
 	}
 
@@ -4099,17 +4196,23 @@ int     m_kline(aClient *cptr,
     {
       if(strchr(argv, ':'))
 	{
-	  sendto_one(sptr,
-		     ":%s NOTICE %s :Invalid character ':' in comment",
-		     me.name, parv[0]);
+#ifdef SLAVE_SERVERS
+	  if(!IsServer(sptr))
+#endif
+	    sendto_one(sptr,
+		       ":%s NOTICE %s :Invalid character ':' in comment",
+		       me.name, parv[0]);
 	  return 0;
 	}
 
       if(strchr(argv, '#'))
         {
-          sendto_one(sptr,
-                     ":%s NOTICE %s :Invalid character '#' in comment",
-                     me.name, parv[0]);
+#ifdef SLAVE_SERVERS
+	  if(!IsServer(sptr))
+#endif
+	    sendto_one(sptr,
+		       ":%s NOTICE %s :Invalid character '#' in comment",
+		       me.name, parv[0]);
           return 0;
         }
 
@@ -4124,18 +4227,24 @@ int     m_kline(aClient *cptr,
   if (!matches(user, "akjhfkahfasfjd") &&
                 !matches(host, "ldksjfl.kss...kdjfd.jfklsjf"))
     {
-      sendto_one(sptr, ":%s NOTICE %s :Can't K-Line *@*",
-		 me.name,
-		 parv[0]);
+#ifdef SLAVE_SERVERS
+      if(!IsServer(sptr))
+#endif
+	sendto_one(sptr, ":%s NOTICE %s :Can't K-Line *@*",
+		   me.name,
+		   parv[0]);
       return 0;
     }
       
   if (bad_tld(host))
     {
-      sendto_one(sptr, ":%s NOTICE %s :Can't K-Line *@%s",
-		 me.name,
-		 parv[0],
-		 host);
+#ifdef SLAVE_SERVERS
+      if(!IsServer(sptr))
+#endif
+	sendto_one(sptr, ":%s NOTICE %s :Can't K-Line *@%s",
+		   me.name,
+		   parv[0],
+		   host);
       return 0;
     }
 
@@ -4175,14 +4284,16 @@ int     m_kline(aClient *cptr,
        char *reason;
 
        reason = aconf->passwd ? aconf->passwd : "<No Reason>";
-       sendto_one(sptr,
-		  ":%s NOTICE %s :[%s@%s] already K-lined by [%s@%s] - %s",
-		  me.name,
-		  parv[0],
-		  user,host,
-		  aconf->name,aconf->host,reason);
-      return 0;
-       
+#ifdef SLAVE_SERVERS
+       if(!IsServer(sptr))
+#endif
+	 sendto_one(sptr,
+		    ":%s NOTICE %s :[%s@%s] already K-lined by [%s@%s] - %s",
+		    me.name,
+		    parv[0],
+		    user,host,
+		    aconf->name,aconf->host,reason);
+       return 0;
      }
 #endif
 
@@ -4237,17 +4348,27 @@ int     m_kline(aClient *cptr,
 
   (void)sprintf(filenamebuf, "%s.%s", klinefile, timebuffer);
   filename = filenamebuf;
-  sendto_one(sptr, ":%s NOTICE %s :Added K-Line [%s@%s] to %s",
-	     me.name, parv[0], user, host, filenamebuf);
+       
+#ifdef SLAVE_SERVERS
+  if(!IsServer(sptr))
+#endif
+    sendto_one(sptr, ":%s NOTICE %s :Added K-Line [%s@%s] to %s",
+	       me.name, parv[0], user, host, filenamebuf);
 #else
   filename = klinefile;
 
 #ifdef KPATH
-  sendto_one(sptr, ":%s NOTICE %s :Added K-Line [%s@%s] to server klinefile",
-	     me.name, parv[0], user, host);
+#ifdef SLAVE_SERVERS
+  if(!IsServer(sptr))
+#endif
+    sendto_one(sptr, ":%s NOTICE %s :Added K-Line [%s@%s] to server klinefile",
+	       me.name, parv[0], user, host);
 #else
-  sendto_one(sptr, ":%s NOTICE %s :Added K-Line [%s@%s] to server configfile",
-	     me.name, parv[0], user, host);
+#ifdef SLAVE_SERVERS
+  if(!IsServer(sptr))
+#endif
+    sendto_one(sptr, ":%s NOTICE %s :Added K-Line [%s@%s] to server configfile",
+	       me.name, parv[0], user, host);
 #endif
 #endif
 
@@ -4262,21 +4383,37 @@ int     m_kline(aClient *cptr,
 
   if((k = (struct pkl *)malloc(sizeof(struct pkl))) == NULL)
     {
-      sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		 me.name, parv[0]);
+#ifdef SLAVE_SERVERS
+      if(!IsServer(sptr))
+#endif
+	sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
+		   me.name, parv[0]);
       return(0);
     }
 
-  (void)ircsprintf(buffer, "#%s!%s@%s K'd: %s@%s:%s\n",
-		   sptr->name, sptr->user->username,
-		   sptr->user->host, user, host,
-		   reason);
+#ifdef SLAVE_SERVERS
+  if(IsServer(sptr))
+    {
+      (void)ircsprintf(buffer, "#%s K'd: %s@%s:%s\n",
+		       slave_oper, user, host, reason);
+    }
+  else
+#endif
+    {
+      (void)ircsprintf(buffer, "#%s!%s@%s K'd: %s@%s:%s\n",
+		       sptr->name, sptr->user->username,
+		       sptr->user->host, user, host,
+		       reason);
+    }
   
   if((k->comment = strdup(buffer)) == NULL)
     {
       free(k);
-      sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		 me.name, parv[0]);
+#ifdef SLAVE_SERVERS
+      if(!IsServer(sptr))
+#endif
+	sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
+		   me.name, parv[0]);
       return(0);
     }
 
@@ -4290,8 +4427,11 @@ int     m_kline(aClient *cptr,
     {
       free(k->comment);
       free(k); 
-      sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		 me.name, parv[0]);
+#ifdef SLAVE_SERVERS
+      if(!IsServer(sptr))
+#endif
+	sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
+		   me.name, parv[0]);
       return(0);
     }       
   k->next = pending_klines;
@@ -4304,8 +4444,11 @@ int     m_kline(aClient *cptr,
 
   if ((out = open(filename, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
     {
-      sendto_one(sptr, ":%s NOTICE %s :Problem opening %s ",
-		 me.name, parv[0], filename);
+#ifdef SLAVE_SERVERS
+      if(!IsServer(sptr))
+#endif
+	sendto_one(sptr, ":%s NOTICE %s :Problem opening %s ",
+		   me.name, parv[0], filename);
       return 0;
     }
 
@@ -4313,10 +4456,20 @@ int     m_kline(aClient *cptr,
   fchmod(out, 0660);
 #endif
 
-  (void)ircsprintf(buffer, "#%s!%s@%s K'd: %s@%s:%s\n",
-		   sptr->name, sptr->user->username,
-		   sptr->user->host, user, host,
-		   reason);
+#ifdef SLAVE_SERVERS
+  if(IsServer(sptr))
+    {
+      (void)ircsprintf(buffer, "#%s K'd: %s@%s:%s\n",
+		       slave_oper, user, host, reason);
+    }
+  else
+#endif
+    {
+      (void)ircsprintf(buffer, "#%s!%s@%s K'd: %s@%s:%s\n",
+		       sptr->name, sptr->user->username,
+		       sptr->user->host, user, host,
+		       reason);
+    }
 
   if (safe_write(sptr,parv[0],filename,out,buffer))
     return 0;

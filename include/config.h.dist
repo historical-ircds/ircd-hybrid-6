@@ -137,6 +137,14 @@
 #define TS_MAX_DELTA 1800	/* seconds */
 #define TS_WARN_DELTA 15 	/* seconds */
 
+/* SLAVE_SERVERS - Use this to send LOCOPS and KLINES to servers you define
+ * uses U: lines in ircd.conf, each server defined in an U: line
+ * is sent a copy of the locally placed K-line, and will also
+ * accept K-lines from those servers.
+ * This is useful for sites with more than one client server.
+ */
+#undef SLAVE_SERVERS
+
 /* LOCKFILE - Exclusive use of ircd.conf and kline.conf during writes
  *
  * This creates a lockfile prior to writes to ircd.conf or kline.conf, and

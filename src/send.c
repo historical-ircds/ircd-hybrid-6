@@ -1793,6 +1793,7 @@ extern aConfItem *u_conf;
 int sendto_slaves(char *message,
 		  aClient *cptr,
 		  aClient *sptr,
+		  char *nick, char *user, char *host,
 		  int parc,
 		  char *parv[])
   {
@@ -1804,19 +1805,27 @@ int sendto_slaves(char *message,
 	acptr = find_client(aconf->name, NULL);
 	if(acptr && IsServer(acptr))
 	  {
-	    if(parc > 2)
-	      sendto_one(acptr,":%s %s %s %s %s %s",me.name,
-			 aconf->name,
+	    if(parc > 3)
+	      sendto_one(acptr,":%s %s %s!%s@%s %s %s :%s",
+			 me.name,
 			 message,
+			 nick,user,host,
 			 parv[1],
 			 parv[2],
 			 parv[3]);
-	    else
-	      sendto_one(acptr,":%s %s %s %s %s",me.name,
-			 aconf->name,
+	    else if(parc > 2)
+	      sendto_one(acptr,":%s %s %s!%s@%s %s :%s",
+			 me.name,
 			 message,
+			 nick,user,host,
 			 parv[1],
 			 parv[2]);
+	    else if(parc > 1)
+	      sendto_one(acptr,":%s %s %s!%s@%s :%s",
+			 me.name,
+			 message,
+			 nick,user,host,
+			 parv[1]);
 
 	  }
       }
