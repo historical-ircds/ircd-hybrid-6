@@ -977,13 +977,14 @@ static int valid_username( anUser *user )
     }
 
   /* 
-   * reject single character usernames which aren't alphabetic 
+   * reject usernames that don't start with an alphanum
    * i.e. reject jokers who have '-@somehost' or '.@somehost'
+   * or "-hi-@somehost", "h-----@somehost" would still be accepted.
    *
    * -Dianora
    */
   
-  if((user->username[1] == '\0') && !isalpha(user->username[0]))
+  if(!isalnum(user->username[0]))
     {
       return ( NO );
     }
