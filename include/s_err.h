@@ -226,9 +226,14 @@ static	char *	replies[] = {
 /* 201 RPL_TRACECONNECTING, */	":%s 201 %s Try. %d %s",
 /* 202 RPL_TRACEHANDSHAKE, */	":%s 202 %s H.S. %d %s",
 /* 203 RPL_TRACEUNKNOWN, */	":%s 203 %s ???? %d %s %d",
-/* 204 RPL_TRACEOPERATOR, */	":%s 204 %s Oper %d %s",
-/* 205 RPL_TRACEUSER, */	":%s 205 %s User %d %s 0 %d",
+/* 204 RPL_TRACEOPERATOR, */	":%s 204 %s Oper %d %s %ld %ld",
+/* 205 RPL_TRACEUSER, */	":%s 205 %s User %d %s %ld %ld",
+#ifdef WINTRHAWK
+/* 206 RPL_TRACESERVER, */	":%s 206 %s Serv %d %dS %dC %s %s!%s@%s %ld",
+
+#else
 /* 206 RPL_TRACESERVER, */	":%s 206 %s Serv %d %dS %dC %s %s!%s@%s",
+#endif /* WINTRHAWK */
 /* 207 */	(char *)NULL,
 /* 208 RPL_TRACENEWTYPE, */	":%s 208 %s <newtype> 0 %s",
 /* 209 RPL_TRACECLASS, */	":%s 209 %s Class %d %d",
@@ -264,13 +269,14 @@ static	char *	replies[] = {
 /* 239 */	(char *)NULL,
 /* 240 */	(char *)NULL,
 /* 241 RPL_STATSLLINE, */	":%s 241 %s %c %s * %s %d %d",
-/* 242 RPL_STATSUPTIME,*/	":%s 242 %s :Dianora hasn't messed with the server code now in %d days, %d:%02d:%02d",
+/* 242 RPL_STATSUPTIME,*/	":%s 242 %s :Server Up %d days, %d:%02d:%02d",
 /* 243 RPL_STATSOLINE, */	":%s 243 %s %c %s * %s %s %d",
 /* 244 RPL_STATSHLINE, */	":%s 244 %s %c %s * %s %d %d", 
 /* 245 RPL_STATSSLINE, */	":%s 245 %s %c %s * %s %d %d", 
 /* 246 */	(char *)NULL,
 /* 247 RPL_STATSXLINE, */	":%s 247 %s %s %s * * 0 0",
-/* 248 RPL_STATSULINE, */	":%s 248 %s %s",
+
+/* 248 RPL_STATSULINE, */	":%s 248 %s %s %s",
 /* 249 */	(char *)NULL,
 #ifdef HIGHEST_CONNECTION
 /* 250 RPL_STATSCONN, */
@@ -280,7 +286,7 @@ static	char *	replies[] = {
 #endif
 /* 251 RPL_LUSERCLIENT, */
 		":%s 251 %s :There are %d users and %d invisible on %d servers",
-/* 252 RPL_LUSEROP, */		":%s 252 %s %d :Smurf Targets (IRC Operators) online",
+/* 252 RPL_LUSEROP, */		":%s 252 %s %d :IRC Operators online",
 /* 253 RPL_LUSERUNKNOWN, */	":%s 253 %s %d :unknown connection(s)",
 /* 254 RPL_LUSERCHANNELS, */	":%s 254 %s %d :channels formed",
 /* 255 RPL_LUSERME, */		":%s 255 %s :I have %d clients and %d servers",
@@ -292,7 +298,7 @@ static	char *	replies[] = {
 /* 261 RPL_TRACELOG, */		":%s 261 %s File %s %d",
 /* 262 RPL_ENDOFTRACE, */	":%s 262 %s %s :End of TRACE",
 /* 263 RPL_LOAD2HI, */
-":%s 263 %s :Hold your horses... the server load is temporarily too heavy. Try again later, ok?",
+":%s 263 %s :This command under throttle control.  Please wait a while and try again.",
 /* 264 */	(char *)NULL,
 /* 265 RPL_LOCALUSERS, */	":%s 265 %s :Current local  users: %d  Max: %d",
 /* 266 RPL_GLOBALUSERS, */	":%s 266 %s :Current global users: %d  Max: %d",
@@ -334,15 +340,15 @@ static	char *	replies[] = {
 /* 302 RPL_USERHOST, */	":%s 302 %s :",
 /* 303 RPL_ISON, */	":%s 303 %s :",
 /* 304 RPL_TEXT, */	 (char *)NULL,
-/* 305 RPL_UNAWAY, */	":%s 305 %s :OK, you're not /away anymore. Did you have fun?",
-/* 306 RPL_NOWAWAY, */	":%s 306 %s :OK, you're /away now. Hurry back!",
+/* 305 RPL_UNAWAY, */	":%s 305 %s :You are no longer marked as being away",
+/* 306 RPL_NOWAWAY, */	":%s 306 %s :You have been marked as being away",
 /* 307 */	(char *)NULL,
 /* 308 */	(char *)NULL,
 /* 309 */	(char *)NULL,
 /* 310 */	(char *)NULL,
 /* 311 RPL_WHOISUSER, */	":%s 311 %s %s %s %s * :%s",
 /* 312 RPL_WHOISSERVER, */	":%s 312 %s %s %s :%s",
-/* 313 RPL_WHOISOPERATOR, */	":%s 313 %s %s :is a Smurf Target (IRC Operator)",
+/* 313 RPL_WHOISOPERATOR, */	":%s 313 %s %s :is a lover of fine furry felines.",
 /* 314 RPL_WHOWASUSER, */	":%s 314 %s %s %s %s * :%s",
 /* 315 RPL_ENDOFWHO, */		":%s 315 %s %s :End of /WHO list.",
 /* 316 RPL_WHOISCHANOP, */	(char *)NULL,
@@ -422,8 +428,8 @@ static	char *	replies[] = {
 /* 378 */	(char *)NULL,
 /* 379 */	(char *)NULL,
 /* 380 */	(char *)NULL,
-/* 381 RPL_YOUREOPER, */	":%s 381 %s :You are now one bad motherfucker - Go /kill someone.",
-/* 382 RPL_REHASHING, */	":%s 382 %s %s :it slices, dices, and even reloads config files! Rehashing config file, mang.",
+/* 381 RPL_YOUREOPER, */	":%s 381 %s :You are now a lover of fine furry felines.",
+/* 382 RPL_REHASHING, */	":%s 382 %s %s :Rehashing",
 /* 383 */	(char *)NULL,
 /* 384 RPL_MYPORTIS, */		":%s 384 %s %d :Port to local server is\r\n",
 /* 385 RPL_NOTOPERANYMORE, */	(char *)NULL,
@@ -507,10 +513,10 @@ static	char *	replies[] = {
 /* 461 ERR_NEEDMOREPARAMS, */	":%s 461 %s %s :Not enough parameters",
 /* 462 ERR_ALREADYREGISTRED, */	":%s 462 %s :You may not reregister",
 /* 463 ERR_NOPERMFORHOST, */	":%s 463 %s :Your host isn't among the privileged",
-/* 464 ERR_PASSWDMISMATCH, */	":%s 464 %s :BZZT!! Wrong password, homez. Are you sure you know what you're doing??",
-/* 465 ERR_YOUREBANNEDCREEP, */	":%s 465 %s :You are BANNED from this server- %s",
+/* 464 ERR_PASSWDMISMATCH, */	":%s 464 %s :Password Incorrect",
+/* 465 ERR_YOUREBANNEDCREEP, */	":%s 465 %s :You are banned from this server- %s",
 /* 466 ERR_YOUWILLBEBANNED, */	(char *)NULL,
-/* 467 ERR_KEYSET, */		":%s 467 %s %s :Channel key already set. Pay attention",
+/* 467 ERR_KEYSET, */		":%s 467 %s %s :Channel key already set",
 /* 468 */	(char *)NULL,
 /* 469 */	(char *)NULL,
 /* 470 */	(char *)NULL,
@@ -523,13 +529,13 @@ static	char *	replies[] = {
 /* 477 ERR_MODELESS, */		":%s 477 %s %s :Channel does not support modes",
 /* 478 ERR_BANLISTFULL, */	":%s 478 %s :Channel ban list is full",
 
-/* 479 ERR_NOJOINSPLIT, */	":%s 479 %s %s :Cannot join channel on split",
+/* 479 ERR_NOJOINSPLIT */	":%s 479 %s %s :Cannot join channel on split",
 
 /* 480 */	(char *)NULL,
 /* 481 ERR_NOPRIVILEGES, */
-		":%s 481 %s :I don't THINK so, homez... you ain't got what it takes. (IRC operator)",
-/* 482 ERR_CHANOPRIVSNEEDED, */	":%s 482 %s %s :You can't do that thing, when you don't have that swing (You're not channel operator)",
-/* 483 ERR_CANTKILLSERVER, */	 ":%s 483 %s :Don't be an idiot - you cant kill a SERVER, fool.",
+		":%s 481 %s :Permission Denied- You're not an IRC operator",
+/* 482 ERR_CHANOPRIVSNEEDED, */	":%s 482 %s %s :You're not channel operator",
+/* 483 ERR_CANTKILLSERVER, */	":%s 483 %s :You cant kill a server!",
 /* 484 */	(char *)NULL,
 /* 485 */	(char *)NULL,
 /* 486 */	(char *)NULL,
@@ -537,7 +543,7 @@ static	char *	replies[] = {
 /* 488 */	(char *)NULL,
 /* 489 */	(char *)NULL,
 /* 490 */	(char *)NULL,
-/* 491 ERR_NOOPERHOST, */	":%s 491 %s :Sorry, you just don't have what it takes to be an IRC Operator here.",
+/* 491 ERR_NOOPERHOST, */	":%s 491 %s :Only few of mere mortals may try to enter the twilight zone",
 /* 492 */	(char *)NULL,
 /* 493 */	(char *)NULL,
 /* 494 */	(char *)NULL,
@@ -554,4 +560,3 @@ static	char *	replies[] = {
 		(char *)NULL
 };
 #endif /* CUSTOM_ERR */
-

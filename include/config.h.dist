@@ -95,11 +95,11 @@
  * APATH = alternate MOTD for multi-lingual servers
  * i.e. /motd A for second motd
  * KPATH = kline conf file 
- * 
+ *
  * OPER_MOTD = if defined display an oper motd to opers 
  * when they oper up.
  * OMOTD = path to MOTD for opers
- *
+ * 
  * For /restart to work, SPATH needs to be a full pathname
  * (unless "." is in your exec path). -Rodder
  * Leave KPATH undefined if you want klines in main conf file.
@@ -113,7 +113,7 @@
 #define	CPATH	"ircd.conf"
 #define KPATH   "kline.conf"
 #define	MPATH	"ircd.motd"
-#undef  APATH   "ircd.motd2"
+#undef  APATH
 #define	LPATH	"ircd.log"
 #define	PPATH	"ircd.pid"
 #define HPATH	"opers.txt"
@@ -450,13 +450,6 @@
  * define this to remove flood control for opers
  */
 #define NO_OPER_FLOOD
-
-/* SHOW_UH - show the user@host everywhere
- */
-#define SHOW_UH
-#ifdef SHOW_UH
-#define USERNAMES_IN_TRACE
-#endif
 
 /* SHOW_INVISIBLE_LUSERS - show invisible clients in LUSERS
  * As defined this will show the correct invisible count for anyone who does
@@ -1090,6 +1083,12 @@
  */
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
+#ifdef __EMX__
+#  undef IRC_UID
+#  undef IRC_GID
+#  undef USE_SYSLOG /* OS/2 doesn't have syslog */
+#endif
+
 #ifdef APOLLO
 #define RESTARTING_SYSTEMCALLS
 #endif                            /* read/write are restarted after signals

@@ -54,6 +54,7 @@
 #define MSG_NAMES    "NAMES"	/* NAME */
 #define MSG_ADMIN    "ADMIN"	/* ADMI */
 #define MSG_TRACE    "TRACE"	/* TRAC */
+#define MSG_LTRACE   "LTRACE"   /* LTRA */
 #define MSG_NOTICE   "NOTICE"	/* NOTI */
 #define MSG_JOIN     "JOIN"	/* JOIN */
 #define MSG_PART     "PART"	/* PART */
@@ -87,6 +88,9 @@
 #endif
 
 #define MSG_LOCOPS   "LOCOPS"	/* LOCOPS */
+#ifdef LWALLOPS
+#define MSG_LWALLOPS "LWALLOPS"	/* Same as LOCOPS */
+#endif /* LWALLOPS */
 #define MSG_KNOCK	   "KNOCK"  /* KNOCK */
 
 #define MAXPARA    15 
@@ -139,6 +143,9 @@ extern int m_connect(aClient *,aClient *,int,char **);
 extern int m_oper(aClient *,aClient *,int,char **);
 extern int m_pass(aClient *,aClient *,int,char **);
 extern int m_trace(aClient *,aClient *,int,char **);
+#ifdef LTRACE
+extern int m_ltrace(aClient *,aClient *,int,char **);
+#endif /* LTRACE */
 extern int m_time(aClient *,aClient *,int, char **);
 extern int m_names(aClient *,aClient *,int,char **);
 
@@ -205,6 +212,9 @@ struct Message msgtab[] = {
   { MSG_KICK,    m_kick,     0, MAXPARA, 1, 0, 0, 0L },
   { MSG_WALLOPS, m_wallops,  0, MAXPARA, 1, 0, 0, 0L },
   { MSG_LOCOPS,  m_locops,   0, MAXPARA, 1, 0, 0, 0L },
+#ifdef LWALLOPS
+  { MSG_LWALLOPS,m_locops,   0, MAXPARA, 1, 0, 0, 0L },
+#endif /* LWALLOPS */
 
 #ifdef IDLE_FROM_MSG
   /* Only m_private has reset idle flag set */
@@ -258,6 +268,9 @@ struct Message msgtab[] = {
   { MSG_NAMES,   m_names,    0, MAXPARA, 1, 0, 0, 0L },
   { MSG_USERHOST,m_userhost, 0, 1,       1, 0, 0, 0L },
   { MSG_TRACE,   m_trace,    0, MAXPARA, 1, 0, 0, 0L },
+#ifdef LTRACE
+  { MSG_LTRACE,  m_ltrace,   0, MAXPARA, 1, 0, 0, 0L },
+#endif /* LTRACE */
   { MSG_PASS,    m_pass,     0, MAXPARA, 1, 1, 0, 0L },
   { MSG_LUSERS,  m_lusers,   0, MAXPARA, 1, 0, 0, 0L },
   { MSG_TIME,    m_time,     0, MAXPARA, 1, 0, 0, 0L },

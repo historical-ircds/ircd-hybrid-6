@@ -488,8 +488,12 @@ char	*comment	/* Reason for the exit */
 	  sendto_realops_lev(CCONN_LEV, "Client exiting: %s (%s@%s) [%s] [%s]",
 		    sptr->name, sptr->user->username,
 		    sptr->user->host,
+#ifdef WINTRHAWK
+		    comment,
+#else
 		    (sptr->flags & FLAGS_NORMALEX) ?
 		    "Client Quit" : comment,
+#endif /* WINTRHAWK */
 		    sptr->hostip);
 	}
 #ifdef FNAME_USERLOG

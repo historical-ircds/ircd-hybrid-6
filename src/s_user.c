@@ -3413,6 +3413,15 @@ int	m_oper(aClient *cptr,
 				cptr->hostip, CONF_OPS)))
     {
       sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
+#if defined(FAILED_OPER_NOTICE) && defined(SHOW_FAILED_OPER_ID)
+#ifdef SHOW_FAILED_OPER_PASSWD
+      sendto_realops("Failed OPER attempt [%s(%s)] - identity mismatch: %s [%s@%s]",
+      	name, password, sptr->name, sptr->user->username, sptr->user->host);
+#else
+      sendto_realops("Failed OPER attempt - host mismatch by %s (%s@%s)",
+		     parv[0], sptr->user->username, sptr->sockhost);
+#endif /* SHOW_FAILED_OPER_PASSWD */
+#endif /* FAILED_OPER_NOTICE && SHOW_FAILED_OPER_ID */
       return 0;
     }
 #ifdef CRYPT_OPER_PASSWORD
@@ -3474,7 +3483,11 @@ int	m_oper(aClient *cptr,
       else
 	operprivs = "";
 
+#ifdef WINTRHAWK
+      sendto_ops("%s (%s@%s) has just acquired the personality of a petty megalomaniacal tyrant [IRC(%c)p]", parv[0],
+#else
       sendto_ops("%s (%s@%s) is now operator (%c)", parv[0],
+#endif /* WINTRHAWK */
 		 sptr->user->username, sptr->sockhost,
 		 IsOper(sptr) ? 'O' : 'o');
       send_umode_out(cptr, sptr, old);
@@ -3538,8 +3551,13 @@ int	m_oper(aClient *cptr,
       (void)detach_conf(sptr, aconf);
       sendto_one(sptr,err_str(ERR_PASSWDMISMATCH),me.name, parv[0]);
 #ifdef FAILED_OPER_NOTICE
+#ifdef SHOW_FAILED_OPER_PASSWD
+      sendto_realops("Failed OPER attempt [%s(%s)] - passwd mismatch: %s [%s@%s]",
+      	name, password, sptr->name, sptr->user->username, sptr->user->host);
+#else
       sendto_realops("Failed OPER attempt by %s (%s@%s)",
 		     parv[0], sptr->user->username, sptr->sockhost);
+#endif /* SHOW_FAILED_OPER_PASSWD */
 #endif
     }
   return 0;

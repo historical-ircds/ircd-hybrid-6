@@ -425,10 +425,14 @@ static	time_t	check_pings(time_t currenttime)
   char *reason;				/* pointer to reason string */
   int die_index=0;			/* index into list */
   char ping_time_out_buffer[64];	/* blech that should be a define */
+#ifdef IDLE_CHECK
+#ifdef SEND_FAKE_KILL_TO_CLIENT
+  int		fakekill;
+#endif /* SEND_FAKE_KILL_TO_CLIENT */
+#endif /* IDLE_CHECK */
 
 					/* of dying clients */
   dying_clients[0] = (aClient *)NULL;	/* mark first one empty */
-
 
   /*
    * I re-wrote the way klines are handled. Instead of rescanning
@@ -485,10 +489,28 @@ static	time_t	check_pings(time_t currenttime)
 
 		      dying_clients[die_index] = cptr;
 #ifdef KLINE_WITH_REASON
+#ifdef WINTRHAWK
+		      /*
+		       * We use a generic non-descript message here on 
+		       * purpose so as to prevent other users seeing the
+		       * client disconnect from harassing the IRCops
+		       */
+		      reason = "Connection closed";
+#else
 		      reason = aconf->passwd ? aconf->passwd : "D-lined";
+#endif /* WINTRHAWK */
 		      dying_clients_reason[die_index++] = reason;
 #else
+#ifdef WINTRHAWK
+		      /*
+		       * We use a generic non-descript message here on 
+		       * purpose so as to prevent other users seeing the
+		       * client disconnect from harassing the IRCops
+		       */
+		      dying_clients_reason[die_index++] = "Connection closed";
+#else
 		      dying_clients_reason[die_index++] = "D-lined";
+#endif /* WINTRHAWK */
 #endif
 		      dying_clients[die_index] = (aClient *)NULL;
 		      sendto_one(cptr, err_str(ERR_YOUREBANNEDCREEP),
@@ -516,10 +538,28 @@ static	time_t	check_pings(time_t currenttime)
 
 		      dying_clients[die_index] = cptr;
 #ifdef KLINE_WITH_REASON
+#ifdef WINTRHAWK
+		      /*
+		       * We use a generic non-descript message here on 
+		       * purpose so as to prevent other users seeing the
+		       * client disconnect from harassing the IRCops
+		       */
+		      reason = "Connection closed";
+#else
 		      reason = aconf->passwd ? aconf->passwd : "G-lined";
+#endif /* WINTRHAWK */
 		      dying_clients_reason[die_index++] = reason;
 #else
+#ifdef WINTRHAWK
+		      /*
+		       * We use a generic non-descript message here on 
+		       * purpose so as to prevent other users seeing the
+		       * client disconnect from harassing the IRCops
+		       */
+		      dying_clients_reason[die_index++] = "Connection closed";
+#else
 		      dying_clients_reason[die_index++] = "G-lined";
+#endif /* WINTRHAWK */
 #endif
 		      dying_clients[die_index] = (aClient *)NULL;
 		      sendto_one(cptr, err_str(ERR_YOUREBANNEDCREEP),
@@ -543,10 +583,28 @@ static	time_t	check_pings(time_t currenttime)
 		      dying_clients[die_index] = cptr;
 
 #ifdef KLINE_WITH_REASON
+#ifdef WINTRHAWK
+		      /*
+		       * We use a generic non-descript message here on 
+		       * purpose so as to prevent other users seeing the
+		       * client disconnect from harassing the IRCops
+		       */
+		      reason = "Connection closed";
+#else
 		      reason = aconf->passwd ? aconf->passwd : "K-lined";
+#endif /* WINTRHAWK */
 		      dying_clients_reason[die_index++] = reason;
 #else
+#ifdef WINTRHAWK
+		      /*
+		       * We use a generic non-descript message here on 
+		       * purpose so as to prevent other users seeing the
+		       * client disconnect from harassing the IRCops
+		       */
+		      dying_clients_reason[die_index++] = "Connection closed";
+#else
 		      dying_clients_reason[die_index++] = "K-lined";
+#endif /* WINTRHAWK */
 #endif
 		      dying_clients[die_index] = (aClient *)NULL;
 		      sendto_one(cptr, err_str(ERR_YOUREBANNEDCREEP),
@@ -561,12 +619,25 @@ static	time_t	check_pings(time_t currenttime)
       if (IsPerson(cptr))
 	{
 	  if( !IsElined(cptr) && idle_time && 
+#ifdef OPER_IDLE
+	      !IsAnOper(cptr) &&
+#endif /* OPER_IDLE */
+#ifdef IDLE_IGNORE
+	      !matches(IDLE_IGNORE, inetntoa((char *)&cptr->ip)) &&
+#endif /* IDLE_IGNORE */
 	      ((timeofday - cptr->user->last) > idle_time))
 	    {
 	      aConfItem *aconf;
 
 	      dying_clients[die_index] = cptr;
+#ifdef WINTRHAWK
+	      dying_clients_reason[die_index++] = "Idle time limit exceeded";
+#else
 	      dying_clients_reason[die_index++] = "idle exceeder";
+#endif /* WINTRHAWK */
+#ifdef SEND_FAKE_KILL_TO_CLIENT
+	      fakekill = 1;
+#endif /* SEND_FAKE_KILL_TO_CLIENT */
 	      dying_clients[die_index] = (aClient *)NULL;
 
 	      aconf = make_conf();
@@ -577,7 +648,11 @@ static	time_t	check_pings(time_t currenttime)
 	      aconf->port = 0;
 	      aconf->hold = timeofday + 60;
 	      add_temp_kline(aconf);
+#ifdef WINTRHAWK
+	      sendto_realops("Idle time limit exceeded for %s - temp k-lining",
+#else
 	      sendto_realops("Idle exceeder %s temp k-lining",
+#endif /* WINTRHAWK */
 			 get_client_name(cptr,FALSE));
 	      continue;		/* and go examine next fd/cptr */
 	    }
@@ -753,7 +828,16 @@ static	time_t	check_pings(time_t currenttime)
 	  (void)exit_client(cptr, cptr, &me, ping_time_out_buffer );
 	}
       else
-	(void)exit_client(cptr, cptr, &me, dying_clients_reason[die_index]);
+#ifdef SEND_FAKE_KILL_TO_CLIENT
+	{
+	  if (fakekill)
+	    sendto_prefix_one(cptr, cptr, ":AutoKILL KILL %s :(%s)",
+	    cptr->name, dying_clients_reason[die_index]);
+#endif /* SEND_FAKE_KILL_TO_CLIENT */
+	  (void)exit_client(cptr, cptr, &me, dying_clients_reason[die_index]);
+#ifdef SEND_FAKE_KILL_TO_CLIENT
+        }
+#endif /* SEND_FAKE_KILL_TO_CLIENT */
     }
 
   rehashed = 0;

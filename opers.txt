@@ -1,6 +1,6 @@
 This file outlines the features that ircd-hybrid has for IRC Operators.
 - 09/27/97 - ThemBones (kraemer@u.washington.edu)
-- 12/10/98 - last update
+- 01/04/98 - last update, Jake [WintrHawk] Khuon <khuon@GCtr.Net>
 
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -61,7 +61,8 @@ COMMAND         - USAGE and DESCRIPTION
                     l - Shows hostname and generic info about [nick]
                     m - Shows commands and their usage
                     o - Shows O/o lines
-                    p - Shows opers connected and their idle times
+                    p - Shows opers connected and their idle times (disabled
+                              if LTRACE option is enabled - see below)
                     r - Shows resource usage by ircd (only in DEBUGMODE)
                   * t - Shows generic server stats
                     u - Shows server uptime
@@ -96,6 +97,10 @@ COMMAND         - USAGE and DESCRIPTION
                   Sends an LOCOPS message of <message. o to all
                   opers on local server who are umode +w and +z
 
++ LWALLOPS      - LWALLOPS :<message>
+                  -- If compiled with LWALLOPS --
+                  Same as LOCOPS (see above)
+
   TRACE         - TRACE [server|nick]
                   TRACE shows client info about [server|nick] or about
                   the server you are on if no [server|nick] is given.
@@ -108,6 +113,16 @@ COMMAND         - USAGE and DESCRIPTION
                   Opers can see all clients connected to a server
                   with TRACE as well as the connection class they
                   fall into.
+
++ LTRACE        - LTRACE [server|nick]
+                  -- If compiled with LTRACE --
+                  Displays only Oper, Serv, Link, and Class reports even if
+                  the O-line is active.  Useful for just showing pertinent
+                  info of a specific server.  Note however that if the
+                  target server is not running this option then you will
+                  still receive a normal trace output.  Server with this
+                  option remove "STATS p" funtionality since the two are
+                  basically redundant.
 
   REHASH        - REHASH [option]
                   When no [option] is given, ircd will re-read the

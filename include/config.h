@@ -108,17 +108,17 @@
  * -Dianora
  */
 
-#define DPATH   "/usr/local/ircd/"
-#define SPATH   "/usr/local/ircd/ircd"
+#define DPATH   "/usr/local/lib/irc/ircd/"
+#define SPATH   "/usr/local/sbin/ircd"
 #define	CPATH	"ircd.conf"
-#define KPATH   "kline.conf"
+#undef  KPATH   "kline.conf"
 #define	MPATH	"ircd.motd"
 #undef  APATH
 #define	LPATH	"ircd.log"
 #define	PPATH	"ircd.pid"
 #define HPATH	"opers.txt"
 
-#define OPER_MOTD
+#undef OPER_MOTD
 #define OMOTD   "opers.motd"
 
 /* TS_MAX_DELTA and TS_WARN_DELTA -  allowed delta for TS when another
@@ -182,8 +182,8 @@
  *
  * These need to be defined if you want to use SYSLOG logging, too.
  */
-#define FNAME_USERLOG "/usr/local/ircd/users" /* */
-#define FNAME_OPERLOG "/usr/local/ircd/opers" /* */
+#define FNAME_USERLOG "users" /* */
+#define FNAME_OPERLOG "opers" /* */
 
 /* FOLLOW_IDENT_RFC
  * 
@@ -225,6 +225,16 @@
  */
 #define FAILED_OPER_NOTICE
 
+/* SHOW_FAILED_OPER_ID - if FAILED_OPER_NOTICE is defined, also notify when
+ * a client fails to oper because of a identity mismatch (wrong host or nick)
+ */
+#define SHOW_FAILED_OPER_ID
+
+/* SHOW_FAILED_OPER_PASSWD - if FAILED_OPER_NOTICE is defined, also show the
+ * attempted passwd
+ */
+#define SHOW_FAILED_OPER_PASSWD
+
 /* CLIENT_SERVER - Don't be so fascist about idle clients ;)
  * changes behaviour of HTM code to make clients lag less.
  * Not necessary any more
@@ -250,7 +260,7 @@
  * define this if you wish to reject usernames like: FuckYou which
  * don't have all one case
  */
-#undef NO_MIXED_CASE
+#define NO_MIXED_CASE
 
 /* IGNORE_FIRST_CHAR -
  * define this for NO_MIXED_CASE if you wish to ignore the first character
@@ -262,7 +272,7 @@
  * A character is "special" if it's not "a-z", "A-Z", "0-9", ".", "-",
  * and "_"
  */
-#undef NO_SPECIAL
+#define NO_SPECIAL
 
 /* REJECT_IPHONE - reject I-phone clients
  * Define if you want to reject I-phoners
@@ -347,6 +357,9 @@
  * processing slightly.. how much I can't say. For very few clients
  * being KLINED very little difference, but you have been forewarned
  *
+ * If WINTRHAWK is also defined then the signoff reason will be "Connection
+ * closed".  However, the client will still see the real reason upon connect
+ * attempts.
  */
 #define KLINE_WITH_REASON
 
@@ -369,14 +382,14 @@
 
 /* IDENTD_COMPLAIN - yell at users that don't have identd installed
  */
-#undef IDENTD_COMPLAIN
+#define IDENTD_COMPLAIN
 
 /* CLIENT_COUNT - keep a running count of Local & Global users
  *                also redefine the /USERS command
  */
 #define CLIENT_COUNT
 #ifdef CLIENT_COUNT
-#undef HIGHEST_CONNECTION
+#define HIGHEST_CONNECTION
 #endif
 
 /* X_LINES_OPER_ONLY - Allow only local opers to see these stats
@@ -465,14 +478,14 @@
  * mode "i" (i == invisible). Invisibility means people dont showup in
  * WHO or NAMES unless they are on the same channel as you.
  */
-#define	NO_DEFAULT_INVISIBLE
+#undef	NO_DEFAULT_INVISIBLE
 
 /*
  * The compression level used for zipped links. (Suggested values: 1 to 5)
  * Above 4 will only give a rather marginal increase in compression for a
  * large increase in CPU usage.
  */
-#define ZIP_LEVEL       2
+#define ZIP_LEVEL       3
 
 /* OPER_KILL OPER_REHASH OPER_RESTART OPER_DIE OPER_REMOTE -
  *      restrict what local global-Opers can do
@@ -499,8 +512,14 @@
  * to 'local' operators.  See above section.
  */
 #define	LOCOP_REHASH
-#undef	LOCOP_RESTART
-#undef	LOCOP_DIE
+#define	LOCOP_RESTART
+#define	LOCOP_DIE
+
+/*
+ * OPER_UMODES LOCAOP_UMODES - set these to be the initial umodes when OPER'ing
+ */
+#define OPER_UMODES   (FLAGS_OPER|FLAGS_WALLOP|FLAGS_SERVNOTICE|FLAGS_OPERWALL|FLAGS_CCONN)
+#define LOCOP_UMODES   (FLAGS_LOCOP|FLAGS_WALLOP|FLAGS_SERVNOTICE|FLAGS_CCONN)
 
 /* MAXIMUM LINKS - max links for class 0 if no Y: line configured
  *
@@ -651,8 +670,8 @@
  * define IRC_UID to that UID.  This should only be defined if you are running
  * as root and even then perhaps not.
  */
-#define	IRC_UID 1001
-#define	IRC_GID 31
+#undef	IRC_UID 1001
+#undef	IRC_GID 31
 
 /* CLIENT_FLOOD - client excess flood threshold
  * this controls the number of bytes the server will allow a client to
@@ -685,7 +704,7 @@
  * if there are no servers presently connected to this server
  * opers are not affected. 
  */
-#undef NO_CHANOPS_WHEN_SPLIT
+#define NO_CHANOPS_WHEN_SPLIT
 
 /*
  * NO_JOIN_ON_SPLIT
@@ -702,7 +721,7 @@
  * server is split from net until rejoin. i.e. if the channel
  * was +i before this server split, it remains +i during the split
  */
-#define PRESERVE_CHANNEL_ON_SPLIT
+#undef PRESERVE_CHANNEL_ON_SPLIT
 
 /*
  * SPLIT_SMALLNET_SIZE defines what constitutes a split from 
@@ -710,6 +729,12 @@
  * on the net gets less than 2, a split is deemed to have happened.
  */
 #define SPLIT_SMALLNET_SIZE 2
+
+/*
+ * DEFAULT_SERVER_SPLIT_RECOVERY_TIME - determines how long to delay split
+ * status after resyncing
+ */
+#define DEFAULT_SERVER_SPLIT_RECOVERY_TIME 5
 
 /* LIMIT_UH
  * If this is defined, Y line limit is made against the actual
@@ -732,15 +757,69 @@
  * /quote set idletime
  *
  * -Dianora
+ *
+ * IDLE_IGNORE will prevent the server from idle'ing clients connected from
+ * the listed IP#s.  This should probably be moved into a .conf file entry
+ * at some point in the future.
+ *
+ * OPER_IDLE allows operators to remain idle when the idle
+ * beyond the idle limit
  */
-#undef IDLE_CHECK
-#define IDLE_TIME 30
+#define IDLE_CHECK
+#undef  IDLE_IGNORE "10.0.0.61"
+#define IDLE_TIME 60
+#define OPER_IDLE
 
 /* If defined USE_IP_I_LINE_FIRST will search IP I lines first
  * and use that in preference over the mtrie. (hi jimmie)
  * -Dianora
  */
 #undef USE_IP_I_LINE_FIRST
+
+/* SEND_FAKE_KILL_TO_CLIENT - make the client think it's being /KILL'ed
+ * 
+ * This was originally intended to prevent clients from reconnecting to the
+ * server after being dropped for idleness.  It can probably be used for
+ * other events too.
+ *
+ * This really only works if the
+ * client was compiled with QUIT_ON_OPERATOR_KILL which was mandatory policy
+ * on UMich.Edu hosts.
+ */
+#define SEND_FAKE_KILL_TO_CLIENT
+ 
+/*
+ * Limited Trace - Reports only link and oper traces even when O:line is
+ * active.
+ *
+ * Displays only Oper, Serv, Link, and Class reports even if the O-line is
+ * active.  Useful for just showing pertinent info of a specific server. 
+ * Note however that if the target server is not running this option then
+ * you will still receive a normal trace output.  Defining this will remove
+ * "STATS p" funtionality since the two are basically redundant.
+ */
+#define LTRACE
+
+/*
+ * LWALLOPS - Like wallops but only local.
+ *
+ * This is actually a compatibility command which really calls m_locops().
+ */
+#define LWALLOPS
+
+/*
+ * STATS_NOTICE - Notify opers on STATS request
+ *
+ * Some people find this invasive and with the STAT command on PACE throttle
+ * the server shouldn't suffer but lusers stat for different reasons and many
+ * times it's been a prelude to some other form of attack.
+ */
+#define STATS_NOTICE
+
+/*
+ * Define this to enable WintrHawk "styling"
+ */
+#define WINTRHAWK
 
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 
@@ -1081,6 +1160,7 @@
  *       number of params.  If anyone has a solution to this, please notify
  *       the maintainer.
  */
+
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #ifdef __EMX__

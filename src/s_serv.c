@@ -2107,6 +2107,11 @@ int	m_stats(aClient *cptr,
   else
     name = me.name;
 
+#ifdef STATS_NOTICE
+  if ((stat != '\0') && strchr("AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz", stat))
+    sendto_realops_lev(SPY_LEV, "STATS %c requested by %s [%s@%s]",
+      stat, parv[0], sptr->user->username, sptr->user->host);
+#endif /* STATS_NOTICE */
 
   switch (stat)
     {
@@ -2269,10 +2274,12 @@ int	m_stats(aClient *cptr,
       valid_stats++;
       break;
 
+#ifndef LTRACE
     case 'p' : case 'P' :
       show_opers(sptr, parv[0]);
       valid_stats++;
       break;
+#endif /* !LTRACE */
 
     case 'Q' : case 'q' :
       if(!IsAnOper(sptr))
@@ -4350,7 +4357,12 @@ int     m_kline(aClient *cptr,
   DupString(aconf->host, host);
 
   if(temporary_kline_time)
-    (void)ircsprintf(buffer, "Temporary K-line %d min. for %s (%s)",
+    (void)ircsprintf(buffer,
+#ifdef WINTRHAWK
+	    "Temporary K-line %d min. - %s (%s)",
+#else
+	    "Temporary K-line %d min. for %s (%s)",
+#endif /* WINTRHAWK */
        temporary_kline_time,reason,current_date);
   else
     (void)ircsprintf(buffer, "%s (%s)",reason,current_date);
@@ -5577,7 +5589,9 @@ int	m_trace(aClient *cptr,
   int	cnt = 0, wilds, dow;
   static time_t last_trace=0L;
   static time_t last_used=0L;
+  static time_t now;
 
+  now = time(NULL);  
   if (parc > 2)
     if (hunt_server(cptr, sptr, ":%s TRACE %s :%s",
 		    2, parc, parv))
@@ -5664,15 +5678,28 @@ int	m_trace(aClient *cptr,
         }
       name = get_client_name(acptr,FALSE);
       class = get_client_class(acptr);
+
       if (IsAnOper(acptr))
         {
           sendto_one(sptr, rpl_str(RPL_TRACEOPERATOR),
-                     me.name, parv[0], class, name);
+                     me.name, parv[0], class,
+#ifdef WINTRHAWK
+		     name, now - acptr->lasttime,
+		     (acptr->user)?(now - acptr->user->last):0);
+#else
+		     name);
+#endif /* WINTRHAWK */
         }
       else
         {
           sendto_one(sptr,rpl_str(RPL_TRACEUSER),
-                     me.name, parv[0], class, name);
+                     me.name, parv[0], class,
+#ifdef WINTRHAWK
+		     name, now - acptr->lasttime,
+		     (acptr->user)?(now - acptr->user->last):0);
+#else
+		     name);
+#endif /* WINTRHAWK */
         }
       sendto_one(sptr, rpl_str(RPL_ENDOFTRACE),me.name,
 		 parv[0], tname);
@@ -5714,7 +5741,6 @@ int	m_trace(aClient *cptr,
     }
 
   /* report all direct connections */
-	
   for (i = 0; i <= highest_fd; i++)
     {
       char	*name;
@@ -5766,11 +5792,22 @@ int	m_trace(aClient *cptr,
 		sendto_one(sptr,
 			   rpl_str(RPL_TRACEOPERATOR),
 			   me.name,
-			   parv[0], class, name);
+			   parv[0], class,
+#ifdef WINTRHAWK
+			   name, now - acptr->lasttime,
+			   (acptr->user)?(now - acptr->user->last):0);
+#else
+			   name);
+#endif /* WINTRHAWK */
 	      else
 		sendto_one(sptr,rpl_str(RPL_TRACEUSER),
-			   me.name, parv[0], class, name,
-			   (acptr->user)?(timeofday - acptr->user->last):0);
+			   me.name, parv[0], class,
+#ifdef WINTRHAWK
+			   name, now - acptr->lasttime,
+#else
+			   name,
+#endif /* WINTRHAWK */
+			   (acptr->user)?(now - acptr->user->last):0);
 	      cnt++;
 	    }
 	  break;
@@ -5780,12 +5817,21 @@ int	m_trace(aClient *cptr,
 		       me.name, parv[0], class, link_s[i],
 		       link_u[i], name, acptr->serv->by,
 		       acptr->serv->user->username,
+#ifdef WINTRHAWK
+		       acptr->serv->user->host, now - acptr->lasttime);
+#else
 		       acptr->serv->user->host);
+#endif /* WINTRHAWK */
 	  else
 	    sendto_one(sptr, rpl_str(RPL_TRACESERVER),
 		       me.name, parv[0], class, link_s[i],
 		       link_u[i], name, *(acptr->serv->by) ?
-		       acptr->serv->by : "*", "*", me.name);
+		       acptr->serv->by : "*", "*",
+#ifdef WINTRHAWK
+		       me.name, now - acptr->lasttime);
+#else
+		       me.name);
+#endif /* WINTRHAWK */
 	  cnt++;
 	  break;
 	case STAT_LOG:
@@ -5829,6 +5875,184 @@ int	m_trace(aClient *cptr,
   sendto_one(sptr, rpl_str(RPL_ENDOFTRACE),me.name, parv[0],tname);
   return 0;
 }
+
+#ifdef LTRACE
+/*
+** m_ltrace - LimitedTRACE... like m_trace() but doesn't return TRACEUSER, TRACEUNKNOWN, or TRACECLASS
+**	parv[0] = sender prefix
+**	parv[1] = servername
+*/
+int	m_ltrace(aClient *cptr,
+		aClient *sptr,
+		int parc,
+		char *parv[])
+{
+  Reg	int	i;
+  Reg	aClient	*acptr = NULL;
+  aClass	*cltmp;
+  char	*tname;
+  int	doall, link_s[MAXCONNECTIONS], link_u[MAXCONNECTIONS];
+  int	cnt = 0, wilds, dow;
+  static time_t now;
+  
+  if (check_registered(sptr))
+    return 0;
+
+  if (parc > 2)
+    if (hunt_server(cptr, sptr, ":%s LTRACE %s :%s",
+		    2, parc, parv))
+      return 0;
+  
+  if (parc > 1)
+    tname = parv[1];
+  else
+    tname = me.name;
+
+  switch (hunt_server(cptr, sptr, ":%s LTRACE :%s", 1, parc, parv))
+    {
+    case HUNTED_PASS: /* note: gets here only if parv[1] exists */
+      {
+	aClient	*ac2ptr;
+	
+	ac2ptr = next_client(client, tname);
+	  sendto_one(sptr, rpl_str(RPL_TRACELINK), me.name, parv[0],
+		     version, debugmode, tname, ac2ptr->from->name);
+	return 0;
+      }
+    case HUNTED_ISME:
+      break;
+    default:
+      return 0;
+    }
+
+
+  if(MyClient(sptr))
+    sendto_realops_lev(SPY_LEV, "ltrace requested by %s (%s@%s) [%s]",
+		       sptr->name, sptr->user->username, sptr->user->host,
+		       sptr->user->server);
+
+
+  doall = (parv[1] && (parc > 1)) ? !matches(tname, me.name): TRUE;
+  wilds = !parv[1] || index(tname, '*') || index(tname, '?');
+  dow = wilds || doall;
+  
+  for (i = 0; i < MAXCONNECTIONS; i++)
+    link_s[i] = 0, link_u[i] = 0;
+                        
+  if (dow && lifesux && !IsOper(sptr))
+    {
+      sendto_one(sptr,rpl_str(RPL_LOAD2HI),me.name,parv[0]);
+      return 0;
+    }
+
+  /*
+   * Count up all the servers and clients in a downlink.
+   */
+  if (doall)
+    for (acptr = client; acptr; acptr = acptr->next)
+      if (IsServer(acptr)) link_s[acptr->from->fd]++;
+
+  /* report all direct connections */
+  now = time(NULL);
+  for (i = 0; i <= highest_fd; i++)
+    {
+      char	*name;
+      int	class;
+      
+      if (!(acptr = local[i])) /* Local Connection? */
+	continue;
+      if (IsInvisible(acptr) && dow &&
+	  !(MyConnect(sptr) && IsAnOper(sptr)) &&
+	  !IsAnOper(acptr) && (acptr != sptr))
+	continue;
+      if (!doall && wilds && matches(tname, acptr->name))
+	continue;
+      if (!dow && mycmp(tname, acptr->name))
+	continue;
+      name = get_client_name(acptr,FALSE);
+      class = get_client_class(acptr);
+      
+      switch(acptr->status)
+	{
+	case STAT_HANDSHAKE:
+	  sendto_one(sptr, rpl_str(RPL_TRACEHANDSHAKE), me.name,
+		     parv[0], class, name);
+	  cnt++;
+	  break;
+	case STAT_ME:
+	  break;
+	case STAT_CLIENT:
+	  /* Well, most servers don't have a LOT of OPERs... let's show them too */
+	  if (IsAnOper(sptr) &&
+	      (MyClient(sptr) || !(dow && IsInvisible(acptr)))
+	      || !dow || IsAnOper(acptr))
+	    {
+	      if (IsAnOper(acptr))
+		sendto_one(sptr,
+			   rpl_str(RPL_TRACEOPERATOR),
+			   me.name, parv[0], class,
+#ifdef WINTRHAWK
+			   name, now - acptr->lasttime,
+			   (acptr->user)?(now - acptr->user->last):0);
+#else
+			   name);
+#endif /* WINTRHAWK */
+	      cnt++;
+	    }
+	  break;
+	case STAT_SERVER:
+	  if (acptr->serv->user)
+	    sendto_one(sptr, rpl_str(RPL_TRACESERVER),
+		       me.name, parv[0], class, link_s[i],
+		       link_u[i], name, acptr->serv->by,
+		       acptr->serv->user->username,
+#ifdef WINTRHAWK
+		       acptr->serv->user->host, now - acptr->lasttime);
+#else
+		       acptr->serv->user->host);
+#endif /* WINTRHAWK */
+	  else
+	    sendto_one(sptr, rpl_str(RPL_TRACESERVER),
+		       me.name, parv[0], class, link_s[i],
+		       link_u[i], name, *(acptr->serv->by) ?
+		       acptr->serv->by : "*", "*",
+#ifdef WINTRHAWK
+		       me.name, now - acptr->lasttime);
+#else
+		       me.name);
+#endif /* WINTRHAWK */
+	  cnt++;
+	  break;
+	case STAT_LOG:
+	  sendto_one(sptr, rpl_str(RPL_TRACELOG), me.name,
+		     parv[0], LOGFILE, acptr->port);
+	  cnt++;
+	  break;
+	default: /* ...we actually shouldn't come here... --msa */
+	  sendto_one(sptr, rpl_str(RPL_TRACENEWTYPE), me.name,
+		     parv[0], name);
+	  cnt++;
+	  break;
+	}
+    }
+  /*
+   * Add these lines to summarize the above which can get rather long
+   * and messy when done remotely - Avalon
+   */
+  if (!IsAnOper(sptr) || !cnt)
+    {
+      if (cnt)
+	  return 0;
+      /* let the user have some idea that its at the end of the
+       * trace
+       */
+      sendto_one(sptr, rpl_str(RPL_TRACESERVER),
+		 me.name, parv[0], 0, link_s[me.fd],
+		 link_u[me.fd], me.name, "*", "*", me.name);
+      return 0;
+    }
+}
+#endif /* LTRACE */
 
 /*
 ** m_motd

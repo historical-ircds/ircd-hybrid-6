@@ -2358,7 +2358,7 @@ static void check_still_split()
 	    (Count.total > split_smallnet_users))
 	    */
 
-      if(Count.server > split_smallnet_size)
+      if(Count.server >= split_smallnet_size)
 	{
 	  /* server hasn't been split for a while.
 	   * -Dianora

@@ -43,8 +43,10 @@ int main(int argc, char *argv[])
     p = argv[0];
   else
     p++;
+#ifdef KPATH
   if(strcmp(p, "viklines") == 0)
     filename = KLINEFILE;
+#endif /* KPATH */
 
   /* create exclusive lock */
   if((fd = open(LOCKFILE, O_WRONLY|O_CREAT|O_EXCL, 0666)) < 0) {

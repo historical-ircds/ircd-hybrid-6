@@ -1,7 +1,106 @@
+/************************************************************************
+ *   IRC - Internet Relay Chat, src/ircd.c
+ *   Copyright (C) 1990 Jarkko Oikarinen and
+ *                      University of Oulu, Computing Center
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 1, or (at your option)
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program; if not, write to the Free Software
+ *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 
 I started this file to keep track of changes made in hybrid-6,
 beginning with b37.  We are in VERY HIGH SPEED development mode,
 so it's important to keep track of this. =)
+
+
+============================================================================
+|        Mon Jan 18 00:13:39 PST 1999	Jake Khuon <khuon@GCtr.Net>        |
+============================================================================
+
+
+[1] Added the following options:
+
+	IDLE_IGNORE
+		When used in conjunction with IDLE_CHECK will prevent the
+	        server from idle'ing clients connected from the listed IP#s. 
+	        This should probably be moved into a conf file entry at
+	        some point in the future.
+	
+	SEND_FAKE_KILL_TO_CLIENT
+		Make the client think it's being KILL'ed.  This was
+		originally intended to prevent clients from reconnecting to
+		the server after being dropped for idleness.  It can
+		probably be used for other events too.  This really only
+		works well if the client was compiled with
+		QUIT_ON_OPERATOR_KILL which was mandatory policy on
+		UMich.Edu hosts.
+
+	LTRACE (Limited TRACE)
+		Reports only link and oper traces even when O:line is
+		active. Displays only Oper, Serv, Link, and Class reports
+		even if the O-line is active.  Useful for just showing
+		pertinent info of a specific server. Note however that if
+		the target server is not running this option then you will
+		still receive a normal trace output.  Defining this will
+		remove "STATS p" funtionality since the two are basically
+		redundant.
+
+	LWALLOPS
+		This is actually a compatibility command which really calls
+		m_locops().
+
+	STATS_NOTICE
+		Notify opers on STATS request.  Some people find this
+		invasive and with the STAT command on PACE throttle the
+		server shouldn't suffer but lusers stat for different
+		reasons and many times it's been a prelude to some other
+		form of attack.  Wrestle with your own morals before
+		defining.
+
+	SHOW_FAILED_OPER_ID
+		If FAILED_OPER_NOTICE is defined, also notify when a client
+		fails to oper because of a identity mismatch (wrong host or
+		nick)
+
+	SHOW_FAILED_OPER_PASSWD
+		If FAILED_OPER_NOTICE is defined, also show the attempted
+		passwd.  Once again, this may be morally offensive.
+
+	WINTRHAWK
+		Enable WintrHawk's style of reporting things.  This is most
+		evident in TRACE and LTRACE which won't report idletimes
+		otherwise.
+
+
+[2] Bugfixes/changes:
+
+	Fixed *_WHEN_SPLIT bug whereby a server was still considered split
+	even though the network had reached SPLIT_SMALLNET_SIZE (but hadn't
+	yet surpassed it).
+
+	Added capability for defining OPER_UMODES, LOCOP_UMODES, and
+	DEFAULT_SERVER_SPLIT_RECOVERY_TIME from config.h.
+
+	Fixed m_trace() so that it now reports correct idletimes and added
+	WINTRHAWK styling option.
+
+	Updated opers.txt with mod1 commands.
+
+	Added a ChangeLog |8^)
+
+	Added some code for K-line files but it's not yet functional
+============================================================================
+
 
 version hybrid-6-b37	13-Jan-1999
 
@@ -12,4 +111,3 @@ version hybrid-6-b37	13-Jan-1999
 * RPL_YOURHOST is now given to the client as server_name[sockhost/port]
   that the client connected to -- for virtual addresses and such -- FlashMan
 * Removed SHOW_UH define from config.h -- no longer needed -- FlashMan
-
