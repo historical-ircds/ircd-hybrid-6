@@ -462,109 +462,115 @@ static	int	register_user(aClient *cptr,
 
   reason = (char *)NULL;
 
+#define SOCKET_ERROR (-2)
+#define I_LINE_FULL (-3)
+#define NOT_AUTHORIZED (-4)
+#define KLINED_CLIENT (-5)
+
   if (MyConnect(sptr))
     {
-      if ( (i = check_client(sptr,username,&reason)) )
-	/*
-	 * -2 is a socket error, already reported.
-	 */
-       {
-	if (i != -2)
-	  {
-	    if (i == -4)
-	      {
-		ircstp->is_ref++;
-		return exit_client(cptr, sptr, &me,
-				   "Too many connections from your hostname");
-	      }
-	    else if (i == -3)
-	      sendto_realops_lev(FULL_LEV, "%s for %s.",
-				 "I-line is full", get_client_host(sptr));
-            else if (i == -5)
-	      {
-		if(sptr->user)
-		  {
-		    if (sptr->flags & FLAGS_DOID &&
-			!(sptr->flags & FLAGS_GOTID))
-		      {
-			*user->username = '~';
-			(void)strncpy(&user->username[1], username, USERLEN);
-			user->username[USERLEN] = '\0';
-		      }
-		    else
-		      (void)strncpy(user->username, username, USERLEN);
-		  }
-		  
+      switch( check_client(sptr,username,&reason))
+	{
+	case SOCKET_ERROR:
+	  return exit_client(cptr, sptr, &me, "Socket Error");
+	  break;
 
-		/* Ok... if we are using REJECT_HOLD, I'm not going to dump
-		 * the client immediately, but just mark the client for exit
-		 * at some future time, .. this marking also disables reads/
-		 * writes from the client. i.e. the client is "hanging" onto
-		 * an fd without actually being able to do anything with it
-		 * I still send the usual messages about the k line, but its
-		 * not exited immediately.
-		 * My concern would be, someone attempting to deny service
-		 * attack would load up a bunch of clients all on the same
-		 * user@host expecting to use up fd's
-		 * - Dianora
-		 */
-
-		reason = (reason) ? reason : "K-lined";
-#ifdef REJECT_HOLD
-		SetRejectHold(cptr);
-#ifdef KLINE_WITH_REASON
-		if(( p = strchr(reason, '|')) )
-		  *p = '\0';
-
-		sendto_one(sptr, ":%s NOTICE %s :*** K-lined for %s",
-			   me.name,cptr->name,reason);
-
-		if(p)
-		  *p = '|';
-#else
-		sendto_one(sptr, ":%s NOTICE %s :*** K-lined",
-			   me.name,cptr->name);
-#endif
-		return(0);
-#else
-		ircstp->is_ref++;
-
-#ifdef KLINE_WITH_REASON
-		if( (p = strchr(reason, '|')) )
-		  {
-		    *p = '\0';
-		    strncpyzt(safe_reason,reason,MAX_REASON); /* ick */
-		    *p = '|';
-		    return exit_client(cptr, sptr, &me, safe_reason);
-		  }
-		else
-		  return exit_client(cptr, sptr, &me, reason);
-#else
-		return exit_client(cptr, sptr, &me, "K-lined");
-#endif
-#endif
-	      }
-	    else
-	      sendto_realops_lev(CCONN_LEV, "%s from %s [%s].",
-				 "Unauthorized client connection",
-				 get_client_host(sptr),
-				 inetntoa((char *)&sptr->ip));
-
+	case I_LINE_FULL:
+	sendto_realops_lev(FULL_LEV, "%s for %s.",
+			   "I-line is full", get_client_host(sptr));
 #ifdef USE_SYSLOG
-	    syslog(LOG_INFO,"%s from %s.",i == -3 ? "Too many connections" :
-		   "Unauthorized client connection", get_client_host(sptr));
+	syslog(LOG_INFO,"%s from %s.", "Too many connections",
+	       get_client_host(sptr));
 #endif
 	    ircstp->is_ref++;
-	    return exit_client(cptr, sptr, &me, i == -3 ?
-			       "No more connections allowed in your connection class" :
-			       "You are not authorized to use this server");
-	    
-	  }
-	else
+	    return exit_client(cptr, sptr, &me, 
+	       "No more connections allowed in your connection class" );
+	  break;
+
+	case NOT_AUTHORIZED:
+	  ircstp->is_ref++;
+
+	  sendto_realops_lev(CCONN_LEV, "%s from %s [%s].",
+			     "Unauthorized client connection",
+			     get_client_host(sptr),
+			     inetntoa((char *)&sptr->ip));
+
+#ifdef USE_SYSLOG
+	  syslog(LOG_INFO,"%s from %s.",
+		 "Unauthorized client connection", get_client_host(sptr));
+#endif
+	  ircstp->is_ref++;
+	  return exit_client(cptr, sptr, &me,
+			     "You are not authorized to use this server");
+	  break;
+
+	case KLINED_CLIENT:
 	  {
-	    return exit_client(cptr, sptr, &me, "Socket Error");
+	    if(sptr->user)
+	      {
+		if (sptr->flags & FLAGS_DOID &&
+		    !(sptr->flags & FLAGS_GOTID))
+		  {
+		    *user->username = '~';
+		    (void)strncpy(&user->username[1], username, USERLEN);
+		    user->username[USERLEN] = '\0';
+		  }
+		else
+		  (void)strncpy(user->username, username, USERLEN);
+	      }
+	    
+	    /* Ok... if we are using REJECT_HOLD, I'm not going to dump
+	     * the client immediately, but just mark the client for exit
+	     * at some future time, .. this marking also disables reads/
+	     * writes from the client. i.e. the client is "hanging" onto
+	     * an fd without actually being able to do anything with it
+	     * I still send the usual messages about the k line, but its
+	     * not exited immediately.
+	     * My concern would be, someone attempting to deny service
+	     * attack would load up a bunch of clients all on the same
+	     * user@host expecting to use up fd's
+	     * - Dianora
+	     */
+	    
+	    reason = (reason) ? reason : "K-lined";
+#ifdef REJECT_HOLD
+	    SetRejectHold(cptr);
+#ifdef KLINE_WITH_REASON
+	    if(( p = strchr(reason, '|')) )
+	      *p = '\0';
+
+	    sendto_one(sptr, ":%s NOTICE %s :*** K-lined for %s",
+		       me.name,cptr->name,reason);
+	    
+	    if(p)
+	      *p = '|';
+#else
+	    sendto_one(sptr, ":%s NOTICE %s :*** K-lined",
+		       me.name,cptr->name);
+#endif
+	    return(0);
+#else
+	    ircstp->is_ref++;
+
+#ifdef KLINE_WITH_REASON
+	    if( (p = strchr(reason, '|')) )
+	      {
+		*p = '\0';
+		strncpyzt(safe_reason,reason,MAX_REASON); /* ick */
+		*p = '|';
+		return exit_client(cptr, sptr, &me, safe_reason);
+	      }
+	    else
+	      return exit_client(cptr, sptr, &me, reason);
+#else
+	    return exit_client(cptr, sptr, &me, "K-lined");
+#endif
+#endif
+	    break;
 	  }
-       }
+	default:
+	  break;
+	}
 
 #ifdef ANTI_SPAMBOT
       /* This appears to be broken */
@@ -747,7 +753,6 @@ static	int	register_user(aClient *cptr,
 		       user->username);
       return exit_client(cptr, sptr, &me, tmpstr2);
     }
-
 
   if(!IsAnOper(sptr) && (aconf = find_special_conf(sptr->info,CONF_XLINE)) )
     {
