@@ -1,3 +1,23 @@
+db          2001/12/06 23:26:21 EST	(20011207_4)
+
+  Modified files:
+    include              config.h config.h.dist irc_string.h 
+                         m_info.h 
+    src                  m_message.c match.c 
+  Log:
+  - removed NO_DUPE_MULTI_MESSAGES
+    confusing, it all goes away in 7 anyway. always check for dupes as before
+  
+  Revision  Changes    Path
+  1.147     +0 -6      ircd-hybrid-6/include/config.h
+  1.126     +0 -6      ircd-hybrid-6/include/config.h.dist
+  1.16      +1 -3      ircd-hybrid-6/include/irc_string.h
+  1.23      +1 -7      ircd-hybrid-6/include/m_info.h
+  1.13      +1 -3      ircd-hybrid-6/src/m_message.c
+  1.26      +1 -3      ircd-hybrid-6/src/match.c
+
+
+
 jdc         2001/12/06 23:16:31 EST	(20011207_3)
 
   Modified files:
