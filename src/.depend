@@ -129,7 +129,7 @@ packet.o: packet.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../zlib/zlib.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \
  ../include/common.h ../include/irc_string.h ../include/msg.h \
- ../include/h.h ../include/fdlist.h
+ ../include/s_zip.h ../include/h.h ../include/fdlist.h
 parse.o: parse.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../zlib/zlib.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \
@@ -228,8 +228,8 @@ send.o: send.c ../include/send.h ../include/config.h \
  ../include/setup.h ../include/struct.h ../include/ircd_defs.h \
  ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h ../include/client.h \
  ../include/dbuf.h ../include/common.h ../include/irc_string.h \
- ../include/h.h ../include/fdlist.h ../include/class.h \
- ../include/numeric.h
+ ../include/s_zip.h ../include/h.h ../include/fdlist.h \
+ ../include/class.h ../include/numeric.h
 sprintf_irc.o: sprintf_irc.c ../include/irc_string.h ../include/send.h \
  ../include/config.h ../include/setup.h ../include/common.h
 whowas.o: whowas.c ../include/struct.h ../include/config.h \

@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.26  1999/07/20 08:28:03  db
+ * - more removal of stuff from h.h
+ *
  * Revision 1.25  1999/07/20 08:20:33  db
  * - more cleanups from h.h
  *
@@ -267,6 +270,7 @@ extern struct ConfItem* find_special_conf(char *,int );
 extern struct ConfItem* find_is_klined(const char* host, 
                                        const char* name,
                                        unsigned long ip);
+extern	char	*show_iline_prefix(struct Client *,struct ConfItem *,char *);
 extern void   GetPrintableaConfItem(struct ConfItem *,
 				    char **, char **, char **,
 				    char **, int *);

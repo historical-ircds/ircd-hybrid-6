@@ -571,34 +571,6 @@ static struct Message *tree_parse(char *cmd)
   return ((struct Message *)NULL);
 }
 
-
-/*
- * field breakup for ircd.conf file.
- */
-char	*getfield(char *newline)
-{
-  static char *line = (char *)NULL;
-  char	*end, *field;
-	
-  if (newline)
-    line = newline;
-
-  if (line == (char *)NULL)
-    return((char *)NULL);
-
-  field = line;
-  if ((end = strchr(line,':')) == NULL)
-    {
-      line = (char *)NULL;
-      if ((end = strchr(field,'\n')) == (char *)NULL)
-	end = field + strlen(field);
-    }
-  else
-    line = end + 1;
-  *end = '\0';
-  return(field);
-}
-
 static	int	cancel_clients(aClient *cptr,
 			       aClient *sptr,
 			       char *cmd)

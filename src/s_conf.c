@@ -63,7 +63,8 @@ int safe_write(aClient *,const char *, int, char *);
 
 static void lookup_confhost(aConfItem* aconf);
 static void do_include_conf(void);
-static int     SplitUserHost( aConfItem * );
+static int  SplitUserHost( aConfItem * );
+static char *getfield(char *newline)
 
 static FBFILE*  openconf(const char* filename);
 static void	initconf(FBFILE*, int);
@@ -3517,3 +3518,29 @@ get_conf_name(KlineType type)
   return(ConfigFileEntry.dlinefile);
 }
 
+/*
+ * field breakup for ircd.conf file.
+ */
+static char *getfield(char *newline)
+{
+  static char *line = (char *)NULL;
+  char	*end, *field;
+	
+  if (newline)
+    line = newline;
+
+  if (line == (char *)NULL)
+    return((char *)NULL);
+
+  field = line;
+  if ((end = strchr(line,':')) == NULL)
+    {
+      line = (char *)NULL;
+      if ((end = strchr(field,'\n')) == (char *)NULL)
+	end = field + strlen(field);
+    }
+  else
+    line = end + 1;
+  *end = '\0';
+  return(field);
+}
