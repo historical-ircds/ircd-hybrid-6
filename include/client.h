@@ -377,7 +377,7 @@ struct Client
 #define ALL_UMODES   (SEND_UMODES | FLAGS_SERVNOTICE | FLAGS_CCONN | \
                       FLAGS_REJ | FLAGS_SKILL | FLAGS_FULL | FLAGS_SPY | \
                       FLAGS_NCHANGE | FLAGS_OPERWALL | FLAGS_DEBUG | \
-                      FLAGS_BOTS | FLAGS_EXTERNAL )
+                      FLAGS_BOTS | FLAGS_EXTERNAL | FLAGS_LOCOP )
 
 #ifndef OPER_UMODES
 #define OPER_UMODES  (FLAGS_OPER | FLAGS_WALLOP | FLAGS_SERVNOTICE | \
