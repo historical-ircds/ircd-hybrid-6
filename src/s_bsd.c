@@ -51,10 +51,12 @@
 #include <sys/resource.h>
 #include <sys/param.h>    /* NOFILE */
 #include <arpa/inet.h>
+
 #if defined(SOL20) 
 #include <sys/filio.h>
 #include <sys/select.h>
 #endif
+
 /*
  * Stuff for poll()
  */

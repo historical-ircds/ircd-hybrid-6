@@ -26,6 +26,7 @@
 #include "res.h"
 #include "send.h"
 
+#include <string.h>
 #include <stdarg.h>
 #include <errno.h>
 
@@ -155,8 +156,6 @@ char	serveropts[] = {
 #define ssize_t unsigned int
 #endif
 
-/* extern char *sys_errlist[]; */
-
 static	char	debugbuf[1024];
 
 void
@@ -221,7 +220,7 @@ void	send_usage(aClient *cptr, char *nick)
   if (getrusage(RUSAGE_SELF, &rus) == -1)
     {
       sendto_one(cptr,":%s NOTICE %s :Getruseage error: %s.",
-		 me.name, nick, sys_errlist[errno]);
+		 me.name, nick, strerror(errno));
       return;
     }
   secs = rus.ru_utime.tv_sec + rus.ru_stime.tv_sec;

@@ -80,34 +80,6 @@ char *str, *fs;
 
 #endif /* !HAVE_STRTOK */
 
-#if !defined( HAVE_STRERROR )
-/*
-**	strerror - return an appropriate system error string to a given errno
-**
-**		   argv 11/90
-**	$Id$
-*/
-
-char *strerror(int err_no)
-{
-#if !defined(__FreeBSD__) && !defined(__NetBSD__)
-	extern	char	*sys_errlist[];	 /* Sigh... hopefully on all systems */
-	extern	int	sys_nerr;
-#endif
-	static	char	buff[40];
-	char	*errp;
-
-	errp = (err_no > sys_nerr ? (char *)NULL : sys_errlist[err_no]);
-
-	if (errp == (char *)NULL)
-	    {
-		errp = buff;
-		ircsprintf(errp, "Unknown Error %d", err_no);
-	    }
-	return errp;
-}
-
-#endif /* !HAVE_STRERROR */
 
 /* this new faster inet_ntoa was ripped from:
  * From: Thomas Helvey <tomh@inxpress.net>
