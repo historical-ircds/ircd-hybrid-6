@@ -4104,7 +4104,7 @@ int     m_sjoin(struct Client *cptr,
  * using a specific one? If so, tell me and I'll make a proper
  * RPL_STATSJLINE def.
  * --einride
- * done - Dianora
+ * made RPL_STATSQLINE like hybrid-7 - Dianora
  */
 void report_juped_channels(struct Client *sptr)
 {
@@ -4121,10 +4121,12 @@ void report_juped_channels(struct Client *sptr)
     {
       if (chptr->juped)
       {
-	sendto_one(sptr, form_str(RPL_STATSJLINE),
+	sendto_one(sptr, form_str(RPL_STATSQLINE),
 		   me.name,
 		   sptr->name,
-		   chptr->chname);
+		   'q',
+		   chptr->chname,
+		   "","","oper juped");
       }
     }
   }
