@@ -74,7 +74,8 @@ static void WriteKline(const char *, struct Client *, struct Client *,
                        const char *, const char *, const char *, 
                        const char *, const char *);
 static void WriteDline(const char *, struct Client *,
-                       const char *, const char *, const char *);
+                       const char *, const char *,
+		       const char *, const char *);
 
 /*
 AddPending()
@@ -213,6 +214,7 @@ WritePendingLines(const char *filename)
 		 PendingLines->sptr,
 		 PendingLines->host,
 		 PendingLines->reason,
+		 PendingLines->oper_reason,
 		 PendingLines->when);
     }
 
@@ -331,7 +333,8 @@ WriteDline()
 
 static void
 WriteDline(const char *filename, struct Client *sptr,
-           const char *host, const char *reason, const char *when)
+           const char *host, const char *reason, const char *oper_reason,
+	   const char *when)
 
 {
   char buffer[1024];
@@ -350,14 +353,26 @@ WriteDline(const char *filename, struct Client *sptr,
 
   fchmod(out, 0660);
 
-  ircsprintf(buffer,
-    "#%s!%s@%s D'd: %s:%s (%s)\n",
-    sptr->name,
-    sptr->username,
-    sptr->host,
-    host,
-    reason,
-    when);
+  if(oper_reason != NULL)
+    ircsprintf(buffer,
+	       "#%s!%s@%s D'd: %s:%s|%s (%s)\n",
+	       sptr->name,
+	       sptr->username,
+	       sptr->host,
+	       host,
+	       reason,
+	       oper_reason,
+	       when);
+  else
+    ircsprintf(buffer,
+	       "#%s!%s@%s D'd: %s:%s (%s)\n",
+	       sptr->name,
+	       sptr->username,
+	       sptr->host,
+	       host,
+	       reason,
+	       when);
+
 
   if (safe_write(sptr, filename, out, buffer) == (-1))
     return;
@@ -1069,6 +1084,7 @@ m_dline(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
 {
   char *host, *reason;
+  char *oper_reason = NULL;
   char *p;
   struct Client *acptr;
   char cidr_form_host[HOSTLEN + 1];
@@ -1209,6 +1225,11 @@ m_dline(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   else
     reason = "No reason";
 
+  if ((p = strchr(reason, '|')) != NULL)
+    {
+      *p = '\0';
+      oper_reason = p+1;
+    }
 
   if((ip_mask & 0xFFFFFF00) ^ 0xFFFFFF00)
     {
@@ -1255,65 +1276,75 @@ m_dline(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
   add_Dline(aconf);
 
-        sendto_realops("%s added D-Line for [%s] [%s]",
-                sptr->name,
-                host,
-                reason);
+  if (oper_reason != NULL)
+    sendto_realops("%s added D-Line for [%s] [%s|%s]",
+		   sptr->name,
+		   host,
+		   reason, oper_reason);
+  else
+    sendto_realops("%s added D-Line for [%s] [%s]",
+		   sptr->name,
+		   host,
+		   reason);
 
-        log(L_TRACE, "%s added D-Line for [%s] [%s]", 
-            sptr->name, host, reason);
+  log(L_TRACE, "%s added D-Line for [%s] [%s|%s]", 
+      sptr->name, host, reason,
+      oper_reason ? oper_reason : "" );
 
-        dconf = get_conf_name(DLINE_TYPE);
+  dconf = get_conf_name(DLINE_TYPE);
 
-        /*
-         * Check if the conf file is locked - if so, add the dline
-         * to our pending dline list, to be written later, if not,
-         * allow this dline to be written, and write out all other
-         * pending lines as well
-         */
-        if (LockedFile(dconf))
-        {
-                aPendingLine *pptr;
+  /*
+   * Check if the conf file is locked - if so, add the dline
+   * to our pending dline list, to be written later, if not,
+   * allow this dline to be written, and write out all other
+   * pending lines as well
+   */
+  if (LockedFile(dconf))
+    {
+      aPendingLine *pptr;
+      
+      pptr = AddPending();
+      
+      /*
+       * Now fill in the fields
+       */
+      pptr->type = DLINE_TYPE;
+      pptr->sptr = sptr;
+      pptr->rcptr = NULL;
+      pptr->user = NULL;
+      pptr->host = strdup(host);
+      pptr->reason = strdup(reason);
+      if (oper_reason != NULL)
+	pptr->oper_reason = strdup(oper_reason);
+      pptr->when = strdup(current_date);
 
-                pptr = AddPending();
+      sendto_one(sptr,
+		 ":%s NOTICE %s :Added D-Line [%s] (config file write delayed)",
+		 me.name,
+		 sptr->name,
+		 host);
 
-                /*
-                 * Now fill in the fields
-                 */
-                pptr->type = DLINE_TYPE;
-                pptr->sptr = sptr;
-                pptr->rcptr = NULL;
-                pptr->user = NULL;
-                pptr->host = strdup(host);
-                pptr->reason = strdup(reason);
-                pptr->when = strdup(current_date);
-
-                sendto_one(sptr,
-                        ":%s NOTICE %s :Added D-Line [%s] (config file write delayed)",
-                        me.name,
-                        sptr->name,
-                        host);
-
-                return 0;
-        }
-        else if (PendingLines)
-                WritePendingLines(dconf);
-
-        sendto_one(sptr,
-                ":%s NOTICE %s :Added D-Line [%s] to %s",
-                me.name,
-                sptr->name,
-                host,
-                dconf ? dconf : "configuration file");
-
-        /*
-         * Write dline to configuration file
-         */
-        WriteDline(dconf,
-                sptr,
-                host,
-                reason,
-                current_date);
+      return 0;
+    }
+  else if (PendingLines)
+    WritePendingLines(dconf);
+  
+  sendto_one(sptr,
+	     ":%s NOTICE %s :Added D-Line [%s] to %s",
+	     me.name,
+	     sptr->name,
+	     host,
+	     dconf ? dconf : "configuration file");
+  
+  /*
+   * Write dline to configuration file
+   */
+  WriteDline(dconf,
+	     sptr,
+	     host,
+	     reason,
+	     oper_reason,
+	     current_date);
 
   /*
   ** I moved the following 2 lines up here
