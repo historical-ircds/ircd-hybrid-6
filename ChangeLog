@@ -1,3 +1,19 @@
+*** 20001021_1 by lusky
+fix for duplicate 401's for kick #validchan invalnick
+ServerStats->is_ref is incremented twice on an X-line
+  which is set to 1 (jdc)
+STATS P notifications were not sent to opers (jdc)
+includefile rehash notifications sent to FLAGS_DEBUG
+stats l/L target to FLAGS_SPY (if STATS_NOTICE) (jdc)
+uname info only displayed to opers
+If X-line port field is 2, reject client but do not send
+  a notification to opers
+STATS y/Y now oper-only
+Four new defines, I_LINES_OPER_ONLY, K_LINES_OPER_ONLY,
+  P_LINES_OPER_ONLY, and SPOOF_NOTICE (jdc/jrl)
+add some missing defines to m_info.h
+
+
 *** 20001019_1 by lusky
 dns cache entries were never fully expiring, stayed in the hashtable forever
 
