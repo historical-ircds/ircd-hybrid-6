@@ -35,8 +35,6 @@
 #define	HOSTLEN		63	/* Length of hostname.  Updated to         */
 				/* comply with RFC1123                     */
 
-#define HOSTIPLEN	15	/* Length of dotted quad form of IP	   */
-				/* - Dianora 				   */
 #define	NICKLEN		9	/* Necessary to put 9 here instead of 10
 				 * if s_msg.c/m_nick has been corrected.
 				 * This preserves compatibility with old
@@ -47,10 +45,7 @@
 #define TOPICLEN 	120	/* old value 90, truncated on other servers */
 #define	KILLLEN		90	
 #define	CHANNELLEN	200
-#define	PASSWDLEN 	20
 #define	KEYLEN		23
-#define IDLEN		12	/* this is the maximum length, not the actual
-				   generated length; DO NOT CHANGE! */
 #define	BUFSIZE		512	/* WARNING: *DONT* CHANGE THIS!!!! */
 #define	MAXRECIPIENTS 	20
 #define	MAXBANS		25	/* bans + exceptions together */
