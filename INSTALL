@@ -10,8 +10,7 @@ follow when building and tuning the daemon:
     an idea of what bugs were fixed, features were added, or variables
     were changed.  Changes to ircd.conf are documented in doc/example.conf.
 
-    If you are upgrading from Hybrid6.0 or earlier, you MUST read
-    README.HYBRID6.2-CHANGES
+    If you are upgrading from Hybrid6.0 or earlier, you MUST read RELNOTES.
 
 2.  Run the "configure" script.  It will create "include/setup.h" and the
     Makefiles to match your system:
