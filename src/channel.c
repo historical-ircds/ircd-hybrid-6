@@ -4068,7 +4068,7 @@ int     m_names( struct Client *cptr,
                              para,
                              get_client_name(sptr,FALSE));
               sendto_one(sptr, form_str(ERR_TOOMANYTARGETS),
-                         me.name, sptr->name, "NAMES");
+                         me.name, sptr->name, "NAMES",1);
               return 0;
             }
         }

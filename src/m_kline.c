@@ -640,9 +640,9 @@ m_kline(aClient *cptr,
      * Not enough non-wild characters were found, assume
      * they are trying to kline *@*.
      */
-  #ifdef SLAVE_SERVERS
+#ifdef SLAVE_SERVERS
     if (!IsServer(sptr))
-  #endif
+#endif
       sendto_one(sptr,
         ":%s NOTICE %s :Please include at least %d non-wildcard characters with the user@host",
         me.name,
@@ -793,11 +793,11 @@ m_kline(aClient *cptr,
     DupString(pptr->reason, reason ? reason : "No reason");
     DupString(pptr->when, current_date);
 
-  #ifdef SLAVE_SERVERS
+#ifdef SLAVE_SERVERS
     pptr->rcptr = rcptr;
-  #else
+#else
     pptr->rcptr = (aClient *) NULL;
-  #endif
+#endif
 
     sendto_one(sptr,
       ":%s NOTICE %s :Added K-Line [%s@%s] (config file write delayed)",

@@ -118,8 +118,9 @@ static  int     m_message(struct Client *cptr,
   struct Client       *acptr;
   char  *s;
   struct Channel *chptr;
-  char  *nick, *server, *p, *cmd, *host;
-  int type=0;
+  char  *nick, *server, *cmd, *host;
+  /* char *p; */
+  int type=0, msgs=0;
 
   cmd = notice ? MSG_NOTICE : MSG_PRIVATE;
 
@@ -154,17 +155,32 @@ static  int     m_message(struct Client *cptr,
    */
 
   nick = parv[1];
+
+/* #if (MAX_MULTI_MESSAGES == 1)
   if((p = strchr(nick,',')))
     {
       sendto_one(sptr, form_str(ERR_TOOMANYTARGETS),
-                     me.name, parv[0], cmd);
+                     me.name, parv[0], cmd, MAX_MULTI_MESSAGES);
       return -1;
     }
+#endif */
 
   /*
   ** channels are privmsg'd a lot more than other clients, moved up here
   ** plain old channel msg ?
   */
+  while(msgs < MAX_MULTI_MESSAGES)
+  {
+     if(!msgs)
+        nick = strtok(parv[1], ",");
+     else
+        nick = strtok(NULL, ",");
+
+     if(!nick && msgs == 0)
+        nick = parv[1];
+     else if(!nick)
+        break;
+
   if( IsChanPrefix(*nick)
       && (IsPerson(sptr) && (chptr = hash_find_channel(nick, NullChn))))
     {
@@ -187,7 +203,8 @@ static  int     m_message(struct Client *cptr,
       else if (!notice)
         sendto_one(sptr, form_str(ERR_CANNOTSENDTOCHAN),
                    me.name, parv[0], nick);
-      return 0;
+      msgs++;
+      continue;
     }
       
   /*
@@ -244,7 +261,8 @@ static  int     m_message(struct Client *cptr,
                   sendto_one(sptr, form_str(ERR_CANNOTSENDTOCHAN),
                              me.name, parv[0], nick);
                 }
-              return -1;
+	msgs++;
+	continue;
             }
           else
             {
@@ -261,7 +279,8 @@ static  int     m_message(struct Client *cptr,
         {
           sendto_one(sptr, form_str(ERR_NOSUCHNICK),
                      me.name, parv[0], nick);
-          return -1;
+	   msgs++;
+	   continue;
         }
       return 0;
     }
@@ -360,7 +379,8 @@ static  int     m_message(struct Client *cptr,
             sptr->user->last = CurrentTime;
         }
 #endif
-      return 0;
+      msgs++;
+      continue;
     }
 
   /* Everything below here should be reserved for opers 
@@ -395,7 +415,8 @@ static  int     m_message(struct Client *cptr,
         {
           sendto_one(sptr, form_str(ERR_NOTOPLEVEL),
                      me.name, parv[0], nick);
-          return 0;
+          msgs++;
+	  continue;
         }
       while (*++s)
         if (*s == '.' || *s == '*' || *s == '?')
@@ -404,7 +425,8 @@ static  int     m_message(struct Client *cptr,
         {
           sendto_one(sptr, form_str(ERR_WILDTOPLEVEL),
                      me.name, parv[0], nick);
-          return 0;
+	  msgs++;
+	  continue;
         }
       sendto_match_butone(IsServer(cptr) ? cptr : NULL, 
                           sptr, nick + 1,
@@ -412,7 +434,8 @@ static  int     m_message(struct Client *cptr,
                           MATCH_SERVER,
                           ":%s %s %s :%s", parv[0],
                           cmd, nick, parv[2]);
-      return 0;
+      msgs++;
+      continue;
     }
         
   /*
@@ -431,7 +454,8 @@ static  int     m_message(struct Client *cptr,
         {
           sendto_one(sptr, form_str(ERR_NOSUCHNICK),
                      me.name, parv[0], nick);
-          return -1;
+ 	  msgs++;
+	  continue;
         }
         
       /*
@@ -441,7 +465,8 @@ static  int     m_message(struct Client *cptr,
         {
           sendto_one(acptr,":%s %s %s :%s", parv[0],
                      cmd, nick, parv[2]);
-          return 0;
+          msgs++;
+          continue;
         }
 
       *server = '\0';
@@ -450,7 +475,8 @@ static  int     m_message(struct Client *cptr,
       if(!irccmp(nick,"opers") && IsAnOper(sptr))
         {
           sendto_realops("To opers: From %s: %s",sptr->name,parv[2]);
-          return 0;
+          msgs++;
+          continue;
         }
         
       if ((host = (char *)strchr(nick, '%')))
@@ -476,14 +502,19 @@ static  int     m_message(struct Client *cptr,
           else if (!notice)
             sendto_one(sptr,
                        form_str(ERR_TOOMANYTARGETS),
-                       me.name, parv[0], nick);
+                       me.name, parv[0], nick, MAX_MULTI_MESSAGES);
         }
       if (acptr)
-          return 0;
+	  msgs++;
+	  continue;
     }
   sendto_one(sptr, form_str(ERR_NOSUCHNICK), me.name,
              parv[0], nick);
-
+   msgs++;
+  }
+  if (strtok(NULL, ","))
+    sendto_one(sptr, form_str(ERR_TOOMANYTARGETS),
+                     me.name, parv[0], cmd, MAX_MULTI_MESSAGES);
   return 0;
 }
 

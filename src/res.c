@@ -766,7 +766,7 @@ static int proc_answer(ResRQ* request, HEADER* header,
                        char* buf, char* eob)
 {
   char   hostbuf[HOSTLEN + 1]; /* working buffer */
-  char*  current;              /* current position in buf */
+  unsigned char*  current;              /* current position in buf */
   char** alias;                /* alias list */
   char** addr;                 /* address list */
   char*  name;                 /* pointer to name string */
@@ -855,7 +855,7 @@ static int proc_answer(ResRQ* request, HEADER* header,
   /*
    * process each answer sent to us blech.
    */
-  while (header->ancount-- > 0 && current < eob && name < endp) {
+  while (header->ancount-- > 0 && (char *) current < eob && name < endp) {
     n = dn_expand(buf, eob, current, hostbuf, sizeof(hostbuf));
     if (n < 0) {
       /*
@@ -877,7 +877,7 @@ static int proc_answer(ResRQ* request, HEADER* header,
      */
     current += (size_t) n;
 
-    if (!((current + ANSWER_FIXED_SIZE) < eob))
+    if (!(((char *)current + ANSWER_FIXED_SIZE) < eob))
       break;
 
     type = _getshort(current);
@@ -1343,7 +1343,7 @@ static aCache* add_to_cache(aCache* ocp)
   ocp->hname_next = hashtable[hashv].name_list;
   hashtable[hashv].name_list = ocp;
 
-  hashv = hash_number(ocp->he.h.h_addr);
+  hashv = hash_number((unsigned char *)ocp->he.h.h_addr);
 
   ocp->hnum_next = hashtable[hashv].num_list;
   hashtable[hashv].num_list = ocp;
@@ -1535,7 +1535,7 @@ static aCache* find_cache_number(ResRQ* request, const char* addr)
      * if the first IP# has the same hashnumber as the IP# we
      * are looking for, its been done already.
      */
-    if (hashv == hash_number(cp->he.h.h_addr_list[0]))
+    if (hashv == hash_number((unsigned char*)cp->he.h.h_addr_list[0]))
       continue;
     for (i = 1; cp->he.h.h_addr_list[i]; i++) {
       if (!memcmp(cp->he.h.h_addr_list[i], addr, sizeof(struct in_addr))) {
@@ -1642,7 +1642,7 @@ static void rem_cache(aCache* ocp)
   /*
    * remove cache entry from hashed number list
    */
-  hashv = hash_number(hp->h_addr);
+  hashv = hash_number((unsigned char *)hp->h_addr);
   /*
    * XXX - memory leak!!!?
    */
