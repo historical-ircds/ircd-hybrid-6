@@ -96,6 +96,8 @@ int rcvbufmax = 0, sndbufmax = 0;
 void	reset_sock_opts (int, int);
 #endif
 
+extern int spare_fd;	/* defined in ircd.c */
+
 aClient	*local[MAXCONNECTIONS];
 
 int	highest_fd = 0, resfd = -1;

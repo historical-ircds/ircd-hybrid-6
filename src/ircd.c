@@ -53,12 +53,17 @@ static char *rcs_version="$Id$";
 int	idle_time = MIN_IDLETIME;
 #endif
 
-aMessageFile *motd;
-#ifdef AMOTD
-aMessageFile *amotd;
+#ifdef OPER_MOTD
+aMessageFile *opermotd=(aMessageFile *)NULL;
+extern char oper_motd_last_changed_date[];
 #endif
-aMessageFile *helpfile;	
-struct tm	*motd_tm;
+aMessageFile *motd=(aMessageFile *)NULL;
+extern char motd_last_changed_date[];
+#ifdef AMOTD
+aMessageFile *amotd=(aMessageFile *)NULL;
+#endif
+aMessageFile *helpfile=(aMessageFile *)NULL;	
+
 
 #ifdef SETUID_ROOT
 #include <sys/lock.h>
@@ -101,6 +106,9 @@ static  time_t	io_loop(time_t);
 
 extern	void dbuf_init();		/* defined in dbuf.c */
 extern  void read_motd();		/* defined in s_serv.c */
+#ifdef OPER_MOTD
+extern  void read_oper_motd();		/* defined in s_serv.c */
+#endif
 extern  void read_help();		/* defined in s_serv.c */
 extern  void sync_channels(time_t);	/* defined in channel.c */
 
@@ -339,7 +347,6 @@ static	time_t	try_connections(time_t currenttime)
       Debug((DEBUG_NOTICE,"Next connection check : %s", myctime(next)));
       return (next);
     }
-
 
   if (connecting)
     {
@@ -1045,10 +1052,16 @@ normal user.\n");
 
   if (argc > 0)
     return bad_command(); /* This should exit out */
- 
+
+#ifdef OPER_MOTD
+  oper_motd_last_changed_date[0] = '\0';
+  opermotd = (aMessageFile *)NULL;
+  read_oper_motd();
+#endif 
   motd = (aMessageFile *)NULL;
   helpfile = (aMessageFile *)NULL;
-  motd_tm = NULL;
+
+  motd_last_changed_date[0] = '\0';
 
   read_motd();
 #ifdef AMOTD

@@ -145,13 +145,16 @@ void read_motd(void);
 void read_amotd(void);
 #endif
 void read_help();
-void read_message_file(char *,aMessageFile **);
+int read_message_file(char *,aMessageFile **);
 
 char motd_last_changed_date[MAX_DATE_STRING];	/* enough room for date */
 
-#ifdef AMOTD
-char amotd_last_changed_date[MAX_DATE_STRING];	/* enough room for date */
+#ifdef OPER_MOTD
+char oper_motd_last_changed_date[MAX_DATE_STRING]; /* enough room for date */
+void read_oper_motd();
+extern aMessageFile *opermotd;
 #endif
+
 
 #ifdef UNKLINE
 static int flush_write(aClient *,int,char *,int,char *);
@@ -2460,14 +2463,11 @@ int	m_help(aClient *cptr,
       return 0;
     }
 
-  helpfile_ptr = helpfile;
-  while(helpfile_ptr)
+  for(helpfile_ptr = helpfile; helpfile_ptr; helpfile_ptr = helpfile_ptr->next)
     {
       sendto_one(sptr,
 		 ":%s NOTICE %s :%s",
 		 me.name, parv[0], helpfile_ptr->line);
-
-      helpfile_ptr = helpfile_ptr->next;
     }
 
   return 0;
@@ -5197,6 +5197,14 @@ int	m_rehash(aClient *cptr,
 #endif
 	  found = YES;
         }
+#ifdef OPER_MOTD
+      else if(mycmp(parv[1],"OMOTD") == 0)
+        {
+	  sendto_ops("%s is forcing re-reading of OPER MOTD file",parv[0]);
+	  read_oper_motd();
+	  found = YES;
+        }
+#endif
       else if(mycmp(parv[1],"HELP") == 0)
         {
 	  sendto_ops("%s is forcing re-reading of oper help file",parv[0]);
@@ -5585,9 +5593,7 @@ int send_motd(aClient *cptr,
 	      aMessageFile *motd)
 {
   register aMessageFile *temp;
-  struct	tm	*tm;
 
-  tm = motd_tm;
   if (motd == (aMessageFile *)NULL)
     {
       sendto_one(sptr, err_str(ERR_NOMOTD), me.name, parv[0]);
@@ -5595,11 +5601,7 @@ int send_motd(aClient *cptr,
     }
   sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.name, parv[0], me.name);
 
-  if (tm)
-    sendto_one(sptr,
-	       ":%s %d %s :- %d/%d/%d %d:%02d", me.name, RPL_MOTD,
-	       parv[0], tm->tm_mday, tm->tm_mon + 1, 1900 + tm->tm_year,
-	       tm->tm_hour, tm->tm_min);
+  sendto_one(sptr,":%s NOTICE %s :%s",me.name,parv[0],motd_last_changed_date);
 
   temp = motd;
   while(temp)
@@ -5613,6 +5615,46 @@ int send_motd(aClient *cptr,
   return 0;
 }
 
+#ifdef OPER_MOTD
+/*
+** send_oper_motd
+**	parv[0] = sender prefix
+**	parv[1] = servername
+**
+** This function split off so a server notice could be generated on a
+** user requested motd, but not on each connecting client.
+** -Dianora
+*/
+
+int send_oper_motd(aClient *cptr,
+	  aClient *sptr,
+	  int parc,
+	  char *parv[],
+	      aMessageFile *motd)
+{
+  register aMessageFile *temp;
+  
+  if (opermotd == (aMessageFile *)NULL)
+    {
+      sendto_one(sptr, "%s NOTICE %s :No OPER MOTD", me.name, parv[0]);
+      return 0;
+    }
+  sendto_one(sptr,":%s NOTICE %s :Start of OPER MOTD",
+	     me.name,parv[0]);
+
+  sendto_one(sptr,":%s NOTICE %s :%s",me.name,parv[0],
+	     oper_motd_last_changed_date);
+
+  temp = motd;
+  while(temp)
+    {
+      sendto_one(sptr,":%s NOTICE %s :%s", me.name, parv[0], temp->line);
+      temp = temp->next;
+    }
+  return 0;
+}
+#endif
+
 /*
  * read_motd()
  *
@@ -5620,21 +5662,47 @@ int send_motd(aClient *cptr,
 
 void read_motd()
 {
-  struct stat	sb;
+  struct stat sb;
+  struct tm *motd_tm;
 
-  read_message_file(MOTD,&motd);
+  if(read_message_file(MOTD,&motd) < 0)
+    return;
+
   stat(MOTD, &sb);
   motd_tm = localtime(&sb.st_mtime);
 
   if (motd_tm)
     (void)sprintf(motd_last_changed_date,
-		  "%d/%d/%d %d:%02d",
+		  "%d/%d/%d %02d:%02d",
 		  motd_tm->tm_mday,
 		  motd_tm->tm_mon + 1,
 		  1900 + motd_tm->tm_year,
 		  motd_tm->tm_hour,
 		  motd_tm->tm_min);
 }
+
+#ifdef OPER_MOTD
+void read_oper_motd()
+{
+  struct stat	sb;
+  struct tm *motd_tm;
+
+  if(read_message_file(OMOTD,&opermotd) < 0)
+    return;
+
+  stat(OMOTD, &sb);
+  motd_tm = localtime(&sb.st_mtime);
+
+  if (motd_tm)
+    (void)sprintf(oper_motd_last_changed_date,
+		  "%d/%d/%d %02d:%02d",
+		  motd_tm->tm_mday,
+		  motd_tm->tm_mon + 1,
+		  1900 + motd_tm->tm_year,
+		  motd_tm->tm_hour,
+		  motd_tm->tm_min);
+}
+#endif
 
 #ifdef AMOTD
 /*
@@ -5646,7 +5714,9 @@ void read_amotd()
 {
   struct stat	sb;
 
-  read_message_file(AMOTD,&amotd);
+  if(read_message_file(AMOTD,&amotd) < 0)
+    return;
+
   stat(AMOTD, &sb);
   motd_tm = localtime(&sb.st_mtime);
 
@@ -5665,7 +5735,7 @@ void read_amotd()
  * read_motd() - From CoMSTuD, added Aug 29, 1996
  * modified by -Dianora
  */
-void	read_message_file(char *filename,aMessageFile **ptr)
+int read_message_file(char *filename,aMessageFile **ptr)
 {
   register aMessageFile *mptr;
   register aMessageFile	*temp, *last;
@@ -5686,7 +5756,7 @@ void	read_message_file(char *filename,aMessageFile **ptr)
   *ptr = ((aMessageFile *)NULL);
   fd = open(filename, O_RDONLY);
   if (fd == -1)
-    return;
+    return(-1);
   last = (aMessageFile *)NULL;
 
   while (dgets(fd, buffer, MESSAGELINELEN-1) > 0)
@@ -5706,6 +5776,7 @@ void	read_message_file(char *filename,aMessageFile **ptr)
       last = temp;
     }
   close(fd);
+  return(0);
 }
 
 /*
@@ -5716,7 +5787,7 @@ void	read_message_file(char *filename,aMessageFile **ptr)
  */
 void	read_help()
 {
-  read_message_file(HELPFILE,&helpfile);
+  (void)read_message_file(HELPFILE,&helpfile);
 }
 
 /*

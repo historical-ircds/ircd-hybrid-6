@@ -59,6 +59,11 @@ int    botwarn (char *, char *, char *, char *);
 extern char motd_last_changed_date[];
 extern int send_motd(aClient *,aClient *,int, char **,aMessageFile *);
 
+#ifdef OPER_MOTD
+extern aMessageFile *opermotd;	/* defined in s_serv.c */
+extern int send_oper_motd(aClient *,aClient *,int, char **,aMessageFile *);
+#endif
+
 /* LINKLIST */ 
 extern aClient *local_cptr_list;
 extern aClient *oper_cptr_list;
@@ -3322,6 +3327,9 @@ int	m_oper(aClient *cptr,
   extern	char *crypt();
 #endif /* CRYPT_OPER_PASSWORD */
   char *operprivs;
+#ifdef OPER_MOTD
+  register aMessageFile *opermotd_ptr;
+#endif
 
   name = parc > 1 ? parv[1] : (char *)NULL;
   password = parc > 2 ? parv[2] : (char *)NULL;
@@ -3426,6 +3434,10 @@ int	m_oper(aClient *cptr,
       sendto_one(sptr, rpl_str(RPL_YOUREOPER), me.name, parv[0]);
       sendto_one(sptr, ":%s NOTICE %s:*** Oper privs are %s",me.name,parv[0],
 		 operprivs);
+
+#ifdef OPER_MOTD
+      (void)send_oper_motd(sptr, sptr, 1, parv,opermotd);
+#endif
 
 #if !defined(CRYPT_OPER_PASSWORD) && (defined(FNAME_OPERLOG) ||\
     (defined(USE_SYSLOG) && defined(SYSLOG_OPER)))

@@ -27,9 +27,9 @@ static char *version = "$Id$";
 #include "struct.h"
 extern	void	count_whowas_memory(int *, u_long *);
 extern	u_long	cres_mem(aClient *);
-extern  void    count_ip_hash(int *,u_long *);	/* defined in s_conf.c */
+extern  void    count_ip_hash(int *,u_long *);	  /* defined in s_conf.c */
 extern	void	count_dline_hash(int *,u_long *); /* defined in s_conf.c */
-
+extern  int	maxdbufblocks;			  /* defined in dbuf.c */
 /*
  * Option string.  Must be before #ifdef DEBUGMODE.
  */

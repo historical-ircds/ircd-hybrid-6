@@ -95,6 +95,10 @@
  * APATH = alternate MOTD for multi-lingual servers
  * i.e. /motd A for second motd
  * KPATH = kline conf file 
+ *
+ * OPER_MOTD = if defined display an oper motd to opers 
+ * when they oper up.
+ * OMOTD = path to MOTD for opers
  * 
  * For /restart to work, SPATH needs to be a full pathname
  * (unless "." is in your exec path). -Rodder
@@ -113,6 +117,9 @@
 #define	LPATH	"ircd.log"
 #define	PPATH	"ircd.pid"
 #define HPATH	"opers.txt"
+
+#define OPER_MOTD
+#define OMOTD   "opers.motd"
 
 /* TS_MAX_DELTA and TS_WARN_DELTA -  allowed delta for TS when another
  * server connects.
