@@ -1182,9 +1182,6 @@ time_t io_loop(time_t delay)
   static long	lastrecvK	= 0;
   static int	lrv		= 0;
   time_t lasttimeofday;
-#ifdef DEBUGMODE
-  static int io_loop_count=0;
-#endif
 
   lasttimeofday = timeofday;
   if((timeofday = time(NULL)) == -1)
@@ -1310,13 +1307,6 @@ time_t io_loop(time_t delay)
    * flush any data to servers.
    *	-Taner
    */
-
-  Debug((DEBUG_DEBUG,"read_message io_loop_count %d call at: %s %d",
-	 io_loop_count,myctime(NOW), NOW));
-
-#ifdef DEBUGMODE
-  io_loop_count++;
-#endif
 
 #ifndef NO_PRIORITY
   (void)read_message(0, &serv_fdlist);
