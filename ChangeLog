@@ -1,3 +1,11 @@
+*** 20010611_1 by leeh
+- moved the "not approved on efnet section" up to where people
+  will actually see it.. it was ok when it was just glines, but its
+  grown significantly..
+- moved LITTLE_I_LINES out of not-on-efnet section, I dont really think
+  its a problem, and its a local decision anyway really
+
+
 *** 20010610_2 by kreator
 - added /usr/pkg and /usr/local paths for openssl detection since i have
   systems with those paths used for ssl - NetBSD, etc.
