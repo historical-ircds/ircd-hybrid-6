@@ -27,7 +27,7 @@ AC_CHECK_FUNC(inet_aton,, AC_CHECK_LIB(resolv, inet_aton,,))
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(sys/param.h errno.h string.h stddef.h getopt.h crypt.h) 
+AC_CHECK_HEADERS(sys/param.h sys/select.h errno.h string.h stddef.h getopt.h crypt.h) 
 
 dnl Check for stdarg.h - if we can't find it, halt configure
 AC_CHECK_HEADER(stdarg.h, , AC_MSG_ERROR(** stdarg.h could not be found - ircd-hybrid will not compile without it **))

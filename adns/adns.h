@@ -66,7 +66,9 @@
 #include "irc_string.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
+#ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif /* HAVE_SYS_SELECT_H */
 #include <sys/types.h>
 #include <sys/time.h>
 #include <unistd.h>
