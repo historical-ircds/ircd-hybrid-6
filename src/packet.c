@@ -28,6 +28,7 @@
 #include "h.h"
 #include "ircd.h"
 #include "list.h"
+#include "parse.h"
  
 /*
 ** dopacket

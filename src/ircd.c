@@ -42,7 +42,8 @@
 #include "fdlist.h"
 #include "restart.h"
 #include "m_gline.h"
-#include "list.h"
+#include "scache.h"
+#include "s_misc.h"
 
 #include <string.h>
 #include <errno.h>
