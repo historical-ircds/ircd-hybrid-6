@@ -1253,7 +1253,7 @@ int	m_info(aClient *cptr,
       
       sendto_one(sptr, rpl_str(RPL_INFO), me.name, parv[0], "");
 
-      if (IsAnOper(sptr) && MyConnect(sptr))
+      if (IsAnOper(sptr))
       {
 #ifdef ANTI_NICK_FLOOD
 	ircsprintf(outstr,
