@@ -309,6 +309,8 @@ aClient* hash_find_server(const char* server, aClient* cptr)
 {
   aClient*     tmp;
   aClient*     prv = NULL;
+  char 	       *t;
+  char         ch;
   aHashEntry*  tmp3;
   int          hashv;
 
@@ -326,6 +328,35 @@ aClient* hash_find_server(const char* server, aClient* cptr)
 #endif
 	  return(tmp);
 	}
+    }
+
+  t = ((char *)server + strlen(server));
+  /*
+   * Whats happening in this next loop ? Well, it takes a name like
+   * foo.bar.edu and proceeds to earch for *.edu and then *.bar.edu.
+   * This is for checking full server names against masks although
+   * it isnt often done this way in lieu of using matches().
+   */
+  for (;;)
+    {
+      t--;
+      for (; t > server; t--)
+        if (*(t+1) == '.')
+          break;
+      if (*t == '*' || t == server)
+        break;
+      ch = *t;
+      *t = '*';
+      /*
+       * Dont need to check IsServer() here since nicknames cant
+       *have *'s in them anyway.
+       */
+      if (((tmp = hash_find_client(t, cptr))) != cptr)
+        {
+          *t = ch;
+          return (tmp);
+        }
+      *t = ch;
     }
 #ifdef	DEBUGMODE
   clmiss++;
