@@ -1,3 +1,27 @@
+wcampbel    2001/12/07 20:59:20 EST	(20011208_0)
+
+  Modified files:
+    .                    Hybrid-team INSTALL RELNOTES opers.txt 
+    doc                  INDEX ts5.txt yline.txt 
+    tools                README 
+  Added files:
+    .                    README.HYBRID6.2-CHANGES 
+  Log:
+  Final documentation update.
+  
+  Revision  Changes    Path
+  1.28      +4 -4      ircd-hybrid-6/Hybrid-team
+  1.11      +4 -4      ircd-hybrid-6/INSTALL
+  1.1       +86 -0     ircd-hybrid-6/README.HYBRID6.2-CHANGES (new)
+  1.8       +1 -1      ircd-hybrid-6/RELNOTES
+  1.3       +4 -1      ircd-hybrid-6/doc/INDEX
+  1.2       +2 -2      ircd-hybrid-6/doc/ts5.txt
+  1.3       +7 -6      ircd-hybrid-6/doc/yline.txt
+  1.21      +2 -3      ircd-hybrid-6/opers.txt
+  1.6       +5 -4      ircd-hybrid-6/tools/README
+
+
+
 leeh        2001/12/07 09:38:48 EST	(20011207_8)
 
   Modified files:
