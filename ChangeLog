@@ -1,3 +1,7 @@
+*** 20010704_4 by wcampbel
+Updated .depend
+
+
 *** 20010704_3 by jdc
 - include/config.h
     * Forgot to add CRYPT_LINKS_CIPHERPREFIX to this file, not just
