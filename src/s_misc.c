@@ -441,28 +441,27 @@ char	*comment	/* Reason for the exit */
 	}
       if (IsClient(sptr))
         {
-	  aClient *nxt_client;
-	  aClient *prv_client;
-
           Count.local--;
 
           /* LINKLIST */
           /* oh for in-line functions... */
           if(IsPerson(sptr))	/* a little extra paranoia */
             {
-	      nxt_client = sptr->next_local_client;
-	      prv_client = sptr->previous_local_client;
-
-	      if(prv_client)
-		prv_client->next_local_client = nxt_client;
-
-	      if(nxt_client)
-		nxt_client->previous_local_client = prv_client;
+	      if(sptr->previous_local_client)
+		sptr->previous_local_client->next_local_client =
+		  sptr->next_local_client;
 	      else
 		{
 		  if(local_cptr_list == sptr)
-		    local_cptr_list = (aClient *)NULL;
+		    {
+		      local_cptr_list = sptr->next_local_client;
+		    }
 		}
+
+	      if(sptr->next_local_client)
+		sptr->next_local_client->previous_local_client =
+		  sptr->previous_local_client;
+
 	      sptr->previous_local_client = sptr->next_local_client = 
 		(aClient *)NULL;
             }
