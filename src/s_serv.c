@@ -1998,7 +1998,7 @@ int     m_trace(struct Client *cptr,
           sendto_one(sptr, form_str(RPL_TRACEOPERATOR),
                      me.name, parv[0], c_class,
                      name, 
-                     IsAnOper(sptr)?ip:(IsIpHidden(acptr)?"127.0.0.1":ip),
+                     IsAnOper(sptr)?ip:(IsIPHidden(acptr)?"127.0.0.1":ip),
                      now - acptr->lasttime,
                      (acptr->user)?(now - acptr->user->last):0);
         }
