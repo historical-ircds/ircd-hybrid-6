@@ -118,7 +118,7 @@ void vlog(int priority, const char *fmt, va_list args)
   vsprintf(buf, fmt, args);
 #ifdef USE_SYSLOG
   if(priority <= L_DEBUG)
-  	syslog(sysLogLevel[priority, "%s", buf);
+  	syslog(sysLogLevel[priority], "%s", buf);
 #endif
 #ifdef USE_LOGFILE
    write_log(buf);
