@@ -59,22 +59,22 @@ extern struct Client  me;
 extern struct Client* local[];
 extern struct Channel* channel;
 extern struct stats* ircstp;
-extern	int	bootopt;
+extern  int     bootopt;
 
-extern	int	dbufalloc;
+extern  int     dbufalloc;
 extern  int     dbufblocks;
 extern  int     debuglevel;
-extern	int	maxdbufalloc;
+extern  int     maxdbufalloc;
 extern  int     maxdbufblocks;
-extern	int	highest_fd;
+extern  int     highest_fd;
 extern  int     debuglevel;
 extern  int     debugtty;
 extern  int     maxusersperchannel;
-extern	char*   debugmode;
+extern  char*   debugmode;
 
 extern void     outofmemory(void);               /* list.c */
-extern	time_t	check_fdlists (time_t);
-extern	void	flush_server_connections(void);
+extern  time_t  check_fdlists (time_t);
+extern  void    flush_server_connections(void);
 
 extern struct Client* find_chasing (struct Client *, char *, int *);
 extern struct Client* find_client(const char* name, struct Client* client);
@@ -86,18 +86,18 @@ extern struct Client* find_userhost (char *, char *, struct Client *, int *);
 /* hash d lines */
 extern struct ConfItem *find_dkill(struct Client *cptr);
 
-extern  void	add_temp_kline(struct ConfItem *);
-extern  void	flush_temp_klines(void);
+extern  void    add_temp_kline(struct ConfItem *);
+extern  void    flush_temp_klines(void);
 extern  void    report_temp_klines(struct Client *);
 
 #ifdef  GLINES
 extern struct ConfItem* find_gkill(struct Client* client);
 extern struct ConfItem* find_is_glined(const char* host, const char* name);
-extern  void	flush_glines(void);		
-extern  void	report_glines(struct Client *);	
+extern  void    flush_glines(void);             
+extern  void    report_glines(struct Client *); 
 #endif
 
-extern	int	rehash (struct Client *, struct Client *, int);
+extern  int     rehash (struct Client *, struct Client *, int);
 extern  void    report_error_on_tty(const char* message); /* ircd.c */
 
 extern void        clear_scache_hash_table(void);
@@ -108,56 +108,55 @@ extern void        list_scache(struct Client *, struct Client *,int, char **);
 extern void     dummy(int signo);
 
 extern  char    *form_str (int);
-extern	void	get_my_name (struct Client *, char *, int);
-extern	int	setup_ping (void);
+extern  void    get_my_name (struct Client *, char *, int);
+extern  int     setup_ping (void);
 
-extern	void	send_channel_modes (struct Client *, struct Channel *);
-extern	void	terminate (void);
+extern  void    send_channel_modes (struct Client *, struct Channel *);
+extern  void    terminate (void);
 
-extern	int	send_queued(struct Client*);
+extern  int     send_queued(struct Client*);
 
 /* Missing definitions */
 /*VARARGS*/
 extern  void    send_capabilities(struct Client *,int);
-extern  int	is_address(char *,unsigned long *,unsigned long *); 
-extern	int	show_lusers(struct Client *, struct Client *, int, char **);
-extern	int	nickkilldone(struct Client*, struct Client*, int, char**, time_t, char*);
+extern  int     is_address(char *,unsigned long *,unsigned long *); 
+extern  int     show_lusers(struct Client *, struct Client *, int, char **);
 
 /* END Missing definitions */
 
-extern	int	deliver_it (struct Client *, char *, int);
+extern  int     deliver_it (struct Client *, char *, int);
 
 extern  const    char* my_name_for_link(const char* name,
                    struct ConfItem* conf);
 extern  char*   date(time_t);
-extern	void	initstats (void), tstats (struct Client *, char *);
-extern	void	serv_info (struct Client *, char *);
+extern  void    initstats (void), tstats (struct Client *, char *);
+extern  void    serv_info (struct Client *, char *);
 
-extern	int	parse (struct Client *, char *, char *);
-extern	void	init_tree_parse (struct Message *);
+extern  int     parse (struct Client *, char *, char *);
+extern  void    init_tree_parse (struct Message *);
 
-extern	int	do_numeric (int, struct Client *, struct Client *, int, char **);
-extern	int	hunt_server (struct Client *,struct Client *,char *,int,int,char **);
-extern	struct Client	*next_client (struct Client *, char *);
-extern	struct Client	*next_client_double (struct Client *, char *);
+extern  int     do_numeric (int, struct Client *, struct Client *, int, char **);
+extern  int     hunt_server (struct Client *,struct Client *,char *,int,int,char **);
+extern  struct Client   *next_client (struct Client *, char *);
+extern  struct Client   *next_client_double (struct Client *, char *);
 
 /* stuff in list.c */
-extern	void	_free_link (struct SLink *);
-extern	void	_free_user (struct User *, struct Client *);
-extern	struct SLink	*make_link (void);
-extern	struct User	*make_user (struct Client *);
-extern	struct Class* make_class(void);
-extern	struct Server	*make_server (struct Client *);
-extern	struct SLink	*find_user_link (struct SLink *, struct Client *);
-extern	void	initlists (void);
-extern  void	block_garbage_collect(void);	/* list.c */
-extern  void	block_destroy(void);		/* list.c */
+extern  void    _free_link (struct SLink *);
+extern  void    _free_user (struct User *, struct Client *);
+extern  struct SLink    *make_link (void);
+extern  struct User     *make_user (struct Client *);
+extern  struct Class* make_class(void);
+extern  struct Server   *make_server (struct Client *);
+extern  struct SLink    *find_user_link (struct SLink *, struct Client *);
+extern  void    initlists (void);
+extern  void    block_garbage_collect(void);    /* list.c */
+extern  void    block_destroy(void);            /* list.c */
 
-extern	int	dopacket (struct Client *, char *, int);
+extern  int     dopacket (struct Client *, char *, int);
 
 #ifdef FLUD
-void	free_fluders();
-void	free_fludees();
+void    free_fluders();
+void    free_fludees();
 #endif /* FLUD */
 
 #ifdef ANTI_SPAMBOT

@@ -56,6 +56,7 @@ extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 static int do_user (char *, aClient *, aClient*, char *, char *, char *,
                      char *);
 
+static int nickkilldone(aClient *, aClient *, int, char **, time_t, char *);
 static int valid_hostname(const char* hostname);
 static int valid_username(const char* username);
 static void report_and_set_user_flags( aClient *, aConfItem * );
@@ -1547,8 +1548,8 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * side effects -
  */
 
-int nickkilldone(aClient *cptr, aClient *sptr, int parc,
-                 char *parv[], time_t newts,char *nick)
+static int nickkilldone(aClient *cptr, aClient *sptr, int parc,
+                        char *parv[], time_t newts,char *nick)
 {
 
   if (IsServer(sptr))
