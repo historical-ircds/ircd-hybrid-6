@@ -1,3 +1,7 @@
+*** 20010704_6 by wcampbel
+Added make lint...that won't be very fun to clean up though
+
+
 *** 20010704_5 by leeh
 - we shouldnt limit things if it isnt our client.. :)
 
