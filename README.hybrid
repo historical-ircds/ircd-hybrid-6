@@ -1,4 +1,4 @@
-+hybrid-6 (11/29/1998)
++hybrid-6 (11/30/1998)
 - U: lines, server cluster lines.. see example.conf (Dianora)
 - applied a pile of fixes for alphas made by jailbird, Dustin Marquess
  (jailbird@alcatraz.fdf.net)
@@ -34,6 +34,7 @@
 - allow users who are invited to walk through any bans/limits (David-R)
 - disallow class -1 in conf file (David-R)
 - allow mode outside channel to see mode limit (David-R)
+- added knock command to ask for invites to +i channel (David-R)
 - disabled the ability to set a ban including a prefixed colon (Dianora)
 - added kline matching on ip (CIDR) you can now kline
   user@ip.ip.ip.ip/mask (Dianora/good)

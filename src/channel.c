@@ -1784,34 +1784,50 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key)
   Reg	Link	*lp;
 
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-  if(Count.myserver == 0)
+  if(chptr->mode.mode & MODE_SPLIT)
     {
+      if((server_split_time + server_split_recovery_time) < NOW)
+	{
+	  if(Count.server > SPLIT_SMALLNET_SIZE)
+	    {
+	      /* server hasn't been split for a while, but no one has
+	       * joined from elsewhere, lets expire the channel now.
+	       * The ideal thing to do now, would be to finalize removing
+	       * the channel block so this appears to be a fresh entry
+	       * on a brand new channel. With this code, the first can_join
+	       * will join the channel but still without ops, leaving/joining
+	       * will then fix it.
+	       * -Dianora
+	       */
+	      
+	      chptr->mode.mode &= ~MODE_SPLIT;
+	      server_was_split = NO;
+	      if(chptr->users == 0)
+		chptr->mode.mode = 0;
+	    }
+	  else
+	    {
+	      server_split_time = NOW; /* still split */
 #ifdef NO_JOIN_ON_SPLIT 
-      if(chptr->mode.mode & MODE_SPLIT)
-	return (ERR_NOJOINSPLIT);
+	      return (ERR_NOJOINSPLIT);
+#endif
+	    }
+	}
+#ifdef NO_JOIN_ON_SPLIT 
+      else
+	{
+	  return (ERR_NOJOINSPLIT);
+	}
 #endif
     }
   else
     {
-      if((chptr->mode.mode & MODE_SPLIT) &&
-	 server_was_split && server_split_recovery_time)
+      if(server_was_split)
 	{
-	  if((server_split_time + server_split_recovery_time) < NOW)
-	    {
-	      if(Count.server > SPLIT_SMALLNET_SIZE)
-		server_was_split = NO;
-	      else
-		{
-		  server_split_time = NOW; /* still split */
-		}
-	    }
-	  else
-	    {
-	      server_was_split = NO;
-	      chptr->mode.mode &= ~MODE_SPLIT;
-	      if(chptr->users == 0)
-		chptr->mode.mode = 0;
-	    }
+	  chptr->mode.mode |= MODE_SPLIT;
+#ifdef NO_JOIN_ON_SPLIT 
+	  return (ERR_NOJOINSPLIT);
+#endif
 	}
     }
 #endif
@@ -1972,7 +1988,7 @@ void	del_invite(aClient *cptr,aChannel *chptr)
 }
 
 /*
-**  Subtract one user from channel i (and free channel
+**  Subtract one user from channel (and free channel
 **  block, if channel became empty).
 */
 static	void	sub1_from_channel(aChannel *chptr)
@@ -1983,7 +1999,7 @@ static	void	sub1_from_channel(aChannel *chptr)
   if (--chptr->users <= 0)
     {
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-      if(!(chptr->locally_created) && (Count.myserver < SPLIT_SMALLNET_SIZE))
+      if(server_was_split)
 	{
 	  chptr->mode.mode |= MODE_SPLIT;
 	  /*
@@ -3493,17 +3509,19 @@ int	m_sjoin(aClient *cptr,
    *
    * -Dianora
    */
-
+  
   chptr->keep_their_modes = YES;
 
   chptr->locally_created = NO;
   oldts = chptr->channelts;
 
-  /* If there are no users on this channel, make sure mode is 0
+  /*
+   * If an SJOIN ever happens on a channel, assume the split is over
+   * for this channel. best I think we can do for now -Dianora
    */
 
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-  if(chptr->users == 0)
+  if( (chptr->mode.mode & MODE_SPLIT) && (chptr->users == 0))
     chptr->mode.mode = 0;
 #endif
 

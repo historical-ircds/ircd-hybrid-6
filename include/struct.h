@@ -521,7 +521,7 @@ struct	User
   int	joined;		/* number of channels joined */
   char	username[USERLEN+1];
   char	host[HOSTLEN+1];
-  char	id[IDLEN+1];
+  char	id[IDLEN+1];	/* for future use *hint* */
   char	*server;	/* pointer to scached server name */
   /*
   ** In a perfect world the 'server' name
