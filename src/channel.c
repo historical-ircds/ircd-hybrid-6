@@ -3057,7 +3057,8 @@ int	m_knock(aClient *cptr,
   sendto_channel_type(cptr, sptr, chptr, MODE_CHANOP,
 		      ":%s NOTICE %s :%s has knocked on the channel door.",
 		      sptr->name,
-		      chptr->chname, parv[0]);
+		      chptr->chname,
+		      sptr->name);
   return 0;
 }
 
