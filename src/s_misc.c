@@ -28,7 +28,6 @@
 #include "res.h"
 #include "common.h"
 #include "numeric.h"
-#include "h.h"
 #include "ircd.h"
 #include "fdlist.h"
 #include "s_bsd.h"

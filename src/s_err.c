@@ -24,14 +24,14 @@
 #include "struct.h"
 #include "numeric.h"
 #include "irc_string.h"
-#include "h.h"
 
-
-static  char    numbuff[512];
-
-#ifdef CUSTOM_ERR
+#ifdef CUSTOM_ERR            /* ZZZZ ick */
+#define INCLUDE_CUSTOM_ERR
+#endif
 #include "s_err.h"
-#else
+#undef INCLUDE_CUSTOM_ERR
+
+#ifndef CUSTOM_ERR
 static  char *  replies[] = {
 /* 000 */       (char *)NULL,
 /* 001  RPL_WELCOME, */ ":%s 001 %s :Welcome to the Internet Relay Network %s",
@@ -570,6 +570,9 @@ static  char *  replies[] = {
  * ok. ;-)
  */
 
+static  char    numbuff[512];  /* ZZZ There is no reason this has to
+                                * be so large
+                                */
 
 char* form_str(int numeric)
 {

@@ -28,13 +28,14 @@
 #include "common.h"
 #include "dline_conf.h"
 #include "numeric.h"
-#include "h.h"
 #include "ircd.h"
 #include "list.h"
 #include "mtrie_conf.h"
 #include "s_bsd.h"
 #include "channel.h"
 #include "send.h"
+#include "s_err.h"
+#include "s_err.h"
 #include "res.h"    /* gethost_byname, gethost_byaddr */
 
 #include <string.h>

@@ -12,9 +12,9 @@
 #include "channel.h"
 #include "send.h"
 #include "fdlist.h"
-#include "h.h"
 #include "ircd.h"
 #include "s_user.h"
+#include "s_err.h"
 
 #include <time.h>
 #include <string.h>

@@ -50,7 +50,6 @@ SRCS = \
 	s_debug.c \
 	s_err.c \
 	s_misc.c \
-	s_numeric.c \
 	s_serv.c \
 	s_user.c \
 	s_zip.c \

@@ -22,10 +22,10 @@
 #include "struct.h"
 #include "common.h"
 #include "numeric.h"
-#include "h.h"
 #include "ircd.h"
 #include "s_conf.h"
 #include "send.h"
+#include "s_err.h"
 #include "list.h"
 
 #define BAD_CONF_CLASS          -1

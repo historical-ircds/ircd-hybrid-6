@@ -23,7 +23,6 @@
  *   $Id$
  */
 
-#include "h.h"
 #include "ircd.h"
 #include "s_bsd.h"
 #include "fileio.h"
@@ -32,6 +31,7 @@
 #include "motd.h"
 #include "class.h"
 #include "send.h"
+#include "s_err.h"
 #include "s_conf.h"
 #include "numeric.h"
 #include "client.h"

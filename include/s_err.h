@@ -20,9 +20,15 @@
  *
  */
 
+#ifndef INCLUDED_s_err_h
+#define INCLUDED_s_err_h
+
+extern  char    *form_str (int);
+
 /* jive replies originally from mr_bill - mrbill@mrbill.net (Bill Bradford) */
 
-#ifdef CUSTOM_ERR
+#ifdef INCLUDE_CUSTOM_ERR
+
 static  char *  replies[] = {
 /* 000 */       (char *)NULL,
 /* 001  RPL_WELCOME, */ ":%s 001 %s :Welcome to the Internet Relay Network %s",
@@ -552,4 +558,6 @@ static  char *  replies[] = {
 /* 504 LAST ERR_LAST_ERR_MSG, */        ":%s 504 %s :Last Error Message",
                 (char *)NULL
 };
-#endif /* CUSTOM_ERR */
+#endif /* INCLUD_CUSTOM_ERR */
+
+#endif

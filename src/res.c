@@ -14,7 +14,6 @@
 #include "numeric.h"
 #include "s_bsd.h"
 #include "struct.h"
-#include "h.h"
 #include "ircd.h"
 #include "common.h"
 #include "send.h"

@@ -23,7 +23,6 @@
 #include "s_conf.h"
 #include "ircd_defs.h"
 #include "client.h"
-#include "h.h"
 #include "s_misc.h"
 #include "ircd.h"
 #include "struct.h"

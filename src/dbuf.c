@@ -27,7 +27,6 @@
 #include <stdlib.h>
 #include "struct.h"
 #include "common.h"
-#include "h.h"
 
 #if !defined(VALLOC) && !defined(valloc)
 #define valloc malloc

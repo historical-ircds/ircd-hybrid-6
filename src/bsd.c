@@ -22,6 +22,7 @@
 #include "struct.h"
 #include "common.h"
 #include "ircd.h"
+#include "bsd.h"
 
 #include <errno.h>
 #include <sys/types.h>

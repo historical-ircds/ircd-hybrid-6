@@ -31,7 +31,7 @@
 #include "s_conf.h"
 #include "class.h"
 #include "send.h"
-#include "h.h"
+#include "s_err.h"
 #include "ircd.h"
 #include "s_misc.h"
 #include "parse.h"

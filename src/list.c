@@ -23,7 +23,6 @@
  */
 #include "struct.h"
 #include "common.h"
-#include "h.h"
 #include "numeric.h"
 #include "blalloc.h"
 #include "res.h"

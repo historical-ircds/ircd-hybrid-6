@@ -35,9 +35,10 @@
 #include "mtrie_conf.h"
 #include "fdlist.h"
 #include "fileio.h"
-#include "h.h"
+#include "s_err.h"
 #include "ircd.h"
 #include "s_misc.h"
+#include "s_err.h"
 
 #include <time.h>
 #include <string.h>

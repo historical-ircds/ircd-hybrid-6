@@ -30,7 +30,6 @@
 #include "s_auth.h"
 #include "class.h"
 #include "numeric.h"
-#include "h.h"
 #include "packet.h"
 #include "parse.h"
 #include "fdlist.h"

@@ -23,13 +23,14 @@
 #include "struct.h"
 #include "common.h"
 #include "s_zip.h"
-#include "h.h"
 #include "ircd.h"
 #include "s_bsd.h"
 #include "class.h"
 #include "numeric.h"
 #include "channel.h"
 #include "msg.h"
+#include "bsd.h"
+#include "s_err.h"
 
 #include <stdio.h>
 #include <string.h>

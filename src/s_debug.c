@@ -32,7 +32,6 @@
 #include "hash.h"
 #include "ircd.h"
 #include "channel.h"
-#include "h.h"
 
 #include <string.h>
 #include <stdarg.h>

@@ -5,7 +5,6 @@
  */
 #include "restart.h"
 #include "common.h"
-#include "h.h"
 #include "ircd.h"
 #include "send.h"
 #include "struct.h"

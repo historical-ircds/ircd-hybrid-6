@@ -25,11 +25,11 @@
 #include "msg.h"
 #undef MSGTAB
 #include "numeric.h"
-#include "h.h"
 #include "ircd.h"
 #include "s_misc.h"
 #include "send.h"
 #include "hash.h"
+#include "channel.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -45,9 +45,12 @@ static  char    sender[HOSTLEN+1];
 static  int     cancel_clients (aClient *, aClient *, char *);
 static  void    remove_unknown (aClient *, char *, char *);
 
+static int do_numeric (int, struct Client *, struct Client *, int, char **);
+
 static struct Message *do_msg_tree(MESSAGE_TREE *, char *, struct Message *);
 static struct Message *tree_parse(char *);
 
+static char buffer[1024];  /* ZZZ must this be so big? must it be here? */
 
 /*
 **  Find a client (server or user) by name.
@@ -707,3 +710,91 @@ static  void    remove_unknown(aClient *cptr,
                  me.name, sender, buffer, get_client_name(cptr, FALSE));
     }
 }
+
+
+
+/*
+** DoNumeric (replacement for the old do_numeric)
+**
+**      parc    number of arguments ('sender' counted as one!)
+**      parv[0] pointer to 'sender' (may point to empty string) (not used)
+**      parv[1]..parv[parc-1]
+**              pointers to additional parameters, this is a NULL
+**              terminated list (parv[parc] == NULL).
+**
+** *WARNING*
+**      Numerics are mostly error reports. If there is something
+**      wrong with the message, just *DROP* it! Don't even think of
+**      sending back a neat error message -- big danger of creating
+**      a ping pong error message...
+*/
+static int     do_numeric(int numeric,
+                   aClient *cptr,
+                   aClient *sptr,
+                   int parc,
+                   char *parv[])
+{
+  aClient *acptr;
+  aChannel *chptr;
+  char  *nick, *p;
+  int   i;
+
+  if (parc < 1 || !IsServer(sptr))
+    return 0;
+  /* Remap low number numerics. */
+  if (numeric < 100)
+    numeric += 100;
+  /*
+  ** Prepare the parameter portion of the message into 'buffer'.
+  ** (Because the buffer is twice as large as the message buffer
+  ** for the socket, no overflow can occur here... ...on current
+  ** assumptions--bets are off, if these are changed --msa)
+  ** Note: if buffer is non-empty, it will begin with SPACE.
+  */
+  buffer[0] = '\0';
+  if (parc > 1)
+    {
+      for (i = 2; i < (parc - 1); i++)
+        {
+          (void)strcat(buffer, " ");
+          (void)strcat(buffer, parv[i]);
+        }
+      (void)strcat(buffer, " :");
+      (void)strcat(buffer, parv[parc-1]);
+    }
+  for (; (nick = strtoken(&p, parv[1], ",")); parv[1] = NULL)
+    {
+      if ((acptr = find_client(nick, (aClient *)NULL)))
+        {
+          /*
+          ** Drop to bit bucket if for me...
+          ** ...one might consider sendto_ops
+          ** here... --msa
+          ** And so it was done. -avalon
+          ** And regretted. Dont do it that way. Make sure
+          ** it goes only to non-servers. -avalon
+          ** Check added to make sure servers don't try to loop
+          ** with numerics which can happen with nick collisions.
+          ** - Avalon
+          */
+          if (!IsMe(acptr) && IsPerson(acptr))
+            sendto_prefix_one(acptr, sptr,":%s %d %s%s",
+                              parv[0], numeric, nick, buffer);
+          else if (IsServer(acptr) && acptr->from != cptr)
+            sendto_prefix_one(acptr, sptr,":%s %d %s%s",
+                              parv[0], numeric, nick, buffer);
+        }
+      else if ((acptr = find_server(nick, (aClient *)NULL)))
+        {
+          if (!IsMe(acptr) && acptr->from != cptr)
+            sendto_prefix_one(acptr, sptr,":%s %d %s%s",
+                              parv[0], numeric, nick, buffer);
+        }
+      else if ((chptr = find_channel(nick, (aChannel *)NULL)))
+        sendto_channel_butone(cptr,sptr,chptr,":%s %d %s%s",
+                              parv[0],
+                              numeric, chptr->chname, buffer);
+    }
+  return 0;
+}
+

@@ -7,7 +7,6 @@
  */
 #include "struct.h"
 #include "common.h"
-#include "h.h"
 #include "config.h"
 #include "fdlist.h"
 #include <string.h>

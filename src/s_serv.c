@@ -32,7 +32,6 @@
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
-#include "h.h"
 #include "ircd.h"
 #include "scache.h"
 #include "list.h"
@@ -57,6 +56,7 @@
 #include "config.h"
 #include "m_gline.h"
 #include "channel.h"
+#include "s_err.h"
 
 #include <string.h>
 #include <stdlib.h>

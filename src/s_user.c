@@ -31,7 +31,6 @@
 #include "motd.h"
 #include "class.h"
 #include "s_bsd.h"
-#include "h.h"
 #include "ircd.h"
 #include "scache.h"
 #include "s_misc.h"
@@ -42,6 +41,8 @@
 #include "s_user.h"
 #include "list.h"
 #include "parse.h"
+#include "s_err.h"
+#include "fdlist.h"
 #ifdef FLUD
 #include "blalloc.h"
 #endif /* FLUD */

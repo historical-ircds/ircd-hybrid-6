@@ -34,7 +34,6 @@
 #include "numeric.h"
 #include "s_bsd.h"
 #include "res.h"
-#include "h.h"
 #include "ircd.h"
 #include "s_misc.h"
 #include "struct.h"
