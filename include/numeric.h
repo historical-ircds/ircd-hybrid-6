@@ -159,7 +159,6 @@
 
 #define RPL_UMODEIS          221
 
-#define RPL_STATSXLINE	     222
 #define RPL_STATSFLINE	     224
 #define RPL_STATSDLINE	     225
 
@@ -171,7 +170,8 @@
 #define	RPL_STATSOLINE       243
 #define	RPL_STATSHLINE       244
 #define	RPL_STATSSLINE       245
-#define	RPL_STATSULINE       246
+#define RPL_STATSXLINE	     247
+#define	RPL_STATSULINE       248
 #define	RPL_STATSDEBUG	     249
 
 #define	RPL_LUSERCLIENT      251

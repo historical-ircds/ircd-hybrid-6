@@ -244,7 +244,7 @@ static	char *	replies[] = {
 /* 219 RPL_ENDOFSTATS, */	":%s 219 %s %c :End of /STATS report",
 /* 220 */	 (char *)NULL,
 /* 221 RPL_UMODEIS, */		":%s 221 %s %s",
-/* 222 RPL_STATSXLINE, */	":%s 222 %s %s %s * * 0 0",
+/* 222 */	(char *)NULL,
 /* 223 */       (char *)NULL,
 /* 224 */       (char *)NULL,
 /* 225 RPL_STATSDLINE*/		":%s 225 %s %c %s %s",
@@ -268,9 +268,9 @@ static	char *	replies[] = {
 /* 243 RPL_STATSOLINE, */	":%s 243 %s %c %s * %s %s %d",
 /* 244 RPL_STATSHLINE, */	":%s 244 %s %c %s * %s %d %d", 
 /* 245 RPL_STATSSLINE, */	":%s 245 %s %c %s * %s %d %d", 
-/* 246 RPL_STATSULINE, */	":%s 246 %s %s",
-/* 247 */	(char *)NULL,
-/* 248 */	(char *)NULL,
+/* 246 */	(char *)NULL,
+/* 247 RPL_STATSXLINE, */	":%s 247 %s %s %s * * 0 0",
+/* 248 RPL_STATSULINE, */	":%s 248 %s %s",
 /* 249 */	(char *)NULL,
 #ifdef HIGHEST_CONNECTION
 /* 250 RPL_STATSCONN, */
