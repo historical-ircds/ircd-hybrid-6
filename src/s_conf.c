@@ -2681,8 +2681,8 @@ static struct ConfItem* find_tkline(const char* host, const char* user)
  * find_is_klined()
  *
  * inputs        - hostname
- *                - username
- *                - ip of possible "victim"
+ *               - username
+ *               - ip of possible "victim"
  * output        - matching struct ConfItem or NULL
  * side effects        -
  *
@@ -3374,8 +3374,11 @@ void read_conf_files(int cold)
   do_include_conf();
 
   /* ZZZ have to deal with single ircd.conf situations */
+  /* It would be better to check for NULL return from filename 
+   * or *filename == '\0'; and then just ignoring it 
+   */
 
-#ifdef KLINE_PATH
+#ifdef KPATH
   filename = get_conf_name(KLINE_TYPE);
 
   if ((file = openconf(filename)) == 0)

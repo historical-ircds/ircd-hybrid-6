@@ -826,13 +826,6 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
    * and not bothering with the K line search - Dianora
    */
 
-  /* if iline returned says no ident needed then get rid
-   * of ~ if found in user
-   */
-
-  if(!IsConfDoIdentd(iline_aconf) && (*user == '~'))
-    user++;
-
   /* ok, if there is a trie to use...
    * and if a possible branch was found the first time
    * I'll have a first_kline_trie_list saved.
