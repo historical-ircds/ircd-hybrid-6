@@ -1,3 +1,7 @@
+*** 20010717_3 by lusky
+- fixed more warnings
+
+
 *** 20010717_2 by bill
 
  - fixed pointless warnings in zlib from showing up
