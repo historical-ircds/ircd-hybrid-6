@@ -270,10 +270,6 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       valid_stats++;
       break;
 
-    case 'B' : case 'b' :
-      sendto_one(sptr,":%s NOTICE %s :Use stats I instead", me.name, parv[0]);
-      break;
-
     case 'D': case 'd':
       if (!IsAnOper(sptr))
         {
@@ -282,14 +278,6 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
         }
       report_dlines(sptr);
       valid_stats++;
-      break;
-
-    case 'E' : case 'e' :
-      sendto_one(sptr,":%s NOTICE %s :Use stats I instead", me.name, parv[0]);
-      break;
-
-    case 'F' : case 'f' :
-      sendto_one(sptr,":%s NOTICE %s :Use stats I instead", me.name, parv[0]);
       break;
 
     case 'G': case 'g' :
@@ -530,6 +518,14 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
                 );
         }
     }
+#else
+#ifdef STATS_P_NOTICE
+  if (stat == 'p')
+    sendto_realops_flags(FLAGS_SPY,
+                         "STATS p requested by %s (%s@%s) [%s]",
+                         sptr->name, sptr->username, sptr->host,
+                         sptr->user->server);
+#endif
 #endif
   return 0;
 }
