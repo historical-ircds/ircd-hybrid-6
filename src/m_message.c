@@ -230,7 +230,7 @@ static  int     m_message(struct Client *cptr,
 		  check_for_flud(sptr, NULL, chptr, 1);
 #endif /* FLUD */
 
-	      if (!is_chan_op(sptr,chptr))
+	      if (!is_chan_op(sptr,chptr) && !has_voice(sptr,chptr))
 		{
 		  if (!notice)
 		      sendto_one(sptr, form_str(ERR_CANNOTSENDTOCHAN),
