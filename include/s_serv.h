@@ -73,9 +73,8 @@ extern int MaxConnectionCount; /* GLOBAL - highest number of connections */
  * the network before allowing chanops new channels,
  *  but allow it to be set to a maximum of MAX_SERVER_SPLIT_RECOVERY_TIME 
  */
-#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-        defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
-#define MAX_SERVER_SPLIT_RECOVERY_TIME 30
+#if defined(NO_CHANOPS_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
+#define MAX_SERVER_SPLIT_RECOVERY_TIME 45 
 #ifndef DEFAULT_SERVER_SPLIT_RECOVERY_TIME
 #define DEFAULT_SERVER_SPLIT_RECOVERY_TIME 15
 #endif /* DEFAULT_SERVER_SPLIT_RECOVERY_TIME */

@@ -579,12 +579,12 @@
  *
  */
 
-/* NO_CHANOPS_WHEN_SPLIT
+/* NO_CHANOPS_ON_SPLIT
  * When this is defined, users will not be chanopped on empty channels
  * if there are no servers presently connected to this server
  * opers are not affected. 
  */
-#undef NO_CHANOPS_WHEN_SPLIT
+#undef NO_CHANOPS_ON_SPLIT
 
 /* 
  * NO_JOIN_ON_SPLIT
@@ -984,7 +984,7 @@ error CLIENT_FLOOD undefined.
 
 #define REPORT_DLINE_TO_USER
 
-#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(NO_JOIN_ON_SPLIT)
+#if defined(NO_CHANOPS_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 #define NEED_SPLITCODE
 #endif
 

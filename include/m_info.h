@@ -406,11 +406,11 @@ Info MyInformation[] = {
   { "NON_REDUNDANT_KLINES", "OFF", 0, "Check for and Disallow Redundant K-lines" },
 #endif /* NON_REDUNDANT_KLINES */
 
-#ifdef NO_CHANOPS_WHEN_SPLIT
-  { "NO_CHANOPS_WHEN_SPLIT", "ON", 0, "Do not Allow Channel Ops During a NetSplit" },
+#ifdef NO_CHANOPS_ON_SPLIT
+  { "NO_CHANOPS_ON_SPLIT", "ON", 0, "Do not Allow Channel Ops During a NetSplit" },
 #else
-  { "NO_CHANOPS_WHEN_SPLIT", "OFF", 0, "Do not Allow Channel Ops During a NetSplit" },
-#endif /* NO_CHANOPS_WHEN_SPLIT */
+  { "NO_CHANOPS_ON_SPLIT", "OFF", 0, "Do not Allow Channel Ops During a NetSplit" },
+#endif /* NO_CHANOPS_ON_SPLIT */
 
 #ifdef NO_DEFAULT_INVISIBLE
   { "NO_DEFAULT_INVISIBLE", "ON", 0, "Do not Give Clients +i Mode Upon Connection" },
@@ -429,12 +429,6 @@ Info MyInformation[] = {
 #else
   { "NO_JOIN_ON_SPLIT", "OFF", 0, "Users Cannot Join Channels Present before a NetSplit" },
 #endif /* NO_JOIN_ON_SPLIT */
-
-#ifdef NO_JOIN_ON_SPLIT_SIMPLE
-  { "NO_JOIN_ON_SPLIT_SIMPLE", "ON", 0, "Users Cannot Join Channels During a NetSplit" },
-#else
-  { "NO_JOIN_ON_SPLIT_SIMPLE", "OFF", 0, "Users Cannot Join Channels During a NetSplit" },
-#endif /* NO_JOIN_ON_SPLIT_SIMPLE */
 
 #ifdef NO_OPER_FLOOD
   { "NO_OPER_FLOOD", "ON", 0, "Disable Flood Control for Operators" },
@@ -495,12 +489,6 @@ Info MyInformation[] = {
 #else
   { "PPATH", "NONE", 0, "Path to Pid File" },
 #endif /* PPATH */
-
-#ifdef PRESERVE_CHANNEL_ON_SPLIT
-  { "PRESERVE_CHANNEL_ON_SPLIT", "ON", 0, "Preserve Channel Modes During a NetSplit" },
-#else
-  { "PRESERVE_CHANNEL_ON_SPLIT", "OFF", 0, "Preserve Channel Modes During a NetSplit" },
-#endif /* PRESERVE_CHANNEL_ON_SPLIT */
 
 #ifdef REJECT_HOLD
   { "REJECT_HOLD", "ON", 0, "Do not Dump a K-lined Client immediately" },

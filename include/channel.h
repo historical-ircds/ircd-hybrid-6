@@ -71,10 +71,6 @@ struct Channel
   time_t          fludblock;
   struct fludbot* fluders;
 #endif
-#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-  struct Channel* last_empty_channel;
-  struct Channel* next_empty_channel;
-#endif
   char            chname[1];
 };
 
@@ -156,10 +152,6 @@ extern void    set_channel_mode(struct Client *, struct Client *,
 
 #ifdef NEED_SPLITCODE
 
-#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-#define MODE_SPLIT      0x1000
-extern void remove_empty_channels();
-#endif
 
 extern int server_was_split;
 extern time_t server_split_time;

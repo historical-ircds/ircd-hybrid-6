@@ -2442,7 +2442,7 @@ int     m_join(struct Client *cptr,
   struct Channel *chptr = NULL;
   char  *name, *key = NULL;
   int   i, flags = 0;
-#ifdef NO_CHANOPS_WHEN_SPLIT
+#ifdef NO_CHANOPS_ON_SPLIT
   int   allow_op=YES;
 #endif
   char  *p = NULL, *p2 = NULL;
@@ -2608,7 +2608,7 @@ int     m_join(struct Client *cptr,
             * and server has been split
             */
 
-#ifdef NO_CHANOPS_WHEN_SPLIT
+#ifdef NO_CHANOPS_ON_SPLIT
           if((*name != '&') && !IsAnOper(sptr) && server_was_split)
             {
               allow_op = NO;
@@ -2713,7 +2713,7 @@ int     m_join(struct Client *cptr,
       **  Complete user entry to the new channel (if any)
       */
 
-#ifdef NO_CHANOPS_WHEN_SPLIT
+#ifdef NO_CHANOPS_ON_SPLIT
       if(allow_op)
         {
           add_user_to_channel(chptr, sptr, flags);
@@ -2731,7 +2731,7 @@ int     m_join(struct Client *cptr,
       if (MyClient(sptr) && (flags & CHFL_CHANOP) )
         {
           chptr->channelts = CurrentTime;
-#ifdef NO_CHANOPS_WHEN_SPLIT
+#ifdef NO_CHANOPS_ON_SPLIT
           if(allow_op)
             {
               sendto_match_servs(chptr, cptr,
