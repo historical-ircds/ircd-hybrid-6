@@ -1,3 +1,16 @@
+leeh        2001/12/20 16:25:50 EST	(20011220_2)
+
+  Modified files:
+    src                  m_version.c 
+  Log:
+  - reverted gregs commit, other ircds send 005 on remote /version, and it
+    gets converted to 105.. this is safe :)
+  
+  Revision  Changes    Path
+  1.11      +1 -2      ircd-hybrid-6/src/m_version.c
+
+
+
 greg        2001/12/20 02:49:32 EST	(20011220_1)
 
   Modified files:
