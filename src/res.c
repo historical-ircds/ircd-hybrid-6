@@ -255,7 +255,7 @@ static  struct  resinfo {
  *
  */
 extern u_short  _getshort(const u_char *);
-extern u_long   _getlong(const u_char *);
+extern u_int    _getlong(const u_char *);
 /*
  * int
  * res_isourserver(ina)
