@@ -1,3 +1,15 @@
+leeh        2001/12/12 14:10:08 EST	(20011212_3)
+
+  Modified files:
+    src                  m_gline.c 
+  Log:
+  - fix a core
+  
+  Revision  Changes    Path
+  1.48      +2 -2      ircd-hybrid-6/src/m_gline.c
+
+
+
 lusky       2001/12/11 21:26:50 EST	(20011212_2)
 
   Modified files:
