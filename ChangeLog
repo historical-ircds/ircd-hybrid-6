@@ -1,3 +1,11 @@
+*** 19990816_1 by lusky
+removed redundant "New highest connections" server notice
+fixed SYSLOG_USERS bug (th)
+discard broken DNS replies (th)
+fixed IP mismatch check (th)
+revved patchlevel to b98
+
+
 *** 19990814_1 by lusky
 small bug in packet.c in the byte counting code (th)
 
