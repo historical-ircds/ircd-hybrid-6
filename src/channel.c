@@ -1607,7 +1607,7 @@ static  void     set_mode(aClient *cptr,
 	  /* Un documented for now , I have no idea how this got here ;-) */
 #ifdef JUPE_CHANNEL
 	case 'j':
-	  if(IsAnOper(sptr))
+	  if(MyConnect(sptr) && IsAnOper(sptr))
 	    {
 	      if (whatt == MODE_ADD)
 		{

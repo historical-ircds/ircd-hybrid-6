@@ -230,12 +230,21 @@ typedef struct	MessageFileItem aMessageFile;
 #define FLAGS2_B_LINED	    0x0008	/* client is graced with B line */
 #define FLAGS2_F_LINED	    0x0010	/* client is graced with F line */
 
+/* oper priv flags */
+
 #define FLAGS2_OPER_GLOBAL_KILL 0x0020	/* oper can global kill */
 #define FLAGS2_OPER_REMOTE	0x0040	/* oper can do squits/connects */
 #define FLAGS2_OPER_UNKLINE	0x0080	/* oper can use unkline */
 #define FLAGS2_OPER_GLINE	0x0100	/* oper can use gline */
 #define FLAGS2_OPER_N		0x0200	/* oper can umode n */
 #define FLAGS2_OPER_K		0x0400	/* oper can kill/kline */
+#define FLAGS2_OPER_FLAGS	(FLAGS2_OPER_GLOBAL_KILL | \
+				 FLAGS2_OPER_REMOTE | \
+				 FLAGS2_OPER_UNKLINE | \
+				 FLAGS2_OPER_GLINE | \
+				 FLAGS2_OPER_N | \
+				 FLAGS2_OPER_K)
+/* ZIP_LINKS */
 
 #define FLAGS2_ZIP	0x1000	/* (server) link is zipped */
 #define FLAGS2_ZIPFIRST	0x2000	/* start of zip (ignore any CR/LF) */

@@ -468,6 +468,8 @@ char	*canonize(char *buffer)
 **	   nick from local user or kill him/her...
 */
 
+#define MAX_REASON 80
+
 static	int	register_user(aClient *cptr,
 			      aClient *sptr,
 			      char *nick,
@@ -493,6 +495,7 @@ static	int	register_user(aClient *cptr,
   char  spamchar = '\0';
 #endif
   char tmpstr2[512];
+  char safe_reason[MAX_REASON];
 
   user->last = timeofday;
   parv[0] = sptr->name;
@@ -557,12 +560,14 @@ static	int	register_user(aClient *cptr,
 #ifdef REJECT_HOLD
 		SetRejectHold(cptr);
 #ifdef KLINE_WITH_REASON
-		p = strchr(reason, '|');
-		if(p)
+		if(p = strchr(reason, '|'))
 		  *p = '\0';
 
 		sendto_one(sptr, ":%s NOTICE %s :*** K-lined for %s",
 			   me.name,cptr->name,reason);
+
+		if(p)
+		  *p = '|';
 #else
 		sendto_one(sptr, ":%s NOTICE %s :*** K-lined",
 			   me.name,cptr->name);
@@ -572,11 +577,15 @@ static	int	register_user(aClient *cptr,
 		ircstp->is_ref++;
 
 #ifdef KLINE_WITH_REASON
-		p = strchr(reason, '|');
-		if(p)
-		  *p = '\0';
-
-		return exit_client(cptr, sptr, &me, reason);
+		if( p = strchr(reason, '|'))
+		  {
+		    *p = '\0';
+		    strncpyzt(safe_reason,reason,MAX_REASON); /* ick */
+		    *p = '|';
+		    return exit_client(cptr, sptr, &me, safe_reason);
+		  }
+		else
+		  return exit_client(cptr, sptr, &me, reason);
 #else
 		return exit_client(cptr, sptr, &me, "K-lined");
 #endif
@@ -773,12 +782,14 @@ static	int	register_user(aClient *cptr,
 	  SetRejectHold(cptr);
 #ifdef KLINE_WITH_REASON
 
-	  p = strchr(reason, '|');
-	  if(p)
+	  if(p = strchr(reason, '|'))
 	    *p = '\0';
 
 	  sendto_one(sptr, ":%s NOTICE %s :*** G-lined for %s",
 		     me.name,cptr->name,reason);
+
+	  if(p)
+	    *p = '|';
 #else
 	  sendto_one(sptr, ":%s NOTICE %s :*** G-lined",
 		     me.name,cptr->name);
@@ -788,11 +799,15 @@ static	int	register_user(aClient *cptr,
 	  ircstp->is_ref++;
 
 #ifdef KLINE_WITH_REASON
-	  p = strchr(reason, '|');
-	  if(p)
-	    *p = '\0';
-
-	  return exit_client(cptr, sptr, &me, reason);
+	  if( p = strchr(reason, '|'))
+	    {
+	      *p = '\0';
+	      strncpyzt(safe_reason,reason,MAX_REASON); /* ick */
+	      *p = '|';
+	      return exit_client(cptr, sptr, &me, safe_reason);
+	    }
+	  else
+	    return exit_client(cptr, sptr, &me, reason);
 #else
 	  return exit_client(cptr, sptr, &me, "G-lined");
 #endif
@@ -1472,10 +1487,9 @@ int	m_nick(aClient *cptr,
   ** acptr already has result from previous find_server()
   */
   /*
-    
-    Well. unless we have a capricious server on the net,
-    a nick can never bet the same as a server name - Dianora
-    */
+   * Well. unless we have a capricious server on the net,
+   * a nick can never be the same as a server name - Dianora
+   */
 
   if (acptr)
     {
@@ -1538,11 +1552,6 @@ int	m_nick(aClient *cptr,
   ** acptr != sptr (point to different client structures).
   */
 
-#ifdef NICK_KILL_LOCALLY
-  if(IsServer(cptr))
-    sendto_serv_butone(cptr, ":%s NICK %s :%ld",
-		       parv[0], nick, sptr->tsinfo);
-#endif
 
   /*
   ** If the older one is "non-person", the new entry is just
@@ -1611,6 +1620,19 @@ int	m_nick(aClient *cptr,
 
   if (IsServer(sptr))
     {
+      /* As discussed with chris (comstud) nick kills can
+       * be handled locally, provided all NICK's are propogated
+       * globally. Just like channel joins are handled.
+       *
+       * I think I got this right.
+       * -Dianora
+       */
+
+#ifdef NICK_KILL_LOCALLY
+      /* just propogate it through */
+      sendto_serv_butone(cptr, ":%s NICK %s :%ld",
+			 parv[0], nick, sptr->tsinfo);
+#endif
       /*
       ** A new NICK being introduced by a neighbouring
       ** server (e.g. message type "NICK new" received)
@@ -1875,7 +1897,6 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
 	  if (sptr->user)
 	    {
 	      add_history(sptr,1);
-	      
 	      sendto_serv_butone(cptr, ":%s NICK %s :%ld",
 				 parv[0], nick, sptr->tsinfo);
 	    }
@@ -3629,12 +3650,33 @@ int	m_oper(aClient *cptr,
 #endif
 	  {
 	    SetLocOp(sptr);
-	    sptr->flags |= (LOCOP_UMODES);
+	    if((int)aconf->hold)
+	      {
+		sptr->flags |= ((int)aconf->hold & ALL_UMODES); 
+		sendto_one(sptr, ":%s NOTICE %s:*** Oper flags set from conf",
+			   me.name,parv[0]);
+	      }
+	    else
+	      {
+		sptr->flags |= (LOCOP_UMODES);
+	      }
 	  }
 	else
 	  {
 	    SetOper(sptr);
-	    sptr->flags |= (OPER_UMODES);
+	    if((int)aconf->hold)
+	      {
+		sptr->flags |= ((int)aconf->hold & ALL_UMODES); 
+		if( !IsSetOperN(sptr) )
+		  sptr->flags &= ~FLAGS_NCHANGE;
+
+		sendto_one(sptr, ":%s NOTICE %s:*** Oper flags set from conf",
+			   me.name,parv[0]);
+	      }
+	    else
+	      {
+		sptr->flags |= (OPER_UMODES);
+	      }
 	  }
       SetIPHidden(sptr);
       Count.oper++;
@@ -3983,6 +4025,7 @@ int	m_umode(aClient *cptr,
   aClient *acptr;
   int	what, setflags;
   int   badflag = NO;	/* Only send one bad flag notice -Dianora */
+  aConfItem *aconf;
 
   what = MODE_ADD;
 
@@ -4111,12 +4154,8 @@ int	m_umode(aClient *cptr,
 
 	  delfrom_fdlist(sptr->fd, &oper_fdlist);
 
-	  sptr->flags2 &= ~(FLAGS2_OPER_GLOBAL_KILL|
-			    FLAGS2_OPER_REMOTE|
-			    FLAGS2_OPER_UNKLINE|
-			    FLAGS2_OPER_GLINE|
-			    FLAGS2_OPER_N|
-			    FLAGS2_OPER_K);
+	  sptr->flags2 &= ~FLAGS2_OPER_FLAGS; /* struct.h */
+
           while(cur_cptr)
             {
               if(sptr == cur_cptr) 

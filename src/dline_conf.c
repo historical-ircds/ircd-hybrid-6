@@ -79,12 +79,14 @@ struct ip_subtree *insert_ip_subtree(struct ip_subtree *head,
 				     struct ip_subtree *node)
 {
   if (!head) return node;   /* null, insert here */
-  if (head->ip > node->ip) {
-    head->left=insert_ip_subtree(head->left, node);
-  }
-  else {
-    head->right=insert_ip_subtree(head->right, node);
-  }
+  if (head->ip > node->ip)
+    {
+      head->left=insert_ip_subtree(head->left, node);
+    }
+  else
+    {
+      head->right=insert_ip_subtree(head->right, node);
+    }
   return head;
 }
 
@@ -151,34 +153,39 @@ struct ip_subtree *delete_ip_subtree(struct ip_subtree *head,
 	{ /* no left child */
 	  temp=head->right;
 	  MyFree(head); 
-      return temp;
-    }
-    if (head->right==NULL) { /* no right child */
-      temp=head->left;
-      MyFree(head);
-      return temp;
-    }
+	  return temp;
+	}
+      if (head->right==NULL)
+	{ /* no right child */
+	  temp=head->left;
+	  MyFree(head);
+	  return temp;
+	}
+
     /* flip a coin here to decide which node to replace this one with */
-    if (rand() < (RAND_MAX>>1)) {
-      /* replace head with inorder predecessor */
-      temp=head->left; prev=head;
-      while (temp->right) { prev=temp; temp=temp->right; }
-      /* temp is the inorder predecessor */
-      temp->right=head->right;
-      MyFree(head);
-      prev->right=NULL;  /* remember to remove it too :P */
-      return temp;
-    } else {
-      /* replace head with inorder successor */
-      temp=head->right; prev=head;
-      while (temp->left) { prev=temp; temp=temp->left; }
-      /* temp is the inorder predecessor */
-      temp->left=head->left;
-      MyFree(head);
-      prev->left=NULL;  /* remember to remove it too :P */
-      return temp;
+    if (rand() < (RAND_MAX>>1))
+      {
+	/* replace head with inorder predecessor */
+	temp=head->left; prev=head;
+	while (temp->right) { prev=temp; temp=temp->right; }
+	/* temp is the inorder predecessor */
+	temp->right=head->right;
+	MyFree(head);
+	prev->right=NULL;  /* remember to remove it too :P */
+	return temp;
+      }
+    else
+      {
+	/* replace head with inorder successor */
+	temp=head->right; prev=head;
+	while (temp->left) { prev=temp; temp=temp->left; }
+	/* temp is the inorder predecessor */
+	temp->left=head->left;
+	MyFree(head);
+	prev->left=NULL;  /* remember to remove it too :P */
+	return temp;
+      }
     }
-  }
   return head;
 }
 
@@ -219,12 +226,13 @@ aConfItem *trim_ip_Klines(aConfItem *cl, int mask)
       return cl;
     }
   /* else if this mask more specific, toast it */
-  if (cl->ip_mask >= mask) {
-    temp=cl;
-    cl=cl->next;
-    free_conf(temp);
-    return trim_ip_Klines(cl, mask);
-  }
+  if (cl->ip_mask >= mask)
+    {
+      temp=cl;
+      cl=cl->next;
+      free_conf(temp);
+      return trim_ip_Klines(cl, mask);
+    }
   /* was more general, leave it */
   cl->next=trim_ip_Klines(cl->next, mask);
   return cl;
@@ -241,12 +249,13 @@ aConfItem *trim_ip_Elines(aConfItem *cl, int mask)
   aConfItem *temp;
   if (!cl) return NULL;
   /* if this mask more specific, toast it */
-  if (cl->ip_mask >= mask) {
-    temp=cl;
-    cl=cl->next;
-    free_conf(temp);
-    return trim_ip_Elines(cl, mask);
-  }
+  if (cl->ip_mask >= mask)
+    {
+      temp=cl;
+      cl=cl->next;
+      free_conf(temp);
+      return trim_ip_Elines(cl, mask);
+    }
   /* was more general, leave it */
   cl->next=trim_ip_Elines(cl->next, mask);
   return cl;
@@ -469,44 +478,49 @@ void add_ip_Kline(aConfItem *conf_ptr)
   /* check for existing ip/mask */
   node=find_ip_subtree(ip_Kline[host_ip>>24], host_ip);
 
-  if (!node) { /* none exist, gather up the lesser ones and add a new node */
-    /* update oracle */
-    ike_oracle[host_ip>>24] |= ((0xffffffff-host_mask)+host_ip);
+  if (!node)
+    { /* none exist, gather up the lesser ones and add a new node */
+      /* update oracle */
+      ike_oracle[host_ip>>24] |= ((0xffffffff-host_mask)+host_ip);
 
-    /* now collect nodes with more specific ip masks */
-    ip_Kline[host_ip>>24]=
-      delete_ip_subtree(ip_Kline[host_ip>>24], host_ip, host_mask, &clist);
+      /* now collect nodes with more specific ip masks */
+#if 0
+      ip_Kline[host_ip>>24]=
+	delete_ip_subtree(ip_Kline[host_ip>>24], host_ip, host_mask, &clist);
+#endif
 
-    /* if this is a *@ Kline, then we can toast all the other Klines in the clist */
-    if (!(strcmp(conf_ptr->name,"*")))
-      clist=trim_ip_Klines(clist,0);
+      /* if this is a *@ Kline, then we can toast all the other Klines in the clist */
+      if (!(strcmp(conf_ptr->name,"*")))
+	clist=trim_ip_Klines(clist,0);
 
-    conf_ptr->next=clist;
-    clist=conf_ptr;
+      conf_ptr->next=clist;
+      clist=conf_ptr;
  
-    /* create a new node and insert it into the tree */
-    node=new_ip_subtree(host_ip, host_mask, clist, NULL, NULL);
-    ip_Kline[host_ip>>24]=insert_ip_subtree(ip_Kline[host_ip>>24], node);
-    return;  /* done */
-  }
+      /* create a new node and insert it into the tree */
+      node=new_ip_subtree(host_ip, host_mask, clist, NULL, NULL);
+      ip_Kline[host_ip>>24]=insert_ip_subtree(ip_Kline[host_ip>>24], node);
+      return;  /* done */
+    }
   
   /* otherwise, this Kline is being placed in an existing list */
   /* if there's a more general *@ Kline (or Eline) in the list, then dont bother adding */
-  for (scan=node->conf;scan;scan=scan->next) {
-    if (((scan->status & CONF_KILL) || (scan->flags & CONF_FLAGS_E_LINED)) &&
-	(!(strcmp(scan->name,"*"))) &&
-	(scan->ip_mask<host_mask)) break;
-  }
+  for (scan=node->conf;scan;scan=scan->next)
+    {
+      if (((scan->status & CONF_KILL) || (scan->flags & CONF_FLAGS_E_LINED)) &&
+	  (!(strcmp(scan->name,"*"))) &&
+	  (scan->ip_mask<host_mask)) break;
+    }
   if (scan) return; /* don't bother adding */
 
   /* update oracle */
   ike_oracle[host_ip>>24] |= ((0xffffffff-host_mask)+host_ip);
 
-  if (strcmp(conf_ptr->name,"*")) {  /* not adding a *@ Kline, just slap it in */
-    conf_ptr->next=node->conf;
-    node->conf=conf_ptr;
-    return;
-  }
+  if (strcmp(conf_ptr->name,"*")) 
+    {  /* not adding a *@ Kline, just slap it in */
+      conf_ptr->next=node->conf;
+      node->conf=conf_ptr;
+      return;
+    }
 
   /* final possibility, we're adding a *@ to the list, only toast more
      specific I/K lines */
@@ -541,44 +555,49 @@ void add_ip_Eline(aConfItem *conf_ptr)
   /* check for existing ip/mask */
   node=find_ip_subtree(ip_Kline[host_ip>>24], host_ip);
 
-  if (!node) { /* none exist, gather up the lesser ones and add a new node */
-    /* update oracle */
-    ike_oracle[host_ip>>24] |= ((0xffffffff-host_mask)+host_ip);
+  if (!node)
+    { /* none exist, gather up the lesser ones and add a new node */
+      /* update oracle */
+      ike_oracle[host_ip>>24] |= ((0xffffffff-host_mask)+host_ip);
 
-    /* now collect nodes with more specific ip masks */
-    ip_Kline[host_ip>>24]=
-      delete_ip_subtree(ip_Kline[host_ip>>24], host_ip, host_mask, &clist);
+      /* now collect nodes with more specific ip masks */
+#if 0
+      ip_Kline[host_ip>>24]=
+	delete_ip_subtree(ip_Kline[host_ip>>24], host_ip, host_mask, &clist);
+#endif
 
-    /* if this is a *@ Eline, then we can toast all the others in the clist */
-    if (!(strcmp(conf_ptr->name,"*"))) 
-      clist=trim_ip_Elines(clist,0);
+      /* if this is a *@ Eline, then we can toast all the others in the clist */
+      if (!(strcmp(conf_ptr->name,"*"))) 
+	clist=trim_ip_Elines(clist,0);
 
-    conf_ptr->next=clist;
-    clist=conf_ptr;
+      conf_ptr->next=clist;
+      clist=conf_ptr;
  
-    /* create a new node and insert it into the tree */
-    node=new_ip_subtree(host_ip, host_mask, clist, NULL, NULL);
-    ip_Kline[host_ip>>24]=insert_ip_subtree(ip_Kline[host_ip>>24], node);
-    return;  /* done */
-  }
+      /* create a new node and insert it into the tree */
+      node=new_ip_subtree(host_ip, host_mask, clist, NULL, NULL);
+      ip_Kline[host_ip>>24]=insert_ip_subtree(ip_Kline[host_ip>>24], node);
+      return;  /* done */
+    }
   
   /* otherwise, this Eline is being placed in an existing list */
   /* if there's a more general *@ Eline in the list, then dont bother adding */
-  for (scan=node->conf;scan;scan=scan->next) {
-    if ((scan->flags & CONF_FLAGS_E_LINED) &&
-	(!(strcmp(scan->name,"*"))) &&
-	(scan->ip_mask<host_mask)) break;
-  }
+  for (scan=node->conf;scan;scan=scan->next)
+    {
+      if ((scan->flags & CONF_FLAGS_E_LINED) &&
+	  (!(strcmp(scan->name,"*"))) &&
+	  (scan->ip_mask<host_mask)) break;
+    }
   if (scan) return; /* don't bother adding */
 
   /* update oracle */
   ike_oracle[host_ip>>24] |= ((0xffffffff-host_mask)+host_ip);
 
-  if (strcmp(conf_ptr->name,"*")) {  /* not adding a *@ Eline, just slap it in */
-    conf_ptr->next=node->conf;
-    node->conf=conf_ptr;
-    return;
-  }
+  if (strcmp(conf_ptr->name,"*")) 
+    {  /* not adding a *@ Eline, just slap it in */
+      conf_ptr->next=node->conf;
+      node->conf=conf_ptr;
+      return;
+    }
 
   /* final possibility, we're adding a *@ to the list, only toast more
      specific lines */
@@ -611,23 +630,26 @@ void add_ip_Iline(aConfItem *conf_ptr)
   /* check for existing ip/mask */
   node=find_ip_subtree(ip_Kline[host_ip>>24], host_ip);
 
-  if (!node) { /* none exist, gather up the lesser ones and add a new node */
-    /* update oracle */
-    ike_oracle[host_ip>>24] |= ((0xffffffff-host_mask)+host_ip);
+  if (!node)
+    { /* none exist, gather up the lesser ones and add a new node */
+      /* update oracle */
+      ike_oracle[host_ip>>24] |= ((0xffffffff-host_mask)+host_ip);
 
-    /* now collect nodes with more specific ip masks */
-    ip_Kline[host_ip>>24]=
-      delete_ip_subtree(ip_Kline[host_ip>>24], host_ip, host_mask, &clist);
+      /* now collect nodes with more specific ip masks */
+#if 0
+      ip_Kline[host_ip>>24]=
+	delete_ip_subtree(ip_Kline[host_ip>>24], host_ip, host_mask, &clist);
+#endif
 
-    /* insert the Iline */
-    conf_ptr->next=clist;
-    clist=conf_ptr;
+      /* insert the Iline */
+      conf_ptr->next=clist;
+      clist=conf_ptr;
  
-    /* create a new node and insert it into the tree */
-    node=new_ip_subtree(host_ip, host_mask, clist, NULL, NULL);
-    ip_Kline[host_ip>>24]=insert_ip_subtree(ip_Kline[host_ip>>24], node);
-    return;  /* done */
-  }
+      /* create a new node and insert it into the tree */
+      node=new_ip_subtree(host_ip, host_mask, clist, NULL, NULL);
+      ip_Kline[host_ip>>24]=insert_ip_subtree(ip_Kline[host_ip>>24], node);
+      return;  /* done */
+    }
   
   /* otherwise, this Iline is being placed in an existing list */
   /* update oracle */
@@ -674,20 +696,23 @@ aConfItem *match_ip_Kline(unsigned long ip,char *name)
 	if (!matches(scan->name,name)) return scan; /* instant win! */
 
       if (scan->status & CONF_KILL)  /* Kline */
-	if (!matches(scan->name,name)) {
-	  winnertype='K'; winner=scan;
-	  continue;
-	}
+	if (!matches(scan->name,name))
+	  {
+	    winnertype='K'; winner=scan;
+	    continue;
+	  }
+
       if (scan->status & CONF_CLIENT) /* Iline */
 	if (!matches(scan->name,name)) /* name jives */
 	  if (winnertype=='I') /* we might be able to beat the champ */
-            {
-	      if (winner && (scan->ip_mask <= winner->ip_mask)) {
-	        continue;  /* more vague */
-	      } else {
-	        winner=scan;
+	    if (winner && (scan->ip_mask <= winner->ip_mask))
+	      {
+		continue;  /* more vague */
 	      }
-            }
+	    else
+	      {
+		winner=scan;
+	      }
     }
   return winner;
 }
@@ -718,12 +743,14 @@ void zap_Dlines()
       oracle[i]=0;  /* clear the oracle field */
       Dline[i] = destroy_ip_subtree(Dline[i]);   /* kill the tree */
     }
+
   for (i=0; i<256; i++)
     {
       ike_oracle[i]=0;  /* clear the oracle field */
       ip_Kline[i] = destroy_ip_subtree(ip_Kline[i]);   /* kill the tree */
     }
   s=leftover;
+
   while (s)
     {    /* toast the leftovers list */
       ss=s->next;

@@ -2,6 +2,13 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b66   8-May-1999
+* Added TESTLINE looks for given user@host,ip returns info
+  on any found I line or K line for that user.
+* found and fixed major IP kline bug. 
+* O lines can have an optional flags field, to set default oper flags	
+-Dianora
+	
 version hybrid-6-b65   8-May-1999
 * changed ANTI_DRONE_FLOOD and JUPE_CHANNEL to undeffed by default
 * servers and opers can no longer trip the drone detection
@@ -14,6 +21,7 @@ version hybrid-6-b64   8-May-1999
 version hybrid-6-b63   6-May-1999
 * SPY_LEVEL notices for clients attempting to join juped channel
 * sendto_realop notices when mode +/-j #channel is used
+-Dianora
 	
 version hybrid-6-b62   4-May-1999
 * Added ANTI_DRONE_FLOOD code	
@@ -21,11 +29,13 @@ version hybrid-6-b62   4-May-1999
   jupes that channel locally only on this server.
 * '|' character in kline reason stops everything afterwards from being seen
   by non opers.
+-Dianora
 	
 version hybrid-6-b61   2-May-1999
 * fixed major bug in mtrie code. I lines would be treated as K lines
   in some cases. 2-May-1999
-
+-Dianora
+	
 version hybrid-6-b60   29-Apr-1999
 * if server split time is 0, i.e. split code is disabled, dont'
   put the server into split mode, this can leave 0 member channels

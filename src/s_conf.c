@@ -68,6 +68,7 @@ aConfItem *temporary_klines = (aConfItem *)NULL;
 
 static  char *set_conf_flags(aConfItem *,char *);
 static  int  get_oper_privs(int,char *);
+static  int  get_oper_flags(char *);
 
 /* externally defined functions */
 extern  void    outofmemory(void);	/* defined in list.c */
@@ -1090,9 +1091,10 @@ aConfItem *find_conf_ip(Link *lp,char *ip,char *user, int statmask)
       tmp = lp->value.aconf;
       if (!(tmp->status & statmask))
 	continue;
-      s = strchr(tmp->host, '@');
-      if(s == (char *)NULL)
+
+      if(!(s = strchr(tmp->host, '@')))
 	continue;
+
       *s = '\0';
       if (match(tmp->host, user))
 	{
@@ -1583,8 +1585,7 @@ int 	initconf(int opt, int fd,int use_include)
 
 	  if(!strncasecmp(line+1,"include ",8))
 	    {
-	      filename = strchr(line+8,'"');
-	      if(filename)
+	      if(filename = strchr(line+8,'"'))
 		filename++;
 	      else
 		{
@@ -1592,8 +1593,7 @@ int 	initconf(int opt, int fd,int use_include)
 		  continue;
 		}
 
-	      back = strchr(filename,'"');
-	      if(back)
+	      if( back = strchr(filename,'"'))
 		*back = '\0';
 	      else
 		{
@@ -1806,6 +1806,12 @@ int 	initconf(int opt, int fd,int use_include)
 	  Debug((DEBUG_DEBUG,"class tmp = %s",tmp));
 
 	  Class(aconf) = find_class(atoi(tmp));
+
+	  if ((tmp = getfield(NULL)) == NULL)
+	    break;
+	  (int)aconf->hold = get_oper_flags(tmp);
+
+
 	  break;
           /* NOTREACHED */
 	}
@@ -1817,17 +1823,18 @@ int 	initconf(int opt, int fd,int use_include)
 
       if( aconf->status & (CONF_HUB|CONF_LEAF) )
 	{
-	  char *p;
+	  char *ps;	/* space finder */
+	  char *pt;	/* tab finder */
 
-	  p = strchr(aconf->name,' ');
-	  if(!p)
-	    p = strchr(aconf->name,'\t');
+	  ps = strchr(aconf->name,' ');
+	  pt = strchr(aconf->name,'\t');
 
-	  if(p)
+	  if(ps || pt)
 	    {
 	      sendto_realops("H: or L: line trailing whitespace [%s]",
 			     aconf->name);
-	      *p = '\0';
+	      if(ps)*ps = '\0';
+	      if(pt)*pt = '\0';
 	    }
 	}
 
@@ -1966,8 +1973,7 @@ int 	initconf(int opt, int fd,int use_include)
 	   * an IP I line only, but I won't enforce it here. 
 	   */
 
-	  p = strchr(aconf->host,'@');
-	  if(p)
+	  if( p = strchr(aconf->host,'@'))
 	    {
 	      aconf->flags |= CONF_FLAGS_DO_IDENTD;
 	      *p = '\0';
@@ -1984,8 +1990,7 @@ int 	initconf(int opt, int fd,int use_include)
 	     * in the aconf->name field.
 	     */
 
-	      p = strchr(aconf->name,'@');
-	      if(p)
+	      if( p = strchr(aconf->name,'@'))
 		{
 		  aconf->flags |= CONF_FLAGS_DO_IDENTD;
 		  *p = '\0';
@@ -2269,8 +2274,8 @@ aConfItem *find_is_klined(char *host,char *name,unsigned long ip)
   if( (found_aconf = find_tkline(host,name)) )
     return(found_aconf);
 
-  /* find_matching_mtrie_conf() can return either a CONF_KILL
-   * or a CONF_CLIENT
+  /* find_matching_mtrie_conf() can return either CONF_KILL,
+   * CONF_CLIENT or NULL, i.e. no I line at all.
    */
 
   found_aconf = find_matching_mtrie_conf(host,name,ntohl(ip));
@@ -2875,6 +2880,7 @@ void report_temp_klines(aClient *sptr)
   char *host;
   char *name;
   char *reason;
+  char *p;
 
   if(temporary_klines)
     {
@@ -2919,8 +2925,19 @@ void report_temp_klines(aClient *sptr)
 	      else
 		reason = "No Reason";
 
-	      sendto_one(sptr,rpl_str(RPL_STATSKLINE), me.name,
-			 sptr->name, 'k' , host, name, reason);
+	      if(!IsAnOper(sptr))
+		{
+		  if(p = strchr(reason,'|'))
+		    *p = '\0';
+
+		  sendto_one(sptr,rpl_str(RPL_STATSKLINE), me.name,
+			     sptr->name, 'k' , host, name, reason);
+		  if(p)
+		    *p = '|';
+		}
+	      else
+		sendto_one(sptr,rpl_str(RPL_STATSKLINE), me.name,
+			   sptr->name, 'k' , host, name, reason);
 
 	      last_list_ptr = kill_list_ptr;
 	      kill_list_ptr = kill_list_ptr->next;
@@ -3089,8 +3106,7 @@ static int check_time_interval(char *interval)
 
   while (interval)
     {
-      p = (char *)strchr(interval, ',');
-      if (p)
+      if(p = (char *)strchr(interval, ','))
 	*p = '\0';
       if (sscanf(interval, "%2d%2d-%2d%2d",
 		 &perm_min_hours, &perm_min_minutes,
@@ -3367,6 +3383,50 @@ char *oper_privs(aClient *cptr,int port)
   return(privs_out);
 }
 
+/* get_oper_flags
+ *
+ * inputs	- flags as string
+ * output	- flags
+ * side effects -
+ *
+ * -Dianora
+ */
+
+int get_oper_flags(char *flags)
+{
+  int int_flags=0;
+
+  Debug((DEBUG_DEBUG,"get_oper_flags called flags = [%s]",flags));
+
+  while(*flags)
+    {
+      if(*flags == 'i')			/* invisible */
+	int_flags |= FLAGS_INVISIBLE;
+      else if(*flags == 'w')		/* see wallops */
+	int_flags |= FLAGS_WALLOP;
+      else if(*flags == 's')
+	int_flags |= FLAGS_SERVNOTICE;
+      else if(*flags == 'c')
+	int_flags |= FLAGS_CCONN;
+      else if(*flags == 'r')
+	int_flags |= FLAGS_REJ;
+      else if(*flags == 'k')
+	int_flags |= FLAGS_SKILL;
+      else if(*flags == 'f')
+	int_flags |= FLAGS_FULL;
+      else if(*flags == 'y')
+	int_flags |= FLAGS_SPY;
+      else if(*flags == 'd')
+	int_flags |= FLAGS_DEBUG;
+      else if(*flags == 'n')
+	int_flags |= FLAGS_NCHANGE;
+      flags++;
+    }
+
+  Debug((DEBUG_DEBUG,"about to return int_flags %x",int_flags));
+  return(int_flags);
+}
+
 /*
  * host_is_legal_ip
  *
@@ -3447,37 +3507,139 @@ int     m_killcomment(sptr, parv, filename)
 aClient *sptr;
 char    *parv, *filename;
 {
-      int     fd;
-      char    line[256];
-      Reg1    char	*tmp;
-      struct  stat	sb;
-      struct  tm	*tm;
+  int     fd;
+  char    line[256];
+  Reg1    char	*tmp;
+  struct  stat	sb;
+  struct  tm	*tm;
 
-      /*
-       * stop NFS hangs...most systems should be able to open a file in
-       * 3 seconds. -avalon (curtesy of wumpus)
-       */
-      (void)alarm(3);
-      fd = open(filename, O_RDONLY);
-      (void)alarm(0);
-      if (fd == -1)
-          {
-              sendto_one(sptr, ":%s %d %s :You are not welcome on this server.", me.name, ERR_YOUREBANNEDCREEP, parv);
-              return 0;
-          }
-      (void)fstat(fd, &sb);
-      tm = localtime(&sb.st_mtime);
-      (void)dgets(-1, NULL, 0); /* make sure buffer is at empty pos */
-      while (dgets(fd, line, sizeof(line)-1) > 0)
-          {
-              if ((tmp = (char *)index(line,'\n')))
-                      *tmp = '\0';
-              if ((tmp = (char *)index(line,'\r')))
-                      *tmp = '\0';
-              sendto_one(sptr, ":%s %d %s :%s.", me.name, ERR_YOUREBANNEDCREEP, parv,line);
-          }
-      (void)dgets(-1, NULL, 0); /* make sure buffer is at empty pos */
-      (void)close(fd);
+  fd = open(filename, O_RDONLY);
+  if (fd == -1)
+    {
+      sendto_one(sptr, ":%s %d %s :You are not welcome on this server.", me.name, ERR_YOUREBANNEDCREEP, parv);
       return 0;
+    }
+  (void)fstat(fd, &sb);
+  tm = localtime(&sb.st_mtime);
+  (void)dgets(-1, NULL, 0); /* make sure buffer is at empty pos */
+  while (dgets(fd, line, sizeof(line)-1) > 0)
+    {
+      if ((tmp = (char *)index(line,'\n')))
+	*tmp = '\0';
+      if ((tmp = (char *)index(line,'\r')))
+	*tmp = '\0';
+      sendto_one(sptr, ":%s %d %s :%s.", me.name, ERR_YOUREBANNEDCREEP, parv,line);
+    }
+  (void)dgets(-1, NULL, 0); /* make sure buffer is at empty pos */
+  (void)close(fd);
+  return 0;
 }
 #endif /* KILL_COMMENT_IS_FILE */
+
+
+/*
+ * command to test I/K lines on server
+ *
+ * /quote testline user@host,ip
+ *
+ */
+
+int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+  aConfItem *aconf;
+  char *ip_string;
+  unsigned long ip;
+  unsigned long host_mask;
+  char *p;
+  char *host;
+  char *pass;
+  char *name;
+  char *given_host;
+  char *given_name;
+  int port;
+  char *mask;
+  static	char	null[] = "<NULL>";
+
+  if (!MyClient(sptr) || !IsAnOper(sptr))
+    {
+      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      return 0;
+    }
+
+  if (parc > 1)
+    {
+      given_name = parv[1];
+      if(!(p = strchr(given_name,'@')))
+	{
+	  sendto_one(sptr, ":%s NOTICE %s :usage: user@host[,ip]",
+		     me.name, parv[0]);
+	  return 0;
+	}
+
+      *p = '\0';
+      p++;
+      given_host = p;
+      if(!(p = strchr(given_host,',')))
+	{
+	  ip = 0L;
+	}
+      else
+	{
+	  *p = '\0';
+	  p++;
+	  ip_string = p;
+	  ip = host_name_to_ip(ip_string,&host_mask);
+	}
+
+      aconf = find_matching_mtrie_conf(given_host,given_name,(unsigned long)ip);
+
+      if(aconf)
+	{
+	  host = BadPtr(aconf->host) ? null : aconf->host;
+	  pass = BadPtr(aconf->passwd) ? null : aconf->passwd;
+	  name = BadPtr(aconf->name) ? null : aconf->name;
+	  mask = BadPtr(aconf->mask) ? null : aconf->mask;
+	  port = (int)aconf->port;
+      
+	  if(aconf->status & CONF_KILL) 
+	    {
+	      sendto_one(sptr, 
+			 ":%s NOTICE %s :K-line name [%s] host [%s] pass [%s]",
+			 me.name, parv[0], 
+			 name,
+			 host,
+			 pass);
+	    }
+	  else if(aconf->status & CONF_CLIENT)
+	    {
+	      sendto_one(sptr,
+":%s NOTICE %s :I-line mask [%s] prefix [%s] name [%s] host [%s] port [%d] class [%d]",
+			 me.name, parv[0], 
+			 mask,
+			 show_iline_prefix(sptr,aconf,name),
+			 name,
+			 host,
+			 port,
+			 get_conf_class(aconf));
+
+	      aconf = find_tkline(given_host,given_name);
+	      if(aconf)
+		{
+		  sendto_one(sptr, 
+		     ":%s NOTICE %s :k-line name [%s] host [%s] pass [%s]",
+			     me.name, parv[0], 
+			     aconf->name,
+			     aconf->host,
+			     aconf->passwd);
+		}
+	    }
+	}
+      else
+	sendto_one(sptr, ":%s NOTICE %s :No aconf found",
+		   me.name, parv[0]);
+    }
+  else
+    sendto_one(sptr, ":%s NOTICE %s :usage: user@host,ip",
+	       me.name, parv[0]);
+}
+

@@ -94,6 +94,9 @@
 
 #define MAXPARA    15 
 
+#define MSG_TESTLINE "TESTLINE"
+extern int m_testline(aClient *,aClient *,int,char **);
+
 extern int m_admin(aClient *,aClient *,int,char **);
 extern int m_kline(aClient *,aClient *,int,char **);
 extern int m_unkline(aClient *,aClient *,int,char **);
@@ -303,6 +306,7 @@ struct Message msgtab[] = {
 #endif
   { MSG_HTM,	m_htm,	     0, MAXPARA, 1, 0, 0, 0L },
   { MSG_SET,	m_set,	     0, MAXPARA, 1, 0, 0, 0L },
+  { MSG_TESTLINE,	m_testline,	     0, MAXPARA, 1, 0, 0, 0L },
   { (char *) 0, (int (*)()) 0 , 0, 0,    0, 0, 0, 0L }
 };
 
