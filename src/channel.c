@@ -2334,7 +2334,7 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 	     and server has been split */
 
 #ifdef NO_CHANOPS_WHEN_SPLIT
-	  if((*name != '&') && !IsAnOper(sptr)
+	  if((*name != '&')
 	     && server_was_split && server_split_recovery_time)
 	    {
 	      allow_op = NO;
