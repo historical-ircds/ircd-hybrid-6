@@ -505,8 +505,10 @@ static  int     m_message(struct Client *cptr,
                        me.name, parv[0], nick, MAX_MULTI_MESSAGES);
         }
       if (acptr)
+	{
 	  msgs++;
 	  continue;
+	}
     }
   sendto_one(sptr, form_str(ERR_NOSUCHNICK), me.name,
              parv[0], nick);
