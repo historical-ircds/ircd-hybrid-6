@@ -2057,7 +2057,7 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key, int *flags)
 #ifdef JUPE_CHANNEL
   if( chptr->mode.mode & MODE_JUPED )
     {
-      sendto_ops_lev(SPY_LEV,
+      sendto_ops_flags(FLAGS_SPY,
 	     "User %s (%s@%s) is attemping to join locally juped channel %s",
 		     sptr->name,
 		     sptr->username, sptr->host,chptr->chname);
@@ -2778,7 +2778,7 @@ int	m_join(aClient *cptr,
 	    {
 	      if(SPAMNUM && (sptr->join_leave_count >= SPAMNUM))
 		{
-		  sendto_ops_lev(SPY_LEV,
+		  sendto_ops_flags(FLAGS_SPY,
 				     "User %s (%s@%s) is a possible spambot",
 				     sptr->name,
 				     sptr->username, sptr->host);
@@ -2877,7 +2877,7 @@ int	m_join(aClient *cptr,
  
               if(sptr->oper_warn_count_down == 0)
                 {
-                  sendto_ops_lev(SPY_LEV,
+                  sendto_ops_flags(FLAGS_SPY,
 		    "User %s (%s@%s) trying to join %s is a possible spambot",
                              sptr->name,
                              sptr->username,
@@ -3089,9 +3089,10 @@ int	m_part(aClient *cptr,
 	{
 	  if(SPAMNUM && (sptr->join_leave_count >= SPAMNUM))
 	    {
-	      sendto_ops_lev(SPY_LEV,"User %s (%s@%s) is a possible spambot",
-			 sptr->name,
-			 sptr->username, sptr->host);
+	      sendto_ops_flags(FLAGS_SPY,
+			       "User %s (%s@%s) is a possible spambot",
+			       sptr->name,
+			       sptr->username, sptr->host);
 	      sptr->oper_warn_count_down = OPER_SPAM_COUNTDOWN;
 	    }
 	  else

@@ -903,73 +903,6 @@ sendto_match_butone(aClient *one, aClient *from, char *mask,
 } /* sendto_match_butone() */
 
 /*
- * sendto_ops_lev
- *
- *    Send to *local* ops only at a certain level...
- *    0 = normal +s
- *    1 = client connect/disconnect   (+c) [IRCOPS ONLY]
- *    2 = bot rejection               (+r)
- *    3 = server kills		      (+k)
- */
-
-void
-sendto_ops_lev(int lev, const char *pattern, ...)
-
-{
-  va_list args;
-  register aClient *cptr;
-  char nbuf[1024];
-
-  va_start(args, pattern);
-
-  for(cptr = local_cptr_list; cptr; cptr = cptr->next_local_client)
-    {
-      switch (lev)
-	{
-	case CCONN_LEV:
-	  if (!SendCConnNotice(cptr) || !IsAnOper(cptr))
-	    continue;
-	  break;
-	case REJ_LEV:
-	  if (!SendRejNotice(cptr) || !IsAnOper(cptr))
-	    continue;
-	  break;
-	case SKILL_LEV:
-	  if (!SendSkillNotice(cptr))
-	    continue;
-	  break;
-	case FULL_LEV:
-	  if (!SendFullNotice(cptr) || !IsAnOper(cptr))
-	    continue;
-	  break;
-	case SPY_LEV: 
-	  if (!SendSpyNotice(cptr) || !IsAnOper(cptr))
-	    continue;
-	  break;
-	case DEBUG_LEV:
-	  if (!SendDebugNotice(cptr) || !IsAnOper(cptr))
-	    continue;
-	  break;
-	case NCHANGE_LEV:
-	  if (!SendNickChange(cptr) || !IsAnOper(cptr))
-	    continue;
-	  break;
-	default: /* this is stupid, but oh well */
-	  if (!SendServNotice(cptr)) continue;
-	} /* switch (lev) */
-      
-      (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
-		       me.name, cptr->name);
-      
-      (void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
-      
-      vsendto_one(cptr, nbuf, args);
-    } /* for(cptr = local_cptr_list; cptr; cptr = cptr->next_local_client) */
-
-  va_end(args);
-}  /* sendto_ops_lev */
-
-/*
  * sendto_ops_flags
  *
  *    Send to *local* ops only at a certain level...
@@ -1020,7 +953,7 @@ sendto_ops_flags(int flags, const char *pattern, ...)
 	} /* for(cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client) */
     }
   va_end(args);
-}  /* sendto_ops_lev */
+}  /* sendto_ops_flags */
 
 /*
  * sendto_ops

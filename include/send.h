@@ -49,7 +49,6 @@ extern  void sendto_match_cap_servs(struct Channel *, struct Client *,
 extern  void sendto_match_butone(struct Client *, struct Client *, 
                                  char *, int, const char *, ...);
 
-extern  void sendto_ops_lev(int, const char *, ...);
 extern  void sendto_ops_flags(int, const char *, ...);
 
 extern  void sendto_realops(const char *, ...);
