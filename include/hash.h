@@ -42,6 +42,14 @@
 struct Client;
 struct Channel;
 
+struct HashEntry {
+  int    hits;
+  int    links;
+  void*  list;
+};
+
+
+extern struct HashEntry hash_get_channel_block(int i);
 extern size_t hash_get_client_table_size(void);
 extern size_t hash_get_channel_table_size(void);
 extern void   clear_channel_hash_table(void);
