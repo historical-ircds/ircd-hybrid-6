@@ -179,7 +179,7 @@ void send_usage(aClient *cptr, char *nick)
              me.name, RPL_STATSDEBUG, nick, secs/60, secs%60,
              rus.ru_utime.tv_sec/60, rus.ru_utime.tv_sec%60,
              rus.ru_stime.tv_sec/60, rus.ru_stime.tv_sec%60);
-  sendto_one(cptr, ":%s %d %s :RSS %d ShMem %d Data %d Stack %d",
+  sendto_one(cptr, ":%s %d %s :RSS %ld ShMem %d Data %d Stack %d",
              me.name, RPL_STATSDEBUG, nick, rus.ru_maxrss,
              rus.ru_ixrss / rup, rus.ru_idrss / rup,
              rus.ru_isrss / rup);
