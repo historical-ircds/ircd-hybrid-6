@@ -610,10 +610,8 @@ time_t check_pings(time_t currenttime)
       else
 #if defined(SEND_FAKE_KILL_TO_CLIENT) && defined(IDLE_CHECK)
         {
-	  char *killer;
-	  strcat(killer, "AutoKILL");
           if (fakekill)
-            sendto_prefix_one(cptr, cptr, ":%s KILL %s :(%s)", killer,
+            sendto_prefix_one(cptr, cptr, ":AutoKILL KILL %s :(%s)",
             cptr->name, dying_clients_reason[die_index]);
           /* ugh. this is horrible.
            * but I can get away with this hack because of the
