@@ -1353,7 +1353,7 @@ int	m_nick(aClient *cptr,
     *s = '\0';
   strncpyzt(nick, parv[1], NICKLEN+1);
 
-  if(MyConnect(sptr) &&
+  if(MyClient(sptr) &&
      !IsAnOper(sptr) && find_special_conf(nick,CONF_QUARANTINED_NICK)) 
     {
       sendto_realops_lev(REJ_LEV,
@@ -3020,7 +3020,10 @@ int	m_kill(aClient *cptr,
 	  sendto_one(sptr,":%s NOTICE %s :You have no K flag",me.name,parv[0]);
 	  return 0;
 	}
-	
+    }
+
+  if (IsAnOper(cptr))
+    {
       if (!BadPtr(path))
 	/*  {
 	    sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),

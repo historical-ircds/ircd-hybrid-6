@@ -223,10 +223,6 @@ typedef struct	MessageFileItem aMessageFile;
 #define FLAGS_OPERWALL 0x20000000 /* Operwalls */
 #define FLAGS_IPHASH   0x40000000 /* iphashed this client */
 
-#ifdef ANTI_IP_SPOOF
-#define FLAGS_GOT_ANTI_SPOOF_PING 0x80000000 
-#endif
-
 /* *sigh* overflow flags */
 #define FLAGS2_RESTRICTED   0x0001      /* restricted client */
 #define FLAGS2_PING_TIMEOUT 0x0002
@@ -658,9 +654,6 @@ struct Client
   int		number_of_nick_changes;
 #endif
   time_t	last_knock;	/* don't allow knock to flood */
-#ifdef ANTI_IP_SPOOF
-  long		random_ping;	/* spoofers won't see this */
-#endif
   char	sockhost[HOSTLEN+1]; /* This is the host name from the socket
 			     ** and after which the connection was
 			     ** accepted.
@@ -705,9 +698,6 @@ struct	stats {
 #ifdef FLUD
 	unsigned int	is_flud;	/* users/channels flood protected */
 #endif /* FLUD */
-#ifdef ANTI_IP_SPOOF
-	unsigned int	is_ipspoof;	/* IP Spoofers Caught */
-#endif /* ANTI_IP_SPOOF */
 };
 
 /* mode structure for channels */
