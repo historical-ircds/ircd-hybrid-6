@@ -47,6 +47,22 @@ struct Server;
 /* 
  * GLOBAL - global variables
  */
+
+#ifdef  GLINES
+extern struct ConfItem* find_gkill(struct Client* client);
+extern struct ConfItem* find_is_glined(const char* host, const char* name);
+extern  void    flush_glines(void);             
+extern  void    report_glines(struct Client *); 
+#endif
+
+/* ircd.c */
+extern void     report_error_on_tty(const char* message);
+extern  int     debuglevel;
+extern  int     highest_fd;
+extern  int     debuglevel;
+extern  int     debugtty;
+extern  char*   debugmode;
+extern  time_t  check_fdlists (time_t);
 extern int    lifesux;
 extern struct Counter Count;
 
@@ -60,26 +76,6 @@ extern struct Client* local[];
 extern struct Channel* channel;
 extern struct stats* ircstp;
 extern  int     bootopt;
-
-extern  int     debuglevel;
-extern  int     highest_fd;
-extern  int     debuglevel;
-extern  int     debugtty;
-extern  char*   debugmode;
-
-extern  time_t  check_fdlists (time_t);
-
-
-#ifdef  GLINES
-extern struct ConfItem* find_gkill(struct Client* client);
-extern struct ConfItem* find_is_glined(const char* host, const char* name);
-extern  void    flush_glines(void);             
-extern  void    report_glines(struct Client *); 
-#endif
-
-
-/* ircd.c */
-extern void        report_error_on_tty(const char* message);
 
 /* scache.c */
 extern void        clear_scache_hash_table(void);
