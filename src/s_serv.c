@@ -282,8 +282,12 @@ time_t try_connections(time_t currenttime)
        * auto connects disabled, send message to ops and bail
        */
       if (connecting)
+#ifdef HIDE_SERVERS_IP
+        sendto_ops("Connection to %s not activated.", con_conf->name);
+#else
         sendto_ops("Connection to %s[%s] not activated.",
                  con_conf->name, con_conf->host);
+#endif
       sendto_ops("WARNING AUTOCONN is 0, autoconns are disabled");
       Debug((DEBUG_NOTICE,"Next connection check : %s", myctime(next)));
       return next;
