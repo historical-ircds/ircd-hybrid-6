@@ -605,15 +605,14 @@ sendto_channel_type(aClient *one, aClient *from, aChannel *chptr,
               /* Send it individually to each opered or voiced
                * client on channel
                */
-              if (sentalong[i] != current_serial)
-                {
-                  sendto_prefix_one(acptr, from,
+	      /* Dont check sentalong - as it has to goto *every* client on
+	       * this server, as its !CAP_CHW --fl_
+	       */
+              sendto_prefix_one(acptr, from,
                     ":%s NOTICE %s :%s",
                     from->name,
                     lp->value.cptr->name, /* target name */
                     message);
-                }
-              sentalong[i] = current_serial;
             }
           else
             {
