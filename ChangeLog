@@ -1,3 +1,8 @@
+*** 20011008_1 by db
+- fix for spoofing bug
+
+
+
 *** 20010925_1 by lusky
 - moved TS5 to main config section, enabled by default
 - revved patchlevel to 6.2
