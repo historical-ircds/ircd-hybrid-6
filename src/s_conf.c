@@ -3545,7 +3545,7 @@ void get_printable_conf(struct ConfItem *aconf, char **name, char **host,
   *name = BadPtr(aconf->name) ? null : aconf->name;
   *host = BadPtr(aconf->host) ? null : aconf->host;
   *pass = BadPtr(aconf->passwd) ? null : aconf->passwd;
-  *oper_reason = BadPtr(aconf->oper_reason) ? "" : aconf->passwd;
+  *oper_reason = BadPtr(aconf->oper_reason) ? "" : aconf->oper_reason;
   *user = BadPtr(aconf->user) ? null : aconf->user;
   *port = (int)aconf->port;
 }
