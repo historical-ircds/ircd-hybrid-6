@@ -1,3 +1,18 @@
+jdc         2001/12/06 22:22:20 EST	(20011207_0)
+
+  Modified files:
+    include              config.h config.h.dist 
+    src                  ircd.c 
+  Log:
+  - Removal of SETUID_ROOT, IRC_UID, IRC_GID, and CHROOTDIR code/#defines.
+  
+  Revision  Changes    Path
+  1.144     +1 -9      ircd-hybrid-6/include/config.h
+  1.125     +1 -9      ircd-hybrid-6/include/config.h.dist
+  1.151     +1 -69     ircd-hybrid-6/src/ircd.c
+
+
+
 davidt      2001/12/06 18:45:53 EST	(20011206_5)
 
   Modified files:
