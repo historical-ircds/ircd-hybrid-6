@@ -1,3 +1,9 @@
+*** 20010626_1 by db
+- removed +d/-d channel mode, somehow this crept back in.
+- re-formatted code
+
+
+
 *** 20010624_7 by db
 - allow opers to see ip's of clients on /trace so tcm's will work again
   do not allow them to see IP's of hidden clients
