@@ -1,3 +1,17 @@
+*** 20010603_4 by greg
+Silly stupid annoying lame bug.
+
+If an oper (or a client with a presumably large sendq, or something) sent
+a large amount of data to the server which was not instantaneously parsed
+(ie, their recvQ size broke 4088) the server encountered a deadlock-ish 
+condition and never added their fd back to the read select mask. 
+
+I kinda wonder who put that magic number there, but I'm not going to dwell
+on it.
+
+Evil bug, you go squish now.
+
+
 *** 20010603_3 by db
 - backported IGNORE bogus TS into 6, its #ifdef'ed for now
   under #ifdef IGNORE_BOGUS_TS
