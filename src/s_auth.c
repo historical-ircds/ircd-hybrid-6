@@ -391,11 +391,13 @@ void read_auth_reply(struct AuthRequest* auth)
       if( (s = GetValidIdent(buf)) )
 	{
 	  t = auth->client->username;
-	  count = USERLEN;
-	  for (; *s && count; s++, count--)
+	  for (count = USERLEN; *s && count; s++)
 	    {
 	      if (!isspace(*s) && *s != ':' && *s != '@')
-		*t++ = *s;
+		{
+		  *t++ = *s;
+		  count--;
+		}
 	    }
 	  *t = '\0';
 	}

@@ -2041,9 +2041,9 @@ static	int	m_message(aClient *cptr,
       *server = '\0';
 
       /* special case opers@server */
-      if(!strcasecmp(nick,"opers"))
+      if(!strcasecmp(nick,"opers") && IsAnOper(sptr))
 	{
-	  sendto_realops("To opers: From %s: %s",parv[0],parv[2]);
+	  sendto_realops("To opers: From %s: %s",parv[0],sptr->name);
 	  return 0;
 	}
 	
