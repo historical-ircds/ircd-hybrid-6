@@ -45,9 +45,6 @@
 #  include <sys/syslog.h>
 # endif
 #endif
-#ifdef	pyr
-#include <sys/time.h>
-#endif
 
 #include "zlib.h"
 
@@ -577,9 +574,6 @@ struct Client
   struct	in_addr	ip;	/* keep real ip# too */
   unsigned short	port;	/* and the remote port# too :-) */
   struct	hostent	*hostp;
-#ifdef	pyr
-  struct	timeval	lw;
-#endif
 #ifdef ANTI_NICK_FLOOD
   time_t	last_nick_change;
   int		number_of_nick_changes;
