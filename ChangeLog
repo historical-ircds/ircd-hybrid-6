@@ -1,3 +1,13 @@
+*** 20010607_5 by db
+Another patch from Walter Campbell
+
+1.  Major cleanup of example.conf
+2.  Fixed a couple minor bugs with config.h
+3.  Spell checked misc files
+
+
+
+
 *** 20010607_4 by db
 - forgot to add this file for Walter
 
