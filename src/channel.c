@@ -61,28 +61,25 @@ int got_server_pong;
 time_t server_split_time;
 
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-aChannel *empty_channel_list=(aChannel*)NULL;
+struct Channel *empty_channel_list=(struct Channel*)NULL;
 void remove_empty_channels();
 #endif
 #endif
 
-aChannel *channel = NullChn;
+struct Channel *channel = NullChn;
 
-static  void    add_invite (aClient *, aChannel *);
-static  int     add_banid (aClient *, aChannel *, char *);
-static  int     add_exceptid(aClient *, aChannel *, char *);
-static  int     add_denyid(aClient *, aChannel *, char *);
-static  int     can_join (aClient *, aChannel *, char *,int *);
-static  void    channel_modes (aClient *, char *, char *, aChannel *);
-static  int     del_banid (aChannel *, char *);
-static  int     del_exceptid (aChannel *, char *);
-static  int     del_denyid (aChannel *, char *);
-static  void    clear_bans_exceptions_denies(aClient *,aChannel *);
-static  void    free_bans_exceptions_denies(aChannel *);
-static  int     is_banned (aClient *, aChannel *);
-static  void    set_mode (aClient *, aClient *, aChannel *, int, char **);
-static  void    sub1_from_channel (aChannel *);
-static  int     check_channel_name(const char* name);
+static  void    add_invite (struct Client *, struct Channel *);
+static  int     add_banid (struct Client *, struct Channel *, char *);
+static  int     add_exceptid(struct Client *, struct Channel *, char *);
+static  int     add_denyid(struct Client *, struct Channel *, char *);
+static  int     can_join (struct Client *, struct Channel *, char *,int *);
+static  int     del_banid (struct Channel *, char *);
+static  int     del_exceptid (struct Channel *, char *);
+static  int     del_denyid (struct Channel *, char *);
+static  void    clear_bans_exceptions_denies(struct Client *,struct Channel *);
+static  void    free_bans_exceptions_denies(struct Channel *);
+static  int     is_banned (struct Client *, struct Channel *);
+static  void    sub1_from_channel (struct Channel *);
 
 
 /* static functions used in set_mode */
@@ -90,8 +87,8 @@ static char* pretty_mask(char *);
 static char *fix_key(char *);
 static void collapse_signs(char *);
 static int errsent(int,int *);
-static void change_chan_flag(aChannel *, aClient *, int );
-static void set_deopped(aClient *,aChannel *,int);
+static void change_chan_flag(struct Channel *, struct Client *, int );
+static void set_deopped(struct Client *,struct Channel *,int);
 
 #ifdef ORATIMING
 struct timeval tsdnow, tsdthen; 
@@ -175,7 +172,7 @@ static char* make_nick_user_host(const char* nick,
  */
 /* add_banid - add an id to be banned to the channel  (belongs to cptr) */
 
-static  int     add_banid(aClient *cptr, aChannel *chptr, char *banid)
+static  int     add_banid(struct Client *cptr, struct Channel *chptr, char *banid)
 {
   Link  *ban;
 
@@ -244,7 +241,7 @@ static  int     add_banid(aClient *cptr, aChannel *chptr, char *banid)
  * (belongs to cptr) 
  */
 
-static  int     add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
+static  int     add_exceptid(struct Client *cptr, struct Channel *chptr, char *eid)
 {
   Link  *ex, *ban;
 
@@ -316,7 +313,7 @@ static  int     add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
  * works like an Xline, but for channels.
  * -sean
  */  
-static  int     add_denyid(aClient *cptr, aChannel *chptr, char *banid)
+static  int     add_denyid(struct Client *cptr, struct Channel *chptr, char *banid)
 {
   Link  *ban;
 
@@ -392,7 +389,7 @@ static  int     add_denyid(aClient *cptr, aChannel *chptr, char *banid)
  *
  * from orabidoo
  */
-static  int     del_banid(aChannel *chptr, char *banid)
+static  int     del_banid(struct Channel *chptr, char *banid)
 {
   register Link **ban;
   register Link *tmp;
@@ -431,7 +428,7 @@ static  int     del_banid(aChannel *chptr, char *banid)
  *
  * from orabidoo
  */
-static  int     del_exceptid(aChannel *chptr, char *eid)
+static  int     del_exceptid(struct Channel *chptr, char *eid)
 {
   register Link **ex;
   register Link *tmp;
@@ -468,7 +465,7 @@ static  int     del_exceptid(aChannel *chptr, char *eid)
  *
  * -sean
  */
-static  int     del_denyid(aChannel *chptr, char *banid)
+static  int     del_denyid(struct Channel *chptr, char *banid)
 {
   register Link **ban;
   register Link *tmp;
@@ -516,7 +513,7 @@ static  int     del_denyid(aChannel *chptr, char *banid)
  *
  * modified from orabidoo - Dianora
  */
-static void del_matching_exception(aClient *cptr,aChannel *chptr)
+static void del_matching_exception(struct Client *cptr,struct Channel *chptr)
 {
   register Link **ex;
   register Link *tmp;
@@ -587,7 +584,7 @@ static void del_matching_exception(aClient *cptr,aChannel *chptr)
  * +e code from orabidoo
  */
 
-static  int is_banned(aClient *cptr,aChannel *chptr)
+static  int is_banned(struct Client *cptr,struct Channel *chptr)
 {
   register Link *tmp;
   register Link *t2;
@@ -642,7 +639,7 @@ static  int is_banned(aClient *cptr,aChannel *chptr)
  * adds a user to a channel by adding another link to the channels member
  * chain.
  */
-static  void    add_user_to_channel(aChannel *chptr, aClient *who, int flags)
+static  void    add_user_to_channel(struct Channel *chptr, struct Client *who, int flags)
 {
   Link *ptr;
 
@@ -682,7 +679,7 @@ static  void    add_user_to_channel(aChannel *chptr, aClient *who, int flags)
     }
 }
 
-void    remove_user_from_channel(aClient *sptr,aChannel *chptr,int was_kicked)
+void    remove_user_from_channel(struct Client *sptr,struct Channel *chptr,int was_kicked)
 {
   Link  **curr;
   Link  *tmp;
@@ -715,7 +712,7 @@ void    remove_user_from_channel(aClient *sptr,aChannel *chptr,int was_kicked)
 
 }
 
-static  void    change_chan_flag(aChannel *chptr,aClient *cptr, int flag)
+static  void    change_chan_flag(struct Channel *chptr,struct Client *cptr, int flag)
 {
   Link *tmp;
 
@@ -734,7 +731,7 @@ static  void    change_chan_flag(aChannel *chptr,aClient *cptr, int flag)
    }
 }
 
-static  void    set_deopped(aClient *cptr, aChannel *chptr,int flag)
+static  void    set_deopped(struct Client *cptr, struct Channel *chptr,int flag)
 {
   Link  *tmp;
 
@@ -743,7 +740,7 @@ static  void    set_deopped(aClient *cptr, aChannel *chptr,int flag)
       tmp->flags |= MODE_DEOPPED;
 }
 
-int     is_chan_op(aClient *cptr, aChannel *chptr)
+int     is_chan_op(struct Client *cptr, struct Channel *chptr)
 {
   Link  *lp;
 
@@ -754,7 +751,7 @@ int     is_chan_op(aClient *cptr, aChannel *chptr)
   return 0;
 }
 
-int     is_deopped(aClient *cptr, aChannel *chptr)
+int     is_deopped(struct Client *cptr, struct Channel *chptr)
 {
   Link  *lp;
 
@@ -765,7 +762,7 @@ int     is_deopped(aClient *cptr, aChannel *chptr)
   return 0;
 }
 
-int     has_voice(aClient *cptr, aChannel *chptr)
+int     has_voice(struct Client *cptr, struct Channel *chptr)
 {
   Link  *lp;
 
@@ -776,7 +773,7 @@ int     has_voice(aClient *cptr, aChannel *chptr)
   return 0;
 }
 
-int     can_send(aClient *cptr, aChannel *chptr)
+int     can_send(struct Client *cptr, struct Channel *chptr)
 {
   Link  *lp;
 
@@ -799,7 +796,7 @@ int     can_send(aClient *cptr, aChannel *chptr)
   return 0;
 }
 
-int     user_channel_mode(aClient *cptr, aChannel *chptr)
+int     user_channel_mode(struct Client *cptr, struct Channel *chptr)
 {
   Link  *lp;
 
@@ -814,10 +811,7 @@ int     user_channel_mode(aClient *cptr, aChannel *chptr)
  * write the "simple" list of channel modes for channel chptr onto buffer mbuf
  * with the parameters in pbuf.
  */
-static  void    channel_modes(aClient *cptr,
-                              char *mbuf,
-                              char *pbuf,
-                              aChannel *chptr)
+void channel_modes(struct Client *cptr, char *mbuf, char *pbuf, struct Channel *chptr)
 {
   *mbuf++ = '+';
   if (chptr->mode.mode & MODE_SECRET)
@@ -853,7 +847,7 @@ static  void    channel_modes(aClient *cptr,
  * 
  */
 
-static  void    send_mode_list(aClient *cptr,
+static  void    send_mode_list(struct Client *cptr,
                                char *chname,
                                Link *top,
                                int mask,
@@ -906,7 +900,7 @@ static  void    send_mode_list(aClient *cptr,
 /*
  * send "cptr" a full list of the modes for channel chptr.
  */
-void    send_channel_modes(aClient *cptr, aChannel *chptr)
+void send_channel_modes(struct Client *cptr, struct Channel *chptr)
 {
   Link  *l, *anop = NULL, *skip = NULL;
   int   n = 0;
@@ -1011,69 +1005,6 @@ void    send_channel_modes(aClient *cptr, aChannel *chptr)
                me.name, chptr->chname, modebuf, parabuf);
 }
 
-/*
- * m_mode
- * parv[0] - sender
- * parv[1] - channel
- */
-
-int     m_mode(aClient *cptr,
-               aClient *sptr,
-               int parc,
-               char *parv[])
-{
-  aChannel *chptr;
-
-  /* Now, try to find the channel in question */
-  if (parc > 1)
-    {
-      if( IsChanPrefix(parv[1][0]) )
-        {
-          /* Don't do any of this stuff at all
-           * unless it looks like a channel name 
-           */
-
-          if(!check_channel_name(parv[1]))
-            { 
-              sendto_one(sptr, form_str(ERR_BADCHANNAME),
-                         me.name, parv[0], (unsigned char *)parv[1]);
-              return 0;
-            }
-
-          chptr = hash_find_channel(parv[1], NullChn);
-          if (chptr == NullChn)
-            return m_umode(cptr, sptr, parc, parv);
-        }
-      else
-        {
-          /* if here, it has to be a non-channel name */
-          return m_umode(cptr, sptr, parc, parv);
-        }
-    }
-  else
-    {
-      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
-                 me.name, parv[0], "MODE");
-      return 0;
-    }
-
-  if (parc < 3)
-    {
-      *modebuf = *parabuf = '\0';
-      modebuf[1] = '\0';
-      channel_modes(sptr, modebuf, parabuf, chptr);
-      sendto_one(sptr, form_str(RPL_CHANNELMODEIS), me.name, parv[0],
-                 chptr->chname, modebuf, parabuf);
-      sendto_one(sptr, form_str(RPL_CREATIONTIME), me.name, parv[0],
-                 chptr->chname, chptr->channelts);
-      return 0;
-    }
-
-  set_mode(cptr, sptr, chptr, parc - 2, parv + 2);
-
-  return 0;
-}
-
 /* stolen from Undernet's ircd  -orabidoo
  *
  */
@@ -1170,11 +1101,11 @@ static  int     errsent(int err, int *errs)
  * -Dianora
  */
 
-static  void     set_mode(aClient *cptr,
-                         aClient *sptr,
-                         aChannel *chptr,
-                         int parc,
-                         char *parv[])
+void set_channel_mode(struct Client *cptr,
+                      struct Client *sptr,
+                      struct Channel *chptr,
+                      int parc,
+                      char *parv[])
 {
   int   errors_sent = 0, opcnt = 0, len = 0, tmp, nusers;
   int   keychange = 0, limitset = 0;
@@ -1185,7 +1116,7 @@ static  void     set_mode(aClient *cptr,
   int   done_s = NO, done_p = NO;
 #endif
   int   done_i = NO, done_m = NO, done_n = NO, done_t = NO;
-  aClient *who;
+  struct Client *who;
   Link  *lp;
   char  *curr = parv[0], c, *arg, plus = '+', *tmpc;
   char  numeric[16];
@@ -2308,7 +2239,7 @@ static  void     set_mode(aClient *cptr,
   return;
 }
 
-static  int     can_join(aClient *sptr, aChannel *chptr, char *key, int *flags)
+static  int     can_join(struct Client *sptr, struct Channel *chptr, char *key, int *flags)
 {
   Link  *lp;
   int ban_or_exception;
@@ -2351,7 +2282,7 @@ static  int     can_join(aClient *sptr, aChannel *chptr, char *key, int *flags)
  * check_channel_name - check channel name for invalid characters
  * return true (1) if name ok, false (0) otherwise
  */
-static int check_channel_name(const char* name)
+int check_channel_name(const char* name)
 {
   assert(0 != name);
   
@@ -2366,9 +2297,9 @@ static int check_channel_name(const char* name)
 **  Get Channel block for chname (and allocate a new channel
 **  block, if it didn't exist before).
 */
-static aChannel* get_channel(aClient *cptr, char *chname, int flag)
+static struct Channel* get_channel(struct Client *cptr, char *chname, int flag)
 {
-  aChannel *chptr;
+  struct Channel *chptr;
   int   len;
 
   if (BadPtr(chname))
@@ -2395,8 +2326,8 @@ static aChannel* get_channel(aClient *cptr, char *chname, int flag)
 
   if (flag == CREATE)
     {
-      chptr = (aChannel*) MyMalloc(sizeof(aChannel) + len + 1);
-      memset(chptr, 0, sizeof(aChannel));
+      chptr = (struct Channel*) MyMalloc(sizeof(struct Channel) + len + 1);
+      memset(chptr, 0, sizeof(struct Channel));
       /*
        * NOTE: strcpy ok here, we have allocated strlen + 1
        */
@@ -2416,7 +2347,7 @@ static aChannel* get_channel(aClient *cptr, char *chname, int flag)
   return chptr;
 }
 
-static  void    add_invite(aClient *cptr,aChannel *chptr)
+static  void    add_invite(struct Client *cptr,struct Channel *chptr)
 {
   Link  *inv, **tmp;
 
@@ -2455,7 +2386,7 @@ static  void    add_invite(aClient *cptr,aChannel *chptr)
 /*
  * Delete Invite block from channel invite list and client invite list
  */
-void    del_invite(aClient *cptr,aChannel *chptr)
+void    del_invite(struct Client *cptr,struct Channel *chptr)
 {
   Link  **inv, *tmp;
 
@@ -2480,7 +2411,7 @@ void    del_invite(aClient *cptr,aChannel *chptr)
 **  Subtract one user from channel (and free channel
 **  block, if channel became empty).
 */
-static  void    sub1_from_channel(aChannel *chptr)
+static  void    sub1_from_channel(struct Channel *chptr)
 {
   Link *tmp;
 
@@ -2516,7 +2447,7 @@ static  void    sub1_from_channel(aChannel *chptr)
           /* Add to double linked empty channel list */
           if(empty_channel_list)
             empty_channel_list->last_empty_channel = chptr;
-          chptr->last_empty_channel = (aChannel *)NULL;
+          chptr->last_empty_channel = (struct Channel *)NULL;
           chptr->next_empty_channel = empty_channel_list;
           empty_channel_list = chptr;
         }
@@ -2570,7 +2501,7 @@ static  void    sub1_from_channel(aChannel *chptr)
  * -Dianora
  */
 
-static void clear_bans_exceptions_denies(aClient *sptr, aChannel *chptr)
+static void clear_bans_exceptions_denies(struct Client *sptr, struct Channel *chptr)
 {
   static char modebuf[MODEBUFLEN];
   register Link *ban;
@@ -2858,7 +2789,7 @@ void remove_empty_channels()
 {
   Link *tmp;
   Link  *obtmp;
-  aChannel *next_empty_channel;
+  struct Channel *next_empty_channel;
 
   for(;empty_channel_list;
       empty_channel_list = next_empty_channel )
@@ -2877,8 +2808,8 @@ void remove_empty_channels()
           sendto_ops("non zero user count in remove_empty_channels");
           sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
 #endif
-          empty_channel_list->next_empty_channel = (aChannel *)NULL;
-          empty_channel_list->last_empty_channel = (aChannel *)NULL;
+          empty_channel_list->next_empty_channel = (struct Channel *)NULL;
+          empty_channel_list->last_empty_channel = (struct Channel *)NULL;
           continue;
         }
 
@@ -2943,14 +2874,14 @@ void remove_empty_channels()
 **      parv[1] = channel
 **      parv[2] = channel password (key)
 */
-int     m_join(aClient *cptr,
-               aClient *sptr,
+int     m_join(struct Client *cptr,
+               struct Client *sptr,
                int parc,
                char *parv[])
 {
   static char   jbuf[BUFSIZE];
   Link  *lp;
-  aChannel *chptr = NULL;
+  struct Channel *chptr = NULL;
   char  *name, *key = NULL;
   int   i, flags = 0;
 #ifdef USE_ALLOW_OP
@@ -3365,12 +3296,12 @@ int     m_join(aClient *cptr,
 **      parv[0] = sender prefix
 **      parv[1] = channel
 */
-int     m_part(aClient *cptr,
-               aClient *sptr,
+int     m_part(struct Client *cptr,
+               struct Client *sptr,
                int parc,
                char *parv[])
 {
-  aChannel *chptr;
+  struct Channel *chptr;
   char  *p, *name;
 
   if (parc < 2 || parv[1][0] == '\0')
@@ -3476,13 +3407,13 @@ int     m_part(aClient *cptr,
  *
  * -Dianora
  */
-int     m_kick(aClient *cptr,
-               aClient *sptr,
+int     m_kick(struct Client *cptr,
+               struct Client *sptr,
                int parc,
                char *parv[])
 {
-  aClient *who;
-  aChannel *chptr;
+  struct Client *who;
+  struct Channel *chptr;
   int   chasing = 0;
   char  *comment;
   char  *name;
@@ -3610,9 +3541,9 @@ int     m_kick(aClient *cptr,
   return (0);
 }
 
-int     count_channels(aClient *sptr)
+int     count_channels(struct Client *sptr)
 {
-  aChannel      *chptr;
+  struct Channel      *chptr;
   int   count = 0;
 
   for (chptr = channel; chptr; chptr = chptr->nextch)
@@ -3635,12 +3566,12 @@ int     count_channels(aClient *sptr)
 ** Just some flood control added here, five minute delay between each
 ** KNOCK -Dianora
 **/
-int     m_knock(aClient *cptr,
-               aClient *sptr,
+int     m_knock(struct Client *cptr,
+               struct Client *sptr,
                int parc,
                char *parv[])
 {
-  aChannel      *chptr;
+  struct Channel      *chptr;
   char  *p, *name;
 
   /* anti flooding code,
@@ -3790,12 +3721,12 @@ int     m_knock(aClient *cptr,
 **      parv[0] = sender prefix
 **      parv[1] = topic text
 */
-int     m_topic(aClient *cptr,
-                aClient *sptr,
+int     m_topic(struct Client *cptr,
+                struct Client *sptr,
                 int parc,
                 char *parv[])
 {
-  aChannel *chptr = NullChn;
+  struct Channel *chptr = NullChn;
   char  *topic = (char *)NULL, *name, *p = (char *)NULL;
   
   if (parc < 2)
@@ -3897,13 +3828,13 @@ int     m_topic(aClient *cptr,
 **      parv[1] - user to invite
 **      parv[2] - channel number
 */
-int     m_invite(aClient *cptr,
-                 aClient *sptr,
+int     m_invite(struct Client *cptr,
+                 struct Client *sptr,
                  int parc,
                  char *parv[])
 {
-  aClient *acptr;
-  aChannel *chptr;
+  struct Client *acptr;
+  struct Channel *chptr;
   int need_invite=NO;
 
   if (parc < 3 || *parv[1] == '\0')
@@ -3917,7 +3848,7 @@ int     m_invite(aClient *cptr,
   if(!sptr->user)
     return 0;
 
-  if (!(acptr = find_person(parv[1], (aClient *)NULL)))
+  if (!(acptr = find_person(parv[1], (struct Client *)NULL)))
     {
       sendto_one(sptr, form_str(ERR_NOSUCHNICK),
                  me.name, parv[0], parv[1]);
@@ -4056,12 +3987,12 @@ int     m_invite(aClient *cptr,
 **      parv[0] = sender prefix
 **      parv[1] = channel
 */
-int     m_list(aClient *cptr,
-               aClient *sptr,
+int     m_list(struct Client *cptr,
+               struct Client *sptr,
                int parc,
                char *parv[])
 {
-  aChannel *chptr;
+  struct Channel *chptr;
   char  *name, *p = NULL;
   /* anti flooding code,
    * I did have this in parse.c with a table lookup
@@ -4206,15 +4137,15 @@ int     m_list(aClient *cptr,
 /* maximum names para to show to opers when abuse occurs */
 #define TRUNCATED_NAMES 20
 
-int     m_names( aClient *cptr,
-                 aClient *sptr,
+int     m_names( struct Client *cptr,
+                 struct Client *sptr,
                  int parc,
                  char *parv[])
 { 
-  aChannel *chptr;
-  aClient *c2ptr;
+  struct Channel *chptr;
+  struct Client *c2ptr;
   Link  *lp;
-  aChannel *ch2ptr = NULL;
+  struct Channel *ch2ptr = NULL;
   int   idx, flag = 0, len, mlen;
   char  *s, *para = parc > 1 ? parv[1] : NULL;
   int comma_count=0;
@@ -4364,7 +4295,7 @@ int     m_names( aClient *cptr,
   flag = 0;
   for (c2ptr = GlobalClientList; c2ptr; c2ptr = c2ptr->next)
     {
-      aChannel *ch3ptr;
+      struct Channel *ch3ptr;
       int       showflag = 0, secret = 0;
 
       if (!IsPerson(c2ptr) || IsInvisible(c2ptr))
@@ -4410,10 +4341,10 @@ int     m_names( aClient *cptr,
 }
 
 
-void    send_user_joins(aClient *cptr, aClient *user)
+void    send_user_joins(struct Client *cptr, struct Client *user)
 {
   Link  *lp;
-  aChannel *chptr;
+  struct Channel *chptr;
   int   cnt = 0, len = 0, clen;
   char   *mask;
 
@@ -4456,9 +4387,9 @@ void    send_user_joins(aClient *cptr, aClient *user)
   return;
 }
 
-static  void sjoin_sendit(aClient *cptr,
-                          aClient *sptr,
-                          aChannel *chptr,
+static  void sjoin_sendit(struct Client *cptr,
+                          struct Client *sptr,
+                          struct Channel *chptr,
                           char *from)
 {
   sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", from,
@@ -4481,13 +4412,13 @@ static  void sjoin_sendit(aClient *cptr,
  */
 
 
-int     m_sjoin(aClient *cptr,
-                aClient *sptr,
+int     m_sjoin(struct Client *cptr,
+                struct Client *sptr,
                 int parc,
                 char *parv[])
 {
-  aChannel *chptr;
-  aClient       *acptr;
+  struct Channel *chptr;
+  struct Client       *acptr;
   time_t        newts;
   time_t        oldts;
   time_t        tstosend;
@@ -5067,7 +4998,7 @@ int     m_sjoin(aClient *cptr,
 
 void sync_channels(time_t delta)
 {
-  register      aChannel        *chptr;
+  register      struct Channel        *chptr;
   time_t newts;
 
   for (chptr = channel; chptr; chptr = chptr->nextch)

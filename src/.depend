@@ -35,6 +35,12 @@ fdlist.o: fdlist.c ../include/fdlist.h ../include/client.h \
  ../include/config.h ../include/setup.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/s_bsd.h
 fileio.o: fileio.c ../include/fileio.h
+flud.o: flud.c ../include/flud.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/irc_string.h ../include/ircd.h \
+ ../include/list.h ../include/numeric.h ../include/send.h \
+ ../include/channel.h ../include/struct.h ../include/blalloc.h \
+ ../include/s_stats.h
 hash.o: hash.c ../include/s_conf.h ../include/config.h \
  ../include/setup.h ../include/fileio.h ../include/ircd_defs.h \
  ../include/motd.h ../include/channel.h ../include/common.h \
@@ -63,7 +69,8 @@ list.o: list.c ../include/struct.h ../include/config.h \
  ../include/dbuf.h ../include/blalloc.h ../include/channel.h \
  ../include/class.h ../include/common.h ../include/irc_string.h \
  ../include/list.h ../include/mtrie_conf.h ../include/numeric.h \
- ../include/res.h ../include/restart.h ../include/send.h
+ ../include/res.h ../include/restart.h ../include/send.h \
+ ../include/flud.h
 listener.o: listener.c ../include/listener.h ../include/ircd_defs.h \
  ../include/config.h ../include/setup.h ../include/client.h \
  ../include/dbuf.h ../include/irc_string.h ../include/ircd.h \
@@ -152,6 +159,11 @@ m_lusers.o: m_lusers.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
  ../include/s_serv.h ../include/s_user.h ../include/send.h
+m_mode.o: m_mode.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/channel.h ../include/ircd_defs.h \
+ ../include/client.h ../include/dbuf.h ../include/hash.h \
+ ../include/irc_string.h ../include/ircd.h ../include/numeric.h \
+ ../include/s_user.h ../include/send.h
 m_operwall.o: m_operwall.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/irc_string.h \
@@ -174,6 +186,10 @@ m_pong.o: m_pong.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
  ../include/send.h ../include/channel.h ../include/irc_string.h
+m_quit.o: m_quit.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
+ ../include/s_serv.h ../include/send.h
 m_rehash.o: m_rehash.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/common.h ../include/irc_string.h \
@@ -235,6 +251,10 @@ m_unkline.o: m_unkline.c ../include/m_commands.h ../include/config.h \
  ../include/numeric.h ../include/s_conf.h ../include/motd.h \
  ../include/s_misc.h ../include/send.h ../include/struct.h \
  ../include/client.h ../include/dbuf.h
+m_userhost.o: m_userhost.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/client.h ../include/ircd_defs.h \
+ ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
+ ../include/s_serv.h ../include/send.h ../include/irc_string.h
 m_users.o: m_users.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/numeric.h \
@@ -351,13 +371,13 @@ s_stats.o: s_stats.c ../include/s_stats.h ../include/config.h \
 s_user.o: s_user.c ../include/s_user.h ../include/config.h \
  ../include/setup.h ../include/channel.h ../include/ircd_defs.h \
  ../include/class.h ../include/common.h ../include/fdlist.h \
- ../include/hash.h ../include/irc_string.h ../include/ircd.h \
- ../include/list.h ../include/listener.h ../include/motd.h \
- ../include/msg.h ../include/numeric.h ../include/s_bsd.h \
- ../include/s_conf.h ../include/fileio.h ../include/s_serv.h \
- ../include/s_stats.h ../include/scache.h ../include/send.h \
- ../include/struct.h ../include/client.h ../include/dbuf.h \
- ../include/whowas.h ../include/blalloc.h
+ ../include/flud.h ../include/hash.h ../include/irc_string.h \
+ ../include/ircd.h ../include/list.h ../include/listener.h \
+ ../include/motd.h ../include/msg.h ../include/numeric.h \
+ ../include/s_bsd.h ../include/s_conf.h ../include/fileio.h \
+ ../include/s_serv.h ../include/s_stats.h ../include/scache.h \
+ ../include/send.h ../include/struct.h ../include/client.h \
+ ../include/dbuf.h ../include/whowas.h ../include/blalloc.h
 s_zip.o: s_zip.c ../include/s_zip.h ../include/config.h \
  ../include/setup.h ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h \
  ../include/irc_string.h ../include/packet.h ../include/s_bsd.h \
@@ -372,10 +392,10 @@ send.o: send.c ../include/send.h ../include/config.h \
  ../include/class.h ../include/common.h ../include/irc_string.h \
  ../include/ircd.h ../include/m_commands.h ../include/numeric.h \
  ../include/s_bsd.h ../include/s_serv.h ../include/s_zip.h \
- ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h ../include/struct.h \
- ../include/client.h ../include/dbuf.h
-sprintf_irc.o: sprintf_irc.c ../include/irc_string.h ../include/send.h \
- ../include/config.h ../include/setup.h ../include/common.h
+ ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h \
+ ../include/sprintf_irc.h ../include/struct.h ../include/client.h \
+ ../include/dbuf.h
+sprintf_irc.o: sprintf_irc.c ../include/sprintf_irc.h
 whowas.o: whowas.c ../include/whowas.h ../include/ircd_defs.h \
  ../include/config.h ../include/setup.h ../include/common.h \
  ../include/hash.h ../include/irc_string.h ../include/ircd.h \

@@ -50,6 +50,7 @@ SRCS = \
 	m_locops.c \
 	m_ltrace.c \
 	m_lusers.c \
+	m_mode.c \
 	m_operwall.c \
 	m_oper.c \
 	m_pass.c \
@@ -130,6 +131,7 @@ SRCS = \
 #	m_locops.o \
 #	m_ltrace.o \
 #	m_lusers.o \
+#	m_mode.o \
 #	m_operwall.o \
 #	m_pass.o \
 #	m_ping.o \

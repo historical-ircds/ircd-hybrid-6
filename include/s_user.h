@@ -38,7 +38,7 @@ extern time_t LastUsedWallops;
 #endif
 
 
-extern int   m_umode(struct Client *, struct Client *, int, char **);
+extern int   user_mode(struct Client *, struct Client *, int, char **);
 extern void  send_umode (struct Client *, struct Client *,
                          int, int, char *);
 extern void  send_umode_out (struct Client*, struct Client *, int);

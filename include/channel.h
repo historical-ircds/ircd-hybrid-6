@@ -80,6 +80,7 @@ struct Channel
 
 typedef struct  Channel aChannel;
 
+extern  struct  Channel *channel;
 
 #define CREATE 1        /* whether a channel should be
                            created or just tested for existance */
@@ -93,21 +94,25 @@ typedef struct  Channel aChannel;
 /* Maximum mode changes allowed per client, per server is different */
 #define MAXMODEPARAMS   4
 
-extern  void sync_channels();
-extern  struct  Channel *find_channel (char *, struct Channel *);
-extern  struct  SLink *find_channel_link(struct SLink *, struct Channel *);
-extern  void    remove_user_from_channel(struct Client *,struct Channel *,int);
-extern  void    del_invite (struct Client *, struct Channel *);
-extern  void    send_user_joins (struct Client *, struct Client *);
-extern  int     can_send (struct Client *, struct Channel *);
-extern  int     is_chan_op (struct Client *, struct Channel *);
-extern  int     has_voice (struct Client *, struct Channel *);
-extern  int     user_channel_mode(struct Client *, struct Channel *);
-extern  int     count_channels (struct Client *);
-extern  int     m_names(struct Client *, struct Client *,int, char **);
-extern  void    send_channel_modes (struct Client *, struct Channel *);
-void    del_invite (struct Client *, struct Channel *);
-extern  struct  Channel *channel;
+extern void sync_channels();
+extern struct Channel* find_channel (char *, struct Channel *);
+extern struct SLink*   find_channel_link(struct SLink *, struct Channel *);
+extern void    remove_user_from_channel(struct Client *,struct Channel *,int);
+extern void    del_invite (struct Client *, struct Channel *);
+extern void    send_user_joins (struct Client *, struct Client *);
+extern int     can_send (struct Client *, struct Channel *);
+extern int     is_chan_op (struct Client *, struct Channel *);
+extern int     has_voice (struct Client *, struct Channel *);
+extern int     user_channel_mode(struct Client *, struct Channel *);
+extern int     count_channels (struct Client *);
+extern int     m_names(struct Client *, struct Client *,int, char **);
+extern void    send_channel_modes (struct Client *, struct Channel *);
+extern void    del_invite (struct Client *, struct Channel *);
+extern int     check_channel_name(const char* name);
+extern void    channel_modes(struct Client *, char *, char *, struct Channel*);
+extern void    set_channel_mode(struct Client *, struct Client *, 
+                                struct Channel *, int, char **);
+
 
 
 /* this should eliminate a lot of ifdef's in the main code... -orabidoo */

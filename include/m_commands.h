@@ -82,7 +82,6 @@ extern int m_time(struct Client *,struct Client *,int, char **);
 extern int m_names(struct Client *,struct Client *,int,char **);
 
 extern int m_lusers(struct Client *,struct Client *,int, char **);
-extern int m_umode(struct Client *,struct Client *,int,char **);
 extern int m_close(struct Client *,struct Client *,int,char **);
 
 extern int m_whowas(struct Client *,struct Client *,int,char **);
