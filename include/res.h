@@ -17,6 +17,7 @@
 #endif
 
 struct Client;
+struct hostent;
 
 struct DNSQuery {
   void* vptr;               /* pointer used by callback to identify request */
