@@ -59,7 +59,9 @@ static int do_user (char *, aClient *, aClient*, char *, char *, char *,
                      char *);
 
 int    botwarn (char *, char *, char *, char *);
+static int valid_hostname( anUser *);
 static int valid_username( anUser *);
+static void report_and_set_user_flags( aClient *, aConfItem * );
 
 extern char motd_last_changed_date[];
 extern int send_motd(aClient *,aClient *,int, char **,aMessageFile *);
@@ -432,8 +434,7 @@ static	int	register_user(aClient *cptr,
   char	*p;
   short	oldstatus = sptr->status;
   anUser *user = sptr->user;
-  int 	i, dots;
-  int   bad_dns;	/* flag a bad dns name */
+  int 	i;
   char *reason;
 #ifdef BOTCHECK
   int	isbot;
@@ -579,44 +580,12 @@ static	int	register_user(aClient *cptr,
 #endif
       strncpyzt(user->host, sptr->sockhost, HOSTLEN);
 
-      dots = 0;
-      p = user->host;
-      bad_dns = NO;
-      while(*p)
-	{
-	  if (!isalnum(*p))
-	    {
-#ifdef RFC1035_ANAL
-	      if ((*p != '-') && (*p != '.'))
-#else
-		if ((*p != '-') && (*p != '.') && (*p != '_') && (*p != '/'))
-#endif /* RFC1035_ANAL */
-		    bad_dns = YES;
-	    } 
-	  if( *p == '.' )
-	    dots++;
-	  p++;
-	}
-      
-      /*
-       * Check that the hostname has AT LEAST ONE dot (.)
-       * in it. If not, drop the client (spoofed host)
-       * -ThemBones
-       */
-      if (!dots)
+      if(!valid_hostname(user))
 	{
 	  sendto_realops(
 			 "Invalid hostname for %s, dumping user %s",
 			 inetntoa((char *)&sptr->ip), sptr->name);
 	  return exit_client(cptr, sptr, &me, "Invalid hostname");
-	}
-
-      if(bad_dns)
-	{
-	  sendto_one(sptr, ":%s NOTICE %s :*** Notice -- You have a bad character in your hostname",
-		     me.name,cptr->name);
-	  (void)strcpy(user->host,inetntoa((char *)&sptr->ip));
-	  (void)strcpy(sptr->sockhost,user->host);
 	}
 
       aconf = sptr->confs->value.aconf;
@@ -659,51 +628,7 @@ static	int	register_user(aClient *cptr,
 	}
       memset((void *)sptr->passwd,0, sizeof(sptr->passwd));
 
-
-      /* If this user is being spoofed, tell them so */
-      if(IsConfDoSpoofIp(aconf))
-	{
-	  sendto_one(sptr,
-	      ":%s NOTICE %s :*** Spoofing your IP. congrats.",
-		     me.name,parv[0]);
-	}
-
-      /* If this user is in the exception class, Set it "E lined" */
-      if(IsConfElined(aconf))
-	{
-	  SetElined(sptr);
-	  sendto_one(sptr,
-	      ":%s NOTICE %s :*** You are exempt from K/D/G lines. congrats.",
-		     me.name,parv[0]);
-	}
-
-      /* If this user can run bots set it "B lined" */
-      if(IsConfBlined(aconf))
-	{
-	  SetBlined(sptr);
-	  sendto_one(sptr,
-	      ":%s NOTICE %s :*** You can run bots here. congrats.",
-		     me.name,parv[0]);
-	}
-
-      /* If this user is exempt from user limits set it F lined" */
-      if(IsConfFlined(aconf))
-	{
-	  SetFlined(sptr);
-	  sendto_one(sptr,
-	      ":%s NOTICE %s :*** You are exempt from user limits. congrats.",
-		     me.name,parv[0]);
-	}
-#ifdef IDLE_CHECK
-      /* If this user is exempt from idle time outs */
-      if(IsConfIdlelined(aconf))
-	{
-	  SetIdlelined(sptr);
-	  sendto_one(sptr,
-	      ":%s NOTICE %s :*** You are exempt from idle limits. congrats.",
-		     me.name,parv[0]);
-	}
-#endif
+      report_and_set_user_flags(sptr, aconf);
 
 #ifdef GLINES
       if ( (aconf=find_gkill(sptr)) )
@@ -869,7 +794,6 @@ static	int	register_user(aClient *cptr,
 			   sptr->info,
 			   reason,
 			   get_client_name(cptr, FALSE));
-      
     }
 
 
@@ -898,7 +822,7 @@ static	int	register_user(aClient *cptr,
 	sendto_ops("New Max Local Clients: %d",
 		   Count.max_loc);
     }
-   }
+    }
   else
     strncpyzt(user->username, username, USERLEN+1);
 
@@ -1088,6 +1012,52 @@ static	int	register_user(aClient *cptr,
   return 0;
 }
 
+/* valid_hostname
+ *
+ * Inputs	- pointer to user
+ * Output	- YES if valid, NO if not
+ * Side effects	- NONE
+ */
+
+static int valid_hostname(anUser *user)
+{
+  int dots;
+  unsigned char *p;
+  int bad_dns;
+
+  dots = 0;
+  p = user->host;
+  bad_dns = NO;
+  while(*p)
+    {
+      if (!isalnum(*p))
+	{
+#ifdef RFC1035_ANAL
+	  if ((*p != '-') && (*p != '.'))
+#else
+	    if ((*p != '-') && (*p != '.') && (*p != '_') && (*p != '/'))
+#endif /* RFC1035_ANAL */
+	      bad_dns = YES;
+	} 
+      if( *p == '.' )
+	dots++;
+      p++;
+    }
+  
+  /*
+   * Check that the hostname has AT LEAST ONE dot (.)
+   * in it. If not, drop the client (spoofed host)
+   * -ThemBones
+   */
+  if (!dots)
+    return ( NO );
+  
+  if(bad_dns)
+    return ( NO );
+
+  return ( YES );
+}
+
 /* valid_username
  *
  * Inputs	- pointer to user
@@ -1096,7 +1066,7 @@ static	int	register_user(aClient *cptr,
  */
 
 /* 
- * Absolutely always reject any '*' '!' '?' '@' in an user name
+ * Absolutely always reject any '*' '!' '?' '@' '.' in an user name
  * reject any odd control characters names.
  */
 
@@ -1108,7 +1078,7 @@ static int valid_username( anUser *user )
 
   while(*p)
     {
-      if( (*p > 127) || (*p <= ' ') || 
+      if( (*p > 127) || (*p <= ' ') || (*p == '.') || 
 	  (*p == '*') || (*p == '?') || (*p == '!') || (*p == '@') )
 	{
 	  return ( NO );
@@ -1128,6 +1098,63 @@ static int valid_username( anUser *user )
     {
       return ( NO );
     }
+}
+
+/* report_and_set_user_flags
+ *
+ * Inputs	- pointer to sptr
+ * 		- pointer to aconf for this user
+ * Output	- NONE
+ * Side effects	-
+ * Report to user any special flags they are getting, and set them.
+ */
+
+static void report_and_set_user_flags(aClient *sptr,aConfItem *aconf)
+{
+  /* If this user is being spoofed, tell them so */
+  if(IsConfDoSpoofIp(aconf))
+    {
+      sendto_one(sptr,
+		 ":%s NOTICE %s :*** Spoofing your IP. congrats.",
+		 me.name,sptr->name);
+    }
+
+  /* If this user is in the exception class, Set it "E lined" */
+  if(IsConfElined(aconf))
+    {
+      SetElined(sptr);
+      sendto_one(sptr,
+	 ":%s NOTICE %s :*** You are exempt from K/D/G lines. congrats.",
+		 me.name,sptr->name);
+    }
+
+  /* If this user can run bots set it "B lined" */
+  if(IsConfBlined(aconf))
+    {
+      SetBlined(sptr);
+      sendto_one(sptr,
+		 ":%s NOTICE %s :*** You can run bots here. congrats.",
+		 me.name,sptr->name);
+    }
+
+  /* If this user is exempt from user limits set it F lined" */
+  if(IsConfFlined(aconf))
+    {
+      SetFlined(sptr);
+      sendto_one(sptr,
+		 ":%s NOTICE %s :*** You are exempt from user limits. congrats.",
+		 me.name,sptr->name);
+    }
+#ifdef IDLE_CHECK
+  /* If this user is exempt from idle time outs */
+  if(IsConfIdlelined(aconf))
+    {
+      SetIdlelined(sptr);
+      sendto_one(sptr,
+	 ":%s NOTICE %s :*** You are exempt from idle limits. congrats.",
+		 me.name,sptr->name);
+    }
+#endif
 }
 
 /*
