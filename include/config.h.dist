@@ -118,12 +118,17 @@
 #define HPATH   "opers.txt"
 #define OPATH   "opers.motd"
 
+/* HIDE_OPS
+ * Define this to prevent non chanops from seeing what ops a channel has
+ */
+#undef HIDE_OPS
+
 /* SERVERHIDE
  * Define this to prevent users from seeing what server a user is on.
  * It also hide IP address in STATS commands and various notices, disables
  * TRACE and LTRACE, and prevents hunting by nickname for nonopers.
  */
-#undef SERVERHIDE
+#define SERVERHIDE
 
 /* NETWORK_NAME
  * Displayed in place of the servername when SERVERHIDE is enabled

@@ -111,10 +111,15 @@ static  void    do_who(struct Client *sptr,
     lp = find_user_link(repchan->members, acptr);
   if (lp != NULL)
     {
-      if (lp->flags & CHFL_CHANOP)
-        *p++ = '@';
-      else if (lp->flags & CHFL_VOICE)
-        *p++ = '+';
+#ifdef HIDE_OPS
+      if(is_chan_op(sptr,repchan))
+#endif
+	{
+	  if (lp->flags & CHFL_CHANOP)
+	    *p++ = '@';
+	  else if (lp->flags & CHFL_VOICE)
+	    *p++ = '+';
+	}
     }
   *p = '\0';
   sendto_one(sptr, form_str(RPL_WHOREPLY), me.name, sptr->name,

@@ -248,10 +248,15 @@ int     m_whois(struct Client *cptr,
                     }
 
 		  found_mode = user_channel_mode(acptr, chptr);
-		  if(found_mode & CHFL_CHANOP)
-                    *(buf + len++) = '@';
-                  else if (found_mode & CHFL_VOICE)
-                    *(buf + len++) = '+';
+#ifdef HIDE_OPS
+		  if(is_chan_op(sptr,chptr))
+#endif
+		    {
+		      if(found_mode & CHFL_CHANOP)
+			*(buf + len++) = '@';
+		      else if (found_mode & CHFL_VOICE)
+			*(buf + len++) = '+';
+		    }
                   if (len)
                     *(buf + len) = '\0';
                   (void)strcpy(buf + len, chptr->chname);
@@ -386,10 +391,15 @@ int     m_whois(struct Client *cptr,
                       len = 0;
                     }
 		  found_mode = user_channel_mode(acptr, chptr);
-                  if (found_mode & CHFL_CHANOP)
-                    *(buf + len++) = '@';
-                  else if (found_mode & CHFL_VOICE)
-                    *(buf + len++) = '+';
+#ifdef HIDE_OPS
+                  if(is_chan_op(sptr,chptr))
+#endif
+		     {
+		       if (found_mode & CHFL_CHANOP)
+			 *(buf + len++) = '@';
+		       else if (found_mode & CHFL_VOICE)
+			 *(buf + len++) = '+';
+		     }
                   if (len)
                     *(buf + len) = '\0';
                   (void)strcpy(buf + len, chptr->chname);

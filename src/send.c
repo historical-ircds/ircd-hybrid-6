@@ -763,6 +763,63 @@ sendto_channel_butserv(aChannel *chptr, aClient *from,
 } /* sendto_channel_butserv() */
 
 /*
+ * sendto_channel_chanops_butserv
+ *
+ * Send a message to all members of a channel that are connected to this
+ * server.
+ */
+
+void
+sendto_channel_chanops_butserv(aChannel *chptr, aClient *from, 
+                       const char *pattern, ...)
+
+{
+  va_list args;
+  register Link *lp;
+  register aClient *acptr;
+
+  va_start(args, pattern);
+
+  for (lp = chptr->members; lp; lp = lp->next)
+    if (MyConnect(acptr = lp->value.cptr))
+      if(is_chan_op(acptr,chptr))
+	{
+	  vsendto_prefix_one(acptr, from, pattern, args);
+	}
+
+  
+  va_end(args);
+} /* sendto_channel_butserv() */
+/*
+ * sendto_channel_chanops_butserv
+ *
+ * Send a message to all members of a channel that are connected to this
+ * server.
+ */
+
+void
+sendto_channel_non_chanops_butserv(aChannel *chptr, aClient *from, 
+                       const char *pattern, ...)
+
+{
+  va_list args;
+  register Link *lp;
+  register aClient *acptr;
+
+  va_start(args, pattern);
+
+  for (lp = chptr->members; lp; lp = lp->next)
+    if (MyConnect(acptr = lp->value.cptr))
+      if(!is_chan_op(acptr,chptr))
+	{
+	  vsendto_prefix_one(acptr, from, pattern, args);
+	}
+
+  
+  va_end(args);
+} /* sendto_channel_butserv() */
+
+/*
 ** send a msg to all ppl on servers/hosts that match a specified mask
 ** (used for enhanced PRIVMSGs)
 **

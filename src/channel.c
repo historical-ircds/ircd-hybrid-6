@@ -314,7 +314,8 @@ static  int     add_denyid(struct Client *cptr, struct Channel *chptr, char *ban
   Link  *ban;
 
   /* truncate to REALLEN */
-  banid[REALLEN]='\0';
+  if(strlen(banid) >= (REALLEN-1))
+    banid[REALLEN-1]='\0';
 
   if ((!IsServer(cptr)) && (chptr->num_bed >= MAXBANS))
     if (MyClient(cptr))
@@ -543,12 +544,21 @@ static void del_matching_exception(struct Client *cptr,struct Channel *chptr)
            * -Dianora
            */
 
+#ifdef HIDE_OPS
+          sendto_channel_chanops_butserv(chptr,
+                                 &me,
+                                 ":%s MODE %s -e %s", 
+                                 me.name,
+                                 chptr->chname,
+                                 BANSTR(tmp));
+#else
           sendto_channel_butserv(chptr,
                                  &me,
                                  ":%s MODE %s -e %s", 
                                  me.name,
                                  chptr->chname,
                                  BANSTR(tmp));
+#endif
 
           *ex = tmp->next;
 #ifdef BAN_INFO
@@ -1322,6 +1332,12 @@ void set_channel_mode(struct Client *cptr,
 
           if (isdeop && (c == 'o') && whatt == MODE_ADD)
             set_deopped(who, chptr, the_mode);
+
+#ifdef HIDE_OPS
+	  if(the_mode == MODE_CHANOP && whatt == MODE_DEL)
+	    sendto_one(who,":%s MODE %s -o %s",
+		       sptr->name,chptr->chname,who->name);
+#endif
 
           if (!isok)
             {
@@ -2248,10 +2264,15 @@ void set_channel_mode(struct Client *cptr,
 
   if(*modebuf)
     {
+#ifdef HIDE_OPS
+      sendto_channel_chanops_butserv(chptr, sptr, ":%s MODE %s %s %s", 
+				     sptr->name, chptr->chname,
+				     modebuf, parabuf);
+#else
       sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", 
                            sptr->name, chptr->chname,
                            modebuf, parabuf);
-
+#endif
       sendto_match_servs(chptr, cptr, ":%s MODE %s %s %s",
                          sptr->name, chptr->chname,
                          modebuf, parabuf);
@@ -3559,9 +3580,19 @@ int     m_kick(struct Client *cptr,
 
   if (IsMember(who, chptr))
     {
+#ifdef HIDE_OPS
+      sendto_channel_chanops_butserv(chptr, sptr,
+                             ":%s KICK %s %s :%s", parv[0],
+                             name, who->name, comment);
+      sendto_channel_non_chanops_butserv(chptr, sptr,
+                             ":%s KICK %s %s :%s", NETWORK_NAME,
+                             name, who->name, comment);
+
+#else
       sendto_channel_butserv(chptr, sptr,
                              ":%s KICK %s %s :%s", parv[0],
                              name, who->name, comment);
+#endif
       sendto_match_servs(chptr, cptr,
                          ":%s KICK %s %s :%s",
                          parv[0], name,
@@ -4124,16 +4155,21 @@ int     m_names( struct Client *cptr,
           c2ptr = lp->value.cptr;
           if (IsInvisible(c2ptr) && !IsMember(sptr,chptr))
             continue;
-          if (lp->flags & CHFL_CHANOP)
-            {
-              strcat(buf, "@");
-              idx++;
-            }
-          else if (lp->flags & CHFL_VOICE)
-            {
-              strcat(buf, "+");
-              idx++;
-            }
+#ifdef HIDE_OPS
+	  if(is_chan_op(sptr,chptr))
+#endif
+	    {
+	      if (lp->flags & CHFL_CHANOP)
+		{
+		  strcat(buf, "@");
+		  idx++;
+		}
+	      else if (lp->flags & CHFL_VOICE)
+		{
+		  strcat(buf, "+");
+		  idx++;
+		}
+	    }
           strncat(buf, c2ptr->name, NICKLEN);
           idx += strlen(c2ptr->name) + 1;
           flag = 1;
