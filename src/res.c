@@ -912,8 +912,9 @@ proc_answer(struct reslist *request, HEADER* header,
         if (rd_length != sizeof(struct in_addr))
           return answer_count;
 
-        if (++addr_count < RES_MAXADDRS)
+        if (addr_count < RES_MAXADDRS)
         {
+	  addr_count++;
           if (answer_count == 1)
             hp->h_addrtype = (query_class == C_IN) ?  AF_INET : AF_UNSPEC;
 
