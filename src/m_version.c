@@ -99,8 +99,7 @@ int m_version(struct Client* cptr, struct Client* sptr, int parc, char* parv[])
                parv[0], ircd_version, serno, 
 	       debugmode, me.name, serveropts);
     
-    if (MyClient(sptr))
-      sendto_one(sptr, form_str(RPL_ISUPPORT),
+    sendto_one(sptr, form_str(RPL_ISUPPORT),
                  me.name, parv[0], isupport);
   }
 
