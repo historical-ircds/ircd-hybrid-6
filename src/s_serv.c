@@ -3586,7 +3586,9 @@ int   m_set(aClient *cptr,
                 }
 	      if(newval > MAX_SERVER_SPLIT_RECOVERY_TIME)
 		{
-		  sendto_one(sptr, ":%s NOTICE %s :Cannot set SPLITDELAY over %d", parv[0], MAX_SERVER_SPLIT_RECOVERY_TIME);
+		  sendto_one(sptr,
+			     ":%s NOTICE %s :Cannot set SPLITDELAY over %d",
+			     me.name, parv[0], MAX_SERVER_SPLIT_RECOVERY_TIME);
 		  newval = MAX_SERVER_SPLIT_RECOVERY_TIME;
 		}
               sendto_realops("%s has changed SPLITDELAY to %i",
