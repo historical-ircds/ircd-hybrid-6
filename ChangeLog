@@ -1,3 +1,7 @@
+*** 20011129_12 by androsyn
+Added mmap() goodness to blalloc.c
+
+
 *** 20011129_11 by wcampbel
 Update opers.txt documentation again.
 
