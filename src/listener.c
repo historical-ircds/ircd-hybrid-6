@@ -82,7 +82,7 @@ const char* get_listener_name(const struct Listener* listener)
   static char buf[HOSTLEN + HOSTLEN + PORTNAMELEN + 4];
   assert(0 != listener);
   ircsprintf(buf, "%s[%s/%u]", 
-             listener->name, listener->name, listener->port);
+             me.name, listener->name, listener->port);
   return buf;
 }
 
