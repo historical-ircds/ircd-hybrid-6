@@ -1,3 +1,10 @@
+*** 20010603_2 by leeh
+- commited Hwy's patch:
+
+  Fix make install on systems that cannot understand /path//file
+  (cygwin et al)
+
+
 *** 20010603_1 by leeh
 - extended the host check for "."'s to also check for ":" so we allow
   IPv6..
