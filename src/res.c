@@ -17,6 +17,7 @@
 #include "h.h"
 #include "common.h"
 #include "send.h"
+#include "restart.h"
 
 #include <assert.h>
 #include <string.h>

@@ -32,6 +32,7 @@
 #include "h.h"
 #include "fdlist.h"
 #include "send.h"
+#include "restart.h"
 
 #include <assert.h>
 #include <stdio.h>

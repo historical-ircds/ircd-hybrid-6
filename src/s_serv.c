@@ -44,6 +44,7 @@
 #include "hash.h"
 #include "s_debug.h"
 #include "listener.h"
+#include "restart.h"
 
 #include <string.h>
 #include <stdlib.h>
