@@ -112,7 +112,8 @@ int     m_gline(aClient *cptr,
   aConfItem *aconf;
 #endif
 
-  if(MyClient(sptr)) /* allow remote opers to apply g lines */
+  /* its one of our local clients doing a /gline */
+  if(MyClient(sptr))
     {
 #ifdef GLINES
       /* Only globals can apply Glines */
@@ -177,10 +178,11 @@ int     m_gline(aClient *cptr,
         return 0;
       }
 
+      /* pull the reason from parv[2] and check the glines valid */
+      reason = parv[2];
+      
       if(invalid_gline(sptr, user, host, reason, 1))
         return 0;
-	
-      reason = parv[2];
 
       if (sptr->user && sptr->user->server)
         oper_server = sptr->user->server;
