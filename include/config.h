@@ -74,12 +74,8 @@
  * SPATH = server executable,
  * CPATH = conf file,
  * MPATH = MOTD
- * APATH = alternate MOTD for multi-lingual servers
- * i.e. /motd A for second motd
  * KPATH = kline conf file 
  *
- * OPER_MOTD = if defined display an oper motd to opers 
- * when they oper up.
  * OMOTD = path to MOTD for opers
  * 
  * For /restart to work, SPATH needs to be a full pathname
@@ -98,13 +94,10 @@
 #define	CPATH	"ircd.conf"
 #define KPATH   "kline.conf"
 #define	MPATH	"ircd.motd"
-#undef  APATH
 #define	LPATH	"ircd.log"
 #define	PPATH	"ircd.pid"
 #define HPATH	"opers.txt"
-
-#define OPER_MOTD
-#define OMOTD   "opers.motd"
+#define OPATH   "opers.motd"
 
 /* DLINES_IN_KPATH - put (/quote) DLINES in your KPATH file.
  * Define this if you want DLINES in your KPATH file.  Otherwise DLINES
@@ -975,9 +968,6 @@
 
 #define HELPFILE HPATH
 #define MOTD MPATH
-#ifdef  APATH
-#define AMOTD APATH
-#endif
 #define	MYNAME SPATH
 #define	CONFIGFILE CPATH
 #ifdef KPATH

@@ -50,15 +50,7 @@
 #include <time.h>
 #endif
 
-#if defined( HAVE_STRING_H )
 #include <string.h>
-#else
-/* older unices don't have strchr/strrchr .. help them out */
-#include <strings.h>
-#undef strchr
-#define strchr index
-#endif
-
 
 /* external variables */
 
@@ -129,24 +121,7 @@ extern void report_qlines(aClient *);
 static int m_set_parser(char *);
 int bad_tld(char *);
 
-int send_motd(aClient *,aClient *,int, char **,aMessageFile *); 
 int safe_write(aClient *,char *,char *,int,char *);
-
-void read_motd(void);
-#ifdef AMOTD
-void read_amotd(void);
-char amotd_last_changed_date[MAX_DATE_STRING];	/* enough room for date */
-#endif
-void read_help();
-int read_message_file(char *,aMessageFile **);
-
-char motd_last_changed_date[MAX_DATE_STRING];	/* enough room for date */
-
-#ifdef OPER_MOTD
-char oper_motd_last_changed_date[MAX_DATE_STRING]; /* enough room for date */
-void read_oper_motd();
-extern aMessageFile *opermotd;
-#endif
 
 
 #ifdef PACE_WALLOPS
@@ -1864,7 +1839,6 @@ int	m_help(aClient *cptr,
 	       char *parv[])
 {
   int i;
-  aMessageFile *helpfile_ptr;
   static time_t last_used=0L;
 
   if(!IsAnOper(sptr))
@@ -1882,21 +1856,15 @@ int	m_help(aClient *cptr,
         }
     }
 
-  if ( !IsAnOper(sptr) || (ConfigFileEntry.helpfile == (aMessageFile *)NULL))
+  if ( !IsAnOper(sptr) )
     {
       for (i = 0; msgtab[i].cmd; i++)
 	sendto_one(sptr,":%s NOTICE %s :%s",
 		   me.name, parv[0], msgtab[i].cmd);
       return 0;
     }
-
-  for(helpfile_ptr = ConfigFileEntry.helpfile;
-      helpfile_ptr; helpfile_ptr = helpfile_ptr->next)
-    {
-      sendto_one(sptr,
-		 ":%s NOTICE %s :%s",
-		 me.name, parv[0], helpfile_ptr->line);
-    }
+  else
+    SendMessageFile(sptr, &ConfigFileEntry.helpfile);
 
   return 0;
 }
@@ -3188,24 +3156,19 @@ int	m_rehash(aClient *cptr,
       else if(irccmp(parv[1],"MOTD") == 0)
         {
 	  sendto_ops("%s is forcing re-reading of MOTD file",parv[0]);
-          read_motd();
-#ifdef AMOTD
-	  read_amotd();
-#endif
+	  ReadMessageFile( &ConfigFileEntry.motd );
 	  found = YES;
         }
-#ifdef OPER_MOTD
       else if(irccmp(parv[1],"OMOTD") == 0)
         {
 	  sendto_ops("%s is forcing re-reading of OPER MOTD file",parv[0]);
-	  read_oper_motd();
+	  ReadMessageFile( &ConfigFileEntry.motd );
 	  found = YES;
         }
-#endif
       else if(irccmp(parv[1],"HELP") == 0)
         {
 	  sendto_ops("%s is forcing re-reading of oper help file",parv[0]);
-          read_help();
+	  ReadMessageFile( &ConfigFileEntry.motd );
 	  found = YES;
         }
       else if(irccmp(parv[1],"dump") == 0)
@@ -3779,263 +3742,6 @@ int	m_ltrace(aClient *cptr,
   return 0;
 }
 #endif /* LTRACE */
-
-/*
-** m_motd
-**	parv[0] = sender prefix
-**	parv[1] = servername
-*/
-int	m_motd(aClient *cptr,
-	       aClient *sptr,
-	       int parc,
-	       char *parv[])
-{
-  aMessageFile *motd_ptr=ConfigFileEntry.motd;
-  static time_t last_used=0L;
-
-  if(!IsAnOper(sptr))
-    {
-      if((last_used + PACE_WAIT) > NOW)
-	{
-	  /* safe enough to give this on a local connect only */
-	  if(MyClient(sptr))
-	    sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,parv[0]);
-	  return 0;
-	}
-      else
-	last_used = NOW;
-    }
-
-  if (hunt_server(cptr, sptr, ":%s MOTD :%s", 1,parc,parv)!=HUNTED_ISME)
-    return 0;
-
-  /* Yes, its a kludge, but it works -Dianora */
-#ifdef AMOTD
-  if(IsLocal(sptr) && (parc > 1) && (*parv[1] == 'A'))
-    {
-      motd_ptr = ConfigFileEntry.amotd;
-      parc--;
-    }
-#endif
-
-  sendto_realops_lev(SPY_LEV, "motd requested by %s (%s@%s) [%s]",
-		     sptr->name, sptr->username, sptr->host,
-		     sptr->user->server);
-
-  return(send_motd(cptr,sptr,parc,parv,motd_ptr));
-}
-
-/*
-** send_motd
-**	parv[0] = sender prefix
-**	parv[1] = servername
-**
-** This function split off so a server notice could be generated on a
-** user requested motd, but not on each connecting client.
-** -Dianora
-*/
-
-int send_motd(aClient *cptr,
-	  aClient *sptr,
-	  int parc,
-	  char *parv[],
-	      aMessageFile *motd)
-{
-  aMessageFile *temp;
-
-  if (ConfigFileEntry.motd == (aMessageFile *)NULL)
-    {
-      sendto_one(sptr, form_str(ERR_NOMOTD), me.name, parv[0]);
-      return 0;
-    }
-  sendto_one(sptr, form_str(RPL_MOTDSTART), me.name, parv[0], me.name);
-
-  sendto_one(sptr,":%s NOTICE %s :%s",me.name,parv[0],motd_last_changed_date);
-
-  temp = ConfigFileEntry.motd;
-  while(temp)
-    {
-      sendto_one(sptr,
-		 form_str(RPL_MOTD),
-		 me.name, parv[0], temp->line);
-      temp = temp->next;
-    }
-  sendto_one(sptr, form_str(RPL_ENDOFMOTD), me.name, parv[0]);
-  return 0;
-}
-
-#ifdef OPER_MOTD
-/*
-** send_oper_motd
-**	parv[0] = sender prefix
-**	parv[1] = servername
-**
-** This function split off so a server notice could be generated on a
-** user requested motd, but not on each connecting client.
-** -Dianora
-*/
-
-int send_oper_motd(aClient *cptr,
-	  aClient *sptr,
-	  int parc,
-	  char *parv[],
-	      aMessageFile *motd)
-{
-  aMessageFile *temp;
-  
-  if (ConfigFileEntry.opermotd == (aMessageFile *)NULL)
-    {
-      sendto_one(sptr, ":%s NOTICE %s :No OPER MOTD", me.name, parv[0]);
-      return 0;
-    }
-  sendto_one(sptr,":%s NOTICE %s :Start of OPER MOTD",
-	     me.name,parv[0]);
-
-  sendto_one(sptr,":%s NOTICE %s :%s",me.name,parv[0],
-	     ConfigFileEntry.oper_motd_last_changed_date);
-
-  temp = motd;
-  while(temp)
-    {
-      sendto_one(sptr,":%s NOTICE %s :%s", me.name, parv[0], temp->line);
-      temp = temp->next;
-    }
-  return 0;
-}
-#endif
-
-/*
- * read_motd()
- *
- */
-
-void read_motd()
-{
-  struct stat sb;
-  struct tm *motd_tm;
-
-  if(read_message_file(MOTD,&ConfigFileEntry.motd) < 0)
-    return;
-
-  stat(MOTD, &sb);
-  motd_tm = localtime(&sb.st_mtime);
-
-  if (motd_tm)
-    (void)sprintf(ConfigFileEntry.motd_last_changed_date,
-		  "%d/%d/%d %02d:%02d",
-		  motd_tm->tm_mday,
-		  motd_tm->tm_mon + 1,
-		  1900 + motd_tm->tm_year,
-		  motd_tm->tm_hour,
-		  motd_tm->tm_min);
-}
-
-#ifdef OPER_MOTD
-void read_oper_motd()
-{
-  struct stat	sb;
-  struct tm *motd_tm;
-
-  if(read_message_file(OMOTD,&ConfigFileEntry.opermotd) < 0)
-    return;
-
-  stat(OMOTD, &sb);
-  motd_tm = localtime(&sb.st_mtime);
-
-  if (motd_tm)
-    (void)sprintf(ConfigFileEntry.oper_motd_last_changed_date,
-		  "%d/%d/%d %02d:%02d",
-		  motd_tm->tm_mday,
-		  motd_tm->tm_mon + 1,
-		  1900 + motd_tm->tm_year,
-		  motd_tm->tm_hour,
-		  motd_tm->tm_min);
-}
-#endif
-
-#ifdef AMOTD
-/*
- * read_amotd()
- *
- */
-
-void read_amotd()
-{
-  struct tm *motd_tm;
-  struct stat	sb;
-
-  if(read_message_file(AMOTD,&ConfigFileEntry.amotd) < 0)
-    return;
-
-  stat(AMOTD, &sb);
-  motd_tm = localtime(&sb.st_mtime);
-
-  if (motd_tm)
-    (void)sprintf(ConfigFileEntry.amotd_last_changed_date,
-		  "%d/%d/%d %d:%02d",
-		  motd_tm->tm_mday,
-		  motd_tm->tm_mon + 1,
-		  1900 + motd_tm->tm_year,
-		  motd_tm->tm_hour,
-		  motd_tm->tm_min);
-}
-#endif
-
-/*
- * read_motd() - From CoMSTuD, added Aug 29, 1996
- * modified by -Dianora
- */
-int read_message_file(char *filename,aMessageFile **ptr)
-{
-  aMessageFile *mptr;
-  aMessageFile	*temp, *last;
-  char		buffer[MESSAGELINELEN], *tmp;
-  FBFILE* file;
-  
-  mptr = *ptr;
-
-  /*
-   * Clear out the old MOTD
-   */
-  while (mptr)
-    {
-      temp = mptr->next;
-      MyFree(mptr);
-      mptr = temp;
-    }
-  *ptr = ((aMessageFile *)NULL);
-  if ((file = fbopen(filename, "r")) == 0)
-    return(-1);
-  last = (aMessageFile *)NULL;
-
-  while (fbgets(buffer, MESSAGELINELEN, file))
-    {
-      if ((tmp = (char *)strchr(buffer, '\n')))
-	*tmp = '\0';
-      temp = (aMessageFile*) MyMalloc(sizeof(aMessageFile));
-
-      strncpyzt(temp->line, buffer, MESSAGELINELEN);
-      temp->next = (aMessageFile *)NULL;
-      if (!*ptr)
-	*ptr = temp;
-      else
-	last->next = temp;
-      last = temp;
-    }
-  fbclose(file);
-  return(0);
-}
-
-/*
- * read_help() - modified from from CoMSTuD's read_motd
- * added Aug 29, 1996 modifed  Aug 31 1997 - Dianora
- *
- * Use the same idea for the oper helpfile
- */
-void	read_help()
-{
-  (void)read_message_file(HELPFILE,&ConfigFileEntry.helpfile);
-}
 
 /*
 ** m_close - added by Darren Reed Jul 13 1992.

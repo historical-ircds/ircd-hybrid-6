@@ -29,6 +29,7 @@
 #include "msg.h"
 #include "channel.h"
 #include "s_conf.h"
+#include "motd.h"
 #include "class.h"
 #include "s_bsd.h"
 #include "h.h"
@@ -63,12 +64,6 @@ static int valid_hostname(const char* hostname);
 static int valid_username(const char* username);
 static void report_and_set_user_flags( aClient *, aConfItem * );
 static int tell_user_off(aClient *,char **);
-
-extern int send_motd(aClient *,aClient *,int, char **,aMessageFile *);
-
-#ifdef OPER_MOTD
-extern int send_oper_motd(aClient *,aClient *,int, char **,aMessageFile *);
-#endif
 
 /* LINKLIST */ 
 extern aClient *local_cptr_list;
@@ -741,28 +736,8 @@ static int register_user(aClient *cptr, aClient *sptr,
       sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, parv[0],
 		 me.name, version);
       show_lusers(sptr, sptr, 1, parv);
+      SendMessageFile(sptr, &ConfigFileEntry.motd);
       
-      sendto_one(sptr,"NOTICE %s :*** Notice -- motd was last changed at %s",
-		 nick, ConfigFileEntry.motd_last_changed_date);
-#ifdef SHORT_MOTD
-      sendto_one(sptr,
-		 "NOTICE %s :*** Notice -- Please read the motd if you haven't read it",
-		 nick);
-      
-      sendto_one(sptr, rpl_str(RPL_MOTDSTART),
-		 me.name, parv[0], me.name);
-      
-      sendto_one(sptr,
-		 rpl_str(RPL_MOTD),
-		 me.name, parv[0],
-		 "*** This is the short motd ***"
-		 );
-
-      sendto_one(sptr, rpl_str(RPL_ENDOFMOTD),
-		 me.name, parv[0]);
-#else
-      (void)send_motd(sptr, sptr, 1, parv,ConfigFileEntry.motd);
-#endif
 #ifdef LITTLE_I_LINES
       if(sptr->confs && sptr->confs->value.aconf &&
 	 (sptr->confs->value.aconf->flags
@@ -2672,7 +2647,7 @@ static int do_user(char *nick, aClient *cptr, aClient *sptr,
        * coming from another server, take the servers word for it
        */
       user->server = find_or_add(server);
-      strncpyzt(user->host, host, sizeof(user->host)); 
+      strncpyzt(sptr->host, host, sizeof(sptr->host)); 
     }
   else
     {
@@ -3144,9 +3119,7 @@ int	m_oper(aClient *cptr,
 	{
 	  sendto_one(sptr, rpl_str(RPL_YOUREOPER),
 		     me.name, parv[0]);
-#ifdef OPER_MOTD
-	  (void)send_oper_motd(sptr, sptr, 1, parv,ConfigFileEntry.opermotd);
-#endif
+	  SendMessageFile(sptr, &ConfigFileEntry.opermotd);
 	}
       return 0;
     }
@@ -3254,9 +3227,7 @@ int	m_oper(aClient *cptr,
       sendto_one(sptr, ":%s NOTICE %s:*** Oper privs are %s",me.name,parv[0],
 		 operprivs);
 
-#ifdef OPER_MOTD
-      (void)send_oper_motd(sptr, sptr, 1, parv,ConfigFileEntry.opermotd);
-#endif
+      SendMessageFile(sptr, &ConfigFileEntry.opermotd);
 
 #if !defined(CRYPT_OPER_PASSWORD) && (defined(FNAME_OPERLOG) ||\
     (defined(USE_SYSLOG) && defined(SYSLOG_OPER)))

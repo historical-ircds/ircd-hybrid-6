@@ -31,6 +31,7 @@
 #include "h.h"
 #include "mtrie_conf.h"
 #include "s_conf.h"
+#include "motd.h"
 #include "s_bsd.h"
 #include "send.h"
 
@@ -109,11 +110,6 @@ static  time_t	io_loop(time_t);
 
 extern  void init_fdlist(fdlist *);	/* defined in fdlist.c */
 extern	void dbuf_init();		/* defined in dbuf.c */
-extern  void read_motd();		/* defined in s_serv.c */
-#ifdef OPER_MOTD
-extern  void read_oper_motd();		/* defined in s_serv.c */
-#endif
-extern  void read_help();		/* defined in s_serv.c */
 extern  void sync_channels(time_t);	/* defined in channel.c */
 
 static char **myargv;
@@ -1140,23 +1136,13 @@ normal user.\n");
   if (argc > 0)
     return bad_command(); /* This should exit out */
 
-#ifdef OPER_MOTD
-  ConfigFileEntry.oper_motd_last_changed_date[0] = '\0';
-  ConfigFileEntry.opermotd = (aMessageFile *)NULL;
-  read_oper_motd();
-#endif 
+  InitMessageFile( HELP_MOTD, HPATH, &ConfigFileEntry.helpfile );
+  InitMessageFile( USER_MOTD, MPATH, &ConfigFileEntry.motd );
+  InitMessageFile( OPER_MOTD, OPATH, &ConfigFileEntry.opermotd );
 
-  ConfigFileEntry.helpfile = (aMessageFile *)NULL;
-  read_help();
-
-  ConfigFileEntry.motd = (aMessageFile *)NULL;
-  ConfigFileEntry.motd_last_changed_date[0] = '\0';
-  read_motd();
-
-#ifdef AMOTD
-  ConfigFileEntry.amotd = (aMessageFile *)NULL;
-  read_amotd();
-#endif
+  ReadMessageFile( &ConfigFileEntry.helpfile );
+  ReadMessageFile( &ConfigFileEntry.motd );
+  ReadMessageFile( &ConfigFileEntry.opermotd );
 
   clear_client_hash_table();
   clear_channel_hash_table();

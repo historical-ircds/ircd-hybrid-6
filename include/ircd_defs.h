@@ -53,8 +53,6 @@
 
 #define OPERWALL_LEN    400	/* can be truncated on other servers */
 
-#define MESSAGELINELEN	90
-
 #define	USERHOST_REPLYLEN	(NICKLEN+HOSTLEN+USERLEN+5)
 #define MAX_DATE_STRING 32      /* maximum string length for a date string */
 

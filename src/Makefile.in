@@ -3,28 +3,28 @@ RM=@RM@
 IRCDLIBS=@LIBS@ ../zlib/libz.a
 INCLUDEDIR=-I../include -I../zlib
 
-SRC_1 = bsd.c channel.c class.c dbuf.c mtrie_conf.c
-SRC_2 = hash.c ircd.c ircsprintf.c dline_conf.c
-SRC_3 = list.c match.c packet.c parse.c res.c s_zip.c fdlist.c
-SRC_4 = s_auth.c s_bsd.c s_conf.c s_debug.c s_err.c s_misc.c s_numeric.c
-SRC_5 = s_serv.c m_info.c m_kline.c m_gline.c m_unkline.c
-SRC_6 = s_user.c send.c support.c whowas.c scache.c blalloc.c
-SRC_7 = fileio.c
+SRC = bsd.c channel.c class.c dbuf.c mtrie_conf.c \
+ hash.c ircd.c ircsprintf.c dline_conf.c \
+ list.c match.c packet.c parse.c res.c s_zip.c fdlist.c \
+ s_auth.c s_bsd.c s_conf.c s_debug.c s_err.c s_misc.c s_numeric.c \
+ s_serv.c client.c motd.c m_info.c m_kline.c m_gline.c m_unkline.c \
+ s_user.c send.c support.c whowas.c scache.c blalloc.c \
+ fileio.c
 
 # Do it this way for Ultrix, and its portable at least
 # just make sure OBJ's match SRC's (pointed out by Ian)
 # 
-OBJ_1 = bsd.o channel.o class.o dbuf.o mtrie_conf.o
-OBJ_2 = hash.o ircd.o ircsprintf.o dline_conf.o
-OBJ_3 = list.o match.o packet.o parse.o res.o s_zip.o fdlist.o
-OBJ_4 = s_auth.o s_bsd.o s_conf.o s_debug.o s_err.o s_misc.o s_numeric.o
-OBJ_5 = s_serv.o m_info.o m_kline.o m_gline.o m_unkline.o
-OBJ_6 = s_user.o send.o support.o whowas.o scache.o blalloc.o
-OBJ_7 = fileio.o
+OBJ = bsd.o channel.o class.o dbuf.o mtrie_conf.o \
+ hash.o ircd.o ircsprintf.o dline_conf.o \
+ list.o match.o packet.o parse.o res.o s_zip.o fdlist.o \
+ s_auth.o s_bsd.o s_conf.o s_debug.o s_err.o s_misc.o s_numeric.o \
+ s_serv.o client.o motd.o m_info.o m_kline.o m_gline.o m_unkline.o \
+ s_user.o send.o support.o whowas.o scache.o blalloc.o \
+ fileio.o
 
-SOURCES = $(SRC_1) $(SRC_2) $(SRC_3) $(SRC_4) $(SRC_5) $(SRC_6) $(SRC_7)
+SOURCES = $(SRC)
 #OBJECTS = $(SOURCES:.c=.o) version.o
-OBJECTS = $(OBJ_1) $(OBJ_2) $(OBJ_3) $(OBJ_4) $(OBJ_5) $(OBJ_6) $(OBJ_7) version.o
+OBJECTS = $(OBJ) version.o
 
 all: ircd
 
