@@ -1,3 +1,8 @@
+*** 20011024_3 by db
+- removed NO_CHANOPS_ON_SPLIT
+
+
+
 *** 20011024_2 by wcampbel
 Corrected two pieces of information in example.conf
 
