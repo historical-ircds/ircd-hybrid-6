@@ -65,11 +65,6 @@
 
 /* external variables */
 
-/* LINKLIST */
-extern aClient *local_cptr_list;
-extern aClient *oper_cptr_list;
-extern aClient *serv_cptr_list;
-
 /* aConfItems */
 /* conf uline link list root */
 extern aConfItem *u_conf;

@@ -58,20 +58,6 @@
  */
 #define CLIENTS_PREALLOCATE 1024
 
-/* LINKLIST */
-extern struct Client* local_cptr_list;
-extern struct Client* oper_cptr_list;
-extern struct Client* serv_cptr_list;
-
-#if 0
-static void exit_one_client(struct Client*, struct Client*, 
-                            struct Client*, char *);
-static void recurse_send_quits(struct Client*, struct Client*, 
-                               struct Client*, char*, char*);
-static void remove_dependents(struct Client*, struct Client*, 
-                              struct Client*, char*, char*);
-#endif
-
 #ifdef NEED_SPLITCODE
 extern int server_was_split;
 extern time_t server_split_time;

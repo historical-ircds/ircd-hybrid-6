@@ -36,11 +36,6 @@
 #include <stdarg.h>
 #include <time.h>
 
-/* LINKLIST */
-extern aClient *local_cptr_list;
-extern aClient *oper_cptr_list;
-extern aClient *serv_cptr_list;
-
 #define NEWLINE "\r\n"
 
 static  char    sendbuf[2048];

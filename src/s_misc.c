@@ -42,12 +42,6 @@
 #include <time.h>
 #include <unistd.h>
 
-/* LINKLIST */
-extern aClient *local_cptr_list;
-extern aClient *oper_cptr_list;
-extern aClient *serv_cptr_list;
-
-extern char *oper_privs(aClient *, int);        /* defined in s_conf.c */
 
 static char* months[] = {
   "January",   "February", "March",   "April",

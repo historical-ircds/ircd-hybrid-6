@@ -49,11 +49,8 @@ struct Server;
  * GLOBAL - global variables
  */
 
-
 extern void     dummy(int signo);
-
 extern  char    *form_str (int);
-extern  void    get_my_name (struct Client *, char *, int);
 
 /* bsd.c */
 extern  int     deliver_it (struct Client *, char *, int);

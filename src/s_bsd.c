@@ -98,9 +98,6 @@ extern fdlist busycli_fdlist;
 extern fdlist default_fdlist;
 
 extern struct sockaddr_in vserv;               /* defined in s_conf.c */
-extern aClient*           serv_cptr_list;      /* defined in ircd.c */
-extern aClient*           local_cptr_list;     /* defined in ircd.c */
-extern aClient*           oper_cptr_list;      /* defined in ircd.c */
 
 const char* const NONB_ERROR_MSG   = "set_non_blocking failed for %s:%s"; 
 const char* const OPT_ERROR_MSG    = "disable_sock_options failed for %s:%s";
