@@ -1,3 +1,22 @@
+db          2001/12/07 00:09:33 EST	(20011207_6)
+
+  Modified files:
+    include              config.h config.h.dist m_info.h 
+    src                  m_message.c messages.tab 
+                         messages_cust.tab 
+  Log:
+  - removed MAX_MULTI_MESSAGES dismal failure.
+  
+  Revision  Changes    Path
+  1.148     +0 -7      ircd-hybrid-6/include/config.h
+  1.127     +0 -7      ircd-hybrid-6/include/config.h.dist
+  1.25      +0 -2      ircd-hybrid-6/include/m_info.h
+  1.14      +281 -315  ircd-hybrid-6/src/m_message.c
+  1.21      +2 -2      ircd-hybrid-6/src/messages.tab
+  1.20      +2 -2      ircd-hybrid-6/src/messages_cust.tab
+
+
+
 wcampbel    2001/12/06 23:51:36 EST	(20011207_5)
 
   Modified files:
