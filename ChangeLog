@@ -1,3 +1,8 @@
+*** 20001124_1 by lusky
+fixed IPQuadTab corruption issue [werd!@#@!#!@] (db/pvr)
+added hide_ops (db)
+
+
 *** 20001122_1 by lusky
 fixed the m_userhost fix
 
