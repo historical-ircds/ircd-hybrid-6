@@ -904,16 +904,30 @@ int	m_mode(aClient *cptr,
   /* Now, try to find the channel in question */
   if (parc > 1)
     {
-      if(clean_channelname((unsigned char *)parv[1],sptr))
-	{ 
-	  sendto_one(sptr, form_str(ERR_BADCHANNAME),
-		     me.name, parv[0], (unsigned char *)parv[1]);
-	  return 0;
-	}
+      /* ZZZ I want a char attribe to tell me if this is a valid channel */
 
-      chptr = find_channel(parv[1], NullChn);
-      if (chptr == NullChn)
-	return m_umode(cptr, sptr, parc, parv);
+      if( (parv[1][0] == '#') || (parv[1][0] == '&') )
+	{
+	  /* Don't do any of this stuff at all
+	   * unless it looks like a channel name 
+	   */
+
+	  if(clean_channelname((unsigned char *)parv[1],sptr))
+	    { 
+	      sendto_one(sptr, form_str(ERR_BADCHANNAME),
+			 me.name, parv[0], (unsigned char *)parv[1]);
+	      return 0;
+	    }
+
+	  chptr = find_channel(parv[1], NullChn);
+	  if (chptr == NullChn)
+	    return m_umode(cptr, sptr, parc, parv);
+	}
+      else
+	{
+	  /* if here, it has to be a non-channel name */
+	  return m_umode(cptr, sptr, parc, parv);
+	}
     }
   else
     {
