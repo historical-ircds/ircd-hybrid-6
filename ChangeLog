@@ -1,3 +1,18 @@
+lusky       2001/12/08 00:38:11 EST	(20011208_7)
+
+  Modified files:
+    .                    configure 
+    autoconf             configure.in 
+  Log:
+  Solaris still needs -lnsl -lresolv.  Check for inet_ntoa and inet_aton instead
+  of blindly linking them in.
+  
+  Revision  Changes    Path
+  1.22      +2 -0      ircd-hybrid-6/autoconf/configure.in
+  1.23      +276 -97   ircd-hybrid-6/configure
+
+
+
 jdc         2001/12/08 00:10:27 EST	(20011208_6)
 
   Modified files:
