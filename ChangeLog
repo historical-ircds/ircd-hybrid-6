@@ -1,3 +1,8 @@
+*** 20010710_2 by jdc
+- More stuff for encrypted link removal.
+
+
+
 *** 20010710_1 by jdc
 - Complete removal of encrypted link (CRYPTLINK) support; this includes
   RSA authentication.
