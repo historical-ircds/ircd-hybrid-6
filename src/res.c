@@ -982,7 +982,8 @@ static int proc_answer(ResRQ* request, HEADER* header,
 #ifdef DEBUG
       Debug((DEBUG_INFO,"proc_answer: type:%d for:%s", type, hostbuf));
 #endif
-      break;
+      current += rd_length;
+    break;
     }
   }
   return answer_count;
