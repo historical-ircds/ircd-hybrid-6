@@ -322,8 +322,10 @@ static void start_resolver(void)
 #ifdef DEBUG
   _res.options |= RES_DEBUG;
 #endif
-  if (ResolverFileDescriptor < 0)
+  if (ResolverFileDescriptor < 0) {
     ResolverFileDescriptor = socket(AF_INET, SOCK_DGRAM, 0);
+    set_non_blocking(ResolverFileDescriptor);
+  }
 }
 
 /*

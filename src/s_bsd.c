@@ -54,7 +54,6 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/file.h>
-#define BSD_COMP          /* needed on Solaris for FIONBIO */
 #include <sys/ioctl.h>
 #include <sys/resource.h>
 #include <sys/param.h>    /* NOFILE */
@@ -186,23 +185,6 @@ static void connect_dns_callback(void* vptr, struct DNSReply* reply)
   }
   else
     sendto_ops("Connect to %s failed: host lookup", aconf->host);
-}
-
-/*
- * do_dns_async - called when the fd returned from init_resolver() has 
- * been selected for reading.
- */
-static void do_dns_async()
-{
-  int bytes = 0;
-  int packets = 0;
-
-  do {
-    get_res();
-    if (ioctl(ResolverFileDescriptor, FIONREAD, &bytes) == -1)
-      bytes = 0;
-    packets++;
-  }  while ((bytes > 0) && (packets < 10)); 
 }
 
 /*
@@ -1054,7 +1036,7 @@ int read_message(time_t delay, unsigned char mask)        /* mika */
 
   if (-1 < ResolverFileDescriptor && 
       FD_ISSET(ResolverFileDescriptor, read_set)) {
-    do_dns_async();
+    get_res();
     --nfds;
   }
   /*
@@ -1312,7 +1294,7 @@ int read_message(time_t delay, unsigned char mask)
    * check resolver descriptor
    */
   if (res_pfd && (res_pfd->revents & (POLLREADFLAGS | POLLERRORS))) {
-    do_dns_async();
+    get_res();
     --nfds;
   }
   /*

@@ -324,6 +324,8 @@ void accept_connection(struct Listener* listener)
    * be accepted until some old is closed first.
    */
   if (-1 == (fd = accept(listener->fd, (struct sockaddr*) &addr, &addrlen))) {
+    if (EAGAIN == errno)
+       return;
     /*
      * slow down the whining to opers bit
      */

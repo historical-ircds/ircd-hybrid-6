@@ -482,6 +482,8 @@ void send_auth_query(struct AuthRequest* auth)
              (unsigned int) ntohs(us.sin_port));
 
   if (send(auth->fd, authbuf, strlen(authbuf), 0) == -1) {
+    if (EAGAIN == errno)
+      return;
     auth_error(auth);
     return;
   }
@@ -525,6 +527,9 @@ void read_auth_reply(struct AuthRequest* auth)
       *t = '\0';
     }
   }
+
+  if ((len < 0) && (EAGAIN == errno))
+    return;
 
   close(auth->fd);
   auth->fd = -1;
