@@ -142,7 +142,7 @@ static int inetport(struct Listener* listener)
      */
     if ((hp = gethostbyaddr((char*) &listener->addr, 
                             sizeof(struct sockaddr_in), AF_INET))) {
-      strncpy(listener->vhost, hp->h_name, HOSTLEN);
+      strncpy_irc(listener->vhost, hp->h_name, HOSTLEN);
       listener->name = listener->vhost;
     }
   }

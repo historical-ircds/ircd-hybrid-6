@@ -368,7 +368,7 @@ static int check_init(aClient* cptr, char* sockn)
         --cptr->dns_reply->ref_count;
         cptr->dns_reply = NULL;
       }
-      strncpy(sockn, me.name, HOSTLEN);
+      strncpy_irc(sockn, me.name, HOSTLEN);
     }
   memcpy(&cptr->ip, &sk.sin_addr, sizeof(struct in_addr));
   cptr->port = ntohs(sk.sin_port);
@@ -549,7 +549,7 @@ int check_server(aClient* cptr, struct DNSReply* dns_reply,
             n_conf = find_conf_host(lp, name, CONF_NOCONNECT_SERVER );
           if (c_conf && n_conf)
             {
-              strncpy(cptr->host, name, HOSTLEN);
+              strncpy_irc(cptr->host, name, HOSTLEN);
               break;
             }
         }
@@ -604,7 +604,7 @@ int check_server(aClient* cptr, struct DNSReply* dns_reply,
    */
   if (!c_conf || !n_conf)
     {
-      /* strncpy(cptr->host, sockname); */
+      /* strncpy_irc(cptr->host, sockname); */
       Debug((DEBUG_DNS, "sv_cl: access denied: %s[%s@%s] c %x n %x",
              name, cptr->username, cptr->host, c_conf, n_conf));
       return -1;
@@ -619,7 +619,7 @@ int check_server(aClient* cptr, struct DNSReply* dns_reply,
   if (c_conf->ipnum.s_addr == INADDR_NONE)
     memcpy(&c_conf->ipnum, &cptr->ip, sizeof(struct in_addr));
 
-  strncpy(cptr->host, c_conf->host, HOSTLEN);
+  strncpy_irc(cptr->host, c_conf->host, HOSTLEN);
   
   Debug((DEBUG_DNS,"sv_cl: access ok: %s[%s]", name, cptr->host));
   if (estab)
@@ -991,7 +991,7 @@ void add_connection(struct Listener* listener, int fd)
    * copy address to 'sockhost' as a string, copy it to host too
    * so we have something valid to put into error messages...
    */
-  strncpy(new_client->sockhost, inetntoa((char*) &addr.sin_addr), HOSTIPLEN);
+  strncpy_irc(new_client->sockhost, inetntoa((char*) &addr.sin_addr), HOSTIPLEN);
   strcpy(new_client->host, new_client->sockhost);
   new_client->ip.s_addr = addr.sin_addr.s_addr;
   new_client->port      = ntohs(addr.sin_port);
@@ -1753,8 +1753,8 @@ int connect_server(aConfItem *aconf, aClient* by, struct DNSReply* reply)
   /*
    * Copy these in so we have something for error detection.
    */
-  strncpy(cptr->name, aconf->name, HOSTLEN);
-  strncpy(cptr->host, aconf->host, HOSTLEN);
+  strncpy_irc(cptr->name, aconf->name, HOSTLEN);
+  strncpy_irc(cptr->host, aconf->host, HOSTLEN);
   svp = connect_inet(aconf, cptr, &len);
 
   if (!svp)
@@ -1829,7 +1829,7 @@ int connect_server(aConfItem *aconf, aClient* by, struct DNSReply* reply)
       cptr->serv->user = NULL;
     }
   cptr->serv->up = me.name;
-  strncpy(cptr->host, aconf->host, HOSTLEN);
+  strncpy_irc(cptr->host, aconf->host, HOSTLEN);
 
   if (cptr->fd > highest_fd)
     highest_fd = cptr->fd;
@@ -1871,7 +1871,7 @@ static struct sockaddr* connect_inet(aConfItem *aconf, aClient *cptr,
   mysk.sin_family = AF_INET;
   memset(&server, 0, sizeof(server));
   server.sin_family = AF_INET;
-  strncpy(cptr->host, aconf->host, HOSTLEN);
+  strncpy_irc(cptr->host, aconf->host, HOSTLEN);
 
   /*
    * Bind to a local IP# (with unknown port - let unix decide) so

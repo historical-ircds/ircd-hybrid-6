@@ -162,7 +162,7 @@ const char* my_name_for_link(const char* name, aConfItem* aconf)
     return start;
 
   namebuf[0] = '*';
-  strncpy(&namebuf[1], name, HOSTLEN - 1);
+  strncpy_irc(&namebuf[1], name, HOSTLEN - 1);
   namebuf[HOSTLEN - 1] = '\0';
   return namebuf;
 }

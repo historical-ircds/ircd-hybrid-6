@@ -91,7 +91,7 @@ void add_history(aClient* cptr, int online)
   /* Its not string copied, a pointer to the scache hash is copied
      -Dianora
    */
-  /*  strncpy(who->servername, cptr->user->server,HOSTLEN); */
+  /*  strncpy_irc(who->servername, cptr->user->server,HOSTLEN); */
   who->servername = cptr->user->server;
 
   if (online)

@@ -849,7 +849,7 @@ int main(int argc, char *argv[])
 
 #endif
 	case 'h':
-	  strncpy(me.name, p, HOSTLEN);
+	  strncpy_irc(me.name, p, HOSTLEN);
 	  break;
 	case 's':
 	  bootopt |= BOOT_STDERR;
@@ -985,8 +985,8 @@ int main(int argc, char *argv[])
   read_conf_files(YES);		/* cold start init conf files */
 
   aconf = find_me();
-  strncpy(me.name, aconf->host, HOSTLEN);
-  strncpy(me.host, aconf->host, HOSTLEN);
+  strncpy_irc(me.name, aconf->host, HOSTLEN);
+  strncpy_irc(me.host, aconf->host, HOSTLEN);
 
   me.fd = -1;
   me.hopcount = 0;

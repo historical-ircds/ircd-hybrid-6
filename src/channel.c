@@ -1342,7 +1342,7 @@ static  void     set_mode(aClient *cptr,
 	  if (whatt == MODE_DEL)
 	    *chptr->mode.key = '\0';
 	  else
-	    strncpy(chptr->mode.key, arg, KEYLEN);
+	    strncpy_irc(chptr->mode.key, arg, KEYLEN);
 
 	  break;
 
@@ -3538,13 +3538,13 @@ int	m_topic(aClient *cptr,
 	       is_chan_op(sptr, chptr))
 	    {
 	      /* setting a topic */
-	      strncpy(chptr->topic, topic, TOPICLEN);
+	      strncpy_irc(chptr->topic, topic, TOPICLEN);
 #ifdef TOPIC_INFO
               /*
                * XXX - this truncates the topic_nick if
                * strlen(sptr->name) > NICKLEN
                */
-	      strncpy(chptr->topic_nick, sptr->name, NICKLEN);
+	      strncpy_irc(chptr->topic_nick, sptr->name, NICKLEN);
 	      chptr->topic_time = timeofday;
 #endif
 	      sendto_match_servs(chptr, cptr,":%s TOPIC %s :%s",
@@ -3973,8 +3973,8 @@ int	m_names( aClient *cptr,
 	    {
 	      sendto_one(sptr, form_str(RPL_NAMREPLY),
 			 me.name, parv[0], buf);
-	      (void)strncpy(buf, "* ", 3);
-	      (void)strncpy(buf+2, chptr->chname, len + 1);
+	      (void)strncpy_irc(buf, "* ", 3);
+	      (void)strncpy_irc(buf+2, chptr->chname, len + 1);
 	      (void)strcat(buf, " :");
 	      if (PubChannel(chptr))
 		*buf = '=';
@@ -3997,7 +3997,7 @@ int	m_names( aClient *cptr,
 
   /* Second, do all non-public, non-secret channels in one big sweep */
 
-  (void)strncpy(buf, "* * :", 6);
+  (void)strncpy_irc(buf, "* * :", 6);
   idx = 5;
   flag = 0;
   for (c2ptr = GlobalClientList; c2ptr; c2ptr = c2ptr->next)
@@ -4034,7 +4034,7 @@ int	m_names( aClient *cptr,
 	{
 	  sendto_one(sptr, form_str(RPL_NAMREPLY),
 		     me.name, parv[0], buf);
-	  (void)strncpy(buf, "* * :", 6);
+	  (void)strncpy_irc(buf, "* * :", 6);
 	  idx = 5;
 	  flag = 0;
 	}
@@ -4182,7 +4182,7 @@ int	m_sjoin(aClient *cptr,
 	mode.mode |= MODE_TOPICLIMIT;
 	break;
       case 'k':
-	strncpy(mode.key, parv[4 + args], KEYLEN);
+	strncpy_irc(mode.key, parv[4 + args], KEYLEN);
 	args++;
 	if (parc < 5+args) return 0;
 	break;

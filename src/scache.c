@@ -79,7 +79,7 @@ const char* find_or_add(const char* name)
   ptr = (SCACHE*) MyMalloc(sizeof(SCACHE));
   assert(0 != ptr);
 
-  strncpy(ptr->name, name, HOSTLEN);
+  strncpy_irc(ptr->name, name, HOSTLEN);
   ptr->name[HOSTLEN] = '\0';
 
   ptr->next = scache_hash[hash_index];

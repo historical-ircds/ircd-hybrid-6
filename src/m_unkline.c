@@ -192,7 +192,7 @@ K:bar:No reason (1997/08/30 14.56):foo
 	  char *found_user;
 	  char *found_comment;
 
-	  strncpy(buff, buf, BUFSIZE);	/* extra paranoia */
+	  strncpy_irc(buff, buf, BUFSIZE);	/* extra paranoia */
 
 	  p = strchr(buff,'\n');
 	  if(p)
@@ -249,7 +249,7 @@ K:bar:No reason (1997/08/30 14.56):foo
 	  char *found_user;
 	  char *found_host;
 
-	  strncpy(buff, buf, BUFSIZE);
+	  strncpy_irc(buff, buf, BUFSIZE);
 /*
 #Dianora!db@ts2-11.ottawa.net K'd: foo@bar:No reason
 K:bar:No reason (1997/08/30 14.56):foo

@@ -335,7 +335,7 @@ static struct Client* hash_find_masked_server(const char* name,
   /*
    * copy the damn thing and be done with it
    */
-  strncpy(buf, name, HOSTLEN);
+  strncpy_irc(buf, name, HOSTLEN);
   buf[HOSTLEN] = '\0';
 
   while ((s = strchr(p, '.')) != 0)

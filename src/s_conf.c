@@ -269,7 +269,7 @@ int attach_Iline(aClient* cptr, struct hostent* hp,
 
   if (hp && hp->h_name)
     {
-      strncpy(host, hp->h_name, HOSTLEN);
+      strncpy_irc(host, hp->h_name, HOSTLEN);
       /*
        * XXX - this probably isn't needed, but ...
        */
@@ -278,7 +278,7 @@ int attach_Iline(aClient* cptr, struct hostent* hp,
     }
   else
     {
-      strncpy(host, sockhost, HOSTLEN);
+      strncpy_irc(host, sockhost, HOSTLEN);
     }
 
   if (IsGotId(cptr))
@@ -294,7 +294,7 @@ int attach_Iline(aClient* cptr, struct hostent* hp,
   else
     {
       non_ident[0] = '~';
-      strncpy(&non_ident[1],username, USERLEN - 1);
+      strncpy_irc(&non_ident[1],username, USERLEN - 1);
       non_ident[USERLEN] = '\0';
       aconf = find_matching_mtrie_conf(host,non_ident,
                                        ntohl(cptr->ip.s_addr));
@@ -329,13 +329,13 @@ int attach_Iline(aClient* cptr, struct hostent* hp,
 #ifdef SPOOF_FREEFORM
               sendto_realops("%s spoofing: %s as %s", cptr->name,
                              host, aconf->name);
-              strncpy(cptr->host, aconf->name, HOSTLEN);
+              strncpy_irc(cptr->host, aconf->name, HOSTLEN);
 #else
               /* default to oper.server.name.tld */
               sendto_realops("%s spoofing: %s(%s) as oper.%s", cptr->name, 
                              host, inetntoa((char*) &cptr->ip), me.name);
               strcpy(cptr->host, "oper.");
-              strncpy(&cptr->host[5], me.name, HOSTLEN - 5);
+              strncpy_irc(&cptr->host[5], me.name, HOSTLEN - 5);
 #endif
               SetIPSpoof(cptr);
               SetIPHidden(cptr);
@@ -2110,11 +2110,11 @@ static void initconf(FBFILE* file, int use_include)
       */
       if (aconf->status == CONF_ME)
         {
-          strncpy(me.info, aconf->user, REALLEN);
+          strncpy_irc(me.info, aconf->user, REALLEN);
 
           if (me.name[0] == '\0' && aconf->host[0])
           {
-            strncpy(me.name, aconf->host, HOSTLEN);
+            strncpy_irc(me.name, aconf->host, HOSTLEN);
             if ((aconf->passwd[0] != '\0') && (aconf->passwd[0] != '*'))
             {
                 memset(&vserv,0, sizeof(vserv));
@@ -2278,7 +2278,7 @@ static void initconf(FBFILE* file, int use_include)
                 }
 
               if(aconf->passwd)
-                strncpy(chptr->topic, aconf->passwd, TOPICLEN);
+                strncpy_irc(chptr->topic, aconf->passwd, TOPICLEN);
             }
 #endif
 

@@ -489,10 +489,10 @@ static int register_user(aClient *cptr, aClient *sptr,
 		if (IsNeedId(sptr))
 		  {
 		    *sptr->username = '~';
-		    strncpy(&sptr->username[1], username, USERLEN - 1);
+		    strncpy_irc(&sptr->username[1], username, USERLEN - 1);
 		  }
 	        else
-	          strncpy(sptr->username, username, USERLEN);
+	          strncpy_irc(sptr->username, username, USERLEN);
  	        sptr->username[USERLEN] = '\0';
               }
 
@@ -534,12 +534,12 @@ static int register_user(aClient *cptr, aClient *sptr,
 	     }
 	   if (IsNoTilde(aconf))
 	     {
-	        strncpy(sptr->username, username, USERLEN);
+	        strncpy_irc(sptr->username, username, USERLEN);
              }
            else
              {
                 *sptr->username = '~';
-                strncpy(&sptr->username[1], username, USERLEN - 1);
+                strncpy_irc(&sptr->username[1], username, USERLEN - 1);
              }
              sptr->username[USERLEN] = '\0';
 	}
@@ -671,7 +671,7 @@ static int register_user(aClient *cptr, aClient *sptr,
 	}
     }
   else
-    strncpy(sptr->username, username, USERLEN);
+    strncpy_irc(sptr->username, username, USERLEN);
 
   SetClient(sptr);
 
@@ -1122,7 +1122,7 @@ int	m_nick(aClient *cptr,
   
   if (MyConnect(sptr) && (s = (char *)strchr(parv[1], '~')))
     *s = '\0';
-  strncpy(nick, parv[1], NICKLEN);
+  strncpy_irc(nick, parv[1], NICKLEN);
 
   /*
    * if do_nick_name() returns a null name OR if the server sent a nick
@@ -1629,7 +1629,7 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
       if (sptr->user)
 	{
           char buf[USERLEN + 1];
-          strncpy(buf, sptr->username, USERLEN);
+          strncpy_irc(buf, sptr->username, USERLEN);
           buf[USERLEN] = '\0';
 	  /*
 	  ** USER already received, now we have NICK.
@@ -2681,7 +2681,7 @@ static int do_user(char* nick, aClient* cptr, aClient* sptr,
        * coming from another server, take the servers word for it
        */
       user->server = find_or_add(server);
-      strncpy(sptr->host, host, HOSTLEN); 
+      strncpy_irc(sptr->host, host, HOSTLEN); 
     }
   else
     {
@@ -2698,11 +2698,11 @@ static int do_user(char* nick, aClient* cptr, aClient* sptr,
 	Count.invisi++;
       /*
        * don't take the clients word for it, ever
-       *  strncpy(user->host, host, HOSTLEN); 
+       *  strncpy_irc(user->host, host, HOSTLEN); 
        */
       user->server = me.name;
     }
-  strncpy(sptr->info, realname, REALLEN);
+  strncpy_irc(sptr->info, realname, REALLEN);
 
   if (sptr->name[0]) /* NICK already received, now I have USER... */
     return register_user(cptr, sptr, sptr->name, username);
@@ -2713,7 +2713,7 @@ static int do_user(char* nick, aClient* cptr, aClient* sptr,
           /*
            * save the username in the client
            */
-          strncpy(sptr->username, username, USERLEN);
+          strncpy_irc(sptr->username, username, USERLEN);
         }
     }
   return 0;
@@ -3340,7 +3340,7 @@ int	m_pass(aClient *cptr,
 		 me.name, parv[0]);
       return 0;
     }
-  strncpy(cptr->passwd, password, PASSWDLEN);
+  strncpy_irc(cptr->passwd, password, PASSWDLEN);
   if (parc > 2)
     {
       /* It looks to me as if orabidoo wanted to have more

@@ -151,9 +151,9 @@ int     m_gline(aClient *cptr,
 	  if (!*host)		/* duh. no host found, assume its '*' host */
 	    host = "*";
 
-	  strncpy(tempuser, user, USERLEN + 1);	/* allow for '*' */
+	  strncpy_irc(tempuser, user, USERLEN + 1);	/* allow for '*' */
           tempuser[USERLEN + 1] = '\0';
-	  strncpy(temphost, host, HOSTLEN);
+	  strncpy_irc(temphost, host, HOSTLEN);
           temphost[HOSTLEN] = '\0';
 	  user = tempuser;
 	  host = temphost;
@@ -723,19 +723,19 @@ static int majority_gline(aClient *sptr,
 
       memset(new_pending_gline, 0, sizeof(GLINE_PENDING));
 
-      strncpy(new_pending_gline->oper_nick1, oper_nick, NICKLEN);
+      strncpy_irc(new_pending_gline->oper_nick1, oper_nick, NICKLEN);
       new_pending_gline->oper_nick2[0] = '\0';
 
-      strncpy(new_pending_gline->oper_user1, oper_user, USERLEN);
+      strncpy_irc(new_pending_gline->oper_user1, oper_user, USERLEN);
       new_pending_gline->oper_user2[0] = '\0';
 
-      strncpy(new_pending_gline->oper_host1, oper_host, HOSTLEN);
+      strncpy_irc(new_pending_gline->oper_host1, oper_host, HOSTLEN);
       new_pending_gline->oper_host2[0] = '\0';
 
       new_pending_gline->oper_server1 = find_or_add(oper_server);
 
-      strncpy(new_pending_gline->user, user, USERLEN);
-      strncpy(new_pending_gline->host, host, HOSTLEN);
+      strncpy_irc(new_pending_gline->user, user, USERLEN);
+      strncpy_irc(new_pending_gline->host, host, HOSTLEN);
       new_pending_gline->reason1 = strdup(reason);
       new_pending_gline->reason2 = NULL;
 
@@ -790,9 +790,9 @@ static int majority_gline(aClient *sptr,
 	    }
 	  else
 	    {
-	      strncpy(gline_pending_ptr->oper_nick2, oper_nick, NICKLEN);
-	      strncpy(gline_pending_ptr->oper_user2, oper_user, USERLEN);
-	      strncpy(gline_pending_ptr->oper_host2, oper_host, HOSTLEN);
+	      strncpy_irc(gline_pending_ptr->oper_nick2, oper_nick, NICKLEN);
+	      strncpy_irc(gline_pending_ptr->oper_user2, oper_user, USERLEN);
+	      strncpy_irc(gline_pending_ptr->oper_host2, oper_host, HOSTLEN);
 	      gline_pending_ptr->reason2 = strdup(reason);
 	      gline_pending_ptr->oper_server2 = find_or_add(oper_server);
 	      gline_pending_ptr->last_gline_time = NOW;
@@ -814,19 +814,19 @@ static int majority_gline(aClient *sptr,
 
   memset((void *)new_pending_gline,0,sizeof(GLINE_PENDING));
 
-  strncpy(new_pending_gline->oper_nick1, oper_nick, NICKLEN);
+  strncpy_irc(new_pending_gline->oper_nick1, oper_nick, NICKLEN);
   new_pending_gline->oper_nick2[0] = '\0';
 
-  strncpy(new_pending_gline->oper_user1, oper_user, USERLEN);
+  strncpy_irc(new_pending_gline->oper_user1, oper_user, USERLEN);
   new_pending_gline->oper_user2[0] = '\0';
 
-  strncpy(new_pending_gline->oper_host1, oper_host, HOSTLEN);
+  strncpy_irc(new_pending_gline->oper_host1, oper_host, HOSTLEN);
   new_pending_gline->oper_host2[0] = '\0';
 
   new_pending_gline->oper_server1 = find_or_add(oper_server);
 
-  strncpy(new_pending_gline->user, user, USERLEN);
-  strncpy(new_pending_gline->host, host, HOSTLEN);
+  strncpy_irc(new_pending_gline->user, user, USERLEN);
+  strncpy_irc(new_pending_gline->host, host, HOSTLEN);
   new_pending_gline->reason1 = strdup(reason);
   new_pending_gline->reason2 = (char *)NULL;
 
