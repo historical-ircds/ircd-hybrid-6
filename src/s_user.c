@@ -2018,7 +2018,7 @@ static	int	m_message(aClient *cptr,
       /* special case opers@server */
       if(!strcasecmp(nick,"opers") && IsAnOper(sptr))
 	{
-	  sendto_realops("To opers: From %s: %s",parv[0],sptr->name);
+	  sendto_realops("To opers: From %s: %s",sptr->name,parv[2]);
 	  return 0;
 	}
 	
