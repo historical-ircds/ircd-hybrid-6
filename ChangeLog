@@ -4,6 +4,8 @@
 
 version hybrid-6-b46   15-Feb-1999
 * put fdlist code back in. Ok, I goofed. mea culpa.
+* #ifdef USE_SYSLOG missing in ircd.c
+* Ultrix'ed the Makefile.in as per Ian
 -Dianora
 
 version hybrid-6-b46   15-Feb-1999
