@@ -289,7 +289,7 @@ static void bad_command(void)
  * -k filename - specify k:line file
  * -l filename - specify log file
  * -n          - do not fork, run in foreground
- * -v          - print version and exit
+ * -v          - print daemon version and exit
  * -x          - set debug level, if compiled for debug logging
  */
 static void parse_command_line(int argc, char* argv[])
@@ -327,7 +327,7 @@ static void parse_command_line(int argc, char* argv[])
       bootDaemon = 0; 
       break;
     case 'v':
-      printf("ircd %s\n\tzlib %s\n\tircd_dir: %s\n", version,
+      printf("ircd %s\n\tzlib %s\n\tircd_dir: %s\n", ircd_version,
 #ifndef ZIP_LINKS
              "not used",
 #else

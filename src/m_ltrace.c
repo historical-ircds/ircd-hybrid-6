@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, src/m_version.c
+ *   IRC - Internet Relay Chat, src/m_ltrace.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
  *
@@ -140,10 +140,10 @@ int     m_ltrace(struct Client *cptr,
         ac2ptr = next_client(GlobalClientList, tname);
         if (ac2ptr)
           sendto_one(sptr, form_str(RPL_TRACELINK), me.name, parv[0],
-                     version, debugmode, tname, ac2ptr->from->name);
+                     ircd_version, debugmode, tname, ac2ptr->from->name);
         else
           sendto_one(sptr, form_str(RPL_TRACELINK), me.name, parv[0],
-                     version, debugmode, tname, "ac2ptr_is_NULL!!");
+                     ircd_version, debugmode, tname, "ac2ptr_is_NULL!!");
         return 0;
       }
     case HUNTED_ISME:
