@@ -201,7 +201,8 @@ struct ConfItem* make_conf()
 /*
  * delist_conf - remove conf item from ConfigItemList
  */
-static void delist_conf(struct ConfItem* aconf)
+static void 
+delist_conf(struct ConfItem* aconf)
 {
   if (aconf == ConfigItemList)
     ConfigItemList = ConfigItemList->next;
@@ -216,9 +217,10 @@ static void delist_conf(struct ConfItem* aconf)
   aconf->next = NULL;
 }
 
-void free_conf(struct ConfItem* aconf)
+void 
+free_conf(struct ConfItem* aconf)
 {
-  assert(0 != aconf);
+  assert(aconf != NULL);
 
   if (aconf->dns_pending)
     delete_adns_queries(aconf->dns_query);
@@ -226,6 +228,7 @@ void free_conf(struct ConfItem* aconf)
   if (aconf->passwd)
     memset(aconf->passwd, 0, strlen(aconf->passwd));
   MyFree(aconf->passwd);
+  MyFree(aconf->oper_reason);
   MyFree(aconf->user);
   MyFree(aconf->name);
   MyFree((char*) aconf);

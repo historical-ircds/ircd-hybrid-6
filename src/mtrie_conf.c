@@ -1246,16 +1246,16 @@ report_unsortable_klines(struct Client *sptr,char *need_host)
   for(found_conf = unsortable_list_klines;
       found_conf;found_conf=found_conf->next)
     {
-      get_printable_conf(found_conf, &name, &host, &pass,
-			 &oper_reason, &user, &port);
+      get_printable_conf(found_conf, &name, &host, &pass, &oper_reason,
+			 &user, &port);
 
       if(match(host,need_host))
         {
 	  if (!IsAnOper(sptr))
 	    *oper_reason = '\0';
-	    sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
-		       sptr->name, 'K', host,
-		       name, pass ); /* oper_reason); */
+	  sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
+		     sptr->name, 'K', host,
+		     name, pass, oper_reason);
         }
     }
 }
@@ -1370,18 +1370,11 @@ void report_mtrie_conf_links(struct Client *sptr, int flags)
           get_printable_conf(found_conf, &name, &host, &pass,
 			     &oper_reason, &user, &port);
 
-          if(IsAnOper(sptr))
-          {
-	    sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
-		       sptr->name, 'K', host,
-		       user, pass); /*  oper_reason); */
-	  }
-	  else
-	  {
-	    sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
-		       sptr->name, 'K', host,
-		       user, pass);
-	  }
+          if(!IsAnOper(sptr))
+	    *oper_reason = '\0';
+	  sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
+		     sptr->name, 'K', host,
+		     user, pass, oper_reason);
         }
     }
 }
@@ -1494,7 +1487,7 @@ report_sub_mtrie(struct Client *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 				 'K',
 				 host,
 				 user,
-				 pass); /* oper_reason); */
+				 pass, oper_reason);
                     }
                   else
                     {
@@ -1546,7 +1539,7 @@ report_sub_mtrie(struct Client *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
                                  'K',
                                  host,
                                  user,
-                                 pass); /* oper_reason); */
+                                 pass, oper_reason);
                     }
                   else
                     {

@@ -111,10 +111,10 @@ DelPending(aPendingLine *pendptr)
   if (!pendptr)
     return;
 
-  if (pendptr->user)
-    MyFree(pendptr->user);
+  MyFree(pendptr->user);
   MyFree(pendptr->host);
   MyFree(pendptr->reason);
+  MyFree(pendptr->oper_reason);
   MyFree(pendptr->when);
   MyFree(pendptr);
 } /* DelPending() */
@@ -305,8 +305,8 @@ WriteKline(const char *filename, struct Client *sptr, struct Client *rcptr,
       ircsprintf(buffer, "K:%s:%s (%s) |%s:%s\n",
 		 host,
 		 reason,
-		 oper_reason,
 		 when,
+		 oper_reason,
 		 user);
     }
   else
@@ -786,7 +786,7 @@ m_kline(struct Client *cptr,
       ircsprintf(buffer, "%s (%s)", reason, current_date);
       DupString(aconf->passwd, buffer);
       if (oper_reason != NULL)
-	DupString(aconf->oper_reason, p);
+	DupString(aconf->oper_reason, oper_reason);
     }
   ClassPtr(aconf) = find_class(0);
 

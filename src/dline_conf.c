@@ -806,14 +806,16 @@ void zap_Dlines()
  * exceptions.
  * -good
  */
-void walk_the_dlines(aClient *sptr, struct ip_subtree *tree)
+void
+walk_the_dlines(struct Client *sptr, struct ip_subtree *tree)
 {
   struct ConfItem *scan;
   char *name, *host, *pass, *oper_reason, *user;
   int port;
   char c;               /* D,d or K */
 
-  if (!tree) return;
+  if (tree == NULL)
+    return;
   
   /* do an inorder traversal of the tree */
   walk_the_dlines(sptr, tree->left);
@@ -832,8 +834,10 @@ void walk_the_dlines(aClient *sptr, struct ip_subtree *tree)
       get_printable_conf(scan, &name, &host, &pass, &oper_reason,
 			 &user, &port);
 
+      if (!IsAnOper(sptr))
+	*oper_reason = '\0';
       sendto_one(sptr, form_str(RPL_STATSDLINE), me.name,
-                 sptr->name, c, host, pass);
+                 sptr->name, c, host, pass, oper_reason);
     }
   walk_the_dlines(sptr, tree->right);
 }
@@ -849,10 +853,11 @@ void report_dlines(aClient *sptr)
  * walk_the_ip_Klines - inorder traversal of a Dline tree, printing K/I/Elines
  * -good
  */
-void walk_the_ip_Klines(aClient *sptr, struct ip_subtree *tree, 
+void
+walk_the_ip_Klines(struct Client *sptr, struct ip_subtree *tree, 
                         char conftype, int MASK)
 {
-  aConfItem *scan;
+  struct ConfItem *scan;
   char *name, *host, *pass, *oper_reason, *user;
   int port;
 
@@ -893,14 +898,16 @@ void walk_the_ip_Klines(aClient *sptr, struct ip_subtree *tree,
   walk_the_ip_Klines(sptr, tree->right, conftype, MASK);
 }
 
-void report_ip_Klines(aClient *sptr)
+void 
+report_ip_Klines(aClient *sptr)
 {
   int i;
   for (i=0;i<256;i++) walk_the_ip_Klines(sptr, ip_Kline[i],'K', CONF_KILL);
 }
 
 
-void report_ip_Ilines(aClient *sptr)
+void
+report_ip_Ilines(aClient *sptr)
 {
   int i;
   for (i=0;i<256;i++) walk_the_ip_Klines(sptr, ip_Kline[i],'I', CONF_CLIENT);
