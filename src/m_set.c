@@ -109,7 +109,13 @@
  *      10 - SPLITUSERS
  *      11 - SPAMNUM
  *      12 - SPAMTIME
+ *      13 - LOG
  * - rjp
+ *
+ * Currently, the end of the table is TOKEN_BAD, 14.  If you add anything
+ * to the set table, you must increase TOKEN_BAD so that it is directly
+ * after the last valid entry.
+ * -Hwy
  */
 
 #define TOKEN_MAX 0
