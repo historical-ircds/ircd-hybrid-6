@@ -19,6 +19,8 @@
 *   $Id$
 */
 #include "struct.h"
+#include "ircd_defs.h"
+#include "whowas.h"
 #include "common.h"
 #include "numeric.h"
 #include "ircd.h"
@@ -32,12 +34,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-/*
- * Whowas hash table size
- *
- * used in whowas.c
- */
-#define WW_MAX 65536
 
 /* internally defined function */
 static void add_whowas_to_clist(aWhowas **,aWhowas *);

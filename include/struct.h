@@ -109,26 +109,6 @@ struct  Counter {
 };
 
 
-/*
-  lets speed this up...
-  also removed away information. *tough*
-  - Dianora
- */
-typedef struct Whowas
-{
-  int  hashv;
-  char name[NICKLEN + 1];
-  char username[USERLEN + 1]; 
-  char hostname[HOSTLEN + 1];
-  const char* servername;
-  char realname[REALLEN + 1];
-  time_t logoff;
-  struct Client *online; /* Pointer to new nickname for chasing or NULL */
-  struct Whowas *next;  /* for hash table... */
-  struct Whowas *prev;  /* for hash table... */
-  struct Whowas *cnext; /* for client struct linked list */
-  struct Whowas *cprev; /* for client struct linked list */
-}aWhowas;
 
 
 /* Macros for aConfItem */
@@ -247,11 +227,6 @@ struct SLink
 
 extern  char    *version, *serno, *infotext[];
 extern  char    *generation, *creation;
-
-/* misc defines */
-
-#define UTMP            "/etc/utmp"
-#define COMMA           ","
 
 #ifdef ORATIMING
 /* Timing stuff (for performance measurements): compile with -DORATIMING

@@ -35,16 +35,47 @@
 #ifndef __whowas_include__
 #define __whowas_include__
 
+
+/*
+ * Whowas hash table size
+ *
+ */
+#define WW_MAX 65536
+
+struct User;
+struct CLient;
+
 /*
 ** WHOWAS structure moved here from whowas.c
 */
 typedef struct aname {
-        anUser  *ww_user;
-        aClient *ww_online;
+        struct User  *ww_user;
+        struct Client *ww_online;
         time_t  ww_logout;
         char    ww_nick[NICKLEN+1];
         char    ww_info[REALLEN+1];
 } aName;
+
+/*
+  lets speed this up...
+  also removed away information. *tough*
+  - Dianora
+ */
+typedef struct Whowas
+{
+  int  hashv;
+  char name[NICKLEN + 1];
+  char username[USERLEN + 1]; 
+  char hostname[HOSTLEN + 1];
+  const char* servername;
+  char realname[REALLEN + 1];
+  time_t logoff;
+  struct Client *online; /* Pointer to new nickname for chasing or NULL */
+  struct Whowas *next;  /* for hash table... */
+  struct Whowas *prev;  /* for hash table... */
+  struct Whowas *cnext; /* for client struct linked list */
+  struct Whowas *cprev; /* for client struct linked list */
+}aWhowas;
 
 /*
 ** initwhowas

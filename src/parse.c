@@ -374,6 +374,9 @@ int parse(aClient *cptr, char *buffer, char *bufend)
         {
 	  /* Never BAD CODE again */
 
+	  while(*s == ' ')	/* tabs are not considered space */
+	    s++;
+
           if (*s == ':')
             {
               /*
@@ -385,18 +388,13 @@ int parse(aClient *cptr, char *buffer, char *bufend)
             }
 	  else
 	    {
-	      if (i >= paramcount)
+	      para[i++] = s;
+	      if (i > paramcount)
 		{
-		  para[i++] = s;
 		  break;
 		}
 	      else
 		{
-		  while(*s == ' ')	/* tabs are not considered space */
-		    s++;
-
-		  para[i++] = s;
-
 		  /* scan for end of string, either ' ' or '\0' */
 		  while (IsNonEOS(*s))
 		    s++;

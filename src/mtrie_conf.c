@@ -126,8 +126,8 @@ void add_mtrie_conf_entry(aConfItem *aconf,int flags)
       return;
     }
 
-  if( (aconf->host[0] == 'x') && aconf->user && 
-      is_address(aconf->user,&ip_host,&ip_mask) )
+  if( (aconf->user[0] == 'x') && aconf->host && 
+      is_address(aconf->host,&ip_host,&ip_mask) )
     {
       aconf->ip = ip_host & ip_mask;
       aconf->ip_mask = ip_mask;
