@@ -270,7 +270,7 @@ char	*get_client_name(aClient *sptr,int showip)
 
       /* Check for a port number, needed for listening ports */
       if (sptr->flags & FLAGS_LISTEN)
-        (void)sprintf(t_port, "%c%.u", '/', sptr->port);
+        (void)sprintf(t_port, "/%.u", sptr->port);
 
       /* And finally, let's get the host information, ip or name */
       switch (showip)
@@ -305,10 +305,23 @@ char  *get_client_host(aClient *cptr)
   if (!cptr->hostp)
     return get_client_name(cptr, FALSE);
   else
-    (void)ircsprintf(nbuf, "%s[%-.*s@%-.*s]",
-		     cptr->name, USERLEN,
-		     (!IsGotId(cptr)) ? "" : cptr->username,
-		     HOSTLEN, cptr->hostp->h_name);
+    {
+      if(IsGotId(cptr))
+	{
+	  (void)ircsprintf(nbuf, "%s[(+)%-.*s@%-.*s]",
+			   cptr->name, USERLEN,
+			   cptr->username,
+			   HOSTLEN, cptr->hostp->h_name);
+	}
+      else
+	{
+	  (void)ircsprintf(nbuf, "%s[%-.*s@%-.*s]",
+			   cptr->name, USERLEN,
+			   cptr->username,
+			   HOSTLEN, cptr->hostp->h_name);
+	}
+
+    }
   return nbuf;
  }
 
