@@ -152,7 +152,8 @@ mtrie_conf.o: mtrie_conf.c ../include/mtrie_conf.h \
  ../include/class.h ../include/ircd.h ../include/send.h \
  ../include/dline_conf.h
 numeric.o: numeric.c ../include/numeric.h ../include/config.h \
- ../include/setup.h ../include/irc_string.h messages.tab
+ ../include/setup.h ../include/irc_string.h ../include/common.h \
+ messages.tab
 packet.o: packet.c ../include/packet.h ../include/struct.h \
  ../include/config.h ../include/setup.h ../include/ircd_defs.h \
  ../include/client.h ../include/dbuf.h ../include/common.h \
