@@ -52,6 +52,10 @@
 
 #define MIN_CONN_FREQ 300
 
+#ifndef INADDR_NONE
+#define INADDR_NONE ((unsigned int) 0xffffffff)
+#endif
+
 int MaxConnectionCount = 1;
 int MaxClientCount     = 1;
 
