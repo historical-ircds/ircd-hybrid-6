@@ -311,7 +311,7 @@ char *zip_buffer(aClient *cptr, char *buffer, int *length, int flush)
   if (buffer)
     {
       /* concatenate buffer in cptr->zip->outbuf */
-      memcpy((void *)cptr->zip->outbuf + cptr->zip->outcount, (void *)buffer,
+      memcpy((void *)(cptr->zip->outbuf + cptr->zip->outcount), (void *)buffer,
              *length );
       cptr->zip->outcount += *length;
     }
