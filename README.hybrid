@@ -29,6 +29,7 @@
 - modified configure.in for use with zlib (Rodder)
 - added CAPAB code, understands EX ZIP QS (orabidoo/Dianora)
 - reworked set_mode() completely in channel.c (orabidoo/Dianora)
+- privmsg/notice @#channel will send to all chanops
 - added +e (orabidoo)
 - Q lines are back, quarantine nick, X line reject gecos info (Dianora)
 - allow users who are invited to walk through any bans/limits (David-R)
