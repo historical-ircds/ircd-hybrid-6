@@ -57,7 +57,12 @@ char        specific_virtual_host;
 /* internally defined functions */
 
 static void lookup_confhost(aConfItem* aconf);
-static  int     SplitUserHost( aConfItem * );
+static int     SplitUserHost( aConfItem * );
+
+static FBFILE*  openconf(char* filename);
+static void	initconf(FBFILE*, int);
+static void     clear_out_old_conf(void);
+static void     flush_deleted_I_P(void);
 
 #ifdef LIMIT_UH
 static  int     attach_iline(aClient *, aConfItem *,char *);
@@ -1534,12 +1539,6 @@ int        rehash_dump(aClient *sptr,char *parv0)
  */
 int rehash(aClient *cptr,aClient *sptr,int sig)
 {
-  aConfItem **tmp = &ConfigItemList;
-  aConfItem *tmp2;
-  aClass        *cltmp;
-  int        ret = 0;
-  FBFILE* file = 0;
-
   if (sig == SIGHUP)
     {
       sendto_ops("Got signal SIGHUP, reloading ircd conf. file");
@@ -1549,123 +1548,11 @@ int rehash(aClient *cptr,aClient *sptr,int sig)
       write_pidfile();
 #endif
     }
-
-  if ((file = openconf(ConfigFileEntry.configfile)) == 0)
-    {
-      sendto_ops("Can't open %s file aborting rehash!",
-                 ConfigFileEntry.configfile);
-      return -1;
-    }
-
-  /* Shadowfax's LOCKFILE code */
-#ifdef LOCKFILE
-  do_pending_klines();
-#endif
-
-#if defined(R_LINES_REHASH) && !defined(R_LINES_OFTEN)
-  { /* Scope */
-    aClient        *acptr;
-    int        i;
-    for (i = 0; i <= highest_fd; i++)
-      {
-        if ((acptr = local[i]) && !IsMe(acptr))
-          {
-            if (find_restrict(acptr))
-              {
-                sendto_ops("Restricting %s, closing lp",
-                           get_client_name(acptr,FALSE));
-                if (exit_client(cptr,acptr,sptr,"R-lined") ==
-                    FLUSH_BUFFER)
-                  ret = FLUSH_BUFFER;
-              }
-         }
-      }
-  }
-#endif
-
-  while ((tmp2 = *tmp))
-    if (tmp2->clients || tmp2->status & CONF_LISTEN_PORT)
-      {
-        /*
-        ** Configuration entry is still in use by some
-        ** local clients, cannot delete it--mark it so
-        ** that it will be deleted when the last client
-        ** exits...
-        */
-        if (!(tmp2->status & (CONF_LISTEN_PORT|CONF_CLIENT)))
-          {
-            *tmp = tmp2->next;
-            tmp2->next = NULL;
-          }
-        else
-          tmp = &tmp2->next;
-        tmp2->status |= CONF_ILLEGAL;
-      }
-    else
-      {
-        *tmp = tmp2->next;
-        free_conf(tmp2);
-      }
-
-  /*
-   * We don't delete the class table, rather mark all entries
-   * for deletion. The table is cleaned up by check_class. - avalon
-   */
-  assert(0 != ClassList);
-  for (cltmp = ClassList->next; cltmp; cltmp = cltmp->next)
-    MaxLinks(cltmp) = -1;
-
-  clear_mtrie_conf_links();
-
-  zap_Dlines();
-  /*  clear_special_conf(&q_conf); */
-  clear_special_conf(&x_conf);
-  clear_special_conf(&u_conf);
-  clear_q_lines();
-
-  initconf(0, file, YES);
-  do_include_conf();
-
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-  {
-    char timebuffer[20];
-    char filenamebuf[1024];
-    struct tm *tmptr;
-    tmptr = localtime(&NOW);
-    (void)strftime(timebuffer, 20, "%Y%m%d", tmptr);
-    ircsprintf(filenamebuf, "%s.%s", ConfigFileEntry.klinefile, timebuffer);
-
-    if ((file = openconf(filenamebuf)) == 0)
-      sendto_ops("Can't open %s file klines could be missing!",filenamebuf);
-    else
-      initconf(0, file, NO);
-  }
-#else
-#ifdef KLINEFILE
-  if ((file = openconf(ConfigFileEntry.klinefile)) == 0)
-    sendto_ops("Can't open %s file klines could be missing!",
-               ConfigFileEntry.klinefile);
-  else
-    initconf(0, file, NO);
-#endif
-#endif
+  read_conf_files(NO);
   close_listeners();
-
-  /*
-   * flush out deleted I and P lines although still in use.
-   */
-  for (tmp = &ConfigItemList; (tmp2 = *tmp); )
-    if (!(tmp2->status & CONF_ILLEGAL))
-      tmp = &tmp2->next;
-    else
-      {
-        *tmp = tmp2->next;
-        tmp2->next = NULL;
-        if (!tmp2->clients)
-          free_conf(tmp2);
-      }
+  flush_deleted_I_P();
   rehashed = 1;
-  return ret;
+  return 0;
 }
 
 /*
@@ -1674,7 +1561,7 @@ int rehash(aClient *cptr,aClient *sptr,int sig)
  * returns 0 (NULL) on any error or else the fd opened from which to read the
  * configuration file from.  
  */
-FBFILE* openconf(char *filename)
+static FBFILE* openconf(char *filename)
 {
   return fbopen(filename, "r");
 }
@@ -1734,8 +1621,7 @@ static char *set_conf_flags(aConfItem *aconf,char *tmp)
 **    Read configuration file.
 **
 *
-* Inputs         - opt 
-*                 - file descriptor pointing to config file to use
+* Inputs   	- file descriptor pointing to config file to use
 *
 **    returns -1, if file cannot be opened
 **             0, if file opened
@@ -1743,7 +1629,7 @@ static char *set_conf_flags(aConfItem *aconf,char *tmp)
 
 #define MAXCONFLINKS 150
 
-void initconf(int opt, FBFILE* file, int use_include)
+static void initconf(FBFILE* file, int use_include)
 {
   static char  quotes[9][2] = {
     {'b', '\b'}, {'f', '\f'}, {'n', '\n'},
@@ -1946,12 +1832,6 @@ void initconf(int opt, FBFILE* file, int use_include)
           aconf->status = CONF_QUARANTINED_NICK;
           break;
 
-#ifdef R_LINES
-        case 'R': /* extended K line */
-        case 'r': /* Offers more options of how to restrict */
-          aconf->status = CONF_RESTRICT;
-          break;
-#endif
         case 'U': /* Uphost, ie. host where client reading */
         case 'u': /* this should connect.                  */
           aconf->status = CONF_ULINE;
@@ -2163,8 +2043,7 @@ void initconf(int opt, FBFILE* file, int use_include)
               continue;
             }
 
-          if (!(opt & BOOT_QUICK))
-            lookup_confhost(aconf);
+	  lookup_confhost(aconf);
         }
       
       /* o: or O: line */
@@ -2443,7 +2322,7 @@ static int SplitUserHost(aConfItem *aconf)
 
 void do_include_conf()
 {
-  FBFILE* file;
+  FBFILE* file=0;
   aConfItem *nextinclude;
 
   for( ; include_list; include_list = nextinclude )
@@ -2454,7 +2333,7 @@ void do_include_conf()
       else
         {
           sendto_ops("Hashing in %s include file",include_list->name);
-          initconf(0, file, NO);
+          initconf(file, NO);
         }
       free_conf(include_list);
     }
@@ -3128,7 +3007,7 @@ char    *parv, *filename;
         *tmp = '\0';
       sendto_one(sptr, ":%s %d %s :%s.", me.name, ERR_YOUREBANNEDCREEP, parv,line);
     }
-  fdclose(file);
+  fbclose(file);
   return 0;
 }
 #endif /* KILL_COMMENT_IS_FILE */
@@ -3248,4 +3127,165 @@ void GetPrintableaConfItem(aConfItem *aconf, char **name, char **host,
   *pass = BadPtr(aconf->passwd) ? null : aconf->passwd;
   *user = BadPtr(aconf->user) ? null : aconf->user;
   *port = (int)aconf->port;
+}
+
+
+/*
+ * read_conf_files
+ */
+
+void read_conf_files(int cold)
+{
+  FBFILE* file = 0;      /* initconf */
+
+  if ((file = openconf(ConfigFileEntry.configfile)) == 0)
+    {
+      if(cold)
+	{
+	  Debug((DEBUG_FATAL, "Failed in reading configuration file %s",
+		 ConfigFileEntry.configfile));
+	  (void)printf("Couldn't open configuration file %s\n",
+		       ConfigFileEntry.configfile);
+	  exit(-1);
+	}
+      else
+	{
+	  sendto_ops("Can't open %s file aborting rehash!",
+		     ConfigFileEntry.configfile);
+	  return;
+	}
+    }
+
+  if(!cold)
+    clear_out_old_conf();
+
+  initconf(file, YES);
+
+  do_include_conf();
+
+/* comstuds SEPARATE_QUOTE_KLINES_BY_DATE code */
+#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
+  {
+    struct tm *tmptr;
+    char timebuffer[20], filename[200];
+
+    tmptr = localtime(&NOW);
+    (void)strftime(timebuffer, 20, "%Y%m%d", tmptr);
+    ircsprintf(filename, "%s.%s", ConfigFileEntry.klinefile, timebuffer);
+    if ((file = openconf(filename)) == 0)
+      {
+	if(cold)
+	  {
+	    Debug((DEBUG_ERROR,"Failed reading kline file %s",
+		   filename));
+	    (void)printf("Couldn't open kline file %s\n",
+			 filename);
+	  }
+	else
+	  {
+	    sendto_ops("Can't open %s file klines could be missing!",
+		       filename);
+	  }
+      }
+    else
+      initconf(file, NO);
+  }
+#else
+#ifdef KPATH
+  if ((file = openconf(ConfigFileEntry.klinefile)) == 0)
+    {
+      if(cold)
+	{
+	  Debug((DEBUG_ERROR,"Failed reading kline file %s",
+		 ConfigFileEntry.klinefile));
+	  (void)printf("Couldn't open kline file %s\n",
+		       ConfigFileEntry.klinefile);
+	}
+      else
+	{
+	  sendto_ops("Can't open %s file klines could be missing!",
+		     ConfigFileEntry.klinefile);
+	}
+    }
+  else
+    initconf(file, NO);
+#endif
+#endif
+}
+
+
+
+static void clear_out_old_conf(void)
+{
+  aConfItem **tmp = &ConfigItemList;
+  aConfItem *tmp2;
+  aClass    *cltmp;
+
+    /* Shadowfax's LOCKFILE code */
+#ifdef LOCKFILE
+    do_pending_klines();
+#endif
+
+    while ((tmp2 = *tmp))
+      {
+	if (tmp2->clients || tmp2->status & CONF_LISTEN_PORT)
+	  {
+	    /*
+	    ** Configuration entry is still in use by some
+	    ** local clients, cannot delete it--mark it so
+	    ** that it will be deleted when the last client
+	    ** exits...
+	    */
+	    if (!(tmp2->status & (CONF_LISTEN_PORT|CONF_CLIENT)))
+	      {
+		*tmp = tmp2->next;
+		tmp2->next = NULL;
+	      }
+	    else
+	      tmp = &tmp2->next;
+	    tmp2->status |= CONF_ILLEGAL;
+	  }
+	else
+	  {
+	    *tmp = tmp2->next;
+	    free_conf(tmp2);
+	  }
+      }
+
+    /*
+     * We don't delete the class table, rather mark all entries
+     * for deletion. The table is cleaned up by check_class. - avalon
+     */
+    assert(0 != ClassList);
+    for (cltmp = ClassList->next; cltmp; cltmp = cltmp->next)
+      MaxLinks(cltmp) = -1;
+
+    clear_mtrie_conf_links();
+
+    zap_Dlines();
+    clear_special_conf(&x_conf);
+    clear_special_conf(&u_conf);
+    clear_q_lines();
+}
+
+static void flush_deleted_I_P(void)
+{
+  aConfItem **tmp = &ConfigItemList;
+  aConfItem *tmp2;
+
+  /*
+   * flush out deleted I and P lines although still in use.
+   */
+  for (tmp = &ConfigItemList; (tmp2 = *tmp); )
+    {
+      if (!(tmp2->status & CONF_ILLEGAL))
+	tmp = &tmp2->next;
+      else
+	{
+	  *tmp = tmp2->next;
+	  tmp2->next = NULL;
+	  if (!tmp2->clients)
+	    free_conf(tmp2);
+	}
+    }
 }

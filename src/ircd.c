@@ -104,8 +104,14 @@ extern  void do_pending_klines(void);
 
 void	server_reboot();
 void	restart (char *);
-static	void	open_debugfile(), setup_signals();
+static	void	open_debugfile();
+static  void    setup_signals();
+
+static void initialize_global_set_options(void);
+static void initialize_message_files(void);
+
 static  time_t	io_loop(time_t);
+
 
 /* externally needed functions */
 
@@ -834,7 +840,6 @@ int	main(int argc, char *argv[])
   int	portarg = 0;
   uid_t	uid, euid;
   time_t	delay = 0;
-  FBFILE* file = 0;      /* initconf */
 
   aConfItem *aconf;
 
@@ -850,42 +855,7 @@ int	main(int argc, char *argv[])
   memset( &Count, 0, sizeof(Count));
   Count.server = 1;	/* us */
 
-  /* This block here sets all global set options needed */
-  memset( &GlobalSetOptions, 0, sizeof(GlobalSetOptions));
-
-  MAXCLIENTS = MAX_CLIENTS;
-  NOISYHTM = NOISY_HTM;
-  AUTOCONN = 1;
-
-#ifdef FLUD
-  FLUDNUM = FLUD_NUM;
-  FLUDTIME = FLUD_TIME;
-  FLUDBLOCK = FLUD_BLOCK;
-#endif
-
-#ifdef IDLE_CHECK
-  IDLETIME = MIN_IDLETIME;
-#endif
-
-#ifdef ANTI_SPAMBOT
-  SPAMTIME = MIN_JOIN_LEAVE_TIME;
-  SPAMNUM = MAX_JOIN_LEAVE_COUNT;
-#endif
-
-#ifdef ANTI_DRONE_FLOOD
-  DRONETIME = DEFAULT_DRONE_TIME;
-  DRONECOUNT = DEFAULT_DRONE_COUNT;
-#endif
-
-#ifdef NEED_SPLITCODE
- SPLITDELAY = (DEFAULT_SERVER_SPLIT_RECOVERY_TIME * 60);
- SPLITNUM = SPLIT_SMALLNET_SIZE;
- SPLITUSERS = SPLIT_SMALLNET_USER_SIZE;
- server_split_time = timeofday;
-#endif
-
- /* End of global set options */
-
+  initialize_global_set_options();
 
 #ifdef REJECT_HOLD
   reject_held_fds = 0;
@@ -1131,13 +1101,7 @@ normal user.\n");
   if (argc > 0)
     return bad_command(); /* This should exit out */
 
-  InitMessageFile( HELP_MOTD, HPATH, &ConfigFileEntry.helpfile );
-  InitMessageFile( USER_MOTD, MPATH, &ConfigFileEntry.motd );
-  InitMessageFile( OPER_MOTD, OPATH, &ConfigFileEntry.opermotd );
-
-  ReadMessageFile( &ConfigFileEntry.helpfile );
-  ReadMessageFile( &ConfigFileEntry.motd );
-  ReadMessageFile( &ConfigFileEntry.opermotd );
+  initialize_message_files();
 
   clear_client_hash_table();
   clear_channel_hash_table();
@@ -1177,55 +1141,12 @@ normal user.\n");
 
   init_sys();
 
-
 #ifdef USE_SYSLOG
 #define SYSLOG_ME     "ircd"
   openlog(SYSLOG_ME, LOG_PID|LOG_NDELAY, LOG_FACILITY);
 #endif
 
-  if ((file = openconf(ConfigFileEntry.configfile)) == 0)
-    {
-      Debug((DEBUG_FATAL, "Failed in reading configuration file %s",
-	     ConfigFileEntry.configfile));
-      (void)printf("Couldn't open configuration file %s\n",
-		   ConfigFileEntry.configfile);
-      exit(-1);
-    }
-  initconf(bootopt, file, YES);
-  do_include_conf();
-
-/* comstuds SEPARATE_QUOTE_KLINES_BY_DATE code */
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-  {
-    struct tm *tmptr;
-    char timebuffer[20], filename[200];
-
-    tmptr = localtime(&NOW);
-    (void)strftime(timebuffer, 20, "%Y%m%d", tmptr);
-    ircsprintf(filename, "%s.%s", ConfigFileEntry.klinefile, timebuffer);
-    if ((file = openconf(filename)) == 0)
-      {
-	Debug((DEBUG_ERROR,"Failed reading kline file %s",
-	       filename));
-	(void)printf("Couldn't open kline file %s\n",
-		     filename);
-      }
-    else
-      initconf(0, file, NO);
-  }
-#else
-#ifdef KPATH
-  if ((file = openconf(ConfigFileEntry.klinefile)) == 0)
-    {
-      Debug((DEBUG_ERROR,"Failed reading kline file %s",
-	     ConfigFileEntry.klinefile));
-      (void)printf("Couldn't open kline file %s\n",
-		   ConfigFileEntry.klinefile);
-    }
-  else
-    initconf(0, file, NO);
-#endif
-#endif
+  read_conf_files(YES);		/* cold start init conf files */
 
   aconf = find_me();
   strncpy(me.name, aconf->host, HOSTLEN);
@@ -1688,4 +1609,72 @@ void report_error_on_tty(char *error_message)
     }
 }
 
+
+/*
+ * initalialize_global_set_options
+ *
+ * inputs	- none
+ * output	- none
+ *
+ * This block here sets all global set options needed 
+ */
+
+static void initialize_global_set_options(void)
+{
+  memset( &GlobalSetOptions, 0, sizeof(GlobalSetOptions));
+
+  MAXCLIENTS = MAX_CLIENTS;
+  NOISYHTM = NOISY_HTM;
+  AUTOCONN = 1;
+
+#ifdef FLUD
+  FLUDNUM = FLUD_NUM;
+  FLUDTIME = FLUD_TIME;
+  FLUDBLOCK = FLUD_BLOCK;
+#endif
+
+#ifdef IDLE_CHECK
+  IDLETIME = MIN_IDLETIME;
+#endif
+
+#ifdef ANTI_SPAMBOT
+  SPAMTIME = MIN_JOIN_LEAVE_TIME;
+  SPAMNUM = MAX_JOIN_LEAVE_COUNT;
+#endif
+
+#ifdef ANTI_DRONE_FLOOD
+  DRONETIME = DEFAULT_DRONE_TIME;
+  DRONECOUNT = DEFAULT_DRONE_COUNT;
+#endif
+
+#ifdef NEED_SPLITCODE
+ SPLITDELAY = (DEFAULT_SERVER_SPLIT_RECOVERY_TIME * 60);
+ SPLITNUM = SPLIT_SMALLNET_SIZE;
+ SPLITUSERS = SPLIT_SMALLNET_USER_SIZE;
+ server_split_time = timeofday;
+#endif
+
+ /* End of global set options */
+
+}
+
+/*
+ * initalialize_message_files
+ *
+ * inputs	- none
+ * output	- none
+ *
+ * This block sets up all message files needed, motd etc.
+ */
+
+static void initialize_message_files(void)
+  {
+  InitMessageFile( HELP_MOTD, HPATH, &ConfigFileEntry.helpfile );
+  InitMessageFile( USER_MOTD, MPATH, &ConfigFileEntry.motd );
+  InitMessageFile( OPER_MOTD, OPATH, &ConfigFileEntry.opermotd );
+
+  ReadMessageFile( &ConfigFileEntry.helpfile );
+  ReadMessageFile( &ConfigFileEntry.motd );
+  ReadMessageFile( &ConfigFileEntry.opermotd );
+  }
 
