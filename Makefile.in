@@ -20,11 +20,12 @@
 RM=@RM@
 
 # Default CFLAGS
+CFLAGS = -g -O2
 
-CFLAGS= -g -O2 -DNDEBUG
+CPPFLAGS = -DNDEBUG
 #
 # For developers
-# CFLAGS= -g -O2 -Wall -Dlint
+# CFLAGS= -g -O2 -Wall
 #
 # You may need to define the FD_SETSIZE in order to overrule
 # the system one.
@@ -77,8 +78,10 @@ SHELL=/bin/sh
 SUBDIRS=zlib src tools
 # ZSUBDIRS=zlib $(SUBDIRS)
 
-MAKE=make 'CFLAGS=${CFLAGS}' 'INSTALL=${INSTALL}' 'LDFLAGS=${LDFLAGS}'
-# ZMAKE=make 'CFLAGS=${ZCFLAGS}' 'INSTALL=${INSTALL}' 'LDFLAGS=${LDFLAGS}'
+MAKE = make 'CPPFLAGS=${CPPFLAGS}' 'CFLAGS=${CFLAGS}' 'INSTALL=${INSTALL}' \
+	'LDFLAGS=${LDFLAGS}'
+# ZMAKE = make 'CPPFLAGS=${CPPFLAGS}' 'CFLAGS=${CFLAGS}' 'INSTALL=${INSTALL}' \
+#	'LDFLAGS=${LDFLAGS}'
 
 all:	build
 

@@ -33,10 +33,11 @@
 #include "s_bsd.h"
 #include "send.h"
 
-#include <sys/stat.h>
-#include <sys/time.h>
+#include <string.h>
 #include <fcntl.h>
 #include <netdb.h>
+#include <sys/stat.h>
+#include <sys/time.h>
 
 #if !defined(ULTRIX) && !defined(SGI) && !defined(sequent) && \
     !defined(__convex__)

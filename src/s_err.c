@@ -570,7 +570,7 @@ static	char *	replies[] = {
  */
 
 
-char	*form_str(int numeric)
+char* form_str(int numeric)
 {
   char *nptr;
 

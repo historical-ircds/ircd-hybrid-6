@@ -1,14 +1,15 @@
 /* simple password generator by Nelson Minar (minar@reed.edu)
  * copyright 1991, all rights reserved.
  * You can use this code as long as my name stays with it.
+ *
+ *
+ * $Id$
  */
-
 #include "sys.h"
+#include <stdio.h>
+#include <string.h>
 #include <time.h>
 
-#ifndef lint
-static char *rcs_version = "$Id$";
-#endif
 
 extern char *getpass();
 extern char *crypt();

@@ -1,3 +1,8 @@
+/*
+ * dline_conf.c
+ *
+ * $Id$
+ */
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -768,7 +773,7 @@ void walk_the_dlines(aClient *sptr, struct ip_subtree *tree)
 
       GetPrintableaConfItem(scan, &name, &host, &pass, &user, &port);
 
-      sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name,
+      sendto_one(sptr, form_str(RPL_STATSDLINE), me.name,
 		 sptr->name, c, name, pass);
     }
   walk_the_dlines(sptr, tree->right);
@@ -808,14 +813,14 @@ void walk_the_ip_Klines(aClient *sptr, struct ip_subtree *tree,
 	{
 	  /* print Kline */
 	  
-	  sendto_one(sptr, rpl_str(RPL_STATSKLINE), me.name,
+	  sendto_one(sptr, form_str(RPL_STATSKLINE), me.name,
 		     sptr->name, conftype, user, name, pass);
 	}
       else if(scan->status & CONF_CLIENT)
 	{
 	  /* print IP I line */
 
-	  sendto_one(sptr, rpl_str(RPL_STATSILINE), me.name,
+	  sendto_one(sptr, form_str(RPL_STATSILINE), me.name,
 		     sptr->name,
 		     'I',
 		     name,

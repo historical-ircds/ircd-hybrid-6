@@ -18,32 +18,63 @@
  *
  * $Id$
  */
-
-#ifndef	__sys_include__
-#define __sys_include__
-#if 0
-#ifdef ISC202
-#include <net/errno.h>
-#else
-#include <sys/errno.h>
-#endif
-#endif /* 0 */
-
+/*
+ * ARGH!!!! this file is a dependency nightmare... --Bleep
+ */
+#ifndef	INCLUDED_sys_h
+#define INCLUDED_sys_h
+/*
+ * XXX - All of this stuff is a good way to slow down builds, we should be
+ * including stuff only where we need it to resolve dependencies.
+ */
+#ifndef INCLUDED_setup_h
 #include "setup.h"
-#include <errno.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/param.h>
+#endif
 
-#include "zlib.h"
+#if 0
+#ifndef INCLUDED_errno_h
+#include <errno.h>
+#define INCLUDED_errno_h
+#endif
+#endif
+
+#if 0
+#ifndef INCLUDED_stdio_h
+#include <stdio.h>
+#define INCLUDED_stdio_h
+#endif
+#endif
+
+#ifndef INCLUDED_sys_types_h
+#include <sys/types.h>
+#define INCLUDED_sys_types_h
+#endif
+#ifndef INCLUDED_sys_param_h
+#include <sys/param.h>
+#define INCLUDED_sys_param_h
+#endif
 
 #if defined( HAVE_UNISTD_H )
+#ifndef INCLUDED_unistd_h
 #include <unistd.h>
+#define INCLUDED_unistd_h
 #endif
-#if defined( HAVE_STDLIB_H )
-#include <stdlib.h>
 #endif
 
+#if defined( HAVE_STDLIB_H )
+#ifndef INCLUDED_stdlib_h
+#include <stdlib.h>
+#define INCLUDED_stdlib_h
+#endif
+#endif
+
+#if 0
+#ifndef INCLUDED_zlib_h
+#include "zlib.h"
+#endif
+#endif
+
+#if 0
 #if defined( HAVE_STRINGS_H ) && !defined( __GLIBC__ )
 #include <strings.h>
 #else
@@ -62,6 +93,12 @@ extern	char	*rindex (char *, char);
 */
 #endif
 
+#endif
+
+/*
+ * XXX - ahem, why do we need to expose <sys/select.h> to every file in
+ * the server? feh
+ */
 #ifdef AIX
 #include <sys/select.h>
 #endif
@@ -78,57 +115,27 @@ extern	char	*rindex (char *, char);
 #  include <os2.h>
 #endif
 
-#define MyFree(x)       if ((x) != NULL) free(x)
-
-#define err_str(x) form_str(x)
-#define rpl_str(x) form_str(x)
-
-#define DEBUG_BLOCK_ALLOCATOR
-#ifdef DEBUG_BLOCK_ALLOCATOR
-extern char *currentfile;
-extern int  currentline;
-
-#define free_client(x)  { currentfile = __FILE__; \
-                          currentline=__LINE__;\
-			  _free_client(x); }
-
-#define free_link(x)    { currentfile = __FILE__; \
-                          currentline=__LINE__;\
-			  _free_link(x); }
-
-#define free_user(x,y)  { currentfile = __FILE__; \
-                          currentline=__LINE__;\
-			  _free_user(x,y); }
-
-#ifdef FLUD
-#define free_fludbot(x) { currentfile = __FILE__;\
-                          currentline=__LINE__;\
-                          BlockHeapFree(free_fludbots,x); }
-#endif
-
-#else
-#define free_client(x) _free_client(x)
-#define free_link(x)   _free_link(x)
-#define free_user(x,y) _free_user(x,y)
-
-#ifdef FLUD
-#define free_fludbot(x) BlockHeapFree(free_fludbots,x)
-#endif
-
-#endif
-
+/*
+ * XXX - hide this in signal code
+ */
 #ifdef NEXT
 #define VOIDSIG int	/* whether signal() returns int of void */
 #else
 #define VOIDSIG void	/* whether signal() returns int of void */
 #endif
 
+/*
+ * XXX - MOVE THIS
+ */
 extern	VOIDSIG	dummy();
 
 #ifdef	DYNIXPTX
 #define	NO_U_TYPES
 #endif
 
+/*
+ * XXX --- ARGH!!!!!
+ */
 #ifdef	OS_SOLARIS2
 extern	int	gethostname(char *, int);
 extern	long	random();
@@ -142,5 +149,5 @@ typedef	unsigned long	u_long;
 typedef	unsigned int	u_int;
 #endif
 
-#endif /* __sys_include__ */
+#endif /* INCLUDED_sys_h */
 

@@ -27,6 +27,8 @@
 #include "h.h"
 #include "send.h"
 
+#include <string.h>
+
 static char buffer[1024];
 
 /*

@@ -160,7 +160,7 @@ int     m_kline(aClient *cptr,
     {
       if (!MyClient(sptr) || !IsAnOper(sptr))
 	{
-	  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+	  sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 	  return 0;
 	}
 
@@ -172,7 +172,7 @@ int     m_kline(aClient *cptr,
 
       if ( parc < 2 )
 	{
-	  sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+	  sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
 		     me.name, parv[0], "KLINE");
 	  return 0;
 	}
@@ -191,7 +191,7 @@ int     m_kline(aClient *cptr,
 #ifdef SLAVE_SERVERS
 	  if(!IsServer(sptr))
 #endif	  
-	     sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+	     sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
 			me.name, parv[0], "KLINE");
 	  return 0;
 	}
@@ -624,7 +624,7 @@ int     m_dline(aClient *cptr,
 
   if (!MyClient(sptr) || !IsAnOper(sptr))
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
 
@@ -636,7 +636,7 @@ int     m_dline(aClient *cptr,
 
   if ( parc < 2 )
     {
-      sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
 		 me.name, parv[0], "KLINE");
       return 0;
     }

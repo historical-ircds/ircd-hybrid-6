@@ -38,6 +38,8 @@
 #include "h.h"
 
 #include <netdb.h>               /* struct hostent */
+#include <string.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <assert.h>
 #include <sys/socket.h>
@@ -260,7 +262,9 @@ static int start_auth_query(struct AuthRequest* auth)
   }
 
   sendheader(auth->client, REPORT_DO_ID);
-  set_non_blocking(fd, auth->client);
+  if (!set_non_blocking(fd))
+    report_error(NB_ERROR_MESSAGE, get_client_name(auth->client, TRUE), errno);
+
 
   /* 
    * get the local address of the client and bind to that to

@@ -45,6 +45,8 @@
 #include "send.h"
 #include "hash.h"
 
+#include <string.h>
+
 #ifdef NEED_SPLITCODE
 int server_was_split=YES;
 time_t server_split_time;
@@ -54,8 +56,6 @@ int got_server_pong=NO;
 static void check_still_split();
 #define USE_ALLOW_OP
 #endif
-
-extern SetOptionsType GlobalSetOptions;
 
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 aChannel *empty_channel_list=(aChannel*)NULL;

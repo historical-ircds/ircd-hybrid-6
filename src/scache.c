@@ -9,6 +9,7 @@
 #include "numeric.h"
 #include "h.h"
 #include "send.h"
+#include <string.h>
 
 
 static int hash(char *);	/* keep it hidden here */

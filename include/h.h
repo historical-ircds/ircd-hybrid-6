@@ -51,7 +51,8 @@ extern	struct	stats	*ircstp;
 extern	int	bootopt;
 extern  int     spare_fd;
 
-extern	char	*canonize (char *);
+extern void     outofmemory(void);               /* list.c */
+extern	char*   canonize (char *);
 extern	time_t	check_fdlists (time_t);
 extern	void	flush_server_connections(void);
 extern	aChannel *find_channel (char *, aChannel *);
@@ -101,10 +102,10 @@ extern  char    *find_or_add(char *);
 extern  void    count_scache(int *,u_long *);
 extern  void    list_scache(aClient *, aClient *,int, char **);
 
-extern	char	*MyMalloc (int);
-extern  char    *MyRealloc (char *, int);
-/* MyFree is defined as a macro in sys.h */
-/* extern  void     MyFree (char *); */
+extern void*    MyMalloc(size_t size);
+extern void*    MyRealloc(void* p, size_t size);
+/* MyFree is defined as a macro in ircd_defs.h */
+/* extern  void     MyFree(void* p); */
 
 extern	char	*debugmode, *configfile, *sbrk0;
 extern  char    *klinefile;
@@ -112,11 +113,9 @@ extern  char	*dlinefile;
 #ifdef	GLINES
 extern	char	*glinefile;
 #endif
-extern	char	*getfield (char *);
-extern	char	*rpl_str (int);
-extern  char 	*err_str (int);
+extern	char*   getfield(char *);
 extern  char    *form_str (int);
-extern	char	*strerror (int);
+/* extern	char	*strerror (int); */
 extern	char	*inetntoa (char *);
 extern	void	ircsprintf ();
 extern	int	dbufalloc, dbufblocks, debuglevel, errno, h_errno;
@@ -142,7 +141,6 @@ extern	int	send_queued (aClient *);
 extern  void    send_capabilities(aClient *,int);
 extern  int	is_address(char *,unsigned long *,unsigned long *); 
 extern  void	do_include_conf();
-extern  void	del_client_from_llist(aClient **, aClient *);
 extern	aConfItem	*match_Dline(unsigned long);
 extern	int	show_lusers(aClient *, aClient *, int, char **);
 extern	int	nickkilldone(aClient*, aClient*, int, char**, time_t, char*);
@@ -156,7 +154,6 @@ extern	int	check_registered (aClient *);
 extern	int	check_registered_user (aClient *);
 extern const char* my_name_for_link(const char* name, aConfItem* conf);
 extern	char	*myctime (time_t), *date (time_t);
-extern	int	exit_client (aClient *, aClient *, aClient *, char *);
 extern	void	initstats (void), tstats (aClient *, char *);
 extern	void	serv_info (aClient *, char *);
 
@@ -175,7 +172,6 @@ extern	void	send_umode (aClient *, aClient *, int, int, char *);
 extern	void	send_umode_out (aClient*, aClient *, int);
 
 
-extern	void	_free_client (aClient *);
 extern	void	_free_link (Link *);
 extern	void	free_class(struct Class* c);
 extern	void	_free_user (anUser *, aClient *);
@@ -183,12 +179,8 @@ extern	Link	*make_link (void);
 extern	anUser	*make_user (aClient *);
 extern	struct Class* make_class(void);
 extern	aServer	*make_server (aClient *);
-extern	aClient	*make_client (aClient *);
 extern	Link	*find_user_link (Link *, aClient *);
-extern	void	add_client_to_list (aClient *);
-extern	void	add_client_to_llist(aClient **, aClient *);
 extern	void	checklist (void);
-extern	void	remove_client_from_list (aClient *);
 extern	void	initlists (void);
 extern  void	block_garbage_collect(void);	/* list.c */
 extern  void	block_destroy(void);		/* list.c */

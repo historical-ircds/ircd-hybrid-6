@@ -89,8 +89,6 @@ extern int dline_in_progress;	/* defined in ircd.c */
 
 int     max_connection_count = 1, max_client_count = 1;
 
-extern SetOptionsType GlobalSetOptions; /* defined in ircd.c */
-
 extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 
 extern aConfItem *temporary_klines;	/* defined in s_conf.c */
@@ -203,7 +201,7 @@ int	m_version(aClient *cptr,
 		    parv[0], version, serno, debugmode, me.name, serveropts);
      }
    else
-     sendto_one(sptr, rpl_str(RPL_VERSION), me.name,
+     sendto_one(sptr, form_str(RPL_VERSION), me.name,
 		parv[0], version, serno, debugmode, me.name, serveropts);
 
   return 0;

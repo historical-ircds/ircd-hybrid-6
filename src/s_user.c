@@ -35,6 +35,7 @@
 #include "h.h"
 #include "send.h"
 #include "hash.h"
+#include "listener.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -54,8 +55,6 @@
 #else
 #include <strings.h>
 #endif
-
-extern SetOptionsType GlobalSetOptions;
 
 extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 
@@ -313,7 +312,7 @@ int	hunt_server(aClient *cptr,
 	  acptr = find_name(parv[server],(aClient *)NULL);
 	  if( !acptr || !IsRegistered(acptr) || !IsServer(acptr) )
 	    {
-	      sendto_one(sptr, err_str(ERR_NOSUCHSERVER), me.name,
+	      sendto_one(sptr, form_str(ERR_NOSUCHSERVER), me.name,
 			 parv[0], parv[server]);
 	      return(HUNTED_NOSUCH);
 	    }
@@ -348,7 +347,7 @@ int	hunt_server(aClient *cptr,
 		 parv[5], parv[6], parv[7], parv[8]);
       return(HUNTED_PASS);
     } 
-  sendto_one(sptr, err_str(ERR_NOSUCHSERVER), me.name,
+  sendto_one(sptr, form_str(ERR_NOSUCHSERVER), me.name,
 	     parv[0], parv[server]);
   return(HUNTED_NOSUCH);
 }
@@ -560,7 +559,7 @@ static int register_user(aClient *cptr, aClient *sptr,
       if (!BadPtr(aconf->passwd) && 0 != strcmp(sptr->passwd, aconf->passwd))
 	{
 	  ircstp->is_ref++;
-	  sendto_one(sptr, err_str(ERR_PASSWDMISMATCH),
+	  sendto_one(sptr, form_str(ERR_PASSWDMISMATCH),
 		     me.name, parv[0]);
 	  return exit_client(cptr, sptr, &me, "Bad Password");
 	}
@@ -712,20 +711,20 @@ static int register_user(aClient *cptr, aClient *sptr,
       reset_sock_opts(sptr->fd, 0);
       /* End sock_opt hack */
 #endif
-      sendto_one(sptr, rpl_str(RPL_WELCOME), me.name, nick, nick);
+      sendto_one(sptr, form_str(RPL_WELCOME), me.name, nick, nick);
       /* This is a duplicate of the NOTICE but see below...*/
-      sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
-		 get_client_name(sptr->acpt, FALSE), version);
+      sendto_one(sptr, form_str(RPL_YOURHOST), me.name, nick,
+		 get_listener_name(sptr->listener), version);
       
       /*
       ** Don't mess with this one - IRCII needs it! -Avalon
       */
       sendto_one(sptr,
 		 "NOTICE %s :*** Your host is %s, running version %s",
-		 nick, get_client_name(sptr->acpt, FALSE), version);
+		 nick, get_listener_name(sptr->listener), version);
       
-      sendto_one(sptr, rpl_str(RPL_CREATED),me.name,nick,creation);
-      sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, parv[0],
+      sendto_one(sptr, form_str(RPL_CREATED),me.name,nick,creation);
+      sendto_one(sptr, form_str(RPL_MYINFO), me.name, parv[0],
 		 me.name, version);
       show_lusers(sptr, sptr, 1, parv);
 
@@ -738,16 +737,16 @@ static int register_user(aClient *cptr, aClient *sptr,
 		 "NOTICE %s :*** Notice -- Please read the motd if you haven't read it",
 		 sptr->name);
       
-      sendto_one(sptr, rpl_str(RPL_MOTDSTART),
+      sendto_one(sptr, form_str(RPL_MOTDSTART),
 		 me.name, sptr->name, me.name);
       
       sendto_one(sptr,
-		 rpl_str(RPL_MOTD),
+		 form_str(RPL_MOTD),
 		 me.name, sptr->name,
 		 "*** This is the short motd ***"
 		 );
 
-      sendto_one(sptr, rpl_str(RPL_ENDOFMOTD),
+      sendto_one(sptr, form_str(RPL_ENDOFMOTD),
 		 me.name, sptr->name);
 #else
       SendMessageFile(sptr, &ConfigFileEntry.motd);
@@ -1075,7 +1074,7 @@ int	m_nick(aClient *cptr,
 
   if (parc < 2)
     {
-      sendto_one(sptr, err_str(ERR_NONICKNAMEGIVEN),
+      sendto_one(sptr, form_str(ERR_NONICKNAMEGIVEN),
 		 me.name, parv[0]);
       return 0;
     }
@@ -1137,7 +1136,7 @@ int	m_nick(aClient *cptr,
   if (do_nick_name(nick) == 0 ||
       (IsServer(cptr) && strcmp(nick, parv[1])))
     {
-      sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
+      sendto_one(sptr, form_str(ERR_ERRONEUSNICKNAME),
 		 me.name, parv[0], parv[1]);
       
       if (IsServer(cptr))
@@ -1188,7 +1187,7 @@ int	m_nick(aClient *cptr,
   if ((acptr = find_server(nick, NULL)))
     if (MyConnect(sptr))
       {
-	sendto_one(sptr, err_str(ERR_NICKNAMEINUSE), me.name,
+	sendto_one(sptr, form_str(ERR_NICKNAMEINUSE), me.name,
 		   BadPtr(parv[0]) ? "*" : parv[0], nick);
 	return 0; /* NICK message ignored */
       }
@@ -1305,7 +1304,7 @@ int	m_nick(aClient *cptr,
       ** NICK is coming from local client connection. Just
       ** send error reply and ignore the command.
       */
-      sendto_one(sptr, err_str(ERR_NICKNAMEINUSE),
+      sendto_one(sptr, form_str(ERR_NICKNAMEINUSE),
 		 /* parv[0] is empty when connecting */
 		 me.name, BadPtr(parv[0]) ? "*" : parv[0], nick);
       return 0; /* NICK message ignored */
@@ -1353,7 +1352,7 @@ int	m_nick(aClient *cptr,
 		     acptr->name, acptr->from->name,
 		     get_client_name(cptr, FALSE));
 	  ircstp->is_kill++;
-	  sendto_one(acptr, err_str(ERR_NICKCOLLISION),
+	  sendto_one(acptr, form_str(ERR_NICKCOLLISION),
 		     me.name, acptr->name, acptr->name);
 #ifndef NICK_KILL_LOCALLY
 	  sendto_serv_butone(NULL, /* all servers */
@@ -1389,7 +1388,7 @@ int	m_nick(aClient *cptr,
 			   get_client_name(cptr, FALSE));
 	      
 	      ircstp->is_kill++;
-	      sendto_one(acptr, err_str(ERR_NICKCOLLISION),
+	      sendto_one(acptr, form_str(ERR_NICKCOLLISION),
 			 me.name, acptr->name, acptr->name);
 
 #ifndef NICK_KILL_LOCALLY
@@ -1420,7 +1419,7 @@ int	m_nick(aClient *cptr,
 		 sptr->name, acptr->name, acptr->from->name,
 		 get_client_name(cptr, FALSE));
       ircstp->is_kill++;
-      sendto_one(acptr, err_str(ERR_NICKCOLLISION),
+      sendto_one(acptr, form_str(ERR_NICKCOLLISION),
 		 me.name, acptr->name, acptr->name);
 
 #ifndef NICK_KILL_LOCALLY
@@ -1481,7 +1480,7 @@ int	m_nick(aClient *cptr,
 		       get_client_name(cptr, FALSE));
 	  
 	  ircstp->is_kill++;
-	  sendto_one(acptr, err_str(ERR_NICKCOLLISION),
+	  sendto_one(acptr, form_str(ERR_NICKCOLLISION),
 		     me.name, acptr->name, acptr->name);
 #ifndef NICK_KILL_LOCALLY
 	  sendto_serv_butone(sptr, /* all servers but sptr */
@@ -1698,14 +1697,14 @@ static	int	m_message(aClient *cptr,
 
   if (parc < 2 || *parv[1] == '\0')
     {
-      sendto_one(sptr, err_str(ERR_NORECIPIENT),
+      sendto_one(sptr, form_str(ERR_NORECIPIENT),
 		 me.name, parv[0], cmd);
       return -1;
     }
 
   if (parc < 3 || *parv[2] == '\0')
     {
-      sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOTEXTTOSEND), me.name, parv[0]);
       return -1;
     }
 
@@ -1729,7 +1728,7 @@ static	int	m_message(aClient *cptr,
   nick = parv[1];
   if((p = strchr(nick,',')))
     {
-      sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
+      sendto_one(sptr, form_str(ERR_TOOMANYTARGETS),
 		     me.name, parv[0], cmd);
       return -1;
     }
@@ -1757,7 +1756,7 @@ static	int	m_message(aClient *cptr,
 			      parv[0], cmd, nick,
 			      parv[2]);
       else if (!notice)
-	sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
+	sendto_one(sptr, form_str(ERR_CANNOTSENDTOCHAN),
 		   me.name, parv[0], nick);
       return 0;
     }
@@ -1784,7 +1783,7 @@ static	int	m_message(aClient *cptr,
       /* suggested by Mortiis */
       if(!*nick)	/* if its a '\0' dump it, there is no recipient */
 	{
-	  sendto_one(sptr, err_str(ERR_NORECIPIENT),
+	  sendto_one(sptr, form_str(ERR_NORECIPIENT),
 		     me.name, parv[0], cmd);
 	  return -1;
 	}
@@ -1813,7 +1812,7 @@ static	int	m_message(aClient *cptr,
 	    {
 	      if (!notice)
 		{
-		  sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
+		  sendto_one(sptr, form_str(ERR_CANNOTSENDTOCHAN),
 			     me.name, parv[0], nick);
 		}
 	      return -1;
@@ -1828,7 +1827,7 @@ static	int	m_message(aClient *cptr,
 	}
       else
 	{
-	  sendto_one(sptr, err_str(ERR_NOSUCHNICK),
+	  sendto_one(sptr, form_str(ERR_NOSUCHNICK),
 		     me.name, parv[0], nick);
 	  return -1;
 	}
@@ -1915,7 +1914,7 @@ static	int	m_message(aClient *cptr,
 #endif
       if (!notice && MyConnect(sptr) &&
 	  acptr->user && acptr->user->away)
-	sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
+	sendto_one(sptr, form_str(RPL_AWAY), me.name,
 		   parv[0], acptr->name,
 		   acptr->user->away);
       sendto_prefix_one(acptr, sptr, ":%s %s %s :%s",
@@ -1955,14 +1954,14 @@ static	int	m_message(aClient *cptr,
 
       if(!IsAnOper(sptr))
 	{
-	  sendto_one(sptr, err_str(ERR_NOSUCHNICK),
+	  sendto_one(sptr, form_str(ERR_NOSUCHNICK),
 		     me.name, parv[0], nick);
 	  return -1;
 	}
 
       if (!(s = (char *)strrchr(nick, '.')))
 	{
-	  sendto_one(sptr, err_str(ERR_NOTOPLEVEL),
+	  sendto_one(sptr, form_str(ERR_NOTOPLEVEL),
 		     me.name, parv[0], nick);
 	  return 0;
 	}
@@ -1971,7 +1970,7 @@ static	int	m_message(aClient *cptr,
 	  break;
       if (*s == '*' || *s == '?')
 	{
-	  sendto_one(sptr, err_str(ERR_WILDTOPLEVEL),
+	  sendto_one(sptr, form_str(ERR_WILDTOPLEVEL),
 		     me.name, parv[0], nick);
 	  return 0;
 	}
@@ -1998,7 +1997,7 @@ static	int	m_message(aClient *cptr,
 
       if( (char *)strchr(nick,'%') && !IsAnOper(sptr))
 	{
-	  sendto_one(sptr, err_str(ERR_NOSUCHNICK),
+	  sendto_one(sptr, form_str(ERR_NOSUCHNICK),
 		     me.name, parv[0], nick);
 	  return -1;
 	}
@@ -2044,13 +2043,13 @@ static	int	m_message(aClient *cptr,
 			      nick, parv[2]);
 	  else if (!notice)
 	    sendto_one(sptr,
-		       err_str(ERR_TOOMANYTARGETS),
+		       form_str(ERR_TOOMANYTARGETS),
 		       me.name, parv[0], nick);
 	}
       if (acptr)
 	  return 0;
     }
-  sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name,
+  sendto_one(sptr, form_str(ERR_NOSUCHNICK), me.name,
 	     parv[0], nick);
 
   return 0;
@@ -2111,7 +2110,7 @@ static	void	do_who(aClient *sptr,
 	*p++ = '+';
     }
   *p = '\0';
-  sendto_one(sptr, rpl_str(RPL_WHOREPLY), me.name, sptr->name,
+  sendto_one(sptr, form_str(RPL_WHOREPLY), me.name, sptr->name,
 	     (repchan) ? (repchan->chname) : "*", acptr->username,
 	     acptr->host, acptr->user->server, acptr->name,
 	     status, acptr->hopcount, acptr->info);
@@ -2160,7 +2159,7 @@ int	m_who(aClient *cptr,
     (void)collapse(mask);
   if (!mask || (*mask == (char) 0))
     {
-      sendto_one(sptr, rpl_str(RPL_ENDOFWHO), me.name, parv[0],
+      sendto_one(sptr, form_str(RPL_ENDOFWHO), me.name, parv[0],
 		 BadPtr(mask) ?  "*" : mask);
       return 0;
     }
@@ -2168,7 +2167,7 @@ int	m_who(aClient *cptr,
     {
       if (!mychannel)
 	{
-	  sendto_one(sptr, rpl_str(RPL_ENDOFWHO), me.name, parv[0],
+	  sendto_one(sptr, form_str(RPL_ENDOFWHO), me.name, parv[0],
 		     BadPtr(mask) ?  "*" : mask);
 	  return 0;
 	}
@@ -2267,14 +2266,14 @@ int	m_who(aClient *cptr,
 	  do_who(sptr, acptr, ch2ptr, NULL);
 	  if (!--maxmatches)
 	    {
-	      sendto_one(sptr, rpl_str(RPL_ENDOFWHO), me.name, parv[0],
+	      sendto_one(sptr, form_str(RPL_ENDOFWHO), me.name, parv[0],
 			 BadPtr(mask) ?  "*" : mask);
 	      return 0;
 	    }
 	}
     }
 
-  sendto_one(sptr, rpl_str(RPL_ENDOFWHO), me.name, parv[0],
+  sendto_one(sptr, form_str(RPL_ENDOFWHO), me.name, parv[0],
 	     BadPtr(mask) ?  "*" : mask);
   return 0;
 }
@@ -2312,7 +2311,7 @@ int	m_whois(aClient *cptr,
 
   if (parc < 2)
     {
-      sendto_one(sptr, err_str(ERR_NONICKNAMEGIVEN),
+      sendto_one(sptr, form_str(ERR_NONICKNAMEGIVEN),
 		 me.name, parv[0]);
       return 0;
     }
@@ -2377,14 +2376,14 @@ int	m_whois(aClient *cptr,
 	  acptr = hash_find_client(nick,(aClient *)NULL);
 	  if(!acptr)
 	    {
-	      sendto_one(sptr, err_str(ERR_NOSUCHNICK),
+	      sendto_one(sptr, form_str(ERR_NOSUCHNICK),
 			 me.name, parv[0], nick);
 	      return 0;
 	      /*	      continue; */
 	    }
 	  if(!IsPerson(acptr))
 	    {
-	      sendto_one(sptr, rpl_str(RPL_ENDOFWHOIS),
+	      sendto_one(sptr, form_str(RPL_ENDOFWHOIS),
 			 me.name, parv[0], parv[1]);
 	      return 0;
 	    }
@@ -2397,7 +2396,7 @@ int	m_whois(aClient *cptr,
 
 	  a2cptr = find_server(user->server, NULL);
 	  
-	  sendto_one(sptr, rpl_str(RPL_WHOISUSER), me.name,
+	  sendto_one(sptr, form_str(RPL_WHOISUSER), me.name,
 		     parv[0], name,
 		     acptr->username, acptr->host, acptr->info);
 
@@ -2433,19 +2432,19 @@ int	m_whois(aClient *cptr,
 		}
 	    }
 	  if (buf[0] != '\0')
-	    sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS),
+	    sendto_one(sptr, form_str(RPL_WHOISCHANNELS),
 		       me.name, parv[0], name, buf);
 	  
-	  sendto_one(sptr, rpl_str(RPL_WHOISSERVER),
+	  sendto_one(sptr, form_str(RPL_WHOISSERVER),
 		     me.name, parv[0], name, user->server,
 		     a2cptr?a2cptr->info:"*Not On This Net*");
 
 	  if (user->away)
-	    sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
+	    sendto_one(sptr, form_str(RPL_AWAY), me.name,
 		       parv[0], name, user->away);
 
 	  if (IsAnOper(acptr))
-	    sendto_one(sptr, rpl_str(RPL_WHOISOPERATOR),
+	    sendto_one(sptr, form_str(RPL_WHOISOPERATOR),
 		       me.name, parv[0], name);
 #ifdef WHOIS_NOTICE
 	  if ((MyOper(acptr)) && ((acptr)->flags & FLAGS_SPY) &&
@@ -2458,11 +2457,11 @@ int	m_whois(aClient *cptr,
 
 
 	  if (acptr->user && MyConnect(acptr))
-	    sendto_one(sptr, rpl_str(RPL_WHOISIDLE),
+	    sendto_one(sptr, form_str(RPL_WHOISIDLE),
 		       me.name, parv[0], name,
 		       timeofday - user->last,
 		       acptr->firsttime);
-	  sendto_one(sptr, rpl_str(RPL_ENDOFWHOIS), me.name, parv[0], parv[1]);
+	  sendto_one(sptr, form_str(RPL_ENDOFWHOIS), me.name, parv[0], parv[1]);
 	  return 0;
 	  /*	  continue; */
 	}
@@ -2523,7 +2522,7 @@ int	m_whois(aClient *cptr,
 	  
 	  a2cptr = find_server(user->server, NULL);
 	  
-	  sendto_one(sptr, rpl_str(RPL_WHOISUSER), me.name,
+	  sendto_one(sptr, form_str(RPL_WHOISUSER), me.name,
 		     parv[0], name,
 		     acptr->username, acptr->host, acptr->info);
 	  found = 1;
@@ -2559,19 +2558,19 @@ int	m_whois(aClient *cptr,
 		}
 	    }
 	  if (buf[0] != '\0')
-	    sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS),
+	    sendto_one(sptr, form_str(RPL_WHOISCHANNELS),
 		       me.name, parv[0], name, buf);
 	  
-	  sendto_one(sptr, rpl_str(RPL_WHOISSERVER),
+	  sendto_one(sptr, form_str(RPL_WHOISSERVER),
 		     me.name, parv[0], name, user->server,
 		     a2cptr?a2cptr->info:"*Not On This Net*");
 
 	  if (user->away)
-	    sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
+	    sendto_one(sptr, form_str(RPL_AWAY), me.name,
 		       parv[0], name, user->away);
 
 	  if (IsAnOper(acptr))
-	    sendto_one(sptr, rpl_str(RPL_WHOISOPERATOR),
+	    sendto_one(sptr, form_str(RPL_WHOISOPERATOR),
 		       me.name, parv[0], name);
 #ifdef WHOIS_NOTICE
 	  if ((MyOper(acptr)) && ((acptr)->flags & FLAGS_SPY) &&
@@ -2584,20 +2583,20 @@ int	m_whois(aClient *cptr,
 
 
 	  if (acptr->user && MyConnect(acptr))
-	    sendto_one(sptr, rpl_str(RPL_WHOISIDLE),
+	    sendto_one(sptr, form_str(RPL_WHOISIDLE),
 		       me.name, parv[0], name,
 		       timeofday - user->last,
 		       acptr->firsttime);
 	}
       if (!found)
-	sendto_one(sptr, err_str(ERR_NOSUCHNICK),
+	sendto_one(sptr, form_str(ERR_NOSUCHNICK),
 		   me.name, parv[0], nick);
       /*
       if (p)
 	p[-1] = ',';
 	*/
     }
-  sendto_one(sptr, rpl_str(RPL_ENDOFWHOIS), me.name, parv[0], parv[1]);
+  sendto_one(sptr, form_str(RPL_ENDOFWHOIS), me.name, parv[0], parv[1]);
   
   return 0;
 }
@@ -2624,7 +2623,7 @@ int m_user(aClient* cptr, aClient* sptr, int parc, char *parv[])
   if (parc < 5 || *parv[1] == '\0' || *parv[2] == '\0' ||
       *parv[3] == '\0' || *parv[4] == '\0')
     {
-      sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
 		 me.name, parv[0], "USER");
       if (IsServer(cptr))
 	sendto_realops("bad USER param count for %s from %s",
@@ -2678,7 +2677,7 @@ static int do_user(char* nick, aClient* cptr, aClient* sptr,
     {
       if (!IsUnknown(sptr))
 	{
-	  sendto_one(sptr, err_str(ERR_ALREADYREGISTRED), me.name, nick);
+	  sendto_one(sptr, form_str(ERR_ALREADYREGISTRED), me.name, nick);
 	  return 0;
 	}
 #ifndef	NO_DEFAULT_INVISIBLE
@@ -2752,7 +2751,7 @@ int m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
   if (parc < 2 || *parv[1] == '\0')
     {
-      sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
 		 me.name, parv[0], "KILL");
       return 0;
     }
@@ -2762,7 +2761,7 @@ int m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
   if (!IsPrivileged(cptr))
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
 
@@ -2788,7 +2787,7 @@ int m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
       */
       if (!(acptr = get_history(user, (long)KILLCHASETIMELIMIT)))
 	{
-	  sendto_one(sptr, err_str(ERR_NOSUCHNICK),
+	  sendto_one(sptr, form_str(ERR_NOSUCHNICK),
 		     me.name, parv[0], user);
 	  return 0;
 	}
@@ -2798,12 +2797,12 @@ int m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
     }
   if (!MyConnect(acptr) && IsLocOp(cptr))
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
   if (IsServer(acptr) || IsMe(acptr))
     {
-      sendto_one(sptr, err_str(ERR_CANTKILLSERVER),
+      sendto_one(sptr, form_str(ERR_CANTKILLSERVER),
 		 me.name, parv[0]);
       return 0;
     }
@@ -2847,7 +2846,7 @@ int m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
   */
   if (IsLocOp(sptr) && !MyConnect(acptr))
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
   if (IsAnOper(sptr)) /* send it normally */
@@ -2959,7 +2958,7 @@ int	m_away(aClient *cptr,
    commented out this sendto_serv_butone() call -Dianora */
 /*      sendto_serv_butone(cptr, ":%s AWAY", parv[0]); */
       if (MyConnect(sptr))
-	sendto_one(sptr, rpl_str(RPL_UNAWAY),
+	sendto_one(sptr, form_str(RPL_UNAWAY),
 		   me.name, parv[0]);
       return 0;
     }
@@ -2984,7 +2983,7 @@ int	m_away(aClient *cptr,
   sptr->user->away = away;
 
   if (MyConnect(sptr))
-    sendto_one(sptr, rpl_str(RPL_NOWAWAY), me.name, parv[0]);
+    sendto_one(sptr, form_str(RPL_NOWAWAY), me.name, parv[0]);
   return 0;
 }
 
@@ -3004,7 +3003,7 @@ int	m_ping(aClient *cptr,
 
   if (parc < 2 || *parv[1] == '\0')
     {
-      sendto_one(sptr, err_str(ERR_NOORIGIN), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOORIGIN), me.name, parv[0]);
       return 0;
     }
   origin = parv[1];
@@ -3022,7 +3021,7 @@ int	m_ping(aClient *cptr,
 		   origin, destination);
       else
 	{
-	  sendto_one(sptr, err_str(ERR_NOSUCHSERVER),
+	  sendto_one(sptr, form_str(ERR_NOSUCHSERVER),
 		     me.name, parv[0], destination);
 	  return 0;
 	}
@@ -3050,7 +3049,7 @@ int	m_pong(aClient *cptr,
 
   if (parc < 2 || *parv[1] == '\0')
     {
-      sendto_one(sptr, err_str(ERR_NOORIGIN), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOORIGIN), me.name, parv[0]);
       return 0;
     }
 
@@ -3081,7 +3080,7 @@ int	m_pong(aClient *cptr,
 		   parv[0], origin, destination);
       else
 	{
-	  sendto_one(sptr, err_str(ERR_NOSUCHSERVER),
+	  sendto_one(sptr, form_str(ERR_NOSUCHSERVER),
 		     me.name, parv[0], destination);
 	  return 0;
 	}
@@ -3119,7 +3118,7 @@ int	m_oper(aClient *cptr,
 
   if (!IsServer(cptr) && (BadPtr(name) || BadPtr(password)))
     {
-      sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
 		 me.name, parv[0], "OPER");
       return 0;
     }
@@ -3132,7 +3131,7 @@ int	m_oper(aClient *cptr,
       Count.oper++;
       sendto_serv_butone(cptr, ":%s MODE %s :+o", parv[0], parv[0]);
       if (IsMe(cptr))
-	sendto_one(sptr, rpl_str(RPL_YOUREOPER),
+	sendto_one(sptr, form_str(RPL_YOUREOPER),
 		   me.name, parv[0]);
       return 0;
     }
@@ -3140,7 +3139,7 @@ int	m_oper(aClient *cptr,
     {
       if (MyConnect(sptr))
 	{
-	  sendto_one(sptr, rpl_str(RPL_YOUREOPER),
+	  sendto_one(sptr, form_str(RPL_YOUREOPER),
 		     me.name, parv[0]);
 	  SendMessageFile(sptr, &ConfigFileEntry.opermotd);
 	}
@@ -3151,7 +3150,7 @@ int	m_oper(aClient *cptr,
       !(aconf = find_conf_exact(name, sptr->username,
 				inetntoa((char *)&cptr->ip), CONF_OPS)))
     {
-      sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOOPERHOST), me.name, parv[0]);
 #if defined(FAILED_OPER_NOTICE) && defined(SHOW_FAILED_OPER_ID)
 #ifdef SHOW_FAILED_OPER_PASSWD
       sendto_realops("Failed OPER attempt [%s(%s)] - identity mismatch: %s [%s@%s]",
@@ -3246,7 +3245,7 @@ int	m_oper(aClient *cptr,
 		 sptr->username, sptr->host,
 		 IsOper(sptr) ? 'O' : 'o');
       send_umode_out(cptr, sptr, old);
-      sendto_one(sptr, rpl_str(RPL_YOUREOPER), me.name, parv[0]);
+      sendto_one(sptr, form_str(RPL_YOUREOPER), me.name, parv[0]);
       sendto_one(sptr, ":%s NOTICE %s:*** Oper privs are %s",me.name,parv[0],
 		 operprivs);
 
@@ -3289,7 +3288,7 @@ int	m_oper(aClient *cptr,
   else
     {
       (void)detach_conf(sptr, aconf);
-      sendto_one(sptr,err_str(ERR_PASSWDMISMATCH),me.name, parv[0]);
+      sendto_one(sptr,form_str(ERR_PASSWDMISMATCH),me.name, parv[0]);
 #ifdef FAILED_OPER_NOTICE
 #ifdef SHOW_FAILED_OPER_PASSWD
       sendto_realops("Failed OPER attempt [%s(%s)] - passwd mismatch: %s [%s@%s]",
@@ -3322,13 +3321,13 @@ int	m_pass(aClient *cptr,
 
   if (BadPtr(password))
     {
-      sendto_one(cptr, err_str(ERR_NEEDMOREPARAMS),
+      sendto_one(cptr, form_str(ERR_NEEDMOREPARAMS),
 		 me.name, parv[0], "PASS");
       return 0;
     }
   if (!MyConnect(sptr) || (!IsUnknown(cptr) && !IsHandshake(cptr)))
     {
-      sendto_one(cptr, err_str(ERR_ALREADYREGISTRED),
+      sendto_one(cptr, form_str(ERR_ALREADYREGISTRED),
 		 me.name, parv[0]);
       return 0;
     }
@@ -3376,12 +3375,12 @@ int	m_userhost(aClient *cptr,
 
   if (parc < 2)
     {
-      sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
 		 me.name, parv[0], "USERHOST");
       return 0;
     }
 
-  ircsprintf(buf, rpl_str(RPL_USERHOST), me.name, parv[0]);
+  ircsprintf(buf, form_str(RPL_USERHOST), me.name, parv[0]);
   len = strlen(buf);
   *buf2 = '\0';
 
@@ -3428,12 +3427,12 @@ int     m_usrip(aClient *cptr,
   
   if (parc < 2)   
     {                   
-      sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
 		 me.name, parv[0], "IP"); 
       return 0;  
     }
         
-  ircsprintf(buf, rpl_str(RPL_USERHOST), me.name, parv[0]);
+  ircsprintf(buf, form_str(RPL_USERHOST), me.name, parv[0]);
   len = strlen(buf);
   *buf2 = '\0';   
     
@@ -3506,12 +3505,12 @@ int	m_ison(aClient *cptr,
 
   if (parc < 2)
     {
-      sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
 		 me.name, parv[0], "ISON");
       return 0;
     }
 
-  ircsprintf(buf, rpl_str(RPL_ISON), me.name, *parv);
+  ircsprintf(buf, form_str(RPL_ISON), me.name, *parv);
   len = strlen(buf);
   if (!IsOper(cptr))
     cptr->priority +=20; /* this keeps it from moving to 'busy' list */
@@ -3555,7 +3554,7 @@ int	m_umode(aClient *cptr,
 
   if (parc < 2)
     {
-      sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
 		 me.name, parv[0], "MODE");
       return 0;
     }
@@ -3563,7 +3562,7 @@ int	m_umode(aClient *cptr,
   if (!(acptr = find_person(parv[1], NULL)))
     {
       if (MyConnect(sptr))
-	sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL),
+	sendto_one(sptr, form_str(ERR_NOSUCHCHANNEL),
 		   me.name, parv[0], parv[1]);
       return 0;
     }
@@ -3576,7 +3575,7 @@ int	m_umode(aClient *cptr,
 			  me.name, parv[1],
 			  get_client_name(cptr, FALSE), sptr->name);
       else
-	sendto_one(sptr, err_str(ERR_USERSDONTMATCH),
+	sendto_one(sptr, form_str(ERR_USERSDONTMATCH),
 		   me.name, parv[0]);
       return 0;
     }
@@ -3590,8 +3589,7 @@ int	m_umode(aClient *cptr,
 	if (sptr->flags & flag)
 	  *m++ = (char)(*(s+1));
       *m = '\0';
-      sendto_one(sptr, rpl_str(RPL_UMODEIS),
-		 me.name, parv[0], buf);
+      sendto_one(sptr, form_str(RPL_UMODEIS), me.name, parv[0], buf);
       return 0;
     }
 
@@ -3638,9 +3636,7 @@ int	m_umode(aClient *cptr,
 	}
 
   if(badflag)
-    sendto_one(sptr,
-	       err_str(ERR_UMODEUNKNOWNFLAG),
-	       me.name, parv[0]);
+    sendto_one(sptr, form_str(ERR_UMODEUNKNOWNFLAG), me.name, parv[0]);
 
   /*
    * stop users making themselves operators too easily

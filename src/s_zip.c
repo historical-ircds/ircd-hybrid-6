@@ -22,6 +22,7 @@
 #include "sys.h"
 #include "h.h"
 #include "send.h"
+#include <string.h>
 
 #ifdef	ZIP_LINKS
 /*

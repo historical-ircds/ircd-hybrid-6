@@ -29,6 +29,7 @@
 
 #include <assert.h>
 #include <fcntl.h>     /* O_RDWR ... */
+#include <string.h>
 #include <sys/stat.h>
 
 /* New hash code */
@@ -450,17 +451,17 @@ int m_hash(struct Client *cptr, struct Client *sptr,int parc,char *parv[])
 
   if (!MyClient(sptr) || !IsOper(sptr))
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
   if(parc > 1)
     {
-      if(!strcasecmp(parv[1],"iphash"))
+      if(!irccmp(parv[1],"iphash"))
         {
           iphash_stats(cptr,sptr,parc,parv,-1);
           return 0;
         }
-      else if(!strcasecmp(parv[1],"Diphash"))
+      else if(!irccmp(parv[1],"Diphash"))
         {
           tmptr = localtime(&NOW);
           strftime(timebuffer, MAX_DATE_STRING, "%Y%m%d%H%M", tmptr);

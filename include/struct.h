@@ -73,8 +73,6 @@
 # include "client.h"
 #endif
 
-#define REPORT_DLINED  "NOTICE DLINE :*** You have been D-lined\r\n"
-
 typedef struct  ConfItem aConfItem;
 typedef	struct 	Client	aClient;
 typedef	struct	Channel	aChannel;
@@ -534,7 +532,7 @@ extern unsigned long tsdms;
 #endif /* DEFAULT_SERVER_SPLIT_RECOVERY_TIME */
 #endif
 
-typedef struct
+struct SetOptions
 {
   int maxclients;	/* max clients allowed */
   int autoconn;		/* autoconn enabled for all servers? */
@@ -567,7 +565,9 @@ typedef struct
   int spam_time;
 #endif
 
-}SetOptionsType;
+};
+
+extern struct SetOptions GlobalSetOptions;  /* defined in ircd.c */
 
 #ifdef FLUD
 struct fludbot {

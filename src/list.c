@@ -31,20 +31,6 @@
 #include "class.h"
 #include "send.h"
 
-extern int BlockHeapGarbageCollect(BlockHeap *);
-extern SetOptionsType GlobalSetOptions;
-
-#ifdef NEED_SPLITCODE
-extern int server_was_split;
-extern time_t server_split_time;
-#endif
-
-char *currentfile;
-int currentline;
-
-/* locally defined functions */
-
-
 /*
  * re-written to use Wohali (joant@cadence.com)
  * block allocator routines. very nicely done Wohali
@@ -69,16 +55,12 @@ int currentline;
    rather than 30k times -Dianora
 */
 
-#define CLIENTS_PREALLOCATE 1024
+#define USERS_PREALLOCATE 1024
 
 void	outofmemory();
 
-int	numclients = 0;
-
 /* for Wohali's block allocator */
-BlockHeap *free_local_aClients;
 BlockHeap *free_Links;
-BlockHeap *free_remote_aClients;
 BlockHeap *free_anUsers;
 #ifdef FLUD
 BlockHeap *free_fludbots;
@@ -86,24 +68,14 @@ BlockHeap *free_fludbots;
 
 void initlists()
 {
+  init_client_heap();
   /* Might want to bump up LINK_PREALLOCATE if FLUD is defined */
   free_Links = BlockHeapCreate((size_t)sizeof(Link),LINK_PREALLOCATE);
-
-  /* start off with CLIENTS_PREALLOCATE for now... on typical
-     efnet these days, it can get up to 35k allocated */
-
-  free_remote_aClients =
-     BlockHeapCreate((size_t)CLIENT_REMOTE_SIZE, CLIENTS_PREALLOCATE);
-
-  /* Can't EVER have more than MAXCONNECTIONS number of local aClients */
-
-  free_local_aClients = BlockHeapCreate((size_t)CLIENT_LOCAL_SIZE,
-                                 MAXCONNECTIONS);
 
   /* anUser structs are used by both local aClients, and remote aClients */
 
   free_anUsers = BlockHeapCreate(sizeof(anUser),
-				 CLIENTS_PREALLOCATE + MAXCONNECTIONS);
+				 USERS_PREALLOCATE + MAXCONNECTIONS);
 
 #ifdef FLUD
   /* fludbot structs are used to track CTCP Flooders */
@@ -124,12 +96,11 @@ void initlists()
  *		  are in order. I'll try to just abort() at least.
  *		  -Dianora
  */
-
 void outofmemory()
 {
-  static int was_here=0;
+  static int was_here = 0;
 
-  if(was_here)
+  if (was_here)
     abort();
 
   was_here = YES;
@@ -140,112 +111,6 @@ void outofmemory()
 }
 
 	
-/*
-** Create a new aClient structure and set it to initial state.
-**
-**	from == NULL,	create local client (a client connected
-**			to a socket).
-**
-**	from,	create remote client (behind a socket
-**			associated with the client defined by
-**			'from'). ('from' is a local client!!).
-*/
-aClient* make_client(aClient* from)
-{
-  aClient *cptr = NULL;
-
-  if (!from)
-    { /* from is NULL */
-      cptr = BlockHeapALLOC(free_local_aClients,aClient);
-      if(cptr == (aClient *)NULL)
-	outofmemory();
-
-      memset(cptr, 0, CLIENT_LOCAL_SIZE);
-      cptr->local_flag = 1;
-      
-      /* Note:  structure is zero (calloc) */
-      cptr->from = cptr; /* 'from' of local client is self! */
-
-      /* commenting out unnecessary assigns, but leaving them
-       * for documentation. REMEMBER the fripping struct is already
-       * zeroed up above =DUH= 
-       * -Dianora 
-       */
-
-      /* cptr->next = NULL; */
-      /* cptr->prev = NULL; */
-      /* cptr->hnext = NULL; */
-      /* cptr->user = NULL; */
-      /* cptr->serv = NULL; */
-      /* cptr->lnext = NULL; */
-      /* cptr->lprev = NULL; */
-#ifdef ZIP_LINKS
-      /* cptr->zip = NULL; */
-#endif
-      /* cptr->user = NULL; */
-      /* cptr->serv = NULL; */
-      cptr->status = STAT_UNKNOWN;
-      cptr->fd = -1;
-      strcpy(cptr->username, "unknown");
-      cptr->since = cptr->lasttime = cptr->firsttime = timeofday;
-      /* cptr->confs = NULL; */
-      /* cptr->sockhost[0] = '\0'; */
-      /* cptr->buffer[0] = '\0'; */
-      /* cptr->username[0] = '\0'; */
-    }
-  else
-    { /* from is not NULL */
-      cptr = BlockHeapALLOC(free_remote_aClients,aClient);
-      if(cptr == (aClient *)NULL)
-	outofmemory();
-
-      memset(cptr, 0, CLIENT_REMOTE_SIZE);
-      /* cptr->local_flag = 0; */
-
-      /* Note:  structure is zero (calloc) */
-      cptr->from = from; /* 'from' of local client is self! */
-      /* cptr->next = NULL; */
-      /* cptr->prev = NULL; */
-      /* cptr->hnext = NULL; */
-      /* cptr->idhnext = NULL; */
-      /* cptr->lnext = NULL; */
-      /* cptr->lprev = NULL; */
-      /* cptr->user = NULL; */
-      /* cptr->serv = NULL; */
-      cptr->status = STAT_UNKNOWN;
-      cptr->fd = -1;
-      (void)strcpy(cptr->username, "unknown");
-    }
-  return (cptr);
-}
-
-void _free_client(aClient *cptr)
-{
-  int retval = 0;
-
-  if(cptr->local_flag)	
-    {
-      retval = BlockHeapFree(free_local_aClients,cptr);
-    }
-  else
-    {
-      retval = BlockHeapFree(free_remote_aClients,cptr);
-    }
-  if(retval)
-    {
-/* Looks "unprofessional" maybe, but I am going to leave this sendto_ops in
-   it should never happen, and if it does, the hybrid team wants to hear
-   about it
-*/
-      sendto_ops("list.c couldn't BlockHeapFree(free_remote_aClients,cptr) cptr = %lX", cptr );
-       sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
-
-#if defined(USE_SYSLOG) && defined(SYSLOG_BLOCK_ALLOCATOR)
-       syslog(LOG_DEBUG,"list.c couldn't BlockHeapFree(free_remote_aClients,cptr) cptr = %lX", (long unsigned int) cptr);
-#endif
-    }
-}
-
 /*
 ** 'make_user' add's an User information block to a client
 ** if it was not previously allocated.
@@ -331,111 +196,6 @@ void _free_user(anUser* user, aClient* cptr)
 }
 
 /*
- * taken the code from ExitOneClient() for this and placed it here.
- * - avalon
- */
-void remove_client_from_list(aClient *cptr)
-{
-  if (IsServer(cptr))
-    {
-      Count.server--;
-
-#ifdef NEED_SPLITCODE
-
-	/* Don't bother checking for a split, if split code
-	 * is deactivated with server_split_recovery_time == 0
-	 */
-
-	if(SPLITDELAY && (Count.server < SPLITNUM))
-	  {
-	    if (!server_was_split)
-	      {
-	        sendto_ops("Netsplit detected, split-mode activated");
-	        server_was_split = YES;
-	      }
-	    server_split_time = NOW;
-	  }
-#endif
-    }
-
-  else if (IsClient(cptr))
-    {
-      Count.total--;
-      if (IsAnOper(cptr))
-	{
-	  Count.oper--;
-	}
-    }
-  if (IsInvisible(cptr)) Count.invisi--;
-  if (cptr->prev)
-    cptr->prev->next = cptr->next;
-  else
-    {
-      GlobalClientList = cptr->next;
-      GlobalClientList->prev = NULL;
-    }
-  if (cptr->next)
-    cptr->next->prev = cptr->prev;
-  if (IsPerson(cptr) && cptr->user)
-    {
-      add_history(cptr,0);
-      off_history(cptr);
-    }
-  if (cptr->user)
-    free_user(cptr->user, cptr); /* try this here */
-  if (cptr->serv)
-    {
-      if (cptr->serv->user)
-	free_user(cptr->serv->user, cptr);
-      MyFree((char *)cptr->serv);
-    }
-
-  /* YEUCK... This is telling me the only way of knowing that
-   * a cptr was pointing to a remote aClient or not is by checking
-   * to see if its fd is not -2
-   *
-   * -Dianora 
-   *
-   */
-  /*
-  if (cptr->fd == -2)
-    cloc.inuse--;
-  else
-    crem.inuse--;
-    */
-
-#ifdef FLUD
-  if(MyFludConnect(cptr))
-    free_fluders(cptr,NULL);
-  free_fludees(cptr);
-#endif
-
-  free_client(cptr);
-/* WTF is this?!#  -Taner */
-  /* numclients--; */
-  return;
-}
-
-/*
- * although only a small routine, it appears in a number of places
- * as a collection of a few lines...functions like this *should* be
- * in this file, shouldnt they ?  after all, this is list.c, isnt it ?
- * -avalon
- */
-void add_client_to_list(aClient *cptr)
-{
-  /*
-   * since we always insert new clients to the top of the list,
-   * this should mean the "me" is the bottom most item in the list.
-   */
-  cptr->next = GlobalClientList;
-  GlobalClientList = cptr;
-  if (cptr->next)
-    cptr->next->prev = cptr;
-  return;
-}
-
-/*
  * Look for ptr in the linked listed pointed to by link.
  */
 Link *find_user_link(Link *lp, aClient *ptr)
@@ -507,42 +267,10 @@ side effects	- memory is possibly freed up
 void block_garbage_collect()
 {
   BlockHeapGarbageCollect(free_Links);
-  BlockHeapGarbageCollect(free_local_aClients);
-  BlockHeapGarbageCollect(free_remote_aClients);
   BlockHeapGarbageCollect(free_anUsers);
+  clean_client_heap();
 #ifdef FLUD
   BlockHeapGarbageCollect(free_fludbots);
 #endif /* FLUD */
-}
-
-/* Functions taken from +CSr31, paranoified to check that the client
-** isn't on a llist already when adding, and is there when removing -orabidoo
-*/
-void add_client_to_llist(aClient **bucket, aClient *client)
-{
-  if (!client->lprev && !client->lnext)
-    {
-      client->lprev = (aClient *)NULL;
-      if ((client->lnext = *bucket) != (aClient *)NULL)
-	client->lnext->lprev = client;
-      *bucket = client;
-    }
-}
-
-void del_client_from_llist(aClient **bucket, aClient *client)
-{
-  if (client->lprev)
-    {
-      client->lprev->lnext = client->lnext;
-    }
-  else if (*bucket == client)
-    {
-      *bucket = client->lnext;
-    }
-  if (client->lnext)
-    {
-      client->lnext->lprev = client->lprev;
-    }
-  client->lnext = client->lprev = (aClient *)NULL;
 }
 

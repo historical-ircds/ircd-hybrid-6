@@ -113,7 +113,7 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
   if (!IsAnOper(sptr))  
 #endif
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, 
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, 
 		 parv[0]);
       return 0;
     }
@@ -126,7 +126,7 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
 
   if ( parc < 2 )
     {
-      sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
 		 me.name, parv[0], "UNKLINE");
       return 0;
     }

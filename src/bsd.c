@@ -23,13 +23,16 @@
 #include "common.h"
 #include "sys.h"
 #include "h.h"
+#include <errno.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#if 0 /* does so :p */
 extern	int errno; /* ...seems that errno.h doesn't define this everywhere */
 #if !defined(__FreeBSD__) && !defined(__NetBSD__) && !defined(__OpenBSD__) && !defined(__bsdi__) && !defined(__linux__) && !defined(__EMX__)
 extern	char	*sys_errlist[];
+#endif
 #endif
 
 #if defined(DEBUGMODE) || defined (DNS_DEBUG)
@@ -90,7 +93,6 @@ VOIDSIG dummy()
 int	deliver_it(aClient *cptr,char *str,int len)
 {
   int	retval;
-  aClient	*acpt = cptr->acpt;
 
 #ifdef	DEBUGMODE
   writecalls++;
@@ -149,15 +151,6 @@ int	deliver_it(aClient *cptr,char *str,int len)
 	  cptr->sendK += (cptr->sendB >> 10);
 	  cptr->sendB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
 	}
-      if (acpt != &me)
-	{
-	  acpt->sendB += retval;
-	  if (acpt->sendB > 1023)
-	    {
-	      acpt->sendK += (acpt->sendB >> 10);
-	      acpt->sendB &= 0x03ff;
-	    }
-	}
       else if (me.sendB > 1023)
 	{
 	  me.sendK += (me.sendB >> 10);
@@ -166,3 +159,5 @@ int	deliver_it(aClient *cptr,char *str,int len)
     }
   return(retval);
 }
+
+

@@ -22,6 +22,7 @@
  *  $Id$
  */
 #include "s_conf.h"
+#include "listener.h"
 #include "class.h"
 #include "struct.h"
 #include "common.h"
@@ -36,12 +37,14 @@
 #if defined(AIX) || defined(DYNIXPTX) || defined(SVR3)
 #include <time.h>
 #endif
+#include <string.h>
 #include <netdb.h>
 #include <signal.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <assert.h>
+
 extern int rehashed;
 
 extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
@@ -220,6 +223,13 @@ void free_conf(struct ConfItem* aconf)
 {
   assert(0 != aconf);
 
+  /*
+   * check aconf->c_class in case we have one we didn't know about
+   */
+  if (ClassPtr(aconf)) {
+    if (ConfMaxLinks(aconf) == -1 && ConfLinks(aconf) == 0)
+      free_class(ClassPtr(aconf));
+  }
   if (aconf->dns_pending)
     delete_resolver_queries(aconf);
   MyFree(aconf->host);
@@ -235,15 +245,16 @@ void free_conf(struct ConfItem* aconf)
  * remove all conf entries from the client except those which match
  * the status field mask.
  */
-void        det_confs_butmask(aClient *cptr,int mask)
+void det_confs_butmask(struct Client* cptr, int mask)
 {
-  Link *tmp, *tmp2;
+  struct SLink* link;
+  struct SLink* link_next;
 
-  for (tmp = cptr->confs; tmp; tmp = tmp2)
+  for (link = cptr->confs; link; link = link_next)
     {
-      tmp2 = tmp->next;
-      if ((tmp->value.aconf->status & mask) == 0)
-        (void)detach_conf(cptr, tmp->value.aconf);
+      link_next = link->next;
+      if ((link->value.aconf->status & mask) == 0)
+        detach_conf(cptr, link->value.aconf);
     }
 }
 
@@ -811,9 +822,10 @@ aConfItem        *count_cnlines(Link *lp)
 **        Disassociate configuration from the client.
 **      Also removes a class from the list if marked for deleting.
 */
-int        detach_conf(aClient *cptr,aConfItem *aconf)
+int detach_conf(struct Client* cptr,struct ConfItem* aconf)
 {
-  Link        **lp, *tmp;
+  struct SLink** lp;
+  struct SLink*  tmp;
 
   lp = &(cptr->confs);
 
@@ -821,13 +833,17 @@ int        detach_conf(aClient *cptr,aConfItem *aconf)
     {
       if ((*lp)->value.aconf == aconf)
         {
+          /*
+           * NOTE: this is done in free conf too now
+           */
           if ((aconf) && (ClassPtr(aconf)))
             {
               if (aconf->status & CONF_CLIENT_MASK)
-                if (ConfLinks(aconf) > 0)
-                  --ConfLinks(aconf);
-              if (ConfMaxLinks(aconf) == -1 &&
-                  ConfLinks(aconf) == 0)
+                {
+		  if (ConfLinks(aconf) > 0)
+		    --ConfLinks(aconf);
+                }
+              if (ConfMaxLinks(aconf) == -1 && ConfLinks(aconf) == 0)
                 {
                   free_class(ClassPtr(aconf));
                   ClassPtr(aconf) = NULL;
@@ -1317,7 +1333,7 @@ void report_qlines(aClient *sptr)
         {
           GetPrintableaConfItem(aconf, &name, &host, &pass, &user, &port);
           
-          sendto_one(sptr, rpl_str(RPL_STATSQLINE),
+          sendto_one(sptr, form_str(RPL_STATSQLINE),
                      me.name,
                      sptr->name,
                      name,
@@ -1980,7 +1996,7 @@ static void initconf(FBFILE* file, int use_include)
       */
 
       /*  Unless its a Y line itself, associate this with a class */
-      if (aconf->status & (CONF_CLIENT_MASK|CONF_LISTEN_PORT))
+      if (aconf->status & (CONF_CLIENT_MASK | CONF_LISTEN_PORT))
         {
           if (0 == ClassPtr(aconf))
             ClassPtr(aconf) = find_class(0);
@@ -1989,11 +2005,11 @@ static void initconf(FBFILE* file, int use_include)
         }
 
       /* P: line or I: line */
-      if (aconf->status & (CONF_LISTEN_PORT|CONF_CLIENT))
+      if (aconf->status & (CONF_LISTEN_PORT | CONF_CLIENT))
         {
           aConfItem *bconf;
           
-          if ( (bconf = find_conf_entry(aconf, aconf->status)) )
+          if ((bconf = find_conf_entry(aconf, aconf->status)))
             {
               delist_conf(bconf);
               bconf->status &= ~CONF_ILLEGAL;
@@ -2014,9 +2030,8 @@ static void initconf(FBFILE* file, int use_include)
               free_conf(aconf);
               aconf = bconf;
             }
-          else if (aconf->host &&
-                   aconf->status == CONF_LISTEN_PORT)
-            (void)add_listener(aconf);
+          else if (aconf->host && aconf->status == CONF_LISTEN_PORT)
+            add_listener(aconf);
         }
 
       if (aconf->status & CONF_SERVER_MASK)
@@ -2614,13 +2629,13 @@ void report_temp_klines(aClient *sptr)
                   if( (p = strchr(reason,'|')) )
                     *p = '\0';
 
-                  sendto_one(sptr,rpl_str(RPL_STATSKLINE), me.name,
+                  sendto_one(sptr,form_str(RPL_STATSKLINE), me.name,
                              sptr->name, 'k' , host, name, reason);
                   if(p)
                     *p = '|';
                 }
               else
-                sendto_one(sptr,rpl_str(RPL_STATSKLINE), me.name,
+                sendto_one(sptr,form_str(RPL_STATSKLINE), me.name,
                            sptr->name, 'k' , host, name, reason);
 
               last_list_ptr = kill_list_ptr;
@@ -3044,7 +3059,7 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
   if (!MyClient(sptr) || !IsAnOper(sptr))
     {
-      sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
 

@@ -19,10 +19,6 @@
  *
  *   $Id$
  */
-
-#include <stdio.h>
-#include <stdarg.h>
-
 #include "send.h"
 #include "struct.h"
 #include "common.h"
@@ -30,6 +26,10 @@
 #include "h.h"
 #include "class.h"
 #include "numeric.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
 
 /* LINKLIST */
 extern aClient *local_cptr_list;
@@ -40,6 +40,11 @@ extern aClient *serv_cptr_list;
 
 static	char	sendbuf[2048];
 static	int	send_message (aClient *, char *, int);
+
+/*
+ * vsprintf_irc - defined in sprintf_irc.c
+ */
+extern int vsprintf_irc(char* str, const char* fmt, va_list args);
 
 static  void vsendto_prefix_one(register aClient *, register aClient *, const char *, va_list);
 static  void vsendto_one(aClient *, const char *, va_list);
@@ -192,8 +197,6 @@ send_message(aClient *to, char *msg, int len)
 	*/
 	to->sendM += 1;
 	me.sendM += 1;
-	if (to->acpt != &me)
-		to->acpt->sendM += 1;
 
 	/*
 	** This little bit is to stop the sendQ from growing too large when
@@ -294,9 +297,6 @@ send_message(aClient *to, char *msg, int len)
 	*/
 	to->sendM += 1;
 	me.sendM += 1;
-
-	if (to->acpt != &me)
-		to->acpt->sendM += 1;
 
 	return 0;
 } /* send_message() */
@@ -1214,7 +1214,7 @@ vsendto_prefix_one(register aClient *to, register aClient *from,
 	  (void)exit_client(NULL, to, &me, "Ghosted client");
 
 	  if (IsPerson(from))
-	    sendto_one(from, err_str(ERR_GHOSTEDCLIENT),
+	    sendto_one(from, form_str(ERR_GHOSTEDCLIENT),
 		       me.name, from->name, to->name, to->username,
 		       to->host, to->from);
 	  

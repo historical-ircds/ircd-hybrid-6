@@ -1,49 +1,28 @@
-/* ************************************************************************ */
-/*                                                                          */
-/* File:   blalloc.c                                                        */
-/* Owner:  Wohali (Joan Touzet)						    */
-/*                                                                          */
-/*         Hacked up for use in ircd by Dianora                             */
-/*                                                                          */
-/* ************************************************************************ */
 /*
+ *
+ * File:   blalloc.c
+ * Owner:  Wohali (Joan Touzet)
+ *
+ *         Hacked up for use in ircd by Dianora
  *
  * $Id$
  */
-
-/* ------------------------------------------------------------------------ */
-/* INCLUDES                                                                 */
-/* ------------------------------------------------------------------------ */
+#include "blalloc.h"
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
 #include "h.h"
 #include "numeric.h"
-#include "blalloc.h"
 #include "send.h"
 
-/* ------------------------------------------------------------------------ */
-/* DEFINES                                                                  */
-/* ------------------------------------------------------------------------ */
+#ifdef DEBUG_BLOCK_ALLOCATOR
+const char* BH_CurrentFile = 0;   /* GLOBAL used for BlockHeap debugging */
+int         BH_CurrentLine = 0;   /* GLOBAL used for BlockHeap debugging */
+#endif
 
-/* ------------------------------------------------------------------------ */
-/* TYPEDEFS                                                                 */
-/* ------------------------------------------------------------------------ */
-
-/* ------------------------------------------------------------------------ */
-/* VARIABLES                                                                */
-/* ------------------------------------------------------------------------ */
-
-
-/* ------------------------------------------------------------------------ */
-/* FUNCTION PROTOTYPES (LOCAL FUNCTIONS ONLY)                               */
-/* ------------------------------------------------------------------------ */
 static int newblock(BlockHeap *bh);
 
-/* ------------------------------------------------------------------------ */
-/* FUNCTION PROTOTYPES (EXTERN FUNCTIONS ONLY)                              */
-/* ------------------------------------------------------------------------ */
-extern        void    outofmemory();	/* defined in list.c */
+extern void outofmemory();	/* defined in list.c */
 
 /* ************************************************************************ */
 /* FUNCTION DOCUMENTATION:                                                  */
@@ -297,12 +276,12 @@ int BlockHeapFree(BlockHeap *bh, void *ptr)
 	    {
 #if defined(USE_SYSLOG) && defined(SYSLOG_BLOCK_ALLOCATOR)
 	      syslog(LOG_DEBUG,"blalloc.c bit already clear in map caller %s %d",
-		     currentfile,currentline);
+		     BH_CurrentFile, BH_CurrentLine);
 #endif
 	      sendto_ops("blalloc.c bit already clear in map elemSize %d caller %s %d",
 			 bh->elemSize,
-			 currentfile,
-			 currentline);
+			 BH_CurrentFile,
+			 BH_CurrentLine);
 	      sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
 	    }
 	  else

@@ -74,6 +74,7 @@ struct Whowas;
 struct fludbot;
 struct Zdata;
 struct DNSReply;
+struct Listener;
 struct Client;
 
 /*
@@ -237,7 +238,7 @@ struct Client
   unsigned short    receiveB;	/* sent and received. */
   unsigned int	    lastrecvM;	/* to check for activity --Mika */
   int		    priority;
-  struct Client*    acpt;	/* listening client which we accepted from */
+  struct Listener*  listener;	/* listener accepted from */
   struct SLink*     confs;	/* Configuration record associated */
   struct in_addr    ip;		/* keep real ip# too */
   unsigned short    port;	/* and the remote port# too :-) */
@@ -477,8 +478,21 @@ struct Client
 #define	CLIENT_LOCAL_SIZE sizeof(struct Client)
 #define	CLIENT_REMOTE_SIZE offsetof(struct Client, count)
 
-extern const char* get_client_name(struct Client* client, int show_ip);
-extern const char* get_client_host(struct Client* client);
-extern void        release_client_dns_reply(struct Client* client);
+extern const char*    get_client_name(struct Client* client, int show_ip);
+extern const char*    get_client_host(struct Client* client);
+extern void           release_client_dns_reply(struct Client* client);
+extern void           init_client_heap(void);
+extern void           clean_client_heap(void);
+extern struct Client* make_client(struct Client* from);
+extern void           _free_client(struct Client* client);
+extern void	      add_client_to_list(struct Client* client);
+extern void           remove_client_from_list(struct Client *);
+extern void	      add_client_to_llist(struct Client** list, 
+                                          struct Client* client);
+extern void	      del_client_from_llist(struct Client** list, 
+                                            struct Client* client);
+extern int	      exit_client(struct Client*, struct Client*, 
+                                  struct Client*, char*);
+
 
 #endif /* INCLUDED_client_h */

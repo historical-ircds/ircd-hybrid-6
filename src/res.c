@@ -20,6 +20,7 @@
 #include "send.h"
 
 #include <assert.h>
+#include <string.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <fcntl.h>

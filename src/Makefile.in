@@ -15,7 +15,7 @@ CPPFLAGS = ${INCLUDES} @CPPFLAGS@
 #
 # For developers
 # CFLAGS= -g -O2 -Wall 
-# CPPFLAGS = ${INCLUDES} -Dlint
+# CPPFLAGS = ${INCLUDES}
 #
 
 SRCS = \
@@ -31,6 +31,7 @@ SRCS = \
 	hash.c \
 	ircd.c \
 	list.c \
+	listener.c \
 	m_gline.c \
 	m_info.c \
 	m_kline.c \
@@ -75,6 +76,7 @@ SRCS = \
 #	hash.o \
 #	ircd.o \
 #	list.o \
+#	listener.o \
 #	m_gline.o \
 #	m_info.o \
 #	m_kline.o \

@@ -132,7 +132,7 @@ int     m_gline(aClient *cptr,
       /* Only globals can apply Glines */
       if (!IsOper(sptr))
 	{
-	  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+	  sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 	  return 0;
 	}
 
@@ -144,7 +144,7 @@ int     m_gline(aClient *cptr,
 
       if ( parc < 3 )
 	{
-	  sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+	  sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
 		     me.name, parv[0], "GLINE");
 	  return 0;
 	}
@@ -645,7 +645,7 @@ void report_glines(aClient *sptr)
 	      else
 		reason = "No Reason";
 
-	      sendto_one(sptr,rpl_str(RPL_STATSKLINE), me.name,
+	      sendto_one(sptr,form_str(RPL_STATSKLINE), me.name,
 			 sptr->name, 'G' , host, name, reason);
 
 	      last_list_ptr = kill_list_ptr;

@@ -21,11 +21,15 @@
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
+#include "h.h"
+#include <string.h>
+
+#include <errno.h>
+#if 0
+extern	int errno; /* ...seems that errno.h doesn't define this everywhere */
+#endif
 
 #define FOREVER for(;;)
-
-extern	int errno; /* ...seems that errno.h doesn't define this everywhere */
-extern	void	outofmemory();
 
 #if !defined( HAVE_STRTOKEN )
 /*
@@ -208,20 +212,20 @@ struct in_addr in;
 }
 #endif /* !HAVE_INET_NETOF */
 
-char	*MyMalloc(size_t x)
+void* MyMalloc(size_t x)
 {
-  char *ret = (char *)malloc(x);
+  void* ret = malloc(x);
 
   if (!ret)
     {
       outofmemory();
     }
-  return	ret;
+  return ret;
 }
 
-char	*MyRealloc(char *x, size_t y)
+void* MyRealloc(void* x, size_t y)
 {
-  char *ret = (char *)realloc(x, y);
+  char *ret = realloc(x, y);
 
   if (!ret)
     {

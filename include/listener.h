@@ -20,31 +20,41 @@
  */
 #ifndef INCLUDED_listener_h
 #define INCLUDED_listener_h
-
 #ifndef INCLUDED_sys_types_h
-#include <sys/types.h>     /* size_t */
+#include <sys/types.h>       /* size_t */
 #define INCLUDED_sys_types_h
 #endif
+#ifndef INCLUDED_netinet_in_h
+#include <netinet/in.h>      /* in_addr */
+#define INCLUDED_netinet_in_h
+#endif
+#ifndef INCLUDED_ircd_defs_h
+#include "ircd_defs.h"       /* HOSTLEN */
+#endif
 
-enum ListenerState {
-  LISTENER_CLOSED,
-  LISTENER_ACCEPTING,
-  LISTENER_CLOSING
-};
-
-/*
- * bahhh... C, feh :-)
- */
-typedef enum ListenerState ListenerState;
+struct ConfItem;
 
 struct Listener {
-  struct Listener* next;            /* list node pointer */
-  struct ConfItem* conf;            /* conf line for the port */
-  int              fd;              /* file descriptor */
-  int              port;            /* listener IP port */
-  ListenerState    state;           /* current state */
-  int              ref_count;       /* number of connection references */
-
+  struct Listener* next;               /* list node pointer */
+  const char*      name;               /* listener name */
+  struct ConfItem* conf;               /* conf line for the port */
+  int              fd;                 /* file descriptor */
+  int              port;               /* listener IP port */
+  int              ref_count;          /* number of connection references */
+  struct in_addr   addr;               /* virtual address or INADDR_ANY */
+  time_t           last_accept;        /* last time listener accepted */
+  int              index;              /* index into poll array */
+  char             vhost[HOSTLEN + 1]; /* virtual name of listener */
 };
+
+extern struct Listener* ListenerPollList; /* GLOBAL - listener list */
+
+extern void accept_connection(struct Listener* listener);
+extern void add_listener(struct ConfItem* conf);
+extern const char* get_listener_name(const struct Listener* listener);
+extern const char* get_listener_name_r(const struct Listener* listener,
+                                       char* buf, size_t len);
+extern void close_listener(struct Listener* listener);
+extern void close_listeners(void);
 
 #endif /* INCLUDED_listener_h */

@@ -26,6 +26,7 @@
 #include "send.h"
 #include "hash.h"
 
+#include <string.h>
 /*
  * Whowas hash table size
  *
@@ -164,7 +165,7 @@ int     m_whowas(aClient *cptr,
 
   if (parc < 2)
     {
-      sendto_one(sptr, err_str(ERR_NONICKNAMEGIVEN),
+      sendto_one(sptr, form_str(ERR_NONICKNAMEGIVEN),
 		 me.name, parv[0]);
       return 0;
     }
@@ -200,12 +201,12 @@ int     m_whowas(aClient *cptr,
     {
       if (!irccmp(nick, temp->name))
 	{
-	  sendto_one(sptr, rpl_str(RPL_WHOWASUSER),
+	  sendto_one(sptr, form_str(RPL_WHOWASUSER),
 		     me.name, parv[0], temp->name,
 		     temp->username,
 		     temp->hostname,
 		     temp->realname);
-	  sendto_one(sptr, rpl_str(RPL_WHOISSERVER),
+	  sendto_one(sptr, form_str(RPL_WHOISSERVER),
 		     me.name, parv[0], temp->name,
 		     temp->servername, myctime(temp->logoff));
 	  cur++;
@@ -215,10 +216,10 @@ int     m_whowas(aClient *cptr,
 	break;
     }
   if (!found)
-    sendto_one(sptr, err_str(ERR_WASNOSUCHNICK),
+    sendto_one(sptr, form_str(ERR_WASNOSUCHNICK),
 	       me.name, parv[0], nick);
 
-  sendto_one(sptr, rpl_str(RPL_ENDOFWHOWAS), me.name, parv[0], parv[1]);
+  sendto_one(sptr, form_str(RPL_ENDOFWHOWAS), me.name, parv[0], parv[1]);
   return 0;
 }
 

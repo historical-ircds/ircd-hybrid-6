@@ -36,6 +36,7 @@
 #include "send.h"
 #include "hash.h"
 
+#include <string.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -85,7 +86,7 @@ fdlist busycli_fdlist;	/* high-priority clients */
 fdlist default_fdlist;
 
 /* /quote set variables */
-SetOptionsType GlobalSetOptions;
+struct SetOptions GlobalSetOptions;
 
 /* config.h config file paths etc */
 ConfigFileEntryType ConfigFileEntry; 
@@ -485,7 +486,7 @@ static	time_t	check_pings(time_t currenttime)
 
 		      dying_clients_reason[die_index++] = reason;
 		      dying_clients[die_index] = (aClient *)NULL;
-		      sendto_one(cptr, err_str(ERR_YOUREBANNEDCREEP),
+		      sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
 				 me.name, cptr->name, reason);
 		      continue;		/* and go examine next fd/cptr */
 		    }
@@ -527,7 +528,7 @@ static	time_t	check_pings(time_t currenttime)
 
 		      dying_clients_reason[die_index++] = reason;
 		      dying_clients[die_index] = (aClient *)NULL;
-		      sendto_one(cptr, err_str(ERR_YOUREBANNEDCREEP),
+		      sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
 				 me.name, cptr->name, reason);
 		      continue;		/* and go examine next fd/cptr */
 		    }
@@ -565,7 +566,7 @@ static	time_t	check_pings(time_t currenttime)
 
 		      dying_clients_reason[die_index++] = reason;
 		      dying_clients[die_index] = (aClient *)NULL;
-		      sendto_one(cptr, err_str(ERR_YOUREBANNEDCREEP),
+		      sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
 				 me.name, cptr->name, reason);
 		      continue;		/* and go examine next fd/cptr */
 		    }
