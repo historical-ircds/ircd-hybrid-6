@@ -2309,12 +2309,14 @@ static void initconf(FBFILE* file, int use_include)
 
           if( (p = strchr(aconf->host,'@')))
             {
+              char* x;
               aconf->flags |= CONF_FLAGS_DO_IDENTD;
-              *p = '\0';
-	      MyFree(aconf->user);
-	      DupString(aconf->user,aconf->host);
-              p++;
-              strncpy_irc(aconf->host,p, HOSTLEN );      
+              *p++ = '\0';
+              MyFree(aconf->user);
+              DupString(aconf->user, aconf->host);
+              DupString(x, p);
+              MyFree(aconf->host);
+              aconf->host = x;
             }
 
            if( is_address(aconf->host,&ip_host,&ip_mask) )
