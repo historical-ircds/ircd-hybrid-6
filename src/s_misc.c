@@ -27,12 +27,13 @@ Computing Center and Jarkko Oikarinen";
 static char *rcs_version = "$Id$";
 #endif
 
-#include <sys/time.h>
+#include "s_conf.h"
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <fcntl.h>
 #if !defined(ULTRIX) && !defined(SGI) && !defined(sequent) && \
     !defined(__convex__)

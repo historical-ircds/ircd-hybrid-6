@@ -60,6 +60,7 @@ static char *rcs_version = "$Id$";
 #include "fdlist.h"
 #include "fileio.h"
 #include "res.h"
+#include "s_conf.h"
 
 
 /* external variables */
@@ -1360,7 +1361,7 @@ static	void	report_configured_links(aClient *sptr,int mask)
   char	*host, *pass, *user, *name;
   int   port;
 
-  for (tmp = conf; tmp; tmp = tmp->next)
+  for (tmp = ConfigItemList; tmp; tmp = tmp->next)
     if (tmp->status & mask)
       {
 	for (p = &report_array[0]; p->conf_type; p++)
@@ -2182,7 +2183,7 @@ int	m_connect(aClient *cptr,
       return 0;
     }
 
-  for (aconf = conf; aconf; aconf = aconf->next)
+  for (aconf = ConfigItemList; aconf; aconf = aconf->next)
     if ((aconf->status == CONF_CONNECT_SERVER) &&
 	match(parv[1], aconf->name))
       break;
@@ -2190,7 +2191,7 @@ int	m_connect(aClient *cptr,
   /* Checked first servernames, then try hostnames. */
   if (!aconf)
     {
-      for (aconf = conf; aconf; aconf = aconf->next)
+      for (aconf = ConfigItemList; aconf; aconf = aconf->next)
 	{
 	  if ((aconf->status == CONF_CONNECT_SERVER) &&
 	      match(parv[1], aconf->host))

@@ -52,7 +52,7 @@
 #include "numeric.h"
 #include "common.h"
 #include "struct.h"
-
+#include "s_conf.h"
 #include "h.h"
 
 #include "mtrie_conf.h"

@@ -16,14 +16,11 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ *  (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen
+ *
+ * $Id$
  */
-
-#ifndef lint
-static  char sccsid[] = "@(#)list.c	2.22 15 Oct 1993 (C) 1988 University of Oulu, \
-Computing Center and Jarkko Oikarinen";
-static char *rcs_version = "$Id$";
-#endif
-
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -31,6 +28,7 @@ static char *rcs_version = "$Id$";
 #include "numeric.h"
 #include "blalloc.h"
 #include "res.h"
+#include "s_conf.h"
 
 #ifndef INADDR_NONE
 #define INADDR_NONE ((unsigned int) 0xffffffff)
@@ -521,13 +519,13 @@ aConfItem *make_conf()
 
 void delist_conf(aConfItem *aconf)
 {
-  if (aconf == conf)
-    conf = conf->next;
+  if (aconf == ConfigItemList)
+    ConfigItemList = ConfigItemList->next;
   else
     {
       aConfItem       *bconf;
  
-      for (bconf = conf; aconf != bconf->next; bconf = bconf->next)
+      for (bconf = ConfigItemList; aconf != bconf->next; bconf = bconf->next)
 	;
       bconf->next = aconf->next;
     }

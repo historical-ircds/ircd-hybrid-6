@@ -25,6 +25,7 @@ Computing Center and Jarkko Oikarinen";
 static char *rcs_version = "$Id$";
 #endif
 
+#include "s_conf.h"
 #include "struct.h"
 #include "common.h"
 #include "dline_conf.h"
@@ -40,7 +41,6 @@ static char *rcs_version = "$Id$";
 #include "h.h"
 extern int rehashed;
 #include "mtrie_conf.h"
-#include "s_conf.h"
 
 #include "res.h"    /* gethost_byname, gethost_byaddr */
 
@@ -116,7 +116,7 @@ static IP_ENTRY *find_or_add_ip(aClient *);
 extern	void  delist_conf(aConfItem *);
 
 /* general conf items link list root */
-aConfItem	*conf = ((aConfItem *)NULL);
+aConfItem* ConfigItemList = NULL;
 
 /* conf xline link list root */
 aConfItem	*x_conf = ((aConfItem *)NULL);
@@ -884,7 +884,7 @@ aConfItem *find_admin()
 {
   aConfItem *aconf;
 
-  for (aconf = conf; aconf; aconf = aconf->next)
+  for (aconf = ConfigItemList; aconf; aconf = aconf->next)
     if (aconf->status & CONF_ADMIN && aconf->user)
       break;
   
@@ -894,7 +894,7 @@ aConfItem *find_admin()
 aConfItem *find_me()
 {
   aConfItem *aconf;
-  for (aconf = conf; aconf; aconf = aconf->next)
+  for (aconf = ConfigItemList; aconf; aconf = aconf->next)
     if (aconf->status & CONF_ME)
       return(aconf);
 
@@ -924,7 +924,7 @@ aConfItem *attach_confs(aClient *cptr,char *name,int statmask)
   if (!name || len > HOSTLEN)
     return((aConfItem *)NULL);
 
-  for (tmp = conf; tmp; tmp = tmp->next)
+  for (tmp = ConfigItemList; tmp; tmp = tmp->next)
     {
       if ((tmp->status & statmask) && !IsIllegal(tmp) &&
 	  ((tmp->status & (CONF_SERVER_MASK|CONF_HUB)) == 0) &&
@@ -956,7 +956,7 @@ aConfItem *attach_confs_host(aClient *cptr,char *host,int statmask)
   if (!host || len > HOSTLEN)
     return( (aConfItem *)NULL);
 
-  for (tmp = conf; tmp; tmp = tmp->next)
+  for (tmp = ConfigItemList; tmp; tmp = tmp->next)
     {
       if ((tmp->status & statmask) && !IsIllegal(tmp) &&
 	  (tmp->status & CONF_SERVER_MASK) == 0 &&
@@ -986,7 +986,7 @@ aConfItem *find_conf_exact(char *name,
 {
   aConfItem *tmp;
 
-  for (tmp = conf; tmp; tmp = tmp->next)
+  for (tmp = ConfigItemList; tmp; tmp = tmp->next)
     {
       if (!(tmp->status & statmask) || !tmp->name || !tmp->host ||
 	  irccmp(tmp->name, name))
@@ -1024,7 +1024,7 @@ aConfItem *find_conf_name(char *name,int statmask)
 {
   aConfItem *tmp;
  
-  for (tmp = conf; tmp; tmp = tmp->next)
+  for (tmp = ConfigItemList; tmp; tmp = tmp->next)
     {
       if ((tmp->status & statmask) &&
 	  (!tmp->name || match(tmp->name, name)))
@@ -1111,7 +1111,8 @@ aConfItem *find_conf_entry(aConfItem *aconf, int mask)
 {
   aConfItem *bconf;
 
-  for (bconf = conf, mask &= ~CONF_ILLEGAL; bconf; bconf = bconf->next)
+  for (bconf = ConfigItemList, mask &= ~CONF_ILLEGAL; bconf; 
+       bconf = bconf->next)
     {
       if (!(bconf->status & mask) || (bconf->port != aconf->port))
 	continue;
@@ -1425,7 +1426,7 @@ int	rehash_dump(aClient *sptr,char *parv0)
     sendto_one(sptr, ":%s NOTICE %s :Dump ircd.conf to %s ",
 	       me.name, parv0, ircd_dump_file);
 
-  for(aconf=conf; aconf; aconf = aconf->next)
+  for(aconf = ConfigItemList; aconf; aconf = aconf->next)
     {
       aClass *class_ptr;
       class_ptr = Class(aconf);
@@ -1484,7 +1485,8 @@ int	rehash_dump(aClient *sptr,char *parv0)
  */
 int rehash(aClient *cptr,aClient *sptr,int sig)
 {
-  aConfItem **tmp = &conf, *tmp2;
+  aConfItem **tmp = &ConfigItemList;
+  aConfItem *tmp2;
   aClass	*cltmp;
   aClient	*acptr;
   int	i;
@@ -1612,7 +1614,7 @@ int rehash(aClient *cptr,aClient *sptr,int sig)
   /*
    * flush out deleted I and P lines although still in use.
    */
-  for (tmp = &conf; (tmp2 = *tmp); )
+  for (tmp = &ConfigItemList; (tmp2 = *tmp); )
     if (!(tmp2->status & CONF_ILLEGAL))
       tmp = &tmp2->next;
     else
@@ -2317,8 +2319,8 @@ void initconf(int opt, FBFILE* file, int use_include)
 		 "Read Init: (%d) (%s) (%s) (%s) (%d) (%d)",
 		 aconf->status, aconf->host, aconf->passwd,
 		 aconf->user, aconf->port, Class(aconf)));
-	  aconf->next = conf;
-	  conf = aconf;
+	  aconf->next = ConfigItemList;
+	  ConfigItemList = aconf;
 	}
       aconf = NULL;
     }

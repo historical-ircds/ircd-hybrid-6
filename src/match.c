@@ -151,17 +151,16 @@ char* collapse(char *pattern)
   /*
    * XXX - null pointers ok?
    */
-  if (!pattern || !*pattern)
-     return pattern;
-
-  for (; *s; s++) {
-    if ('*' == *s) {
-      t = s1 = s + 1;
-      while ('*' == *t)
-        ++t;
-      if (s1 != t) {
-        while ((*s1++ = *t++))
-          ;
+  if (s) {
+    for (; *s; s++) {
+      if ('*' == *s) {
+	t = s1 = s + 1;
+	while ('*' == *t)
+	  ++t;
+	if (s1 != t) {
+	  while ((*s1++ = *t++))
+	    ;
+	}
       }
     }
   }

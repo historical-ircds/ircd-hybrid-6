@@ -28,6 +28,7 @@ static char *rcs_version = "$Id$";
 #include "common.h"
 #include "sys.h"
 #include "res.h"
+#include "s_conf.h"
 #include "numeric.h"
 #include "patchlevel.h"
 #include <sys/types.h>

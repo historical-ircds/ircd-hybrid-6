@@ -25,8 +25,9 @@ static char *rcs_version = "$Id$";
 #endif
 
 #include "struct.h"
+#include "s_conf.h"
+#include "res.h"
 extern	void	count_whowas_memory(int *, u_long *);
-extern	u_long	cres_mem(aClient *);
 extern  void    count_ip_hash(int *,u_long *);	  /* defined in s_conf.c */
 extern  int	maxdbufblocks;			  /* defined in dbuf.c */
 /*
@@ -306,9 +307,13 @@ void	send_usage(aClient *cptr, char *nick)
 
 void count_memory(aClient *cptr,char *nick)
 {
-  extern	aChannel	*channel;
-  extern	aClass	*classes;
-  extern	aConfItem	*conf;
+  /*
+   * XXX - BAD idea... include the headers
+   */
+#if 0
+  extern	aChannel* channel;
+  extern	aClass*   classes;
+#endif
   
   aClient *acptr;
   Link *link;
@@ -398,7 +403,7 @@ void count_memory(aClient *cptr,char *nick)
 	}
     }
 
-  for (aconf = conf; aconf; aconf = aconf->next)
+  for (aconf = ConfigItemList; aconf; aconf = aconf->next)
     {
       co++;
       com += aconf->host ? strlen(aconf->host)+1 : 0;

@@ -9,7 +9,7 @@
 #endif
 #include <signal.h>
 #include "h.h"
-
+#include "s_conf.h"
 #include "dline_conf.h"
 
 

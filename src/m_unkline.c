@@ -32,6 +32,7 @@ static char *rcs_version = "$Id$";
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
+#include "s_conf.h"
 #ifndef __EMX__
 #include <utmp.h> /* old slackware utmp.h defines BYTE_ORDER */
 #endif /* __EMX__ */
