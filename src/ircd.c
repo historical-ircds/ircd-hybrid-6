@@ -52,6 +52,7 @@
 #include "struct.h"
 #include "whowas.h"
 
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
@@ -67,6 +68,19 @@
 #include <sys/lock.h>
 #include <unistd.h>
 #endif /* SETUID_ROOT */
+
+/* for getopt */
+/* ZZZ this is going to need confirmation on other OS's */
+extern char *optarg;
+/* 
+ * for FreeBSD the following are defined:
+ *
+ * extern char *optarg;
+ * extern int optind;
+ * extern in optopt;
+ * extern int opterr;
+ * extern in optreset;
+ */
 
 /*
  * Try and find the correct name to use with getrlimit() for setting the max.

@@ -89,23 +89,19 @@ static void report_unsortable_klines(aClient *,char *);
 static void clear_sub_mtrie(DOMAIN_LEVEL *);
 static aConfItem *find_matching_ip_i_line(unsigned long);
 
-void add_to_ip_ilines(aConfItem *,unsigned long, unsigned long);
-
-/* internally used variables, these can all be static */
-
-int stack_pointer;              /* dns piece stack */
+static int stack_pointer;              /* dns piece stack */
 static char *dns_stack[MAX_TLD_STACK];
 
-DOMAIN_LEVEL *trie_list=(DOMAIN_LEVEL *)NULL;
-DOMAIN_LEVEL *first_kline_trie_list=(DOMAIN_LEVEL *)NULL;
-int saved_stack_pointer;
+static DOMAIN_LEVEL *trie_list=(DOMAIN_LEVEL *)NULL;
+static DOMAIN_LEVEL *first_kline_trie_list=(DOMAIN_LEVEL *)NULL;
+static int saved_stack_pointer;
 
-aConfItem *last_found_iline_aconf=(aConfItem *)NULL;
+static aConfItem *last_found_iline_aconf=(aConfItem *)NULL;
 
-aConfItem *unsortable_list_ilines = (aConfItem *)NULL;
-aConfItem *unsortable_list_klines = (aConfItem *)NULL;
-aConfItem *wild_card_ilines = (aConfItem *)NULL;
-aConfItem *ip_i_lines=(aConfItem *)NULL;
+static aConfItem *unsortable_list_ilines = (aConfItem *)NULL;
+static aConfItem *unsortable_list_klines = (aConfItem *)NULL;
+static aConfItem *wild_card_ilines = (aConfItem *)NULL;
+static aConfItem *ip_i_lines=(aConfItem *)NULL;
 
 /* add_mtrie_conf_entry
  *
