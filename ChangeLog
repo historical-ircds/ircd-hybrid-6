@@ -1,3 +1,25 @@
+db          2001/12/14 11:56:39 EST	(20011214_2)
+
+  Modified files:
+    include              s_conf.h 
+    src                  dline_conf.c m_kline.c messages.tab 
+                         messages_cust.tab mtrie_conf.c s_conf.c 
+  Log:
+  - ripped oper_reason out of /stats K /stat G . admins have conf access
+    they can see the oper reason in the kline.conf file, no need to have
+    remote access.
+  
+  Revision  Changes    Path
+  1.61      +1 -2      ircd-hybrid-6/include/s_conf.h
+  1.42      +6 -10     ircd-hybrid-6/src/dline_conf.c
+  1.71      +15 -36    ircd-hybrid-6/src/m_kline.c
+  1.23      +2 -2      ircd-hybrid-6/src/messages.tab
+  1.22      +2 -2      ircd-hybrid-6/src/messages_cust.tab
+  1.86      +16 -30    ircd-hybrid-6/src/mtrie_conf.c
+  1.231     +11 -36    ircd-hybrid-6/src/s_conf.c
+
+
+
 leeh        2001/12/14 09:58:45 EST	(20011214_1)
 
   Modified files:
