@@ -84,8 +84,8 @@
 #define MASTER_MAX      (HARD_FDLIMIT - MAX_BUFFER)
 /*******************************************************************/
 
-/* DPATH SPATH CPATH MPATH KPATH - directoy and files locations
- * Full pathnames and defaults of irc system's support files. Please note that
+/* DPATH SPATH CPATH MPATH KPATH - directory and files locations
+ * Full pathnames and defaults of IRC system's support files. Please note that
  * these are only the recommended names and paths. Change as needed.
  * You must define these to something, even if you don't really want them.
  *
@@ -129,7 +129,7 @@
 /* SERVERHIDE
  * Define this to prevent users from seeing what server a user is on.
  * It also hide IP address in STATS commands and various notices, disables
- * TRACE and LTRACE, and prevents hunting by nickname for nonopers.
+ * TRACE and LTRACE, and prevents hunting by nickname for non-opers.
  * NOT ADEQUATELY TESTED YET, DON'T USE ON PRODUCTION NETWORK --Rodder
  */
 /* #undef SERVERHIDE */
@@ -290,9 +290,9 @@
  * define this if you want users to exit with the kline/dline reason
  * (i.e. instead of "You have been K-lined" they will see the reason
  * and to see the kline/dline reason when they try to connect
- * It's a neat feature except for one thing... If you use a tcm
+ * It's a neat feature except for one thing... If you use a TCM
  * and it shows the nick of the oper doing the kline (as it does by default)
- * Your opers can be hit with retalitation... Or if your opers use
+ * Your opers can be hit with retaliation... Or if your opers use
  * scripts that stick an ID into the comment field. etc. It's up to you
  * whether you want to use it or not.
  */
@@ -539,7 +539,7 @@
 /* MAXSENDQLENGTH - Max amount of internal send buffering
  * Max amount of internal send buffering when socket is stuck (bytes)
  */
-#define MAXSENDQLENGTH 9000000    /* Recommended value: 9000000 for efnet */
+#define MAXSENDQLENGTH 9000000    /* Recommended value: 9000000 for EFnet */
 
 /*  BUFFERPOOL - the maximum size of the total of all sendq's.
  *  Recommended value is 4 times MAXSENDQLENGTH.
@@ -694,9 +694,9 @@
 #define WINTRHAWK
 
 /*
- * comstud and I have both noted that solaris 2.5 at least, takes a hissy
- * fit if you don't read a fd that becomes ready right away. Unfortunately
- * the dog3 priority code relies upon not having to read a ready fd right away.
+ * comstud and I have both noted that Solaris 2.5 at least, takes a hissy
+ * fit if you don't read a FD that becomes ready right away. Unfortunately
+ * the dog3 priority code relies upon not having to read a ready FD right away.
  * If you have HTM mode set low as it is normally, the server will
  * eventually grind to a halt.
  * Don't complain if Solaris lags if you don't define this. I warned you.
@@ -728,7 +728,7 @@
 
 /* MAXCONNECTIONS - don't touch - change the HARD_FDLIMIT_ instead
  * Maximum number of network connections your server will allow.  This should
- * never exceed max. number of open file descrpitors and wont increase this.
+ * never exceed max. number of open file descriptors and wont increase this.
  */
 /* change the HARD_FDLIMIT_ instead */
 #define MAXCONNECTIONS  HARD_FDLIMIT
@@ -749,7 +749,7 @@
  */
 #define PINGFREQUENCY    120    /* Recommended value: 120 */
 
-/* CONNECTFREQUENCY - time to wait before auto-reconencting
+/* CONNECTFREQUENCY - time to wait before auto-reconnecting
  * If the connection to to uphost is down, then attempt to reconnect every 
  * CONNECTFREQUENCY  seconds.
  *
@@ -786,7 +786,7 @@
 
 /* KILLCHASETIMELIMIT -
  * Max time from the nickname change that still causes KILL
- * automaticly to switch for the current nick of that user. (seconds)
+ * automatically to switch for the current nick of that user. (seconds)
  */
 #define KILLCHASETIMELIMIT 90   /* Recommended value: 90 */
 
