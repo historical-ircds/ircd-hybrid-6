@@ -285,6 +285,12 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       break;
 
     case 'G': case 'g' :
+      if (!IsAnOper(sptr))
+        {
+          ignore_request++;
+          valid_stats++;
+          break;
+        }
 #ifdef GLINES
       report_glines(sptr);
       valid_stats++;
@@ -403,6 +409,12 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       break;
 
     case 'R' : case 'r' :
+      if (!IsAnOper(sptr))
+	{
+	  ignore_request++;
+	  valid_stats++;
+	  break;
+	}
       send_usage(sptr,parv[0]);
       valid_stats++;
       break;
