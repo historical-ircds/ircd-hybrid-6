@@ -577,13 +577,6 @@
 #define NOISY_HTM YES
 
 /*
- * LITTLE_I_LINE support
- * clients with a little i instead of an I in their I line
- * can be chanopped, but cannot chanop anyone else.
- */
-#define LITTLE_I_LINES
-
-/*
  * define either NO_CHANOPS_ON_SPLIT or NO_JOIN_ON_SPLIT
  *
  * choose =one= only or undef on small networks
@@ -994,6 +987,16 @@
  * It is not approved on EFNet at the moment.
  */
 #undef USE_KNOCK
+
+/*
+ * This can lead to odd desyncs. So has been moved into the
+ * not approved for EFNet section for now.
+ *
+ * LITTLE_I_LINE support
+ * clients with a little i instead of an I in their I line
+ * can be chanopped, but cannot chanop anyone else.
+ */
+#undef LITTLE_I_LINES
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MAX_CLIENTS INIT_MAXCLIENTS
