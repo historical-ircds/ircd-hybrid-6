@@ -1099,143 +1099,163 @@ void add_connection(struct Listener* listener, int fd)
 
 
 /*
-** read_packet
-**
-** Read a 'packet' of data from a connection and process it.  Read in 8k
-** chunks to give a better performance rating (for server connections).
-** Do some tricky stuff for client connections to make sure they don't do
-** any flooding >:-) -avalon
-*/
+ * read_packet - Read a 'packet' of data from a connection and process it.
+ * Do some tricky stuff for client connections to make sure they don't do
+ * any flooding >:-) -avalon
+ */
+#define SBSD_MAX_CLIENT 6090
 
-int read_packet(aClient *cptr, int msg_ready)
+static int read_packet(aClient *cptr)
 {
-  int        dolen = 0, length = 0, done;
+  int dolen  = 0;
+  int length = 0;
+  int done;
 
-  if (msg_ready &&
-      !(IsPerson(cptr) && DBufLength(&cptr->recvQ) > 6090))
-      {
-        errno = 0;
+  if (!(IsPerson(cptr) && DBufLength(&cptr->recvQ) > SBSD_MAX_CLIENT)) {
+    errno = 0;
+    length = recv(cptr->fd, readBuf, READBUF_SIZE, 0);
+    /*
+     * If not ready, fake it so it isnt closed
+     */
+    if (length == -1) {
+      if (EWOULDBLOCK == errno || EAGAIN == errno)
+        length = 1;
+      return length;
+    }
+  }
+  if (length == 0)
+    return length;
 
-#if 0
-        /*
-         * XXX - no client read should ever be more than the defualt
-         * buffer size, on most systems this will be 4096 bytes
-         */
-        if (IsPerson(cptr))
-          length = recv(cptr->fd, readBuf, 8192, 0);
-        else
-#endif
-          length = recv(cptr->fd, readBuf, READBUF_SIZE, 0);
-
-        
 #ifdef REJECT_HOLD
-
-        /* If client has been marked as rejected i.e. it is a client
-         * that is trying to connect again after a k-line,
-         * pretend to read it but don't actually.
-         * -Dianora
-         */
-
-        /* FLAGS_REJECT_HOLD should NEVER be set for non local client */
-        if(IsRejectHeld(cptr))
-          return 1;
+  /* 
+   * If client has been marked as rejected i.e. it is a client
+   * that is trying to connect again after a k-line,
+   * pretend to read it but don't actually.
+   * -Dianora
+   *
+   * FLAGS_REJECT_HOLD should NEVER be set for non local client 
+   */
+  if (IsRejectHeld(cptr))
+    return 1;
 #endif
 
-        cptr->lasttime = timeofday;
-        if (cptr->lasttime > cptr->since)
-          cptr->since = cptr->lasttime;
-        cptr->flags &= ~(FLAGS_PINGSENT|FLAGS_NONL);
-        /*
-         * If not ready, fake it so it isnt closed
+  cptr->lasttime = timeofday;
+  if (cptr->lasttime > cptr->since)
+    cptr->since = cptr->lasttime;
+  cptr->flags &= ~(FLAGS_PINGSENT | FLAGS_NONL);
+
+  /*
+   * For server connections, we process as many as we can without
+   * worrying about the time of day or anything :)
+   */
+  if (IsServer(cptr) || IsConnecting(cptr) || IsHandshake(cptr)) {
+    if (length > 0) {
+      if ((done = dopacket(cptr, readBuf, length)))
+        return done;
+    }
+  }
+  else {
+    /*
+    ** Before we even think of parsing what we just read, stick
+    ** it on the end of the receive queue and do it when its
+    ** turn comes around.
+    */
+    if (dbuf_put(&cptr->recvQ, readBuf, length) < 0)
+      return exit_client(cptr, cptr, cptr, "dbuf_put fail");
+    
+    if (IsPerson(cptr) &&
+#ifdef NO_OPER_FLOOD
+        !IsAnOper(cptr) &&
+#endif
+        DBufLength(&cptr->recvQ) > CLIENT_FLOOD) {
+      return exit_client(cptr, cptr, cptr, "Excess Flood");
+    }
+    while (DBufLength(&cptr->recvQ) && !NoNewLine(cptr) &&
+           ((cptr->status < STAT_UNKNOWN) || (cptr->since - timeofday < 10))) {
+      /*
+       * If it has become registered as a Server
+       * then skip the per-message parsing below.
+       */
+      if (IsServer(cptr)) {
+        /* 
+         * This is actually useful, but it needs the ZIP_FIRST
+         * kludge or it will break zipped links  -orabidoo
          */
-        if (length == -1 &&
-            ((errno == EWOULDBLOCK) || (errno == EAGAIN)))
-          return 1;
-        if (length <= 0)
-          return length;
+        dolen = dbuf_get(&cptr->recvQ, readBuf, READBUF_SIZE);
+
+        if (dolen <= 0)
+          break;
+        if ((done = dopacket(cptr, readBuf, dolen)))
+          return done;
+        break;
       }
+      dolen = dbuf_getmsg(&cptr->recvQ, readBuf, READBUF_SIZE);
 
       /*
-      ** For server connections, we process as many as we can without
-      ** worrying about the time of day or anything :)
+      ** Devious looking...whats it do ? well..if a client
+      ** sends a *long* message without any CR or LF, then
+      ** dbuf_getmsg fails and we pull it out using this
+      ** loop which just gets the next 512 bytes and then
+      ** deletes the rest of the buffer contents.
+      ** -avalon
       */
-      if (IsServer(cptr) || IsConnecting(cptr) || IsHandshake(cptr))
-      
-      {
-        if (length > 0)
-          if ((done = dopacket(cptr, readBuf, length)))
-            return done;
+      while (dolen <= 0) {
+        if (dolen < 0)
+          return exit_client(cptr, cptr, cptr, "dbuf_getmsg fail");
+        if (DBufLength(&cptr->recvQ) < 510) {
+          cptr->flags |= FLAGS_NONL;
+          break;
+        }
+        dolen = dbuf_get(&cptr->recvQ, readBuf, 511);
+        if (dolen > 0 && DBufLength(&cptr->recvQ))
+          DBufClear(&cptr->recvQ);
       }
+
+      if (dolen > 0 && (dopacket(cptr, readBuf, dolen) == FLUSH_BUFFER))
+        return FLUSH_BUFFER;
+    }
+  }
+  return 1;
+}
+
+static void error_exit_client(struct Client* cptr, int error)
+{
+  /*
+   * ...hmm, with non-blocking sockets we might get
+   * here from quite valid reasons, although.. why
+   * would select report "data available" when there
+   * wasn't... so, this must be an error anyway...  --msa
+   * actually, EOF occurs when read() returns 0 and
+   * in due course, select() returns that fd as ready
+   * for reading even though it ends up being an EOF. -avalon
+   */
+  char errmsg[255];
+  int  current_error = get_sockerr(cptr->fd);
+
+  Debug((DEBUG_ERROR, "READ ERROR: fd = %d %d %d",
+         cptr->fd, current_error, error));
+  if (IsServer(cptr) || IsHandshake(cptr))
+    {
+      int connected = timeofday - cptr->firsttime;
+      
+      if (0 == error)
+        sendto_ops("Server %s closed the connection",
+                   get_client_name(cptr, FALSE));
       else
-      {
-        /*
-        ** Before we even think of parsing what we just read, stick
-        ** it on the end of the receive queue and do it when its
-        ** turn comes around.
-        */
-        if (dbuf_put(&cptr->recvQ, readBuf, length) < 0)
-          return exit_client(cptr, cptr, cptr, "dbuf_put fail");
-        
-        if (IsPerson(cptr) &&
-#ifdef NO_OPER_FLOOD
-            !IsAnOper(cptr) &&
-#endif
-            DBufLength(&cptr->recvQ) > CLIENT_FLOOD)
-          return exit_client(cptr, cptr, cptr, "Excess Flood");
-
-        while (DBufLength(&cptr->recvQ) && !NoNewLine(cptr) &&
-               ((cptr->status < STAT_UNKNOWN) ||
-                (cptr->since - timeofday < 10)))
-          {
-            /*
-            ** If it has become registered as a Server
-            ** then skip the per-message parsing below.
-            */
-            if (IsServer(cptr))
-              {
-                /* This is actually useful, but it needs the ZIP_FIRST
-                ** kludge or it will break zipped links  -orabidoo
-                */
-
-                dolen = dbuf_get(&cptr->recvQ, readBuf, READBUF_SIZE);
-
-                if (dolen <= 0)
-                  break;
-                if ((done = dopacket(cptr, readBuf, dolen)))
-                  return done;
-                break;
-              }
-            dolen = dbuf_getmsg(&cptr->recvQ, readBuf, READBUF_SIZE);
-
-            /*
-            ** Devious looking...whats it do ? well..if a client
-            ** sends a *long* message without any CR or LF, then
-            ** dbuf_getmsg fails and we pull it out using this
-            ** loop which just gets the next 512 bytes and then
-            ** deletes the rest of the buffer contents.
-            ** -avalon
-            */
-            while (dolen <= 0)
-              {
-                if (dolen < 0)
-                  return exit_client(cptr, cptr, cptr,
-                                     "dbuf_getmsg fail");
-                if (DBufLength(&cptr->recvQ) < 510)
-                  {
-                    cptr->flags |= FLAGS_NONL;
-                    break;
-                  }
-                dolen = dbuf_get(&cptr->recvQ, readBuf, 511);
-                if (dolen > 0 && DBufLength(&cptr->recvQ))
-                  DBufClear(&cptr->recvQ);
-              }
-      
-            if (dolen > 0 &&
-                (dopacket(cptr, readBuf, dolen) == FLUSH_BUFFER))
-              return FLUSH_BUFFER;
-          }
-      }
-      return 1;
+        report_error("Lost connection to %s:%s", 
+                     get_client_name(cptr, TRUE), current_error);
+      sendto_ops("%s had been connected for %d day%s, %2d:%02d:%02d",
+                 cptr->name, connected/86400,
+                 (connected/86400 == 1) ? "" : "s",
+                 (connected % 86400) / 3600, (connected % 3600) / 60,
+                 connected % 60);
+    }
+  if (0 == error)
+    strcpy(errmsg, "Remote closed the connection");
+  else
+    ircsprintf(errmsg, "Read error: %d (%s)", 
+               current_error, strerror(current_error));
+  exit_client(cptr, cptr, &me, errmsg);
 }
 
 /*
@@ -1263,8 +1283,6 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
   struct AuthRequest* auth_next = 0;
   struct Listener*    listener = 0;
   int                 i;
-  int                 rr;
-  int                 current_error = 0;
 
   now = timeofday;
 
@@ -1398,8 +1416,8 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
      * See if we can write...
      */
     if (FD_ISSET(i, write_set)) {
-      int        write_err = 0;
-      nfds--;
+      int write_err = 0;
+      --nfds;
 
       /*
       ** ...room for writing, empty some queue then...
@@ -1409,11 +1427,7 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
       if (!write_err)
         send_queued(cptr);
 
-      if (IsDead(cptr) || write_err) {
-        if (FD_ISSET(i, read_set)) {
-          nfds--;
-          FD_CLR(i, read_set);
-        }
+      if (write_err || IsDead(cptr)) {
         exit_client(cptr, cptr, &me, 
                     (cptr->flags & FLAGS_SENDQEX) ? 
                     "SendQ Exceeded" : strerror(get_sockerr(cptr->fd)));
@@ -1421,59 +1435,25 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
       }
     }
     length = 1;        /* for fall through case */
-    rr = 0;
-    rr = FD_ISSET(i, read_set);
-    if (!NoNewLine(cptr) || rr)
-      length = read_packet(cptr, rr);
 
-    if ((length != FLUSH_BUFFER) && IsDead(cptr)) {
-      if (FD_ISSET(i, read_set)) {
-        nfds--;
-        FD_CLR(i, read_set);
-      }
-      exit_client(cptr, cptr, &me,
-                  (cptr->flags & FLAGS_SENDQEX) ? "SendQ Exceeded" :
-                  strerror(get_sockerr(cptr->fd)));
-      continue;
+    if (FD_ISSET(i, read_set)) {
+      --nfds;
+      if (!NoNewLine(cptr))
+        length = read_packet(cptr);
+      
+      if (FLUSH_BUFFER == length)
+        continue;
+
+      if (IsDead(cptr))
+         exit_client(cptr, cptr, &me,
+                     (cptr->flags & FLAGS_SENDQEX) ? "SendQ Exceeded" :
+                     strerror(get_sockerr(cptr->fd)));
+       continue;
     }
-    if (!FD_ISSET(i, read_set) && length > 0)
-      continue;
-    nfds--;
-
     if (length > 0)
       continue;
-    /*
-    ** ...hmm, with non-blocking sockets we might get
-    ** here from quite valid reasons, although.. why
-    ** would select report "data available" when there
-    ** wasn't... so, this must be an error anyway...  --msa
-    ** actually, EOF occurs when read() returns 0 and
-    ** in due course, select() returns that fd as ready
-    ** for reading even though it ends up being an EOF. -avalon
-    */
-    current_error = get_sockerr(cptr->fd);
-
-    Debug((DEBUG_ERROR, "READ ERROR: fd = %d %d %d",
-           i, current_error, length));
-  
-    /*
-    ** NOTE: if length == -2 then cptr has already been freed!
-    */
-    if (length != -2 && (IsServer(cptr) || IsHandshake(cptr))) {
-      if (length == 0)
-        sendto_ops("Server %s closed the connection",
-                   get_client_name(cptr, FALSE));
-      else
-        report_error("Lost connection to %s:%s",
-                     get_client_name(cptr, TRUE), current_error);
-    }
-    if (length != FLUSH_BUFFER) {
-      char errmsg[255];
-      ircsprintf(errmsg,"Read error: %d (%s)", 
-                 current_error, strerror(current_error));
-      exit_client(cptr, cptr, &me, errmsg);
-    }
-    current_error = errno = 0;
+    error_exit_client(cptr, length);
+    errno = 0;
   }
   return 0;
 }
@@ -1560,8 +1540,6 @@ int read_message(time_t delay, fdlist *listp)
   int                  rr;
   int                  rw;
   int                  i;
-  char                 errmsg[255];
-  int                  current_error = 0;
 
   /* if it is called with NULL we check all active fd's */
   if (!listp)
@@ -1727,7 +1705,7 @@ int read_message(time_t delay, fdlist *listp)
           if (IsConnecting(cptr))
             write_err = completed_connection(cptr);
           if (!write_err)
-            (void)send_queued(cptr);
+            send_queued(cptr);
           if (IsDead(cptr) || write_err)
             {
               exit_client(cptr, cptr, &me,
@@ -1736,52 +1714,22 @@ int read_message(time_t delay, fdlist *listp)
             }
         }
       length = 1;     /* for fall through case */
-      if (!NoNewLine(cptr) || rr)
-        length = read_packet(cptr, rr);
+      if (rr) {
+        if (!NoNewLine(cptr))
+          length = read_packet(cptr);
 
-      if (length == FLUSH_BUFFER)
-        continue;
-      if (IsDead(cptr))
-        {
-          exit_client(cptr, cptr, &me,
-                      strerror(get_sockerr(cptr->fd)));
+        if (length == FLUSH_BUFFER)
           continue;
+        if (IsDead(cptr)) {
+           exit_client(cptr, cptr, &me,
+                        strerror(get_sockerr(cptr->fd)));
+           continue;
         }
+      }
       if (length > 0)
         continue;
-
-      /*
-       * ...hmm, with non-blocking sockets we might get
-       * here from quite valid reasons, although.. why
-       * would select report "data available" when there
-       * wasn't... so, this must be an error anyway...  --msa
-       * actually, EOF occurs when read() returns 0 and
-       * in due course, select() returns that fd as ready
-       * for reading even though it ends up being an EOF. -avalon
-       */
-      current_error = get_sockerr(cptr->fd);
-      Debug((DEBUG_ERROR, "READ ERROR: fd = %d %d %d",
-             fd, current_error, length));
-      if (IsServer(cptr) || IsHandshake(cptr))
-        {
-          int connected = timeofday - cptr->firsttime;
-          
-          if (length == 0)
-            sendto_ops("Server %s closed the connection",
-                       get_client_name(cptr, FALSE));
-          else
-            report_error("Lost connection to %s:%s", 
-                         get_client_name(cptr, TRUE), current_error);
-          sendto_ops("%s had been connected for %d day%s, %2d:%02d:%02d",
-                     cptr->name, connected/86400,
-                     (connected/86400 == 1) ? "" : "s",
-                     (connected % 86400) / 3600, (connected % 3600) / 60,
-                     connected % 60);
-        }
-      ircsprintf(errmsg, "Read error: %d (%s)", 
-                 current_error, strerror(current_error));
-      exit_client(cptr, cptr, &me, errmsg);
-      errno = current_error = 0;
+      error_exit_client(cptr, length);
+      errno = 0;
     }
   return 0;
 }

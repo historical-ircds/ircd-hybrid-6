@@ -131,12 +131,12 @@ mtrie_conf.o: mtrie_conf.c ../include/mtrie_conf.h \
  ../include/fileio.h ../include/motd.h ../include/class.h \
  ../include/h.h ../include/fdlist.h ../include/ircd.h \
  ../include/send.h ../include/dline_conf.h
-packet.o: packet.c ../include/struct.h ../include/config.h \
- ../include/setup.h ../include/ircd_defs.h ../zlib/zlib.h \
- ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \
- ../include/common.h ../include/irc_string.h ../include/msg.h \
- ../include/s_zip.h ../include/h.h ../include/fdlist.h \
- ../include/ircd.h
+packet.o: packet.c ../include/packet.h ../include/struct.h \
+ ../include/config.h ../include/setup.h ../include/ircd_defs.h \
+ ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h ../include/client.h \
+ ../include/dbuf.h ../include/common.h ../include/irc_string.h \
+ ../include/msg.h ../include/s_zip.h ../include/h.h \
+ ../include/fdlist.h ../include/ircd.h
 parse.o: parse.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../zlib/zlib.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \
@@ -163,16 +163,16 @@ s_auth.o: s_auth.c ../include/s_auth.h ../include/config.h \
  ../include/res.h ../include/h.h ../include/fdlist.h ../include/ircd.h \
  ../include/s_misc.h ../include/struct.h ../zlib/zlib.h \
  ../zlib/zconf.h ../zlib/setup.h
-s_bsd.o: s_bsd.c ../include/s_bsd.h ../include/listener.h \
- ../include/ircd_defs.h ../include/config.h ../include/setup.h \
- ../include/struct.h ../zlib/zlib.h ../zlib/zconf.h ../zlib/setup.h \
- ../include/client.h ../include/dbuf.h ../include/common.h \
- ../include/irc_string.h ../include/res.h ../include/s_conf.h \
- ../include/fileio.h ../include/motd.h ../include/s_auth.h \
- ../include/class.h ../include/numeric.h ../include/h.h \
- ../include/fdlist.h ../include/parse.h ../include/send.h \
- ../include/restart.h ../include/s_zip.h ../include/ircd.h \
- ../include/s_misc.h
+s_bsd.o: s_bsd.c ../include/s_bsd.h ../include/s_serv.h \
+ ../include/listener.h ../include/ircd_defs.h ../include/config.h \
+ ../include/setup.h ../include/struct.h ../zlib/zlib.h ../zlib/zconf.h \
+ ../zlib/setup.h ../include/client.h ../include/dbuf.h \
+ ../include/common.h ../include/irc_string.h ../include/res.h \
+ ../include/s_conf.h ../include/fileio.h ../include/motd.h \
+ ../include/s_auth.h ../include/class.h ../include/numeric.h \
+ ../include/h.h ../include/fdlist.h ../include/packet.h \
+ ../include/parse.h ../include/send.h ../include/restart.h \
+ ../include/s_zip.h ../include/ircd.h ../include/s_misc.h
 s_conf.o: s_conf.c ../include/s_conf.h ../include/config.h \
  ../include/setup.h ../include/fileio.h ../include/ircd_defs.h \
  ../include/motd.h ../include/listener.h ../include/class.h \
@@ -212,16 +212,16 @@ s_numeric.o: s_numeric.c ../include/struct.h ../include/config.h \
 s_serv.o: s_serv.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../zlib/zlib.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \
- ../include/common.h ../include/irc_string.h ../include/numeric.h \
- ../include/msg.h ../include/channel.h ../include/h.h \
- ../include/fdlist.h ../include/ircd.h ../include/scache.h \
- ../include/list.h ../include/parse.h ../include/s_zip.h \
- ../include/s_bsd.h ../include/dline_conf.h ../include/mtrie_conf.h \
- ../include/fileio.h ../include/res.h ../include/s_conf.h \
- ../include/motd.h ../include/class.h ../include/send.h \
- ../include/hash.h ../include/s_debug.h ../include/listener.h \
- ../include/restart.h ../include/s_user.h ../include/s_misc.h \
- ../include/match.h
+ ../include/s_serv.h ../include/common.h ../include/irc_string.h \
+ ../include/numeric.h ../include/msg.h ../include/channel.h \
+ ../include/h.h ../include/fdlist.h ../include/ircd.h \
+ ../include/scache.h ../include/list.h ../include/parse.h \
+ ../include/s_zip.h ../include/s_bsd.h ../include/dline_conf.h \
+ ../include/mtrie_conf.h ../include/fileio.h ../include/res.h \
+ ../include/s_conf.h ../include/motd.h ../include/class.h \
+ ../include/send.h ../include/hash.h ../include/s_debug.h \
+ ../include/listener.h ../include/restart.h ../include/s_user.h \
+ ../include/s_misc.h ../include/match.h
 s_user.o: s_user.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../zlib/zlib.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \
@@ -236,7 +236,8 @@ s_user.o: s_user.c ../include/struct.h ../include/config.h \
 s_zip.o: s_zip.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../zlib/zlib.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \
- ../include/send.h ../include/irc_string.h ../include/s_bsd.h
+ ../include/send.h ../include/irc_string.h ../include/s_bsd.h \
+ ../include/packet.h
 scache.o: scache.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/ircd_defs.h ../zlib/zlib.h \
  ../zlib/zconf.h ../zlib/setup.h ../include/client.h ../include/dbuf.h \

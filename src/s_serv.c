@@ -179,16 +179,14 @@ time_t last_used_wallops = 0L;
 **      parv[0] = sender prefix
 **      parv[1] = remote server
 */
-int     m_version(aClient *cptr,
-                  aClient *sptr,
-                  int parc,
-                  char *parv[])
+int m_version(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
   extern char serveropts[];
 
   if(IsAnOper(sptr))
      {
-       if (hunt_server(cptr,sptr,":%s VERSION :%s",1,parc,parv)==HUNTED_ISME)
+       if (hunt_server(cptr, sptr, ":%s VERSION :%s", 
+                       1, parc, parv) == HUNTED_ISME)
          sendto_one(sptr, form_str(RPL_VERSION), me.name,
                     parv[0], version, serno, debugmode, me.name, serveropts);
      }
@@ -205,10 +203,7 @@ int     m_version(aClient *cptr,
 **      parv[1] = server name
 **      parv[2] = comment
 */
-int     m_squit(aClient *cptr,
-                aClient *sptr,
-                int parc,
-                char *parv[])
+int m_squit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
   aConfItem *aconf;
   char  *server;
@@ -400,7 +395,7 @@ int     m_svinfo(aClient *cptr,
 **      parv[0] = sender prefix
 **      parv[1] = space-separated list of capabilities
 */
-int     m_capab(aClient *cptr, aClient *sptr, int parc, char *parv[])
+int m_capab(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
   struct Capability *cap;
   char  *p;
@@ -409,16 +404,16 @@ int     m_capab(aClient *cptr, aClient *sptr, int parc, char *parv[])
   if ((!IsUnknown(cptr) && !IsHandshake(cptr)) || parc < 2)
     return 0;
 
-  if(cptr->caps)
+  if (cptr->caps)
     return exit_client(cptr, cptr, cptr, "CAPAB received twice");
   else
     cptr->caps |= CAP_CAP;
 
-  for (s=strtoken(&p, parv[1], " "); s; s=strtoken(&p, NULL, " "))
+  for (s = strtoken(&p, parv[1], " "); s; s = strtoken(&p, NULL, " "))
     {
-      for (cap=captab; cap->name; cap++)
+      for (cap = captab; cap->name; cap++)
         {
-          if (!strcmp(cap->name, s))
+          if (0 == strcmp(cap->name, s))
             {
               cptr->caps |= cap->cap;
               break;
@@ -463,12 +458,12 @@ void send_capabilities(aClient *cptr,int use_zip)
 }
 
 /*
-** m_server
-**      parv[0] = sender prefix
-**      parv[1] = servername
-**      parv[2] = serverinfo/hopcount
-**      parv[3] = serverinfo
-*/
+ * m_server
+ *      parv[0] = sender prefix
+ *      parv[1] = servername
+ *      parv[2] = serverinfo/hopcount
+ *      parv[3] = serverinfo
+ */
 int m_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
   int        i;
@@ -510,13 +505,14 @@ int m_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
         }
     }
   /*
-  ** July 5, 1997
-  ** Rewritten to throw away server cruft from users,
-  ** combined the hostname validity test with
-  ** cleanup of host name, so a cleaned up hostname
-  ** can be returned as an error if necessary. - Dianora
-  */
-  /* yes, the if(strlen) below is really needed!! */
+   * July 5, 1997
+   * Rewritten to throw away server cruft from users,
+   * combined the hostname validity test with
+   * cleanup of host name, so a cleaned up hostname
+   * can be returned as an error if necessary. - Dianora
+   *
+   * yes, the if(strlen) below is really needed!! 
+   */
   if (strlen(host) > HOSTLEN)
     host[HOSTLEN] = '\0';
 
@@ -599,7 +595,7 @@ int m_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
   */
   if (!IsServer(cptr))
     {
-      if(find_conf_name(host,CONF_NOCONNECT_SERVER) == NULL)
+      if(find_conf_name(host, CONF_NOCONNECT_SERVER) == NULL)
         {
 #ifdef WARN_NO_NLINE
           sendto_realops("Link %s Server %s dropped, no N: line",
@@ -740,7 +736,7 @@ int m_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
       ** need to send different names to different servers
       ** (domain name matching)
       */
-      for(bcptr=serv_cptr_list;bcptr;bcptr=bcptr->next_server_client)
+      for (bcptr = serv_cptr_list; bcptr; bcptr = bcptr->next_server_client)
         {
           if (bcptr == cptr)
             continue;

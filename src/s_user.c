@@ -1086,6 +1086,165 @@ report_and_set_user_flags(aClient *sptr,aConfItem *aconf)
 }
 
 /*
+ * nickkilldone
+ *
+ * input        - pointer to physical aClient
+ *              - pointer to source aClient
+ *              - argument count
+ *              - arguments
+ *              - newts time
+ *              - nick
+ * output       -
+ * side effects -
+ */
+
+static int nickkilldone(aClient *cptr, aClient *sptr, int parc,
+                 char *parv[], time_t newts,char *nick)
+{
+
+  if (IsServer(sptr))
+    {
+      /* A server introducing a new client, change source */
+      
+      sptr = make_client(cptr);
+      add_client_to_list(sptr);         /* double linked list */
+      if (parc > 2)
+        sptr->hopcount = atoi(parv[2]);
+      if (newts)
+        sptr->tsinfo = newts;
+      else
+        {
+          newts = sptr->tsinfo = timeofday;
+          ts_warn("Remote nick %s introduced without a TS", nick);
+        }
+      /* copy the nick in place */
+      (void)strcpy(sptr->name, nick);
+      (void)add_to_client_hash_table(nick, sptr);
+      if (parc > 8)
+        {
+          int   flag;
+          char* m;
+          
+          /*
+          ** parse the usermodes -orabidoo
+          */
+          m = &parv[4][1];
+          while (*m)
+            {
+              flag = user_modes_from_c_to_bitmask[(int)(*m & 0x1F)];
+              if( flag == FLAGS_INVISIBLE )
+                {
+                  Count.invisi++;
+                }
+              if( flag == FLAGS_OPER )
+                {
+                  Count.oper++;
+                }
+              sptr->umodes |= flag & SEND_UMODES;
+              m++;
+            }
+          
+          return do_user(nick, cptr, sptr, parv[5], parv[6],
+                         parv[7], parv[8]);
+        }
+    }
+  else if (sptr->name[0])
+    {
+      /*
+      ** Client just changing his/her nick. If he/she is
+      ** on a channel, send note of change to all clients
+      ** on that channel. Propagate notice to other servers.
+      */
+      if (irccmp(parv[0], nick))
+        sptr->tsinfo = newts ? newts : timeofday;
+
+      if(MyConnect(sptr) && IsRegisteredUser(sptr))
+        {     
+#ifdef ANTI_NICK_FLOOD
+
+          if( (sptr->last_nick_change + MAX_NICK_TIME) < NOW)
+            sptr->number_of_nick_changes = 0;
+          sptr->last_nick_change = NOW;
+            sptr->number_of_nick_changes++;
+
+          if(sptr->number_of_nick_changes <= MAX_NICK_CHANGES)
+            {
+#endif
+              sendto_realops_flags(FLAGS_NCHANGE,
+                                 "Nick change: From %s to %s [%s@%s]",
+                                 parv[0], nick, sptr->username,
+                                 sptr->host);
+
+              sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
+              if (sptr->user)
+                {
+                  add_history(sptr,1);
+              
+                  sendto_serv_butone(cptr, ":%s NICK %s :%lu",
+                                     parv[0], nick, sptr->tsinfo);
+                }
+#ifdef ANTI_NICK_FLOOD
+            }
+          else
+            {
+              sendto_one(sptr,
+                         ":%s NOTICE %s :*** Notice -- Too many nick changes wait %d seconds before trying to change it again.",
+                         me.name,
+                         sptr->name,
+                         MAX_NICK_TIME);
+              return 0;
+            }
+#endif
+        }
+      else
+        {
+          sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
+          if (sptr->user)
+            {
+              add_history(sptr,1);
+              sendto_serv_butone(cptr, ":%s NICK %s :%lu",
+                                 parv[0], nick, sptr->tsinfo);
+            }
+        }
+    }
+  else
+    {
+      /* Client setting NICK the first time */
+      
+
+      /* This had to be copied here to avoid problems.. */
+      strcpy(sptr->name, nick);
+      sptr->tsinfo = timeofday;
+      if (sptr->user)
+        {
+          char buf[USERLEN + 1];
+          strncpy_irc(buf, sptr->username, USERLEN);
+          buf[USERLEN] = '\0';
+          /*
+          ** USER already received, now we have NICK.
+          ** *NOTE* For servers "NICK" *must* precede the
+          ** user message (giving USER before NICK is possible
+          ** only for local client connection!). register_user
+          ** may reject the client and call exit_client for it
+          ** --must test this and exit m_nick too!!!
+          */
+            if (register_user(cptr, sptr, nick, buf) == FLUSH_BUFFER)
+              return FLUSH_BUFFER;
+        }
+    }
+
+  /*
+  **  Finally set new nick name.
+  */
+  if (sptr->name[0])
+    del_from_client_hash_table(sptr->name, sptr);
+  strcpy(sptr->name, nick);
+  add_to_client_hash_table(nick, sptr);
+
+  return 0;
+}
+
+/*
 ** m_nick
 **      parv[0] = sender prefix
 **      parv[1] = nickname
@@ -1538,165 +1697,6 @@ int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
         }
     }
   return(nickkilldone(cptr,sptr,parc,parv,newts,nick));
-}
-
-/*
- * nickkilldone
- *
- * input        - pointer to physical aClient
- *              - pointer to source aClient
- *              - argument count
- *              - arguments
- *              - newts time
- *              - nick
- * output       -
- * side effects -
- */
-
-static int nickkilldone(aClient *cptr, aClient *sptr, int parc,
-                        char *parv[], time_t newts,char *nick)
-{
-
-  if (IsServer(sptr))
-    {
-      /* A server introducing a new client, change source */
-      
-      sptr = make_client(cptr);
-      add_client_to_list(sptr);         /* double linked list */
-      if (parc > 2)
-        sptr->hopcount = atoi(parv[2]);
-      if (newts)
-        sptr->tsinfo = newts;
-      else
-        {
-          newts = sptr->tsinfo = timeofday;
-          ts_warn("Remote nick %s introduced without a TS", nick);
-        }
-      /* copy the nick in place */
-      (void)strcpy(sptr->name, nick);
-      (void)add_to_client_hash_table(nick, sptr);
-      if (parc > 8)
-        {
-          int   flag;
-          char* m;
-          
-          /*
-          ** parse the usermodes -orabidoo
-          */
-          m = &parv[4][1];
-          while (*m)
-            {
-              flag = user_modes_from_c_to_bitmask[(int)(*m & 0x1F)];
-              if( flag == FLAGS_INVISIBLE )
-                {
-                  Count.invisi++;
-                }
-              if( flag == FLAGS_OPER )
-                {
-                  Count.oper++;
-                }
-              sptr->umodes |= flag & SEND_UMODES;
-              m++;
-            }
-          
-          return do_user(nick, cptr, sptr, parv[5], parv[6],
-                         parv[7], parv[8]);
-        }
-    }
-  else if (sptr->name[0])
-    {
-      /*
-      ** Client just changing his/her nick. If he/she is
-      ** on a channel, send note of change to all clients
-      ** on that channel. Propagate notice to other servers.
-      */
-      if (irccmp(parv[0], nick))
-        sptr->tsinfo = newts ? newts : timeofday;
-
-      if(MyConnect(sptr) && IsRegisteredUser(sptr))
-        {     
-#ifdef ANTI_NICK_FLOOD
-
-          if( (sptr->last_nick_change + MAX_NICK_TIME) < NOW)
-            sptr->number_of_nick_changes = 0;
-          sptr->last_nick_change = NOW;
-            sptr->number_of_nick_changes++;
-
-          if(sptr->number_of_nick_changes <= MAX_NICK_CHANGES)
-            {
-#endif
-              sendto_realops_flags(FLAGS_NCHANGE,
-                                 "Nick change: From %s to %s [%s@%s]",
-                                 parv[0], nick, sptr->username,
-                                 sptr->host);
-
-              sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
-              if (sptr->user)
-                {
-                  add_history(sptr,1);
-              
-                  sendto_serv_butone(cptr, ":%s NICK %s :%lu",
-                                     parv[0], nick, sptr->tsinfo);
-                }
-#ifdef ANTI_NICK_FLOOD
-            }
-          else
-            {
-              sendto_one(sptr,
-                         ":%s NOTICE %s :*** Notice -- Too many nick changes wait %d seconds before trying to change it again.",
-                         me.name,
-                         sptr->name,
-                         MAX_NICK_TIME);
-              return 0;
-            }
-#endif
-        }
-      else
-        {
-          sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
-          if (sptr->user)
-            {
-              add_history(sptr,1);
-              sendto_serv_butone(cptr, ":%s NICK %s :%lu",
-                                 parv[0], nick, sptr->tsinfo);
-            }
-        }
-    }
-  else
-    {
-      /* Client setting NICK the first time */
-      
-
-      /* This had to be copied here to avoid problems.. */
-      strcpy(sptr->name, nick);
-      sptr->tsinfo = timeofday;
-      if (sptr->user)
-        {
-          char buf[USERLEN + 1];
-          strncpy_irc(buf, sptr->username, USERLEN);
-          buf[USERLEN] = '\0';
-          /*
-          ** USER already received, now we have NICK.
-          ** *NOTE* For servers "NICK" *must* precede the
-          ** user message (giving USER before NICK is possible
-          ** only for local client connection!). register_user
-          ** may reject the client and call exit_client for it
-          ** --must test this and exit m_nick too!!!
-          */
-            if (register_user(cptr, sptr, nick, buf) == FLUSH_BUFFER)
-              return FLUSH_BUFFER;
-        }
-    }
-
-  /*
-  **  Finally set new nick name.
-  */
-  if (sptr->name[0])
-    del_from_client_hash_table(sptr->name, sptr);
-  strcpy(sptr->name, nick);
-  add_to_client_hash_table(nick, sptr);
-
-  return 0;
 }
 
 /* Code provided by orabidoo */
@@ -3375,12 +3375,9 @@ int     m_oper(aClient *cptr,
 **      parv[1] = password
 **      parv[2] = optional extra version information
 */
-int     m_pass(aClient *cptr,
-               aClient *sptr,
-               int parc,
-               char *parv[])
+int m_pass(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-  char *password = parc > 1 ? parv[1] : NULL;
+  char* password = parc > 1 ? parv[1] : NULL;
 
   if (BadPtr(password))
     {
@@ -3397,22 +3394,15 @@ int     m_pass(aClient *cptr,
   strncpy_irc(cptr->passwd, password, PASSWDLEN);
   if (parc > 2)
     {
-      /* It looks to me as if orabidoo wanted to have more
+      /* 
+       * It looks to me as if orabidoo wanted to have more
        * than one set of option strings possible here...
        * i.e. ":AABBTS" as long as TS was the last two chars
        * however, as we are now using CAPAB, I think we can
        * safely assume if there is a ":TS" then its a TS server
        * -Dianora
        */
-
-      /*      int l = strlen(parv[2]);
-      
-      if (l < 2)
-        return 0; */
-
-      /*      if (strcmp(parv[2]+l-2, "TS") == 0) */
-
-      if(parv[2][0] == 'T' && parv[2][1] == 'S' && !parv[2][2])
+      if (0 == irccmp(parv[2], "TS"))
         cptr->tsinfo = TS_DOESTS;
     }
   return 0;
