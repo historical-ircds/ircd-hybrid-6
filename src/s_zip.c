@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, ircd/s_zip.c
+ *   IRC - Internet Relay Chat, src/s_zip.c
  *   Copyright (C) 1996  Christophe Kalt
  *
  *   This program is free software; you can redistribute it and/or modify

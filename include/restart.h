@@ -1,3 +1,7 @@
+/*
+ * $Id$ 
+ */
+
 #ifndef INCLUDED_restart_h
 #define INCLUDED_restart_h
 

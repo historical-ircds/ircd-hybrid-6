@@ -1,4 +1,7 @@
-/* include/setup.h.in.  Generated automatically from configure.in by autoheader.  */
+/* include/setup.h.in.  Generated automatically from configure.in by autoheader.
+ *
+ * $Id$ 
+ */
 
 /* Define if you need to in order for stat and other things to work.  */
 #undef _POSIX_SOURCE

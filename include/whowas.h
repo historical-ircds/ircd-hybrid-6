@@ -18,17 +18,6 @@
  */
 
 /*
- * from original rcs 
- * $ Id: whowas.h,v 6.1 1991/07/04 21:04:39 gruner stable gruner $
- *
- * $ Log: whowas.h,v $
- * Revision 6.1  1991/07/04  21:04:39  gruner
- * Revision 2.6.1 [released]
- *
- * Revision 6.0  1991/07/04  18:05:08  gruner
- * frozen beta revision 2.6.1
- *
- * th+hybrid rcs version
  * $Id$
  */
 #ifndef INCLUDED_whowas_h

@@ -1,3 +1,5 @@
+# $Id$
+
 CC=@CC@
 RM=@RM@
 IRCDLIBS=@LIBS@
@@ -41,5 +43,5 @@ install: build
 
 mkpasswd.o: ../include/setup.h ../zlib/zlib.h
 mkpasswd.o: ../zlib/zconf.h
-viconf.o: ../include/config.h ../include/setup.h ../include/defs.h
+viconf.o: ../include/config.h ../include/setup.h
 viconf.o: ../zlib/zlib.h ../zlib/zconf.h

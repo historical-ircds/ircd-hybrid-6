@@ -1,5 +1,5 @@
 /*
- * irc2.7.2/ircd/res.h (C)opyright 1992 Darren Reed.
+ * include/res.h (C)opyright 1992 Darren Reed.
  *
  * $Id$
  */

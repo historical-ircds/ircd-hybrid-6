@@ -1,6 +1,6 @@
 #!/bin/sh
-#
 # IRCD INSTALL SCRIPT
+# $Id$
 #
 # Completely re-written by FlashMan <chuegen@quadrunner.com> 981231
 # Wow.  The old version was *very* messy and had boatloads of redundancy.

@@ -1,8 +1,10 @@
 /*
- * IRC - Internet Relay Chat, ircd/fileio.c
+ * IRC - Internet Relay Chat, src/fileio.c
  * Copyright (C) 1998 Thomas Helvey <tomh@inxpress.net>
  * Copyright (C) 1990 Jarkko Oikarinen and
  *                    University of Oulu, Co Center
+ *
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

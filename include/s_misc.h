@@ -1,3 +1,7 @@
+/*
+ * $Id$ 
+ */
+
 #ifndef INCLUDED_s_misc_h
 #define INCLUDED_s_misc_h
 #ifndef INCLUDED_sys_types_h

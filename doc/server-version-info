@@ -1,3 +1,5 @@
+$Id$
+
 When you type /version you will often see something like this:
 *** Server cs-pub.bu.edu: 2.8.21. AHiKmMptXY
 
@@ -14,7 +16,7 @@ here they are:
 'f'	FOLLOW_IDENT_RFC
 'F'	HIDE_FAKES
 'g'	SUN_GSO_BUG
-'G'	SHOW_GHOSTS
+'G'	GLINES
 'H'	HUB
 'i'	SHOW_INVISIBLE_LUSERS
 'I'	NO_DEFAULT_INVISIBLE

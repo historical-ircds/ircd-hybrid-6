@@ -1,3 +1,7 @@
+/*
+ * $Id$ 
+ */
+
 #ifndef SPRINTF_IRC
 #define SPRINTF_IRC
 

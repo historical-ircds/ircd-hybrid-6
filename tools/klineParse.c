@@ -5,6 +5,7 @@
  *
  * This program will take a kline.conf and remove duplicate and redundant 
  * entries from it, creating a kline.conf.parsed file
+ * $Id$
  */
 
 #define kParseVer "2.12"

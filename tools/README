@@ -1,3 +1,5 @@
+$Id$
+
 A directory of support programs for ircd.
 
 mkpasswd - makes password for O lines

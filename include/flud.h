@@ -1,6 +1,6 @@
 /************************************************************************
  *
- *   IRC - Internet Relay Chat, ircd/flud.h
+ *   IRC - Internet Relay Chat, include/flud.h
  *   Copyright (C) 1999 Michael Pearce
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -16,6 +16,8 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * $Id$ 
  */
 #ifndef INCLUDED_flud_h
 #define INCLUDED_flud_h

@@ -1,4 +1,7 @@
 #!/bin/sh
+
+# $Id$ 
+
 spitshell=cat
 package=IRC
 
@@ -68,19 +71,20 @@ char *infotext[] =
   "",
   "The core Hybrid Team as of this major release:",
   "",
-  "Bleep               Thomas Helvey       tomh@inxpress.net",
   "cosine              Patrick Alken       wnder@uwns.underworld.net",
   "Dianora             Diane Bruce         db@db.net",
+  "is-                 Edward Brocklesby   ejb@leguin.org.uk",
   "Neph|l|m            Adel Mezibra        adel@cybercable.fr",
   "pro                 Bill Jonus          proggy@earthling.net",
   "Rodder              Jon Lusky           lusky@blown.net",
+  "Wohali              Joan Touzet         jolo@cadence.com",
   "",
   "The following people have contributed to this release of hybrid",
   "in nick alphabetical order:",
   "",
+  "Bleep               Thomas Helvey       tomh@inxpress.net",
   "CBongo              Chris Bongaarts     cab@tc.umn.edu",
   "comstud             Chris Behrens       cbehrens@concentric.net",
-  "Dianora             Diane Bruce         db@db.net",
   "echo                Adam J. Durana      adam@caca.com",
   "FlashMan            Craig A. Huegen     chuegen@quadrunner.com",
   "jailbird            Dustin Marquess     jailbird@alcatraz.fdf.net",
@@ -93,7 +97,6 @@ char *infotext[] =
   "ThemBones           Brian Kraemer       kraemer@u.washington.edu",
   "White_Dragon        Chip Norkus         wd@dal.net",
   "WintrHawk           Jake Khuon          khuon@GCtr.Net",
-  "Wohali              Joan Touzet         jolo@cadence.com",
   "",
   "",
   "Developers and Contributors for previous versions:",

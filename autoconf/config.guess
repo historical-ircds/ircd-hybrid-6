@@ -1,4 +1,5 @@
 #! /bin/sh
+# $Id$
 # Attempt to guess a canonical system name.
 #   Copyright (C) 1992, 93, 94, 95, 1996 Free Software Foundation, Inc.
 #
