@@ -386,7 +386,7 @@ void start_auth(struct Client* client)
   client->dns_reply = gethost_byaddr((const char*) &client->ip, &query);
   if (client->dns_reply) {
     ++client->dns_reply->ref_count;
-    strncpy(client->host, client->dns_reply->he->h_name, HOSTLEN);
+    strncpy(client->host, client->dns_reply->hp->h_name, HOSTLEN);
     sendheader(client, REPORT_FIN_DNSC);
   }
   else

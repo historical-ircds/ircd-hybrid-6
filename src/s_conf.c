@@ -325,12 +325,12 @@ int attach_Iline(aClient* cptr, struct hostent* hp,
               /* abuse it, lose it. */
 #ifdef SPOOF_FREEFORM
               sendto_realops("%s spoofing: %s as %s", cptr->name,
-                             host,aconf->name);
+                             host, aconf->name);
               strncpy(cptr->host, aconf->name, HOSTLEN);
 #else
               /* default to oper.server.name.tld */
               sendto_realops("%s spoofing: %s(%s) as oper.%s", cptr->name, 
-                             host, inetntoa((char *)&cptr->ip), me.name);
+                             host, inetntoa((char*) &cptr->ip), me.name);
               strcpy(cptr->host, "oper.");
               strncpy(&cptr->host[5], me.name, HOSTLEN - 5);
 #endif
@@ -339,9 +339,9 @@ int attach_Iline(aClient* cptr, struct hostent* hp,
             }
 
 #ifdef LIMIT_UH
-          return(attach_iline(cptr,aconf,username));
+          return(attach_iline(cptr, aconf, username));
 #else
-          return(attach_iline(cptr,aconf));
+          return(attach_iline(cptr, aconf));
 #endif
 
         }
