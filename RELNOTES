@@ -1,6 +1,24 @@
+$Id$
+
+This is the current release version of ircd-hybrid-6.
+
+BUG REPORTS: If you run this code and encounter problems, you must report
+ the bug in one of the following ways:
+  a) By EMAIL to ircd-hybrid@the-project.org.  
+ Please include a gdb backtrace and a copy of your config.h and ircd.conf 
+ with any report  (with passwords and other sensitive information masked).
+
+DISCUSSION: There is a mailing list for discussion of hybrid issues,
+ including betas.  To subscribe, send a message with the subject "subscribe"
+ to hybrid-request@the-project.org.  This is the proper place to discuss new
+ features, bugs, etc.  Posting here is much more likely to get something
+ done than ranting on #TZ.
+
+Questions/comments directed to ircd-hybrid@the-project.org
+
+
 ircd-hybrid-6.3.1 Release Notes
 -------------------------------
-$Id$
 
 This is a minor bugfix release
 
