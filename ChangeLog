@@ -1,3 +1,8 @@
+*** 19991220_1 by lusky
+patch for core if there were no klines at all (db)
+revved patchlevel to b117
+
+
 *** 19991213_1 by lusky
 another fix for dline bug (db)
 "E lines" weren't being honoured on connect for glines (db)
