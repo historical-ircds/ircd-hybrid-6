@@ -1,3 +1,7 @@
+*** 20010727_6 by leeh
+- drop TS_CURRENT to 3 till we can make a workaround for this bug..
+
+
 *** 20010727_5 by leeh
 - TS_CURRENT is now 4
 - if sptr's ts version is > 3, older ts always wins
