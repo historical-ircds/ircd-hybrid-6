@@ -918,7 +918,8 @@ static  void     set_mode(aClient *cptr,
   int	errors_sent = 0, opcnt = 0, len = 0, tmp, nusers;
   int   ip;
   int	keychange = 0, passet = 0, limitset = 0;
-  int	whatt = MODE_ADD, the_mode, done_s_or_p = NO;
+  int	whatt = MODE_ADD, the_mode;
+  int   done_s_or_p = NO, done_i = NO, done_m = NO, done_n = NO, done_t = NO;
   aClient *who;
   Link	*lp;
   char	*curr = parv[0], c, cc, *arg, plus = '+', *tmpc, *clear;
@@ -1405,6 +1406,14 @@ static  void     set_mode(aClient *cptr,
 	      break;
 	    }
 
+	  if(MyClient(sptr))
+	    {
+	      if(done_i)
+		break;
+	      else
+		done_i = YES;
+	    }
+
 	  if(whatt == MODE_ADD)
 	    {
 	      if (len + 2 >= MODEBUFLEN)
@@ -1434,6 +1443,14 @@ static  void     set_mode(aClient *cptr,
 		sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED), me.name, 
 			   sptr->name, chptr->chname);
 	      break;
+	    }
+
+	  if(MyClient(sptr))
+	    {
+	      if(done_m)
+		break;
+	      else
+		done_m = YES;
 	    }
 
 	  if(whatt == MODE_ADD)
@@ -1467,6 +1484,14 @@ static  void     set_mode(aClient *cptr,
 	      break;
 	    }
 
+	  if(MyClient(sptr))
+	    {
+	      if(done_n)
+		break;
+	      else
+		done_n = YES;
+	    }
+
 	  if(whatt == MODE_ADD)
 	    {
 	      if (len + 2 >= MODEBUFLEN)
@@ -1498,9 +1523,13 @@ static  void     set_mode(aClient *cptr,
 	      break;
 	    }
 
-	  if(done_s_or_p)
-	    break;
-	  done_s_or_p = YES;
+	  if(MyClient(sptr))
+	    {
+	      if(done_s_or_p)
+		break;
+	      else
+		done_s_or_p = YES;
+	    }
 
 	  if(whatt == MODE_ADD)
 	    {
@@ -1544,9 +1573,13 @@ static  void     set_mode(aClient *cptr,
 
 	  /* ickity poo, traditional +p-s nonsense */
 
-	  if(done_s_or_p)
-	    break;
-	  done_s_or_p = YES;
+	  if(MyClient(sptr))
+	    {
+	      if(done_s_or_p)
+		break;
+	      else
+		done_s_or_p = YES;
+	    }
 
 	  if(whatt == MODE_ADD)
 	    {
@@ -1586,6 +1619,14 @@ static  void     set_mode(aClient *cptr,
 		sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED), me.name, 
 			   sptr->name, chptr->chname);
 	      break;
+	    }
+
+	  if(MyClient(sptr))
+	    {
+	      if(done_t)
+		break;
+	      else
+		done_t = YES;
 	    }
 
 	  if(whatt == MODE_ADD)
@@ -1697,9 +1738,11 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key)
 ** Remove bells and commas from channel name
 */
 
-void	clean_channelname(unsigned char *cn)
+void	clean_channelname(unsigned char *name)
 {
-  for (; *cn; cn++)
+  unsigned char *cn;
+  
+  for (cn = name; *cn; cn++)
     /*
      * Find bad characters and remove them, also check for
      * characters in the '\0' -> ' ' range, but +127   -Taner
