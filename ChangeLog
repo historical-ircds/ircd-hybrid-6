@@ -1,3 +1,13 @@
+*** 20010722_1 by db
+*sigh*
+1) NO_HACK_OPS is broken atm, all servers in the network have to
+   run this, or servers have to send deops, else you get desyncs.
+   I'll look at this some more later.
+2) Don't allow opers to gain ops on splits ever (for now, other networks
+   might wish to allow this) But allow opers to join channels on splits.
+
+
+
 *** 20010721_2 by leeh
 - disable IP connects if hide servers ips is defined.. 
 
