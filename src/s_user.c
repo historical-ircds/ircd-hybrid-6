@@ -22,27 +22,29 @@
  *
  *  $Id$
  */
-#include "struct.h"
-#include "common.h"
-#include "numeric.h"
-#include "channel.h"
-#include "s_conf.h"
-#include "motd.h"
-#include "class.h"
-#include "s_bsd.h"
-#include "ircd.h"
-#include "scache.h"
-#include "s_misc.h"
-#include "send.h"
-#include "hash.h"
-#include "whowas.h"
-#include "listener.h"
 #include "s_user.h"
-#include "list.h"
-#include "parse.h"
-#include "s_err.h"
+#include "channel.h"
+#include "class.h"
+#include "common.h"
 #include "fdlist.h"
+#include "hash.h"
+#include "ircd.h"
+#include "list.h"
+#include "listener.h"
+#include "motd.h"
 #include "msg.h"
+#include "numeric.h"
+#include "parse.h"
+#include "s_bsd.h"
+#include "s_conf.h"
+#include "s_err.h"
+#include "s_misc.h"
+#include "s_serv.h"
+#include "scache.h"
+#include "send.h"
+#include "struct.h"
+#include "whowas.h"
+
 #ifdef FLUD
 #include "blalloc.h"
 #endif /* FLUD */
@@ -260,112 +262,6 @@ aClient *next_client_double(aClient *next,      /* First client to check */
         break;
     }
   return next;
-}
-
-/*
-** hunt_server
-**
-**      Do the basic thing in delivering the message (command)
-**      across the relays to the specific server (server) for
-**      actions.
-**
-**      Note:   The command is a format string and *MUST* be
-**              of prefixed style (e.g. ":%s COMMAND %s ...").
-**              Command can have only max 8 parameters.
-**
-**      server  parv[server] is the parameter identifying the
-**              target server.
-**
-**      *WARNING*
-**              parv[server] is replaced with the pointer to the
-**              real servername from the matched client (I'm lazy
-**              now --msa).
-**
-**      returns: (see #defines)
-*/
-int     hunt_server(aClient *cptr,
-                    aClient *sptr,
-                    char *command,
-                    int server,
-                    int parc,
-                    char *parv[])
-{
-  aClient *acptr;
-  int wilds;
-
-  /*
-  ** Assume it's me, if no server
-  */
-  if (parc <= server || BadPtr(parv[server]) ||
-      match(me.name, parv[server]) ||
-      match(parv[server], me.name))
-    return (HUNTED_ISME);
-  /*
-  ** These are to pickup matches that would cause the following
-  ** message to go in the wrong direction while doing quick fast
-  ** non-matching lookups.
-  */
-  if ((acptr = find_client(parv[server], NULL)))
-    if (acptr->from == sptr->from && !MyConnect(acptr))
-      acptr = NULL;
-  if (!acptr && (acptr = find_server(parv[server], NULL)))
-    if (acptr->from == sptr->from && !MyConnect(acptr))
-      acptr = NULL;
-
-  (void)collapse(parv[server]);
-  wilds = (strchr(parv[server], '?') || strchr(parv[server], '*'));
-
-  /*
-   * Again, if there are no wild cards involved in the server
-   * name, use the hash lookup
-   * - Dianora
-   */
-
-  if (!acptr)
-    {
-      if(!wilds)
-        {
-          acptr = find_name(parv[server],(aClient *)NULL);
-          if( !acptr || !IsRegistered(acptr) || !IsServer(acptr) )
-            {
-              sendto_one(sptr, form_str(ERR_NOSUCHSERVER), me.name,
-                         parv[0], parv[server]);
-              return(HUNTED_NOSUCH);
-            }
-        }
-      else
-        {
-          for (acptr = GlobalClientList;
-               (acptr = next_client(acptr, parv[server]));
-               acptr = acptr->next)
-            {
-              if (acptr->from == sptr->from && !MyConnect(acptr))
-                continue;
-              /*
-               * Fix to prevent looping in case the parameter for
-               * some reason happens to match someone from the from
-               * link --jto
-               */
-              if (IsRegistered(acptr) && (acptr != cptr))
-                break;
-            }
-        }
-    }
-
-  if (acptr)
-    {
-      if (IsMe(acptr) || MyClient(acptr))
-        return HUNTED_ISME;
-      if (!match(acptr->name, parv[server]))
-        parv[server] = acptr->name;
-      sendto_one(acptr, command, parv[0],
-                 parv[1], parv[2], parv[3], parv[4],
-                 parv[5], parv[6], parv[7], parv[8]);
-      return(HUNTED_PASS);
-    } 
-  sendto_one(sptr, form_str(ERR_NOSUCHSERVER), me.name,
-             parv[0], parv[server]);
-  return(HUNTED_NOSUCH);
 }
 
 /*

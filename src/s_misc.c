@@ -30,6 +30,7 @@
 #include "numeric.h"
 #include "ircd.h"
 #include "s_bsd.h"
+#include "s_serv.h"
 #include "send.h"
 
 #include <string.h>

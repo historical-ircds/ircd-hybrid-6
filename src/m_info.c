@@ -5,14 +5,15 @@
  */
 #define DEFINE_M_INFO_DATA
 #include "m_info.h"
-#include "struct.h"
-#include "common.h"
-#include "numeric.h"
 #include "channel.h"
-#include "send.h"
+#include "common.h"
 #include "ircd.h"
-#include "s_user.h"
+#include "numeric.h"
 #include "s_err.h"
+#include "s_serv.h"
+#include "s_user.h"
+#include "send.h"
+#include "struct.h"
 
 #include <time.h>
 #include <string.h>

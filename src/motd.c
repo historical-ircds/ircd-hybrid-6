@@ -22,22 +22,20 @@
  *
  *   $Id$
  */
-
+#include "motd.h"
 #include "ircd.h"
 #include "s_bsd.h"
 #include "fileio.h"
 #include "res.h"
 #include "s_conf.h"
-#include "motd.h"
 #include "class.h"
 #include "send.h"
 #include "s_err.h"
 #include "s_conf.h"
 #include "numeric.h"
 #include "client.h"
-#include "struct.h"     /* HUNTED_ISME */
 #include "irc_string.h"
-#include "s_user.h"     /* hunt_server */
+#include "s_serv.h"     /* hunt_server */
 
 #include <string.h>
 #include <stdlib.h>

@@ -23,40 +23,37 @@
  *   $Id$
  */
 
-#define CAPTAB
-#include "struct.h"
-#undef CAPTAB
-
+#define DEFINE_CAPTAB
 #include "s_serv.h"
-#include "common.h"
-#include "numeric.h"
 #include "channel.h"
-#include "ircd.h"
-#include "scache.h"
-#include "list.h"
-#include "parse.h"
-#include "s_zip.h"
-#include "s_bsd.h"
+#include "class.h"
+#include "client.h"
+#include "common.h"
 #include "dline_conf.h"
-#include "mtrie_conf.h"
 #include "fdlist.h"
 #include "fileio.h"
-#include "res.h"
-#include "s_conf.h"
-#include "class.h"
-#include "send.h"
 #include "hash.h"
-#include "s_debug.h"
-#include "listener.h"
-#include "restart.h"
-#include "s_user.h"
-#include "s_misc.h"
 #include "irc_string.h"
-#include "config.h"
+#include "ircd.h"
+#include "list.h"
+#include "listener.h"
 #include "m_gline.h"
-#include "channel.h"
-#include "s_err.h"
 #include "msg.h"      /* msgtab */
+#include "mtrie_conf.h"
+#include "numeric.h"
+#include "parse.h"
+#include "res.h"
+#include "restart.h"
+#include "struct.h"
+#include "s_bsd.h"
+#include "s_conf.h"
+#include "s_debug.h"
+#include "s_err.h"
+#include "s_misc.h"
+#include "s_user.h"
+#include "s_zip.h"
+#include "scache.h"
+#include "send.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -69,19 +66,119 @@ int     max_client_count = 1;
 extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 
 /* Local function prototypes */
-static void show_servers(aClient *);
-static void show_opers(aClient *); 
-static void show_ports(aClient *); 
-static void set_autoconn(aClient *,char *,char *,int);
-static void report_specials(aClient *,int,int);
-static int m_server_estab(aClient *cptr);
+static void show_servers(struct Client *);
+static void show_opers(struct Client *); 
+static void show_ports(struct Client *); 
+static void set_autoconn(struct Client *,char *,char *,int);
+static void report_specials(struct Client *,int,int);
+static int m_server_estab(struct Client *cptr);
 static int m_set_parser(char *);
-extern void report_qlines(aClient *);
+extern void report_qlines(struct Client *);
 
 #ifdef PACE_WALLOPS
 time_t last_used_wallops = 0L;
 #endif
 
+
+/*
+ * hunt_server - Do the basic thing in delivering the message (command)
+ *      across the relays to the specific server (server) for
+ *      actions.
+ *
+ *      Note:   The command is a format string and *MUST* be
+ *              of prefixed style (e.g. ":%s COMMAND %s ...").
+ *              Command can have only max 8 parameters.
+ *
+ *      server  parv[server] is the parameter identifying the
+ *              target server.
+ *
+ *      *WARNING*
+ *              parv[server] is replaced with the pointer to the
+ *              real servername from the matched client (I'm lazy
+ *              now --msa).
+ *
+ *      returns: (see #defines)
+ */
+int hunt_server(aClient *cptr, aClient *sptr, char *command,
+                int server, int parc, char *parv[])
+{
+  aClient *acptr;
+  int wilds;
+
+  /*
+  ** Assume it's me, if no server
+  */
+  if (parc <= server || BadPtr(parv[server]) ||
+      match(me.name, parv[server]) ||
+      match(parv[server], me.name))
+    return (HUNTED_ISME);
+  /*
+  ** These are to pickup matches that would cause the following
+  ** message to go in the wrong direction while doing quick fast
+  ** non-matching lookups.
+  */
+  if ((acptr = find_client(parv[server], NULL)))
+    if (acptr->from == sptr->from && !MyConnect(acptr))
+      acptr = NULL;
+  if (!acptr && (acptr = find_server(parv[server], NULL)))
+    if (acptr->from == sptr->from && !MyConnect(acptr))
+      acptr = NULL;
+
+  (void)collapse(parv[server]);
+  wilds = (strchr(parv[server], '?') || strchr(parv[server], '*'));
+
+  /*
+   * Again, if there are no wild cards involved in the server
+   * name, use the hash lookup
+   * - Dianora
+   */
+
+  if (!acptr)
+    {
+      if(!wilds)
+        {
+          acptr = find_name(parv[server],(aClient *)NULL);
+          if( !acptr || !IsRegistered(acptr) || !IsServer(acptr) )
+            {
+              sendto_one(sptr, form_str(ERR_NOSUCHSERVER), me.name,
+                         parv[0], parv[server]);
+              return(HUNTED_NOSUCH);
+            }
+        }
+      else
+        {
+          for (acptr = GlobalClientList;
+               (acptr = next_client(acptr, parv[server]));
+               acptr = acptr->next)
+            {
+              if (acptr->from == sptr->from && !MyConnect(acptr))
+                continue;
+              /*
+               * Fix to prevent looping in case the parameter for
+               * some reason happens to match someone from the from
+               * link --jto
+               */
+              if (IsRegistered(acptr) && (acptr != cptr))
+                break;
+            }
+        }
+    }
+
+  if (acptr)
+    {
+      if (IsMe(acptr) || MyClient(acptr))
+        return HUNTED_ISME;
+      if (!match(acptr->name, parv[server]))
+        parv[server] = acptr->name;
+      sendto_one(acptr, command, parv[0],
+                 parv[1], parv[2], parv[3], parv[4],
+                 parv[5], parv[6], parv[7], parv[8]);
+      return(HUNTED_PASS);
+    } 
+  sendto_one(sptr, form_str(ERR_NOSUCHSERVER), me.name,
+             parv[0], parv[server]);
+  return(HUNTED_NOSUCH);
+}
 
 /*
 ** m_functions execute protocol messages on this server:
@@ -145,7 +242,7 @@ time_t last_used_wallops = 0L;
 **      parv[0] = sender prefix
 **      parv[1] = remote server
 */
-int m_version(aClient *cptr, aClient *sptr, int parc, char *parv[])
+int m_version(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
   extern char serveropts[];
 
@@ -169,11 +266,11 @@ int m_version(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **      parv[1] = server name
 **      parv[2] = comment
 */
-int m_squit(aClient *cptr, aClient *sptr, int parc, char *parv[])
+int m_squit(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
   aConfItem *aconf;
   char  *server;
-  aClient       *acptr;
+  struct Client       *acptr;
   char  *comment = (parc > 2 && parv[2]) ? parv[2] : cptr->name;
 
   if (!IsPrivileged(sptr))
@@ -314,8 +411,8 @@ int m_squit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **      parv[3] = server is standalone or connected to non-TS only
 **      parv[4] = server's idea of UTC time
 */
-int     m_svinfo(aClient *cptr,
-                 aClient *sptr,
+int     m_svinfo(struct Client *cptr,
+                 struct Client *sptr,
                  int parc,
                  char *parv[])
 {
@@ -361,7 +458,7 @@ int     m_svinfo(aClient *cptr,
 **      parv[0] = sender prefix
 **      parv[1] = space-separated list of capabilities
 */
-int m_capab(aClient *cptr, aClient *sptr, int parc, char *parv[])
+int m_capab(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
   struct Capability *cap;
   char  *p;
@@ -395,7 +492,7 @@ int m_capab(aClient *cptr, aClient *sptr, int parc, char *parv[])
 *
 * modified, always send all capabilities -Dianora
 */
-void send_capabilities(aClient *cptr,int use_zip)
+void send_capabilities(struct Client* cptr, int use_zip)
 {
   struct Capability *cap;
   char  msgbuf[BUFSIZE];
@@ -430,13 +527,13 @@ void send_capabilities(aClient *cptr,int use_zip)
  *      parv[2] = serverinfo/hopcount
  *      parv[3] = serverinfo
  */
-int m_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
+int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
   int        i;
   char       info[REALLEN + 1];
   char*      host;
-  aClient*   acptr;
-  aClient*   bcptr;
+  struct Client*   acptr;
+  struct Client*   bcptr;
   aConfItem* aconf;
   int        hop;
   char       clean_host[(2 * HOSTLEN) + 1];
@@ -765,7 +862,7 @@ int m_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 }
 
-static void     sendnick_TS( aClient *cptr, aClient *acptr)
+static void     sendnick_TS( struct Client *cptr, struct Client *acptr)
 {
   static char ubuf[12];
 
@@ -787,10 +884,10 @@ static void     sendnick_TS( aClient *cptr, aClient *acptr)
     }
 }
 
-static int m_server_estab(aClient *cptr)
+static int m_server_estab(struct Client *cptr)
 {
   aChannel*   chptr;
-  aClient*    acptr;
+  struct Client*    acptr;
   aConfItem*  aconf;
   aConfItem*  bconf;
   const char* inpath;
@@ -1132,13 +1229,13 @@ static int m_server_estab(aClient *cptr)
 **      parv[1] = server to query 
 **      parv[2] = servername mask
 */
-int     m_links(aClient *cptr,
-                aClient *sptr,
+int     m_links(struct Client *cptr,
+                struct Client *sptr,
                 int parc,
                 char *parv[])
 {
   char *mask;
-  aClient *acptr;
+  struct Client *acptr;
   char clean_mask[(2*HOSTLEN)+1];
   char *s;
   char *d;
@@ -1278,7 +1375,7 @@ static REPORT_STRUCT report_array[] = {
 
 
 
-static  void    report_configured_links(aClient *sptr,int mask)
+static  void    report_configured_links(struct Client *sptr,int mask)
 {
   aConfItem *tmp;
   REPORT_STRUCT *p;
@@ -1329,7 +1426,7 @@ static  void    report_configured_links(aClient *sptr,int mask)
                          sptr->name,
                          p->conf_char,
                          user, host, name,
-                         oper_privs_as_string((aClient *)NULL,port),
+                         oper_privs_as_string((struct Client *)NULL,port),
                          get_conf_class(tmp),
                          oper_flags_as_string((int)tmp->hold));
             else
@@ -1352,14 +1449,14 @@ static  void    report_configured_links(aClient *sptr,int mask)
 /*
  * report_specials
  *
- * inputs       - aClient pointer to client to report to
+ * inputs       - struct Client pointer to client to report to
  *              - int flags type of special aConfItem to report
  *              - int numeric for aConfItem to report
  * output       - none
  * side effects -
  */
 
-static  void    report_specials(aClient *sptr,int flags,int numeric)
+static  void    report_specials(struct Client *sptr,int flags,int numeric)
 {
   aConfItem *this_conf;
   aConfItem *aconf;
@@ -1407,14 +1504,14 @@ static  void    report_specials(aClient *sptr,int flags,int numeric)
 **            it--not reversed as in ircd.conf!
 */
 
-int     m_stats(aClient *cptr,
-                aClient *sptr,
+int     m_stats(struct Client *cptr,
+                struct Client *sptr,
                 int parc,
                 char *parv[])
 {
   static        char    Lformat[]  = ":%s %d %s %s %u %u %u %u %u :%u %u %s";
   struct        Message *mptr;
-  aClient       *acptr;
+  struct Client       *acptr;
   char  stat = parc > 1 ? parv[1][0] : '\0';
   int i;
   int   doall = 0, wilds = 0, valid_stats = 0;
@@ -1731,8 +1828,8 @@ int     m_stats(aClient *cptr,
 **      parv[0] = sender prefix
 **      parv[1] = servername
 */
-int     m_users(aClient *cptr,
-                aClient *sptr,
+int     m_users(struct Client *cptr,
+                struct Client *sptr,
                 int parc,
                 char *parv[])
 {
@@ -1755,8 +1852,8 @@ int     m_users(aClient *cptr,
 **      parv[0] = sender prefix
 **      parv[*] = parameters
 */
-int     m_error(aClient *cptr,
-                aClient *sptr,
+int     m_error(struct Client *cptr,
+                struct Client *sptr,
                 int parc,
                 char *parv[])
 {
@@ -1787,8 +1884,8 @@ int     m_error(aClient *cptr,
 ** m_help
 **      parv[0] = sender prefix
 */
-int     m_help(aClient *cptr,
-               aClient *sptr,
+int     m_help(struct Client *cptr,
+               struct Client *sptr,
                int parc,
                char *parv[])
 {
@@ -1831,8 +1928,8 @@ int     m_help(aClient *cptr,
  * 199970918 JRL hacked to ignore parv[1] completely and require parc > 3
  * to cause a force
  */
-int      m_lusers(aClient *cptr,
-                  aClient *sptr,
+int      m_lusers(struct Client *cptr,
+                  struct Client *sptr,
                   int parc,
                   char *parv[])
 {
@@ -1864,8 +1961,8 @@ int      m_lusers(aClient *cptr,
   return(show_lusers(cptr,sptr,parc,parv));
 }
 
-int show_lusers(aClient *cptr,
-                aClient *sptr,
+int show_lusers(struct Client *cptr,
+                struct Client *sptr,
                 int parc,
                 char *parv[])
 {
@@ -1874,7 +1971,7 @@ int show_lusers(aClient *cptr,
   static int    s_count = 0, c_count = 0, u_count = 0, i_count = 0;
   static int    o_count = 0, m_client = 0, m_server = 0;
   int forced;
-  aClient *acptr;
+  struct Client *acptr;
 
 /*  forced = (parc >= 2); */
   forced = (IsAnOper(sptr) && (parc > 3));
@@ -2048,12 +2145,12 @@ int show_lusers(aClient *cptr,
 **      parv[2] = port number
 **      parv[3] = remote server
 */
-int m_connect(aClient *cptr, aClient *sptr, int parc, char *parv[])
+int m_connect(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
   int        port;
   int        tmpport;
   aConfItem* aconf;
-  aClient*   acptr;
+  struct Client*   acptr;
 
   if (!IsPrivileged(sptr))
     {
@@ -2168,8 +2265,8 @@ int m_connect(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
-int     m_wallops(aClient *cptr,
-                  aClient *sptr,
+int     m_wallops(struct Client *cptr,
+                  struct Client *sptr,
                   int parc,
                   char *parv[])
 { 
@@ -2224,15 +2321,15 @@ int     m_wallops(aClient *cptr,
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
-int     m_locops(aClient *cptr,
-                  aClient *sptr,
+int     m_locops(struct Client *cptr,
+                  struct Client *sptr,
                   int parc,
                   char *parv[])
 {
   char *message = NULL;
 #ifdef SLAVE_SERVERS
   char *slave_oper;
-  aClient *acptr;
+  struct Client *acptr;
 #endif
 
 #ifdef SLAVE_SERVERS
@@ -2251,7 +2348,7 @@ int     m_locops(aClient *cptr,
           parc--;
           parv++;
 
-          if ((acptr = hash_find_client(slave_oper,(aClient *)NULL)))
+          if ((acptr = hash_find_client(slave_oper,(struct Client *)NULL)))
             {
               if(!IsPerson(acptr))
                 return 0;
@@ -2306,8 +2403,8 @@ int     m_locops(aClient *cptr,
   return(0);
 }
 
-int     m_operwall(aClient *cptr,
-                   aClient *sptr,
+int     m_operwall(struct Client *cptr,
+                   struct Client *sptr,
                    int parc,
                    char *parv[])
 {
@@ -2353,8 +2450,8 @@ int     m_operwall(aClient *cptr,
 **      parv[0] = sender prefix
 **      parv[1] = servername
 */
-int     m_time(aClient *cptr,
-               aClient *sptr,
+int     m_time(struct Client *cptr,
+               struct Client *sptr,
                int parc,
                char *parv[])
 {
@@ -2369,8 +2466,8 @@ int     m_time(aClient *cptr,
 **      parv[0] = sender prefix
 **      parv[1] = servername
 */
-int     m_admin(aClient *cptr,
-                aClient *sptr,
+int     m_admin(struct Client *cptr,
+                struct Client *sptr,
                 int parc,
                 char *parv[])
 {
@@ -2494,8 +2591,8 @@ static int m_set_parser(char *parsethis)
 /*
  * m_set - set options while running
  */
-int   m_set(aClient *cptr,
-            aClient *sptr,
+int   m_set(struct Client *cptr,
+            struct Client *sptr,
             int parc,
             char *parv[])
 {
@@ -2916,8 +3013,8 @@ int   m_set(aClient *cptr,
 /*
  * m_htm - high traffic mode info
  */
-int   m_htm(aClient *cptr,
-            aClient *sptr,
+int   m_htm(struct Client *cptr,
+            struct Client *sptr,
             int parc,
             char *parv[])
 {
@@ -3002,7 +3099,7 @@ int   m_htm(aClient *cptr,
 ** m_rehash
 **
 */
-int m_rehash(aClient *cptr, aClient *sptr, int parc, char *parv[])
+int m_rehash(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
   int found = NO;
 
@@ -3156,8 +3253,8 @@ int m_rehash(aClient *cptr, aClient *sptr, int parc, char *parv[])
 ** m_restart
 **
 */
-int     m_restart(aClient *cptr,
-                  aClient *sptr,
+int     m_restart(struct Client *cptr,
+                  struct Client *sptr,
                   int parc,
                   char *parv[])
 {
@@ -3188,13 +3285,13 @@ int     m_restart(aClient *cptr,
 **      parv[0] = sender prefix
 **      parv[1] = servername
 */
-int     m_trace(aClient *cptr,
-                aClient *sptr,
+int     m_trace(struct Client *cptr,
+                struct Client *sptr,
                 int parc,
                 char *parv[])
 {
   int   i;
-  aClient       *acptr = NULL;
+  struct Client       *acptr = NULL;
   aClass        *cltmp;
   char  *tname;
   int   doall, link_s[MAXCONNECTIONS], link_u[MAXCONNECTIONS];
@@ -3222,7 +3319,7 @@ int     m_trace(aClient *cptr,
     {
     case HUNTED_PASS: /* note: gets here only if parv[1] exists */
       {
-        aClient *ac2ptr;
+        struct Client *ac2ptr;
         
         ac2ptr = next_client_double(GlobalClientList, tname);
         if (ac2ptr)
@@ -3282,7 +3379,7 @@ int     m_trace(aClient *cptr,
       const char* ip;
       int         c_class;
 
-      acptr = hash_find_client(tname,(aClient *)NULL);
+      acptr = hash_find_client(tname,(struct Client *)NULL);
       if(!acptr || !IsPerson(acptr)) 
         {
           /* this should only be reached if the matching
@@ -3482,13 +3579,13 @@ int     m_trace(aClient *cptr,
 **      parv[0] = sender prefix
 **      parv[1] = servername
 */
-int     m_ltrace(aClient *cptr,
-                aClient *sptr,
+int     m_ltrace(struct Client *cptr,
+                struct Client *sptr,
                 int parc,
                 char *parv[])
 {
   int   i;
-  aClient       *acptr = NULL;
+  struct Client       *acptr = NULL;
   char  *tname;
   int   doall, link_s[MAXCONNECTIONS], link_u[MAXCONNECTIONS];
   int   cnt = 0, wilds, dow;
@@ -3511,7 +3608,7 @@ int     m_ltrace(aClient *cptr,
     {
     case HUNTED_PASS: /* note: gets here only if parv[1] exists */
       {
-        aClient *ac2ptr;
+        struct Client *ac2ptr;
         
         ac2ptr = next_client(GlobalClientList, tname);
         if (ac2ptr)
@@ -3654,12 +3751,12 @@ int     m_ltrace(aClient *cptr,
 /*
 ** m_close - added by Darren Reed Jul 13 1992.
 */
-int     m_close(aClient *cptr,
-                aClient *sptr,
+int     m_close(struct Client *cptr,
+                struct Client *sptr,
                 int parc,
                 char *parv[])
 {
-  aClient       *acptr;
+  struct Client       *acptr;
   int   i;
   int   closed = 0;
 
@@ -3685,9 +3782,9 @@ int     m_close(aClient *cptr,
   return 0;
 }
 
-int m_die(aClient *cptr, aClient *sptr, int parc, char *parv[])
+int m_die(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
-  aClient* acptr;
+  struct Client* acptr;
   int      i;
 
   if (!MyClient(sptr) || !IsAnOper(sptr))
@@ -3752,13 +3849,13 @@ int m_die(aClient *cptr, aClient *sptr, int parc, char *parv[])
 /*
  * set_autoconn
  *
- * inputs       - aClient pointer to oper requesting change
+ * inputs       - struct Client pointer to oper requesting change
  *              -
  * output       - none
  * side effects -
  */
 
-static void set_autoconn(aClient *sptr,char *parv0,char *name,int newval)
+static void set_autoconn(struct Client *sptr,char *parv0,char *name,int newval)
 {
   aConfItem *aconf;
 
@@ -3792,9 +3889,9 @@ static void set_autoconn(aClient *sptr,char *parv0,char *name,int newval)
  * side effects - show who is opered on this server
  */
 
-static void show_opers(aClient *cptr)
+static void show_opers(struct Client *cptr)
 {
-  register aClient        *cptr2;
+  register struct Client        *cptr2;
   register int j=0;
 
   for(cptr2 = oper_cptr_list; cptr2; cptr2 = cptr2->next_oper_client)
@@ -3829,15 +3926,15 @@ static void show_opers(aClient *cptr)
 /*
  * show_servers
  *
- * inputs        - aClient pointer to client to show server list to
+ * inputs        - struct Client pointer to client to show server list to
  *               - name of client
  * output        - NONE
  * side effects        -
  */
 
-static void show_servers(aClient *cptr)
+static void show_servers(struct Client *cptr)
 {
-  register aClient *cptr2;
+  register struct Client *cptr2;
   register int j=0;                /* used to count servers */
 
   for(cptr2 = serv_cptr_list; cptr2; cptr2 = cptr2->next_server_client)
@@ -3869,7 +3966,7 @@ static void show_servers(aClient *cptr)
  * side effects - show ports
  */
 
-static void show_ports(aClient *sptr)
+static void show_ports(struct Client *sptr)
 {
   struct Listener* listener = 0;
 

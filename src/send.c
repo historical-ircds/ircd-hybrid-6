@@ -20,17 +20,18 @@
  *   $Id$
  */
 #include "send.h"
-#include "struct.h"
-#include "common.h"
-#include "s_zip.h"
-#include "ircd.h"
-#include "s_bsd.h"
-#include "class.h"
-#include "numeric.h"
-#include "channel.h"
 #include "bsd.h"
-#include "s_err.h"
+#include "channel.h"
+#include "class.h"
+#include "common.h"
+#include "ircd.h"
 #include "m_commands.h"
+#include "numeric.h"
+#include "s_bsd.h"
+#include "s_err.h"
+#include "s_serv.h"
+#include "s_zip.h"
+#include "struct.h"
 
 #include <stdio.h>
 #include <string.h>
