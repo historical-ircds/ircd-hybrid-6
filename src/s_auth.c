@@ -111,7 +111,7 @@ static void release_auth_client(struct Client* client)
 }
  
 /*
- * client_dns_callback - called when resolver query finishes
+ * auth_dns_callback - called when resolver query finishes
  * if the query resulted in a successful search, hp will contain
  * a non-null pointer, otherwise hp will be null.
  * set the client on it's way to a connection completion, regardless
@@ -123,6 +123,12 @@ static void auth_dns_callback(void* vptr, struct hostent* hp)
 
   ClearDNSPending(auth);
   if (hp) {
+    /*
+     * XXX - we should copy info to the client here instead of saving
+     * the pointer, holding the hp could be dangerous if the dns entries
+     * are invalidated and not wiped here too, this also means that we
+     * need to restart the dns query.
+     */
     auth->client->hostp = hp;
     sendheader(auth->client, REPORT_FIN_DNS, R_fin_dns);
   }
@@ -193,7 +199,8 @@ static int start_auth_query(struct AuthRequest* auth)
   sendheader(auth->client, REPORT_DO_ID, R_do_id);
   set_non_blocking(fd, auth->client);
 
-  /* get the local address of the client and bind to that to
+  /* 
+   * get the local address of the client and bind to that to
    * make the auth request.  This used to be done only for
    * ifdef VIRTTUAL_HOST, but needs to be done for all clients
    * since the ident request must originate from that same address--
@@ -266,6 +273,10 @@ void start_auth(struct Client* client)
   }
 }
 
+/*
+ * timeout_auth_queries - timeout resolver and identd requests
+ * allow clients through if requests failed
+ */
 void timeout_auth_queries(time_t now)
 {
   struct AuthRequest* auth;
@@ -308,9 +319,7 @@ void timeout_auth_queries(time_t now)
 }
 
 /*
- * send_authports
- *
- * Send the ident server a query giving "theirport , ourport".
+ * send_auth_query - send the ident server a query giving "theirport , ourport"
  * The write is only attempted *once* so it is deemed to be a fail if the
  * entire write doesn't write all the data given.  This shouldnt be a
  * problem since the socket should have a write buffer far greater than
@@ -353,16 +362,10 @@ void send_auth_query(struct AuthRequest* auth)
 
 
 /*
- * read_authports
- *
- * read the reply (if any) from the ident server we connected to.
- * The actual read processing here is pretty weak - no handling of the reply
- * if it is fragmented by IP.
- * 
- * This is really broken and needs to be rewritten.  Somehow len is nonzero
- * on failed connects() on Solaris (and maybe others?).  I relocated the
- * REPORT_FIN_ID to hide the problem.  --Rodder
- *
+ * read_auth_reply - read the reply (if any) from the ident server 
+ * we connected to.
+ * We only give it one shot, if the reply isn't good the first time
+ * fail the authentication entirely. --Bleep
  */
 #define AUTH_BUFSIZ 128
 
@@ -380,13 +383,7 @@ void read_auth_reply(struct AuthRequest* auth)
   *ruser = '\0';
   Debug((DEBUG_NOTICE,"read_auth_reply(%x) fd %d authfd %d flags %d",
          auth, auth->client->fd, auth->fd, auth->flags));
-  /*
-   * Nasty.  Cant allow any other reads from client fd while we're
-   * waiting on the authfd to return a full valid string.  Use the
-   * client's input buffer to buffer the authd reply.
-   * Oh. this is needed because an authd reply may come back in more
-   * than 1 read! -avalon
-   */
+
   len = recv(auth->fd, buf, AUTH_BUFSIZ, 0);
   
   if (len > 0) {
