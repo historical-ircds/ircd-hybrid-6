@@ -149,7 +149,7 @@ typedef struct Hostent {
   char*          buf;    /* buffer for data pointed to from hostent */
 } aHostent;
 
-typedef struct reslist {
+struct reslist {
   int             id;
   int             sent;              /* number of requests sent */
   time_t          ttl;
@@ -205,7 +205,7 @@ static int      send_res_msg(const char* buf, int len, int count);
 static void     resend_query(struct reslist *request);
 static int      proc_answer(struct reslist *request, HEADER* header, 
                                     char*, char *);
-static reslist *find_id(int);
+static struct reslist* find_id(int);
 
 static  struct  resinfo {
   int  re_errors;
@@ -1277,3 +1277,14 @@ cres_mem(aClient *sptr)
 {
   return 0L;
 }
+
+
+
+
+
+
+
+
+
+
+
