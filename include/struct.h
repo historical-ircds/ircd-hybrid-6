@@ -546,8 +546,14 @@ struct Client
   struct	Client *lprev;	/* Used for Server->servers/users */
 
 /* LINKLIST */
+  /* N.B. next_local_client, and previous_local_client
+   * duplicate the link list referenced to by struct Server -> users
+   * someday, we'll rationalize this... -Dianora
+   */
 
   struct        Client *next_local_client;      /* keep track of these */
+  struct	Client *previous_local_client;
+
   struct        Client *next_server_client;
   struct        Client *next_oper_client;
 

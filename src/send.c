@@ -558,9 +558,9 @@ va_dcl
 {
   va_list	vl;
 # endif
-  register	int	i;
   register	aClient *cptr;
 
+  /* USE_VARARGS IS BROKEN someone volunteer to fix it :-) -Dianora */
 # ifdef	USE_VARARGS
   va_start(vl);
 # endif
@@ -630,6 +630,46 @@ va_dcl
   sendto_prefix_one(user, user, pattern, p1, p2, p3, p4,
 		    p5, p6, p7, p8);
 # endif
+  return;
+}
+
+/*
+ * sendto_cap_serv_butone
+ *
+ * Send a message to servers other than 'one' which have capability cap
+ */
+# ifndef	USE_VARARGS
+/*VARARGS*/
+void	sendto_cap_serv_butone(cap, one, pattern, p1, p2, p3, p4, p5, p6, p7, p8, p9)
+int	cap;
+aClient *one;
+char	*pattern, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8, *p9;
+{
+# else
+void	sendto_cap_serv_butone(cap, one, pattern, va_alist)
+int	cap;
+aClient	*one;
+char	*pattern;
+va_dcl
+{
+  va_list	vl;
+# endif
+  Reg	aClient *cptr;
+
+# ifdef	USE_VARARGS
+  va_start(vl);
+# endif
+
+  /* USE_VARARGS IS BROKEN someone volunteer to fix it :-) -Dianora */
+
+  for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
+    {
+      if ((one && cptr == one->from)) 
+	continue;
+      if(!IsCapable(cptr,cap))
+	continue;
+      sendto_one(cptr, pattern, p1, p2, p3, p4, p5, p6, p7, p8);
+    }
   return;
 }
 
