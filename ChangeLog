@@ -1,3 +1,8 @@
+*** 20011203_1 by wcampbel
+Correction in the documentation of KLINE_WITH_CONNECTION_CLOSED,
+thanks Kindred.
+
+
 *** 20011201_1 by leeh
 - $irc.server -> $$irc.server
 - #host.mask -> $#host.mask
