@@ -24,6 +24,10 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.43  1999/08/10 03:32:14  lusky
+ * remove <sys/syslog.h> check from configure, assume <syslog.h> exists (sw)
+ * cleaned up attach_Iline some more (db)
+ *
  * Revision 1.41  1999/07/29 07:06:48  tomh
  * new m_commands
  *
@@ -343,6 +347,7 @@ extern struct QlineItem *q_conf;
 extern struct ConfItem* ConfigItemList;        /* GLOBAL - conf list head */
 extern int              specific_virtual_host; /* GLOBAL - used in s_bsd.c */
 extern struct ConfItem *temporary_klines;
+extern struct ConfItem *temporary_ip_klines;
 extern ConfigFileEntryType ConfigFileEntry;    /* GLOBAL - defined in ircd.c */
 
 extern void clear_ip_hash_table(void);
@@ -421,6 +426,7 @@ extern int safe_write(struct Client *, const char *, int ,char *);
 extern void add_temp_kline(struct ConfItem *);
 extern  void    flush_temp_klines(void);
 extern  void    report_temp_klines(struct Client *);
+extern  void    show_temp_klines(struct Client *, struct ConfItem *);
 extern  int     is_address(char *,unsigned long *,unsigned long *); 
 extern  int     rehash (struct Client *, struct Client *, int);
 

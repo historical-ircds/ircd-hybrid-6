@@ -84,9 +84,10 @@ struct ConfItem *find_special_conf(char *, int );
 static void add_q_line(struct ConfItem *);
 static void clear_q_lines(void);
 static void clear_special_conf(struct ConfItem **);
-static struct ConfItem* find_tkline(const char* host, const char* name);
+static struct ConfItem* find_tkline(const char*, const char*, unsigned long);
 
 struct ConfItem *temporary_klines = NULL;
+struct ConfItem *temporary_ip_klines = NULL;
 
 static  char *set_conf_flags(struct ConfItem *,char *);
 static  int  oper_privs_from_string(int,char *);
@@ -398,7 +399,7 @@ int attach_Iline(aClient* cptr, const char* username, char **preason)
                                        ntohl(cptr->ip.s_addr));
       if(aconf && !IsConfElined(aconf))
         {
-          if( (tkline_conf = find_tkline(cptr->host, cptr->username)) )
+          if( (tkline_conf = find_tkline(cptr->host, cptr->username, ntohl(cptr->ip.s_addr))) )
             aconf = tkline_conf;
         }
     }
@@ -411,7 +412,7 @@ int attach_Iline(aClient* cptr, const char* username, char **preason)
                                        ntohl(cptr->ip.s_addr));
       if(aconf && !IsConfElined(aconf))
         {
-          if( (tkline_conf = find_tkline(cptr->host, non_ident)) )
+          if( (tkline_conf = find_tkline(cptr->host, non_ident, ntohl(cptr->ip.s_addr))) )
             aconf = tkline_conf;
         }
     }
@@ -2639,7 +2640,7 @@ struct ConfItem *find_kill(aClient* cptr)
  * thats expected to be done by caller.... *sigh* -Dianora
  */
 
-static struct ConfItem* find_tkline(const char* host, const char* user)
+static struct ConfItem* find_tkline(const char* host, const char* user, unsigned long ip)
 {
   struct ConfItem *kill_list_ptr;        /* used for the link list only */
   struct ConfItem *last_list_ptr;
@@ -2680,6 +2681,41 @@ static struct ConfItem* find_tkline(const char* host, const char* user)
         }
     }
 
+  if(temporary_ip_klines)
+    {
+      kill_list_ptr = last_list_ptr = temporary_ip_klines;
+
+      while(kill_list_ptr)
+        {
+          if(kill_list_ptr->hold <= CurrentTime)        /* a kline has expired */
+            {
+              if(temporary_ip_klines == kill_list_ptr)
+                {
+                  temporary_ip_klines = last_list_ptr = tmp_list_ptr =
+                    kill_list_ptr->next;
+                }
+              else
+                {
+                  /* its in the middle of the list, so link around it */
+                  tmp_list_ptr = last_list_ptr->next = kill_list_ptr->next;
+                }
+
+              free_conf(kill_list_ptr);
+              kill_list_ptr = tmp_list_ptr;
+            }
+          else
+            {
+              if( (kill_list_ptr->user
+                   && (!user || match(kill_list_ptr->user, user)))
+                  && (kill_list_ptr->ip
+                      && ((ip & kill_list_ptr->ip_mask) == kill_list_ptr->ip)))
+                return(kill_list_ptr);
+              last_list_ptr = kill_list_ptr;
+              kill_list_ptr = kill_list_ptr->next;
+            }
+        }
+    }
+
   return NULL;
 }
 
@@ -2700,7 +2736,7 @@ struct ConfItem *find_is_klined(const char* host, const char* name, unsigned lon
 {
   struct ConfItem *found_aconf;
 
-  if( (found_aconf = find_tkline(host, name)) )
+  if( (found_aconf = find_tkline(host, name, ntohl(ip))) )
     return(found_aconf);
 
   /* find_matching_mtrie_conf() can return either CONF_KILL,
@@ -2725,8 +2761,16 @@ struct ConfItem *find_is_klined(const char* host, const char* name, unsigned lon
 
 void add_temp_kline(struct ConfItem *aconf)
 {
-  aconf->next = temporary_klines;
-  temporary_klines = aconf;
+  if (aconf->ip == 0)
+    {
+      aconf->next = temporary_klines;
+      temporary_klines = aconf;
+    }
+  else
+    {
+      aconf->next = temporary_ip_klines;
+      temporary_ip_klines = aconf;
+    }
 }
 
 /* flush_temp_klines
@@ -2749,6 +2793,16 @@ void flush_temp_klines()
           kill_list_ptr = temporary_klines;
         }
     }
+
+  if( (kill_list_ptr = temporary_ip_klines) )
+    {
+      while(kill_list_ptr)
+        {
+          temporary_ip_klines = kill_list_ptr->next;
+          free_conf(kill_list_ptr);
+          kill_list_ptr = temporary_ip_klines;
+        }
+    }
 }
 
 /* report_temp_klines
@@ -2760,6 +2814,23 @@ void flush_temp_klines()
  */
 void report_temp_klines(aClient *sptr)
 {
+
+  if(temporary_klines)
+      show_temp_klines(sptr, temporary_klines);
+  if(temporary_ip_klines)
+      show_temp_klines(sptr, temporary_ip_klines);
+
+}
+
+/* show_temp_klines
+ *
+ * inputs	- aClient pointer, client to report to
+ *		- ConfItem pointer, the tkline list to show
+ * outputs	- NONE
+ * side effects	- NONE
+ */
+void show_temp_klines(aClient *sptr, struct ConfItem * tklist)
+{
   struct ConfItem *kill_list_ptr;
   struct ConfItem *last_list_ptr;
   struct ConfItem *tmp_list_ptr;
@@ -2768,66 +2839,62 @@ void report_temp_klines(aClient *sptr)
   char *reason;
   char *p;
 
-  if(temporary_klines)
+  kill_list_ptr = last_list_ptr = tklist;
+
+  while(kill_list_ptr)
     {
-      kill_list_ptr = last_list_ptr = temporary_klines;
-
-      while(kill_list_ptr)
+      if(kill_list_ptr->hold <= CurrentTime)        /* kline has expired */
         {
-          if(kill_list_ptr->hold <= CurrentTime)        /* kline has expired */
+          if(tklist == kill_list_ptr)
             {
-              if(temporary_klines == kill_list_ptr)
-                {
-                  /* Its pointing to first one in link list*/
-                  /* so, bypass this one, remember bad things can happen
-                     if you try to use an already freed pointer.. */
+              /* Its pointing to first one in link list*/
+              /* so, bypass this one, remember bad things can happen
+                 if you try to use an already freed pointer.. */
 
-                  temporary_klines = last_list_ptr = tmp_list_ptr =
-                    kill_list_ptr->next;
-                }
-              else
-                {
-                  /* its in the middle of the list, so link around it */
-                  tmp_list_ptr = last_list_ptr->next = kill_list_ptr->next;
-                }
-
-              free_conf(kill_list_ptr);
-              kill_list_ptr = tmp_list_ptr;
+              tklist = last_list_ptr = tmp_list_ptr = kill_list_ptr->next;
             }
           else
             {
-              if(kill_list_ptr->host)
-                host = kill_list_ptr->host;
-              else
-                host = "*";
-
-              if(kill_list_ptr->user)
-                user = kill_list_ptr->user;
-              else
-                user = "*";
-
-              if(kill_list_ptr->passwd)
-                reason = kill_list_ptr->passwd;
-              else
-                reason = "No Reason";
-
-              if(!IsAnOper(sptr))
-                {
-                  if( (p = strchr(reason,'|')) )
-                    *p = '\0';
-
-                  sendto_one(sptr,form_str(RPL_STATSKLINE), me.name,
-                             sptr->name, 'k' , host, user, reason);
-                  if(p)
-                    *p = '|';
-                }
-              else
-                sendto_one(sptr,form_str(RPL_STATSKLINE), me.name,
-                           sptr->name, 'k' , host, user, reason);
-
-              last_list_ptr = kill_list_ptr;
-              kill_list_ptr = kill_list_ptr->next;
+              /* its in the middle of the list, so link around it */
+              tmp_list_ptr = last_list_ptr->next = kill_list_ptr->next;
             }
+
+          free_conf(kill_list_ptr);
+          kill_list_ptr = tmp_list_ptr;
+        }
+      else
+        {
+          if(kill_list_ptr->host)
+            host = kill_list_ptr->host;
+          else
+            host = "*";
+
+          if(kill_list_ptr->user)
+            user = kill_list_ptr->user;
+          else
+            user = "*";
+
+          if(kill_list_ptr->passwd)
+            reason = kill_list_ptr->passwd;
+          else
+            reason = "No Reason";
+
+          if(!IsAnOper(sptr))
+            {
+              if( (p = strchr(reason,'|')) )
+                *p = '\0';
+
+              sendto_one(sptr,form_str(RPL_STATSKLINE), me.name,
+                         sptr->name, 'k' , host, user, reason);
+              if(p)
+                *p = '|';
+            }
+          else
+            sendto_one(sptr,form_str(RPL_STATSKLINE), me.name,
+                       sptr->name, 'k' , host, user, reason);
+
+          last_list_ptr = kill_list_ptr;
+          kill_list_ptr = kill_list_ptr->next;
         }
     }
 }
@@ -3310,7 +3377,7 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
                          port,
                          get_conf_class(aconf));
 
-              aconf = find_tkline(given_host,given_name);
+              aconf = find_tkline(given_host,given_name,0);
               if(aconf)
                 {
                   sendto_one(sptr, 

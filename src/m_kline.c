@@ -662,12 +662,8 @@ m_kline(aClient *cptr,
   **
   */
 
-  /*
-   * what to do if host is a legal ip, and its a temporary kline ?
-   * Don't do the CIDR conversion for now of course.
-   */
 
-  if(!temporary_kline_time && (ip_kline = is_address(host, &ip, &ip_mask)))
+  if((ip_kline = is_address(host, &ip, &ip_mask)))
      {
        /*
         * XXX - ack
@@ -730,6 +726,11 @@ m_kline(aClient *cptr,
         current_date);
       DupString(aconf->passwd, buffer );
       aconf->hold = CurrentTime + temporary_kline_time_seconds;
+      if(ip_kline)
+        {
+          aconf->ip = ip;
+          aconf->ip_mask = ip_mask;
+        }
       add_temp_kline(aconf);
       rehashed = YES;
       dline_in_progress = NO;
