@@ -213,6 +213,7 @@ void count_memory(aClient *cptr,char *nick)
   int chu = 0;          /* channel users */
   int chi = 0;          /* channel invites */
   int chb = 0;          /* channel bans */
+  int che = 0;          /* +e's */
   int wwu = 0;          /* whowas users */
   int cl = 0;           /* classes */
   int co = 0;           /* conf lines */
@@ -225,6 +226,7 @@ void count_memory(aClient *cptr,char *nick)
 
   u_long chm = 0;       /* memory used by channels */
   u_long chbm = 0;      /* memory used by channel bans */
+  u_long chem = 0;      /* +e */
   u_long lcm = 0;       /* memory used by local clients */
   u_long rcm = 0;       /* memory used by remote clients */
   u_long awm = 0;       /* memory used by aways */
@@ -314,6 +316,17 @@ void count_memory(aClient *cptr,char *nick)
         		chbm += strlen(gen_link->value.banptr->who);
         #endif /* BAN_INFO */
         }
+      for (gen_link = chptr->exceptlist; gen_link; gen_link = gen_link->next)
+      {
+        che++;
+	chem += (strlen(gen_link->value.cp)+1+sizeof(Link));
+      #ifdef BAN_INFO
+      		if (gen_link->value.banptr->banstr)
+			chem += strlen(gen_link->value.banptr->banstr);
+		if (gen_link->value.banptr->who)
+			chem += strlen(gen_link->value.banptr->who);
+      #endif
+      }
     }
 
   for (aconf = ConfigItemList; aconf; aconf = aconf->next)
@@ -357,8 +370,8 @@ void count_memory(aClient *cptr,char *nick)
   sendto_one(cptr, ":%s %d %s :Classes %d(%d)",
              me.name, RPL_STATSDEBUG, nick, cl, cl*sizeof(aClass));
 
-  sendto_one(cptr, ":%s %d %s :Channels %d(%d) Bans %d(%d)",
-             me.name, RPL_STATSDEBUG, nick, ch, chm, chb, chbm);
+  sendto_one(cptr, ":%s %d %s :Channels %d(%d) Bans %d(%d) Exceptions %d(%d)",
+             me.name, RPL_STATSDEBUG, nick, ch, chm, chb, chbm, che, chem);
   sendto_one(cptr, ":%s %d %s :Channel members %d(%d) invite %d(%d)",
              me.name, RPL_STATSDEBUG, nick, chu, chu*sizeof(Link),
              chi, chi*sizeof(Link));
