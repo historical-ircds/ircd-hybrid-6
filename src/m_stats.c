@@ -214,7 +214,11 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
           /* if(IsAnOper(sptr)) */
 
           /* Don't trust opers not on this server */
+#ifdef HIDE_SERVERS_IPS
+          if(MyClient(sptr) && IsAnOper(sptr) && !IsServer(acptr))
+#else	  
           if(MyClient(sptr) && IsAnOper(sptr))
+#endif	 
             {
               sendto_one(sptr, Lformat, me.name,
                      RPL_STATSLINKINFO, parv[0],

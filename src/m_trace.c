@@ -365,7 +365,10 @@ int m_trace(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
                        acptr->serv->user->host, now - acptr->lasttime);
           else
 #endif
-            sendto_one(sptr, form_str(RPL_TRACESERVER),
+#ifdef HIDE_SERVERS_IPS
+	    name = get_client_name(acptr, MASK_IP);
+#endif
+	    sendto_one(sptr, form_str(RPL_TRACESERVER),
                        me.name, parv[0], c_class, link_s[i],
                        link_u[i], name, *(acptr->serv->by) ?
                        acptr->serv->by : "*", "*",

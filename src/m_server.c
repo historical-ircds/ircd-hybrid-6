@@ -36,6 +36,7 @@
 #include "scache.h"      /* find_or_add */
 #include "send.h"        /* sendto_one */
 #include "struct.h"      /* bleah */
+#include "s_log.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -163,9 +164,15 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
        */
       if (IsServer(cptr))
         {
+#ifdef HIDE_SERVERS_IPS
+          sendto_realops("SERVER command from remote user %s -- %s is a hacked server",
+	                 get_client_name(sptr,MASK_IP),
+	                 get_client_name(cptr,MASK_IP));
+#else							      
           sendto_realops("SERVER command from remote user %s -- %s is a hacked server",
                           get_client_name(sptr,SHOW_IP),
                           get_client_name(cptr,SHOW_IP));
+#endif			  
         }
       else
         {
@@ -227,8 +234,15 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       if (find_conf_by_name(host, CONF_NOCONNECT_SERVER) == NULL)
         {
 #ifdef WARN_NO_NLINE
+#ifdef HIDE_SERVERS_IPS
           sendto_realops("Link %s Server %s dropped, no N: line",
-                         get_client_name(cptr, TRUE), host);
+                         get_client_name(cptr, MASK_IP), host);
+          log(L_NOTICE, "Access denied. No N line for server %s",
+	                 get_client_name(cptr, TRUE));
+#else
+          sendto_realops("Link %s Server %s dropped, no N: line",
+	                 get_client_name(cptr, TRUE), host);
+#endif			 				   
 #endif
           return exit_client(cptr, cptr, cptr, "NO N line");
         }
@@ -236,8 +250,13 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
   if (MyConnect(cptr) && (GlobalSetOptions.autoconn == 0))
     {
+#ifdef HIDE_SERVERS_IPS
+      sendto_realops("WARNING AUTOCONN is 0, Closing %s",
+                       get_client_name(cptr, MASK_IP));
+#else     
       sendto_realops("WARNING AUTOCONN is 0, Closing %s",
                  get_client_name(cptr, TRUE));
+#endif		 
       return exit_client(cptr, cptr, cptr, "AUTOCONNS off");
     }
 
@@ -257,8 +276,13 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       sendto_one(bcptr,"ERROR :Server %s already exists", host);
       if (bcptr == cptr)
       {
+#ifdef HIDE_SERVERS_IPS      
         sendto_realops("Link %s cancelled, server %s already exists",
-                   get_client_name(bcptr, TRUE), host);
+                   get_client_name(bcptr, MASK_IP), host);
+#else
+        sendto_realops("Link %s cancelled, server %s already exists",
+	                   get_client_name(bcptr, TRUE), host);
+#endif			   
         return exit_client(bcptr, bcptr, &me, "Server Exists");
       }
       /*
@@ -271,9 +295,15 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
        * 2 times in same sendto_ops(), so we have to strcpy one =(
        *  - comstud
        */
+#ifdef HIDE_SERVERS_IPS
       strcpy(nbuf, get_client_name(bcptr, TRUE));
       sendto_realops("Link %s cancelled, server %s reintroduced by %s",
-                nbuf, host, get_client_name(cptr, TRUE));
+                nbuf, host, get_client_name(cptr, MASK_IP));
+#else
+      strcpy(nbuf, get_client_name(bcptr, TRUE));
+      sendto_realops("Link %s cancelled, server %s reintroduced by %s",
+	                    nbuf, host, get_client_name(cptr, TRUE));
+#endif			    
       exit_client(bcptr, bcptr, &me, "Server Exists");
     }
 
@@ -293,8 +323,13 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
        * for a while and servers to send stuff to the wrong place.
        */
       sendto_one(cptr,"ERROR :Nickname %s already exists!", host);
+#ifdef HIDE_SERVERS_IPS
       sendto_ops("Link %s cancelled: Server/nick collision on %s",
-                 /* inpath */ get_client_name(cptr,FALSE), host);
+                 /* inpath */ get_client_name(cptr,MASK_IP), host);
+#else
+      sendto_ops("Link %s cancelled: Server/nick collision on %s",
+                /* inpath */ get_client_name(cptr,FALSE), host);
+#endif		
       return exit_client(cptr, cptr, cptr, "Nick as Server");
     }
 
@@ -319,9 +354,15 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       if ((aconf = find_conf_host(cptr->confs, host, CONF_LEAF)) &&
           (!aconf->port || (hop > aconf->port)))
         {
+#ifdef HIDE_SERVERS_IPS
+          sendto_realops("Leaf-only link %s->%s - Closing",
+	             get_client_name(cptr,  MASK_IP),
+		     aconf->host ? aconf->host : "*");
+#else		     
           sendto_realops("Leaf-only link %s->%s - Closing",
                      get_client_name(cptr,  TRUE),
                      aconf->host ? aconf->host : "*");
+#endif		     
           sendto_one(cptr, "ERROR :Leaf-only link, sorry.");
           return exit_client(cptr, cptr, cptr, "Leaf Only");
         }
@@ -329,9 +370,15 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       if (!(aconf = find_conf_host(cptr->confs, host, CONF_HUB)) ||
           (aconf->port && (hop > aconf->port)) )
         {
+#ifdef HIDE_SERVERS_IPS
           sendto_realops("Non-Hub link %s introduced %s(%s).",
                      get_client_name(cptr,  TRUE), host,
                      aconf ? (aconf->host ? aconf->host : "*") : "!");
+#else		     
+          sendto_realops("Non-Hub link %s introduced %s(%s).",
+	             get_client_name(cptr, MASK_IP), host,
+		     aconf ? (aconf->host ? aconf->host : "*") : "!");
+#endif		     
           sendto_one(cptr, "ERROR :%s has no H: line for %s.",
                      get_client_name(cptr,  TRUE), host);
           return exit_client(cptr, cptr, cptr, "Too many servers");
@@ -364,8 +411,13 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
             continue;
           if (!(aconf = bcptr->serv->nline))
             {
+#ifdef HIDE_SERVERS_IPS
+              sendto_realops("Lost N-line for %s on %s. Closing",
+	                 get_client_name(cptr, MASK_IP), host);
+#else			 
               sendto_realops("Lost N-line for %s on %s. Closing",
                          get_client_name(cptr, TRUE), host);
+#endif			 
               return exit_client(cptr, cptr, cptr, "Lost N line");
             }
           if (match(my_name_for_link(me.name, aconf), acptr->name))
@@ -376,8 +428,8 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
                          
         }
       
-      sendto_realops_flags(FLAGS_EXTERNAL, "Server %s[%s] being introduced by %s[%d hops]",
-                           acptr->name, acptr->info, sptr->name, acptr->hopcount);
+      sendto_realops_flags(FLAGS_EXTERNAL, "Server %s being introduced by %s",
+                           acptr->name, sptr->name);
       return 0;
     }
 
@@ -394,8 +446,13 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
    */
   if (!DoesTS(cptr))
     {
+#ifdef _HIDE_SERVERS_IPS
+      sendto_realops("Link %s dropped, non-TS server",
+                 get_client_name(cptr, MASK_IP));
+#else		 
       sendto_realops("Link %s dropped, non-TS server",
                  get_client_name(cptr, TRUE));
+#endif		 
       return exit_client(cptr, cptr, cptr, "Non-TS server");
     }
 

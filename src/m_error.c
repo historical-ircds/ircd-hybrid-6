@@ -111,12 +111,21 @@ int m_error(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
    */
   if (IsPerson(cptr) || IsUnknown(cptr))
     return 0;
+#if (defined SERVERHIDE) || (defined HIDE_SERVERS_IPS)
+  if (cptr == sptr)
+    sendto_realops("ERROR :from %s -- %s",
+               get_client_name(cptr, MASK_IP), para);
+  else
+    sendto_realops("ERROR :from %s via %s -- %s", sptr->name,
+               get_client_name(cptr, MASK_IP), para);
+#else	       
   if (cptr == sptr)
     sendto_realops("ERROR :from %s -- %s",
                get_client_name(cptr, FALSE), para);
   else
     sendto_realops("ERROR :from %s via %s -- %s", sptr->name,
                get_client_name(cptr,FALSE), para);
+#endif
   return 0;
 }
 

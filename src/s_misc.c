@@ -160,7 +160,7 @@ void serv_info(aClient *cptr,char *name)
        */
       if(IsAnOper(cptr))
         sendto_one(cptr, Lformat, me.name, RPL_STATSLINKINFO, name,
-#ifdef SERVERHIDE
+#if (defined SERVERHIDE) || (defined HIDE_SERVERS_IPS)
                    get_client_name(acptr, HIDEME),
 #else
                    get_client_name(acptr, TRUE),

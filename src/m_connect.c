@@ -203,7 +203,7 @@ int m_connect(struct Client* cptr, struct Client* sptr, int parc, char* parv[])
    * C:line and a valid port in the C:line
    */
   if (connect_server(aconf, sptr, 0))
-#ifdef SERVERHIDE
+#if (defined SERVERHIDE) || (defined HIDE_SERVERS_IPS)
     sendto_one(sptr, ":%s NOTICE %s :*** Connecting to %s[%s].%d",
                me.name, parv[0], "255.255.255.255", aconf->name, aconf->port);
   else
