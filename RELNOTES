@@ -1,7 +1,20 @@
-ircd-hybrid-6.3 Release Notes
----------------------------
+ircd-hybrid-6.3.1 Release Notes
+-------------------------------
 $Id$
 
+This is a minor bugfix release
+
+o Fixed missing SystemTime initializations in adns
+o Fixed a small memory leak from rehashing
+o Fixed a leak of hidden server IPs when auto connects are disabled
+o Fixed SIGTRAP handling so you can detach gdb on FreeBSD without crashing
+o Changed LUSERS to be paced by WHOIS_WAIT instead of PACE_WAIT
+
+
+
+
+ircd-hybrid-6.3 Release Notes
+-----------------------------
 There have been a number of changes done since 6.0 release.
 
 Administrator level
