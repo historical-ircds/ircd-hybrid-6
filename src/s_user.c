@@ -2060,7 +2060,7 @@ static	int	m_message(aClient *cptr,
 	    return 0;
 #endif
 #ifdef ANTI_DRONE_FLOOD
-      if(MyConnect(acptr) && drone_time)
+      if(MyConnect(acptr) && IsClient(sptr) && !IsAnOper(sptr) && drone_time)
 	{
 	  if((acptr->first_received_message_time+drone_time) < NOW)
 	    {

@@ -2,6 +2,11 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b65   8-May-1999
+* changed ANTI_DRONE_FLOOD and JUPE_CHANNEL to undeffed by default
+* servers and opers can no longer trip the drone detection
+--Rodder
+
 version hybrid-6-b64   8-May-1999
 * code clean-up...
 --Rodder

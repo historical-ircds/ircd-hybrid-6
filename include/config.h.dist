@@ -1002,14 +1002,14 @@
  * within 1 seconds. (I'm told it is usually that fast)
  * I'll do better next time, this is a Q&D -Dianora
  */
-#define ANTI_DRONE_FLOOD
+#undef ANTI_DRONE_FLOOD
 #define DEFAULT_DRONE_TIME 1
 #define DEFAULT_DRONE_COUNT 8
 
 /* JUPE_CHANNEL - jupes a channel from being joined on this server only
  * if added to Q lines e.g. Q:\#packet_channel:Tired of packets
  */
-#define JUPE_CHANNEL
+#undef JUPE_CHANNEL
 
 /* 
  * ANTI_SPAMBOT
