@@ -436,7 +436,7 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
 
       found_aconf=ptr->conf_ptr;
 
-      if( (!matches(ptr->host_piece,host_piece)) &&
+      if( (!match(ptr->host_piece,host_piece)) &&
 	  (!strcasecmp(found_aconf->user,user)) )
 	{
 	  found_aconf->status |= flags;
@@ -515,10 +515,10 @@ static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr, int flags,
     {
       if((aconf=ptr->conf_ptr))
 	{
-	  if( (!matches(ptr->host_piece,host_piece)) &&
+	  if( (!match(ptr->host_piece,host_piece)) &&
 	      (aconf->status & flags) )
 	    {
-	      if(!matches(aconf->user,user))
+	      if(!match(aconf->user,user))
 		{
 		  first_aconf = aconf;
 		  if(first_aconf->status & CONF_ELINE)
@@ -632,10 +632,10 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 	      if(pptr->conf_ptr)
 		{
 		  aconf= pptr->conf_ptr;
-		  if( (!matches(pptr->host_piece,host_piece)) &&
+		  if( (!match(pptr->host_piece,host_piece)) &&
 		      (aconf->status & flags) )
 		    {
-		      if(!matches(aconf->user,user))
+		      if(!match(aconf->user,user))
 			first_aconf = aconf;
 		    }
 		}
@@ -1120,8 +1120,8 @@ static aConfItem *look_in_unsortable_ilines(char *host,char *user)
 
   for(found_conf=unsortable_list_ilines;found_conf;found_conf=found_conf->next)
     {
-      if(!matches(found_conf->host,host) &&
-	 !matches(found_conf->user,user))
+      if(!match(found_conf->host,host) &&
+	 !match(found_conf->user,user))
 	{
 	    return(found_conf);
 	}
@@ -1146,8 +1146,8 @@ static aConfItem *look_in_unsortable_klines(char *host,char *user)
 
   for(found_conf=unsortable_list_klines;found_conf;found_conf=found_conf->next)
     {
-      if(!matches(found_conf->host,host) &&
-	 !matches(found_conf->user,user))
+      if(!match(found_conf->host,host) &&
+	 !match(found_conf->user,user))
 	return(found_conf);
     }
   return((aConfItem *)NULL);
@@ -1169,7 +1169,7 @@ static aConfItem *find_wild_card_iline(char *user)
 
   for(found_conf=wild_card_ilines;found_conf;found_conf=found_conf->next)
     {
-      if(!matches(found_conf->user,user))
+      if(!match(found_conf->user,user))
 	return(found_conf);
     }
   return((aConfItem *)NULL);

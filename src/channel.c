@@ -4090,7 +4090,7 @@ void	send_user_joins(aClient *cptr, aClient *user)
       if (*chptr->chname == '&')
 	continue;
       if ((mask = strchr(chptr->chname, ':')))
-	if (matches(++mask, cptr->name))
+	if (match(++mask, cptr->name))
 	  continue;
       clen = strlen(chptr->chname);
       if (clen > (size_t) BUFSIZE - 7 - len)

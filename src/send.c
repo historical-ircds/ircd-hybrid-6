@@ -951,9 +951,9 @@ va_dcl
 static	int	match_it(aClient *one, char *mask,int what)
 {
   if(what == MATCH_HOST)
-    return (matches(mask, one->user->host)==0);
+    return (match(mask, one->user->host)==0);
   else
-    return (matches(mask, one->user->server)==0);
+    return (match(mask, one->user->server)==0);
 }
 
 /*
@@ -1904,7 +1904,7 @@ int sendto_slaves(aClient *one,
 
 	for(aconf = u_conf; aconf; aconf= aconf->next)
 	  {
-	    if (!matches(acptr->name,aconf->name))
+	    if (!match(acptr->name,aconf->name))
 	      {
 		if(parc > 3)
 		  sendto_one(acptr,":%s %s %s %s %s :%s",

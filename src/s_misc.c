@@ -682,7 +682,7 @@ static	void recurse_send_quits(aClient *cptr,
 
   if (IsCapable(to,CAP_QS))
     {
-      if (matches(myname, sptr->name) == 0)
+      if (match(myname, sptr->name) == 0)
 	{
 	  for (acptr = sptr->serv->users; acptr; acptr = acptr->lnext)
 	    sendto_one(to, ":%s QUIT :%s", acptr->name, comment);
@@ -698,7 +698,7 @@ static	void recurse_send_quits(aClient *cptr,
 	sendto_one(to, ":%s QUIT :%s", acptr->name, comment);
       for (acptr = sptr->serv->servers; acptr; acptr = acptr->lnext)
 	recurse_send_quits(cptr, acptr, to, comment, myname);
-      if (matches(myname, sptr->name) != 0)
+      if (match(myname, sptr->name) != 0)
 	sendto_one(to, "SQUIT %s :%s", sptr->name, me.name);
     }
 }

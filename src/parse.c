@@ -40,7 +40,6 @@ static char *rcs_version = "$Id$";
 #include <strings.h>
 #endif
 
-#define match matches
 /*
  * NOTE: parse() should not be called recursively by other functions!
  */
@@ -103,7 +102,7 @@ aClient *find_userhost(char *user,
       {
 	if (!MyClient(c2ptr)) /* implies mine and a user */
 	  continue;
-	if ((!host || !matches(host, c2ptr->user->host)) &&
+	if ((!host || !match(host, c2ptr->user->host)) &&
 	    irccmp(user, c2ptr->user->username) == 0)
 	  {
 	    (*count)++;
@@ -230,7 +229,7 @@ int	parse(aClient *cptr, char *buffer, char *bufend)
       if (*sender && IsServer(cptr))
 	{
 	  from = find_client(sender, (aClient *) NULL);
-	  if (!from || matches(from->name, sender))
+	  if (!from || match(from->name, sender))
 	    from = find_server(sender, (aClient *)NULL);
 
 	  else if (!from && strchr(sender, '@'))
