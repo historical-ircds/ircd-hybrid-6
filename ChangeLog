@@ -1,3 +1,8 @@
+*** 20010726_1 by leeh
+- backport from -7
+  if someone squits *us*, use cptr->name, not cptr->host
+
+
 *** 20010722_2 by db
 - Don't show ip's on auto conns
 
