@@ -266,8 +266,6 @@ anUser *make_user(aClient *cptr)
       if( user == (anUser *)NULL)
 	outofmemory();
       user->away = NULL;
-      *user->username = '\0';		/* Initialize this crap */
-      *user->host = '\0';
       user->server = (char *)NULL;	/* scache server name */
       user->refcnt = 1;
       user->joined = 0;
@@ -307,7 +305,7 @@ aServer *make_server(aClient *cptr)
 **	Decrease user reference count by one and release block,
 **	if count reaches 0
 */
-void _free_user(anUser *user, aClient *cptr)
+void _free_user(anUser* user, aClient* cptr)
 {
   if (--user->refcnt <= 0)
     {
@@ -320,7 +318,7 @@ void _free_user(anUser *user, aClient *cptr)
 	  user->invited || user->channel)
       sendto_ops("* %#x user (%s!%s@%s) %#x %#x %#x %d %d *",
 		 cptr, cptr ? cptr->name : "<noname>",
-		 user->username, user->host, user,
+		 cptr->username, cptr->host, user,
 		 user->invited, user->channel, user->joined,
 		 user->refcnt);
 

@@ -279,12 +279,12 @@ int     m_kline(aClient *cptr,
 	 if found in original user name (non-idented) */
 
       tempuser[0] = '*';
-      if (*acptr->user->username == '~')
-	strcpy(tempuser+1, (char *)acptr->user->username+1);
+      if (*acptr->username == '~')
+	strcpy(tempuser+1, (char *)acptr->username+1);
       else
-	strcpy(tempuser+1, acptr->user->username);
+	strcpy(tempuser+1, acptr->username);
       user = tempuser;
-      host = cluster(acptr->user->host);
+      host = cluster(acptr->host);
     }
 
   if(temporary_kline_time)
@@ -508,8 +508,8 @@ int     m_kline(aClient *cptr,
   if(IsServer(sptr))
     {
       (void)ircsprintf(buffer, "#%s!%s@%s from %s K'd: %s@%s:%s\n",
-		       rcptr->name, rcptr->user->username,
-		       rcptr->user->host, sptr->name,
+		       rcptr->name, rcptr->username,
+		       rcptr->host, sptr->name,
 		       user, host,
 		       reason);
     }
@@ -517,8 +517,8 @@ int     m_kline(aClient *cptr,
 #endif
     {
       (void)ircsprintf(buffer, "#%s!%s@%s K'd: %s@%s:%s\n",
-		       sptr->name, sptr->user->username,
-		       sptr->user->host, user, host,
+		       sptr->name, sptr->username,
+		       sptr->host, user, host,
 		       reason);
     }
   
@@ -576,16 +576,16 @@ int     m_kline(aClient *cptr,
   if(IsServer(sptr))
     {
       (void)ircsprintf(buffer, "#%s!%s@%s from %s K'd: %s@%s:%s\n",
-		       rcptr->name, rcptr->user->username,
-		       rcptr->user->host, sptr->name, user, host,
+		       rcptr->name, rcptr->username,
+		       rcptr->host, sptr->name, user, host,
 		       reason);
     }
   else
 #endif
     {
       (void)ircsprintf(buffer, "#%s!%s@%s K'd: %s@%s:%s\n",
-		       sptr->name, sptr->user->username,
-		       sptr->user->host, user, host,
+		       sptr->name, sptr->username,
+		       sptr->host, user, host,
 		       reason);
     }
 
@@ -1003,8 +1003,8 @@ int     m_dline(aClient *cptr,
     }
 
   (void)ircsprintf(buffer, "#%s!%s@%s D'd: %s:%s (%s)\n",
-		   sptr->name, sptr->user->username,
-		   sptr->user->host, host,
+		   sptr->name, sptr->username,
+		   sptr->host, host,
 		   reason, current_date);
 
   if((k->comment = strdup(buffer)) == NULL)
@@ -1044,8 +1044,8 @@ int     m_dline(aClient *cptr,
     }
 
   (void)ircsprintf(buffer, "#%s!%s@%s D'd: %s:%s (%s)\n",
-		   sptr->name, sptr->user->username,
-		   sptr->user->host, host,
+		   sptr->name, sptr->username,
+		   sptr->host, host,
 		   reason, current_date);
 
   if (safe_write(sptr,parv[0],ConfigFileEntry.dlinefile,out,buffer))

@@ -48,7 +48,7 @@
 #include "dbuf.h"
 #endif
 
-#define HOSTIPLEN	15	/* Length of dotted quad form of IP	   */
+#define HOSTIPLEN	16	/* Length of dotted quad form of IP	   */
 				/* - Dianora 				   */
 #define	PASSWDLEN 	20
 #define IDLEN		12	/* this is the maximum length, not the actual
@@ -291,8 +291,6 @@ struct User
   time_t         last;
   int	         refcnt;	/* Number of times this block is referenced */
   int	         joined;	/* number of channels joined */
-  char	         username[USERLEN + 1];
-  char	         host[HOSTLEN + 1];
   char	         id[IDLEN + 1];	/* for future use *hint* */
   char*          server;	/* pointer to scached server name */
   /*
@@ -359,20 +357,43 @@ struct Client
   /* XXX - alignment? */
   short	            status;	/* Client type */
   char	            nicksent;
-  char	            name[HOSTLEN + 1]; /* Unique name of the client, 
-                                          nick or host */
-  char	            username[USERLEN + 1]; /* username for auth stuff */
+  /*
+   * client->name is the unique name for a client nick or host
+   * XXX - name only needs to be NICKLEN + 1 for clients, servers *should*
+   * be using the client->host field for unique identification, or better
+   * yet a completely different data structure.
+   */
+  char	            name[HOSTLEN + 1]; 
+  /* 
+   * client->username is the username from ident or the USER message, 
+   * If the client is idented the USER message is ignored, otherwise 
+   * the username part of the USER message is put here prefixed with a 
+   * tilde depending on the I:line, Once a client has registered, this
+   * field should be considered read-only.
+   */ 
+  char	            username[USERLEN + 1]; /* client's username */
+  /*
+   * client->host contains the resolved name or ip address
+   * as a string for the user, it may be fiddled with for oper spoofing etc.
+   * once it's changed the *real* address goes away. This should be
+   * considered a read-only field after the client has registered.
+   */
+  char	            host[HOSTLEN + 1];     /* client's hostname */
+  /*
+   * client->info for unix clients will normally contain the info from the 
+   * gcos field in /etc/passwd but anything can go here.
+   */
   char	            info[REALLEN + 1]; /* Free form additional client info */
 #ifdef FLUD
   struct SLink*     fludees;
 #endif
   /*
-  ** The following fields are allocated only for local clients
-  ** (directly connected to *this* server with a socket.
-  ** The first of them *MUST* be the "count"--it is the field
-  ** to which the allocation is tied to! *Never* refer to
-  ** these fields, if (from != self).
-  */
+   * The following fields are allocated only for local clients
+   * (directly connected to *this* server with a socket.
+   * The first of them *MUST* be the "count"--it is the field
+   * to which the allocation is tied to! *Never* refer to
+   * these fields, if (from != self).
+   */
   int	            count;	 /* Amount of data in buffer */
 #ifdef FLUD
   time_t            fludblock;
@@ -428,8 +449,22 @@ struct Client
   int		    number_of_nick_changes;
 #endif
   time_t	    last_knock;	/* don't allow knock to flood */
+  /*
+   * client->sockhost contains the ip address gotten from the socket as a
+   * string, this field should be considered read-only once the connection
+   * has been made. (set in s_bsd.c only)
+   */
+#ifdef SOCKHOST_IS_IP
+  char	            sockhost[HOSTIPLEN + 1]; /* This is the host name from the 
+                                              socket ip address as string */
+#else
   char	            sockhost[HOSTLEN + 1]; /* This is the host name from the 
-                                              socket or the resolved name */
+                                              socket ip address as string */
+#endif
+  /*
+   * XXX - there is no reason to save this, it should be checked when it's
+   * received and not stored, this is not used after registration
+   */
   char	            passwd[PASSWDLEN + 1];
   int	            caps;	/* capabilities bit-field */
 };

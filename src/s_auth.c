@@ -184,12 +184,15 @@ static void auth_dns_callback(void* vptr, struct DNSReply* reply)
     else {
       ++reply->ref_count;
       auth->client->dns_reply = reply;
+      strncpy(auth->client->host, hp->h_name, HOSTLEN);
       sendheader(auth->client, REPORT_FIN_DNS);
     }
   }
-  else
+  else {
+    strncpy(auth->client->host, auth->client->sockhost, HOSTLEN);
     sendheader(auth->client, REPORT_FAIL_DNS);
-
+  }
+  auth->client->host[HOSTLEN] = '\0';
   if (!IsDoingAuth(auth)) {
     release_auth_client(auth->client);
     unlink_auth_request(auth, &AuthIncompleteList);

@@ -838,7 +838,7 @@ match_it(const aClient *one, const char *mask, int what)
 
 {
   if(what == MATCH_HOST)
-    return match(mask, one->user->host);
+    return match(mask, one->host);
   else
     return match(mask, one->user->server);
 } /* match_it() */
@@ -1287,21 +1287,16 @@ send_operwall(aClient *from, char *type_message, char *message)
   user = from->user;
   (void)strcpy(sender, from->name);
 
-  if (*user->username) 
+  if (*from->username) 
     {
-      (void)strcat(sender, "!");
-      (void)strcat(sender, user->username);
+      strcat(sender, "!");
+      strcat(sender, from->username);
     }
 
-  if (*user->host && !MyConnect(from)) 
+  if (*from->host)
     {
-      (void)strcat(sender, "@");
-      (void)strcat(sender, user->host);
-    }
-  else if (*user->host && MyConnect(from))
-    {
-      (void)strcat(sender, "@");
-      (void)strcat(sender, from->sockhost);
+      strcat(sender, "@");
+      strcat(sender, from->host);
     }
 
   for (acptr = oper_cptr_list; acptr; acptr = acptr->next_oper_client)
@@ -1371,17 +1366,14 @@ vsendto_prefix_one(register aClient *to, register aClient *from,
 
 {
   static char sender[HOSTLEN + NICKLEN + USERLEN + 5];
-  register anUser *user;
   char *par;
   static char temp[1024];
-  int flag;
 
   par = va_arg(args, char *);
 
 /* Optimize by checking if (from && to) before everything */
   if (to && from)
     {
-      flag = 0;
       if (!MyClient(from) && IsPerson(to) && (to->from == from->from))
 	{
 	  if (IsServer(from))
@@ -1396,13 +1388,13 @@ vsendto_prefix_one(register aClient *to, register aClient *from,
 	    }
 
 	  sendto_ops("Ghosted: %s[%s@%s] from %s[%s@%s] (%s)",
-		     to->name, to->user->username, to->user->host,
-		     from->name, from->user->username, from->user->host,
+		     to->name, to->username, to->host,
+		     from->name, from->username, from->host,
 		     to->from->name);
 	  
 	  sendto_serv_butone(NULL, ":%s KILL %s :%s (%s[%s@%s] Ghosted %s)",
 			     me.name, to->name, me.name, to->name,
-			     to->user->username, to->user->host, to->from->name);
+			     to->username, to->host, to->from->name);
 
 	  to->flags |= FLAGS_KILLED;
 
@@ -1410,41 +1402,26 @@ vsendto_prefix_one(register aClient *to, register aClient *from,
 
 	  if (IsPerson(from))
 	    sendto_one(from, err_str(ERR_GHOSTEDCLIENT),
-		       me.name, from->name, to->name, to->user->username,
-		       to->user->host, to->from);
+		       me.name, from->name, to->name, to->username,
+		       to->host, to->from);
 	  
 	  return;
 	} /* if (!MyClient(from) && IsPerson(to) && (to->from == from->from)) */
       
       if (MyClient(to) && IsPerson(from) && !irccmp(par, from->name))
 	{
-	  user = from->user;
-	  (void)strcpy(sender, from->name);
+	  strcpy(sender, from->name);
 	  
-	  if (user)
+	  if (*from->username)
 	    {
-	      if (*user->username)
-		{
-		  (void)strcat(sender, "!");
-		  (void)strcat(sender, user->username);
-		}
-
-	      if (*user->host && !MyConnect(from))
-		{
-		  (void)strcat(sender, "@");
-		  (void)strcat(sender, user->host);
-		  flag = 1;
-		}
+	      strcat(sender, "!");
+	      strcat(sender, from->username);
 	    }
 
-	  /*
-	  ** flag is used instead of index(sender, '@') for speed and
-	  ** also since username/nick may have had a '@' in them. -avalon
-	  */
-	  if (!flag && MyConnect(from) && *user->host)
+	  if (*from->host)
 	    {
-	      (void)strcat(sender, "@");
-	      (void)strcat(sender, from->sockhost);
+	      strcat(sender, "@");
+	      strcat(sender, from->host);
 	    }
 	  
 	  par = sender;
@@ -1456,9 +1433,7 @@ vsendto_prefix_one(register aClient *to, register aClient *from,
    * so jump past the ":%s " after we insert our new
    * prefix
    */
-  sprintf(temp, ":%s %s",
-	  par,
-	  &pattern[4]);
+  sprintf(temp, ":%s %s", par, &pattern[4]);
 
   /*
    * temp[] is now a modified version of pattern - pattern

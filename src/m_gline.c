@@ -19,14 +19,10 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ *  $Id$
  */
-
-#ifndef lint
-static char *rcs_version = "$Id$";
-#endif
-
 #include "struct.h"
-
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
@@ -34,6 +30,11 @@ static char *rcs_version = "$Id$";
 #include "channel.h"
 #include "s_conf.h"
 #include "send.h"
+#include "h.h"
+#include "dline_conf.h"
+#include "mtrie_conf.h"
+
+#include <assert.h>
 
 #ifndef __EMX__
 #include <utmp.h> /* old slackware utmp.h defines BYTE_ORDER */
@@ -43,7 +44,6 @@ static char *rcs_version = "$Id$";
 #include <time.h>
 #endif
 #include <fcntl.h>
-#include "h.h"
 #if defined( HAVE_STRING_H )
 #include <string.h>
 #else
@@ -52,8 +52,7 @@ static char *rcs_version = "$Id$";
 #undef strchr
 #define strchr index
 #endif
-#include "dline_conf.h"
-#include "mtrie_conf.h"
+
 
 #ifdef GLINES
 
@@ -211,25 +210,15 @@ int     m_gline(aClient *cptr,
 	  return 0;
 	}
 
-      if(sptr->name)
-	oper_name = sptr->name;
-      else 
-	return 0;
-      
-      if(sptr->user && sptr->user->username)
-	oper_username = sptr->user->username;
-      else
-	return 0;
-
-      if(sptr->user && sptr->user->host)
-	oper_host = sptr->user->host;
-      else
-	return 0;
-
-      if(sptr->user && sptr->user->server)
+      if (sptr->user && sptr->user->server)
 	oper_server = sptr->user->server;
       else
 	return 0;
+
+      oper_name     = sptr->name;
+      oper_username = sptr->username;
+      oper_host     = sptr->host;
+
 
       sendto_serv_butone(NULL, ":%s GLINE %s %s %s %s %s %s :%s",
 			 me.name,
@@ -481,24 +470,24 @@ void flush_glines()
  * side effects	- none
  */
 
-aConfItem *find_gkill(aClient *cptr)
+aConfItem *find_gkill(aClient* cptr)
 {
-  char *host, *name;
+  assert(0 != cptr);
+#if 0
+  char* host;
+  char* name;
   
   if (!cptr->user)
     return 0;
 
   host = cptr->sockhost;
-  name = cptr->user->username;
+  name = cptr->username;
 
   if (strlen(host)  > (size_t) HOSTLEN ||
       (name ? strlen(name) : 0) > (size_t) HOSTLEN)
     return (0);
-  
-  if(IsElined(cptr))
-    return 0;
-
-  return(find_is_glined(host,name));
+#endif
+  return (IsElined(cptr)) ? 0 : find_is_glined(cptr->sockhost, cptr->username);
 }
 
 /*

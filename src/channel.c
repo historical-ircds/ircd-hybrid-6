@@ -250,10 +250,10 @@ static	int	add_banid(aClient *cptr, aChannel *chptr, char *banid)
     {
       ban->value.banptr->who =
 	(char *)MyMalloc(strlen(cptr->name)+
-			 strlen(cptr->user->username)+
-			 strlen(cptr->user->host)+3);
+			 strlen(cptr->username)+
+			 strlen(cptr->host)+3);
       (void)sprintf(ban->value.banptr->who, "%s!%s@%s",
-		    cptr->name, cptr->user->username, cptr->user->host);
+		    cptr->name, cptr->username, cptr->host);
     }
   else
     {
@@ -329,10 +329,10 @@ static	int	add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
     {
       ex->value.banptr->who =
 	(char *)MyMalloc(strlen(cptr->name)+
-			 strlen(cptr->user->username)+
-			 strlen(cptr->user->host)+3);
+			 strlen(cptr->username)+
+			 strlen(cptr->host)+3);
       (void)sprintf(ex->value.banptr->who, "%s!%s@%s",
-		    cptr->name, cptr->user->username, cptr->user->host);
+		    cptr->name, cptr->username, cptr->host);
     }
   else
     {
@@ -447,9 +447,9 @@ static void del_matching_exception(aClient *cptr,aChannel *chptr)
   if (!IsPerson(cptr))
     return;
 
-  strcpy(s,make_nick_user_host(cptr->name, cptr->user->username,
-			       cptr->user->host));
-  s2 = make_nick_user_host(cptr->name, cptr->user->username,
+  strcpy(s,make_nick_user_host(cptr->name, cptr->username,
+			       cptr->host));
+  s2 = make_nick_user_host(cptr->name, cptr->username,
 			   inetntoa((char *)&cptr->ip));
 
   for (ex = &(chptr->exceptlist); *ex; ex = &((*ex)->next))
@@ -514,9 +514,9 @@ static	int is_banned(aClient *cptr,aChannel *chptr)
   if (!IsPerson(cptr))
     return (0);
 
-  strcpy(s,make_nick_user_host(cptr->name, cptr->user->username,
-			       cptr->user->host));
-  s2 = make_nick_user_host(cptr->name, cptr->user->username,
+  strcpy(s,make_nick_user_host(cptr->name, cptr->username,
+			       cptr->host));
+  s2 = make_nick_user_host(cptr->name, cptr->username,
 			   inetntoa((char *)&cptr->ip));
 
   for (tmp = chptr->banlist; tmp; tmp = tmp->next)
@@ -1693,14 +1693,14 @@ static  void     set_mode(aClient *cptr,
 		{
 		  chptr->mode.mode |= MODE_JUPED;
 		  sendto_realops("%s!%s@%s juping locally Channel %s)",
-				 sptr->name, sptr->user->username,
+				 sptr->name, sptr->username,
 				 sptr->sockhost, chptr->chname);
 		}
 	      else if(whatt == MODE_DEL)
 		{
 		  chptr->mode.mode &= ~MODE_JUPED;
 		  sendto_realops("%s!%s@%s unjuping locally Channel %s)",
-				 sptr->name, sptr->user->username,
+				 sptr->name, sptr->username,
 				 sptr->sockhost, chptr->chname);
 		}
 	    }
@@ -2064,7 +2064,7 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key, int *flags)
       sendto_ops_lev(SPY_LEV,
 	     "User %s (%s@%s) is attemping to join locally juped channel %s",
 		     sptr->name,
-		     sptr->user->username, sptr->user->host,chptr->chname);
+		     sptr->username, sptr->host,chptr->chname);
       return (ERR_JUPEDCHAN);
     }
 #endif
@@ -2782,7 +2782,7 @@ int	m_join(aClient *cptr,
 		  sendto_ops_lev(SPY_LEV,
 				     "User %s (%s@%s) is a possible spambot",
 				     sptr->name,
-				     sptr->user->username, sptr->user->host);
+				     sptr->username, sptr->host);
 		  sptr->oper_warn_count_down = OPER_SPAM_COUNTDOWN;
 		}
 	      else
@@ -2881,8 +2881,8 @@ int	m_join(aClient *cptr,
                   sendto_ops_lev(SPY_LEV,
 		    "User %s (%s@%s) trying to join %s is a possible spambot",
                              sptr->name,
-                             sptr->user->username,
-			     sptr->user->host,
+                             sptr->username,
+			     sptr->host,
 			     name);	
                   sptr->oper_warn_count_down = OPER_SPAM_COUNTDOWN;
                 }
@@ -3092,7 +3092,7 @@ int	m_part(aClient *cptr,
 	    {
 	      sendto_ops_lev(SPY_LEV,"User %s (%s@%s) is a possible spambot",
 			 sptr->name,
-			 sptr->user->username, sptr->user->host);
+			 sptr->username, sptr->host);
 	      sptr->oper_warn_count_down = OPER_SPAM_COUNTDOWN;
 	    }
 	  else
@@ -3459,8 +3459,8 @@ int	m_knock(aClient *cptr,
 	ircsprintf(message,"KNOCK: %s (%s [%s@%s] has asked for an invite)",
 		   chptr->chname,
 		   sptr->name,
-		   sptr->user->username,
-		   sptr->user->host);
+		   sptr->username,
+		   sptr->host);
 	sendto_channel_type_notice(cptr, chptr, MODE_CHANOP, message);
       }
 
@@ -3478,8 +3478,8 @@ int	m_knock(aClient *cptr,
 			  chptr->chname,
 			  chptr->chname,
 			  sptr->name,
-			  sptr->user->username,
-			  sptr->user->host);
+			  sptr->username,
+			  sptr->host);
 			  */
   }
   return 0;
@@ -3722,8 +3722,8 @@ int	m_invite(aClient *cptr,
 				   chptr->chname,
 				   sptr->name,
 				   acptr->name,
-				   acptr->user->username,
-				   acptr->user->host);
+				   acptr->username,
+				   acptr->host);
 
 		  /* Note the horrible kludge here of "PRIVMSG"
 		   * in the arguments, this is to ensure that p4 in 

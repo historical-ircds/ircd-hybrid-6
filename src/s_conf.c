@@ -2516,28 +2516,33 @@ static void lookup_confhost(aConfItem* aconf)
  * -Dianora
  *
  */
-
-aConfItem *find_kill(aClient *cptr)
+aConfItem *find_kill(aClient* cptr)
 {
-  char *host, *name;
+  assert(0 != cptr);
+#if 0
+  /*
+   * this can't possibly ever happen, this this whole thing is a 
+   * waste of cpu, if either of these tests are true it's too late,
+   * we're already screwed
+   * --Bleep
+   */
+  char* host;
+  char* name;
   
   if (!cptr->user)
     return 0;
 
   host = cptr->sockhost;
-  name = cptr->user->username;
-
+  name = cptr->username;
   if (strlen(host)  > (size_t) HOSTLEN ||
       (name ? strlen(name) : 0) > (size_t) HOSTLEN)
     return (0);
-
+#endif
   /* If client is e-lined, then its not k-linable */
   /* opers get that flag automatically, normal users do not */
-
-  if (IsElined(cptr))
-    return(0);
-  
-  return(find_is_klined(host,name,cptr->ip.s_addr));
+  return (IsElined(cptr)) ? 0 : find_is_klined(cptr->host, 
+                                               cptr->username, 
+                                               cptr->ip.s_addr);
 }
 
 /*

@@ -852,7 +852,7 @@ static void	sendnick_TS( aClient *cptr, aClient *acptr)
 
       sendto_one(cptr, "NICK %s %d %ld %s %s %s %s :%s", acptr->name, 
 		 acptr->hopcount + 1, acptr->tsinfo, ubuf,
-		 acptr->user->username, acptr->user->host,
+		 acptr->username, acptr->host,
 		 acptr->user->server, acptr->info);
     }
 }
@@ -1288,8 +1288,8 @@ int	m_links(aClient *cptr,
     sendto_realops_lev(SPY_LEV,
 		       "LINKS '%s' requested by %s (%s@%s) [%s]",
 		       mask?clean_mask:"",
-		       sptr->name, sptr->user->username,
-		       sptr->user->host, sptr->user->server);
+		       sptr->name, sptr->username,
+		       sptr->host, sptr->user->server);
   
   for (acptr = GlobalClientList, collapse(mask); acptr; acptr = acptr->next) 
     {
@@ -1791,7 +1791,7 @@ int	m_stats(aClient *cptr,
 #ifdef STATS_NOTICE
   if (valid_stats)
     sendto_realops_lev(SPY_LEV, "STATS %c requested by %s (%s@%s) [%s]", stat,
-		       sptr->name, sptr->user->username, sptr->user->host,
+		       sptr->name, sptr->username, sptr->host,
 		       sptr->user->server);
 #endif
   return 0;
@@ -2507,7 +2507,7 @@ int	m_admin(aClient *cptr,
 
   if (IsPerson(sptr))
     sendto_realops_lev(SPY_LEV, "ADMIN requested by %s (%s@%s) [%s]", sptr->name,
-		       sptr->user->username, sptr->user->host, sptr->user->server);
+		       sptr->username, sptr->host, sptr->user->server);
   if ((aconf = find_admin()))
     {
       sendto_one(sptr, form_str(RPL_ADMINME),
@@ -2647,7 +2647,7 @@ int   m_set(aClient *cptr,
 		}
 	      MAXCLIENTS = new_value;
 	      sendto_realops("%s!%s@%s set new MAXCLIENTS to %d (%d current)",
-			     parv[0], sptr->user->username, sptr->sockhost, MAXCLIENTS, Count.local);
+			     parv[0], sptr->username, sptr->sockhost, MAXCLIENTS, Count.local);
 	      return 0;
 	    }
 	  sendto_one(sptr, ":%s NOTICE %s :Current Maxclients = %d (%d)",
@@ -3066,7 +3066,7 @@ int   m_htm(aClient *cptr,
 	      sendto_one(sptr, ":%s NOTICE %s :NEW Max rate = %dk/s. Current = %.1fk/s",
 			 me.name, parv[0], LRV, currlife);
 	      sendto_realops("%s!%s@%s set new HTM rate to %dk/s (%.1fk/s current)",
-			     parv[0], sptr->user->username, sptr->sockhost,
+			     parv[0], sptr->username, sptr->sockhost,
 			     LRV, currlife);
 	    }
 	  else 
@@ -3079,7 +3079,7 @@ int   m_htm(aClient *cptr,
               LIFESUX = 1;
               sendto_one(sptr, ":%s NOTICE %s :HTM is now ON.", me.name, parv[0]);
               sendto_ops("Entering high-traffic mode: Forced by %s!%s@%s",
-			 parv[0], sptr->user->username, sptr->sockhost);
+			 parv[0], sptr->username, sptr->sockhost);
 	      LCF = 30;	/* 30s */
 	    }
 	  else if (!strcasecmp(command,"OFF"))
@@ -3088,7 +3088,7 @@ int   m_htm(aClient *cptr,
 	      LCF = LOADCFREQ;
               sendto_one(sptr, ":%s NOTICE %s :HTM is now OFF.", me.name, parv[0]);
               sendto_ops("Resuming standard operation: Forced by %s!%s@%s",
-			 parv[0], sptr->user->username, sptr->sockhost);
+			 parv[0], sptr->username, sptr->sockhost);
             }
           else if (!strcasecmp(command,"QUIET"))
             {
@@ -3386,7 +3386,7 @@ int	m_trace(aClient *cptr,
 
   if(MyClient(sptr))
     sendto_realops_lev(SPY_LEV, "trace requested by %s (%s@%s) [%s]",
-		       sptr->name, sptr->user->username, sptr->user->host,
+		       sptr->name, sptr->username, sptr->host,
 		       sptr->user->server);
 
 
@@ -3542,6 +3542,7 @@ int	m_trace(aClient *cptr,
 	    }
 	  break;
 	case STAT_SERVER:
+#if 0
 	  if (acptr->serv->user)
 	    sendto_one(sptr, form_str(RPL_TRACESERVER),
 		       me.name, parv[0], class, link_s[i],
@@ -3549,6 +3550,7 @@ int	m_trace(aClient *cptr,
 		       acptr->serv->user->username,
 		       acptr->serv->user->host, now - acptr->lasttime);
 	  else
+#endif
 	    sendto_one(sptr, form_str(RPL_TRACESERVER),
 		       me.name, parv[0], class, link_s[i],
 		       link_u[i], name, *(acptr->serv->by) ?
@@ -3653,7 +3655,7 @@ int	m_ltrace(aClient *cptr,
 
   if(MyClient(sptr))
     sendto_realops_lev(SPY_LEV, "ltrace requested by %s (%s@%s) [%s]",
-		       sptr->name, sptr->user->username, sptr->user->host,
+		       sptr->name, sptr->username, sptr->host,
 		       sptr->user->server);
 
 
@@ -3730,6 +3732,7 @@ int	m_ltrace(aClient *cptr,
 	    }
 	  break;
 	case STAT_SERVER:
+#if 0
 	  if (acptr->serv->user)
 	    sendto_one(sptr, form_str(RPL_TRACESERVER),
 		       me.name, parv[0], class, link_s[i],
@@ -3737,6 +3740,7 @@ int	m_ltrace(aClient *cptr,
 		       acptr->serv->user->username,
 		       acptr->serv->user->host, now - acptr->lasttime);
 	  else
+#endif
 	    sendto_one(sptr, form_str(RPL_TRACESERVER),
 		       me.name, parv[0], class, link_s[i],
 		       link_u[i], name, *(acptr->serv->by) ?
@@ -3815,7 +3819,7 @@ int	m_motd(aClient *cptr,
 #endif
 
   sendto_realops_lev(SPY_LEV, "motd requested by %s (%s@%s) [%s]",
-		     sptr->name, sptr->user->username, sptr->user->host,
+		     sptr->name, sptr->username, sptr->host,
 		     sptr->user->server);
 
   return(send_motd(cptr,sptr,parc,parv,motd_ptr));

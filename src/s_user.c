@@ -59,8 +59,8 @@ extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 static int do_user (char *, aClient *, aClient*, char *, char *, char *,
                      char *);
 
-static int valid_hostname( anUser *);
-static int valid_username( anUser *);
+static int valid_hostname(const char* hostname);
+static int valid_username(const char* username);
 static void report_and_set_user_flags( aClient *, aConfItem * );
 static int tell_user_off(aClient *,char **);
 
@@ -411,23 +411,21 @@ static	int do_nick_name(char *nick)
 
 #define MAX_REASON 80
 
-static	int	register_user(aClient *cptr,
-			      aClient *sptr,
-			      char *nick,
-			      char *username)
+static int register_user(aClient *cptr, aClient *sptr, 
+                         char *nick, char *username)
 {
-  aConfItem *aconf;
-  char	*parv[3];
-  static  char ubuf[12];
-  short	oldstatus = sptr->status;
-  anUser *user = sptr->user;
-  char *reason;
+  aConfItem*  aconf;
+  char*       parv[3];
+  static char ubuf[12];
+  short	      oldstatus = sptr->status;
+  anUser*     user = sptr->user;
+  char*       reason;
 #ifdef BOTCHECK
-  int	isbot;
-  char	bottemp[HOSTLEN + 1];
-  char  *type_of_bot;
+  int	      isbot;
+  char	      bottemp[HOSTLEN + 1];
+  char*       type_of_bot;
 #endif
-  char tmpstr2[512];
+  char        tmpstr2[512];
 
   user->last = timeofday;
   parv[0] = sptr->name;
@@ -437,13 +435,13 @@ static	int	register_user(aClient *cptr,
   if(strlen(username) > USERLEN)
     username[USERLEN] = '\0';
 
-  reason = (char *)NULL;
+  reason = NULL;
 
-#define NOT_AUTHORIZED (-1)
-#define SOCKET_ERROR (-2)
-#define I_LINE_FULL (-3)
-#define I_LINE_FULL2 (-4)
-#define BANNED_CLIENT (-5)
+#define NOT_AUTHORIZED  (-1)
+#define SOCKET_ERROR    (-2)
+#define I_LINE_FULL     (-3)
+#define I_LINE_FULL2    (-4)
+#define BANNED_CLIENT   (-5)
 
   if (MyConnect(sptr))
     {
@@ -497,23 +495,22 @@ static	int	register_user(aClient *cptr,
 
 	case BANNED_CLIENT:
 	  {
-	    if(sptr->user)
+	    if (!IsGotId(sptr))
 	      {
-		if (IsNeedId(sptr) && !IsGotId(sptr))
+		if (IsNeedId(sptr))
 		  {
-		    *user->username = '~';
-		    strncpy(&user->username[1], username, USERLEN);
-		    user->username[USERLEN] = '\0';
+		    *sptr->username = '~';
+		    strncpy(&sptr->username[1], username, USERLEN);
 		  }
-		else
-		  (void)strncpy(user->username, username, USERLEN);
-	      }
+	        else
+	          strncpy(sptr->username, username, USERLEN);
+ 	        sptr->username[USERLEN] = '\0';
+              }
 
-	    if( tell_user_off( sptr, &reason ))
+	    if ( tell_user_off( sptr, &reason ))
 	      {
 		ircstp->is_ref++;
-		return exit_client(cptr, sptr, &me,
-				   "Banned" );
+		return exit_client(cptr, sptr, &me, "Banned" );
 	      }
 	    else
 	      return 0;
@@ -528,53 +525,42 @@ static	int	register_user(aClient *cptr,
       /*
        * Need to save this now, before its clobbered
        */
-      strncpyzt(bottemp, user->host, HOSTLEN);
+      strncpyzt(bottemp, sptr->host, HOSTLEN);
 #endif
-      strncpyzt(user->host, sptr->sockhost, HOSTLEN);
+      /* strncpyzt(user->host, sptr->sockhost, HOSTLEN); */
 
-      if(!valid_hostname(user))
+      if(!valid_hostname(sptr->host))
 	{
-	  sendto_realops(
-			 "Invalid hostname for %s, dumping user %s",
+	  sendto_realops("Invalid hostname for %s, dumping user %s",
 			 inetntoa((char *)&sptr->ip), sptr->name);
 	  ircstp->is_ref++;
 	  return exit_client(cptr, sptr, &me, "Invalid hostname");
 	}
 
       aconf = sptr->confs->value.aconf;
-      if(aconf)
-	{
-	  if (IsConfDoIdentd(aconf) && !IsGotId(sptr))
-	    {
-	      char	temp[USERLEN + 1];
-	  
-	      if(IsNeedIdentd(aconf))
-		{
-		  ircstp->is_ref++;
-		  sendto_one(sptr,
- ":%s NOTICE %s :*** Notice -- You need to install identd to use this server",
-			     me.name, cptr->name);
-		  return exit_client(cptr, sptr, &me, "Install identd");
-		}
-
-	      if(IsNoTilde(aconf))
-		{
-		  strncpyzt(user->username, sptr->username, USERLEN + 1);
-		}
-	      else
-		{
-		  strncpyzt(temp, username, USERLEN + 1);
-		  *user->username = '~';
-		  strncpy(&user->username[1], temp, USERLEN);
-		  user->username[USERLEN] = '\0';
-		}
-	    }
-	  else
-	    strncpyzt(user->username, username, USERLEN+1);
-	}
-      else /* HOW did it get this far???? */
+      if (!aconf)
 	return exit_client(cptr, sptr, &me, "*** Not Authorized");
-
+      if (!IsGotId(sptr))
+	{
+          if (IsNeedIdentd(aconf))
+            {
+	      ircstp->is_ref++;
+	      sendto_one(sptr,
+ ":%s NOTICE %s :*** Notice -- You need to install identd to use this server",
+                         me.name, cptr->name);
+		  return exit_client(cptr, sptr, &me, "Install identd");
+	     }
+	   if (IsNoTilde(aconf))
+	     {
+	        strncpyzt(sptr->username, username, USERLEN + 1);
+             }
+           else
+             {
+                *sptr->username = '~';
+                strncpy(&sptr->username[1], username, USERLEN - 1);
+                sptr->username[USERLEN] = '\0';
+             }
+	}
 
       /* password check */
       if (!BadPtr(aconf->passwd) &&
@@ -625,7 +611,7 @@ static	int	register_user(aClient *cptr,
 	    {
 	      sendto_realops_lev(CCONN_LEV,
 				 "Possible %s: %s (%s@%s) [B-lined]",
-				 type_of_bot, nick, user, user->host);
+				 type_of_bot, nick, user, sptr->host);
 	    }
 	  else
 	    {
@@ -639,17 +625,16 @@ static	int	register_user(aClient *cptr,
       /* End of botcheck */
 
       if (oldstatus == STAT_MASTER && MyConnect(sptr))
-	(void)m_oper(&me, sptr, 1, parv);
+	m_oper(&me, sptr, 1, parv);
 
       /* valid user name check */
 
-      if ( !valid_username(user) )
+      if (!valid_username(sptr->username))
 	{
 	  sendto_realops_lev(REJ_LEV,"Invalid username: %s (%s@%s)",
-			     nick, user->username, user->host);
+			     nick, sptr->username, sptr->host);
 	  ircstp->is_ref++;
-	  (void)ircsprintf(tmpstr2, "Invalid username [%s]",
-			   user->username);
+	  ircsprintf(tmpstr2, "Invalid username [%s]", sptr->username);
 	  return exit_client(cptr, sptr, &me, tmpstr2);
 	}
       /* end of valid user name check */
@@ -684,7 +669,7 @@ static	int	register_user(aClient *cptr,
 				   get_client_name(cptr, FALSE));
 	    }
 
-	  if((find_q_line(nick,user->username,user->host)))
+	  if((find_q_line(nick, sptr->username, sptr->host)))
 	    {
 	      sendto_realops_lev(REJ_LEV,
 				 "Quarantined nick [%s], dumping user %s",
@@ -698,9 +683,7 @@ static	int	register_user(aClient *cptr,
 
       sendto_realops_lev(CCONN_LEV,
 			 "Client connecting: %s (%s@%s) [%s] {%d}",
-			 nick,
-			 user->username,
-			 user->host,
+			 nick, sptr->username, sptr->host,
 			 inetntoa((char *)&sptr->ip),
 			 get_client_class(sptr));
 
@@ -713,7 +696,7 @@ static	int	register_user(aClient *cptr,
 	}
     }
   else
-    strncpyzt(user->username, username, USERLEN+1);
+    strncpyzt(sptr->username, username, USERLEN + 1);
 
   SetClient(sptr);
 
@@ -757,7 +740,7 @@ static	int	register_user(aClient *cptr,
       sendto_one(sptr, rpl_str(RPL_CREATED),me.name,nick,creation);
       sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, parv[0],
 		 me.name, version);
-      (void)show_lusers(sptr, sptr, 1, parv);
+      show_lusers(sptr, sptr, 1, parv);
       
       sendto_one(sptr,"NOTICE %s :*** Notice -- motd was last changed at %s",
 		 nick, ConfigFileEntry.motd_last_changed_date);
@@ -810,8 +793,8 @@ static	int	register_user(aClient *cptr,
 	{
 	  sendto_realops_lev(DEBUG_LEV, 
 			     "Bad User [%s] :%s USER %s@%s %s, != %s[%s]",
-			     cptr->name, nick, user->username,
-			     user->host, user->server,
+			     cptr->name, nick, sptr->username,
+			     sptr->host, user->server,
 			     acptr->name, acptr->from->name);
 	  sendto_one(cptr,
 		     ":%s KILL %s :%s (%s != %s[%s] USER from wrong direction)",
@@ -832,11 +815,10 @@ static	int	register_user(aClient *cptr,
 	  sendto_one(cptr,
 		     ":%s KILL %s :%s GHOST (no server %s on the net)",
 		     me.name,
-			  sptr->name, me.name, user->server);
+		     sptr->name, me.name, user->server);
 	  sendto_realops("No server %s for user %s[%s@%s] from %s",
-			       user->server,
-			  sptr->name, user->username,
-			  user->host, sptr->from->name);
+		          user->server, sptr->name, sptr->username,
+			  sptr->host, sptr->from->name);
 	  sptr->flags |= FLAGS_KILLED;
 	  return exit_client(sptr, sptr, &me, "Ghosted Client");
 	}
@@ -872,7 +854,7 @@ static	int	register_user(aClient *cptr,
   
   sendto_serv_butone(cptr, "NICK %s %d %ld %s %s %s %s :%s",
 		     nick, sptr->hopcount+1, sptr->tsinfo, ubuf,
-		     user->username, user->host, user->server,
+		     sptr->username, sptr->host, user->server,
 		     sptr->info);
   if (ubuf[1])
     send_umode_out(cptr, sptr, 0);
@@ -886,14 +868,13 @@ static	int	register_user(aClient *cptr,
  * Side effects	- NONE
  */
 
-static int valid_hostname(anUser *user)
+static int valid_hostname(const char* hostname)
 {
   int dots;
-  unsigned char *p;
+  const unsigned char *p = (const unsigned char*) hostname;
   int bad_dns;
 
   dots = 0;
-  p = user->host;
   bad_dns = NO;
   while(*p)
     {
@@ -937,11 +918,9 @@ static int valid_hostname(anUser *user)
  * reject any odd control characters names.
  */
 
-static int valid_username( anUser *user )
+static int valid_username(const char* username)
 {
-  unsigned char *p;
-
-  p = (unsigned char *) user->username;
+  const unsigned char *p = (const unsigned char*) username;
 
   while(*p)
     {
@@ -962,7 +941,7 @@ static int valid_username( anUser *user )
    * -Dianora
    */
   
-  p = user->username;
+  p = username;
 
   /* ignored unidented */
 
@@ -1199,9 +1178,7 @@ int	m_nick(aClient *cptr,
 
   if(MyConnect(sptr) && !IsServer(sptr) &&
      !IsAnOper(sptr) && sptr->user &&
-     find_q_line(nick,
-		 sptr->username,
-		 sptr->user->host)) 
+     find_q_line(nick, sptr->username, sptr->host)) 
     {
       sendto_realops_lev(REJ_LEV,
 			 "Quarantined nick [%s], dumping user %s",
@@ -1405,8 +1382,8 @@ int	m_nick(aClient *cptr,
       else
 	{
 	  sameuser =  fromTS && (acptr->user) &&
-	    irccmp(acptr->user->username, parv[5]) == 0 &&
-	    irccmp(acptr->user->host, parv[6]) == 0;
+	    irccmp(acptr->username, parv[5]) == 0 &&
+	    irccmp(acptr->host, parv[6]) == 0;
 	  if ((sameuser && newts < acptr->tsinfo) ||
 	      (!sameuser && newts > acptr->tsinfo))
 	    return 0;
@@ -1476,9 +1453,9 @@ int	m_nick(aClient *cptr,
     }
   else
     {
-      sameuser = irccmp(acptr->user->username,
-		       sptr->user->username) == 0 &&
-	irccmp(acptr->user->host, sptr->user->host) == 0;
+      sameuser = irccmp(acptr->username,
+		       sptr->username) == 0 &&
+	irccmp(acptr->host, sptr->host) == 0;
       if ((sameuser && newts < acptr->tsinfo) ||
 	  (!sameuser && newts > acptr->tsinfo))
 	{
@@ -1609,8 +1586,8 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
 #endif
 	      sendto_realops_lev(NCHANGE_LEV,
 				 "Nick change: From %s to %s [%s@%s]",
-				 parv[0], nick, sptr->user->username,
-				 sptr->user->host);
+				 parv[0], nick, sptr->username,
+				 sptr->host);
 
 	      sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
 	      if (sptr->user)
@@ -1662,7 +1639,7 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
 	  ** may reject the client and call exit_client for it
 	  ** --must test this and exit m_nick too!!!
 	  */
-	    if (register_user(cptr, sptr, nick, sptr->user->username)
+	    if (register_user(cptr, sptr, nick, sptr->username)
 		== FLUSH_BUFFER)
 	      return FLUSH_BUFFER;
 	}
@@ -1900,8 +1877,8 @@ static	int	m_message(aClient *cptr,
 		    {
 		      sendto_ops_lev(REJ_LEV,
 			     "Possible Drone Flooder %s [%s@%s] on %s target: %s",
-				     sptr->name, sptr->user->username,
-				     sptr->user->host,
+				     sptr->name, sptr->username,
+				     sptr->host,
 				     sptr->user->server, acptr->name);
 		      acptr->drone_noticed = 1;
 		    }
@@ -2144,8 +2121,8 @@ static	void	do_who(aClient *sptr,
     }
   *p = '\0';
   sendto_one(sptr, rpl_str(RPL_WHOREPLY), me.name, sptr->name,
-	     (repchan) ? (repchan->chname) : "*", acptr->user->username,
-	     acptr->user->host, acptr->user->server, acptr->name,
+	     (repchan) ? (repchan->chname) : "*", acptr->username,
+	     acptr->host, acptr->user->server, acptr->name,
 	     status, acptr->hopcount, acptr->info);
 }
 
@@ -2291,8 +2268,8 @@ int	m_who(aClient *cptr,
       if (showperson &&
 	  (!mask ||
 	   match(mask, acptr->name) ||
-	   match(mask, acptr->user->username) ||
-	   match(mask, acptr->user->host) ||
+	   match(mask, acptr->username) ||
+	   match(mask, acptr->host) ||
 	   match(mask, acptr->user->server) ||
 	   match(mask, acptr->info)))
 	{
@@ -2330,8 +2307,6 @@ int	m_whois(aClient *cptr,
     0,		/* last */
     1,      	/* refcount */
     0,		/* joined */
-    "<Unknown>",	/* user */
-    "<Unknown>",	/* host */
     "<Unknown>"		/* server */
   };
   Link	*lp;
@@ -2433,7 +2408,7 @@ int	m_whois(aClient *cptr,
 	  
 	  sendto_one(sptr, rpl_str(RPL_WHOISUSER), me.name,
 		     parv[0], name,
-		     user->username, user->host, acptr->info);
+		     acptr->username, acptr->host, acptr->info);
 
 	  mlen = strlen(me.name) + strlen(parv[0]) + 6 +
 	    strlen(name);
@@ -2486,8 +2461,8 @@ int	m_whois(aClient *cptr,
 	      (MyConnect(sptr)) && (IsPerson(sptr)) && (acptr != sptr))
 	    sendto_one(acptr,
 		       ":%s NOTICE %s :*** Notice -- %s (%s@%s) is doing a /whois on you.",
-		       me.name, acptr->name, parv[0], sptr->user->username,
-		       sptr->user->host);
+		       me.name, acptr->name, parv[0], sptr->username,
+		       sptr->host);
 #endif /* #ifdef WHOIS_NOTICE */
 
 
@@ -2559,7 +2534,7 @@ int	m_whois(aClient *cptr,
 	  
 	  sendto_one(sptr, rpl_str(RPL_WHOISUSER), me.name,
 		     parv[0], name,
-		     user->username, user->host, acptr->info);
+		     acptr->username, acptr->host, acptr->info);
 	  found = 1;
 	  mlen = strlen(me.name) + strlen(parv[0]) + 6 +
 	    strlen(name);
@@ -2612,8 +2587,8 @@ int	m_whois(aClient *cptr,
 	      (MyConnect(sptr)) && (IsPerson(sptr)) && (acptr != sptr))
 	    sendto_one(acptr,
 		       ":%s NOTICE %s :*** Notice -- %s (%s@%s) is doing a /whois on you.",
-		       me.name, acptr->name, parv[0], sptr->user->username,
-		       sptr->user->host);
+		       me.name, acptr->name, parv[0], sptr->username,
+		       sptr->host);
 #endif /* #ifdef WHOIS_NOTICE */
 
 
@@ -2681,15 +2656,10 @@ int	m_user(aClient *cptr,
 /*
 ** do_user
 */
-static int do_user(char *nick,
-		aClient *cptr,
-		aClient *sptr,
-		char *username,
-		char *host,
-		char *server,
-		char *realname)
+static int do_user(char *nick, aClient *cptr, aClient *sptr,
+		   char *username, char *host, char *server, char *realname)
 {
-  anUser	*user;
+  anUser* user;
 
   long oflags;
 
@@ -2699,7 +2669,10 @@ static int do_user(char *nick,
   if (!MyConnect(sptr))
     {
       user->server = find_or_add(server);
-      strncpyzt(user->host, host, sizeof(user->host));
+      /* 
+       * don't take the client's word for it ever
+       * strncpyzt(user->host, host, sizeof(user->host)); 
+       */
     }
   else
     {
@@ -2715,7 +2688,7 @@ static int do_user(char *nick,
       sptr->flags |= (UFLAGS & atoi(host));
       if (!(oflags & FLAGS_INVISIBLE) && IsInvisible(sptr))
 	Count.invisi++;
-      strncpyzt(user->host, host, sizeof(user->host));
+      /* strncpyzt(user->host, host, sizeof(user->host)); */
       user->server = me.name;
     }
   strncpyzt(sptr->info, realname, sizeof(sptr->info));
@@ -2724,12 +2697,14 @@ static int do_user(char *nick,
     return register_user(cptr, sptr, sptr->name, username);
   else
     {
-      if (IsGotId(sptr))
-	strncpy(sptr->user->username, sptr->username, USERLEN);
-      else
-	strncpy(sptr->user->username, username, USERLEN);
-
-      sptr->user->username[USERLEN] = '\0';
+      if (!IsGotId(sptr)) 
+        {
+          /*
+           * save the username in the client
+           */
+          strncpy(sptr->username, username, USERLEN);
+          sptr->username[USERLEN] = '\0';
+        }
     }
   return 0;
 }
@@ -3181,10 +3156,10 @@ int	m_oper(aClient *cptr,
 #if defined(FAILED_OPER_NOTICE) && defined(SHOW_FAILED_OPER_ID)
 #ifdef SHOW_FAILED_OPER_PASSWD
       sendto_realops("Failed OPER attempt [%s(%s)] - identity mismatch: %s [%s@%s]",
-      	name, password, sptr->name, sptr->user->username, sptr->user->host);
+      	name, password, sptr->name, sptr->username, sptr->host);
 #else
       sendto_realops("Failed OPER attempt - host mismatch by %s (%s@%s)",
-		     parv[0], sptr->user->username, sptr->sockhost);
+		     parv[0], sptr->username, sptr->sockhost);
 #endif /* SHOW_FAILED_OPER_PASSWD */
 #endif /* FAILED_OPER_NOTICE && SHOW_FAILED_OPER_ID */
       return 0;
@@ -3269,7 +3244,7 @@ int	m_oper(aClient *cptr,
 #else
       sendto_ops("%s (%s@%s) is now operator (%c)", parv[0],
 #endif /* CUSTOM_ERR */
-		 sptr->user->username, sptr->sockhost,
+		 sptr->username, sptr->sockhost,
 		 IsOper(sptr) ? 'O' : 'o');
       send_umode_out(cptr, sptr, old);
       sendto_one(sptr, rpl_str(RPL_YOUREOPER), me.name, parv[0]);
@@ -3287,7 +3262,7 @@ int	m_oper(aClient *cptr,
 #if defined(USE_SYSLOG) && defined(SYSLOG_OPER)
 	syslog(LOG_INFO, "OPER (%s) (%s) by (%s!%s@%s)",
 	       name, encr,
-	       parv[0], sptr->user->username, sptr->sockhost);
+	       parv[0], sptr->username, sptr->sockhost);
 #endif
 #ifdef FNAME_OPERLOG
 	{
@@ -3306,7 +3281,7 @@ int	m_oper(aClient *cptr,
 	      /* (void)alarm(0); */
 	      (void)ircsprintf(buf, "%s OPER (%s) (%s) by (%s!%s@%s)\n",
 			       myctime(timeofday), name, encr,
-			       parv[0], sptr->user->username,
+			       parv[0], sptr->username,
 			       sptr->sockhost);
 	      (void)write(logfile, buf, strlen(buf));
 	      (void)close(logfile);
@@ -3321,10 +3296,10 @@ int	m_oper(aClient *cptr,
 #ifdef FAILED_OPER_NOTICE
 #ifdef SHOW_FAILED_OPER_PASSWD
       sendto_realops("Failed OPER attempt [%s(%s)] - passwd mismatch: %s [%s@%s]",
-      	name, password, sptr->name, sptr->user->username, sptr->user->host);
+      	name, password, sptr->name, sptr->username, sptr->host);
 #else
       sendto_realops("Failed OPER attempt by %s (%s@%s)",
-		     parv[0], sptr->user->username, sptr->sockhost);
+		     parv[0], sptr->username, sptr->sockhost);
 #endif /* SHOW_FAILED_OPER_PASSWD */
 #endif
     }
@@ -3423,8 +3398,8 @@ int	m_userhost(aClient *cptr,
 			 acptr->name,
 			 IsAnOper(acptr) ? "*" : "",
 			 (acptr->user->away) ? '-' : '+',
-			 acptr->user->username,
-			 acptr->user->host);
+			 acptr->username,
+			 acptr->host);
 	
 	(void)strncat(buf, buf2, sizeof(buf) - len);
 	len += strlen(buf2);
@@ -3478,7 +3453,7 @@ int     m_usrip(aClient *cptr,
 			     acptr->name,
 			     IsAnOper(acptr) ? "*" : "",
 			     (acptr->user->away) ? '-' : '+',
-			     acptr->user->username,
+			     acptr->username,
 			     inetntoa((char *)&acptr->ip));
 	  }
 	else
@@ -3488,13 +3463,13 @@ int     m_usrip(aClient *cptr,
 				acptr->name,
 				IsAnOper(acptr) ? "*" : "",
 				(acptr->user->away) ? '-' : '+',
-				acptr->user->username);
+				acptr->username);
 	    else
 	      (void)ircsprintf(buf2, "%s%s=%c%s@%s",
 			       acptr->name,
 			       IsAnOper(acptr) ? "*" : "",
 			       (acptr->user->away) ? '-' : '+',
-			       acptr->user->username,
+			       acptr->username,
 			       inetntoa((char *)&acptr->ip));
 	  }
 
@@ -3902,7 +3877,7 @@ static void announce_fluder(
     fludee = chptr->chname;
 
   sendto_ops_lev(REJ_LEV, "Flooder %s [%s@%s] on %s target: %s",
-		 fluder->name, fluder->user->username, fluder->user->host,
+		 fluder->name, fluder->username, fluder->host,
 		 fluder->user->server, fludee);
 }
 

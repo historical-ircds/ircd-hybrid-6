@@ -103,8 +103,8 @@ aClient *find_userhost(char *user,
       {
 	if (!MyClient(c2ptr)) /* implies mine and a user */
 	  continue;
-	if ((!host || match(host, c2ptr->user->host)) &&
-	    irccmp(user, c2ptr->user->username) == 0)
+	if ((!host || match(host, c2ptr->host)) &&
+	    irccmp(user, c2ptr->username) == 0)
 	  {
 	    (*count)++;
 	    res = c2ptr;
@@ -665,7 +665,7 @@ static	int	cancel_clients(aClient *cptr,
       if (IsClient(cptr))
 	sendto_realops_lev(DEBUG_LEV,
 			   "Would have dropped client %s (%s@%s) [%s from %s]",
-			   cptr->name, cptr->user->username, cptr->user->host,
+			   cptr->name, cptr->username, cptr->host,
 			   cptr->user->server, cptr->from->name);
       return -1;
 
@@ -689,7 +689,7 @@ static	int	cancel_clients(aClient *cptr,
 	if (sptr->user)
 	  sendto_realops_lev(DEBUG_LEV,
 	      "Message for %s[%s@%s!%s] from %s (TS, ignored)",
-			     sptr->name, sptr->user->username, sptr->user->host,
+			     sptr->name, sptr->username, sptr->host,
 			   sptr->from->name, get_client_name(cptr, TRUE));
 	return 0;
       }
@@ -699,7 +699,7 @@ static	int	cancel_clients(aClient *cptr,
 	  {
 	    sendto_realops_lev(DEBUG_LEV,
 			     "Message for %s[%s@%s!%s] from %s",
-			   sptr->name, sptr->user->username, sptr->user->host,
+			   sptr->name, sptr->username, sptr->host,
 			   sptr->from->name, get_client_name(cptr, TRUE));
           }
 	sendto_serv_butone(NULL,
