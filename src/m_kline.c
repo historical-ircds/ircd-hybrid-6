@@ -684,7 +684,7 @@ m_kline(aClient *cptr,
     }
 
 #ifdef NON_REDUNDANT_KLINES
-  if( (aconf = find_matching_mtrie_conf(host,user,(unsigned long)ip)) )
+  if( (aconf = is_klined(host,user,(unsigned long)ip)) )
      {
        char *nrkreason;
 

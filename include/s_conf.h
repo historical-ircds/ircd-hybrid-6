@@ -241,6 +241,9 @@ extern char *oper_privs_as_string(struct Client *, int);
 extern int rehash_dump(struct Client *);
 extern int find_q_line(char*, char*, char *);
 extern struct ConfItem* find_special_conf(char *,int );
+extern struct ConfItem* is_klined(const char *host,
+                                  const char *name,
+				  unsigned long ip);
 extern struct ConfItem* find_is_klined(const char* host, 
                                        const char* name,
                                        unsigned long ip);
