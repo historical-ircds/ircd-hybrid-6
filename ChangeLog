@@ -1,3 +1,15 @@
+androsyn    2001/12/18 22:25:53 EST	(20011219_0)
+
+  Modified files:
+    adns                 setup.c 
+  Log:
+  Fixed byte order of INADDR_LOOPBACK
+  
+  Revision  Changes    Path
+  1.6       +4 -4      ircd-hybrid-6/adns/setup.c
+
+
+
 wcampbel    2001/12/16 00:49:20 EST	(20011216_0)
 
   Modified files:
