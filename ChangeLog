@@ -1,3 +1,8 @@
+*** 20010604_6 by leeh
+- commited initial revision of HIDE_SERVERS_IPS, to mask servers ips
+  from everyone (including opers)
+
+
 *** 20010604_5 by db
 - There is a reason we don't use if(foo) { 
 
