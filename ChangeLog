@@ -1,3 +1,15 @@
+db          2001/12/09 21:21:13 EST	(20011210_0)
+
+  Modified files:
+    src                  s_log.c 
+  Log:
+  - missing ]
+  
+  Revision  Changes    Path
+  1.13      +2 -2      ircd-hybrid-6/src/s_log.c
+
+
+
 lusky       2001/12/09 16:34:33 EST	(20011209_8)
 
   Modified files:
