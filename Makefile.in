@@ -73,11 +73,11 @@ ZCFLAGS= -g -O3
 
 
 SHELL=/bin/sh
-SUBDIRS=src tools
-ZSUBDIRS=zlib $(SUBDIRS)
+SUBDIRS=zlib src tools
+# ZSUBDIRS=zlib $(SUBDIRS)
 
 MAKE=make 'CFLAGS=${CFLAGS}' 'INSTALL=${INSTALL}' 'LDFLAGS=${LDFLAGS}'
-ZMAKE=make 'CFLAGS=${ZCFLAGS}' 'INSTALL=${INSTALL}' 'LDFLAGS=${LDFLAGS}'
+# ZMAKE=make 'CFLAGS=${ZCFLAGS}' 'INSTALL=${INSTALL}' 'LDFLAGS=${LDFLAGS}'
 
 all:	build
 
@@ -87,8 +87,8 @@ build:
 		echo "Doing so now."; \
 		sh configure; \
 	fi
-	cd zlib; \
-	${ZMAKE} build; cd ..
+#	cd zlib; \
+#	${ZMAKE} build; cd ..
 	@for i in $(SUBDIRS); do \
 		echo "Building $$i";\
 		cd $$i;\
