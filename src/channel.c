@@ -3098,15 +3098,12 @@ int     m_join(struct Client *cptr,
 #ifdef NO_CHANOPS_WHEN_SPLIT
           if((*name != '&') && !IsAnOper(sptr) && server_was_split)
             {
-              if(server_was_split)
-                {
-                  allow_op = NO;
+              allow_op = NO;
 
-                  if(!IsRestricted(sptr) && (flags & CHFL_CHANOP))
+              if(!IsRestricted(sptr) && (flags & CHFL_CHANOP))
                 sendto_one(sptr,":%s NOTICE %s :*** Notice -- Due to a network split, you can not obtain channel operator status in a new channel at this time.",
-                           me.name,
-                           sptr->name);
-                }
+                       me.name,
+                       sptr->name);
             }
 #endif
 

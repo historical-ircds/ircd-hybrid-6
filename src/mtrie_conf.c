@@ -847,6 +847,17 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
 
   if(trie_list)
     {
+#ifdef USE_IP_I_LINE_FIRST
+      if(ip_iline_aconf)
+        {
+          stack_pointer = 0;
+          tokenize_and_stack(tokenized_host, host);
+          top_of_stack = stack_pointer;
+          saved_stack_pointer = -1;
+          first_kline_trie_list = (DOMAIN_LEVEL *)NULL;
+        }
+#endif
+
       if(first_kline_trie_list)
         {
           stack_pointer = saved_stack_pointer;
