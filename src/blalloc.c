@@ -3,9 +3,10 @@
  * File:   blalloc.c
  * Owner:  Wohali (Joan Touzet)
  *
- *
+ * Modified 2001/11/29 for mmap() support by Aaron Sethman <androsyn@ratbox.org>
  * $Id$
  */
+#include "config.h"
 #include "blalloc.h"
 #include "ircd_defs.h"      /* DEBUG_BLOCK_ALLOCATOR */
 #include "irc_string.h"     /* MyMalloc */
@@ -13,7 +14,9 @@
 
 #include <string.h>
 #include <stdlib.h>
-
+#ifdef HAVE_MMAP
+#include <sys/mman.h>
+#endif
 #ifdef DEBUG_BLOCK_ALLOCATOR
 #include "send.h"           /* sendto_ops */
 
@@ -22,8 +25,51 @@ int         BH_CurrentLine = 0;   /* GLOBAL used for BlockHeap debugging */
 #endif
 
 static int newblock(BlockHeap *bh);
+static void *get_block(size_t size);
 
 extern void outofmemory(void);      /* defined in list.c */
+
+
+#ifdef HAVE_MMAP
+#ifndef MAP_ANON
+int zero_fd = -1;
+void initBlockHeap(void)
+{
+    zero_fd = open("/dev/zero", O_RDWR);
+    if (zero_fd < 0)
+        outofmemory();
+}
+
+static void *get_block(size_t size)
+{
+    return (mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE, zero_fd, 0));
+}
+#else
+void initBlockHeap(void)
+{
+    return;
+}
+
+static void *get_block(size_t size)
+{
+    return (mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0));
+}
+#endif
+static void free_block(void *ptr, size_t size)
+{
+	munmap(ptr, size);
+}
+#else
+static void *get_block(size_t size)
+{
+	return(MyMalloc(size));
+}
+
+static void free_block(void *ptr, size_t size)
+{
+	MyFree(ptr);
+}
+#endif
 
 /* ************************************************************************ */
 /* FUNCTION DOCUMENTATION:                                                  */
@@ -57,7 +103,8 @@ static int newblock(BlockHeap *bh)
      }
    
    /* Now allocate the memory for the elems themselves. */
-   b->elems = (void *) MyMalloc ((bh->elemsPerBlock + 1) * bh->elemSize);
+
+   b->elems = get_block((bh->elemsPerBlock + 1) * bh->elemSize);
    if (b->elems == NULL)
      {
        free(b->allocMap);
@@ -336,7 +383,7 @@ int BlockHeapGarbageCollect(BlockHeap *bh)
       if (i == bh->numlongs)
         {
           /* This entire block is free.  Remove it. */
-          free(walker->elems);
+          free_block(walker->elems, (bh->elemsPerBlock + 1) * bh->elemSize);
           free(walker->allocMap);
 
           if (last)
@@ -384,7 +431,7 @@ int BlockHeapDestroy(BlockHeap *bh)
    for (walker = bh->base; walker != NULL; walker = next)
      {
        next = walker->next;
-       free(walker->elems);
+       free_block(walker->elems, (bh->elemsPerBlock + 1) * bh->elemSize);
        free(walker->allocMap);
        free(walker);
      }

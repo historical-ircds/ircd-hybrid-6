@@ -354,7 +354,7 @@ static void parse_command_line(int argc, char* argv[])
     }
   }
 }
-
+static time_t next_gc = 0;
 static time_t io_loop(time_t delay)
 {
   static char   to_send[200];
@@ -362,7 +362,6 @@ static time_t io_loop(time_t delay)
   static long   lastrecvK = 0;
   static int    lrv       = 0;
   time_t        lasttimeofday;
-
   lasttimeofday = CurrentTime;
 
   if (CurrentTime < lasttimeofday)
@@ -370,6 +369,10 @@ static time_t io_loop(time_t delay)
       ircsprintf(to_send, "System clock is running backwards - (%d < %d)",
                  CurrentTime, lasttimeofday);
       report_error(to_send, me.name, 0);
+    }
+  if(!next_gc)
+    {
+  	next_gc = CurrentTime + 600;
     }
 
   /*
@@ -541,6 +544,12 @@ static time_t io_loop(time_t delay)
 #ifndef NO_PRIORITY
   fdlist_check(CurrentTime);
 #endif
+
+  if(CurrentTime >= next_gc)
+  {
+     block_garbage_collect();
+     next_gc = CurrentTime + 600;
+  }
 
   return delay;
 
@@ -725,6 +734,11 @@ int main(int argc, char *argv[])
    * set initialVMTop before we allocate any memory
    */
   initialVMTop = get_vm_top();
+
+  /*
+   * Initialize the Blockheap allocator
+   */
+  initBlockHeap();
 
   ServerRunning = 0;
   memset(&me, 0, sizeof(me));
