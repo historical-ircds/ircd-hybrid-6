@@ -996,6 +996,8 @@ int read_message(time_t delay, unsigned char mask)        /* mika */
             {
                FD_SET(i, read_set);
             }
+          else parse_client_queued(cptr);
+		/* bubye annoying bug. *squish* -gnp */
 
           if (DBufLength(&cptr->sendQ) || IsConnecting(cptr)
 #ifdef ZIP_LINKS
@@ -1264,6 +1266,8 @@ int read_message(time_t delay, unsigned char mask)
 
       if (DBufLength(&cptr->recvQ) < 4088)
         PFD_SETR(i);
+      else parse_client_queued(cptr);
+      /* you go squish now. -gnp */
       
       if (DBufLength(&cptr->sendQ) || IsConnecting(cptr)
 #ifdef ZIP_LINKS
