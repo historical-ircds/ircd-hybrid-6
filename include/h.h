@@ -142,7 +142,6 @@ extern	char	*rpl_str (int);
 extern  char 	*err_str (int);
 extern  char    *form_str (int);
 extern	char	*strerror (int);
-extern	int	dgets (int, char *, int);
 extern	char	*inetntoa (char *);
 extern	void	ircsprintf ();
 extern	int	dbufalloc, dbufblocks, debuglevel, errno, h_errno;
@@ -191,8 +190,6 @@ extern  void	sendto_realops_lev();		/* defined in send.c */
 extern  void	sendto_realops();		/* defined in send.c */
 extern  void	send_operwall(aClient *,char *,char *);	/* defined in send.c */
 extern  void	sendto_wallops_butone();	/* defined in send.c */
-extern  int     match(char *,char *);		/* defined in match.c */
-extern	char    *collapse(char *);		/* match.c */
 extern  void    send_capabilities(aClient *,int);
 extern  int	is_address(char *,unsigned long *,unsigned long *); 
 extern  void	do_include_conf();

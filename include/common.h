@@ -71,9 +71,6 @@ void	free();
 #include MALLOCH
 #endif
 #endif
-extern	int	matches (char *, char *);
-extern	int	irccmp (char *, char *);
-extern	int	ircncmp (char *, char *, int);
 #if !defined( HAVE_STRTOK )
 extern	char	*strtok (char *, char *); 
 #endif
@@ -110,49 +107,13 @@ extern char *strtoken (char **, char *, char *);
 
 #define DupString(x,y) do{x=MyMalloc(strlen(y)+1);(void)strcpy(x,y);}while(0)
 
-extern unsigned char tolowertab[];
-
-#undef tolower
-#define tolower(c) (tolowertab[(u_char)(c)])
-
-extern unsigned char touppertab[];
-
-#undef toupper
-#define toupper(c) (touppertab[(u_char)(c)])
-
-#undef isalpha
-#undef isdigit
-#undef isxdigit
-#undef isalnum
-#undef isprint
-#undef isascii
-#undef isgraph
-#undef ispunct
-#undef islower
-#undef isupper
-#undef isspace
-#undef iscntrl
-extern unsigned char char_atribs[];
-
-#define PRINT 1
-#define CNTRL 2
-#define ALPHA 4
-#define PUNCT 8
-#define DIGIT 16
-#define SPACE 32
-#define	iscntrl(c) (char_atribs[(u_char)(c)]&CNTRL)
-#define isalpha(c) (char_atribs[(u_char)(c)]&ALPHA)
-#define isspace(c) (char_atribs[(u_char)(c)]&SPACE)
-#define islower(c) ((char_atribs[(u_char)(c)]&ALPHA) && ((u_char)(c) > 0x5f))
-#define isupper(c) ((char_atribs[(u_char)(c)]&ALPHA) && ((u_char)(c) < 0x60))
-#define isdigit(c) (char_atribs[(u_char)(c)]&DIGIT)
-#define	isxdigit(c) (isdigit(c) || 'a' <= (c) && (c) <= 'f' || \
-	'A' <= (c) && (c) <= 'F')
-#define isalnum(c) (char_atribs[(u_char)(c)]&(DIGIT|ALPHA))
-#define isprint(c) (char_atribs[(u_char)(c)]&PRINT)
-#define isascii(c) ((u_char)(c) >= 0 && (u_char)(c) <= 0x7f)
-#define isgraph(c) ((char_atribs[(u_char)(c)]&PRINT) && ((u_char)(c) != 0x32))
-#define ispunct(c) (!(char_atribs[(u_char)(c)]&(CNTRL|ALPHA|DIGIT)))
+/*
+ * match.h contains character comparison and conversion macros and
+ * string comparison functions
+ */
+#ifndef INCLUDED_match_h
+#include "match.h"
+#endif
 
 extern void flush_connections();
 extern struct SLink *find_user_link(/* struct SLink *, struct Client * */);
