@@ -154,11 +154,6 @@ char    *klinefile = CONFIGFILE;
 char    *dlinefile = CONFIGFILE;
 #endif
 
-#ifdef	GLINES
-char	*glinefile = GLINEFILE;
-#endif
-
-
 int	debuglevel = -1;		/* Server debug level */
 int	bootopt = 0;			/* Server boot option flags */
 char	*debugmode = "";		/*  -"-    -"-   -"-  */
