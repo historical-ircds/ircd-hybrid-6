@@ -196,8 +196,8 @@ void _free_user(anUser* user, aClient* cptr)
         {
           sendto_ops("list.c couldn't BlockHeapFree(free_anUsers,user) user = %lX", user );
           sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
-#if defined(USE_SYSLOG) && defined(SYSLOG_BLOCK_ALLOCATOR)
-          syslog(LOG_DEBUG,"list.c couldn't BlockHeapFree(free_anUsers,user) user = %lX", (long unsigned int) user);
+#ifdef SYSLOG_BLOCK_ALLOCATOR 
+          log(L_DEBUG,"list.c couldn't BlockHeapFree(free_anUsers,user) user = %lX", (long unsigned int) user);
 #endif
         }
 

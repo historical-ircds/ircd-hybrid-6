@@ -37,6 +37,7 @@
 #include "s_misc.h"
 #include "send.h"
 #include "struct.h"
+#include "hash.h"
 
 #include <stdlib.h>
 #include <unistd.h>

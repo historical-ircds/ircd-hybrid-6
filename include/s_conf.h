@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.41  1999/07/29 07:06:48  tomh
+ * new m_commands
+ *
  * Revision 1.40  1999/07/28 05:00:41  tomh
  * Finish net cleanup of connects (mostly).
  * NOTE: Please check this carefully to make sure it still works right.
@@ -364,7 +367,6 @@ extern int              attach_cn_lines(struct Client* client,
                                         const char* host);
 extern int              attach_Iline(struct Client* client, 
                                      struct hostent* hp,
-                                     const char* sockname, 
                                      const char* username, char** reason);
 extern struct ConfItem* find_me(void);
 extern struct ConfItem* find_admin(void);

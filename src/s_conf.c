@@ -383,7 +383,7 @@ void report_specials(struct Client* sptr, int flags, int numeric)
  */
 
 int attach_Iline(aClient* cptr, struct hostent* hp,
-                 const char* sockhost, const char* username, char **preason)
+                 const char* username, char **preason)
 {
   struct ConfItem* aconf;
   struct ConfItem* gkill_conf;
@@ -405,7 +405,7 @@ int attach_Iline(aClient* cptr, struct hostent* hp,
     }
   else
     {
-      strncpy_irc(host, sockhost, HOSTLEN);
+      strncpy_irc(host, cptr->sockhost, HOSTLEN);
       host[HOSTLEN] = '\0';
     }
 

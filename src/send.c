@@ -33,6 +33,7 @@
 #include "s_zip.h"
 #include "sprintf_irc.h"
 #include "struct.h"
+#include "s_conf.h"
 
 #include <stdio.h>
 #include <string.h>

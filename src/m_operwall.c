@@ -117,13 +117,16 @@ int m_operwall(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
     }
 
 #ifdef PACE_WALLOPS
-  if( MyClient(sptr) && ((LastUsedWallops + WALLOPS_WAIT) > CurrentTime) )
+  if( MyClient(sptr) )
     {
-      sendto_one(sptr, ":%s NOTICE %s :Oh, one of those annoying opers who doesn't know how to use a channel",
-                 me.name,parv[0]); 
-      return 0;
-    }
-  LastUsedWallops = CurrentTime;
+          if( (LastUsedWallops + WALLOPS_WAIT) > CurrentTime ) 
+            {
+                sendto_one(sptr, ":%s NOTICE %s :Oh, one of those annoying opers who doesn't know how to use a channel",
+                     me.name,parv[0]);
+                return 0;
+            }
+          LastUsedWallops = CurrentTime;
+     }
 #endif
 
   sendto_serv_butone(IsServer(cptr) ? cptr : NULL, ":%s OPERWALL :%s",
