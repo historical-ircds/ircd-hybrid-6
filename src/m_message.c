@@ -38,6 +38,9 @@
 
 #include <string.h>
 
+static void
+send_oper_special (struct Client *cptr, struct Client *sptr,
+		    char *cmd, char *nick, char *message);
 
 /*
  * m_functions execute protocol messages on this server:
@@ -158,7 +161,28 @@ static  int     m_message(struct Client *cptr,
   for (nick = strtoken(&p, parv[1], ","); nick;
        nick = strtoken(&p, NULL, ","))
     {
-      if( IsChanPrefix(*nick)
+      /* This slows us down :-( especially opers...
+       * but disambiguates as best we can
+       * the old "is it an oper send to a channel or to a hostmask?" bug -db
+       */
+      if (IsAnOper(sptr) && (*nick == '#'))
+	{
+	  if ((chptr = hash_find_channel(nick, NullChn)) == NULL)
+	    {
+	      send_oper_special(cptr, sptr, cmd, nick, parv[2]);
+	      continue;
+	    }
+	  else
+	    {
+	      if (!IsMember(sptr, chptr)) /* oper send to hash ! */
+		{
+		  send_oper_special(cptr, sptr, cmd, nick, parv[2]);
+		  continue;
+		}
+	    }
+	}
+
+      if (IsChanPrefix(*nick)
 	  && (IsPerson(sptr) && (chptr = hash_find_channel(nick, NullChn))))
 	{
 #ifdef  IDLE_CHECK
@@ -367,37 +391,13 @@ static  int     m_message(struct Client *cptr,
       */
       if (*nick == '$')
 	{
-	  if((*(nick+1) == '$' || *(nick+1) == '#'))
-	    nick++;
-	  
 	  if(!IsAnOper(sptr))
 	    {
 	      sendto_one(sptr, form_str(ERR_NOSUCHNICK),
 			 me.name, parv[0], nick);
 	      return -1;
 	    }
-
-	  if (!(s = (char *)strrchr(nick, '.')))
-	    {
-	      sendto_one(sptr, form_str(ERR_NOTOPLEVEL),
-			 me.name, parv[0], nick);
-	      continue;
-	    }
-	  while (*++s)
-	    if (*s == '.' || *s == '*' || *s == '?')
-	      break;
-	  if (*s == '*' || *s == '?')
-	    {
-	      sendto_one(sptr, form_str(ERR_WILDTOPLEVEL),
-			 me.name, parv[0], nick);
-	      continue;
-	    }
-	  sendto_match_butone(IsServer(cptr) ? cptr : NULL, 
-			      sptr, nick + 1,
-			      (*nick == '#') ? MATCH_HOST :
-			      MATCH_SERVER,
-			      ":%s %s $%s :%s", parv[0],
-			      cmd, nick, parv[2]);
+	  send_oper_special(cptr, sptr, cmd, nick, parv[2]);
 	  continue;
 	}
         
@@ -470,6 +470,60 @@ static  int     m_message(struct Client *cptr,
 		 parv[0], nick);
     }
   return 0;
+}
+
+
+static void
+send_oper_special (struct Client *cptr, struct Client *sptr,
+		   char *cmd, char *nick, char *message)
+{
+  char *s;
+
+  if ((s = strrchr(nick, '.')) == NULL)
+    {
+      sendto_one(sptr, form_str(ERR_NOTOPLEVEL),
+		 me.name, sptr->name, nick);
+      return;
+    }
+
+  while (*++s)
+    if (*s == '.' || *s == '*' || *s == '?')
+      break;
+
+  if (*s == '*' || *s == '?')
+    {
+      sendto_one(sptr, form_str(ERR_WILDTOPLEVEL),
+		 me.name, sptr->name, nick);
+      return;
+    }
+
+  /* here we cope with $$server, $server and $#host.mask */
+  if (*nick == '$')
+    {
+      if((*(nick+1) == '$') || (*(nick+1) == '#'))
+        sendto_match_butone(IsServer(cptr) ? cptr : NULL, 
+			  sptr, nick + 2,
+			  (*(nick+1) == '$') ? MATCH_SERVER : MATCH_HOST,
+			  ":%s %s %s :%s", sptr->name,
+			  cmd, nick, message);
+      else
+        sendto_match_butone(IsServer(cptr) ? cptr : NULL,
+	                  sptr, nick + 1, MATCH_SERVER,
+			  ":%s %s %s :%s",
+			  sptr->name, cmd, nick, message);
+    }
+  else
+    {
+      /* sanity test, by now, this code can only deal with #host.mask */
+      if (*nick != '#')
+	return;
+
+      sendto_match_butone(IsServer(cptr) ? cptr : NULL, 
+			  sptr, nick + 1,
+			  MATCH_HOST,
+			  ":%s %s %s :%s", sptr->name,
+			  cmd, nick, message);
+    }
 }
 
 /*
