@@ -1349,12 +1349,7 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
       wait.tv_sec = IRCD_MIN(delay2, delay);
       wait.tv_usec = usec;
 
-#ifdef        HPUX
-      nfds = select(FD_SETSIZE, (fd_set *)read_set, (fd_set *)write_set,
-                    (fd_set *)0, &wait);
-#else
       nfds = select(MAXCONNECTIONS, read_set, write_set, 0, &wait);
-#endif
 
       if((timeofday = time(NULL)) == -1)
         {

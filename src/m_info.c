@@ -3,10 +3,8 @@
  *
  * $Id$
  */
-
-#include <time.h>
-#include <string.h>
-
+#define DEFINE_M_INFO_DATA
+#include "m_info.h"
 #include "struct.h"
 #include "common.h"
 #include "numeric.h"
@@ -17,7 +15,9 @@
 #include "h.h"
 #include "ircd.h"
 #include "s_user.h"
-#include "m_info.h"
+
+#include <time.h>
+#include <string.h>
 
 
 /*
@@ -30,84 +30,84 @@ int
 m_info(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 {
-	char **text = infotext;
-	static time_t last_used=0L;
-	Info *infoptr;
+  char **text = infotext;
+  static time_t last_used=0L;
+  Info *infoptr;
 
-	if (hunt_server(cptr,sptr,":%s INFO :%s",1,parc,parv) == HUNTED_ISME)
-	{
-		sendto_realops_flags(FLAGS_SPY, "info requested by %s (%s@%s) [%s]",
-			sptr->name, sptr->username, sptr->host,
-			sptr->user->server);
+  if (hunt_server(cptr,sptr,":%s INFO :%s",1,parc,parv) == HUNTED_ISME)
+  {
+    sendto_realops_flags(FLAGS_SPY, "info requested by %s (%s@%s) [%s]",
+      sptr->name, sptr->username, sptr->host,
+      sptr->user->server);
 
-		if (!IsAnOper(sptr))
-		{
-			/* reject non local requests */
-			if (!MyConnect(sptr))
-				return 0;
-			if ((last_used + PACE_WAIT) > NOW)
-			{
-				/* safe enough to give this on a local connect only */
-				sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,parv[0]);
-				return 0;
-			}
-			else
-				last_used = NOW;
-		} /* if (!IsAnOper(sptr)) */
+    if (!IsAnOper(sptr))
+    {
+      /* reject non local requests */
+      if (!MyConnect(sptr))
+        return 0;
+      if ((last_used + PACE_WAIT) > NOW)
+      {
+        /* safe enough to give this on a local connect only */
+        sendto_one(sptr,form_str(RPL_LOAD2HI),me.name,parv[0]);
+        return 0;
+      }
+      else
+        last_used = NOW;
+    } /* if (!IsAnOper(sptr)) */
 
-		while (*text)
-			sendto_one(sptr, form_str(RPL_INFO), me.name, parv[0], *text++);
+    while (*text)
+      sendto_one(sptr, form_str(RPL_INFO), me.name, parv[0], *text++);
 
-		sendto_one(sptr, form_str(RPL_INFO), me.name, parv[0], "");
+    sendto_one(sptr, form_str(RPL_INFO), me.name, parv[0], "");
 
-		/*
-		 * Now send them a list of all our configuration options
-		 * (mostly from config.h)
-		 */
-		if (IsAnOper(sptr))
-		{
-			for (infoptr = MyInformation; infoptr->name; infoptr++)
-			{
-				if (infoptr->intvalue)
-					sendto_one(sptr,
-						":%s %d %s :%-30s %-5d [%-30s]",
-						me.name,
-						RPL_INFO,
-						parv[0],
-						infoptr->name,
-						infoptr->intvalue,
-						infoptr->desc);
-				else
-					sendto_one(sptr,
-						":%s %d %s :%-30s %-5s [%-30s]",
-						me.name,
-						RPL_INFO,
-						parv[0],
-						infoptr->name,
-						infoptr->strvalue,
-						infoptr->desc);
-			}
-		} /* if (IsAnOper(sptr)) */
+    /*
+     * Now send them a list of all our configuration options
+     * (mostly from config.h)
+     */
+    if (IsAnOper(sptr))
+    {
+      for (infoptr = MyInformation; infoptr->name; infoptr++)
+      {
+        if (infoptr->intvalue)
+          sendto_one(sptr,
+            ":%s %d %s :%-30s %-5d [%-30s]",
+            me.name,
+            RPL_INFO,
+            parv[0],
+            infoptr->name,
+            infoptr->intvalue,
+            infoptr->desc);
+        else
+          sendto_one(sptr,
+            ":%s %d %s :%-30s %-5s [%-30s]",
+            me.name,
+            RPL_INFO,
+            parv[0],
+            infoptr->name,
+            infoptr->strvalue,
+            infoptr->desc);
+      }
+    } /* if (IsAnOper(sptr)) */
 
-		sendto_one(sptr, form_str(RPL_INFO), me.name, parv[0], "");
+    sendto_one(sptr, form_str(RPL_INFO), me.name, parv[0], "");
 
-		sendto_one(sptr,
-			":%s %d %s :Birth Date: %s, compile # %s",
-			me.name,
-			RPL_INFO,
-			parv[0],
-			creation,
-			generation);
+    sendto_one(sptr,
+      ":%s %d %s :Birth Date: %s, compile # %s",
+      me.name,
+      RPL_INFO,
+      parv[0],
+      creation,
+      generation);
 
-		sendto_one(sptr,
-			":%s %d %s :On-line since %s",
-			me.name,
-			RPL_INFO,
-			parv[0],
-			myctime(me.firsttime));
+    sendto_one(sptr,
+      ":%s %d %s :On-line since %s",
+      me.name,
+      RPL_INFO,
+      parv[0],
+      myctime(me.firsttime));
 
-		sendto_one(sptr, form_str(RPL_ENDOFINFO), me.name, parv[0]);
-	} /* if (hunt_server(cptr,sptr,":%s INFO :%s",1,parc,parv) == HUNTED_ISME) */
+    sendto_one(sptr, form_str(RPL_ENDOFINFO), me.name, parv[0]);
+  } /* if (hunt_server(cptr,sptr,":%s INFO :%s",1,parc,parv) == HUNTED_ISME) */
 
-	return 0;
+  return 0;
 } /* m_info() */

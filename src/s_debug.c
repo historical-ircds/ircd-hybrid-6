@@ -27,10 +27,21 @@
 #include "res.h"
 #include "send.h"
 #include "scache.h"
+#include "numeric.h"
+#include "common.h"
+#include "hash.h"
+#include "ircd.h"
+#include "channel.h"
+#include "h.h"
 
 #include <string.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <time.h>
+#include <sys/file.h>
+#include <sys/param.h>
+#include <sys/resource.h>
+
 
 extern  void    count_whowas_memory(int *, u_long *);
 extern  void    count_ip_hash(int *,u_long *);    /* defined in s_conf.c */
@@ -117,44 +128,6 @@ char    serveropts[] = {
 'o',
 'w',
 '\0'};
-
-#include "numeric.h"
-#include "common.h"
-#include "hash.h"
-#include "ircd.h"
-#include "channel.h"
-#include <sys/file.h>
-#ifdef HPUX
-#include <fcntl.h>
-#endif
-#if !defined(ULTRIX) && !defined(SGI) && !defined(sequent) && \
-    !defined(__convex__)
-# include <sys/param.h>
-#endif
-#ifdef HPUX
-# include <sys/syscall.h>
-# define getrusage(a,b) syscall(SYS_GETRUSAGE, a, b)
-#endif
-
-# ifdef SOL20
-#  include <sys/time.h>
-/*
-#  include <sys/rusage.h>
-*/
-# endif
-
-# include <sys/resource.h>
-
-
-#ifdef HPUX
-#include <unistd.h>
-#ifdef DYNIXPTX
-#include <sys/types.h>
-#include <time.h>
-#endif /* DYNIXPTX */
-#endif /* HPUX */
-
-#include "h.h"
 
 #ifndef ssize_t
 #define ssize_t unsigned int
