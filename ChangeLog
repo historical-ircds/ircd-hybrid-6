@@ -1,3 +1,29 @@
+jdc         2001/12/08 03:34:51 EST	(20011208_12)
+
+  Modified files:
+    src                  sprintf_irc.c 
+  Log:
+  - Change to ircsprintf().  Someone please look into this, as the change
+  may affect daemon performance.  Here are the details:
+  
+  On RedHat Linux 7.1, gcc 2.96 seems to complain about trying to obtain
+  the "address of a register" (in this case, args) in reference to the
+  va_start() macro:
+  
+  "warning: address of register variable `args' requested"
+  
+  One can't get the _address_ of a CPU register, but I'm not sure if this
+  is actually what's going on (due to va_start() being wacky as hell).
+  
+  This works on gcc 2.95.3 (FreeBSD 4.4-STABLE), though.  I have no idea if
+  it's _ACTUALLY_ using a register or not.  Someone with gdb/gas knowledge
+  should attempt to figure out what the heck is going on.
+  
+  Revision  Changes    Path
+  1.10      +7 -2      ircd-hybrid-6/src/sprintf_irc.c
+
+
+
 jdc         2001/12/08 02:22:28 EST	(20011208_11)
 
   Modified files:
