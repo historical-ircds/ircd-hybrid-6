@@ -1,3 +1,7 @@
+*** 20010727_4 by jdc
+- Whoops, typo (chat != char ;-) ).
+
+
 *** 20010727_3 by jdc
 - src/s_serv.c: show_capabilities():
     Removed the trailing space during link-time or anything involving
