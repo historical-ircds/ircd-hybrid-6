@@ -2374,6 +2374,21 @@ static void lookup_confhost(aConfItem* aconf)
 }
 
 /*
+ * conf_connect_allowed (untested)
+ */
+int conf_connect_allowed(struct in_addr addr)
+{
+  aConfItem *aconf;
+
+  aconf = match_Dline(ntohl((unsigned long)addr.s_addr));
+
+  if (aconf && !IsConfElined(aconf))
+    return 1;
+  else
+    return 0;
+}
+
+/*
  * find_kill
  *
  * See if this user is klined already, and if so, return aConfItem pointer
