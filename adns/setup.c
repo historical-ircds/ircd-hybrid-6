@@ -39,11 +39,17 @@
 
 #include "internal.h"
 
+#ifndef INADDR_LOOPBACK
+#define INADDR_LOOPBACK inet_addr("127.0.0.1")
+#endif 
 static void readconfig(adns_state ads, const char *filename, int warnmissing);
 
 static void addserver(adns_state ads, struct in_addr addr) {
   int i;
   struct server *ss;
+  
+  if(addr.s_addr == 0)
+  	addr.s_addr = INADDR_LOOPBACK;	
   
   for (i=0; i<ads->nservers; i++) {
     if (ads->servers[i].addr.s_addr == addr.s_addr) {
