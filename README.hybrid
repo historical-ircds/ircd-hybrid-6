@@ -59,7 +59,7 @@
 - F lines replaced by > in front of username in I line
 - B lines replaced by & in front of username in I line
 - "^>&" can be combined with any combination of "+!-" characters (Dianora)
-- = as a prefix char will spoof that user see example.conf (Dianora)
+- = as a prefix char will spoof that user, see example.conf (Dianora)
 - will not allow any user with username including '!' '*' '?'
   or high bit/control characters to user the server (Dianora)
 - added LIMIT_UH code (Dianora)
@@ -76,7 +76,6 @@
 - added /quote set autoconn ALL 0/1 enable/disable autoconns
 - added /quote set autoconn servername 0/1 enable/disable this server
   or /quote set autoconn ALL 0/1 enable/disable all autoconns (Dianora)
-- removed ANTI_IP_SPOOF (Dianora)
 
 +hybrid-5.3 (6/13/98)
 * added NO_CHANOPS_WHEN_SPLIT code back in (Rodder/Dianora)
