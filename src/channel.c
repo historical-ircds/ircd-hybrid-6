@@ -2804,6 +2804,7 @@ static void free_bans_exceptions_denies(struct Channel *chptr)
     }
 
   chptr->banlist = chptr->exceptlist = chptr->denylist = NULL;
+  chptr->num_bed = 0;
 }
 
 
