@@ -1565,12 +1565,12 @@ const char* comment        /* Reason for the exit */
               if (IsRegistered(sptr) && !IsServer(sptr))
                 { /* jeremy is anal retentive */
                   sendto_one(sptr, "ERROR :Closing Link: %s (%s)",
-                             get_client_name(sptr, SHOW_IP, comment);
+                             get_client_name(sptr, SHOW_IP), comment);
                 } 
               else
                 {
                   sendto_one(sptr, "ERROR :Closing Link: %s (%s)",
-                             get_client_name(sptr, MASK_IP, comment);
+                             get_client_name(sptr, MASK_IP), comment);
                 }
             }
           /*
