@@ -21,7 +21,7 @@
 
 /*
  * match - compare name with mask, mask may contain * and ? as wildcards
- * match - returns 0 on successful match, 1 otherwise
+ * match - returns 1 on successful match, 0 otherwise
  */
 extern int match(const char *mask, const char *name);
 /*
