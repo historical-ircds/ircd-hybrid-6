@@ -1,3 +1,15 @@
+lusky       2002/02/05 22:21:27 EST	(20020206_0)
+
+  Modified files:
+    src                  adns.c 
+  Log:
+  * removed unused static function dns_cancel_call
+  
+  Revision  Changes    Path
+  1.8       +0 -30     ircd-hybrid-6/src/adns.c
+
+
+
 androsyn    2002/02/04 11:25:04 EST	(20020204_1)
 
   Modified files:
