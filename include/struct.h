@@ -1003,14 +1003,6 @@ extern struct Capability captab[];
 #define	MATCH_SERVER  1
 #define	MATCH_HOST    2
 
-/* used for async dns values */
-
-#define	ASYNC_NONE	(-1)
-#define	ASYNC_CLIENT	0
-#define	ASYNC_CONNECT	1
-#define	ASYNC_CONF	2
-#define	ASYNC_SERVER	3
-
 /* misc variable externs */
 
 extern	char	*version, *serno, *infotext[];
