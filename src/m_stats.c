@@ -189,40 +189,47 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
        */
       for (i = 0; i <= highest_fd; i++)
         {
-          if (!(acptr = local[i]))
+	  /* If not a local client, skip */
+          if ((acptr = local[i]) == NULL)
             continue;
 
-          if (IsPerson(acptr) &&
-              !IsAnOper(acptr) && !IsAnOper(sptr) &&
-              (acptr != sptr))
+	  /* if the source is not an oper, allow them to
+	   * /stats l/L an oper or themselves.
+	   * An oper can stats l/L everyone.
+	   */
+
+          if (IsPerson(acptr) && !IsAnOper(acptr)
+	      && !IsAnOper(sptr) && (acptr != sptr))
             continue;
+
           if (IsInvisible(acptr) && (doall || wilds) &&
               !(MyConnect(sptr) && IsOper(sptr)) &&
               !IsAnOper(acptr) && (acptr != sptr))
             continue;
+
           if (!doall && wilds && !match(name, acptr->name))
             continue;
+
           if (!(doall || wilds) && irccmp(name, acptr->name))
             continue;
 
-          /* I've added a sanity test to the "CurrentTime - acptr->since"
-           * occasionally, acptr->since is larger than CurrentTime.
-           * The code in parse.c "randomly" increases the "since",
-           * which means acptr->since is larger then CurrentTime at times,
-           * this gives us very high odd number.. 
-           * So, I am going to return 0 for ->since if this happens.
-           * - Dianora
-           */
-          /* trust opers not on this server */
-          /* if(IsAnOper(sptr)) */
-
-          /* Don't trust opers not on this server */
+          /* EWWWWWWW!!!! --fl */
+#if defined(HIDE_SERVERS_IPS) && defined(HIDE_SPOOF_IPS)
+          if(!IsIPSpoof(acptr) && !IsHandshake(acptr) && !IsConnecting(acptr) &&
+	     !IsServer(acptr) &&
+#else
 #ifdef HIDE_SERVERS_IPS
-          if(MyClient(sptr) && IsAnOper(sptr) && !IsServer(acptr) &&
-	    !IsConnecting(acptr) && !IsHandshake(acptr))
-#else	  
-          if(MyClient(sptr) && IsAnOper(sptr))
-#endif	 
+	  if(!IsConnecting(acptr) && !IsHandshake(acptr) &&
+	     !IsServer(acptr) &&
+#else
+#ifdef HIDE_SPOOF_IPS
+	  if(!IsIPSpoof(acptr) &&
+#else
+          if(
+#endif /* HIDE_SPOOF_IPS */
+#endif /* HIDE_SERVERS_IPS */
+#endif /* HIDE_SERVERS_IPS && HIDE_SPOOF_IPS */
+          MyClient(sptr) && IsAnOper(sptr))
             {
               sendto_one(sptr, Lformat, me.name,
                      RPL_STATSLINKINFO, parv[0],
@@ -238,7 +245,7 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
               }
             else
               {
-                if(IsIPHidden(acptr) || IsServer(acptr) ||
+                if(IsIPSpoof(acptr) || IsServer(acptr) ||
 		   IsConnecting(acptr) || IsHandshake(acptr))
                   sendto_one(sptr, Lformat, me.name,
                      RPL_STATSLINKINFO, parv[0],
