@@ -38,7 +38,7 @@
 
 struct Listener* ListenerPollList = 0;
 
-struct Listener* make_listener(const char* name, int port)
+struct Listener* make_listener(int port, struct in_addr addr)
 {
   struct Listener* listener = 
     (struct Listener*) MyMalloc(sizeof(struct Listener));
@@ -46,10 +46,10 @@ struct Listener* make_listener(const char* name, int port)
 
   memset(listener, 0, sizeof(struct Listener));
 
-  listener->name        = name;
+  listener->name        = me.name;
   listener->fd          = -1;
   listener->port        = port;
-  listener->addr.s_addr = INADDR_ANY;
+  listener->addr.s_addr = addr.s_addr;
 
 #ifdef NULL_POINTER_NOT_ZERO
   listener->next = NULL;
@@ -61,11 +61,6 @@ struct Listener* make_listener(const char* name, int port)
 void free_listener(struct Listener* listener)
 {
   assert(0 != listener);
-  if (listener->conf && IsIllegal(listener->conf)) {
-    assert(0 < listener->conf->clients);
-    if (0 == --listener->conf->clients)
-      free_conf(listener->conf);
-  }
   MyFree(listener);
 }
 
@@ -79,33 +74,8 @@ const char* get_listener_name(const struct Listener* listener)
 {
   static char buf[HOSTLEN + HOSTLEN + PORTNAMELEN + 4];
   assert(0 != listener);
-  ircsprintf(buf, "%s[%s/%u]", listener->name, listener->name, listener->port);
-#if 0
-  /* 
-   * NOTE: strcpy ok, listener->name is always <= HOSTLEN
-   */
-  strcpy(buf, listener->name);
-  /*
-   * XXX - ircsprintf screws this up, sometimes it puts an extra space in
-   */
-  sprintf(buf + strlen(buf), ":%d", listener->port);
-#endif
-  return buf;
-}
-
-/*
- * get_listener_name_r - reentrant version of get_listener_name
- */
-const char* get_listener_name_r(const struct Listener* listener, 
-                                char* buf, size_t len)
-{
-  size_t s_len;
-
-  strncpy(buf, listener->name, len);
-  buf[len - 1] = '\0';
-  s_len = strlen(buf);
-  if ((s_len + PORTNAMELEN) < len)
-    sprintf(buf + s_len, ":%d", listener->port);
+  ircsprintf(buf, "%s[%s/%u]", 
+             listener->name, listener->name, listener->port);
   return buf;
 }
   
@@ -201,38 +171,60 @@ static int inetport(struct Listener* listener)
   return 1;
 }
 
+static Listener* find_listener(int port, struct in_addr addr)
+{
+  Listener* listener;
+  for (listener = ListenerPollList; listener; listener = listener->next) {
+    if (port == listener->port && addr.s_addr == listener->addr.s_addr)
+      return listener;
+  }
+  return 0;
+}
+ 
   
 /*
  * add_listener- create a new listener 
  */
-void add_listener(struct ConfItem* conf)
+void add_listener(int port, const char* vhost_ip) 
 {
   struct Listener* listener;
   struct in_addr   vaddr;
 
-  assert(0 != conf);
   /*
    * if no port in conf line, don't bother
    */
-  if (!conf->port)
+  if (0 == port)
     return;
 
-  listener = make_listener(me.name, conf->port);
+  vaddr.s_addr = INADDR_ANY;
 
-  if (*conf->passwd && '*' != *conf->passwd) {
-    vaddr.s_addr = inet_addr(conf->passwd);
-    if (INADDR_NONE != vaddr.s_addr)
-      listener->addr = vaddr;
+  if (vhost_ip) {
+    vaddr.s_addr = inet_addr(vhost_ip);
+    if (INADDR_NONE == vaddr.s_addr)
+      return;
   }
 
+  if ((listener = find_listener(port, vaddr)) {
+    listener->active = 1;
+    return;
+  }
+
+  listener = make_listener(port, vaddr);
+
   if (inetport(listener)) {
-    ++conf->clients;
-    listener->conf   = conf;
+    listener->active = 1;
     listener->next   = ListenerPollList;
     ListenerPollList = listener; 
   }
   else
     free_listener(listener);
+}
+
+void mark_listeners_closing(void)
+{
+  Listener* listener;
+  for (listener = ListenerPollList; listener; listener = listener->next)
+    listener->active = 0;
 }
 
 /*
@@ -272,7 +264,7 @@ void close_listeners()
    */
   for (listener = ListenerPollList; listener; listener = listener_next) {
     listener_next = listener->next;
-    if (IsIllegal(listener->conf) && 0 == listener->ref_count)
+    if (0 == listener->active && 0 == listener->ref_count)
       close_listener(listener);
   }
 }
@@ -324,7 +316,7 @@ void accept_connection(struct Listener* listener)
   /*
    * check to see if listener is shutting down
    */
-  if (IsIllegal(listener->conf)) {
+  if (!listener->active) {
     ++ircstp->is_ref;
     send(fd, "ERROR :Use another port\r\n", 25, 0);
     close(fd);

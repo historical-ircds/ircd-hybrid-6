@@ -815,8 +815,7 @@ void close_connection(aClient *cptr)
        */
       if (cptr->listener) {
         assert(0 < cptr->listener->ref_count);
-        if (0 == --cptr->listener->ref_count && 
-            IsIllegal(cptr->listener->conf)) 
+        if (0 == --cptr->listener->ref_count && !cptr->listener->active) 
           close_listener(cptr->listener);
         cptr->listener = 0;
       }

@@ -32,29 +32,26 @@
 #include "ircd_defs.h"       /* HOSTLEN */
 #endif
 
-struct ConfItem;
-
 struct Listener {
   struct Listener* next;               /* list node pointer */
   const char*      name;               /* listener name */
-  struct ConfItem* conf;               /* conf line for the port */
   int              fd;                 /* file descriptor */
   int              port;               /* listener IP port */
   int              ref_count;          /* number of connection references */
-  struct in_addr   addr;               /* virtual address or INADDR_ANY */
-  time_t           last_accept;        /* last time listener accepted */
+  int              active;             /* current state of listener */
   int              index;              /* index into poll array */
+  time_t           last_accept;        /* last time listener accepted */
+  struct in_addr   addr;               /* virtual address or INADDR_ANY */
   char             vhost[HOSTLEN + 1]; /* virtual name of listener */
 };
 
 extern struct Listener* ListenerPollList; /* GLOBAL - listener list */
 
 extern void accept_connection(struct Listener* listener);
-extern void add_listener(struct ConfItem* conf);
+extern void add_listener(int port, const char* vaddr_ip);
 extern const char* get_listener_name(const struct Listener* listener);
-extern const char* get_listener_name_r(const struct Listener* listener,
-                                       char* buf, size_t len);
 extern void close_listener(struct Listener* listener);
+extern void mark_listeners_closing(void);
 extern void close_listeners(void);
 
 #endif /* INCLUDED_listener_h */
