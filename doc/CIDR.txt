@@ -239,5 +239,44 @@ Maintainer: BEST
   whois on Linux is "whois <INFO>@whois.arin.net", while under FreeBSD
   it's "whois -h whois.arin.net <INFO>".
 
+  Note that the FreeBSD whois client has shortcuts for the most commonly
+  used whois servers.  "whois -a <INFO>" is the shortcut for ARIN.
+
+  Also note that ARIN is not authoritative for all IP blocks on the 
+  Internet.  Take for example 212.158.123.66.  A whois query to ARIN
+  will return the following information:
+
+$ whois -h whois.arin.net 212.158.123.66
+European Regional Internet Registry/RIPE NCC (NET-RIPE-NCC-)
+   These addresses have been further assigned to European users.
+   Contact information can be found in the RIPE database, via the
+   WHOIS and TELNET servers at whois.ripe.net, and at
+   http://www.ripe.net/db/whois.html
+
+   Netname: RIPE-NCC-212
+   Netblock: 212.0.0.0 - 212.255.255.255
+   Maintainer: RIPE
+
+  This query tells us that it is a European IP block, and is further
+  handled by RIPE's whois server.  We must then query whois.ripe.net
+  to get more information.
+
+$ whois -h whois.ripe.net 212.158.123.66
+
+% Rights restricted by copyright. See http://www.ripe.net/ripencc/pub-services/d
+b/copyright.html
+
+inetnum:     212.158.120.0 - 212.158.123.255
+netname:     INSNET-P2P
+descr:       Point to Point Links for for London Nodes
+country:     GB
+--snip--
+
+  This tells us the actual IP block that the query was a part of.
+
+  Other whois servers that you may see blocks referred to are: 
+  whois.ripn.net for Russia, whois.apnic.net for Asia and the Pacific,
+  whois.aunic.net for Australia, and whois.6bone.net for IPv6 blocks.
+
 Contributed by Jeremy Chadwick <jdc@best.net>
 and Piotr Kucharski <chopin@sgh.waw.pl>

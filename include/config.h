@@ -216,7 +216,7 @@
 /* WARN_NO_NLINE
  * Define this if you want ops to get noticed about "things" trying to
  * connect as servers that don't have N: lines.  Twits with misconfigured
- * servers can get really annoying with enabled.
+ * servers can get really annoying with this enabled.
  */
 #define WARN_NO_NLINE
 
@@ -504,7 +504,7 @@
 /* CRYPT_LINK_PASSWORD - use crypted N-line passwords in the ircd.conf
  * If you want to store encrypted passwords in N-lines for server links,
  * define this.  For a C/N pair in your ircd.conf file, the password
- * need not be the same for both, as long as hte opposite end has the
+ * need not be the same for both, as long as the opposite end has the
  * right password in the opposite line.
  */
 #undef  CRYPT_LINK_PASSWORD
@@ -679,8 +679,7 @@
  * Displays only Oper, Serv, Link, and Class reports even if the O-line is
  * active.  Useful for just showing pertinent info of a specific server. 
  * Note however that if the target server is not running this option then
- * you will still receive a normal trace output.  Defining this will remove
- * "STATS p" funtionality since the two are basically redundant.
+ * you will still receive a normal trace output. 
  */
 #define LTRACE
 
@@ -693,6 +692,8 @@
 
 /*
  * Define this to enable WintrHawk "styling"
+ * Currently this shows the actual quit message on the Client exiting 
+ * notice, rather than the error or "Client Quit"
  */
 #define WINTRHAWK
 
@@ -780,7 +781,7 @@
 /* WRITEWAITDELAY - Number of seconds to wait for write to
  * complete if stuck.
  */
-#define WRITEWAITDELAY     10   /* Recommended value: 15 */
+#define WRITEWAITDELAY     15   /* Recommended value: 15 */
 
 /* CONNECTTIMEOUT -
  * Number of seconds to wait for a connect(2) call to complete.
