@@ -24,6 +24,7 @@
  */
 #include "m_commands.h"
 #include "client.h"
+#include "flud.h"
 #include "ircd.h"
 #include "numeric.h"
 #include "s_serv.h"
