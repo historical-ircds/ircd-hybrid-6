@@ -33,4 +33,11 @@ Keeping it a multiple of 2 is advisable, but not absolutely
 necessary. You will just waste a tiny bit of memory in one of the
 bit maps.
 
+  Other things to reduce, to use less startup memory.
+(from flier@globecom.net) All of these are in config.h
+
+   - reduce NICKNAMEHISTORYLENGTH from 15000 to say 1000
+   - reduce MAXSENDQLENGTH from 5050000 to 500000
+   - reduce INITIAL_DBUFS from 1000 to 300
+
   - Dianora
