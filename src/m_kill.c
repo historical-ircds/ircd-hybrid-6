@@ -184,10 +184,12 @@ int m_kill(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       **        ...!operhost!oper
       **        ...!operhost!oper (comment)
       */
+      inpath = cptr->host;
       if (!BadPtr(path))
         {
-          ircsprintf(buf, "%s%s (%s)",
-                           cptr->name, IsOper(sptr) ? "" : "(L)", path);
+          ircsprintf(buf, "%s!%s%s (%s)",
+                     cptr->username, cptr->name,
+                     IsOper(sptr) ? "" : "(L)", path);
           path = buf;
           reason = path;
         }
@@ -232,9 +234,8 @@ int m_kill(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
   if (IsAnOper(sptr)) /* send it normally */
     {
-      sendto_realops("Received KILL message for %s. From %s!%s@%s Path: %s!%s",
-                 acptr->name, sptr->name, sptr->username, sptr->host,
-                 inpath, path);
+      sendto_realops("Received KILL message for %s. From %s Path: %s!%s", 
+               acptr->name, parv[0], inpath, path);
       /*
        * dilema here: we don't want non opers to see pathes which
        * contain real IP addresses.  But we do want opers to see them.
@@ -263,8 +264,8 @@ int m_kill(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
   */
   if (!MyConnect(acptr) || !MyConnect(sptr) || !IsAnOper(sptr))
     {
-      sendto_serv_butone(cptr, ":%s KILL %s :%s",
-                         parv[0], acptr->name, reason );
+      sendto_serv_butone(cptr, ":%s KILL %s :%s!%s",
+                         parv[0], acptr->name, inpath, path);
       if (chasing && IsServer(cptr))
         sendto_one(cptr, ":%s KILL %s :%s!%s",
                    me.name, acptr->name, inpath, path);
