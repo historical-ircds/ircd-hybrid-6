@@ -1,3 +1,7 @@
+*** 20011027_4 by bill
+- will now compile.  we were missing two "*/"s in do_query_number()
+
+
 *** 20011027_3 by bill
 - pro died, he shouldn't be in the Hybrid-team
 
