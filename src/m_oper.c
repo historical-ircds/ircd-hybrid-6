@@ -38,6 +38,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#if defined(CRYPT_OPER_PASSWORD) && defined(HAVE_CRYPT_H)
+#include <crypt.h>
+#endif
 
 /*
  * m_functions execute protocol messages on this server:
@@ -163,7 +166,7 @@ int m_oper(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
   /* passwd may be NULL pointer. Head it off at the pass... */
   if (password && *aconf->passwd)
-    encr = (char *)crypt(password, aconf->passwd);
+    encr = crypt(password, aconf->passwd);
   else
     encr = "";
 #else

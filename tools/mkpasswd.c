@@ -12,6 +12,10 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef HAVE_CRYPT_H
+#include <crypt.h>
+#endif
+
 
 #define FLAG_MD5     0x00000001
 #define FLAG_DES     0x00000002
