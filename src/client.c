@@ -58,12 +58,6 @@
  */
 #define CLIENTS_PREALLOCATE 1024
 
-#ifdef NEED_SPLITCODE
-extern int server_was_split;
-extern time_t server_split_time;
-#endif
-
-
 /* 
  * for Wohali's block allocator 
  */

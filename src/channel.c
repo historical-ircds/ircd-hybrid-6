@@ -59,6 +59,7 @@
 static void check_still_split();
 int server_was_split;
 int got_server_pong;
+time_t server_split_time;
 
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 aChannel *empty_channel_list=(aChannel*)NULL;
