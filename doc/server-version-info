@@ -19,6 +19,7 @@ here they are:
 'M'	IDLE_FROM_MSG
 'p'	CRYPT_OPER_PASSWORD
 'P'	CRYPT_LINK_PASSWORD
+'r'     LITTLE_I_LINES (restricted mode)
 'T'     IGNORE_BOGUS_TS
 'Y'	USE_SYSLOG
 'Z'	ZIP_LINKS

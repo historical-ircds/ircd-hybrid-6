@@ -95,6 +95,9 @@ const char serveropts[] = {
 #ifdef  CRYPT_LINK_PASSWORD
   'P',
 #endif
+#ifdef  LITTLE_I_LINES
+  'r',
+#endif
 #ifdef  IGNORE_BOGUS_TS
   'T',
 #endif
