@@ -1,3 +1,48 @@
+*** 20010604_11 by jdc
+* Round 2 of the cryptlinks modifications.  --enable-openssl and
+  --disable-openssl now added to the configure option list.  I'll
+  describe how they work via a small chart:
+
+  +------------+------------+-------------+-----------------------+
+  | Arguments  | SSL found? | CRYPT_LINKS | Result                |
+  +------------+------------+-------------+-----------------------+
+  | None       | Yes        | #define     | Cryptlinks enabled    |
+  +------------+------------+-------------+-----------------------+
+  | None       | No         | #define     | Error during 'make'   |
+  +------------+------------+-------------+-----------------------+
+  | None       | Yes        | #undef      | No cryptlink support  |
+  +------------+------------+-------------+-----------------------+
+  | None       | No         | #undef      | No cryptlink support  |
+  +------------+------------+-------------+-----------------------+
+  | --enable-  | Yes        | #define     | Cryptlinks enabled    |
+  |   openssl  |            |             |                       |
+  +------------+------------+-------------+-----------------------+
+  | --enable-  | No         | #define     | Error during 'make'   |
+  |   openssl  |            |             |                       |
+  +------------+------------+-------------+-----------------------+
+  | --enable-  | Yes        | #undef      | No cryptlink support  |
+  |   openssl  |            |             |                       |
+  +------------+------------+-------------+-----------------------+
+  | --enable-  | No         | #undef      | No cryptlink support  |
+  |   openssl  |            |             |                       |
+  +------------+------------+-------------+-----------------------+
+  | --disable- | N/A        | N/A         | No cryptlink support  |
+  |   openssl  |            |             |                       |
+  +------------+------------+-------------+-----------------------+
+    * CRYPT_LINKS can be #define or #undef'd in config.h.
+    * OpenSSL must be version 0.9.6 or higher.  This is because previous
+      versions of OpenSSL did not return error-codes during the
+      encryption process.  <0.9.6 is deprecated and will not work.
+
+  If --enable-openssl does not find OpenSSL for you, and you DO have
+  a working copy of it on your system, try using the =DIR specifier
+  to --enable-openssl (i.e. --enable-openssl=/usr/local/someplace).
+
+  configure looks for the file PATH/include/opensslv.h.  This is how
+  it figures out if PATH is legitimate or not.
+
+
+
 *** 20010604_10 by jdc
 * Removed all of this "cipher priority" crap.  I'm sorry folks, but
   this is silly.  The priority is now defined by the order of the
