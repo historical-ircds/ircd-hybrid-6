@@ -1,3 +1,8 @@
+*** 20001005_1 by bill
+
+Fixed misnamed va var in sendto_realops()
+
+
 *** 20001004_1 by lusky
 changed ltrace to be consistant with trace for non-opers
 mode channel +e now returns an error to non-chanops
