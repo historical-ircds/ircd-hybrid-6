@@ -80,8 +80,6 @@
  * SPATH = server executable,
  * CPATH = conf file,
  * MPATH = MOTD
- * APATH = alternate MOTD for multi-lingual servers
- * i.e. /motd A for second motd
  * KPATH = kline conf file
  * DLPATH = dline conf file
  *
@@ -104,15 +102,12 @@
 #define SPATH   "/usr/local/ircd/ircd"
 #define	CPATH	"ircd.conf"
 #define KPATH   "kline.conf"
-#define DLPATH "kline.conf"
+#define DLPATH  "kline.conf"
 #define	MPATH	"ircd.motd"
 #undef  APATH
 #define	LPATH	"ircd.log"
 #define	PPATH	"ircd.pid"
 #define HPATH	"opers.txt"
-
-#define OPER_MOTD
-#define OMOTD   "opers.motd"
 
 /* TS_MAX_DELTA and TS_WARN_DELTA -  allowed delta for TS when another
  * server connects.
