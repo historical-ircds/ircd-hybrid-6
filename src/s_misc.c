@@ -140,7 +140,7 @@ char    *smalldate(time_t clock)
 #if defined(GLINES) || defined(SEPARATE_QUOTE_KLINES_BY_DATE)
 /*
  * small_file_date
- * Make a small YYMMDD formatted string suitable for a
+ * Make a small YYYYMMDD formatted string suitable for a
  * dated file stamp. 
  */
 char    *small_file_date(time_t clock)
@@ -151,7 +151,7 @@ char    *small_file_date(time_t clock)
   if (!clock)
     time(&clock);
   tmptr = localtime(&clock);
-  strftime(timebuffer, MAX_DATE_STRING, "%y%m%d", tmptr);
+  strftime(timebuffer, MAX_DATE_STRING, "%Y%m%d", tmptr);
   return timebuffer;
 }
 #endif
@@ -516,7 +516,7 @@ char	*comment	/* Reason for the exit */
 	  on_for = timeofday - sptr->firsttime;
 # if defined(USE_SYSLOG) && defined(SYSLOG_USERS)
 	  if (IsPerson(sptr))
-	    syslog(LOG_NOTICE, "%s (%3d:%02d:%02d): %s!%s@%s %d/%d\n",
+	    syslog(LOG_NOTICE, "%s (%3ld:%02ld:%02ld): %s!%s@%s %ld/%ld\n",
 		   myctime(sptr->firsttime),
 		   on_for / 3600, (on_for % 3600)/60,
 		   on_for % 60, sptr->name,
@@ -615,7 +615,7 @@ char	*comment	/* Reason for the exit */
 		     sptr->name, timeofday - sptr->firsttime,
 		     sptr->sendK, sptr->receiveK);
 #ifdef USE_SYSLOG
-	  syslog(LOG_NOTICE, "%s was connected for %u seconds.  %lu/%lu sendK/recvK.", sptr->name, timeofday - sptr->firsttime, sptr->sendK, sptr->receiveK);
+	  syslog(LOG_NOTICE, "%s was connected for %lu seconds.  %lu/%lu sendK/recvK.", sptr->name, timeofday - sptr->firsttime, sptr->sendK, sptr->receiveK);
 #endif
 
               /* Just for paranoia... this shouldn't be necessary if the

@@ -119,6 +119,8 @@ extern int drone_count;
 #endif
 
 extern aConfItem *temporary_klines;	/* defined in s_conf.c */
+extern aConfItem *find_special_conf(char *,int); /* defined in s_conf.c */
+
 #ifdef IDLE_CHECK
 extern int idle_time;			/* defined in ircd.c */
 #endif
@@ -3123,7 +3125,7 @@ int	m_connect(aClient *cptr,
 			me.name, parv[1], parv[2] ? parv[2] : "",
 			get_client_name(sptr,FALSE));
 #if defined(USE_SYSLOG) && defined(SYSLOG_CONNECT)
-      syslog(LOG_DEBUG, "CONNECT From %s : %s %d", parv[0], parv[1], parv[2] ? parv[2] : "");
+      syslog(LOG_DEBUG, "CONNECT From %s : %s %s", parv[0], parv[1], parv[2] ? parv[2] : "");
 #endif
     }
   aconf->port = port;
@@ -3208,10 +3210,9 @@ int     m_locops(aClient *cptr,
                   int parc,
                   char *parv[])
 {
-  char *message;
+  char *message = NULL;
 #ifdef SLAVE_SERVERS
   char *slave_oper;
-  char *p;
   register aClient *acptr;
 #endif
 
@@ -3284,8 +3285,6 @@ int     m_locops(aClient *cptr,
 
   return(0);
 }
-
-/* raped from csr30 */
 
 int     m_operwall(aClient *cptr,
 		   aClient *sptr,
@@ -4335,7 +4334,7 @@ static void log_gline_request(
     }
 
   tmptr = localtime(&NOW);
-  strftime(timebuffer, MAX_DATE_STRING, "%y/%m/%d %H:%M:%S", tmptr);
+  strftime(timebuffer, MAX_DATE_STRING, "%Y/%m/%d %H:%M:%S", tmptr);
 
   (void)ircsprintf(buffer,
 		   "#Gline for %s@%s [%s] requested by %s!%s@%s on %s at %s\n",
@@ -4381,7 +4380,7 @@ void log_gline(
     }
 
   tmptr = localtime(&NOW);
-  strftime(timebuffer, MAX_DATE_STRING, "%y/%m/%d %H:%M:%S", tmptr);
+  strftime(timebuffer, MAX_DATE_STRING, "%Y/%m/%d %H:%M:%S", tmptr);
 
   (void)ircsprintf(buffer,"#Gline for %s@%s %s added by the following\n",
 		   user,host,timebuffer);
@@ -4456,6 +4455,7 @@ int     m_kline(aClient *cptr,
   char cidr_form_host[64];
 
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
+  char *timebuffer;
   char filenamebuf[1024];
 #endif
   char *filename;		/* filename to use for kline */
@@ -4474,7 +4474,7 @@ int     m_kline(aClient *cptr,
   char *argv;
 #ifdef SLAVE_SERVERS
   char *slave_oper;
-  aClient *rcptr;
+  aClient *rcptr=NULL;
 
   if(IsServer(sptr))
     {
@@ -5017,7 +5017,7 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
   char	temppath[256];
 
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-  char timebuffer[MAX_DATE_STRING];
+  static  char    timebuffer[MAX_DATE_STRING];
   char filenamebuf[1024];
   struct tm *tmptr;
 #endif
@@ -5118,7 +5118,7 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
 
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
   tmptr = localtime(&NOW);
-  strftime(timebuffer, MAX_DATE_STRING, "%y%m%d", tmptr);
+  strftime(timebuffer, MAX_DATE_STRING, "%Y%m%d", tmptr);
   (void)sprintf(filenamebuf, "%s.%s", klinefile, timebuffer);
   filename = filenamebuf;
 #else

@@ -240,7 +240,7 @@ void free_client(aClient *cptr)
        sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
 
 #if defined(USE_SYSLOG) && defined(SYSLOG_BLOCK_ALLOCATOR)
-       syslog(LOG_DEBUG,"list.c couldn't BlockHeapFree(free_remote_aClients,cptr) cptr = %lX", cptr);
+       syslog(LOG_DEBUG,"list.c couldn't BlockHeapFree(free_remote_aClients,cptr) cptr = %lX", (long unsigned int) cptr);
 #endif
     }
 }
@@ -323,7 +323,7 @@ void free_user(anUser *user, aClient *cptr)
 	  sendto_ops("list.c couldn't BlockHeapFree(free_anUsers,user) user = %lX", user );
 	  sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
 #if defined(USE_SYSLOG) && defined(SYSLOG_BLOCK_ALLOCATOR)
-	  syslog(LOG_DEBUG,"list.c couldn't BlockHeapFree(free_anUsers,user) user = %lX", user);
+	  syslog(LOG_DEBUG,"list.c couldn't BlockHeapFree(free_anUsers,user) user = %lX", (long unsigned int) user);
 #endif
 	}
 

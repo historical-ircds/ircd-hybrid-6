@@ -2,6 +2,15 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+
+version hybrid-6-b68   8-May-1999
+* more cleanup
+* RedHat 6.0 / glibc fixes
+* Y2K fixes.  All dates that were YYMMDD are now YYYYMMDD.  Affects
+  SEPARATE_QUOTE_KLINES_BY_DATE and GLINE code.
+* SEPARATE_QUOTE_KLINES_BY_DATE wouldn't compile
+--Rodder
+
 version hybrid-6-b67   9-May-1999
 * fixed broken LIMIT_UH code
 -Dianora

@@ -1912,5 +1912,6 @@ int sendto_slaves(aClient *one,
 	      }
 	  }
       }
+    return 0;
   }
 #endif

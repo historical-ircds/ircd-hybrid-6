@@ -495,7 +495,9 @@ static	int	register_user(aClient *cptr,
   char  spamchar = '\0';
 #endif
   char tmpstr2[512];
+#if defined(KLINE_WITH_REASON) && !defined(REJECT_HOLD)
   char safe_reason[MAX_REASON];
+#endif
 
   user->last = timeofday;
   parv[0] = sptr->name;
@@ -560,7 +562,7 @@ static	int	register_user(aClient *cptr,
 #ifdef REJECT_HOLD
 		SetRejectHold(cptr);
 #ifdef KLINE_WITH_REASON
-		if(p = strchr(reason, '|'))
+		if(( p = strchr(reason, '|')) )
 		  *p = '\0';
 
 		sendto_one(sptr, ":%s NOTICE %s :*** K-lined for %s",
@@ -577,7 +579,7 @@ static	int	register_user(aClient *cptr,
 		ircstp->is_ref++;
 
 #ifdef KLINE_WITH_REASON
-		if( p = strchr(reason, '|'))
+		if( (p = strchr(reason, '|')) )
 		  {
 		    *p = '\0';
 		    strncpyzt(safe_reason,reason,MAX_REASON); /* ick */
@@ -782,7 +784,7 @@ static	int	register_user(aClient *cptr,
 	  SetRejectHold(cptr);
 #ifdef KLINE_WITH_REASON
 
-	  if(p = strchr(reason, '|'))
+	  if( (p = strchr(reason, '|')) )
 	    *p = '\0';
 
 	  sendto_one(sptr, ":%s NOTICE %s :*** G-lined for %s",
@@ -799,7 +801,7 @@ static	int	register_user(aClient *cptr,
 	  ircstp->is_ref++;
 
 #ifdef KLINE_WITH_REASON
-	  if( p = strchr(reason, '|'))
+	  if( (p = strchr(reason, '|')) )
 	    {
 	      *p = '\0';
 	      strncpyzt(safe_reason,reason,MAX_REASON); /* ick */
@@ -4025,7 +4027,6 @@ int	m_umode(aClient *cptr,
   aClient *acptr;
   int	what, setflags;
   int   badflag = NO;	/* Only send one bad flag notice -Dianora */
-  aConfItem *aconf;
 
   what = MODE_ADD;
 

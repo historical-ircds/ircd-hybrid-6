@@ -43,7 +43,7 @@
 #include <stdlib.h>
 #endif
 
-#if defined( HAVE_STRINGS_H )
+#if defined( HAVE_STRINGS_H ) && !defined( __GLIBC__ )
 #include <strings.h>
 #else
 # if defined( HAVE_STRING_H )

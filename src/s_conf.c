@@ -102,12 +102,9 @@ static int hash_ip(unsigned long);
 
 #ifdef LIMIT_UH
 static IP_ENTRY *find_or_add_ip(aClient *,char *);
+static int count_users_on_this_ip(IP_ENTRY *,aClient *,char *);
 #else
 static IP_ENTRY *find_or_add_ip(aClient *);
-#endif
-
-#ifdef LIMIT_UH
-static int count_users_on_this_ip(IP_ENTRY *,aClient *,char *);
 #endif
 
 /* externally defined routines */
@@ -417,7 +414,6 @@ static IP_ENTRY *find_or_add_ip(aClient *cptr)
 {
   unsigned long ip_in=cptr->ip.s_addr;	
 #ifdef LIMIT_UH
-  Link *old_link;
   Link *new_link;
 #endif
 
@@ -1209,7 +1205,7 @@ int	rehash_dump(aClient *sptr,char *parv0)
   struct tm *tmptr;
 
   tmptr = localtime(&NOW);
-  strftime(timebuffer, MAX_DATE_STRING, "%y%m%d%H%M", tmptr);
+  strftime(timebuffer, MAX_DATE_STRING, "%Y%m%d%H%M", tmptr);
   (void)sprintf(ircd_dump_file,"%s/ircd.conf.%s",
 		DPATH,timebuffer);
   
@@ -1382,7 +1378,7 @@ int	rehash(aClient *cptr,aClient *sptr,int sig)
     char filenamebuf[1024];
     struct tm *tmptr;
     tmptr = localtime(&NOW);
-    (void)strftime(timebuffer, 20, "%y%m%d", tmptr);
+    (void)strftime(timebuffer, 20, "%Y%m%d", tmptr);
     ircsprintf(filenamebuf, "%s.%s", klinefile, timebuffer);
 
     if ((fd = openconf(filenamebuf)) == -1)
@@ -1575,7 +1571,7 @@ int 	initconf(int opt, int fd,int use_include)
 
 	  if(!strncasecmp(line+1,"include ",8))
 	    {
-	      if(filename = strchr(line+8,'"'))
+	      if( (filename = strchr(line+8,'"')) )
 		filename++;
 	      else
 		{
@@ -1583,7 +1579,7 @@ int 	initconf(int opt, int fd,int use_include)
 		  continue;
 		}
 
-	      if( back = strchr(filename,'"'))
+	      if( (back = strchr(filename,'"')) )
 		*back = '\0';
 	      else
 		{
@@ -1963,7 +1959,7 @@ int 	initconf(int opt, int fd,int use_include)
 	   * an IP I line only, but I won't enforce it here. 
 	   */
 
-	  if( p = strchr(aconf->host,'@'))
+	  if( (p = strchr(aconf->host,'@')) )
 	    {
 	      aconf->flags |= CONF_FLAGS_DO_IDENTD;
 	      *p = '\0';
@@ -1980,7 +1976,7 @@ int 	initconf(int opt, int fd,int use_include)
 	     * in the aconf->name field.
 	     */
 
-	      if( p = strchr(aconf->name,'@'))
+	      if( ( p = strchr(aconf->name,'@')) )
 		{
 		  aconf->flags |= CONF_FLAGS_DO_IDENTD;
 		  *p = '\0';
@@ -2543,7 +2539,7 @@ void report_glines(aClient *sptr)
       while(gline_pending_ptr)
 	{
 	  tmptr = localtime(&gline_pending_ptr->time_request1);
-	  strftime(timebuffer, MAX_DATE_STRING, "%y/%m/%d %H:%M:%S", tmptr);
+	  strftime(timebuffer, MAX_DATE_STRING, "%Y/%m/%d %H:%M:%S", tmptr);
 
 	  sendto_one(sptr,":%s NOTICE %s :1) %s!%s@%s on %s requested gline at %s for %s@%s [%s]",
 		     me.name,sptr->name,
@@ -2559,7 +2555,7 @@ void report_glines(aClient *sptr)
 	  if(gline_pending_ptr->oper_nick2[0])
 	    {
 	      tmptr = localtime(&gline_pending_ptr->time_request2);
-	      strftime(timebuffer, MAX_DATE_STRING, "%y/%m/%d %H:%M:%S", tmptr);
+	      strftime(timebuffer, MAX_DATE_STRING, "%Y/%m/%d %H:%M:%S", tmptr);
 	      sendto_one(sptr,
 	      ":%s NOTICE %s :2) %s!%s@%s on %s requested gline at %s for %s@%s [%s]",
 			 me.name,sptr->name,
@@ -2917,7 +2913,7 @@ void report_temp_klines(aClient *sptr)
 
 	      if(!IsAnOper(sptr))
 		{
-		  if(p = strchr(reason,'|'))
+		  if( (p = strchr(reason,'|')) )
 		    *p = '\0';
 
 		  sendto_one(sptr,rpl_str(RPL_STATSKLINE), me.name,
@@ -2985,7 +2981,7 @@ int	find_restrict(aClient *cptr)
 		       &me);
 	  return 0;
 	}
-      switch (rc = vfork())
+      switch (rc = fork())
 	{
 	case -1 :
 	  report_error("Error forking for R-line %s:%s", &me);
@@ -3096,7 +3092,7 @@ static int check_time_interval(char *interval)
 
   while (interval)
     {
-      if(p = (char *)strchr(interval, ','))
+      if( (p = (char *)strchr(interval, ',')) )
 	*p = '\0';
       if (sscanf(interval, "%2d%2d-%2d%2d",
 		 &perm_min_hours, &perm_min_minutes,
@@ -3631,5 +3627,6 @@ int m_testline(aClient *cptr, aClient *sptr, int parc, char *parv[])
   else
     sendto_one(sptr, ":%s NOTICE %s :usage: user@host,ip",
 	       me.name, parv[0]);
+  return 0;
 }
 

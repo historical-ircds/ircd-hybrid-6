@@ -705,14 +705,16 @@ aConfItem *match_ip_Kline(unsigned long ip,char *name)
       if (scan->status & CONF_CLIENT) /* Iline */
 	if (!matches(scan->name,name)) /* name jives */
 	  if (winnertype=='I') /* we might be able to beat the champ */
-	    if (winner && (scan->ip_mask <= winner->ip_mask))
-	      {
-		continue;  /* more vague */
-	      }
-	    else
-	      {
-		winner=scan;
-	      }
+            {
+	      if (winner && (scan->ip_mask <= winner->ip_mask))
+	        {
+		  continue;  /* more vague */
+	        }
+	      else
+	        {
+		  winner=scan;
+	        }
+            }
     }
   return winner;
 }

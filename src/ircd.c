@@ -445,7 +445,7 @@ static	time_t	check_pings(time_t currenttime)
   int die_index=0;			/* index into list */
   char ping_time_out_buffer[64];	/* blech that should be a define */
 #if defined(IDLE_CHECK) && defined(SEND_FAKE_KILL_TO_CLIENT)
-  int		fakekill;
+  int		fakekill=0;
 #endif /* IDLE_CHECK && SEND_FAKE_KILL_TO_CLIENT */
 
 					/* of dying clients */
@@ -1267,7 +1267,7 @@ normal user.\n");
     char timebuffer[20], filename[200];
 
     tmptr = localtime(&NOW);
-    (void)strftime(timebuffer, 20, "%y%m%d", tmptr);
+    (void)strftime(timebuffer, 20, "%Y%m%d", tmptr);
     ircsprintf(filename, "%s.%s", klinefile, timebuffer);
     if ((fd = openconf(filename)) == -1)
       {
