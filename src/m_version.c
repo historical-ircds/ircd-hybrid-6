@@ -1,5 +1,3 @@
-
-
 /************************************************************************
  *   IRC - Internet Relay Chat, src/m_version.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
