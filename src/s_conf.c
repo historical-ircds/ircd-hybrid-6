@@ -2046,6 +2046,39 @@ int 	initconf(int opt, int fd,int use_include)
       else if (aconf->status & CONF_QUARANTINED_NICK)
 	{
 	  dontadd = 1;
+#ifdef JUPE_CHANNEL
+	  if(aconf->host[0] == '#')
+	    {
+	      aChannel *chptr;
+	      int len;
+
+	      if(chptr = find_channel(aconf->host, (aChannel *)NULL))
+		chptr->mode.mode |= MODE_JUPED;
+	      else
+		{
+		  /* create a zero user channel, marked as MODE_JUPED
+		   * which just place holds the channel down.
+		   */
+
+		  len = strlen(aconf->host);
+		  chptr = (aChannel *)MyMalloc(sizeof(aChannel) + len);
+		  memset((void *)chptr, 0, sizeof(aChannel));
+		  strncpyzt(chptr->chname, aconf->host, len+1);
+		  chptr->mode.mode = MODE_JUPED;
+		  if (channel)
+		    channel->prevch = chptr;
+		  chptr->prevch = NULL;
+		  chptr->nextch = channel;
+		  channel = chptr;
+		  /* JIC */
+		  chptr->channelts = NOW;
+		  (void)add_to_channel_hash_table(aconf->host, chptr);
+		  Count.chan++;
+		}
+	      if(aconf->passwd)
+		strncpyzt(chptr->topic, aconf->passwd, sizeof(chptr->topic));
+	    }
+#endif
 	  MyFree(aconf->name);
 	  aconf->name = aconf->host;
 	  aconf->host = (char *)NULL;

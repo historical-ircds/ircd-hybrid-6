@@ -1258,6 +1258,7 @@ static void report_unsortable_klines(aClient *sptr,char *need_host)
   char *host;
   char *pass;
   char *name;
+  char *p;
   int port;
 
   for(found_conf = unsortable_list_klines;
@@ -1268,11 +1269,21 @@ static void report_unsortable_klines(aClient *sptr,char *need_host)
       name = BadPtr(found_conf->name) ? null : found_conf->name;
       port = (int)found_conf->port;
       
+      /* Hide any comment following a '|' seen in the password field */
       if(!match(host,need_host))
 	{
+	  p = (char *)NULL;
+	  if(!IsAnOper(sptr))
+	    {
+	      p = strchr(pass,'|');
+	      if(p)
+		*p = '\0';
+	    }
 	  sendto_one(sptr, rpl_str(RPL_STATSKLINE), me.name,
 		     sptr->name, 'K', host,
 		     name, pass);
+	  if(p)
+	    *p = '|';
 	}
     }
 }
@@ -1294,6 +1305,7 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
   char *pass;
   char *name;
   char *mask;
+  char *p;
   int  port;
   char c;		/* conf char used for CONF_CLIENT only */
 
@@ -1400,9 +1412,20 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
 	  name = BadPtr(found_conf->name) ? null : found_conf->name;
 	  port = (int)found_conf->port;
 
+	  /* Hide any comment following a '|' seen in the password field */
+	  p = (char *)NULL;
+	  if(!IsAnOper(sptr))
+	    {
+	      p = strchr(pass,'|');
+	      if(p)
+		*p = '\0';
+	    }
+
 	  sendto_one(sptr, rpl_str(RPL_STATSKLINE), me.name,
 		     sptr->name, 'K', host,
 		     name, pass);
+	  if(p)
+	    *p = '|';
 	}
     }
 }
@@ -1486,6 +1509,7 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
   char *pass;
   char *name;
   char *mask;
+  char *p;
   int  port;
   char c='\0';
 
@@ -1512,6 +1536,16 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 
 		  if (aconf->status == CONF_KILL)
 		    {
+		      /* Hide any comment following a '|' seen in the
+		       * password field
+		       */
+		      p = (char *)NULL;
+		      if(!IsAnOper(sptr))
+			{
+			  p = strchr(pass,'|');
+			  if(p)
+			    *p = '\0';
+			}
 		      sendto_one(sptr, rpl_str(RPL_STATSKLINE),
 				 me.name,
 				 sptr->name,
@@ -1519,6 +1553,8 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 				 host,
 				 name,
 				 pass);
+		      if(p)
+			*p = '|';
 		    }
 		  else
 		    {
@@ -1561,6 +1597,13 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 
 		  if (aconf->status == CONF_KILL)
 		    {
+		      p = (char *)NULL;
+		      if(!IsAnOper(sptr))
+			{
+			  p = strchr(pass,'|');
+			  if(p)
+			    *p = '\0';
+			}
 		      sendto_one(sptr, rpl_str(RPL_STATSKLINE),
 				 me.name,
 				 sptr->name,
@@ -1568,6 +1611,8 @@ static void report_sub_mtrie(aClient *sptr, int flags, DOMAIN_LEVEL *dl_ptr)
 				 host,
 				 name,
 				 pass);
+		      if(p)
+			*p = '|';
 		    }
 		  else
 		    {

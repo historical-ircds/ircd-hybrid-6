@@ -611,6 +611,15 @@ int	can_send(aClient *cptr, aChannel *chptr)
   Reg	Link	*lp;
   Reg	int	member;
 
+#ifdef JUPE_CHANNEL
+  if (MyClient(cptr) && (chptr->mode.mode & MODE_JUPED))
+    {
+      sendto_one(cptr, err_str(ERR_JUPEDCHAN),
+		 me.name, cptr->name, "PRIVMSG");
+      return (MODE_NOPRIVMSGS);
+    }
+#endif
+
   lp = find_user_link(chptr->members, cptr);
 
   if (chptr->mode.mode & MODE_MODERATED &&
@@ -1596,6 +1605,19 @@ static  void     set_mode(aClient *cptr,
 	    }
 	  break;
 
+	  /* Un documented for now , I have no idea how this got here ;-) */
+#ifdef JUPE_CHANNEL
+	case 'j':
+	  if(IsAnOper(sptr))
+	    {
+	      if (whatt == MODE_ADD)
+		chptr->mode.mode |= MODE_JUPED;
+	      else if(whatt == MODE_DEL)
+		chptr->mode.mode &= ~MODE_JUPED;
+	    }
+	  break;
+#endif
+
 	case 'm' :
 	  if (!isok)
 	    {
@@ -1946,6 +1968,15 @@ static	int	can_join(aClient *sptr, aChannel *chptr, char *key)
 {
   Reg	Link	*lp;
 
+#ifdef JUPE_CHANNEL
+  if( chptr->mode.mode & MODE_JUPED )
+    {
+      sendto_one(sptr, err_str(ERR_JUPEDCHAN),
+		 me.name, sptr->name, "JOIN");
+      return (ERR_JUPEDCHAN);
+    }
+#endif
+
   if (is_banned(sptr, chptr))
     return (ERR_BANNEDFROMCHAN);
   if (chptr->mode.mode & MODE_INVITEONLY)
@@ -2155,7 +2186,19 @@ static	void	sub1_from_channel(aChannel *chptr)
 	}
       else
 #endif
-	{
+#ifdef JUPE_CHANNEL
+	if( chptr->mode.mode & MODE_JUPED )
+	  {
+	    while ((tmp = chptr->invites))
+	      del_invite(tmp->value.cptr, chptr);
+	    
+#ifdef FLUD
+	    free_fluders(NULL, chptr);
+#endif
+	  }
+	else
+#endif
+       {
 	  /*
 	   * Now, find all invite links from channel structure
 	   */
@@ -3590,10 +3633,26 @@ int	m_list(aClient *cptr,
 {
   aChannel *chptr;
   char	*name, *p = NULL;
+  /* anti flooding code,
+   * I did have this in parse.c with a table lookup
+   * but I think this will be less inefficient doing it in each
+   * function that absolutely needs it
+   *
+   * -Dianora
+   */
+  static time_t last_used=0L;
 
   /* throw away non local list requests that do get here -Dianora */
   if(!MyConnect(sptr))
     return 0;
+
+  if(!IsAnOper(sptr))
+    {
+      if((last_used + PACE_WAIT) > NOW)
+	return 0;
+      else
+	last_used = NOW;
+    }
 
   sendto_one(sptr, rpl_str(RPL_LISTSTART), me.name, parv[0]);
 
@@ -3961,6 +4020,7 @@ int	m_sjoin(aClient *cptr,
 
   isnew = ChannelExists(parv[2]) ? 0 : 1;
   chptr = get_channel(sptr, parv[2], CREATE);
+
 
   /*
    * bogus ban removal code.

@@ -998,13 +998,18 @@
  * This code adds server side ignore for a client who gets
  * messaged more than drone_count times within drone_time seconds
  * unfortunately, its a great DOS, but at least the client won't flood off.
- * I have no idea what to use for values here, trying 10 privmsgs
- * within 5 seconds.
+ * I have no idea what to use for values here, trying 8 privmsgs
+ * within 1 seconds. (I'm told it is usually that fast)
  * I'll do better next time, this is a Q&D -Dianora
  */
 #define ANTI_DRONE_FLOOD
-#define DEFAULT_DRONE_TIME 5
-#define DEFAULT_DRONE_COUNT 10
+#define DEFAULT_DRONE_TIME 1
+#define DEFAULT_DRONE_COUNT 8
+
+/* JUPE_CHANNEL - jupes a channel from being joined on this server only
+ * if added to Q lines e.g. Q:\#packet_channel:Tired of packets
+ */
+#define JUPE_CHANNEL
 
 /* 
  * ANTI_SPAMBOT

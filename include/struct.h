@@ -932,6 +932,10 @@ extern struct Capability captab[];
 #define MODE_SPLIT	0x1000
 #endif
 
+#ifdef JUPE_CHANNEL
+#define MODE_JUPED	0x2000
+#endif
+
 /*
  * mode flags which take another parameter (With PARAmeterS)
  */

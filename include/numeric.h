@@ -323,6 +323,8 @@
 #define ERR_MODELESS	     477	/* ircu numeric -db */
 #define ERR_BANLISTFULL	     478	/* I stole the numeric from ircu -db */
 
+#define ERR_JUPEDCHAN	     479	/* co-ordinate later with ircu/ircnet */
+
 #define ERR_NOPRIVILEGES     481
 #define ERR_CHANOPRIVSNEEDED 482
 #define	ERR_CANTKILLSERVER   483

@@ -557,6 +557,10 @@ static	int	register_user(aClient *cptr,
 #ifdef REJECT_HOLD
 		SetRejectHold(cptr);
 #ifdef KLINE_WITH_REASON
+		p = strchr(reason, '|');
+		if(p)
+		  *p = '\0';
+
 		sendto_one(sptr, ":%s NOTICE %s :*** K-lined for %s",
 			   me.name,cptr->name,reason);
 #else
@@ -568,6 +572,10 @@ static	int	register_user(aClient *cptr,
 		ircstp->is_ref++;
 
 #ifdef KLINE_WITH_REASON
+		p = strchr(reason, '|');
+		if(p)
+		  *p = '\0';
+
 		return exit_client(cptr, sptr, &me, reason);
 #else
 		return exit_client(cptr, sptr, &me, "K-lined");
@@ -764,6 +772,11 @@ static	int	register_user(aClient *cptr,
 #ifdef REJECT_HOLD
 	  SetRejectHold(cptr);
 #ifdef KLINE_WITH_REASON
+
+	  p = strchr(reason, '|');
+	  if(p)
+	    *p = '\0';
+
 	  sendto_one(sptr, ":%s NOTICE %s :*** G-lined for %s",
 		     me.name,cptr->name,reason);
 #else
@@ -775,6 +788,10 @@ static	int	register_user(aClient *cptr,
 	  ircstp->is_ref++;
 
 #ifdef KLINE_WITH_REASON
+	  p = strchr(reason, '|');
+	  if(p)
+	    *p = '\0';
+
 	  return exit_client(cptr, sptr, &me, reason);
 #else
 	  return exit_client(cptr, sptr, &me, "G-lined");
