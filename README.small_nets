@@ -1,12 +1,11 @@
-  On a stand alone server, make sure you #undef all of
-NO_CHANOPS_ON_SPLIT, NO_JOIN_ON_SPLIT, PRESERVE_CHANNEL_ON_SPLIT
-NO_JOIN_ON_SPLIT_SIMPLE in config.h Otherwise, you will have trouble
-with non opered clients gaining ops in new channels.
+  On a stand alone server, make sure you #undef NO_JOIN_ON_SPLIT in
+config.h Otherwise, you will have trouble with non opered clients
+joining new channels.
 
 IMPORTANT NOTE:  INITIAL_DBUFS is now 16MB in the default.  Small
 networks MUST change this value to avoid wasting considerable memory.
 
-  ircd-hybrid has been primarily geared for EFnet, where 50k clients
+  ircd-hybrid has been primarily geared for EFnet, where 60k clients
 is becoming the norm. But for smaller non EFnet nets, thats going
 to cost your server memory, because it will be expecting the large numbers
 of clients on EFnet that will never happen on a smaller net.

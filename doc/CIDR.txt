@@ -265,16 +265,11 @@ Maintainer: BEST
   of us admins are BOFH types, but if you ask us the right questions,
   you'll benefit from the answer quite thoroughly.
 
-  I'm also sure this doc has some things which are incorrect or are
-  "vague."  I apologize for that; all of this is how I understand
-  things as a programmer and as an admin.  I don't claim to be a
-  network administrator, nor do I claim to know everything about IPv4
-  or anything of the sort.  I just know what I know.
-
-  Oh, I almost forgot.  I believe Linux uses a different version of
-  "whois" than FreeBSD does.  If I remember right, the syntax for
-  whois on Linux is "whois <INFO>@whois.arin.net", while under FreeBSD
-  it's "whois -h whois.arin.net <INFO>".
+  Oh, I almost forgot.  Most Linux systems use a different version of
+  "whois" than FreeBSD does.  The syntax for whois on Linux is
+  "whois <INFO>@whois.arin.net", while under FreeBSD it is
+  "whois -h whois.arin.net <INFO>"  Debian uses yet another version
+  of whois that is incompatible with the above syntax options.
 
   Note that the FreeBSD whois client has shortcuts for the most commonly
   used whois servers.  "whois -a <INFO>" is the shortcut for ARIN.
@@ -300,8 +295,8 @@ European Regional Internet Registry/RIPE NCC (NET-RIPE-NCC-)
 
 $ whois -h whois.ripe.net 212.158.123.66
 
-% Rights restricted by copyright. See http://www.ripe.net/ripencc/pub-services/d
-b/copyright.html
+% Rights restricted by copyright. See
+  http://www.ripe.net/ripencc/pub-services/db/copyright.html
 
 inetnum:     212.158.120.0 - 212.158.123.255
 netname:     INSNET-P2P
@@ -312,10 +307,10 @@ country:     GB
   This tells us the actual IP block that the query was a part of.
 
   Other whois servers that you may see blocks referred to are: 
-  whois.ripn.net for Russia, whois.apnic.net for Asia and the Pacific,
-  whois.aunic.net for Australia, and whois.6bone.net for IPv6 blocks.
+  whois.ripn.net for Russia, whois.apnic.net for Asia, Australia, and
+  the Pacific, and whois.6bone.net for IPv6 blocks.
 
 Contributed by Jeremy Chadwick <jdc@best.net>
 Piotr Kucharski <chopin@sgh.waw.pl> 
-Walter Campbell <wcampbel@botbay.net> and
+W. Campbell <wcampbel@botbay.net> and
 Ariel Biener <ariel@fireball.tau.ac.il>

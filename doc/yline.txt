@@ -1,5 +1,5 @@
 # Y: Line Reference Guide (In Constant Progress)
-# Walter Campbell (hwy101@kabel.pp.ru)
+# W. Campbell (hwy101@kabel.pp.ru)
 # This document is freely redistributable copyrighted material
 # 
 # The structure of this document allows for pasting or including into an 

@@ -1,8 +1,8 @@
 
 EFnet Oper Guide
-Last update : 01-25-2001
+Last update : 09-25-2001
 Written and maintained by Riedel
-E-Mail : vink@vuurwerk.nl
+E-Mail : dennisv@vuurwerk.nl
 
  1.  Commands you should know about
  2.  The client of your choice
@@ -15,7 +15,9 @@ E-Mail : vink@vuurwerk.nl
  8.  Security
  9.  Know who your friends are
 10.  The TCM bot
-11.  Modern Oper-dom, Hybrid 7
+11.  Services 
+12.  G-Lines
+
 
 1. Commands you should know about
 
@@ -23,12 +25,13 @@ E-Mail : vink@vuurwerk.nl
   this section would be outdated in no time ;) For an up-to-date version,
   please download the latest hybrid at www.ircd-hybrid.org.
 
+
 2. The client of your choice
 
   There are many IRC clients around for a wide variety of operating systems.
   Being an IRC Operator doesn't *require* you to use a UNIX client, however
-  i personally prefer UNIX-based clients. If you're familiar with UNIX and
-  use UNIX for opering, i suggest ircII / epic. There are a lot of scripts
+  I personally prefer UNIX-based clients. If you're familiar with UNIX and
+  use UNIX for opering, I suggest ircII / epic. There are a lot of scripts
   available for those two clients, and it's not that hard to write scripts
   yourself to suite your needs. It is important that you know how to operate
   your client, and familiarize yourself with the options and features. For
@@ -297,6 +300,7 @@ Example topology :
   relationship.  Your *real* friends are usually the persons who were your
   friends _before_ you acquired the extra privileges.
 
+
 10. The TCM Bot
 
   A TCM bot can be a valuable tool for opers. It keeps record of all connected
@@ -313,86 +317,53 @@ Example topology :
   Resources :	http://toast.blackened.com/oomon/help
 		http://www.db.net/~db/tcm.html
 
-11. Modern Oper-dom - Hybrid 7
-
-  Unfortunately these times are drastic times, and drastic times require
-  drastic measures. EFnet has been the playground of takeover groups and other
-  scum. The services provided to the EFnet community have been heavily abused.
-  DoS attacks against servers is something we see every day. Modern Oper-dom is
-  a timeage where we have been forced to obscure information from our users, so
-  that they cannot use it against us. It is also a timeage where new features
-  give the user more control to remedy the problems. We'll cover a few of those
-  features that have been implemented in ircd-hybrid-7.
-
-Flood Throttling :
-
-  The newest Hybrid IRCd offers users flood protection to a certain extent.
-  Anyone who floods the channel with text, CTCP's, or any other junk
-  imaginable will be throttled. Massive flood attacks will have little impact.
-  
-Server side ignore :
-
-  Every user has the umode +g at their disposal. Umode +g is a server-side
-  ignore to ignore everyone. When the user is messaged, he'll be informed
-  with a notice and can use /quote ACCEPT nick  to be able to receive
-  messages from this user. The problem with client side ignores is that
-  the client does receive the info, but just doesn't respond. It acts like
-  it doesn't see it... but the sendq will keep on rising. Umode +g gets
-  rid of this problem.
-
-Hiding Chanops :
-
-  Mode +a has been added to the available channel modes. A non-op cannot see
-  who's opped, halfopped and voiced. Hence, someone who's interested in taking
-  over the channel doesn't know whom to target. Did i mention 'halfopped' ?
-  Oh gee, yes i did! ;p
- 
-Halfops :
-
-  You can recognize a HalfOp by the % before the nick.
-  A halfop can kick non-ops from the channel and set bans but cannot deop
-  nor kick full chanops.
-
-Virtual Channels
-
-  At this point it is uncertain if the command to create a virtual channel
-  should be an oper only command or not. A virtual channel is a situation where
-  you have multiple instances of the same channel. An example :
-
-  (The way it will be implemented is still uncertain, so this may not be a
-   realistic situation)
-
-  User Joe wants to join #nederland
-
-  /join #nederland
-  *** #nederland : has 2 possible virtual channels available
-  *** #nederland !Riedel !kaaZ
-
-  This means that there is one #nederland version, and Riedel has joined it
-  first kaaZ has joined the second channel #nederland. Lets say kaaZ is a
-  friend of Joe, and Joe wants to join kaaZ's version of the channel.
-  /join #nederland !kaaZ
-
-  If Joe was a bad guy and took over kaaZ'es version of the channel, kaaZ would
-  just start a new instance of the same channel (or requests it) and nothing
-  would've changed. Virtual channels will make channel takeovers useless.
-
-  To decrease the frequence of attacks, hybrid also hides the topology of the
-  IRC network to the mere user. Certain information that gives an indication
-  about its structure has been removed. Server Hiding is optional and will
-  probably be used to hide hubs. Server names have been removed from WHOIS.
-  This is not to annoy the mere user, but merely the removal of information
-  that's been used against us on structural basis by the abusers. It will
-  not ban out DoS attacks completely, but it will help a lot. IRC was meant
-  to be about having fun, to be able to communicate with thousands of others
-  all over the world. Let's get back to that point.
 
   Questions / Comments / Suggestions are welcome.
-  You can e-mail me : vink@vuurwerk.nl
+  You can e-mail me : dennisv@vuurwerk.nl
+
+
+11. Services
+
+  A recent addition to EFNet is Channel Fixer aka JUPES. This is an automated
+  service that re-ops clients on opless channels. There are a few restrictions.
+  First, the channel has to be of significant size for jupes to store it in its
+  database. Second, it only logs static addresses.
+
+  How does it work ? Periodically it stores information about the channel state
+  in its database, for every channel in there. On every 'run', a channel
+  operator gets one point. These scores make a top-5 of 'most frequent opped
+  clients'.
+  When a channel becomes opless, JUPES will join and op the top-5 opped clients
+  CURRENTLY IN THE CHANNEL.
+
+  Chanfix can be invoked manually to. /msg jupes chanfix #channel is the command
+  to do it. JUPES will join, and treat the channel as if it were opless. It
+  lowers TS by one (resulting in a deop of the entire channel) and re-ops the
+  top-5 clients currently in the channel. The Channel fixer won't log or
+  actively fix channels when there's a split of significant size. Needless to
+  say, the chanfix command must be used with caution.
+
+
+12. G-Lines
+
+  Oh yes! A G-Line section. Currently, a part of EFNet (eu-efnet) has G-Lines
+  enabled. This was decided by the EU admin community and is now mandatory
+  within EU-EFnet. In order for a G-Line to be activated, three opers from
+  three different servers need to issue the _exact_ same G-Line. This includes
+  a reason.
+
+  G-Lines work ideally when the EU side of EFNet is not fragmented. If you oper
+  on an EU-Server and EU is split in two (ie, one part linked to *.gblx and
+  another part to lightning), two G-Lines need to be issued on both 'sides' of
+  EU-EFnet.  Hybrid 5 and comstud servers do not support G-Lines and will not
+  propagate G-Line requests.  Hybrid 6 servers with G-Lines disabled will not
+  allow G-Lines to be set, but will still pass them.
+
 
 Best regards,
-
-Riedel
-
 --
+Dennis "Riedel" Vink       ___~___  Email - dennisv@vuurwerk.nl
+Unix System Administrator  \  |  /  Phone - +31 23 5111111
+Vuurwerk Internet           '|.|'   PGP   - 0xD68A7AAB
+
 And on the seventh day, He exited from append mode.
