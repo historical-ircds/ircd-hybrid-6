@@ -1,3 +1,17 @@
+*** 20010606_12 by db
+another patch by walter campbell
+
+1.  Updated the Hybrid-Team file with all known contributers to the Hybrid-6
+    source code
+2.  Audited the INFO defines completely
+3.  Audited the VERSION flags
+4.  Updated server-version-info
+5.  Fixed a missing header in src/ircd.c
+6.  Fixed a compilation warning in tools/encspeed.c
+
+
+
+
 *** 20010606_11 by kreator
 - fixed problems with configure under solaris 2.7 not detecting ssl -
   added missing #include <stdlib.h> for exit(). done that for all
