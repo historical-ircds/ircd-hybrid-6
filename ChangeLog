@@ -1,3 +1,8 @@
+*** 20010811_1 by lusky
+- made TS5 undef'd by default for this RC
+
+
+
 *** 20010810_4 by leeh
 - if a channel is unjuped and is empty, destroy it
 
