@@ -23,6 +23,7 @@
 #include "struct.h"
 #include "common.h"
 #include "numeric.h"
+#include "channel.h"
 #include "h.h"
 #include "send.h"
 
