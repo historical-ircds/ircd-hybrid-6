@@ -609,7 +609,6 @@ int	has_voice(aClient *cptr, aChannel *chptr)
 int	can_send(aClient *cptr, aChannel *chptr)
 {
   Reg	Link	*lp;
-  Reg	int	member;
 
 #ifdef JUPE_CHANNEL
   if (MyClient(cptr) && (chptr->mode.mode & MODE_JUPED))
@@ -2566,7 +2565,7 @@ int	m_join(aClient *cptr,
 {
   static char	jbuf[BUFSIZE];
   Reg	Link	*lp;
-  Reg	aChannel *chptr;
+  Reg	aChannel *chptr = NULL;
   Reg	char	*name, *key = NULL;
   int	i, flags = 0;
 #ifdef USE_ALLOW_OP
@@ -3079,7 +3078,6 @@ int	m_kick(aClient *cptr,
   char  *name;
   char  *p = (char *)NULL;
   char  *user;
-  char  *p2 = (char *)NULL;
 
   if (parc < 3 || *parv[1] == '\0')
     {
@@ -3741,8 +3739,7 @@ int	m_names( aClient *cptr,
   Reg	aChannel *chptr;
   Reg	aClient *c2ptr;
   Reg	Link	*lp;
-  aChannel *ch2ptr = NULL;
-  int	idx, flag, len, mlen;
+  int	idx, flag = 0, len, mlen;
   char	*s, *para = parc > 1 ? parv[1] : NULL;
   int comma_count=0;
   int char_count=0;

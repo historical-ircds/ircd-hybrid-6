@@ -96,7 +96,6 @@ struct ip_subtree *insert_ip_subtree(struct ip_subtree *head,
 struct ip_subtree *find_ip_subtree(struct ip_subtree *head,
 				   unsigned long ip)
 {
-  long diff;
   unsigned long mask;
   struct ip_subtree *cur=head;
   while (cur) 
@@ -126,7 +125,7 @@ struct ip_subtree *delete_ip_subtree(struct ip_subtree *head,
 				     unsigned long mask,
 				     aConfItem **clist)
 {
-  aConfItem *cur, *ctemp;
+  aConfItem *cur;
   struct ip_subtree *temp, *prev;
   
   if (!head) return NULL; /* end of the tree */
@@ -429,7 +428,7 @@ aConfItem *match_Dline(unsigned long ip)
     return NULL;                    /*   this tree.  Don't even bother looking */
 
   /* check the top level */
-  /* if (Dline[head]==NULL) return NULL; <--- oracle check should cover this  /* no match */
+  /* if (Dline[head]==NULL) return NULL; <--- oracle check should cover this */  /* no match */
   
   /* check the ip_subtree */
   node=find_ip_subtree(Dline[head], ip);
@@ -599,7 +598,6 @@ void add_ip_Iline(aConfItem *conf_ptr)
   unsigned long host_ip;
   unsigned long host_mask;
   aConfItem *clist = NULL;
-  aConfItem *scan = NULL;
   struct ip_subtree *node;
 
   host_ip = host_name_to_ip(conf_ptr->host,&host_mask),
@@ -741,10 +739,8 @@ void zap_Dlines()
 void walk_the_dlines(aClient *sptr, struct ip_subtree *tree)
 {
   aConfItem *scan;
-  char *host;
   char *mask;
   char *pass;
-  char *name;
   char c;		/* D,d or K */
   static  char	null[] = "<NULL>";
 
@@ -788,7 +784,7 @@ void walk_the_ip_Klines(aClient *sptr, struct ip_subtree *tree,
 {
   aConfItem *scan;
   char *host;
-  char *mask;
+  char *mask = NULL;
   char *pass;
   char *name;
   int port;

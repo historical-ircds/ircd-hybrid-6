@@ -144,9 +144,9 @@ int     m_whowas(aClient *cptr,
   register aWhowas *temp;
   register int cur = 0;
   int     max = -1, found = 0;
-  char    *p, *nick, *s;
+  char    *p, *nick;
+/*  char    *s; */
   static time_t last_used=0L;
-  static int last_count=0;
 
   if (parc < 2)
     {

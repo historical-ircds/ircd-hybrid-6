@@ -2,6 +2,10 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b64   8-May-1999
+* code clean-up...
+--Rodder
+
 version hybrid-6-b63   6-May-1999
 * SPY_LEVEL notices for clients attempting to join juped channel
 * sendto_realop notices when mode +/-j #channel is used

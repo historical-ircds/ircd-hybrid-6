@@ -332,7 +332,6 @@ void	count_memory(aClient *cptr,char *nick)
   int usc = 0;		/* users in channels */
   int aw = 0;		/* aways set */
   int number_ips_stored;	/* number of ip addresses hashed */
-  int number_dlines_stored;	/* number of dlines hashed */
   int number_servers_cached; /* number of servers cached by scache */
 
   u_long chm = 0;	/* memory used by channels */
@@ -347,7 +346,6 @@ void	count_memory(aClient *cptr,char *nick)
   u_long rm = 0;	/* res memory used */
   u_long mem_servers_cached; /* memory used by scache */
   u_long mem_ips_stored;	/* memory used by ip address hash */
-  u_long mem_dlines_stored;	/* memory used by dline hash */
 
   u_long totcl = 0;
   u_long totch = 0;

@@ -5638,7 +5638,7 @@ int     place_dline(aClient *sptr,
     }
 
 #ifdef NON_REDUNDANT_KLINES
-  if( aconf = match_Dline(ip_host_network_order)) 
+  if( (aconf = match_Dline(ip_host_network_order)) )
      {
        char *reason;
        reason = aconf->passwd ? aconf->passwd : "<No Reason>";
@@ -5988,8 +5988,10 @@ int	m_trace(aClient *cptr,
   char	*tname;
   int	doall, link_s[MAXCONNECTIONS], link_u[MAXCONNECTIONS];
   int	cnt = 0, wilds, dow;
+#ifdef PACE_TRACE
   static time_t last_trace=0L;
   static time_t last_used=0L;
+#endif
   static time_t now;
 
   now = time(NULL);  
@@ -6279,7 +6281,6 @@ int	m_ltrace(aClient *cptr,
 {
   Reg	int	i;
   Reg	aClient	*acptr = NULL;
-  aClass	*cltmp;
   char	*tname;
   int	doall, link_s[MAXCONNECTIONS], link_u[MAXCONNECTIONS];
   int	cnt = 0, wilds, dow;
@@ -6379,9 +6380,9 @@ int	m_ltrace(aClient *cptr,
 	  break;
 	case STAT_CLIENT:
 	  /* Well, most servers don't have a LOT of OPERs... let's show them too */
-	  if (IsAnOper(sptr) &&
-	      (MyClient(sptr) || !(dow && IsInvisible(acptr)))
-	      || !dow || IsAnOper(acptr))
+          if ((IsAnOper(sptr) &&
+              (MyClient(sptr) || !(dow && IsInvisible(acptr))))
+              || !dow || IsAnOper(acptr))
 	    {
 	      if (IsAnOper(acptr))
 		sendto_one(sptr,
@@ -6437,6 +6438,7 @@ int	m_ltrace(aClient *cptr,
 		 link_u[me.fd], me.name, "*", "*", me.name);
       return 0;
     }
+  return 0;
 }
 #endif /* LTRACE */
 

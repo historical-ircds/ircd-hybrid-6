@@ -199,6 +199,10 @@ extern  void    send_capabilities(aClient *,int);
 extern  int	host_is_legal_ip(char *); 
 extern  void	do_include_conf();
 extern  void	del_client_from_llist(aClient **, aClient *);
+extern	void	sendto_channel_type_notice(aClient *, aChannel *, int, char *);
+extern	aConfItem	*match_Dline(unsigned long);
+extern	int	show_lusers(aClient *, aClient *, int, char **);
+extern	int	nickkilldone(aClient *, aClient *, int, char **,ts_val,char *);
 /* END Missing definitions */
 
 /*VARARGS2*/

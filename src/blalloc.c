@@ -324,7 +324,7 @@ int BlockHeapFree(BlockHeap *bh, void *ptr)
 /* ************************************************************************ */
 int BlockHeapGarbageCollect(BlockHeap *bh)
 {
-   Block *walker, *last, *tmpptr;
+   Block *walker, *last;
 
    if (bh == NULL)
       return 1;

@@ -94,7 +94,6 @@ IP_ENTRY *ip_hash_table[IP_HASH_SIZE];
 extern void zap_Dlines();
 
 static int hash_ip(unsigned long);
-static int hash_dline_ip(unsigned long);
 
 #ifdef LIMIT_UH
 static IP_ENTRY *find_or_add_ip(aClient *);
@@ -205,7 +204,7 @@ int	attach_Iline(aClient *cptr,
 				       ntohl(cptr->ip.s_addr));
       if(aconf && !IsConfElined(aconf))
 	{
-	  if(tkline_conf = find_tkline(host,cptr->username))
+	  if( (tkline_conf = find_tkline(host,cptr->username)) )
 	    aconf = tkline_conf;
 	}
     }
@@ -219,7 +218,7 @@ int	attach_Iline(aClient *cptr,
 				       ntohl(cptr->ip.s_addr));
       if(aconf && !IsConfElined(aconf))
 	{
-	  if(tkline_conf = find_tkline(host,non_ident))
+	  if( (tkline_conf = find_tkline(host,non_ident)) )
 	    aconf = tkline_conf;
 	}
     }
@@ -327,7 +326,7 @@ static int attach_iline(
     }
 #endif
 
-#ifdef 0
+#if 0
   /* What exactly is this crap? */
   if(IsLimitIp(aconf) && (ip_found->count > 1))
     return -4; /* Already at maximum allowed ip#'s */
@@ -2052,7 +2051,7 @@ int 	initconf(int opt, int fd,int use_include)
 	      aChannel *chptr;
 	      int len;
 
-	      if(chptr = find_channel(aconf->host, (aChannel *)NULL))
+	      if( (chptr = find_channel(aconf->host, (aChannel *)NULL)) )
 		chptr->mode.mode |= MODE_JUPED;
 	      else
 		{
@@ -2267,7 +2266,7 @@ aConfItem *find_is_klined(char *host,char *name,unsigned long ip)
 {
   aConfItem *found_aconf;
 
-  if(found_aconf = find_tkline(host,name))
+  if( (found_aconf = find_tkline(host,name)) )
     return(found_aconf);
 
   /* find_matching_mtrie_conf() can return either a CONF_KILL
@@ -2298,7 +2297,7 @@ static aConfItem *find_tkline(char *host,char *name)
   aConfItem *kill_list_ptr;	/* used for the link list only */
   aConfItem *last_list_ptr;
   aConfItem *tmp_list_ptr;
-  aConfItem *tmp;
+/*  aConfItem *tmp; */
 
   /* Temporary kline handling...
    * I expect this list to be very tiny. (crosses fingers) so CPU

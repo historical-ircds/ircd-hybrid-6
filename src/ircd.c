@@ -495,7 +495,7 @@ static	time_t	check_pings(time_t currenttime)
 	    {
 	      if(IsPerson(cptr))
 		{
-		  if( aconf = match_Dline(ntohl(cptr->ip.s_addr)))
+		  if( (aconf = match_Dline(ntohl(cptr->ip.s_addr))) )
 
 		      /* if there is a returned 
 		       * aConfItem then kill it

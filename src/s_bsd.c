@@ -247,7 +247,7 @@ int	inetport(aClient *cptr, int port, u_long bind_addr)
   static struct sockaddr_in server;
   int len = sizeof(server);
   struct hostent *hp;
-  Link *lp;
+
 
   (void)strcpy(cptr->name, me.name);
 
@@ -288,8 +288,8 @@ int	inetport(aClient *cptr, int port, u_long bind_addr)
       if (bind_addr)
         {
 	  server.sin_addr.s_addr = bind_addr;
-          if (hp = gethostbyaddr((char *)&bind_addr, sizeof(bind_addr),
-            AF_INET))
+          if ( (hp = gethostbyaddr((char *)&bind_addr, sizeof(bind_addr),
+            AF_INET)) )
               strncpyzt(cptr->sockhost, hp->h_name, HOSTLEN);
           else
               strncpyzt(cptr->sockhost, inetntoa((char *)&bind_addr), HOSTLEN);
@@ -1326,7 +1326,7 @@ aClient	*add_connection(aClient *cptr, int fd)
    */
 
     {
-      Reg	char	*s, *t;
+/*      Reg	char	*s, *t; */
       struct	sockaddr_in addr;
       int	len = sizeof(struct sockaddr_in);
 
