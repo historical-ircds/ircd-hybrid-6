@@ -1501,6 +1501,13 @@ int 	initconf(int opt, int fd,int use_include)
 	      include_conf->next = include_list;
 	      include_list = include_conf;
 	    }
+	  /* 
+	   * A line consisting of the first char '.' will now
+	   * be treated as a comment line.
+	   * a line `.include "file"' will result in an included
+	   * portion of the conf file.
+	   */
+	  continue;
 	}
 
       /* Could we test if it's conf line at all?	-Vesa */
