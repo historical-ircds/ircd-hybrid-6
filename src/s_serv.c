@@ -5488,9 +5488,9 @@ int	m_rehash(aClient *cptr,
 #undef OUT
 
 #ifdef GLINES
-#define OUT "rehash one of :DNS TKLINES GLINES GC MOTD DUMP"
+#define OUT "rehash one of :DNS TKLINES GLINES GC MOTD OMOTD DUMP"
 #else
-#define OUT "rehash one of :DNS TKLINES GC MOTD DUMP"
+#define OUT "rehash one of :DNS TKLINES GC MOTD OMOTD DUMP"
 #endif
 	  sendto_one(sptr,":%s NOTICE %s : " OUT,me.name,sptr->name);
 	  return(0);

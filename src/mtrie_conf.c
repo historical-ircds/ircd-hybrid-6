@@ -327,8 +327,7 @@ static DOMAIN_PIECE *find_or_add_host_piece(DOMAIN_LEVEL *level_ptr,
  * inputs	- pointer to current level 
  *		- piece of domain name being looked for
  *		- flags
- *		- username
- *		- reason
+ *		- aconf pointer to an aConfItem 
  * output	- pointer to next DOMAIN_LEVEL to use
  * side effects -
  *
@@ -350,6 +349,7 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
 
   if(user[0] == '*' && user[1] == '\0')
     {
+      /* its empty, so add the given aconf, and return. done */
       if(!(piece_ptr->wild_conf_ptr))
 	 {
 	   aconf->status |= flags;
@@ -357,7 +357,7 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
 	   piece_ptr->flags |= flags;
 	   return;
 	 }
-      else
+      else	/* not empty.... */
 	{
 	  found_aconf = piece_ptr->wild_conf_ptr;
 
@@ -378,17 +378,18 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
 	      found_aconf->status &= ~CONF_KILL;
 	      piece_ptr->flags |= flags;
 	      piece_ptr->flags &= ~CONF_KILL;
+	      return;
 	    }
 	  else if(flags & CONF_KILL)
 	    {
+	      report_dup('K',found_aconf);
 	      if(found_aconf->clients)
 		found_aconf->status |= CONF_ILLEGAL;
 	      else
-		{
-		  report_dup('K',found_aconf);
-		  free_conf(found_aconf);
-		}
+		free_conf(found_aconf);
 	      piece_ptr->wild_conf_ptr = aconf;
+	      piece_ptr->flags |= flags;
+	      return;
 	    }
 	  else if(flags & CONF_CLIENT)	/* I line replacement */
 	    {
@@ -397,10 +398,10 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
 	       */
 	      report_dup('I',aconf);
 	      free_conf(aconf);	
+	      found_aconf->status |= flags;
+	      piece_ptr->flags |= flags;
+	      return;
 	    }
-	  found_aconf->status |= flags;
-	  piece_ptr->flags |= flags;
-	  return;
 	}
     }
 
@@ -447,6 +448,7 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
 	      else
 		{
 		  /* Its a K line */
+		  report_dup('K',aconf);
 
 		  if(found_aconf->clients)
 		    found_aconf->status |= CONF_ILLEGAL;
