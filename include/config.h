@@ -342,7 +342,7 @@
  * being KLINED very little difference, but you have been forewarned
  *
  */
-#undef KLINE_WITH_REASON
+#define KLINE_WITH_REASON
 
 /*
  * If KLINE_WITH_CONNECTION_CLOSED is defined and KLINE_WITH_REASON
