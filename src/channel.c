@@ -2166,8 +2166,13 @@ int	m_knock(aClient *cptr,
 		 me.name,
 		 sptr->name);
 
-  sendto_channel_type(cptr, &me, chptr, MODE_CHANOP,
-	      ":%s NOTICE %s :%s has knocked on the channel door.", me.name,
+  /* using &me and me.name won't deliver to clients not on this server
+   * so, the notice will have to appear from the "knocker" ick.
+   */
+
+  sendto_channel_type(cptr, sptr, chptr, MODE_CHANOP,
+		      ":%s NOTICE %s :%s has knocked on the channel door.",
+		      sptr->name,
 		      chptr->chname, parv[0]);
 }
 

@@ -3336,14 +3336,15 @@ int   m_htm(aClient *cptr,
 }
 
 /*
-cluster()
-input		- pointer to a hostname
-output		- pointer to a static of the hostname masked
-		  for use in a kline.
-side effects	- NONE
-
-reworked a tad -Dianora
-*/
+ * cluster()
+ *
+ * input	- pointer to a hostname
+ * output	- pointer to a static of the hostname masked
+ *		  for use in a kline.
+ * side effects	- NONE
+ *
+ * reworked a tad -Dianora
+ */
 
 static char *cluster(char *hostname)
 {
@@ -3360,12 +3361,12 @@ static char *cluster(char *hostname)
     return (char *) NULL;	/* EEK! */
 
   /* If a '@' is found in the hostname, this is bogus
-     and must have been introduced by server that doesn't
-     check for bogus domains (dns spoof) very well. *sigh* just return it...
-     I could also legitimately return (char *)NULL as above.
-
-     -Dianora
-  */
+   * and must have been introduced by server that doesn't
+   * check for bogus domains (dns spoof) very well. *sigh* just return it...
+   * I could also legitimately return (char *)NULL as above.
+   *
+   * -Dianora
+   */
 
   if(strchr(hostname,'@'))	
     {
@@ -3451,15 +3452,15 @@ static char *cluster(char *hostname)
 #ifdef GLINES
 
 /*
-m_gline()
-
-inputs		- The usual for a m_ function
-output		-
-side effects	-
-
-Place a G line if 3 opers agree on the identical user@host
-
-*/
+ * m_gline()
+ *
+ * inputs	- The usual for a m_ function
+ * output	-
+ * side effects	-
+ *
+ * Place a G line if 3 opers agree on the identical user@host
+ * 
+ */
 
 int     m_gline(aClient *cptr,
 		aClient *sptr,
@@ -5765,6 +5766,12 @@ static int safe_write(aClient *sptr,
 
 
 /*
+ * set_autoconn
+ *
+ * inputs	- aClient pointer to oper requesting change
+ *		-
+ * output	- none
+ * side effects	-
  */
 
 static void set_autoconn(aClient *sptr,char *parv0,char *hostname,int newval)
