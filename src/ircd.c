@@ -505,10 +505,6 @@ static	time_t	check_pings(time_t currenttime)
 				 get_client_name(cptr, FALSE));
 
 		      dying_clients[die_index] = cptr;
-#ifdef KLINE_WITH_REASON
-		      reason = aconf->passwd ? aconf->passwd : "D-lined";
-#else
-
 /* Wintrhawk */
 #ifdef KLINE_WITH_CONNECTION_CLOSED
 		      /*
@@ -518,9 +514,13 @@ static	time_t	check_pings(time_t currenttime)
 		       */
 		      reason = "Connection closed";
 #else
+#ifdef KLINE_WITH_REASON
+		      reason = aconf->passwd ? aconf->passwd : "D-lined";
+#else
 		      reason = "D-lined";
-#endif /* KLINE_WITH_CONNECTION_CLOSED */
 #endif /* KLINE_WITH_REASON */
+#endif /* KLINE_WITH_CONNECTION_CLOSED */
+
 		      dying_clients_reason[die_index++] = reason;
 		      dying_clients[die_index] = (aClient *)NULL;
 		      sendto_one(cptr, err_str(ERR_YOUREBANNEDCREEP),
@@ -547,9 +547,6 @@ static	time_t	check_pings(time_t currenttime)
 				 get_client_name(cptr, FALSE));
 
 		      dying_clients[die_index] = cptr;
-#ifdef KLINE_WITH_REASON
-		      reason = aconf->passwd ? aconf->passwd : "G-lined";
-#else
 /* Wintrhawk */
 #ifdef KLINE_WITH_CONNECTION_CLOSED
 		      /*
@@ -559,9 +556,13 @@ static	time_t	check_pings(time_t currenttime)
 		       */
 		      reason = "Connection closed";
 #else
+#ifdef KLINE_WITH_REASON
+		      reason = aconf->passwd ? aconf->passwd : "G-lined";
+#else
 		      reason = "G-lined";
-#endif /* KLINE_WITH_CONNECTION_CLOSED */
 #endif /* KLINE_WITH_REASON */
+#endif /* KLINE_WITH_CONNECTION_CLOSED */
+
 		      dying_clients_reason[die_index++] = reason;
 		      dying_clients[die_index] = (aClient *)NULL;
 		      sendto_one(cptr, err_str(ERR_YOUREBANNEDCREEP),
@@ -584,9 +585,6 @@ static	time_t	check_pings(time_t currenttime)
 				 get_client_name(cptr, FALSE));
 		      dying_clients[die_index] = cptr;
 
-#ifdef KLINE_WITH_REASON
-		      reason = aconf->passwd ? aconf->passwd : "K-lined";
-#else
 /* Wintrhawk */
 #ifdef KLINE_WITH_CONNECTION_CLOSED
 		      /*
@@ -596,9 +594,13 @@ static	time_t	check_pings(time_t currenttime)
 		       */
 		      reason = "Connection closed";
 #else
+#ifdef KLINE_WITH_REASON
+		      reason = aconf->passwd ? aconf->passwd : "K-lined";
+#else
 		      reason = "K-lined";
-#endif /* KLINE_WITH_CONNECTION_CLOSED */
 #endif /* KLINE_WITH_REASON */
+#endif /* KLINE_WITH_CONNECTION_CLOSED */
+
 		      dying_clients_reason[die_index++] = reason;
 		      dying_clients[die_index] = (aClient *)NULL;
 		      sendto_one(cptr, err_str(ERR_YOUREBANNEDCREEP),

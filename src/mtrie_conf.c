@@ -72,6 +72,7 @@ static int wildcmp(char *,char *);
 char *show_iline_prefix(aClient *,aConfItem *,char *);
 static DOMAIN_PIECE *find_or_add_host_piece(DOMAIN_LEVEL *,int,char *);
 static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *,int,char *,char *);
+static DOMAIN_PIECE *find_wild_host_piece(DOMAIN_LEVEL *,int,char *,char *);
 static void find_or_add_user_piece(DOMAIN_PIECE *,aConfItem *,int,char *);
 static aConfItem *find_user_piece(DOMAIN_PIECE *,char *,char *);
 
@@ -573,6 +574,49 @@ static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 
   for(ptr=piece_ptr;ptr;ptr=ptr->next_piece)
     {
+      if(!strcasecmp(ptr->host_piece,host_piece) && (ptr->flags & flags))
+	{
+	  return(ptr);
+	}
+    }
+
+  index = '*'&(MAX_PIECE_LIST-1);
+  piece_ptr = level_ptr->piece_list[index];
+
+  for(ptr=piece_ptr;ptr;ptr=ptr->next_piece)
+    {
+      if( ((ptr->host_piece[0] == '*') && (ptr->host_piece[1] == '\0'))
+	  && (ptr->flags & flags))
+	{
+	  return(ptr);
+	}
+    }
+
+  return((DOMAIN_PIECE *)NULL);
+}
+
+/* find_wild_host_piece
+ *
+ * inputs	- pointer to current level 
+ *		- piece of domain name being looked for
+ *		- usename
+ * output	- pointer to next DOMAIN_LEVEL to use
+ * side effects -
+ *
+ */
+
+static DOMAIN_PIECE *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
+				     char *host_piece,char *user)
+{
+  DOMAIN_PIECE *ptr;
+  DOMAIN_PIECE *piece_ptr;
+  int index;
+  
+  index = *host_piece&(MAX_PIECE_LIST-1);
+  piece_ptr = level_ptr->piece_list[index];
+
+  for(ptr=piece_ptr;ptr;ptr=ptr->next_piece)
+    {
       if(!wildcmp(ptr->host_piece,host_piece) && (ptr->flags & flags))
 	{
 	  return(ptr);
@@ -800,8 +844,9 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
 				 char *host,char *user,int flags)
 {
   DOMAIN_PIECE *cur_piece;
+  DOMAIN_PIECE *cur_wild_piece;
   char *cur_dns_piece;
-  aConfItem *aconf;
+  aConfItem *aconf=(aConfItem *)NULL;
 
   cur_dns_piece = dns_stack[--stack_pointer];
 
@@ -819,20 +864,59 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
 	  aconf = find_user_piece(cur_piece,"*",user);
 	  if(aconf && aconf->status & CONF_KILL)
 	    return(aconf);
+
+	  aconf = find_user_piece(cur_piece,cur_dns_piece,user);
+	  if(aconf && aconf->status & CONF_KILL)
+	    return(aconf);
+
+	  aconf= (aConfItem *)NULL;
 	}
       cur_piece = find_host_piece(cur_level,flags,cur_dns_piece,user);
-      if(cur_piece == (DOMAIN_PIECE *)NULL)
-	return((aConfItem *)NULL);
+
+      /* look for a match at this level of the tree */
+
+      if(cur_piece)
+	{
+	  aconf = find_user_piece(cur_piece,"*",user);
+	  if(aconf && aconf->status & CONF_KILL)
+	    return(aconf);
+
+	  aconf = find_user_piece(cur_piece,cur_dns_piece,user);
+	  if(aconf && aconf->status & CONF_KILL)
+	    return(aconf);
+
+	  aconf= (aConfItem *)NULL;
+	}
+
+      if(!aconf)
+	{
+	  cur_wild_piece =
+	    find_wild_host_piece(cur_level,flags,cur_dns_piece,user);
+
+	  if(cur_wild_piece)
+	    {
+	      aconf = find_user_piece(cur_wild_piece,"*",user);
+	      if(aconf && aconf->status & CONF_KILL)
+		return(aconf);
+
+	      aconf = find_user_piece(cur_wild_piece,cur_dns_piece,user);
+	      if(aconf && aconf->status & CONF_KILL)
+		return(aconf);
+
+	    }
+	  else
+	    return((aConfItem *)NULL);
+	}
     }
   else
     {
       /* looking for CONF_CLIENT, so descend deeper */
 
       cur_piece = find_host_piece(cur_level,flags,cur_dns_piece,user);
-
-      if(cur_piece == (DOMAIN_PIECE *)NULL)
-	return((aConfItem *)NULL);
     }
+
+  if(!cur_piece)
+    return((aConfItem *)NULL);
 
   if((cur_piece->flags & CONF_KILL) && (!first_kline_trie_list))
     {
@@ -846,7 +930,17 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
   if(cur_piece->next_level)
     cur_level = cur_piece->next_level;
   else
-    return(find_user_piece(cur_piece,cur_dns_piece,user));
+    {
+      if(aconf = find_user_piece(cur_piece,cur_dns_piece,user))
+	return(aconf);
+      else
+	{
+	  cur_piece = find_wild_host_piece(cur_level,flags,cur_dns_piece,user);
+	  if(!cur_piece)
+	    return((aConfItem *)NULL);
+	  return(find_user_piece(cur_piece,cur_dns_piece,user));
+	}
+    }
 
   return(find_sub_mtrie(cur_level,host,user,flags));
 }

@@ -755,12 +755,18 @@ static	void remove_dependents(aClient *cptr,
        * WALLOPS here only if we're "deflecting" a SQUIT
        * that hasn't hit its target  -orabidoo
        */
+      /* The WALLOPS isn't needed here as pointed out by
+       * comstud, since m_squit already does the notification.
+       */
+#ifdef 0
       if (to != cptr &&	/* not to the originator */
 	  to != sptr->from && /* not to the destination */
 	  cptr != sptr->from	/* hasn't reached target */
 	  && sptr->servptr != &me) /* not mine [done in m_squit] */
 	sendto_one(to, ":%s WALLOPS :Received SQUIT %s from %s (%s)",
 		   me.name, sptr->name, get_client_name(from, FALSE), comment);
+
+#endif
       if ((aconf = to->serv->nline))
 	strncpyzt(myname, my_name_for_link(me.name, aconf), HOSTLEN+1);
       else

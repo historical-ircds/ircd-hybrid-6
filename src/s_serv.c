@@ -2195,12 +2195,6 @@ int	m_stats(aClient *cptr,
   else
     name = me.name;
 
-#ifdef STATS_NOTICE
-  if ((stat != '\0') && strchr("AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz", stat))
-    sendto_realops_lev(SPY_LEV, "STATS %c requested by %s [%s@%s]",
-      stat, parv[0], sptr->user->username, sptr->user->host);
-#endif /* STATS_NOTICE */
-
   switch (stat)
     {
     case 'L' : case 'l' :
@@ -2469,7 +2463,7 @@ int	m_stats(aClient *cptr,
    */
 
 #ifdef STATS_NOTICE
-  if (valid_stats && stat != (char)0)
+  if (valid_stats)
     sendto_realops_lev(SPY_LEV, "STATS %c requested by %s (%s@%s) [%s]", stat,
 		       sptr->name, sptr->user->username, sptr->user->host,
 		       sptr->user->server);
@@ -5885,6 +5879,7 @@ int	m_trace(aClient *cptr,
   for (i = 0; i <= highest_fd; i++)
     {
       char	*name;
+      char      *ip;
       int	class;
       
       if (!(acptr = local[i])) /* Local Connection? */
@@ -5898,6 +5893,8 @@ int	m_trace(aClient *cptr,
       if (!dow && mycmp(tname, acptr->name))
 	continue;
       name = get_client_name(acptr,FALSE);
+      ip = acptr->hostip;
+
       class = get_client_class(acptr);
       
       switch(acptr->status)
@@ -5917,7 +5914,7 @@ int	m_trace(aClient *cptr,
 	case STAT_UNKNOWN:
 /* added time -Taner */
 	  sendto_one(sptr, rpl_str(RPL_TRACEUNKNOWN),
-		     me.name, parv[0], class, name,
+		     me.name, parv[0], class, name, ip,
 		     acptr->firsttime ? timeofday - acptr->firsttime : -1);
 	  cnt++;
 	  break;
@@ -5934,20 +5931,13 @@ int	m_trace(aClient *cptr,
 			   rpl_str(RPL_TRACEOPERATOR),
 			   me.name,
 			   parv[0], class,
-#ifdef WINTRHAWK
-			   name, now - acptr->lasttime,
+			   name, IsAnOper(sptr)?ip:"255.255.255.255",
+			   now - acptr->lasttime,
 			   (acptr->user)?(now - acptr->user->last):0);
-#else
-			   name);
-#endif /* WINTRHAWK */
 	      else
 		sendto_one(sptr,rpl_str(RPL_TRACEUSER),
 			   me.name, parv[0], class,
-#ifdef WINTRHAWK
-			   name, now - acptr->lasttime,
-#else
-			   name,
-#endif /* WINTRHAWK */
+			   name, ip, now - acptr->lasttime,
 			   (acptr->user)?(now - acptr->user->last):0);
 	      cnt++;
 	    }
@@ -6090,6 +6080,7 @@ int	m_ltrace(aClient *cptr,
   for (i = 0; i <= highest_fd; i++)
     {
       char	*name;
+      char 	*ip;
       int	class;
       
       if (!(acptr = local[i])) /* Local Connection? */
@@ -6103,6 +6094,7 @@ int	m_ltrace(aClient *cptr,
       if (!dow && mycmp(tname, acptr->name))
 	continue;
       name = get_client_name(acptr,FALSE);
+      ip = acptr->hostip;
       class = get_client_class(acptr);
       
       switch(acptr->status)
@@ -6124,12 +6116,10 @@ int	m_ltrace(aClient *cptr,
 		sendto_one(sptr,
 			   rpl_str(RPL_TRACEOPERATOR),
 			   me.name, parv[0], class,
-#ifdef WINTRHAWK
-			   name, now - acptr->lasttime,
+			   name, 
+			   IsAnOper(sptr)?ip:"255.255.255.255", 
+			   now - acptr->lasttime,
 			   (acptr->user)?(now - acptr->user->last):0);
-#else
-			   name);
-#endif /* WINTRHAWK */
 	      cnt++;
 	    }
 	  break;

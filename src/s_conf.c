@@ -3211,32 +3211,30 @@ int get_oper_privs(int int_privs,char *privs)
 
   while(*privs)
     {
-      if(*privs == 'O')
+      if(*privs == 'O')			/* allow global kill */
 	int_privs |= CONF_OPER_GLOBAL_KILL;
-      else if(*privs == 'o')
+      else if(*privs == 'o')		/* disallow global kill */
 	int_privs &= ~CONF_OPER_GLOBAL_KILL;
-      else if(*privs == 'U')
+      else if(*privs == 'U')		/* allow unkline */
 	int_privs |= CONF_OPER_UNKLINE;
-      else if(*privs == 'u')
+      else if(*privs == 'u')		/* disallow unkline */
 	int_privs &= ~CONF_OPER_UNKLINE;
-      else if(*privs == 'R')
-	int_privs |= CONF_OPER_REMOTE;	/* squit/connect etc. */
-      else if(*privs == 'r')
-	int_privs &= ~CONF_OPER_REMOTE;	/* squit/connect etc. */
-      else if(*privs == 'N')
+      else if(*privs == 'R')		/* allow remote squit/connect etc.*/
+	int_privs |= CONF_OPER_REMOTE;	
+      else if(*privs == 'r')		/* disallow remote squit/connect etc.*/
+	int_privs &= ~CONF_OPER_REMOTE;
+      else if(*privs == 'N')		/* allow +n see nick changes */
 	int_privs |= CONF_OPER_N;
-      else if(*privs == 'n')
+      else if(*privs == 'n')		/* disallow +n see nick changes */
 	int_privs &= ~CONF_OPER_N;
-      else if(*privs == 'K')		/* kill and kline privs, 
-					 * for monitor bots
-					 */
+      else if(*privs == 'K')		/* allow kill and kline privs */
 	int_privs |= CONF_OPER_K;
-      else if(*privs == 'k')
+      else if(*privs == 'k')		/* disallow kill and kline privs */
 	int_privs &= ~CONF_OPER_K;
 #ifdef GLINES
-      else if(*privs == 'G')
+      else if(*privs == 'G')		/* allow gline */
 	int_privs |= CONF_OPER_GLINE;
-      else if(*privs == 'g')
+      else if(*privs == 'g')		/* disallow gline */
 	int_privs &= ~CONF_OPER_GLINE;
 #endif
       privs++;

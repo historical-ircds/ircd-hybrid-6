@@ -2,6 +2,13 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b52   15-Mar-1999
+* added fix by comstud to s_misc.c remove_dependents() unnecessary WALLOPS
+-comstud/orabidoo	
+* fixed mtrie_conf.c bugs
+* added ip to /trace (help with virtual host cloners)
+-Dianora
+	
 version hybrid-6-b51   11-Mar-1999
 * added WHOIS_WAIT to info output 
 -Rodder
