@@ -17,17 +17,26 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __channel_include__
-#define __channel_include__
-#ifndef INCLUDED_struct_h
-#include "struct.h"
+#ifndef INCLUDED_channel_h
+#define INCLUDED_channel_h
+#ifndef INCLUDED_config_h
+#include "config.h"           /* config settings */
+#endif
+#ifndef INCLUDED_ircd_defs_h
+#include "ircd_defs.h"        /* buffer sizes */
+#endif
+#ifndef INCLUDED_sys_types_h
+#include <sys/types.h>        /* time_t */
+#define INCLUDED_sys_types_h
 #endif
 
-typedef struct  Channel aChannel;
+struct SLink;
+struct Client;
+
 
 /* mode structure for channels */
 
-struct  SMode
+struct Mode
 {
   unsigned int  mode;
   int   limit;
@@ -41,17 +50,17 @@ struct Channel
   struct Channel* nextch;
   struct Channel* prevch;
   struct Channel* hnextch;
-  Mode            mode;
+  struct Mode     mode;
   char            topic[TOPICLEN + 1];
 #ifdef TOPIC_INFO
   char            topic_nick[NICKLEN + 1];
   time_t          topic_time;
 #endif
   int             users;
-  Link*           members;
-  Link*           invites;
-  Link*           banlist;
-  Link*           exceptlist;
+  struct SLink*   members;
+  struct SLink*   invites;
+  struct SLink*   banlist;
+  struct SLink*   exceptlist;
   time_t          channelts;
   int             locally_created;  /* used to flag a locally created channel */
   int             keep_their_modes; /* used only on mode after sjoin */
@@ -65,6 +74,9 @@ struct Channel
 #endif
   char            chname[1];
 };
+
+typedef struct  Channel aChannel;
+
 
 #define CREATE 1        /* whether a channel should be
                            created or just tested for existance */
@@ -196,5 +208,5 @@ extern int got_server_pong;
 
 #endif  /* NEED_SPLITCODE */
 
-#endif
+#endif  /* INCLUDED_channel_h */
 

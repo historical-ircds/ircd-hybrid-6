@@ -74,7 +74,7 @@ typedef struct  Client  aClient;
 typedef struct  User    anUser;
 typedef struct  Server  aServer;
 typedef struct  SLink   Link;
-typedef struct  SMode   Mode;
+typedef struct  Mode    Mode;
 typedef struct  Zdata   aZdata;
 
 /*
