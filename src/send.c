@@ -143,6 +143,9 @@ send_message(aClient *to, char *msg, int len)
                 return 0;
         }
 
+        if (to->fd < 0)
+                return 0; /* Thou shalt not write to closed descriptors */
+
         if (IsDead(to))
                 return 0; /* This socket has already been marked as dead */
 
