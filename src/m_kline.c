@@ -40,7 +40,6 @@
 #if defined(AIX) || defined(DYNIXPTX) || defined(SVR3)
 #include <time.h>
 #endif
-#include <fcntl.h>
 #include "h.h"
 #if defined( HAVE_STRING_H )
 #include <string.h>
@@ -91,7 +90,6 @@ extern char *small_file_date(time_t);  /* defined in s_misc.c */
  *
  * re-worked a tad ... -Dianora
  *
- * Added comstuds SEPARATE_QUOTE_KLINES_BY_DATE code
  * -Dianora
  */
 
@@ -100,21 +98,9 @@ int     m_kline(aClient *cptr,
 		int parc,
 		char *parv[])
 {
-#if defined (LOCKFILE) && !defined(SEPARATE_QUOTE_KLINES_BY_DATE)
-  struct pkl *k;
-#else
-  int out;
-#endif
   char buffer[512];
   char *p;
   char cidr_form_host[64];
-
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-  char *timebuffer;
-  char filenamebuf[1024];
-#endif
-  char *filename;		/* filename to use for kline */
-
   char *user, *host;
   char *reason;
   char *current_date;
@@ -412,9 +398,9 @@ int     m_kline(aClient *cptr,
 
   if(temporary_kline_time)
     {
-      (void)ircsprintf(buffer,
-		       "Temporary K-line %d min. - %s (%s)",
-		       temporary_kline_time,reason,current_date);
+      ircsprintf(buffer,
+		 "Temporary K-line %d min. - %s (%s)",
+		 temporary_kline_time,reason,current_date);
       DupString(aconf->passwd, buffer );
       aconf->hold = timeofday + temporary_kline_time_seconds;
       add_temp_kline(aconf);
@@ -427,16 +413,10 @@ int     m_kline(aClient *cptr,
     }
   else
     {
-      (void)ircsprintf(buffer, "%s (%s)",reason,current_date);
+      ircsprintf(buffer, "%s (%s)",reason,current_date);
       DupString(aconf->passwd, buffer );
     }
   ClassPtr(aconf) = find_class(0);
-
-/* when can aconf->host ever be a NULL pointer though?
- * or for that matter, when is aconf->status ever not going
- * to be CONF_KILL at this point? 
- * -Dianora
- */
 
   if(ip_kline)
     {
@@ -447,173 +427,23 @@ int     m_kline(aClient *cptr,
   else
     add_mtrie_conf_entry(aconf,CONF_KILL);
 
-/* comstud's SEPARATE_QUOTE_KLINES_BY_DATE code */
-/* Note, that if SEPARATE_QUOTE_KLINES_BY_DATE is defined,
- *  it doesn't make sense to have LOCKFILE on the kline file
- */
-
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-  timebuffer = small_file_date(NOW);
-
-  (void)sprintf(filenamebuf, "%s.%s", ConfigFileEntry.klinefile, timebuffer);
-  filename = filenamebuf;
-       
 #ifdef SLAVE_SERVERS
-  if(!IsServer(sptr))
-#endif
-    sendto_one(sptr, ":%s NOTICE %s :Added K-Line [%s@%s] to %s",
-	       me.name, parv[0], user, host, filenamebuf);
+  write_kline_or_dline_to_conf_and_notice_opers( KLINE_TYPE,
+						 sptr, rcptr,
+						 user, host, reason,
+						 current_date);
 #else
-  filename = ConfigFileEntry.klinefile;
-
-#ifdef KPATH
-#ifdef SLAVE_SERVERS
-  if(!IsServer(sptr))
-#endif
-    sendto_one(sptr, ":%s NOTICE %s :Added K-Line [%s@%s] to server klinefile",
-	       me.name, parv[0], user, host);
-#else
-#ifdef SLAVE_SERVERS
-  if(!IsServer(sptr))
-#endif
-    sendto_one(sptr, ":%s NOTICE %s :Added K-Line [%s@%s] to server configfile",
-	       me.name, parv[0], user, host);
-#endif
+  write_kline_or_dline_to_conf_and_notice_opers( KLINE_TYPE,
+						 sptr, NULL,
+						 user, host, reason,
+						 current_date);
 #endif
 
   rehashed = YES;
   dline_in_progress = NO;
   nextping = timeofday;
-  sendto_realops("%s added K-Line for [%s@%s] [%s]",
-		 parv[0], user, host, reason);
-
-#if defined(LOCKFILE) && !defined(SEPARATE_QUOTE_KLINES_BY_DATE)
-/* MDP - Careful, don't cut & paste that ^O */
-
-  if((k = (struct pkl *)malloc(sizeof(struct pkl))) == NULL)
-    {
-#ifdef SLAVE_SERVERS
-      if(!IsServer(sptr))
-#endif
-	sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		   me.name, parv[0]);
-      return(0);
-    }
-
-#ifdef SLAVE_SERVERS
-  if(IsServer(sptr))
-    {
-      (void)ircsprintf(buffer, "#%s!%s@%s from %s K'd: %s@%s:%s\n",
-		       rcptr->name, rcptr->username,
-		       rcptr->host, sptr->name,
-		       user, host,
-		       reason);
-    }
-  else
-#endif
-    {
-      (void)ircsprintf(buffer, "#%s!%s@%s K'd: %s@%s:%s\n",
-		       sptr->name, sptr->username,
-		       sptr->host, user, host,
-		       reason);
-    }
-  
-  if((k->comment = strdup(buffer)) == NULL)
-    {
-      free(k);
-#ifdef SLAVE_SERVERS
-      if(!IsServer(sptr))
-#endif
-	sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		   me.name, parv[0]);
-      return(0);
-    }
-
-  (void)ircsprintf(buffer, "K:%s:%s (%s):%s\n",
-		   host,
-		   reason,
-		   current_date,
-		   user);
-
-  if((k->kline = strdup(buffer)) == NULL)
-    {
-      free(k->comment);
-      free(k); 
-#ifdef SLAVE_SERVERS
-      if(!IsServer(sptr))
-#endif
-	sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		   me.name, parv[0]);
-      return(0);
-    }       
-  k->next = pending_klines;
-  pending_klines = k; 
- 
-  do_pending_klines();
-  return(0);
-
-#else /* LOCKFILE - MDP and not SEPARATE_KLINES_BY_DATE */
-
-  if ((out = open(filename, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
-    {
-#ifdef SLAVE_SERVERS
-      if(!IsServer(sptr))
-#endif
-	sendto_one(sptr, ":%s NOTICE %s :Problem opening %s ",
-		   me.name, parv[0], filename);
-      return 0;
-    }
-
-#ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-  fchmod(out, 0660);
-#endif
-
-#ifdef SLAVE_SERVERS
-  if(IsServer(sptr))
-    {
-      (void)ircsprintf(buffer, "#%s!%s@%s from %s K'd: %s@%s:%s\n",
-		       rcptr->name, rcptr->username,
-		       rcptr->host, sptr->name, user, host,
-		       reason);
-    }
-  else
-#endif
-    {
-      (void)ircsprintf(buffer, "#%s!%s@%s K'd: %s@%s:%s\n",
-		       sptr->name, sptr->username,
-		       sptr->host, user, host,
-		       reason);
-    }
-
-  if (safe_write(sptr,parv[0],filename,out,buffer))
-    return 0;
-
-  if (safe_write(sptr,parv[0],filename,out,buffer))
-    return 0;
-
-  (void)ircsprintf(buffer, "K:%s:%s (%s):%s\n",
-		   host,
-		   reason,
-		   current_date,
-		   user);
-
-  if (safe_write(sptr,parv[0],filename,out,buffer))
-    return 0;
-
-  (void)close(out);
-
-#ifdef USE_SYSLOG
-  syslog(LOG_NOTICE, "%s added K-Line for [%s@%s] [%s]",
-	 parv[0],
-	 user,
-	 host,
-	 reason);
-#endif
-
   return 0;
-#endif /* #ifdef LOCKFILE */
 }
-
 
 /*
  * isnumber()
@@ -789,11 +619,6 @@ int     m_dline(aClient *cptr,
   unsigned long ip_host;
   unsigned long ip_mask;
   aConfItem *aconf;
-#if defined(LOCKFILE) && defined(DLINES_IN_KPATH)
-  struct pkl *k;
-#else
-  int out;
-#endif
   char buffer[1024];
   char *current_date;
 
@@ -955,7 +780,7 @@ int     m_dline(aClient *cptr,
 
   current_date = smalldate((time_t) 0);
 
-  (void)ircsprintf(buffer, "%s (%s)",reason,current_date);
+  ircsprintf(buffer, "%s (%s)",reason,current_date);
 
   aconf = make_conf();
   aconf->status = CONF_DLINE;
@@ -966,16 +791,11 @@ int     m_dline(aClient *cptr,
   aconf->ip_mask &= ip_mask;
 
   add_Dline(aconf);
-  sendto_realops("%s added D-Line for [%s] [%s]",
-		 parv[0], host, reason);
 
-#ifdef DLINES_IN_KPATH
-  sendto_one(sptr, ":%s NOTICE %s :Added D-Line [%s] to server klinefile",
-	     me.name, parv[0], host);
-#else
-  sendto_one(sptr, ":%s NOTICE %s :Added D-Line [%s] to server configfile",
-          me.name, parv[0], host);
-#endif
+  write_kline_or_dline_to_conf_and_notice_opers( DLINE_TYPE,
+						 sptr, NULL,
+						 NULL, host, reason,
+						 current_date);
 
   /*
   ** I moved the following 2 lines up here
@@ -987,160 +807,9 @@ int     m_dline(aClient *cptr,
   rehashed = YES;
   dline_in_progress = YES;
   nextping = timeofday;
-
-/* MDP - Careful, don't cut & paste that ^O */
-#if defined(LOCKFILE) && defined(DLINES_IN_KPATH)
-
-  if((k = (struct pkl *)MyMalloc(sizeof(struct pkl))) == NULL)
-    {
-      sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		 me.name, parv[0]);
-      return(0);
-    }
-
-  (void)ircsprintf(buffer, "#%s!%s@%s D'd: %s:%s (%s)\n",
-		   sptr->name, sptr->username,
-		   sptr->host, host,
-		   reason, current_date);
-
-  if((k->comment = strdup(buffer)) == NULL)
-    {
-      free(k);
-      sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		 me.name, parv[0]);
-      return(0);
-    }
-
-  (void)ircsprintf(buffer, "D:%s:%s (%s)\n",
-		   host,
-		   reason,
-		   current_date);
-
-  if((k->kline = strdup(buffer)) == NULL)
-    {
-      free(k->comment);
-      free(k); 
-      sendto_one(sptr, ":%s NOTICE %s :Problem allocating memory",
-		 me.name, parv[0]);
-      return(0);
-    }       
-  k->next = pending_klines;
-  pending_klines = k; 
- 
-  do_pending_klines();
-  return(0);
-
-#else /* LOCKFILE - MDP */
-
-  if ((out = open(ConfigFileEntry.dlinefile, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
-    {
-      sendto_one(sptr, ":%s NOTICE %s :Problem opening %s ",
-		 me.name, parv[0], ConfigFileEntry.dlinefile);
-      return 0;
-    }
-
-  (void)ircsprintf(buffer, "#%s!%s@%s D'd: %s:%s (%s)\n",
-		   sptr->name, sptr->username,
-		   sptr->host, host,
-		   reason, current_date);
-
-  if (safe_write(sptr,parv[0],ConfigFileEntry.dlinefile,out,buffer))
-    return 0;
-
-  (void)ircsprintf(buffer, "D:%s:%s (%s)\n",
-		   host,
-		   reason,
-		   current_date);
-
-  if (safe_write(sptr,parv[0],ConfigFileEntry.dlinefile,out,buffer))
-    return 0;
-
-  (void)close(out);
   return 0;
-#endif
 }
 
-/* Shadowfax's LOCKFILE code */
-#ifdef LOCKFILE
-
-int lock_kline_file()
-{
-  int fd;
-
-  /* Create Lockfile */
-  if((fd = open(LOCKFILE, O_WRONLY|O_CREAT|O_EXCL, 0644)) < 0)
-    {
-      sendto_realops("%s is locked, klines pending",ConfigFileEntry.klinefile);
-      pending_kline_time = time(NULL);
-      return(-1);
-    }
-  (void)close(fd);
-  return(1);
-}
-
-void do_pending_klines()
-{
-  int fd;
-  char s[20];
-  struct pkl *k, *ok;
-
-  if(!pending_klines)
-    return;
-                        
-  /* Create Lockfile */
-  if((fd = open(LOCKFILE, O_WRONLY|O_CREAT|O_EXCL, 0644)) < 0)
-    {
-      sendto_realops("%s is locked, klines pending",ConfigFileEntry.klinefile);
-      pending_kline_time = time(NULL);
-      return;
-    }
-  (void)ircsprintf(s, "%d\n", getpid());
-  (void)write(fd, s, strlen(s));
-  close(fd);
-  
-  /* Open klinefile */   
-  if ((fd = open(ConfigFileEntry.klinefile,
-		 O_WRONLY|O_APPEND|O_CREAT,0644))==-1)
-    {
-      sendto_realops("Pending klines cannot be written, cannot open %s",
-                 ConfigFileEntry.klinefile);
-      unlink(LOCKFILE);
-      return; 
-    }
-
-  /* Add the Pending Klines */
-  k = pending_klines;
-  while(k)
-    {
-      write(fd, k->comment, strlen(k->comment));
-      write(fd, k->kline, strlen(k->kline));
-      free(k->comment);
-      free(k->kline);
-      ok = k;
-      k = k->next;
-      free(ok);
-    }
-  pending_klines = NULL;
-  pending_kline_time = 0;
-        
-  close(fd);
-
-  /* Delete the Lockfile */
-  unlink(LOCKFILE);
-}
-#endif             
-
-int safe_write(aClient *sptr,
-		      char *parv0,char *filename, int out,char *buffer)
-{
-  if (write(out,buffer,strlen(buffer)) <= 0)
-    {
-      sendto_realops("*** Problem writing to %s",filename);
-      (void)close(out);
-      return (-1);
-    }
-  return(0);
-}
 
 /*
  * bad_tld

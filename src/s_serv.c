@@ -122,9 +122,6 @@ extern void report_qlines(aClient *);
 static int m_set_parser(char *);
 int bad_tld(char *);
 
-int safe_write(aClient *,char *,char *,int,char *);
-
-
 #ifdef PACE_WALLOPS
 time_t last_used_wallops = 0L;
 #endif

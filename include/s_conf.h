@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.10  1999/07/13 01:42:58  db
+ * - cleaned up conf file handling, handled by read_conf_files()
+ *
  * Revision 1.9  1999/07/11 21:09:35  tomh
  * sockhost cleanup and a lot of other stuff
  *
@@ -184,7 +187,20 @@ extern struct ConfItem* find_conf_ip (struct SLink *, char *, char *, int);
 extern struct ConfItem* find_conf_name (char *, int);
 extern struct ConfItem* find_kill (struct Client *);
 
+typedef enum {
+  KLINE_TYPE,
+  DLINE_TYPE
+}KlineType;
 
+extern void write_kline_or_dline_to_conf_and_notice_opers(
+							  KlineType,
+							  struct Client *,
+							  struct Client *,
+							  char *,
+							  char *,
+							  char *,
+							  char *
+							  );
 
 typedef struct
 {

@@ -68,7 +68,7 @@ static GLINE_PENDING *pending_glines;
 
 /* external functions */
 extern int bad_tld(char *);	/* defined in m_kline.c */
-extern int safe_write(aClient *,char *,char *,int,char *); /* in m_kline.c */
+extern int safe_write(aClient *,char *,int,char *); /* in s_conf.c */
 extern char *small_file_date(time_t);  /* defined in s_misc.c */
 extern char *smalldate(time_t);		/* defined in s_misc.c */
 
@@ -394,7 +394,7 @@ static void log_gline(
   (void)ircsprintf(buffer,"#Gline for %s@%s %s added by the following\n",
 		   user,host,timebuffer);
 
-  if (safe_write(sptr,parv0,filenamebuf,out,buffer))
+  if (safe_write(sptr,filenamebuf,out,buffer))
     return;
 
   (void)ircsprintf(buffer, "#%s!%s@%s on %s [%s]\n",
@@ -405,7 +405,7 @@ static void log_gline(
 		   (gline_pending_ptr->reason1)?
 		   (gline_pending_ptr->reason1):"No reason");
 
-  if (safe_write(sptr,parv0,filenamebuf,out,buffer))
+  if (safe_write(sptr,filenamebuf,out,buffer))
     return;
 
   (void)ircsprintf(buffer, "#%s!%s@%s on %s [%s]\n",
@@ -416,7 +416,7 @@ static void log_gline(
 		   (gline_pending_ptr->reason2)?
 		   (gline_pending_ptr->reason2):"No reason");
 
-  if (safe_write(sptr,parv0,filenamebuf,out,buffer))
+  if (safe_write(sptr,filenamebuf,out,buffer))
     return;
 
   (void)ircsprintf(buffer, "#%s!%s@%s on %s [%s]\n",
@@ -426,12 +426,12 @@ static void log_gline(
 		   oper_server,
 		   (reason)?reason:"No reason");
 
-  if (safe_write(sptr,parv0,filenamebuf,out,buffer))
+  if (safe_write(sptr,filenamebuf,out,buffer))
     return;
 
   (void)ircsprintf(buffer, "K:%s:%s:%s\n",
 	host,user,reason);
-  if (safe_write(sptr,parv0,filenamebuf,out,buffer))
+  if (safe_write(sptr,filenamebuf,out,buffer))
     return;
 
   (void)close(out);
