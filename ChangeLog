@@ -1,5 +1,5 @@
 *** 19990909_1 by lusky
-bumped patchlevel to b105
+revved patchlevel to b106
 fix return values for client_dopacket and dopacket (th)
 m_links check for local client instead of connect
 
