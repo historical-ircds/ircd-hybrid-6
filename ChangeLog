@@ -1,3 +1,10 @@
+*** 19991223_1 by lusky
+backed out previous change to config.h
+upped MAXSENDQLENGTH slightly
+redid dbuf handling to dynamically allocate more dbufs (db)
+numeric 480 is unnecessary 479 does the same job on ircu ircnet (db)
+
+
 *** 19991222_1 by lusky
 changed BUFFERPOOL definition to try to fix mass disconnects during netsplits
   on larger (over 8k local clients) servers
