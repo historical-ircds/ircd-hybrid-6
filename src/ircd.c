@@ -54,6 +54,7 @@
 #include <unistd.h>
 #endif /* SETUID_ROOT */
 
+#define MIN_CONN_FREQ 300
 
 #ifdef  REJECT_HOLD
 int reject_held_fds = 0;
@@ -173,9 +174,8 @@ static	time_t	try_connections(time_t currenttime)
 	  continue;
 	}
 
-      confrq = get_con_freq(cltmp);
-      if( confrq < 300 )
-	confrq = 300;
+      if( (confrq = get_con_freq(cltmp)) < MIN_CONN_FREQ )
+	confrq = MIN_CONN_FREQ;
 
       aconf->hold = currenttime + confrq;
       /*
