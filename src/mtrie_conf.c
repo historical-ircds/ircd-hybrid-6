@@ -845,6 +845,8 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
    * - Dianora
    */
 
+  kline_aconf = (aConfItem *)NULL;
+
   if(trie_list)
     {
 #ifdef USE_IP_I_LINE_FIRST
@@ -852,12 +854,16 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
         {
           stack_pointer = 0;
           tokenize_and_stack(tokenized_host, host);
-          top_of_stack = stack_pointer;
-          saved_stack_pointer = -1;
-          first_kline_trie_list = (DOMAIN_LEVEL *)NULL;
+          stack_pointer = top_of_stack;
+          kline_aconf = find_sub_mtrie(trie_list,host,user,CONF_KILL);
         }
-#endif
-
+      else if(first_kline_trie_list)
+        {
+          stack_pointer = saved_stack_pointer;
+          kline_aconf = find_sub_mtrie(first_kline_trie_list,host,user,
+                                       CONF_KILL);
+        }
+#else
       if(first_kline_trie_list)
         {
           stack_pointer = saved_stack_pointer;
@@ -869,9 +875,8 @@ aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
           stack_pointer = top_of_stack;
           kline_aconf = find_sub_mtrie(trie_list,host,user,CONF_KILL);
         }
+#endif
     }
-  else
-    kline_aconf = (aConfItem *)NULL;
 
   /* I didn't find a kline in the mtrie, I'll try the unsortable list */
 

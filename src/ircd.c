@@ -370,13 +370,12 @@ static time_t io_loop(time_t delay)
                  CurrentTime, lasttimeofday);
       report_error(to_send, me.name, 0);
     }
-  else if ((lasttimeofday + 60) < CurrentTime)
+  else if ((lasttimeofday + TS_MAX_DELTA) < CurrentTime)
     {
-      ircsprintf(to_send,
-                 "System clock was reset into the future - (%d+60 > %d)",
-                 CurrentTime, lasttimeofday);
-      report_error(to_send, me.name, 0);
-      sync_channels(CurrentTime - lasttimeofday);
+      log(L_ERROR, "Clock Failure (%d)", errno);
+      sendto_ops("Clock set back more than %d seconds, TS can be corrupted",
+        TS_MAX_DELTA);
+      restart("Clock Failure");
     }
 
   /*

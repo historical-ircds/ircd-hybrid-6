@@ -153,6 +153,11 @@ m_links.o: m_links.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/irc_string.h ../include/ircd.h \
  ../include/numeric.h ../include/s_serv.h ../include/send.h
+m_list.o: m_list.c ../include/m_commands.h ../include/config.h \
+ ../include/setup.h ../include/channel.h ../include/ircd_defs.h \
+ ../include/client.h ../include/dbuf.h ../include/hash.h \
+ ../include/irc_string.h ../include/ircd.h ../include/numeric.h \
+ ../include/send.h
 m_locops.o: m_locops.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/irc_string.h \

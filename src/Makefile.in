@@ -48,6 +48,7 @@ SRCS = \
 	m_kill.c \
 	m_kline.c \
 	m_links.c \
+	m_list.c \
 	m_locops.c \
 	m_ltrace.c \
 	m_lusers.c \
@@ -132,6 +133,7 @@ SRCS = \
 #	m_info.o \
 #	m_kline.o \
 #	m_links.o \
+#	m_list.o \
 #	m_locops.o \
 #	m_ltrace.o \
 #	m_lusers.o \
