@@ -240,11 +240,11 @@ int	attach_Iline(aClient *cptr,
 	  if(IsConfDoSpoofIp(aconf))
 	    {
 	      /* abuse it, lose it. */
-	      /*
+#ifdef SPOOF_FREEFORM
 	      sendto_realops("%s spoofing: %s as %s",
 			     cptr->name,host,aconf->mask);
 	      strncpyzt(cptr->sockhost,aconf->mask,sizeof(cptr->sockhost));
-	      */
+#else
 	      /* default to oper.server.name.tld */
 	      sendto_realops("%s spoofing: %s(%s) as oper.%s",
 			     cptr->name,host,
@@ -252,6 +252,7 @@ int	attach_Iline(aClient *cptr,
 			     me.name);
 	      strncpyzt(cptr->sockhost,"oper.",sizeof(cptr->sockhost));
 	      strcat(cptr->sockhost,me.name);
+#endif
 	      SetIPSpoof(cptr);
 	      SetIPHidden(cptr);
 	    }
