@@ -1,3 +1,7 @@
+*** 20000419_1 by lusky
+fixed channel unavailable error (db)
+
+
 *** 20000410_3 by lusky
 revved patchlevel to b124
 fixed stats K for username@* klines
