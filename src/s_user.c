@@ -2035,11 +2035,11 @@ static	int	m_message(aClient *cptr,
 
   if(type)
     {
-      nick++;
       /* Strip if using DALnet chanop/voice prefix.  -- David-R */
-      if (*nick == '@' || *nick == '+')
+      if (*(nick+1) == '@' || *(nick+1) == '+')
 	{
 	  nick++;
+	  *nick = '@';
 	  type = MODE_CHANOP|MODE_VOICE;
 	}
 
@@ -2054,11 +2054,11 @@ static	int	m_message(aClient *cptr,
       if (!IsPerson(sptr))	/* This means, servers can't send messages */
 	return -1;
 
-      /* At this point, nick should be a channel name i.e. #foo or &foo
+      /* At this point, nick+1 should be a channel name i.e. #foo or &foo
        * if the channel is found, fine, if not report an error
        */
 
-      if (chptr = find_channel(nick, NullChn))
+      if (chptr = find_channel(nick+1, NullChn))
 	{
 #ifdef	IDLE_CHECK
 	  /* reset idle time for message only if target exists */
@@ -2107,7 +2107,7 @@ static	int	m_message(aClient *cptr,
       else
 	{
 	  sendto_one(sptr, err_str(ERR_NOSUCHNICK),
-		     me.name, parv[0], cmd);
+		     me.name, parv[0], nick);
 	  return -1;
 	}
 #endif

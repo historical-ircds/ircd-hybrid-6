@@ -63,6 +63,7 @@ static char *version="$Id$";
 
 /* internally defined functions */
 
+static void report_dup(char,aConfItem *);
 static int sortable(char *,char *);
 static void tokenize_and_stack(char *,char *);
 static void create_sub_mtrie(DOMAIN_LEVEL *,aConfItem *,int,char *);
@@ -363,6 +364,7 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
 	       * reading the conf file.
 	       */
 
+	      report_dup('K',aconf);
 	      free_conf(aconf);	/* toss it in the garbage */
 
 	      found_aconf->status |= flags;
@@ -375,7 +377,10 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
 	      if(found_aconf->clients)
 		found_aconf->status |= CONF_ILLEGAL;
 	      else
-		free_conf(found_aconf);
+		{
+		  report_dup('K',found_aconf);
+		  free_conf(found_aconf);
+		}
 	      piece_ptr->wild_conf_ptr = aconf;
 	    }
 	  else if(flags & CONF_CLIENT)	/* I line replacement */
@@ -383,6 +388,7 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
 	      /* another I line/CONF_CLIENT exactly matching this
 	       * toss the new one into the garbage
 	       */
+	      report_dup('I',aconf);
 	      free_conf(aconf);	
 	    }
 	  found_aconf->status |= flags;
@@ -1649,4 +1655,34 @@ static aConfItem *find_matching_ip_i_line(unsigned long host_ip)
 	return(aconf);
     }
   return((aConfItem *)NULL);
+}
+
+/*
+ * report_dup()
+ *
+ * input	- char type
+ *		- pointer to aConfItem
+ * output	- NONE
+ * side effects -
+ * report a duplicate conf item found in the mtrie
+ *
+ */
+
+static void report_dup(char type,aConfItem *tmp)
+{
+  char *host;
+  char *pass;
+  char *name;
+  int port;
+  char *mask;
+  static	char	null[] = "<NULL>";
+
+  host = BadPtr(tmp->host) ? null : tmp->host;
+  pass = BadPtr(tmp->passwd) ? null : tmp->passwd;
+  name = BadPtr(tmp->name) ? null : tmp->name;
+  mask = BadPtr(tmp->mask) ? null : tmp->mask;
+  port = (int)tmp->port;
+
+  sendto_realops("DUP: %c: (%s@%s) pass %s mask %s port %d",
+		 type,name,host,pass,mask,port);
 }

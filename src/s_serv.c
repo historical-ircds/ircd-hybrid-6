@@ -1937,7 +1937,7 @@ static REPORT_STRUCT report_array[] = {
 
 static	void	report_configured_links(aClient *sptr,int mask)
 {
-  static	char	null[] = "<NULL>";
+  static char null[] = "<NULL>";
   aConfItem *tmp;
   REPORT_STRUCT *p;
   int   port;

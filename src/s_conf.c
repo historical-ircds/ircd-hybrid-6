@@ -1866,13 +1866,16 @@ int 	initconf(int opt, int fd,int use_include)
 	  if (portnum < 0 && aconf->port >= 0)
 	    portnum = aconf->port;
 	}
-      
-      if (aconf->host && (aconf->status & CONF_CLIENT))
+      else if (aconf->host && (aconf->status & CONF_CLIENT))
 	{
 	  char *p;
 
 	  dontadd = 1;
 
+	  (void)collapse(aconf->host);
+	  (void)collapse(aconf->name);
+
+	  MyFree(aconf->mask);
 	  DupString(aconf->mask,aconf->host);
 	  p = strchr(aconf->name,'@');
 	  if(p)
@@ -1889,20 +1892,22 @@ int 	initconf(int opt, int fd,int use_include)
 	      aconf->host = aconf->name;
 	      DupString(aconf->name,"*");
 	    }
-
+	  
 	  add_mtrie_conf_entry(aconf,CONF_CLIENT);
 	}
-
-      if (aconf->host && (aconf->status & CONF_KILL))
+      else if (aconf->host && (aconf->status & CONF_KILL))
 	{
 	  dontadd = 1;
 	  if(host_is_legal_ip(aconf->host))
 	    add_ip_Kline(aconf);
 	  else
-	    add_mtrie_conf_entry(aconf,CONF_KILL);
+	    {
+	      (void)collapse(aconf->host);
+	      (void)collapse(aconf->name);
+	      add_mtrie_conf_entry(aconf,CONF_KILL);
+	    }
 	}
-
-      if (aconf->host && (aconf->status & CONF_DLINE))
+      else if (aconf->host && (aconf->status & CONF_DLINE))
 	{
 	  dontadd = 1;
 	  DupString(aconf->mask,aconf->host);
@@ -1911,8 +1916,7 @@ int 	initconf(int opt, int fd,int use_include)
 	  else
 	    add_Dline(aconf);
 	}
-
-      if (aconf->status & CONF_XLINE)
+      else if (aconf->status & CONF_XLINE)
 	{
 	  dontadd = 1;
 	  MyFree(aconf->name);
@@ -1921,8 +1925,7 @@ int 	initconf(int opt, int fd,int use_include)
 	  aconf->next = x_conf;
 	  x_conf = aconf;
 	}
-
-      if (aconf->status & CONF_ULINE)
+      else if (aconf->status & CONF_ULINE)
 	{
 	  dontadd = 1;
 	  MyFree(aconf->name);
@@ -1931,8 +1934,7 @@ int 	initconf(int opt, int fd,int use_include)
 	  aconf->next = u_conf;
 	  u_conf = aconf;
 	}
-
-      if (aconf->status & CONF_QUARANTINED_NICK)
+      else if (aconf->status & CONF_QUARANTINED_NICK)
 	{
 	  dontadd = 1;
 	  MyFree(aconf->name);
@@ -1942,14 +1944,14 @@ int 	initconf(int opt, int fd,int use_include)
 	  q_conf = aconf;
 	}
 
-      (void)collapse(aconf->host);
-      (void)collapse(aconf->name);
-      Debug((DEBUG_NOTICE,
-	     "Read Init: (%d) (%s) (%s) (%s) (%d) (%d)",
-	     aconf->status, aconf->host, aconf->passwd,
-	     aconf->name, aconf->port, Class(aconf)));
       if (!dontadd)
 	{
+	  (void)collapse(aconf->host);
+	  (void)collapse(aconf->name);
+	  Debug((DEBUG_NOTICE,
+		 "Read Init: (%d) (%s) (%s) (%s) (%d) (%d)",
+		 aconf->status, aconf->host, aconf->passwd,
+		 aconf->name, aconf->port, Class(aconf)));
 	  aconf->next = conf;
 	  conf = aconf;
 	}
