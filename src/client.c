@@ -329,9 +329,9 @@ time_t check_pings(time_t currenttime)
 /* Wintrhawk */
 #ifdef KLINE_WITH_CONNECTION_CLOSED
                   /*
-                   * We use a generic non-descript message here on 
-                   * purpose so as to prevent other users seeing the
-                   * client disconnect from harassing the IRCops
+                   * Use a generic non-descript message here on 
+                   * purpose, so as to prevent other users seeing the
+                   * client disconnect, from harassing the IRCops.
                    */
                   reason = "Connection closed";
 #else
@@ -341,13 +341,19 @@ time_t check_pings(time_t currenttime)
                   reason = "D-lined";
 #endif /* KLINE_WITH_REASON */
 #endif /* KLINE_WITH_CONNECTION_CLOSED */
-
                   dying_clients_reason[die_index++] = reason;
                   dying_clients[die_index] = (struct Client *)NULL;
                   if(IsPerson(cptr))
                     {
+		      char *p;
+
+		      /* In hybrid-7 this stupidity goes away ! */
+		      if( (p = strchr(reason, '|')) != NULL)
+			*p = '\0';
                       sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
                                  me.name, cptr->name, reason);
+		      if(p != NULL)
+			*p = '|';
                     }
 #ifdef REPORT_DLINE_TO_USER
                   else
@@ -365,6 +371,8 @@ time_t check_pings(time_t currenttime)
 #ifdef GLINES
                   if( (aconf = find_gkill(cptr,cptr->username)) )
                     {
+		      char *p;
+
                       sendto_realops("G-line active for %s",
                                  get_client_name(cptr, FALSE));
 
@@ -373,8 +381,8 @@ time_t check_pings(time_t currenttime)
 #ifdef KLINE_WITH_CONNECTION_CLOSED
                       /*
                        * We use a generic non-descript message here on 
-                       * purpose so as to prevent other users seeing the
-                       * client disconnect from harassing the IRCops
+                       * purpose, so as to prevent other users seeing the
+                       * client, disconnect from harassing the IRCops.
                        */
                       reason = "Connection closed";
 #else
@@ -387,8 +395,14 @@ time_t check_pings(time_t currenttime)
 
                       dying_clients_reason[die_index++] = reason;
                       dying_clients[die_index] = (struct Client *)NULL;
+		      if ((strchr(reason,'|')) != NULL)
+			*p = '\0';
                       sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
                                  me.name, cptr->name, reason);
+
+		      if (p != NULL)
+			*p = '|';
+
                       continue;         /* and go examine next fd/cptr */
                     }
                   else
@@ -396,6 +410,8 @@ time_t check_pings(time_t currenttime)
                   if((aconf = find_kill(cptr))) /* if there is a returned
                                                    struct ConfItem.. then kill it */
                     {
+		      char *p;
+
                       if(aconf->status & CONF_ELINE)
                         {
                           sendto_realops("K-line over-ruled for %s client is E-lined",
@@ -425,8 +441,12 @@ time_t check_pings(time_t currenttime)
 
                       dying_clients_reason[die_index++] = reason;
                       dying_clients[die_index] = (struct Client *)NULL;
+		      if ((p = strchr(reason,'|')) != NULL)
+			*p = '\0';
                       sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
                                  me.name, cptr->name, reason);
+		      if (p != NULL)
+			*p = '|';
                       continue;         /* and go examine next fd/cptr */
                     }
                 }

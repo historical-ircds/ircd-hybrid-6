@@ -448,7 +448,7 @@ struct Client
 #define SetRejectHold(x)        ((x)->flags |= FLAGS_REJECT_HOLD)
 #endif
 
-#define SetIpHash               ((x)->flags |= FLAGS_IPHASH)
+#define SetIpHash(x)            ((x)->flags |= FLAGS_IPHASH)
 #define ClearIpHash             ((x)->flags &= ~FLAGS_IPHASH)
 #define IsIpHash                ((x)->flags & FLAGS_IPHASH)
 

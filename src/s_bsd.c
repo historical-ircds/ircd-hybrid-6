@@ -316,35 +316,6 @@ int deliver_it(aClient* cptr, const char* str, int len)
   return(retval);
 }
 
-/*
- * Ordinary client access check. Look for conf lines which have the same
- * status as the flags passed.
- *
- * outputs
- *  0 = Success
- * -1 = Access denied (no I line match)
- * -2 = Bad socket.
- * -3 = I-line is full
- * -4 = Too many connections from hostname
- * -5 = K-lined
- * also updates reason if a K-line
- *
- */
-int check_client(struct Client *cptr,char *username,char **reason)
-{
-  static char     sockname[HOSTLEN + 1];
-  int             i;
- 
-  ClearAccess(cptr);
-
-  if ((i = attach_Iline(cptr, username, reason)))
-    {
-      log(L_INFO, "Access denied: %s[%s]", cptr->name, sockname);
-      return i;
-    }
-
-  return 0;
-}
 
 /*
  * completed_connection - Complete non-blocking connect-sequence. 

@@ -201,6 +201,7 @@ void remove_one_ip(struct Client *);
 void remove_one_ip(unsigned long);
 #endif
 
+extern int   check_client(struct Client*, char *,char **);
 extern struct ConfItem* make_conf(void);
 extern void             free_conf(struct ConfItem*);
 
@@ -213,8 +214,6 @@ extern int              attach_confs(struct Client* client,
 extern int              attach_cn_lines(struct Client* client, 
                                         const char *name,
 					const char *host);
-extern int              attach_Iline(struct Client *client, 
-                                     const char* username, char** reason);
 extern struct ConfItem* find_me(void);
 extern struct ConfItem* find_admin(void);
 extern struct ConfItem* find_first_nline(struct SLink* lp);

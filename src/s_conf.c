@@ -75,11 +75,9 @@ static void     initconf(FBFILE*, int);
 static void     clear_out_old_conf(void);
 static void     flush_deleted_I_P(void);
 
-#ifdef LIMIT_UH
-static  int     attach_iline(aClient *, struct ConfItem *,const char *);
-#else
-static  int     attach_iline(aClient *, struct ConfItem *);
-#endif
+static  int     attach_iline(struct Client *, struct ConfItem *, const char *);
+static	int	verify_access(struct Client *, const char *, char **);
+
 struct ConfItem *find_special_conf(char *, int );
 
 static void add_q_line(struct ConfItem *);
@@ -122,11 +120,10 @@ static IP_ENTRY *ip_hash_table[IP_HASH_SIZE];
 
 static int hash_ip(unsigned long);
 
-#ifdef LIMIT_UH
 static IP_ENTRY *find_or_add_ip(aClient *,const char *);
+
+#ifdef LIMIT_UH
 static int count_users_on_this_ip(IP_ENTRY *,aClient *,const char *);
-#else
-static IP_ENTRY *find_or_add_ip(aClient *);
 #endif
 
 /* general conf items link list root */
@@ -391,15 +388,47 @@ void report_specials(struct Client* sptr, int flags, int numeric)
                    pass);
       }
 }
-/*
- * find the first (best) I line to attach.
- */
-/*
- *  cleanup aug 3 1997 - Dianora
- *  Cleaned up again Sept 7 1998 - Dianora
- */
 
-int attach_Iline(aClient* cptr, const char* username, char **preason)
+/*
+ * Ordinary client access check. Look for conf lines which have the same
+ * status as the flags passed.
+ *
+ * outputs
+ *  0 = Success
+ * -1 = Access denied (no I line match)
+ * -2 = Bad socket.
+ * -3 = I-line is full
+ * -4 = Too many connections from hostname
+ * -5 = K-lined
+ * also updates reason if a K-line
+ *
+ */
+int check_client(struct Client *cptr, char *username, char **reason)
+{
+  static char     sockname[HOSTLEN + 1];
+  int             i;
+ 
+  ClearAccess(cptr);
+
+  if ((i = verify_access(cptr, username, reason)))
+    {
+      log(L_INFO, "Access denied: %s[%s]", cptr->name, sockname);
+      return i;
+    }
+
+  return 0;
+}
+
+/*
+ * verify_access
+ *
+ * inputs	- pointer to client to verify
+ *		- pointer to proposed username
+ * output	- 0 if success -'ve if not
+ * side effect	- find the first (best) I line to attach.
+ */
+static int
+verify_access(struct Client *cptr, const char* username, char **preason)
 {
   struct ConfItem* aconf;
 #ifdef GLINES
@@ -468,12 +497,7 @@ int attach_Iline(aClient* cptr, const char* username, char **preason)
               SetIPHidden(cptr);
             }
 
-#ifdef LIMIT_UH
           return(attach_iline(cptr, aconf, username));
-#else
-          return(attach_iline(cptr, aconf));
-#endif
-
         }
       else if(aconf->status & CONF_KILL)
         {
@@ -486,30 +510,26 @@ int attach_Iline(aClient* cptr, const char* username, char **preason)
 }
 
 /*
- *  rewrote to remove the "ONE" lamity *BLEH* I agree with comstud
- *  on this one. 
- * - Dianora
+ * attach_iline
+ *
+ * inputs	- client pointer
+ *		- conf pointer
+ *		- username (only used if LIMIT_UH is defined)
+ * output	-
+ * side effects	- do actual attach
  */
 
-#ifdef LIMIT_UH
-static int attach_iline(aClient *cptr, struct ConfItem *aconf, const char *username)
-#else
-static int attach_iline(aClient *cptr, struct ConfItem *aconf)
-#endif
+static int
+attach_iline(aClient *cptr, struct ConfItem *aconf,
+	     const char *username)
 {
   IP_ENTRY *ip_found;
 
   /* if LIMIT_UH is set, limit clients by idented usernames not by ip */
 
-#ifdef LIMIT_UH
-  ip_found = find_or_add_ip(cptr,username);
-#else
-  ip_found = find_or_add_ip(cptr);
-#endif
+  ip_found = find_or_add_ip(cptr, username);
 
-  /* too tired FIX later */
-  /*  SetIpHash(cptr); */
-  cptr->flags |= FLAGS_IPHASH;
+  SetIpHash(cptr);
   ip_found->count++;
 
 #ifdef LIMIT_UH
@@ -605,13 +625,8 @@ void clear_ip_hash_table()
  * count set to 0.
  */
 
-#ifdef LIMIT_UH
 static IP_ENTRY *
-find_or_add_ip(aClient *cptr,const char *username)
-#else
-static IP_ENTRY *
-find_or_add_ip(aClient *cptr)
-#endif
+find_or_add_ip(struct Client *cptr, const char *username)
 {
   unsigned long ip_in=cptr->ip.s_addr;        
 #ifdef LIMIT_UH
