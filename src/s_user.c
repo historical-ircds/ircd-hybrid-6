@@ -98,7 +98,8 @@ unsigned long my_rand(void);	/* provided by orabidoo */
 
 /* externally defined functions */
 extern Link *find_channel_link(Link *,aChannel *);	/* defined in list.c */
-extern char *oper_privs(aClient *,int);		/* defined in s_conf.c */
+extern char *oper_privs(aClient *,int);		 /* defined in s_conf.c */
+extern aConfItem *find_special_conf(char *,int); /* defined in s_conf.c */
 
 #ifdef FLUD
 int flud_num = FLUD_NUM;
@@ -1034,7 +1035,7 @@ static	int	register_user(aClient *cptr,
       }
   }
 
-  if(!IsAnOper(sptr) && (aconf = find_conf_name(sptr->info,CONF_XLINE)) )
+  if(!IsAnOper(sptr) && (aconf = find_special_conf(sptr->info,CONF_XLINE)) )
     {
       char *reason;
       if(aconf->passwd)
@@ -1278,7 +1279,7 @@ int	m_nick(aClient *cptr,
   char	nick[NICKLEN+2], *s;
   ts_val newts = 0;
   int	sameuser = 0, fromTS = 0;
-  
+
   if (parc < 2)
     {
       sendto_one(sptr, err_str(ERR_NONICKNAMEGIVEN),
@@ -1334,7 +1335,7 @@ int	m_nick(aClient *cptr,
     *s = '\0';
   strncpyzt(nick, parv[1], NICKLEN+1);
 
-  if(!IsAnOper(sptr) && find_conf_name(nick,CONF_QUARANTINED_NICK))
+  if(!IsAnOper(sptr) && find_special_conf(sptr->info,CONF_QUARANTINED_NICK)) 
     {
       sendto_realops("Quarantined nick [%s], dumping user %s",
 		     nick,get_client_name(cptr, FALSE));
@@ -2440,16 +2441,6 @@ int	m_whois(aClient *cptr,
   char	*nick, *tmp, *name;
   char	*p = NULL;
   int	found, len, mlen;
-
-  /* anti flooding code,
-   * I did have this in parse.c with a table lookup
-   * but I think this will be less inefficient doing it in each
-   * function that absolutely needs it
-   *
-   * flood control only =outgoing= whois in this case
-   * -Dianora
-   */
-
   static time_t last_used=0L;
 
   if (parc < 2)
@@ -2459,24 +2450,12 @@ int	m_whois(aClient *cptr,
       return 0;
     }
 
-  if (hunt_server(cptr,sptr,":%s WHOIS %s :%s", 1,parc,parv) !=
-      HUNTED_ISME)
-    return 0;
-  parv[1] = parv[2];
-
-  if (parc > 2)
+  if(parc > 2)
     {
-      if(!IsAnOper(sptr))
-	{
-	  /* allow =incoming= requests
-	   * but rate limit outoing requests to 1 per MOTD_WAIT seconds
-	   */
-
-	  if((last_used + MOTD_WAIT) > NOW)
-	    return 0;
-	  else
-	    last_used = NOW;
-	}
+      if (hunt_server(cptr,sptr,":%s WHOIS %s :%s", 1,parc,parv) !=
+	  HUNTED_ISME)
+	return 0;
+      parv[1] = parv[2];
     }
 
   for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)

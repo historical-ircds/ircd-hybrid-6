@@ -394,11 +394,10 @@
  * its always defined now
  */
 
-/* MOTD_WAIT - minimum seconds between use of MOTD, INFO, HELP, LINKS
- * before max use count is reset 
+/* PACE_WAIT - minimum seconds between use of MOTD, INFO, HELP, LINKS, TRACE
  * -Dianora
  */
-#define MOTD_WAIT 10
+#define PACE_WAIT 10
 
 /* KNOCK_DELAY 5 minutes per each KNOCK should be enough
  */

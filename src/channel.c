@@ -2790,7 +2790,7 @@ int	m_knock(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
-      if((last_used + MOTD_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > NOW)
 	return 0;
       else
 	last_used = NOW;

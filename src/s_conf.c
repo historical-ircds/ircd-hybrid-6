@@ -128,6 +128,11 @@ static GLINE_PENDING *pending_glines;
 /* general conf items link list root */
 aConfItem	*conf = ((aConfItem *)NULL);
 
+/* conf xline link list root */
+aConfItem	*x_conf = ((aConfItem *)NULL);
+/* conf qline link list root */
+aConfItem	*q_conf = ((aConfItem *)NULL);
+
 /* keep track of .include files to hash in */
 aConfItem	*include_list = ((aConfItem *)NULL);
 
@@ -1104,6 +1109,40 @@ aConfItem *find_conf_entry(aConfItem *aconf, int mask)
 }
 
 /*
+ * find_special_conf
+ *
+ * - looks for a match on name field
+ */
+aConfItem *find_special_conf(char *to_find, int mask)
+{
+  register aConfItem *aconf;
+  register aConfItem *this_conf;
+
+  if(mask & CONF_QUARANTINED_NICK)
+    this_conf = q_conf;
+  else if(mask & CONF_XLINE)
+    this_conf = x_conf;
+  else
+    return((aConfItem *)NULL);
+
+  for (aconf = this_conf, mask &= ~CONF_ILLEGAL; aconf; aconf = aconf->next)
+    {
+      /* This shouldn't happen, since there are separate conf link lists
+       * for X lines and Q lines now. i.e. no mixed conf items on these
+       * lists.
+       */
+      if (!(aconf->status & mask))
+	continue;
+      
+      if (BadPtr(aconf->name))
+	  continue;
+      if(!match(aconf->name,to_find))
+	return aconf;
+    }
+  return((aConfItem *)NULL);
+}
+
+/*
  * partially reconstruct an ircd.conf file (tsk tsk, you should have
  * been making backups;but we've all done it)
  * I just cull out the N/C/O/o/A lines, you'll have to finish
@@ -1861,10 +1900,22 @@ int 	initconf(int opt, int fd,int use_include)
 	  add_to_dline_hash(aconf);
 	}
 
-      if (aconf->status & (CONF_XLINE|CONF_QUARANTINED_NICK))
+      if (aconf->status & CONF_XLINE)
 	{
+	  dontadd = 1;
 	  MyFree(aconf->name);
 	  aconf->name = aconf->host;
+	  aconf->next = x_conf;
+	  x_conf = aconf;
+	}
+
+      if (aconf->status & CONF_QUARANTINED_NICK)
+	{
+	  dontadd = 1;
+	  MyFree(aconf->name);
+	  aconf->name = aconf->host;
+	  aconf->next = q_conf;
+	  q_conf = aconf;
 	}
 
       (void)collapse(aconf->host);

@@ -72,6 +72,12 @@ extern aClient *local_cptr_list;
 extern aClient *oper_cptr_list;
 extern aClient *serv_cptr_list;
 
+/* aConfItems */
+/* conf xline link list root */
+extern aConfItem *x_conf;
+/* conf qline link list root */
+extern aConfItem *q_conf;
+
 #if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
 	defined(NO_JOIN_ON_SPLIT)
 extern int server_was_split;
@@ -255,7 +261,7 @@ int	m_version(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
-      if((last_used + MOTD_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > NOW)
 	return 0;
       else
 	last_used = NOW;
@@ -1234,7 +1240,7 @@ int	m_info(aClient *cptr,
       if(!MyConnect(sptr))
 	return 0;
 
-      if((last_used + MOTD_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > NOW)
 	return 0;
       else
 	last_used = NOW;
@@ -1657,18 +1663,18 @@ int	m_info(aClient *cptr,
 #undef OUT3
 #undef OUT4
 
+#ifdef SHOW_UH
 #ifdef SHOW_INVISIBLE_LUSERS
 #define OUT1 "SHOW_INVISIBLE_LUSERS=1"
 #else
 #define OUT1 "SHOW_INVISIBLE_LUSERS=0"
 #endif
-#ifdef SHOW_UH
 #define OUT2 " SHOW_UH=1"
 #else
 #define OUT2 " SHOW_UH=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-		me.name, parv[0], OUT1 OUT2);
+		me.name, parv[0], OUT1 OUT2 );
 
 #undef OUT1
 #undef OUT2
@@ -1766,7 +1772,7 @@ int	m_info(aClient *cptr,
 	ircsprintf(outstr,"HARD_FDLIMIT_=%d HYBRID_SOMAXCONN=%d",HARD_FDLIMIT_,HYBRID_SOMAXCONN);
 	sendto_one(sptr, rpl_str(RPL_INFO),
 		me.name, parv[0], outstr);
-	ircsprintf(outstr,"MOTD_WAIT=%d MAXIMUM_LINKS=%d",MOTD_WAIT,MAXIMUM_LINKS);
+	ircsprintf(outstr,"PACE_WAIT=%d MAXIMUM_LINKS=%d",PACE_WAIT,MAXIMUM_LINKS);
 	sendto_one(sptr, rpl_str(RPL_INFO),
                 me.name, parv[0], outstr);
 	ircsprintf(outstr,"MAX_NICK_CHANGES=%d MAX_NICK_TIME=%d",MAX_NICK_CHANGES,MAX_NICK_TIME);
@@ -1828,7 +1834,7 @@ int	m_links(aClient *cptr,
       if(!MyConnect(sptr))
 	return 0;
 
-      if((last_used + MOTD_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > NOW)
 	return 0;
       else
 	last_used = NOW;
@@ -1994,13 +2000,29 @@ static	void	report_configured_links(aClient *sptr,int mask)
   return;
 }
 
+/*
+ * report_specials
+ *
+ * inputs	- aClient pointer to client to report to
+ *		- int flags type of special aConfItem to report
+ *		- int numeric for aConfItem to report
+ * output	- none
+ * side effects	-
+ */
+
 static	void	report_specials(aClient *sptr,int flags,int numeric)
 {
   static	char	null[] = "<NULL>";
+  aConfItem *this_conf;
   aConfItem *aconf;
   char	*pass, *host;
 
-  for (aconf = conf; aconf; aconf = aconf->next)
+  if(flags & CONF_XLINE)
+    this_conf = x_conf;
+  else if(flags & CONF_QUARANTINED_NICK)
+    this_conf = q_conf;
+
+  for (aconf = this_conf; aconf; aconf = aconf->next)
     if (aconf->status & flags)
       {
 	host = BadPtr(aconf->host) ? null : aconf->host;
@@ -2066,7 +2088,7 @@ int	m_stats(aClient *cptr,
 	  !MyConnect(sptr))
 	return 0;
 
-      if((last_used + MOTD_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > NOW)
 	return 0;
       else
 	last_used = NOW;
@@ -2456,7 +2478,7 @@ int	m_help(aClient *cptr,
       if(!MyConnect(sptr))
 	return 0;
 
-      if((last_used + MOTD_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > NOW)
 	return 0;
       else
 	last_used = NOW;
@@ -2509,7 +2531,7 @@ int	 m_lusers(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
-      if((last_used + MOTD_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > NOW)
 	return 0;
       else
 	last_used = NOW;
@@ -3011,7 +3033,7 @@ int	m_admin(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
-      if((last_used + MOTD_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > NOW)
 	return 0;
       else
 	last_used = NOW;
@@ -5310,7 +5332,7 @@ int	m_trace(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
-      if((last_used + MOTD_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > NOW)
 	return 0;
       else
 	last_used = NOW;
@@ -5318,12 +5340,6 @@ int	m_trace(aClient *cptr,
 
   if(!IsAnOper(sptr))
     {
-      if((last_trace + MOTD_WAIT) > NOW)
-	{
-	  return 0;
-	}
-      else
-	last_trace = NOW;
       if (parv[1] && !index(parv[1],'.') && (index(parv[1], '*')
           || index(parv[1], '?'))) /* bzzzt, no wildcard nicks for nonopers */
         {
@@ -5582,7 +5598,7 @@ int	m_motd(aClient *cptr,
   if(!IsAnOper(sptr))
     {
       /* reject non local requests */
-      if((last_used + MOTD_WAIT) > NOW)
+      if((last_used + PACE_WAIT) > NOW)
 	return 0;
       else
 	last_used = NOW;
