@@ -589,14 +589,13 @@ int	can_send(aClient *cptr, aChannel *chptr)
   Reg	Link	*lp;
   Reg	int	member;
 
-  member = IsMember(cptr, chptr);
   lp = find_user_link(chptr->members, cptr);
 
   if (chptr->mode.mode & MODE_MODERATED &&
       (!lp || !(lp->flags & (CHFL_CHANOP|CHFL_VOICE))))
     return (MODE_MODERATED);
 
-  if (chptr->mode.mode & MODE_NOPRIVMSGS && !member)
+  if (chptr->mode.mode & MODE_NOPRIVMSGS && !lp)
     return (MODE_NOPRIVMSGS);
 
   return 0;

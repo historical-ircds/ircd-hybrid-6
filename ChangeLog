@@ -6,6 +6,9 @@ version hybrid-6-b53   17-Mar-1999
 * fixed misplaced #ifdef's and } causing undef'ed ANTI_SPAMBOT_EXTRA to fail
 in s_serv.c s_user.c
 -Dianora
+* optimization in can_send() in channel.c
+-orabidoo	
+
 
 version hybrid-6-b52   15-Mar-1999
 * userlength oopsies with usernames
