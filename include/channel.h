@@ -64,6 +64,7 @@ struct Channel
   struct SLink*   invites;
   struct SLink*   banlist;
   struct SLink*   exceptlist;
+  struct SLink*   denylist;
   int             num_bed;  /* number of bans+exceptions+denies */
   time_t          channelts;
 #ifdef FLUD
