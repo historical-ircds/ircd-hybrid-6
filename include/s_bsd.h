@@ -52,7 +52,7 @@ extern int   read_message (time_t, struct FDList*);
 extern void  report_error(const char* message, const char* who, int error);
 extern int   set_non_blocking(int fd);
 extern int   set_sock_buffers(int fd, int size);
-
+extern int   send_queued(struct Client*);
 
 #endif /* INCLUDED_s_bsd_h */
 

@@ -49,26 +49,11 @@ struct Server;
  * GLOBAL - global variables
  */
 
-#ifdef  GLINES
-extern struct ConfItem* find_gkill(struct Client* client);
-extern struct ConfItem* find_is_glined(const char* host, const char* name);
-extern  void    flush_glines(void);             
-extern  void    report_glines(struct Client *); 
-#endif
-
-/* scache.c */
-extern void        clear_scache_hash_table(void);
-extern const char* find_or_add(const char* name);
-extern void        count_scache(int *,unsigned long *);
-extern void        list_scache(struct Client *, struct Client *,int, char **);
 
 extern void     dummy(int signo);
 
 extern  char    *form_str (int);
 extern  void    get_my_name (struct Client *, char *, int);
-
-/* s_bsd.c */
-extern  int     send_queued(struct Client*);
 
 /* s_serv.c */
 extern  void    send_capabilities(struct Client *,int);

@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, include/s_user.h
+ *   IRC - Internet Relay Chat, include/gline.h
  *   Copyright (C) 1992 Darren Reed
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -17,23 +17,24 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  *
- * "s_user.h". - Headers file.
+ * "m_gline.h". - Headers file.
  *
  * $Id$
  *
  */
-#ifndef INCLUDED_s_user_h
-#define INCLUDED_s_user_h
+
+#ifndef INCLUDED_m_gline_h
+#define INCLUDED_m_gline_h
 
 struct Client;
+struct ConfItem;
 
-extern  void    send_umode (struct Client *, struct Client *,
-                            int, int, char *);
-extern  void    send_umode_out (struct Client*, struct Client *, int);
-extern  int     m_umode(struct Client *, struct Client *, int, char **);
-extern  int     show_lusers(struct Client *, struct Client *, int, char **);
-extern  int     hunt_server (struct Client *,struct Client *,char *,int,int,char **);
-extern  struct Client   *next_client (struct Client *, char *);
-extern  struct Client   *next_client_double (struct Client *, char *);
+#ifdef  GLINES
+extern struct ConfItem* find_gkill(struct Client* client);
+extern struct ConfItem* find_is_glined(const char* host, const char* name);
+extern void   flush_glines(void);             
+extern void   report_glines(struct Client *); 
+#endif
+
 
 #endif

@@ -22,6 +22,8 @@
  *
  *  $Id$
  */
+
+#include "config.h"
 #include "struct.h"
 #include "common.h"
 #include "numeric.h"
@@ -31,9 +33,12 @@
 #include "send.h"
 #include "h.h"
 #include "ircd.h"
+#include "scache.h"
 #include "dline_conf.h"
 #include "mtrie_conf.h"
+
 #include "m_kline.h"
+#include "m_gline.h"
 
 #include <assert.h>
 #include <string.h>
@@ -516,7 +521,7 @@ aConfItem *find_gkill(aClient* cptr)
  * thats expected to be done by caller.... *sigh* -Dianora
  */
 
-aConfItem* find_is_glined(const char* host, const char* name)
+struct ConfItem* find_is_glined(const char* host, const char* name)
 {
   aConfItem *kill_list_ptr;     /* used for the link list only */
   aConfItem *last_list_ptr;

@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, include/s_user.h
+ *   IRC - Internet Relay Chat, include/scache.h
  *   Copyright (C) 1992 Darren Reed
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -17,23 +17,17 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  *
- * "s_user.h". - Headers file.
+ * "scache.h". - Headers file.
  *
  * $Id$
  *
  */
-#ifndef INCLUDED_s_user_h
-#define INCLUDED_s_user_h
+#ifndef INCLUDED_scache_h
+#define INCLUDED_scache_h
 
-struct Client;
-
-extern  void    send_umode (struct Client *, struct Client *,
-                            int, int, char *);
-extern  void    send_umode_out (struct Client*, struct Client *, int);
-extern  int     m_umode(struct Client *, struct Client *, int, char **);
-extern  int     show_lusers(struct Client *, struct Client *, int, char **);
-extern  int     hunt_server (struct Client *,struct Client *,char *,int,int,char **);
-extern  struct Client   *next_client (struct Client *, char *);
-extern  struct Client   *next_client_double (struct Client *, char *);
+extern void        clear_scache_hash_table(void);
+extern const char* find_or_add(const char* name);
+extern void        count_scache(int *,unsigned long *);
+extern void        list_scache(struct Client *, struct Client *,int, char **);
 
 #endif

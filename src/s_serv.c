@@ -33,6 +33,7 @@
 #include "channel.h"
 #include "h.h"
 #include "ircd.h"
+#include "scache.h"
 #include "list.h"
 #include "parse.h"
 #include "s_zip.h"
@@ -97,17 +98,6 @@ extern int dline_in_progress;   /* defined in ircd.c */
 int     max_connection_count = 1, max_client_count = 1;
 
 extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
-
-extern aConfItem *temporary_klines;     /* defined in s_conf.c */
-extern aConfItem *find_special_conf(char *,int); /* defined in s_conf.c */
-
-/* external functions */
-extern char *smalldate(time_t);         /* defined in s_misc.c */
-extern char *show_capabilities(aClient *); /* defined in s_misc.c */
-
-#if defined(GLINES) || defined(SEPARATE_QUOTE_KLINES_BY_DATE)
-extern char *small_file_date(time_t);   /* defined in s_misc.c */
-#endif
 
 extern void s_die(void);                /* defined in ircd.c as VOIDSIG */
 extern void count_memory(aClient *,char *); /* defined in s_debug.c */

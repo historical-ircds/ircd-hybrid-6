@@ -33,6 +33,7 @@
 #include "s_bsd.h"
 #include "h.h"
 #include "ircd.h"
+#include "scache.h"
 #include "s_misc.h"
 #include "send.h"
 #include "hash.h"
