@@ -53,7 +53,8 @@ void restart_resolver(void)
 void init_resolver(void)
 {
  int r;
-
+  
+ gettimeofday(&SystemTime, NULL);
  r =adns_init(&dns_state, adns_if_noautosys, 0);    
  if(dns_state == NULL) {
    log(L_CRIT, "Error opening /etc/resolv.conf: %s; r = %d", strerror(errno), r);
@@ -146,6 +147,7 @@ static void do_adns_poll(void)
 	struct pollfd pfd[MAXFD_POLL];
 	int nfds = MAXFD_POLL;
 	int timeout = 0;
+	
 	adns_beforepoll(dns_state, pfd, &nfds, &timeout, &SystemTime);
 	poll(pfd, nfds, timeout);
 	adns_afterpoll(dns_state, pfd, nfds, &SystemTime);
@@ -155,6 +157,7 @@ static void do_adns_poll(void)
 
 void do_adns_io(void)
 {
+        gettimeofday(&SystemTime, NULL);
 #ifdef USE_POLL
 	do_adns_poll();
 #else
