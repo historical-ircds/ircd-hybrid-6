@@ -108,6 +108,7 @@ if test "X$cf_enable_openssl" != "Xno"; then
     AC_TRY_RUN(
     [
 #include <openssl/opensslv.h>
+#include <stdlib.h>
 int main(void) {
   if ( (OPENSSL_VERSION_NUMBER & 0x00906000) == 0x00906000)
   {
@@ -153,6 +154,7 @@ AC_TRY_RUN(
 #include <sys/ioctl.h>
 #include <sys/file.h>
 #include <signal.h>
+#include <stdlib.h>
 alarmed()
 {
 	exit(1);
@@ -194,6 +196,7 @@ AC_TRY_RUN(
 #include <sys/ioctl.h>
 #include <sys/file.h>
 #include <signal.h>
+#include <stdlib.h>
 alarmed()
 {
 	exit(1);
@@ -224,6 +227,7 @@ AC_TRY_RUN(
 #include <sys/ioctl.h>
 #include <sys/file.h>
 #include <signal.h>
+#include <stdlib.h>
 alarmed()
 {
 	exit(1);
@@ -250,6 +254,7 @@ dnl taken from ircd's Config script
 AC_MSG_CHECKING(signal implementation)
 AC_TRY_RUN(
 [
+#include <stdlib.h>
 int main()
 {
 #if defined(HAVE_SIGACTION)
@@ -262,6 +267,7 @@ int main()
     AC_TRY_RUN(
 [
 #include <signal.h>
+#include <stdlib.h>
 int calls = 0;
 void handler()
 {
