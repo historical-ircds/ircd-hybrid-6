@@ -947,15 +947,6 @@
                                      behaviour (apollo sr10.1/bsd4.3 needs
                                      this) */
 
-#define HELPFILE HPATH
-#define MOTD MPATH
-#define	MYNAME SPATH
-#define	CONFIGFILE CPATH
-#ifdef KPATH
-#define KLINEFILE  KPATH
-#endif
-#define	IRCD_PIDFILE PPATH
-
 #define MAX_CLIENTS INIT_MAXCLIENTS
 
 #if defined(CLIENT_FLOOD) && ((CLIENT_FLOOD > 8000) || (CLIENT_FLOOD < 512))

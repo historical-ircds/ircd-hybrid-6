@@ -101,6 +101,7 @@ void	server_reboot();
 void	restart (char *);
 static	void	open_debugfile();
 static  void    setup_signals();
+static  void    write_pidfile(void);
 
 static void initialize_global_set_options(void);
 static void initialize_message_files(void);
@@ -239,12 +240,12 @@ void	server_reboot()
   close(1);
   if ((bootopt & BOOT_CONSOLE) || isatty(0))
     close(0);
-  execv(MYNAME, myargv);
+  execv(SPATH, myargv);
 #ifdef USE_SYSLOG
   /* Have to reopen since it has been closed above */
 
   openlog(myargv[0], LOG_PID|LOG_NDELAY, LOG_FACILITY);
-  syslog(LOG_CRIT, "execv(%s,%s) failed: %m\n", MYNAME, myargv[0]);
+  syslog(LOG_CRIT, "execv(%s,%s) failed: %m\n", SPATH, myargv[0]);
   closelog();
 #endif
   Debug((DEBUG_FATAL,"Couldn't restart server: %s", strerror(errno)));
@@ -881,18 +882,18 @@ int	main(int argc, char *argv[])
 
   ConfigFileEntry.dpath = DPATH;
 
-  ConfigFileEntry.configfile = CONFIGFILE;	/* Server configuration file */
+  ConfigFileEntry.configfile = CPATH;	/* Server configuration file */
 
 #ifdef KPATH
-  ConfigFileEntry.klinefile = KLINEFILE;         /* Server kline file */
+  ConfigFileEntry.klinefile = KPATH;         /* Server kline file */
 #else
-	ConfigFileEntry.klinefile = CONFIGFILE;
+	ConfigFileEntry.klinefile = CPATH;
 #endif /* KPATH */
 
 #ifdef DLPATH
 	ConfigFileEntry.dlinefile = DLPATH;
 #else
-	ConfigFileEntry.dlinefile = CONFIGFILE;
+	ConfigFileEntry.dlinefile = CPATH;
 #endif /* DLPATH */
 
 #ifdef GLINES
@@ -1636,3 +1637,29 @@ static void initialize_message_files(void)
   ReadMessageFile( &ConfigFileEntry.opermotd );
   }
 
+/*
+ * write_pidfile
+ *
+ * inputs	- none
+ * output	- none
+ * side effects	- write the pid of the ircd to PPATH
+ */
+
+static void write_pidfile(void)
+{
+  int fd;
+  char buff[20];
+  if ((fd = open(PPATH, O_CREAT|O_WRONLY, 0600))>=0)
+    {
+      ircsprintf(buff,"%d\n", (int)getpid());
+      if (write(fd, buff, strlen(buff)) == -1)
+        Debug((DEBUG_NOTICE,"Error writing to pid file %s",
+               PPATH));
+      close(fd);
+      return;
+    }
+#ifdef        DEBUGMODE
+  else
+    Debug((DEBUG_NOTICE,"Error opening pid file %s", PPATH));
+#endif
+}

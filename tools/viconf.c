@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 {
 #ifdef LOCKFILE
   int fd;
-  char s[20], *ed, *p, *filename = CONFIGFILE;
+  char s[20], *ed, *p, *filename = MPATH;
 
   if( chdir(DPATH) < 0 )
     {
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     p++;
 #ifdef KPATH
   if(strcmp(p, "viklines") == 0)
-    filename = KLINEFILE;
+    filename = KPATH;
 #endif /* KPATH */
 
   /* create exclusive lock */
