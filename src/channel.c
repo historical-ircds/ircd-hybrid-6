@@ -81,10 +81,8 @@ static  void    clear_bans_exceptions(aClient *,aChannel *);
 static  int     is_banned (aClient *, aChannel *);
 static  void    set_mode (aClient *, aClient *, aChannel *, int, char **);
 static  void    sub1_from_channel (aChannel *);
+static  int     check_channel_name(const char* name);
 
-
-int     check_channel_name(const char* name);
-void    del_invite (aClient *, aChannel *);
 
 /* static functions used in set_mode */
 static char* pretty_mask(char *);
@@ -1113,17 +1111,23 @@ static  void     set_mode(aClient *cptr,
   char  *mbufw_new = modebuf_new;
   char  *pbufw_new = parabuf_new;
 
-  int   ischop, isok, isdeop, chan_op, self_lose_ops;
+  int   ischop;
+  int   isok;
+  int   isdeop;
+  int   chan_op;
+  int   self_lose_ops;
+  int   user_mode;
 
   self_lose_ops = 0;
 
-  chan_op = is_chan_op(sptr, chptr);
+  user_mode = user_channel_mode(sptr, chptr);
+  chan_op = (user_mode & CHFL_CHANOP);
 
   /* has ops or is a server */
-  ischop = IsServer(sptr) || (chan_op & MODE_CHANOP);
+  ischop = IsServer(sptr) || chan_op;
 
   /* is client marked as deopped */
-  isdeop = !ischop && !IsServer(sptr) && is_deopped(sptr, chptr);
+  isdeop = !ischop && !IsServer(sptr) && (user_mode & CHFL_DEOPPED);
 
   /* is an op or server or remote user on a TS channel */
   isok = ischop || (!isdeop && IsServer(cptr) && chptr->channelts);
@@ -2125,7 +2129,7 @@ static  int     can_join(aClient *sptr, aChannel *chptr, char *key, int *flags)
  * check_channel_name - check channel name for invalid characters
  * return true (1) if name ok, false (0) otherwise
  */
-int check_channel_name(const char* name)
+static int check_channel_name(const char* name)
 {
   assert(0 != name);
   

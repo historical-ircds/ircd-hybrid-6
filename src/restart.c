@@ -94,12 +94,17 @@ void s_die(void)
   exit(-1);
 }
   
+/* signal rehash
+ * 
+ * inputs	- none
+ * output	- none
+ * side effects	- do a rehash 
+ */
+
 void s_rehash()
 {
   dorehash = 1;
-#if !defined(POSIX_SIGNALS)
-  signal(SIGHUP, s_rehash);     /* sysV -argv */
-#endif
+  signal(SIGHUP, s_rehash);
 }
 
 /* not sure about where this should be */
@@ -113,6 +118,7 @@ void     setup_signals()
   sigemptyset(&act.sa_mask);
   sigaddset(&act.sa_mask, SIGPIPE);
   sigaddset(&act.sa_mask, SIGALRM);
+
 # ifdef SIGWINCH
   sigaddset(&act.sa_mask, SIGWINCH);
   sigaction(SIGWINCH, &act, NULL);
@@ -120,13 +126,18 @@ void     setup_signals()
   sigaction(SIGPIPE, &act, NULL);
   act.sa_handler = dummy;
   sigaction(SIGALRM, &act, NULL);
+
   act.sa_handler = s_rehash;
+  act.sa_flags = 0;
   sigemptyset(&act.sa_mask);
   sigaddset(&act.sa_mask, SIGHUP);
   sigaction(SIGHUP, &act, NULL);
+
   act.sa_handler = (void *)s_restart;
+  act.sa_flags = 0;
   sigaddset(&act.sa_mask, SIGINT);
   sigaction(SIGINT, &act, NULL);
+
   act.sa_handler = (void *)s_die;
   sigaddset(&act.sa_mask, SIGTERM);
   sigaction(SIGTERM, &act, NULL);

@@ -47,6 +47,7 @@ extern struct Client* local[];
 extern int    bootopt;
 extern int    cold_start;
 
+
 extern struct Client*           serv_cptr_list;
 extern struct Client*           local_cptr_list;
 extern struct Client*           oper_cptr_list;

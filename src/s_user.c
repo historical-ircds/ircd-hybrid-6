@@ -56,7 +56,7 @@
 #include <time.h>
 #include <sys/stat.h>
 
-extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
+extern ConfigFileEntryType ConfigFileEntry;
 
 static int do_user (char *, aClient *, aClient*, char *, char *, char *,
                      char *);

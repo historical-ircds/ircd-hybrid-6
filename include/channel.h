@@ -90,6 +90,7 @@ extern  int     user_channel_mode(struct Client *, struct Channel *);
 extern  int     count_channels (struct Client *);
 extern  int     m_names(struct Client *, struct Client *,int, char **);
 extern  void    send_channel_modes (struct Client *, struct Channel *);
+void    del_invite (struct Client *, struct Channel *);
 extern  struct  Channel *channel;
 
 
