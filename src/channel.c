@@ -91,12 +91,6 @@ static int errsent(int,int *);
 static void change_chan_flag(struct Channel *, struct Client *, int );
 static void set_deopped(struct Client *,struct Channel *,int);
 
-#ifdef ORATIMING
-struct timeval tsdnow, tsdthen; 
-unsigned long tsdms;
-#endif
-
-
 static  char    *PartFmt = ":%s PART %s";
 /*
  * some buffers for rebuilding channel/nick lists with ,'s

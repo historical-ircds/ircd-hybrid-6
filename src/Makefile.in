@@ -78,6 +78,7 @@ SRCS = \
 	match.c \
 	motd.c \
 	mtrie_conf.c \
+	oratime.c \
 	numeric.c \
 	packet.c \
 	parse.c \
@@ -158,6 +159,7 @@ SRCS = \
 #	match.o \
 #	motd.o \
 #	mtrie_conf.o \
+#	oratime.o \
 #	numeric.o \
 #	packet.o \
 #	parse.o \

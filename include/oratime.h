@@ -1,4 +1,5 @@
-/* - Internet Relay Chat, include/struct.h
+/* 
+ * Internet Relay Chat, include/oratime.h
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
  *
@@ -19,39 +20,36 @@
  *
  * $Id$
  */
-#ifndef INCLUDED_struct_h
-#define INCLUDED_struct_h
+#ifndef INCLUDED_oratime_h
+#define INCLUDED_oratime_h
 #ifndef INCLUDED_config_h
 #include "config.h"
 #endif
 
-struct Channel;
-struct Ban;
+#ifdef ORATIMING
+/* 
+ * Timing stuff (for performance measurements): compile with -DORATIMING
+ * and put a TMRESET where you want the counter of time spent set to 0,
+ * a TMPRINT where you want the accumulated results, and TMYES/TMNO pairs
+ * around the parts you want timed -orabidoo
+ */
+extern void orat_reset(void);
+extern void orat_yes(void);
+extern void orat_no(void);
+extern void orat_report(void);
 
-typedef struct  ConfItem aConfItem;
-typedef struct  Client  aClient;
-typedef struct  User    anUser;
-typedef struct  Server  aServer;
-typedef struct  SLink   Link;
-typedef struct  Mode    Mode;
-typedef struct  Zdata   aZdata;
+#define TMRESET orat_reset();
+#define TMYES   orat_yes();
+#define TMNO    orat_no(); 
+#define TMPRINT orat_report();
 
-/* general link structure used for chains */
+#else
 
-struct SLink
-{
-  struct        SLink   *next;
-  union
-  {
-    struct Client   *cptr;
-    struct Channel  *chptr;
-    struct ConfItem *aconf;
-#ifdef BAN_INFO
-    struct Ban   *banptr;
+#define TMRESET
+#define TMYES
+#define TMNO
+#define TMPRINT
 #endif
-    char      *cp;
-  } value;
-  int   flags;
-};
 
-#endif /* INCLUDED_struct_h */
+#endif /* INCLUDED_oratime_h */
+
