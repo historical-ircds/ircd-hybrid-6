@@ -1,3 +1,7 @@
+*** 19990910_2 by lusky
+removed an exit that shouldn't have been there
+
+
 *** 19990910_1 by lusky
 revved patchlevel to b107
 user sys/poll.h instead of poll.h
