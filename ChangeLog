@@ -1,3 +1,8 @@
+*** 20010701_6 by db
+- removed USE_CVS, it never worked right anyway
+
+
+
 *** 20010701_5 by db
 - we don't need this comment
 
