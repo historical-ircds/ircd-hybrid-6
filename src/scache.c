@@ -8,9 +8,10 @@
 #include "numeric.h"
 #include "h.h"
 #include "send.h"
+#include "irc_string.h"
 
 #include <assert.h>
-#include <string.h>
+
 
 
 /*
@@ -22,10 +23,6 @@
  * -orabidoo
  */
 
-/* I could have tucked this code into hash.c I suppose
-   but lets keep it separate for now
-   -Dianora 
-*/
 
 #define SCACHE_HASH_SIZE 257
 
@@ -36,9 +33,6 @@ typedef struct scache_entry
 } SCACHE;
 
 static SCACHE *scache_hash[SCACHE_HASH_SIZE];
-
-/* renamed to keep it consistent with the other hash functions -Dianora */
-/* orabidoo had named it init_scache_hash(); */
 
 void clear_scache_hash_table(void)
 {
@@ -51,7 +45,11 @@ static int hash(const char* string)
 
   hash_value = 0;
   while (*string)
-    hash_value += (*string++ & 0xDF);
+    {
+      hash_value += tolower(*string);
+      /* I don't like auto increments inside macro calls... -db */
+      string++;
+    }
 
   return hash_value % SCACHE_HASH_SIZE;
 }
