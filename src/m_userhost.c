@@ -104,9 +104,12 @@ int     m_userhost(struct Client *cptr,
 {
   char  *p;            /* scratch end pointer */
   char  *cn;           /* current name */
+  char  *t;
   struct Client *acptr;
-  char response[5][NICKLEN*2+CHANNELLEN+USERLEN+HOSTLEN+30];
+  char response[NICKLEN*2+USERLEN+HOSTLEN+30];
   int i;               /* loop counter */
+  int cur_len;
+  int rl;
 
   if (parc < 2)
     {
@@ -115,15 +118,8 @@ int     m_userhost(struct Client *cptr,
       return 0;
     }
 
-  /* The idea is to build up the response string out of pieces
-   * none of this strlen() nonsense.
-   * 5 * (NICKLEN*2+CHANNELLEN+USERLEN+HOSTLEN+30) is still << sizeof(buf)
-   * and our ircsprintf() truncates it to fit anyway. There is
-   * no danger of an overflow here. -Dianora
-   */
-
-  response[0][0] = response[1][0] = response[2][0] = 
-    response[3][0] = response[4][0] = '\0';
+  cur_len = ircsprintf(buf,form_str(RPL_USERHOST),me.name, parv[0], "");
+  t = buf + cur_len;
 
   cn = parv[1];
 
@@ -135,28 +131,35 @@ int     m_userhost(struct Client *cptr,
       if ((acptr = find_person(cn, NULL)))
         {
           if (acptr == sptr) /* show real IP for USERHOST on yourself */
-            ircsprintf(response[i], "%s%s=%c%s@%s",
+            rl = ircsprintf(response, "%s%s=%c%s@%s ",
 		       acptr->name,
 		       IsAnOper(acptr) ? "*" : "",
 		       (acptr->user->away) ? '-' : '+',
 		       acptr->username,
 		       acptr->sockhost);
           else
-            ircsprintf(response[i], "%s%s=%c%s@%s",
+            rl = ircsprintf(response, "%s%s=%c%s@%s ",
 		       acptr->name,
 		       IsAnOper(acptr) ? "*" : "",
 		       (acptr->user->away) ? '-' : '+',
 		       acptr->username,
 		       acptr->host);
+
+          if((rl + cur_len) < (BUFSIZE-10))
+            {
+              ircsprintf(t,"%s",response);
+              t += rl;
+              cur_len += rl;
+            }
+          else
+            break;
         }
       if(p)
         p++;
       cn = p;
     }
 
-  ircsprintf(buf, "%s %s %s %s %s",
-    response[0], response[1], response[2], response[3], response[4] );
-  sendto_one(sptr, form_str(RPL_USERHOST), me.name, parv[0], buf);
+  sendto_one(sptr, "%s", buf);
 
   return 0;
 }
