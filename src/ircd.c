@@ -74,11 +74,6 @@
 #include <getopt.h>
 #endif /* HAVE_GETOPT_H */
 
-#ifdef SETUID_ROOT
-#include <sys/lock.h>
-#include <unistd.h>
-#endif /* SETUID_ROOT */
-
 /*
  * for getopt
  * ZZZ this is going to need confirmation on other OS's
@@ -705,8 +700,6 @@ static void setup_corefile(void)
 
 int main(int argc, char *argv[])
 {
-  uid_t       uid;
-  uid_t       euid;
   time_t      delay = 0;
   aConfItem*  aconf;
 
@@ -752,20 +745,6 @@ int main(int argc, char *argv[])
 #ifdef REJECT_HOLD
   reject_held_fds = 0;
 #endif
-
-/* this code by mika@cs.caltech.edu */
-/* 
- * it is intended to keep the ircd from being swapped out. BSD swapping
- * criteria do not match the requirements of ircd 
- */
-#ifdef SETUID_ROOT
-  if (setuid(IRCD_UID) < 0)
-    exit(-1); /* blah.. this should be done better */
-#endif
-
-
-  uid = getuid();
-  euid = geteuid();
 
   ConfigFileEntry.dpath = DPATH;
 
@@ -816,55 +795,8 @@ int main(int argc, char *argv[])
       exit(-1);
     }
 
-#if !defined(IRC_UID)
-  if ((uid != euid) && !euid)
-    {
-      fprintf(stderr,
-              "ERROR: do not run ircd setuid root. " \
-              "Make it setuid a normal user.\n");
-      exit(-1);
-    }
-#endif
-
   init_sys(bootDaemon);
   init_log(logFileName);
-
-#if !defined(CHROOTDIR) || (defined(IRC_UID) && defined(IRC_GID))
-
-  setuid(euid);
-
-  if (getuid() == 0)
-    {
-# if defined(IRC_UID) && defined(IRC_GID)
-
-      /* run as a specified user */
-      fprintf(stderr,"WARNING: running ircd with uid = %d\n", IRC_UID);
-      fprintf(stderr,"         changing to gid %d.\n",IRC_GID);
-
-      /* setgid/setuid previous usage noted unsafe by ficus@neptho.net
-       */
-
-      if (setgid(IRC_GID) < 0)
-        {
-          fprintf(stderr,"ERROR: can't setgid(%d)\n", IRC_GID);
-          exit(-1);
-        }
-
-      if(setuid(IRC_UID) < 0)
-        {
-          fprintf(stderr,"ERROR: can't setuid(%d)\n", IRC_UID);
-          exit(-1);
-        }
-
-#else
-      /* check for setuid root as usual */
-      fprintf(stderr,
-              "ERROR: do not run ircd setuid root. " \
-              "Make it setuid a normal user.\n");
-      return -1;
-# endif 
-            } 
-#endif /*CHROOTDIR/UID/GID*/
 
   setup_signals();
   initialize_message_files();
