@@ -78,16 +78,16 @@ static  int     attach_iline(aClient *, aConfItem *);
 aConfItem *find_special_conf(char *, int );
 int       find_q_line(char *, char *,char *);
 
-void add_q_line(aConfItem *);
-void clear_q_lines(void);
-void clear_special_conf(aConfItem **);
+static void add_q_line(aConfItem *);
+static void clear_q_lines(void);
+static void clear_special_conf(aConfItem **);
 static aConfItem *find_tkline(char *,char *);
 
 aConfItem *temporary_klines = (aConfItem *)NULL;
 
 static  char *set_conf_flags(aConfItem *,char *);
-static  int  get_oper_privs(int,char *);
-static  int  get_oper_flags(char *);
+static  int  oper_privs_from_string(int,char *);
+static  int  oper_flags_from_string(char *);
 
 /* externally defined functions */
 extern  void    outofmemory(void);        /* defined in list.c */
@@ -1279,9 +1279,11 @@ int find_q_line(char *nickToFind,char *user,char *host)
 /*
  * clear_q_lines
  *
- * - clear out the q lines
+ * inputs	- none
+ * output	- none
+ * side effects - clear out the q lines
  */
-void clear_q_lines()
+static void clear_q_lines()
 {
   aQlineItem *qp;
   aQlineItem *qp_next;
@@ -1341,7 +1343,15 @@ void report_qlines(aClient *sptr)
     }
 }
 
-void add_q_line(aConfItem *aconf)
+/*
+ * add_q_line
+ *
+ * inputs	- pointer to aconf to add
+ * output	- none
+ * side effects	- given Q line is added to q line list 
+ */
+
+static void add_q_line(aConfItem *aconf)
 {
   char *pc;
   aQlineItem *qp, *newqp;
@@ -1441,10 +1451,12 @@ static void makeQlineEntry(aQlineItem *qp, aConfItem *aconf, char *uath)
 
 /*
  * clear_special_conf
- *
- * - clears given special conf lines
+ * 
+ * inputs	- pointer to pointer of root of special conf link list
+ * output	- none
+ * side effects	- clears given special conf lines
  */
-void clear_special_conf(aConfItem **this_conf)
+static void clear_special_conf(aConfItem **this_conf)
 {
   aConfItem *aconf;
   aConfItem *next_aconf;
@@ -1897,7 +1909,7 @@ static void initconf(FBFILE* file, int use_include)
                 CONF_OPER_K|CONF_OPER_GLINE|CONF_OPER_REHASH;
               if ((tmp = getfield(NULL)) == NULL)
                 break;
-              aconf->port = get_oper_privs(aconf->port,tmp);
+              aconf->port = oper_privs_from_string(aconf->port,tmp);
             }
           else if(aconf->status & CONF_LOCOP)
             {
@@ -1905,7 +1917,7 @@ static void initconf(FBFILE* file, int use_include)
               aconf->port = CONF_OPER_UNKLINE|CONF_OPER_K;
               if ((tmp = getfield(NULL)) == NULL)
                 break;
-              aconf->port = get_oper_privs(aconf->port,tmp);
+              aconf->port = oper_privs_from_string(aconf->port,tmp);
             }
           else
             {
@@ -1944,7 +1956,7 @@ static void initconf(FBFILE* file, int use_include)
             {
               if ((tmp = getfield(NULL)) == NULL)
                 break;
-              (int)aconf->hold = get_oper_flags(tmp);
+              (int)aconf->hold = oper_flags_from_string(tmp);
             }
 
           break;
@@ -2653,20 +2665,17 @@ void report_temp_klines(aClient *sptr)
     }
 }
 
-/* get_oper_privs
+/* oper_privs_from_string
  *
  * inputs        - default privs
  *               - privs as string
  * output        - default privs as modified by privs string
  * side effects -
  *
- * -Dianora
  */
 
-int get_oper_privs(int int_privs,char *privs)
+static int oper_privs_from_string(int int_privs,char *privs)
 {
-  Debug((DEBUG_DEBUG,"get_oper_privs called privs = [%s]",privs));
-
   while(*privs)
     {
       if(*privs == 'O')                     /* allow global kill */
@@ -2705,22 +2714,20 @@ int get_oper_privs(int int_privs,char *privs)
         int_privs &= ~CONF_OPER_DIE;        /* disallow die */
       privs++;
     }
-
-  Debug((DEBUG_DEBUG,"about to return int_privs %x",int_privs));
   return(int_privs);
 }
 
 /*
- * oper_privs
+ * oper_privs_as_string
  *
  * inputs        - pointer to cptr or NULL
  * output        - pointer to static string showing oper privs
- * side effects        -
+ * side effects  -
  * return as string, the oper privs as derived from port
- * also, set the oper privs if given cptr is non NULL
+ * also, set the oper privs if given cptr non NULL
  */
 
-char *oper_privs(aClient *cptr,int port)
+char *oper_privs_as_string(aClient *cptr,int port)
 {
   static char privs_out[16];
   char *privs_ptr;
@@ -2802,20 +2809,18 @@ char *oper_privs(aClient *cptr,int port)
   return(privs_out);
 }
 
-/* get_oper_flags
+/* oper_flags_from_string
  *
  * inputs        - flags as string
- * output        - flags
+ * output        - flags as bit mask
  * side effects -
  *
  * -Dianora
  */
 
-int get_oper_flags(char *flags)
+static int oper_flags_from_string(char *flags)
 {
   int int_flags=0;
-
-  Debug((DEBUG_DEBUG,"get_oper_flags called flags = [%s]",flags));
 
   while(*flags)
     {
@@ -2842,28 +2847,25 @@ int get_oper_flags(char *flags)
       flags++;
     }
 
-  Debug((DEBUG_DEBUG,"about to return int_flags %x",int_flags));
   return(int_flags);
 }
 
-/* oper_flags
+/* oper_flags_as_string
  *
- * inputs        - flags as string
- * output        - flags
+ * inputs        - oper flags as bit mask
+ * output        - oper flags as as string
  * side effects -
  *
  * -Dianora
  */
 
-char *oper_flags(int flags)
+char *oper_flags_as_string(int flags)
 {
   static char flags_out[16];
   char *flags_ptr;
 
   flags_ptr = flags_out;
   *flags_ptr = '\0';
-
-  Debug((DEBUG_DEBUG,"per_flags called flags = [%d]",flags));
 
   if(flags & FLAGS_INVISIBLE)
     *flags_ptr++ = 'i';
@@ -2887,25 +2889,11 @@ char *oper_flags(int flags)
     *flags_ptr++ = 'n';
   *flags_ptr = '\0';
 
-  Debug((DEBUG_DEBUG,"about to return flags_out %s",flags_out));
   return(flags_out);
 }
 
-/*
- * is_address
- *
- * inputs        - hostname
- *                - pointer to ip result
- *                - pointer to ip_mask result
- * output        - YES if hostname is ip# only NO if its not
- *              - 
- * side effects        - NONE
- * 
- * Thanks Soleil
- *
- * BUGS
- */
-unsigned long cidr_to_bitmask[]=
+/* table used for is_address */
+static unsigned long cidr_to_bitmask[]=
 {
   /* 00 */ 0x00000000,
   /* 01 */ 0x80000000,
@@ -2941,6 +2929,21 @@ unsigned long cidr_to_bitmask[]=
   /* 31 */ 0xFFFFFFFE,
   /* 32 */ 0xFFFFFFFF
 };
+
+/*
+ * is_address
+ *
+ * inputs        - hostname
+ *                - pointer to ip result
+ *                - pointer to ip_mask result
+ * output        - YES if hostname is ip# only NO if its not
+ *              - 
+ * side effects        - NONE
+ * 
+ * Thanks Soleil
+ *
+ * BUGS
+ */
 
 int        is_address(char *host,
                    unsigned long *ip_ptr,
@@ -3051,9 +3054,16 @@ char    *parv, *filename;
 
 
 /*
- * command to test I/K lines on server
+ * m_testline
  *
- * /quote testline user@host,ip
+ * inputs	- pointer to physical connection request is coming from
+ *		- pointer to source connection request is comming from
+ *		- parc arg count
+ *		- parv actual arguments
+ *
+ * side effects	- command to test I/K lines on server
+ *
+ * i.e. /quote testline user@host,ip
  *
  */
 
@@ -3166,9 +3176,12 @@ void GetPrintableaConfItem(aConfItem *aconf, char **name, char **host,
   *port = (int)aconf->port;
 }
 
-
 /*
  * read_conf_files
+ *
+ * inputs	- cold start YES or NO
+ * output	- none
+ * side effects	- read all conf files needed, ircd.conf kline.conf etc.
  */
 
 void read_conf_files(int cold)
@@ -3202,6 +3215,9 @@ void read_conf_files(int cold)
 
   do_include_conf();
 
+  /* ZZZ have to deal with single ircd.conf situations */
+
+#ifdef KLINE_PATH
   filename = get_conf_name(KLINE_TYPE);
 
   if ((file = openconf(filename)) == 0)
@@ -3221,9 +3237,16 @@ void read_conf_files(int cold)
     }
   else
     initconf(file, NO);
+#endif
 }
 
-
+/*
+ * clear_out_old_conf
+ *
+ * inputs	- none
+ * output	- none
+ * side effects	- Clear out the old configuration
+ */
 
 static void clear_out_old_conf(void)
 {
@@ -3273,6 +3296,14 @@ static void clear_out_old_conf(void)
     clear_q_lines();
 }
 
+/*
+ * flush_deleted_I_P
+ *
+ * inputs	- none
+ * output	- none
+ * side effects	- This function removes I/P conf items
+ */
+
 static void flush_deleted_I_P(void)
 {
   aConfItem **tmp = &ConfigItemList;
@@ -3295,6 +3326,26 @@ static void flush_deleted_I_P(void)
     }
 }
 
+/*
+ * write_kline_or_dline_to_conf_and_notice_opers
+ *
+ * inputs	- kline or dline type flag
+ * 		- client pointer to report to
+ *		- server pointer to relay onto
+ *		- user name of target
+ *		- host name of target
+ *		- reason for target
+ *		- current tiny date string
+ * output	- -1 if error on write, 0 if ok
+ * side effects	- This function takes care of
+ *		  finding right kline or dline conf file, writing
+ *		  the right lines to this file, 
+ *		  notifying the oper that their kline/dline is in place
+ *		  notifying the opers on the server about the k/d line
+ *		  forwarding the kline onto the next U lined server
+ *		  
+ * Bugs		- This function is still doing too much
+ */
 
 void write_kline_or_dline_to_conf_and_notice_opers(
 						   KlineType type,
@@ -3409,7 +3460,7 @@ void write_kline_or_dline_to_conf_and_notice_opers(
  *
  * inputs	- client pointer
  * 		- filename to write to
- *		- open fd to be writing on
+ *		- open fd to write on
  *		- buffer to write
  * output	- -1 if error on write, 0 if ok
  * side effects	- function tries to write buffer safely

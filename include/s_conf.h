@@ -24,6 +24,10 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.14  1999/07/16 04:16:59  db
+ * - optimized get_conf_name
+ * - replaced char * with const char * for filename
+ *
  * Revision 1.13  1999/07/15 22:26:43  db
  * - fixed core bug in m_kline.c, probably should add extra sanity test there
  *   REDUNDANT_KLINES was using aconf->name instead of aconf->user
@@ -200,6 +204,8 @@ extern struct ConfItem* find_conf_ip (struct SLink *, char *, char *, int);
 extern struct ConfItem* find_conf_name (char *, int);
 extern struct ConfItem* find_kill (struct Client *);
 extern int conf_connect_allowed(struct in_addr addr);
+extern char *oper_flags_as_string(int);
+extern char *oper_privs_as_string(struct Client *, int);
 
 typedef enum {
   CONF_TYPE,

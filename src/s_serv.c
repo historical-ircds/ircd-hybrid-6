@@ -106,9 +106,6 @@ extern char *show_capabilities(aClient *); /* defined in s_misc.c */
 extern char *small_file_date(time_t);	/* defined in s_misc.c */
 #endif
 
-extern char *oper_privs(aClient *,int);	/* defined in s_conf.c */
-extern char *oper_flags(int);		/* defined in s_conf.c */
-extern void outofmemory(void);		/* defined in list.c */
 extern void s_die(void);		/* defined in ircd.c as VOIDSIG */
 extern void show_opers(aClient *,char *);   /* defined in s_misc.c */
 extern void show_servers(aClient *,char *); /* defined in s_misc.c */
@@ -1361,7 +1358,7 @@ static	void	report_configured_links(aClient *sptr,int mask)
 			 name,
 			 port,
 			 get_conf_class(tmp),
-			 oper_flags((int)tmp->hold));
+			 oper_flags_as_string((int)tmp->hold));
 	    else
 	      sendto_one(sptr, form_str(p->rpl_stats), me.name,
 			 sptr->name, c,
@@ -1379,9 +1376,9 @@ static	void	report_configured_links(aClient *sptr,int mask)
 			 sptr->name,
 			 p->conf_char,
 			 user, host, name,
-			 oper_privs((aClient *)NULL,port),
+			 oper_privs_as_string((aClient *)NULL,port),
 			 get_conf_class(tmp),
-			 oper_flags((int)tmp->hold));
+			 oper_flags_as_string((int)tmp->hold));
 	    else
 	      sendto_one(sptr, form_str(p->rpl_stats), me.name,
 			 sptr->name, p->conf_char,

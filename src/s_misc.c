@@ -412,7 +412,8 @@ void show_opers(aClient *cptr,char *name)
           sendto_one(cptr, ":%s %d %s :[%c][%s] %s (%s@%s) Idle: %d",
                      me.name, RPL_STATSDEBUG, name,
                      IsOper(cptr2) ? 'O' : 'o',
-                     oper_privs(cptr2,cptr2->confs->value.aconf->port),
+                     oper_privs_as_string(cptr2,
+					  cptr2->confs->value.aconf->port),
                      cptr2->name,
                      cptr2->username, cptr2->host,
                      timeofday - cptr2->user->last);
