@@ -133,13 +133,8 @@ int	m_info(aClient *cptr,
 #else
 #define OUT2 " BOTCHECK=0"
 #endif
-#ifdef BOT_GCOS_WARN
-#define OUT3 " BOT_GCOS_WARN=1"
-#else
-#define OUT3 " BOT_GCOS_WARN=0"
-#endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-                   me.name, parv[0], OUT1 OUT2 OUT3 );
+                   me.name, parv[0], OUT1 OUT2 );
 #undef OUT1
 #undef OUT2
 #undef OUT3
@@ -199,18 +194,13 @@ int	m_info(aClient *cptr,
 #else
 #define OUT1 "DO_IDENTD=0"
 #endif
-#ifdef EXTRA_BOT_NOTICES
-#define OUT2 " EXTRA_BOT_NOTICES=1"
-#else
-#define OUT2 " EXTRA_BOT_NOTICES=0"
-#endif
 #ifdef E_LINES_OPER_ONLY
-#define OUT3 " E_LINES_OPER_ONLY=1"
+#define OUT2 " E_LINES_OPER_ONLY=1"
 #else
-#define OUT3 " E_LINES_OPER_ONLY=0"
+#define OUT2 " E_LINES_OPER_ONLY=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-                   me.name, parv[0], OUT1 OUT2 OUT3 );
+                   me.name, parv[0], OUT1 OUT2 );
 #undef OUT1
 #undef OUT2
 #undef OUT3

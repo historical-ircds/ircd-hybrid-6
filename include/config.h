@@ -332,18 +332,6 @@
 #define PACE_WALLOPS
 #define WALLOPS_WAIT 10	
 
-/* EXTRA_BOT_NOTICES - Have the server send extra bot notices?
- */
-#define EXTRA_BOT_NOTICES
-
-/* BOT_GCOS_WARN - Check connecting clients gcos for possible bot ID's?
- */
-#define BOT_GCOS_WARN
-
-#if defined(BOT_GCOS_WARN) && !defined(EXTRA_BOT_NOTICES)
-#define EXTRA_BOT_NOTICES
-#endif
-
 /* SHOW_HEADERS - Shows messages like "looking up hostname" 
  */
 #define SHOW_HEADERS

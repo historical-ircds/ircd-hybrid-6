@@ -1770,22 +1770,66 @@ static	int	m_message(aClient *cptr,
       /* As Mortiis points out, if there is only one target,
        * the call to canonize is silly
        */
-      /*      parv[1] = canonize(parv[1]); */
     }
   /* 
    * If the target contains a , it will barf tough.
    */
 
-  /*  nick = strtoken(&p, parv[1], ",");*/
   nick = parv[1];
-  p = strchr(nick,',');
-  if(p)
+  if((p = strchr(nick,',')))
     {
       sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
 		     me.name, parv[0], cmd);
       return -1;
     }
 
+  /*
+  ** plain old channel msg ?
+  */
+  if( ((*nick == '#') || (*nick == '&'))
+      && (IsPerson(sptr) && (chptr = find_channel(nick, NullChn))))
+    {
+#ifdef	IDLE_CHECK
+      /* reset idle time for message only if target exists */
+      if(MyClient(sptr) && sptr->user)
+	sptr->user->last = timeofday;
+#endif
+#ifdef ANTI_SPAMBOT_EXTRA
+      if(MyConnect(sptr) && !IsElined(sptr))
+	sptr->channel_privmsgs++;
+#endif
+#ifdef FLUD
+      if(!notice)
+	if(check_for_ctcp(parv[2]))
+	    check_for_flud(sptr, NULL, chptr, 1);
+#endif /* FLUD */
+
+      if (can_send(sptr, chptr) == 0)
+	sendto_channel_butone(cptr, sptr, chptr,
+			      ":%s %s %s :%s",
+			      parv[0], cmd, nick,
+			      parv[2]);
+      else if (!notice)
+	sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
+		   me.name, parv[0], nick);
+#ifdef ANTI_SPAMBOT_EXTRA
+      if( MyConnect(sptr) && spambot_privmsg_count &&
+	  ((sptr->person_privmsgs - sptr->channel_privmsgs)
+	   > spambot_privmsg_count) )
+	{
+	  sendto_realops_lev(REJ_LEV,
+"Possible spambot %s [%s@%s] : privmsgs to clients %d privmsgs to channels %d",
+			 sptr->name, sptr->user->username,
+			 sptr->user->host,
+			 sptr->person_privmsgs,sptr->channel_privmsgs);
+	  /* and report it if happens again */
+	  sptr->person_privmsgs = 0;
+	  sptr->channel_privmsgs = 0;
+	}
+#endif
+      return 0;
+    }
+      
   /*
   ** @# type of channel msg?
   */
@@ -1875,52 +1919,6 @@ static	int	m_message(aClient *cptr,
 		     me.name, parv[0], nick);
 	  return -1;
 	}
-      return 0;
-    }
-
-  /*
-  ** plain old channel msg ?
-  */
-  if (IsPerson(sptr) && (chptr = find_channel(nick, NullChn)))
-    {
-#ifdef	IDLE_CHECK
-      /* reset idle time for message only if target exists */
-      if(MyClient(sptr) && sptr->user)
-	sptr->user->last = timeofday;
-#endif
-#ifdef ANTI_SPAMBOT_EXTRA
-      if(MyConnect(sptr) && !IsElined(sptr))
-	sptr->channel_privmsgs++;
-#endif
-#ifdef FLUD
-      if(!notice)
-	if(check_for_ctcp(parv[2]))
-	    check_for_flud(sptr, NULL, chptr, 1);
-#endif /* FLUD */
-
-      if (can_send(sptr, chptr) == 0)
-	sendto_channel_butone(cptr, sptr, chptr,
-			      ":%s %s %s :%s",
-			      parv[0], cmd, nick,
-			      parv[2]);
-      else if (!notice)
-	sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
-		   me.name, parv[0], nick);
-#ifdef ANTI_SPAMBOT_EXTRA
-      if( MyConnect(sptr) && spambot_privmsg_count &&
-	  ((sptr->person_privmsgs - sptr->channel_privmsgs)
-	   > spambot_privmsg_count) )
-	{
-	  sendto_realops_lev(REJ_LEV,
-"Possible spambot %s [%s@%s] : privmsgs to clients %d privmsgs to channels %d",
-			 sptr->name, sptr->user->username,
-			 sptr->user->host,
-			 sptr->person_privmsgs,sptr->channel_privmsgs);
-	  /* and report it if happens again */
-	  sptr->person_privmsgs = 0;
-	  sptr->channel_privmsgs = 0;
-	}
-#endif
       return 0;
     }
 
