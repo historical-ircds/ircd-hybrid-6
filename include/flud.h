@@ -17,9 +17,16 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+#ifndef INCLUDED_flud_h
+#define INCLUDED_flud_h
+#ifndef INCLUDED_config_h
+#include "config.h"
+#endif
+#ifndef INCLUDED_sys_types_h
+#include <sys/types.h>
+#define INCLUDED_sys_types_h
+#endif
 
-#ifndef INCLUDED_FLUD_H
-#define INCLUDED_FLUD_H
 
 #ifdef FLUD
 struct SLink;
@@ -49,4 +56,4 @@ extern void free_fluders(struct Client *,struct Channel *);
 extern void free_fludees(struct Client *);
 #endif
 
-#endif
+#endif /* INCLUDED_flud_h */

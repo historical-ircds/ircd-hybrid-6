@@ -134,6 +134,7 @@ SRCS = \
 #	m_pass.o \
 #	m_ping.o \
 #	m_pong.o \
+#	m_quit.o \
 #	m_rehash.o \
 #	m_restart.o \
 #	m_server.o \

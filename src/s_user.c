@@ -27,6 +27,7 @@
 #include "class.h"
 #include "common.h"
 #include "fdlist.h"
+#include "flud.h"
 #include "hash.h"
 #include "irc_string.h"
 #include "ircd.h"
