@@ -459,9 +459,7 @@ int adns_processwriteable(adns_state ads, int fd, const struct timeval *now) {
   case server_ok:
     if (fd != ads->tcpsocket) break;
     while (ads->tcpsend.used) {
-      adns__sigpipe_protect(ads);
       r= write(ads->tcpsocket,ads->tcpsend.buf,ads->tcpsend.used);
-      adns__sigpipe_unprotect(ads);
       if (r<0) {
 	if (errno==EINTR) continue;
 	if (errno==EAGAIN || errno==EWOULDBLOCK) { r= 0; goto xit; }

@@ -109,6 +109,7 @@ void dns_do_callbacks(void)
     assert(query->callback != NULL);
     query->query = NULL;
     query->callback(query->ptr, answer);
+    MyFree(query);
     break;
    case EAGAIN:
     /* Go into the queue again */
@@ -118,6 +119,7 @@ void dns_do_callbacks(void)
     /* Awww we failed, what a shame */
     query->query = NULL;
     query->callback(query->ptr, NULL);      
+    MyFree(query);
     break;
   } 
  }

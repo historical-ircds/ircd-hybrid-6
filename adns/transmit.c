@@ -188,9 +188,7 @@ void adns__querysend_tcp(adns_query qu, struct timeval now) {
     iov[0].iov_len= 2;
     iov[1].iov_base= qu->query_dgram;
     iov[1].iov_len= qu->query_dglen;
-    adns__sigpipe_protect(qu->ads);
     wr= writev(qu->ads->tcpsocket,iov,2);
-    adns__sigpipe_unprotect(qu->ads);
     if (wr < 0) {
       if (!(errno == EAGAIN || errno == EINTR || errno == ENOSPC ||
 	    errno == ENOBUFS || errno == ENOMEM)) {

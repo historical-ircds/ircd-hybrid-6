@@ -193,7 +193,6 @@ static void auth_dns_callback(void* vptr, adns_answer* reply)
      sendheader(auth->client, REPORT_FAIL_DNS);
   }
   MyFree(reply);
-  MyFree(auth->client->dns_query);
     
   auth->client->dns_query = NULL;
   auth->client->host[HOSTLEN] = '\0';

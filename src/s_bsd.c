@@ -185,6 +185,7 @@ static void connect_dns_callback(void* vptr, adns_answer* reply)
   aconf->dns_pending = 0;
   if (reply && reply->status == adns_s_ok) {
     aconf->ipnum.s_addr = reply->rrs.addr->addr.inet.sin_addr.s_addr;
+    MyFree(reply);
     connect_server(aconf, 0, NULL);
   }
   else

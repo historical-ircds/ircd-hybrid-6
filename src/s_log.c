@@ -107,6 +107,24 @@ static void write_log(const char* message)
 }
 #endif
    
+void vlog(int priority, const char *fmt, va_list args)
+{
+  char buf[LOG_BUFSIZE];
+  assert(-1 < priority);
+  assert(0 != fmt);
+
+  if(priority > logLevel)
+  	return;  
+  vsprintf(buf, fmt, args);
+#ifdef USE_SYSLOG
+  if(priority <= L_DEBUG)
+  	syslog(sysLogLevel[priority, "%s", buf);
+#endif
+#ifdef USE_LOGFILE
+   write_log(buf);
+#endif	  		
+}
+
 void log(int priority, const char* fmt, ...)
 {
   char    buf[LOG_BUFSIZE];
