@@ -1,3 +1,8 @@
+*** 20000907_1 by bill
+
+Fixed the small bug with nick,nick,nick.
+
+
 *** 20000901_1 by lusky
 revved patchlevel to rc5
 added canonize() call in m_message if NO_DUPE_MULTI_MESSAGES is defined
