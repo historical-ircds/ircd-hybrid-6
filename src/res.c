@@ -144,10 +144,10 @@
  *  Nov. 17, 1997 --Bleep
  */
 
-typedef struct Hostent {
+struct Hostent {
   struct hostent h;      /* the hostent struct we are passing around */
   char*          buf;    /* buffer for data pointed to from hostent */
-} aHostent;
+};
 
 struct reslist {
   int             id;
@@ -163,7 +163,7 @@ struct reslist {
   char*           name;
   struct reslist *next;
   struct DNSQuery query;             /* query callback for this request */
-  aHostent        he;
+  struct Hostent  he;
 };
 
 struct result {
@@ -1020,7 +1020,7 @@ proc_answer(struct reslist *request, HEADER* header,
  * the data we're putting in it.
  */
 static void 
-dup_hostent(aHostent* new_hp, struct hostent* hp)
+dup_hostent(struct Hostent *new_hp, struct hostent* hp)
 {
   char*  p;
   char** ap;
