@@ -1106,49 +1106,6 @@ time_t io_loop(time_t delay)
 
 }
 
-#if 0
-/*
- * open_debugfile
- *
- * If the -t option is not given on the command line when the server is
- * started, all debugging output is sent to the file set by LPATH in config.h
- * Here we just open that file and make sure it is opened to fd 2 so that
- * any fprintf's to stderr also goto the logfile.  If the debuglevel is not
- * set from the command line by -x, use /dev/null as the dummy logfile as long
- * as DEBUGMODE has been defined, else dont waste the fd.
- */
-static void open_debugfile()
-{
-#ifdef  DEBUGMODE
-  int   fd;
-  const char* name = LOGFILE;
-
-  if (debuglevel >= 0)
-    {
-      printf("isatty = %d ttyname = %#x\n", isatty(2), ttyname(2));
-      if (!(bootopt & BOOT_TTY)) /* leave debugging output on fd 2 */
-        {
-          truncate(name, 0);
-          if ((fd = open(name, O_WRONLY | O_CREAT, 0600)) < 0) 
-            if ((fd = open("/dev/null", O_WRONLY)) < 0)
-              exit(-1);
-          if (fd != 2)
-            {
-              dup2(fd, 2);
-              close(fd); 
-            }
-        }
-      else if (isatty(2) && ttyname(2))
-        name = ttyname(2);
-      else
-        name = "FD2-Pipe";
-      Debug((DEBUG_FATAL, "Debug: File <%s> Level: %d at %s",
-             name, debuglevel, myctime(time(NULL))));
-    }
-#endif
-}
-
-#endif
 /*
  * simple function added because its used more than once
  * - Dianora
