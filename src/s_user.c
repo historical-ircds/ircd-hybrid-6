@@ -2052,7 +2052,7 @@ static	int	m_message(aClient *cptr,
 
   if(type)
     {
-      /* Strip if using DALnet chanop/voice prefix.  -- David-R */
+      /* Strip if using DALnet chanop/voice prefix. */
       if (*(nick+1) == '@' || *(nick+1) == '+')
 	{
 	  nick++;

@@ -354,7 +354,7 @@ int	m_squit(aClient *cptr,
       **
       ** Closing the client's connection probably wouldn't do much
       ** good.. any oper out there should know that the proper way
-      ** to disconnect is /QUIT :)  -- David-R
+      ** to disconnect is /QUIT :)
       **
       ** its still valid if its not a local client, its then
       ** a protocol error for sure -Dianora

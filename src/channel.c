@@ -3119,7 +3119,7 @@ int	count_channels(aClient *sptr)
 **  they would like to join.  Helpful if the channel is invite-only, the
 **  key is forgotten, or the channel is full (INVITE can bypass each one
 **  of these conditions.  Concept by Dianora <db@db.net> and written by
-**  David-R <rientjes@mail.whidbey.net>
+**  <anonymous>
 **
 ** Just some flood control added here, five minute delay between each
 ** KNOCK -Dianora
@@ -3150,7 +3150,7 @@ int	m_knock(aClient *cptr,
 
 
   /* We will cut at the first comma reached, however we will not *
-   * process anything afterwards.  -- David-R                    */
+   * process anything afterwards.                                */
 
   p = strchr(parv[1],',');
   if(p)
@@ -3416,7 +3416,7 @@ int	m_invite(aClient *cptr,
     }
 
   /* Do not send local channel invites to users if they are not on the
-   * same server as the person sending the INVITE message.  -- David-R
+   * same server as the person sending the INVITE message. 
    */
   /* Possibly should be an error sent to sptr */
   if (!MyConnect(acptr) && (parv[2][0] == '&'))
@@ -3481,7 +3481,7 @@ int	m_invite(aClient *cptr,
 	{
 	  /* Send a NOTICE to all channel operators concerning chanops who  *
 	   * INVITE other users to the channel when it is invite-only (+i). *
-	   * The NOTICE is sent from the local server.  -- David-R          */
+	   * The NOTICE is sent from the local server.                      */
 
 	  /* Only allow this invite notice if the channel is +p
 	   * i.e. "paranoid"

@@ -499,7 +499,7 @@ void	init_sys()
 
   (void)setvbuf(stderr,logbuf,_IOLBF,sizeof(logbuf));
 #else
-# if defined(HPUX)
+# if defined(HPUX) || defined(__CYGWIN__)
   (void)setvbuf(stderr, NULL, _IOLBF, 0);
 # else
 #  if !defined(SOL20) && !defined(__EMX__)
@@ -529,6 +529,7 @@ void	init_sys()
   if (!(bootopt & BOOT_DEBUG) && !(bootopt & BOOT_STDERR))
     (void)close(2);
 
+#ifndef __CYGWIN__
   if (((bootopt & BOOT_CONSOLE) || isatty(0)) &&
       !(bootopt & (BOOT_INETD|BOOT_OPER)) &&
       !(bootopt & BOOT_STDERR))
@@ -560,6 +561,7 @@ void	init_sys()
     (void)close(0);	/* fd 0 opened by inetd */
     local[0] = NULL;
     }
+#endif /* __CYGWIN__ */
   resfd = init_resolver(0x1f);
   return;
 }
@@ -1159,7 +1161,7 @@ static	void	set_sock_opts(int fd, aClient *cptr)
     report_error("setsockopt(SO_DEBUG) %s:%s", cptr);
 #endif /* SOL20 */
 #endif
-#ifdef	SO_USELOOPBACK
+#if defined(SO_USELOOPBACK) && !defined(__CYGWIN__)
   opt = 1;
   if (setsockopt(fd, SOL_SOCKET, SO_USELOOPBACK, (char *)&opt, sizeof(opt)) < 0)
     report_error("setsockopt(SO_USELOOPBACK) %s:%s", cptr);

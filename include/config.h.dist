@@ -123,8 +123,8 @@
  * implementation.  Once pre-hybrid5.2 servers are eradicated, we can drop this
  * down to 90 seconds or so. --Rodder
  */
-#define TS_MAX_DELTA 1800	/* seconds */
-#define TS_WARN_DELTA 15 	/* seconds */
+#define TS_MAX_DELTA 600	/* seconds */
+#define TS_WARN_DELTA 30 	/* seconds */
 
 /* SLAVE_SERVERS - Use this to send LOCOPS and KLINES to servers you define
  * uses U: lines in ircd.conf, each server defined in an U: line
@@ -605,6 +605,10 @@
  * are only logged to syslog.
  */
 #define	USE_SYSLOG
+
+#if defined(__CYGWIN__)
+#undef USE_SYSLOG
+#endif
 
 #ifdef	USE_SYSLOG
 /* SYSLOG_KILL SYSLOG_SQUIT SYSLOG_CONNECT SYSLOG_USERS SYSLOG_OPER
