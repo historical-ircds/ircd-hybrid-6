@@ -1,3 +1,8 @@
+*** 19991115_2 by lusky
+added USE_LOGFILE to config.h
+added MFLAGS to toplevel Makefile.in so I can do parallel makes
+
+
 *** 19991115_1 by lusky
 add fix for logging, if you define USE_LOGFILE, stuff will be logged to
   the ircd.log, if you define USE_SYSLOG, stuff will be logged to syslog,
