@@ -171,7 +171,9 @@ int	dopacket(aClient *cptr, char *buffer, int length)
 	      */
 	      if (cptr->flags & FLAGS_DEADSOCKET)
 		return exit_client(cptr, cptr, &me, (cptr->flags & FLAGS_SENDQEX) ?
-				   "SendQ exceeded" : "Dead socket");
+				   ((IsDoingList(cptr)) ?
+				    "SendQ exceeded while doing /list" :
+				   "SendQ exceeded") : "Dead socket");
 
 #ifdef ZIP_LINKS
 	      if ((cptr->flags2 & FLAGS2_ZIP) && (zipped == 0) &&
