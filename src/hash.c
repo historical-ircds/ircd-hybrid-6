@@ -28,6 +28,7 @@
 #include "numeric.h"
 #include "send.h"
 #include "struct.h"
+#include "s_debug.h"
 
 #include <assert.h>
 #include <fcntl.h>     /* O_RDWR ... */

@@ -28,6 +28,7 @@
 #include "ircd.h"
 #include "numeric.h"
 #include "send.h"
+#include "s_debug.h"
 
 /*
  * m_functions execute protocol messages on this server:

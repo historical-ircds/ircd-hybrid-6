@@ -39,6 +39,7 @@
 #include "s_log.h"
 #include "send.h"
 #include "struct.h"
+#include "s_debug.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -2456,7 +2457,8 @@ static void initconf(FBFILE* file, int use_include)
           Debug((DEBUG_NOTICE,
                  "Read Init: (%d) (%s) (%s) (%s) (%d) (%d)",
                  aconf->status, aconf->host, aconf->passwd,
-                 aconf->user, aconf->port, Class(aconf)));
+                 aconf->user, aconf->port,
+		 ConfClassType(aconf)));
           aconf->next = ConfigItemList;
           ConfigItemList = aconf;
         }

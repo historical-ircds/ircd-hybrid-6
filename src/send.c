@@ -34,6 +34,7 @@
 #include "sprintf_irc.h"
 #include "struct.h"
 #include "s_conf.h"
+#include "s_debug.h"
 
 #include <stdio.h>
 #include <string.h>

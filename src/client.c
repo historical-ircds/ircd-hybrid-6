@@ -44,6 +44,7 @@
 #include "send.h"
 #include "struct.h"
 #include "whowas.h"
+#include "s_debug.h"
 
 #include <assert.h>
 #include <fcntl.h>

@@ -20,6 +20,7 @@
 #include "s_bsd.h"
 #include "send.h"
 #include "struct.h"
+#include "s_debug.h"
 
 #include <assert.h>
 #include <string.h>
