@@ -249,9 +249,14 @@ static  struct  resinfo {
   int  re_unkrep;
 } reinfo;
 
+
 /*
- * From bind 8.3, this isn't in earlier versions of bind
+ * From bind 8.3, these aren't in earlier versions of bind
  *
+ */
+extern u_int16_t  _getshort(const u_char *);
+extern u_int32_t  _getlong(const u_char *);
+/*
  * int
  * res_isourserver(ina)
  *      looks up "ina" in _res.ns_addr_list[]
