@@ -1748,7 +1748,7 @@ find_matching_ip_i_line(char *user, unsigned long host_ip)
 {
   struct ConfItem *aconf;
 
-  for( aconf = ip_i_lines; aconf; aconf = aconf->next)
+  for(aconf = ip_i_lines; aconf; aconf = aconf->next)
     {
       if (((host_ip & aconf->ip_mask) == aconf->ip) &&
 	  match(aconf->user,user))

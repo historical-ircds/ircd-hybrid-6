@@ -102,7 +102,7 @@ int     m_pong(struct Client *cptr,
                int parc,
                char *parv[])
 {
-  struct Client *acptr;
+  struct Client *acptr = NULL;
   char  *origin, *destination;
 
   if (parc < 2 || *parv[1] == '\0')
@@ -113,15 +113,6 @@ int     m_pong(struct Client *cptr,
 
   origin = parv[1];
   destination = parv[2];
-  cptr->flags &= ~FLAGS_PINGSENT;
-  sptr->flags &= ~FLAGS_PINGSENT;
-
-#ifdef NEED_SPLITCODE
-#ifdef SPLIT_PONG
-  if (IsServer(cptr))
-    got_server_pong = 1;
-#endif
-#endif
 
   /* Now attempt to route the PONG, comstud pointed out routable PING
    * is used for SPING.  routable PING should also probably be left in
@@ -143,11 +134,22 @@ int     m_pong(struct Client *cptr,
           return 0;
         }
     }
-
-#ifdef  DEBUGMODE
   else
-    Debug((DEBUG_NOTICE, "PONG: %s %s", origin,
+    {
+      if (MyConnect(sptr))
+      {
+        sptr->flags &= ~FLAGS_PINGSENT;
+#ifdef NEED_SPLITCODE
+#ifdef SPLIT_PONG
+        if (IsServer(sptr))
+          got_server_pong = 1;
+#endif
+#endif
+      }
+#ifdef  DEBUGMODE
+      Debug((DEBUG_NOTICE, "PONG: %s %s", origin,
            destination ? destination : "*"));
 #endif
+    }
   return 0;
 }

@@ -364,12 +364,6 @@ static time_t io_loop(time_t delay)
   time_t        lasttimeofday;
 
   lasttimeofday = CurrentTime;
-  if ((CurrentTime = time(NULL)) == -1)
-    {
-      log(L_ERROR, "Clock Failure (%d)", errno);
-      sendto_ops("Clock Failure (%d), TS can be corrupted", errno);
-      restart("Clock Failure");
-    }
 
   if (CurrentTime < lasttimeofday)
     {
