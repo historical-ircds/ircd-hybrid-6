@@ -798,7 +798,7 @@ static int hash_ip(unsigned long ip)
 {
   int hash;
   ip = ntohl(ip);
-  hash = ((ip >>= 12) + ip) & (IP_HASH_SIZE-1);
+  hash = ((ip >> 12) + ip) & (IP_HASH_SIZE-1);
   return(hash);
 }
 
