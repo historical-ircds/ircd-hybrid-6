@@ -1,3 +1,7 @@
+*** 20001018_1 by lusky
+fix for whois_notice (tv)
+
+
 *** 20001017_1 by lusky
 fixed a bug tickled by sending a bogus SERVER command from hacked server
 auditted leakage of IP address from get_client_name calls
