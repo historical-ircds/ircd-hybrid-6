@@ -934,7 +934,7 @@ aConfItem *attach_confs(aClient *cptr,char *name,int statmask)
 	}
       else if ((tmp->status & statmask) && !IsIllegal(tmp) &&
 	       (tmp->status & (CONF_SERVER_MASK|CONF_HUB)) &&
-	       tmp->name && !match(tmp->name, name))
+	       tmp->name && !irccmp(tmp->name, name))
 	{
 	  if (!attach_conf(cptr, tmp) && !first)
 	    first = tmp;
