@@ -75,6 +75,15 @@ extern void* MyRealloc(void* p, size_t size);
 
 #define DupString(x,y) \
   do{ x = (char*) MyMalloc(strlen(y) + 1); strcpy(x, y); } while(0)
+
+#define EmptyString(x) (!(x) || (*(x) == '\0'))
+
+/*
+ * deprecate
+ */
+#define BadPtr(x) (!(x) || (*(x) == '\0'))
+
+
 /*
  * character macros
  */

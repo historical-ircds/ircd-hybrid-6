@@ -23,9 +23,11 @@
  * $Id$
  *
  */
-
 #ifndef INCLUDED_parse_h_h
 #define INCLUDED_parse_h_h
+
+struct Message;
+struct Client;
 
 extern  int     parse (struct Client *, char *, char *);
 extern  void    init_tree_parse (struct Message *);

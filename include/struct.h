@@ -199,36 +199,6 @@ struct  stats {
 };
 
 
-/* Message table structure */
-
-struct  Message
-{
-  char  *cmd;
-  int   (* func)();
-  unsigned int  count;                  /* number of times command used */
-  int   parameters;
-  char  flags;
-  /* bit 0 set means that this command is allowed to be used
-   * only on the average of once per 2 seconds -SRB */
-
-  /* I could have defined other bit maps to above instead of the next two
-     flags that I added. so sue me. -Dianora */
-
-  char    allow_unregistered_use;       /* flag if this command can be
-                                           used if unregistered */
-
-  char    reset_idle;                   /* flag if this command causes
-                                           idle time to be reset */
-  unsigned long bytes;
-};
-
-typedef struct msg_tree
-{
-  char *final;
-  struct Message *msg;
-  struct msg_tree *pointers[26];
-} MESSAGE_TREE;
-
 #ifdef BAN_INFO
 /*
   Move BAN_INFO information out of the SLink struct
@@ -267,11 +237,6 @@ struct SLink
   int   flags;
 };
 
-
-#define TS_CURRENT      3       /* current TS protocol version */
-#define TS_MIN          1       /* minimum supported TS protocol version */
-#define TS_DOESTS       0x20000000
-#define DoesTS(x)       ((x)->tsinfo == TS_DOESTS)
 
 #define CAP_CAP         0x00000001      /* received a CAP to begin with */
 #define CAP_QS          0x00000002      /* Can handle quit storm removal */
@@ -321,7 +286,6 @@ extern struct Capability captab[];
 
 /* Misc macros */
 
-#define BadPtr(x) (!(x) || (*(x) == '\0'))
 
 
 /* return values for hunt_server() */

@@ -19,9 +19,47 @@
  *
  * $Id$
  */
+#ifndef INCLUDED_msg_h
+#define INCLUDED_msg_h
+#ifndef INCLUDED_config_h
+#include "config.h"
+#endif
 
-#ifndef __msg_include__
-#define __msg_include__
+struct Client;
+
+/* 
+ * Message table structure 
+ */
+struct  Message
+{
+  char  *cmd;
+  int   (* func)();
+  unsigned int  count;                  /* number of times command used */
+  int   parameters;
+  char  flags;
+  /* bit 0 set means that this command is allowed to be used
+   * only on the average of once per 2 seconds -SRB */
+
+  /* I could have defined other bit maps to above instead of the next two
+     flags that I added. so sue me. -Dianora */
+
+  char    allow_unregistered_use;       /* flag if this command can be
+                                           used if unregistered */
+
+  char    reset_idle;                   /* flag if this command causes
+                                           idle time to be reset */
+  unsigned long bytes;
+};
+
+struct MessageTree
+{
+  char*               final;
+  struct Message*     msg;
+  struct MessageTree* pointers[26];
+}; 
+
+typedef struct MessageTree MESSAGE_TREE;
+
 
 #define MSG_PRIVATE  "PRIVMSG"  /* PRIV */
 #define MSG_WHO      "WHO"      /* WHO  -> WHOC */
@@ -93,81 +131,11 @@
 #define MAXPARA    15 
 
 #define MSG_TESTLINE "TESTLINE"
-extern int m_testline(aClient *,aClient *,int,char **);
-
-extern int m_admin(aClient *,aClient *,int,char **);
-extern int m_kline(aClient *,aClient *,int,char **);
-extern int m_unkline(aClient *,aClient *,int,char **);
-extern int m_dline(aClient *,aClient *,int,char **);
-
-extern int m_gline(aClient *,aClient *,int,char **);
-
-extern int m_locops(aClient *,aClient *,int,char **);
-
-extern int m_private(aClient *,aClient *,int,char **);
-extern int m_knock(aClient *,aClient *,int,char **);
-extern int m_topic(aClient *,aClient *,int,char **);
-extern int m_join(aClient *,aClient *,int,char **);
-extern int m_part(aClient *,aClient *,int,char **);
-extern int m_mode(aClient *,aClient *,int,char **);
-extern int m_ping(aClient *,aClient *,int,char **);
-extern int m_pong(aClient *,aClient *,int,char **);
-extern int m_wallops(aClient *,aClient *,int,char **);
-extern int m_kick(aClient *,aClient *,int,char **);
-extern int m_nick(aClient *,aClient *,int,char **);
-extern int m_error(aClient *,aClient *,int,char **);
-extern int m_notice(aClient *,aClient *,int,char **);
-extern int m_invite(aClient *,aClient *,int,char **);
-extern int m_quit(aClient *,aClient *,int,char **);
-
-extern int m_capab(aClient *,aClient *,int,char **);
-extern int m_info(aClient *,aClient *,int,char **);
-extern int m_kill(aClient *,aClient *,int,char **);
-extern int m_list(aClient *,aClient *,int, char **);
-extern int m_motd(aClient *,aClient *,int,char **);
-extern int m_who(aClient *,aClient *,int,char **);
-extern int m_whois(aClient *,aClient *,int,char **);
-extern int m_server(aClient *,aClient *,int,char **);
-extern int m_user(aClient *,aClient *,int, char **);
-extern int m_links(aClient *,aClient *,int,char **);
-extern int m_summon(aClient *,aClient *,int,char **);
-extern int m_stats(aClient *,aClient *,int,char **);
-extern int m_users(aClient *,aClient *,int,char **);
-extern int m_version(aClient *,aClient *,int, char **);
-extern int m_help(aClient *,aClient *,int, char**);
-extern int m_squit(aClient *,aClient *,int, char **);
-extern int m_away(aClient *,aClient *,int,char **);
-extern int m_connect(aClient *,aClient *,int,char **);
-extern int m_oper(aClient *,aClient *,int,char **);
-extern int m_pass(aClient *,aClient *,int,char **);
-extern int m_trace(aClient *,aClient *,int,char **);
-#ifdef LTRACE
-extern int m_ltrace(aClient *,aClient *,int,char **);
-#endif /* LTRACE */
-extern int m_time(aClient *,aClient *,int, char **);
-extern int m_names(aClient *,aClient *,int,char **);
-
-extern int m_lusers(aClient *,aClient *,int, char **);
-extern int m_umode(aClient *,aClient *,int,char **);
-extern int m_close(aClient *,aClient *,int,char **);
-
-extern int m_whowas(aClient *,aClient *,int,char **);
-extern int m_usrip(aClient *,aClient *,int,char **);
-extern int m_userhost(aClient *,aClient *,int,char **);
-extern int m_ison(aClient *,aClient *,int,char **);
-extern int m_svinfo(aClient *,aClient *,int,char **);
-extern int m_sjoin(aClient *,aClient *,int,char **);
-extern int m_operwall(aClient *,aClient *,int,char **);
-extern int m_rehash(aClient *,aClient *,int,char **);
-extern int m_restart(aClient *,aClient *,int,char **);
-extern int m_die(aClient *,aClient *,int,char **);
-extern int m_hash(aClient *,aClient *,int,char **);
-extern int m_dns(aClient *,aClient *,int,char **);
-extern int m_htm(aClient *,aClient *,int,char **);
-extern int m_set(aClient *,aClient *,int,char **);
 
 #ifdef MSGTAB
-
+#ifndef INCLUDED_m_commands_h
+#include "m_commands.h"       /* m_xxx */
+#endif
 struct Message msgtab[] = {
 #ifdef IDLE_FROM_MSG    /* reset idle time only if privmsg used */
 #ifdef IDLE_CHECK       /* reset idle time only if valid target for privmsg
@@ -237,7 +205,7 @@ struct Message msgtab[] = {
    * remember idle flag sense is reversed when IDLE_FROM_MSG is undefined
    */
   { MSG_ISON,    m_ison,     0, 1,       1, 0, 1, 0L },
-#endif
+#endif /* !IDLE_FROM_MSG */
   { MSG_USRIP,   m_usrip,    0, 1,       1, 0, 0, 0L },
   { MSG_SERVER,  m_server,   0, MAXPARA, 1, 1, 0, 0L },
   { MSG_SQUIT,   m_squit,    0, MAXPARA, 1, 0, 0, 0L },
@@ -284,14 +252,12 @@ struct Message msgtab[] = {
   { (char *) 0, (int (*)()) 0 , 0, 0,    0, 0, 0, 0L }
 };
 
-MESSAGE_TREE *msg_tree_root;
+struct MessageTree* msg_tree_root;
 
 #else
-
-extern struct Message msgtab[];
-
-extern MESSAGE_TREE *msg_tree_root;
-
+extern struct Message       msgtab[];
+extern struct MessageTree*  msg_tree_root;
 #endif
-#endif /* __msg_include__ */
+
+#endif /* INCLUDED_msg_h */
 
