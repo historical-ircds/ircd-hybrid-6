@@ -1,3 +1,25 @@
+lusky       2002/02/17 00:58:16 EST	(20020217_0)
+
+  Modified files:
+    include              client.h config.h config.h.dist 
+                         ircd_defs.h 
+    src                  channel.c client.c m_unkline.c s_conf.c 
+  Log:
+  - revved CONFIG_H_LEVEL to 6_3
+  - fixed misc compile errors and warnings with "flipped" config.h
+  
+  Revision  Changes    Path
+  1.61      +2 -2      ircd-hybrid-6/include/client.h
+  1.153     +1 -1      ircd-hybrid-6/include/config.h
+  1.132     +1 -1      ircd-hybrid-6/include/config.h.dist
+  1.11      +2 -2      ircd-hybrid-6/include/ircd_defs.h
+  1.233     +2 -2      ircd-hybrid-6/src/channel.c
+  1.77      +9 -11     ircd-hybrid-6/src/client.c
+  1.45      +4 -4      ircd-hybrid-6/src/m_unkline.c
+  1.236     +5 -1      ircd-hybrid-6/src/s_conf.c
+
+
+
 lusky       2002/02/06 00:42:01 EST	(20020206_2)
 
   Modified files:
