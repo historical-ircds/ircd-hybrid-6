@@ -971,6 +971,11 @@
  */
 #define GLINE_TIME      (12*3600)
 
+/* Ignore bogus timestamps from other servers. Yes this will desync
+ * the network, but it will allow chanops to resync with a valid non TS 0
+ */
+#undef IGNORE_BOGUS_TS
+
 /* ----------------- archaic and/or broken section -------------------- */
 #undef DNS_DEBUG
 

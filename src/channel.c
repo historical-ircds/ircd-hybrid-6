@@ -4212,6 +4212,16 @@ int     m_sjoin(struct Client *cptr,
 
   oldmode = &chptr->mode;
 
+#ifdef IGNORE_BOGUS_TS
+  if (newts < 800000000)
+    {
+      sendto_realops("*** Bogus TS %lu on %s ignored from %s",
+		     (unsigned long) newts,
+		     chptr->chname,
+		     client_p->name);
+    }
+#endif
+
   if (isnew)
     chptr->channelts = tstosend = newts;
   else if (newts == 0 || oldts == 0)
@@ -4234,19 +4244,6 @@ int     m_sjoin(struct Client *cptr,
       if (doesop && !haveops)
         {
           chptr->channelts = tstosend = newts;
-#if 0
-          /* Only warn of Hacked ops if the channel already
-           * existed on this side.
-           * This should drop the number of warnings down dramatically
-           */
-
-          if (MyConnect(sptr) && !isnew)
-            {
-              sendto_realops("Hacked ops from %s on opless channel: %s",
-                             sptr->name,
-                             chptr->chname);
-            }
-#endif
         }
       else
         tstosend = oldts;
