@@ -330,7 +330,7 @@ getmsg_init:
 	  if ((d = d->next))
 	    {
 	      s = d->data;
-	      i = MIN(DBUFSIZ, dlen);
+	      i = IRCD_MIN(DBUFSIZ, dlen);
 	    }
 	}
       else
@@ -343,7 +343,7 @@ getmsg_init:
   /*
   ** copy as much of the message as wanted into parse buffer
   */
-  i = dbuf_get(dyn, buf, MIN(copy, length));
+  i = dbuf_get(dyn, buf, IRCD_MIN(copy, length));
   /*
   ** and delete the rest of it!
   */

@@ -550,18 +550,23 @@ static	int	register_user(aClient *cptr,
 	  strncpy(&user->username[1], temp, USERLEN);
 	  user->username[USERLEN] = '\0';
 
-	  if(aconf && IsNeedIdentd(aconf))
+	  if(aconf)
 	    {
-	      ircstp->is_ref++;
-	      sendto_one(sptr, ":%s NOTICE %s :*** Notice -- You need to install identd to use this server",
-			 me.name, cptr->name);
-	      return exit_client(cptr, sptr, &me, "Install identd");
+	      if(IsNeedIdentd(aconf))
+		{
+		  ircstp->is_ref++;
+		  sendto_one(sptr,
+ ":%s NOTICE %s :*** Notice -- You need to install identd to use this server",
+			     me.name, cptr->name);
+		  return exit_client(cptr, sptr, &me, "Install identd");
+		}
+
+	      if(IsNoTilde(aconf))
+		{
+		  strncpyzt(user->username, username, USERLEN + 1);
+		}
 	    }
-	  if(aconf && IsNoTilde(aconf))
-	    {
-	      strncpyzt(user->username, username, USERLEN + 1);
-	    }
-	}
+
 #ifndef FOLLOW_IDENT_RFC
       else if (IsGotId(sptr) && *sptr->username != '-')
 	strncpyzt(user->username, sptr->username, USERLEN + 1);

@@ -96,14 +96,10 @@ extern int inet_netof (struct in_addr);
 extern char *myctime (time_t);
 extern char *strtoken (char **, char *, char *);
 
-#if !defined(HAVE_MINMAX)
-#ifndef MAX
-#define MAX(a, b)	((a) > (b) ? (a) : (b))
-#endif
-#ifndef MIN
-#define MIN(a, b)	((a) < (b) ? (a) : (b))
-#endif
-#endif /* !HAVE_MINMAX */
+/* Just blindly define our own MIN/MAX macro */
+
+#define IRCD_MAX(a, b)	((a) > (b) ? (a) : (b))
+#define IRCD_MIN(a, b)	((a) < (b) ? (a) : (b))
 
 #define DupString(x,y) do{x=MyMalloc(strlen(y)+1);(void)strcpy(x,y);}while(0)
 

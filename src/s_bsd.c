@@ -1590,7 +1590,7 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
         {
           FD_SET(ResolverFileDescriptor, read_set);
         }
-      wait.tv_sec = MIN(delay2, delay);
+      wait.tv_sec = IRCD_MIN(delay2, delay);
       wait.tv_usec = usec;
 
 #ifdef        HPUX
@@ -1898,7 +1898,7 @@ int read_message(time_t delay, fdlist *listp)
 	PFD_SETW(i);
     }
 
-    wait.tv_sec = MIN(delay2, delay);
+    wait.tv_sec = IRCD_MIN(delay2, delay);
     wait.tv_usec = usec;
     nfds = poll(poll_fdarray, nbr_pfds,
 		wait.tv_sec * 1000 + wait.tv_usec / 1000);
