@@ -476,5 +476,6 @@ struct Client
 
 extern const char* get_client_name(struct Client* client, int show_ip);
 extern const char* get_client_host(struct Client* client);
+extern void        release_client_dns_reply(struct Client* client);
 
 #endif /* INCLUDED_client_h */
