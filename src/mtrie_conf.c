@@ -631,17 +631,25 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
               if(pptr->conf_ptr)
                 {
                   aconf= pptr->conf_ptr;
-                  if( (match(pptr->host_piece,host_piece)) &&
-                      (aconf->status & flags) )
+                  if( (aconf->status & flags) &&
+                      (match(pptr->host_piece,host_piece)) )
+
                     {
                       if(match(aconf->user,user))
                         first_aconf = aconf;
                     }
                 }
 
-              if(pptr->wild_conf_ptr &&
-                 (pptr->wild_conf_ptr->status & flags))
-                wild_aconf = pptr->wild_conf_ptr;
+              if(pptr->wild_conf_ptr)
+                {
+                  aconf= pptr->wild_conf_ptr;
+                  if( (aconf->status & flags) &&
+                      (match(pptr->host_piece,host_piece)) )
+                      
+		    {
+                       wild_aconf = aconf;
+		    }
+		}
             }
         }
     }

@@ -39,7 +39,7 @@
 #define LOG_BUFSIZE 2048 
 
 static int logFile = -1;
-static int logLevel = L_DEBUG;
+static int logLevel = INIT_LOG_LEVEL;
 
 static int sysLogLevel[] = {
   LOG_CRIT,
