@@ -87,11 +87,7 @@ int m_unkline (aClient *cptr,aClient *sptr,int parc,char *parv[])
       return -1;
     }
 
-#ifdef NO_LOCAL_KLINE
-  if(!IsOper(sptr))
-#else
   if (!IsAnOper(sptr))  
-#endif
     {
       sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, 
                  parv[0]);
