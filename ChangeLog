@@ -1,3 +1,8 @@
+*** 20010607_3 by kreator
+- fixed setup.h that had wrong EVP stuff
+- fixed tools Makefile to remove encspeed for target clean
+
+
 *** 20010607_2 by davidt
 - Another round of OpenSSL fixes; check for the functions used in hybrid-6,
   not the ones used in hybrid-7, which does it a different way...
