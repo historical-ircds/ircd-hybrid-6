@@ -2184,9 +2184,6 @@ int     m_join(struct Client *cptr,
   struct Channel *chptr = NULL;
   char  *name, *key = NULL;
   int   i, flags = 0;
-#ifdef NO_CHANOPS_ON_SPLIT
-  int   allow_op=YES;
-#endif
   char  *p = NULL, *p2 = NULL;
 #ifdef ANTI_SPAMBOT
   int   successful_join_count = 0; /* Number of channels successfully joined */
@@ -2353,18 +2350,6 @@ int     m_join(struct Client *cptr,
             * and server has been split
             */
 
-#ifdef NO_CHANOPS_ON_SPLIT
-          if((*name != '&') && server_was_split)
-            {
-              allow_op = NO;
-
-              if(!IsRestricted(sptr) && (flags & CHFL_CHANOP))
-                sendto_one(sptr,":%s NOTICE %s :*** Notice -- Due to a network split, you can not obtain channel operator status in a new channel at this time.",
-                       me.name,
-                       sptr->name);
-            }
-#endif
-
           if ((sptr->user->joined >= MAXCHANNELSPERUSER) &&
              (!IsAnOper(sptr) || (sptr->user->joined >= MAXCHANNELSPERUSER*3)))
             {
@@ -2458,41 +2443,18 @@ int     m_join(struct Client *cptr,
       **  Complete user entry to the new channel (if any)
       */
 
-#ifdef NO_CHANOPS_ON_SPLIT
-      if(allow_op)
-        {
-          add_user_to_channel(chptr, sptr, flags);
-        }
-      else
-        {
-          add_user_to_channel(chptr, sptr, flags & CHFL_EXCEPTION);
-        }
-#else
       add_user_to_channel(chptr, sptr, flags);
-#endif
+
       /*
       **  Set timestamp if appropriate, and propagate
       */
       if (MyClient(sptr) && (flags & CHFL_CHANOP) )
         {
           chptr->channelts = CurrentTime;
-#ifdef NO_CHANOPS_ON_SPLIT
-          if(allow_op)
-            {
-              sendto_match_servs(chptr, cptr,
-                                 ":%s SJOIN %lu %s + :@%s", me.name,
-                                 chptr->channelts, name, parv[0]);
 
-            }                                
-          else
-            sendto_match_servs(chptr, cptr,
-                               ":%s SJOIN %lu %s + :%s", me.name,
-                               chptr->channelts, name, parv[0]);
-#else
           sendto_match_servs(chptr, cptr,
                              ":%s SJOIN %lu %s + :@%s", me.name,
                              chptr->channelts, name, parv[0]);
-#endif
         }
       else if (MyClient(sptr))
         {

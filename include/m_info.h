@@ -413,12 +413,6 @@ Info MyInformation[] = {
 
   { "NICKNAMEHISTORYLENGTH", "", NICKNAMEHISTORYLENGTH, "Size of WHOWAS Array" },
 
-#ifdef NO_CHANOPS_ON_SPLIT
-  { "NO_CHANOPS_ON_SPLIT", "ON", 0, "Do not Allow Channel Ops During a NetSplit" },
-#else
-  { "NO_CHANOPS_ON_SPLIT", "OFF", 0, "Do not Allow Channel Ops During a NetSplit" },
-#endif /* NO_CHANOPS_ON_SPLIT */
-
 #ifdef NO_DEFAULT_INVISIBLE
   { "NO_DEFAULT_INVISIBLE", "ON", 0, "Do not Give Clients +i Mode Upon Connection" },
 #else
