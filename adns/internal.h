@@ -716,7 +716,7 @@ static inline int errno_resources(int e) { return e==ENOMEM || e==ENOBUFS; }
 		       (tv)|=GETIL_B(cb), \
 		       (tv) )
 
-#ifndef timeclear
+#ifndef timerclear
 #define timerclear(tvp)   (tvp)->tv_sec = (tvp)->tv_usec = 0
 #endif
 
