@@ -1,3 +1,8 @@
+*** 20010717_2 by bill
+
+ - fixed pointless warnings in zlib from showing up
+
+
 *** 20010717_1 by lusky
 massive cleanup of gcc warnings
 
