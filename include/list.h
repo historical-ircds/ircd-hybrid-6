@@ -31,6 +31,7 @@ struct SLink;
 struct Client;
 struct Class;
 struct User;
+struct Channel;
 
 extern void count_user_memory(int *, int *);
 extern void count_links_memory(int *, int *);
@@ -46,5 +47,6 @@ extern  struct SLink    *find_user_link (struct SLink *, struct Client *);
 extern  void    initlists (void);
 extern  void    block_garbage_collect(void);
 extern  void    block_destroy(void);
+extern struct SLink *find_channel_link(struct SLink *, struct Channel *);
 
 #endif

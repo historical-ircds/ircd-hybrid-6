@@ -110,10 +110,6 @@ static  char    modebuf[MODEBUFLEN], modebuf2[MODEBUFLEN];
 static  char    parabuf[MODEBUFLEN], parabuf2[MODEBUFLEN];
 
 
-/* externally defined function */
-extern Link *find_channel_link(Link *,aChannel *);      /* defined in list.c */
-
-
 /* 
  * return the length (>=0) of a chain of links.
  */
