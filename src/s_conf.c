@@ -155,7 +155,7 @@ static void conf_dns_callback(void* vptr, adns_answer *reply)
 {
   struct ConfItem* aconf = (struct ConfItem*) vptr;
   aconf->dns_pending = 0;
-  if (reply->status == adns_s_ok)
+  if (reply && (reply->status == adns_s_ok))
     aconf->ipnum.s_addr = reply->rrs.addr->addr.inet.sin_addr.s_addr;
   MyFree(reply);
 }
