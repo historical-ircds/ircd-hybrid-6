@@ -34,6 +34,11 @@ static char *rcs_version = "$Id$";
 #include <sys/stat.h>
 #include <fcntl.h>
 
+/* New hash code */
+/*
+ * Contributed by James L. Davis
+ */
+
 int HASHSIZE = U_MAX;
 int CHANNELHASHSIZE = CH_MAX;
 
@@ -50,10 +55,10 @@ static	aHashEntry	channelTable[CH_MAX];
 #endif
 
 /*
-
-look in whowas.c for the missing ...[WW_MAX]; entry
-  - Dianora
-*/
+ *
+ * look in whowas.c for the missing ...[WW_MAX]; entry
+ *   - Dianora
+ */
 
 /*
  * Hashing.
