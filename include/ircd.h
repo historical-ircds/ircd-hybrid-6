@@ -118,7 +118,6 @@ extern char*          serno;
 extern char*          version;
 extern const char     serveropts[];
 extern int            LRV;
-extern int            bootopt;
 extern int            cold_start;
 extern int            dline_in_progress;
 extern int            dorehash;
@@ -142,7 +141,6 @@ extern struct Client* serv_cptr_list;
 extern int reject_held_fds;
 #endif
 
-extern void     report_error_on_tty(const char* message);
 extern size_t   get_maxrss(void);
 
 #endif

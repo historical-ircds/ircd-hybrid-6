@@ -118,16 +118,9 @@ static size_t      initialVMTop = 0;   /* top of virtual memory at init */
 static const char* logFileName = LPATH;
 static int         bootDaemon  = 1;
 
-static void write_pidfile(void);
-
-static void initialize_global_set_options(void);
-static void initialize_message_files(void);
-static time_t io_loop(time_t);
-
 char**  myargv;
 int     dorehash   = 0;
 int     debuglevel = -1;        /* Server debug level */
-int     bootopt    = 0;         /* Server boot option flags */
 char*   debugmode  = "";        /*  -"-    -"-   -"-  */
 
 
@@ -333,6 +326,302 @@ static void parse_command_line(int argc, char* argv[])
     }
   }
 }
+
+static time_t io_loop(time_t delay)
+{
+  static char   to_send[200];
+  static time_t lasttime  = 0;
+  static long   lastrecvK = 0;
+  static int    lrv       = 0;
+  time_t        lasttimeofday;
+
+  lasttimeofday = CurrentTime;
+  if ((CurrentTime = time(NULL)) == -1)
+    {
+      log(L_ERROR, "Clock Failure (%d)", errno);
+      sendto_ops("Clock Failure (%d), TS can be corrupted", errno);
+      restart("Clock Failure");
+    }
+
+  if (CurrentTime < lasttimeofday)
+    {
+      ircsprintf(to_send, "System clock is running backwards - (%d < %d)",
+                 CurrentTime, lasttimeofday);
+      report_error(to_send, me.name, 0);
+    }
+  else if ((lasttimeofday + 60) < CurrentTime)
+    {
+      ircsprintf(to_send,
+                 "System clock was reset into the future - (%d+60 > %d)",
+                 CurrentTime, lasttimeofday);
+      report_error(to_send, me.name, 0);
+      sync_channels(CurrentTime - lasttimeofday);
+    }
+
+  /*
+   * This chunk of code determines whether or not
+   * "life sucks", that is to say if the traffic
+   * level is so high that standard server
+   * commands should be restricted
+   *
+   * Changed by Taner so that it tells you what's going on
+   * as well as allows forced on (long LCF), etc...
+   */
+  
+  if ((CurrentTime - lasttime) >= LCF)
+    {
+      lrv = LRV * LCF;
+      lasttime = CurrentTime;
+      currlife = (float)((long)me.receiveK - lastrecvK)/(float)LCF;
+      if (((long)me.receiveK - lrv) > lastrecvK )
+        {
+          if (!LIFESUX)
+            {
+              LIFESUX = 1;
+
+              if (NOISYHTM)
+                {
+                  sprintf(to_send, 
+                        "Entering high-traffic mode - (%.1fk/s > %dk/s)",
+                                (float)currlife, LRV);
+                  sendto_ops(to_send);
+                }
+            }
+          else
+            {
+              LIFESUX++;                /* Ok, life really sucks! */
+              LCF += 2;                 /* Wait even longer */
+              if (NOISYHTM) 
+                {
+                  sprintf(to_send,
+                        "Still high-traffic mode %d%s (%d delay): %.1fk/s",
+                                LIFESUX,
+                                (LIFESUX & 0x04) ?  " (TURBO)" : "",
+                                (int)LCF, (float)currlife);
+                  sendto_ops(to_send);
+                }
+            }
+        }
+      else
+        {
+          LCF = LOADCFREQ;
+          if (LIFESUX)
+            {
+              LIFESUX = 0;
+              if (NOISYHTM)
+                sendto_ops("Resuming standard operation . . . .");
+            }
+        }
+      lastrecvK = (long)me.receiveK;
+    }
+
+  /*
+  ** We only want to connect if a connection is due,
+  ** not every time through.  Note, if there are no
+  ** active C lines, this call to Tryconnections is
+  ** made once only; it will return 0. - avalon
+  */
+  if (nextconnect && CurrentTime >= nextconnect)
+    nextconnect = try_connections(CurrentTime);
+  /*
+   * DNS checks, use smaller of resolver delay or next ping
+   */
+  delay = IRCD_MIN(timeout_resolver(CurrentTime), nextping);
+  /*
+  ** take the smaller of the two 'timed' event times as
+  ** the time of next event (stops us being late :) - avalon
+  ** WARNING - nextconnect can return 0!
+  */
+  if (nextconnect)
+    delay = IRCD_MIN(nextping, nextconnect);
+  delay -= CurrentTime;
+  /*
+  ** Adjust delay to something reasonable [ad hoc values]
+  ** (one might think something more clever here... --msa)
+  ** We don't really need to check that often and as long
+  ** as we don't delay too long, everything should be ok.
+  ** waiting too long can cause things to timeout...
+  ** i.e. PINGS -> a disconnection :(
+  ** - avalon
+  */
+  if (delay < 1)
+    delay = 1;
+  else
+    delay = IRCD_MIN(delay, TIMESEC);
+  /*
+   * We want to read servers on every io_loop, as well
+   * as "busy" clients (which again, includes servers.
+   * If "lifesux", then we read servers AGAIN, and then
+   * flush any data to servers.
+   *    -Taner
+   */
+
+#ifndef NO_PRIORITY
+  read_message(0, FDL_SERVER);
+  read_message(1, FDL_BUSY);
+  if (LIFESUX)
+    {
+      read_message(1, FDL_SERVER);
+      if (LIFESUX & 0x4)
+        {       /* life really sucks */
+          read_message(1, FDL_BUSY);
+          read_message(1, FDL_SERVER);
+        }
+      flush_server_connections();
+    }
+
+  /*
+   * CLIENT_SERVER = TRUE:
+   *    If we're in normal mode, or if "lifesux" and a few
+   *    seconds have passed, then read everything.
+   * CLIENT_SERVER = FALSE:
+   *    If it's been more than lifesux*2 seconds (that is, 
+   *    at most 1 second, or at least 2s when lifesux is
+   *    != 0) check everything.
+   *    -Taner
+   */
+  {
+    static time_t lasttime=0;
+#ifdef CLIENT_SERVER
+    if (!LIFESUX || (lasttime + LIFESUX) < CurrentTime)
+      {
+#else
+    if ((lasttime + (LIFESUX + 1)) < CurrentTime)
+      {
+#endif
+        read_message(delay, FDL_ALL); /*  check everything! */
+        lasttime = CurrentTime;
+      }
+   }
+#else
+  read_message(delay, FDL_ALL); /*  check everything! */
+  flush_server_connections();
+#endif
+
+  /*
+  ** ...perhaps should not do these loops every time,
+  ** but only if there is some chance of something
+  ** happening (but, note that conf->hold times may
+  ** be changed elsewhere--so precomputed next event
+  ** time might be too far away... (similarly with
+  ** ping times) --msa
+  */
+
+  if (CurrentTime >= nextping) {
+    nextping = check_pings(CurrentTime);
+    timeout_auth_queries(CurrentTime);
+  }
+
+  if (dorehash && !LIFESUX)
+    {
+      rehash(&me, &me, 1);
+      dorehash = 0;
+    }
+  /*
+  ** Flush output buffers on all connections now if they
+  ** have data in them (or at least try to flush)
+  ** -avalon
+  */
+  flush_connections(0);
+
+#ifndef NO_PRIORITY
+  fdlist_check(CurrentTime);
+#endif
+
+  return delay;
+
+}
+
+/*
+ * initalialize_global_set_options
+ *
+ * inputs       - none
+ * output       - none
+ * side effects - This sets all global set options needed 
+ */
+
+static void initialize_global_set_options(void)
+{
+  memset( &GlobalSetOptions, 0, sizeof(GlobalSetOptions));
+
+  MAXCLIENTS = MAX_CLIENTS;
+  NOISYHTM = NOISY_HTM;
+  GlobalSetOptions.autoconn = 1;
+
+#ifdef FLUD
+  FLUDNUM = FLUD_NUM;
+  FLUDTIME = FLUD_TIME;
+  FLUDBLOCK = FLUD_BLOCK;
+#endif
+
+#ifdef IDLE_CHECK
+  IDLETIME = MIN_IDLETIME;
+#endif
+
+#ifdef ANTI_SPAMBOT
+  SPAMTIME = MIN_JOIN_LEAVE_TIME;
+  SPAMNUM = MAX_JOIN_LEAVE_COUNT;
+#endif
+
+#ifdef ANTI_DRONE_FLOOD
+  DRONETIME = DEFAULT_DRONE_TIME;
+  DRONECOUNT = DEFAULT_DRONE_COUNT;
+#endif
+
+#ifdef NEED_SPLITCODE
+ SPLITDELAY = (DEFAULT_SERVER_SPLIT_RECOVERY_TIME * 60);
+ SPLITNUM = SPLIT_SMALLNET_SIZE;
+ SPLITUSERS = SPLIT_SMALLNET_USER_SIZE;
+ server_split_time = CurrentTime;
+#endif
+
+ /* End of global set options */
+
+}
+
+/*
+ * initialize_message_files
+ *
+ * inputs       - none
+ * output       - none
+ * side effects - Set up all message files needed, motd etc.
+ */
+
+static void initialize_message_files(void)
+  {
+  InitMessageFile( HELP_MOTD, HPATH, &ConfigFileEntry.helpfile );
+  InitMessageFile( USER_MOTD, MPATH, &ConfigFileEntry.motd );
+  InitMessageFile( OPER_MOTD, OPATH, &ConfigFileEntry.opermotd );
+
+  ReadMessageFile( &ConfigFileEntry.helpfile );
+  ReadMessageFile( &ConfigFileEntry.motd );
+  ReadMessageFile( &ConfigFileEntry.opermotd );
+  }
+
+/*
+ * write_pidfile
+ *
+ * inputs       - none
+ * output       - none
+ * side effects - write the pid of the ircd to PPATH
+ */
+
+static void write_pidfile(void)
+{
+  int fd;
+  char buff[20];
+  if ((fd = open(PPATH, O_CREAT|O_WRONLY, 0600))>=0)
+    {
+      ircsprintf(buff,"%d\n", (int)getpid());
+      if (write(fd, buff, strlen(buff)) == -1)
+        log(L_ERROR,"Error writing to pid file %s", PPATH);
+      close(fd);
+      return;
+    }
+  else
+    log(L_ERROR, "Error opening pid file %s", PPATH);
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -543,313 +832,3 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-time_t io_loop(time_t delay)
-{
-  static char   to_send[200];
-  static time_t lasttime  = 0;
-  static long   lastrecvK = 0;
-  static int    lrv       = 0;
-  time_t        lasttimeofday;
-
-  lasttimeofday = CurrentTime;
-  if ((CurrentTime = time(NULL)) == -1)
-    {
-      log(L_ERROR, "Clock Failure (%d)", errno);
-      sendto_ops("Clock Failure (%d), TS can be corrupted", errno);
-      restart("Clock Failure");
-    }
-
-  if (CurrentTime < lasttimeofday)
-    {
-      ircsprintf(to_send, "System clock is running backwards - (%d < %d)",
-                 CurrentTime, lasttimeofday);
-      report_error(to_send, me.name, 0);
-    }
-  else if ((lasttimeofday + 60) < CurrentTime)
-    {
-      ircsprintf(to_send,
-                 "System clock was reset into the future - (%d+60 > %d)",
-                 CurrentTime, lasttimeofday);
-      report_error(to_send, me.name, 0);
-      sync_channels(CurrentTime - lasttimeofday);
-    }
-
-  /*
-   * This chunk of code determines whether or not
-   * "life sucks", that is to say if the traffic
-   * level is so high that standard server
-   * commands should be restricted
-   *
-   * Changed by Taner so that it tells you what's going on
-   * as well as allows forced on (long LCF), etc...
-   */
-  
-  if ((CurrentTime - lasttime) >= LCF)
-    {
-      lrv = LRV * LCF;
-      lasttime = CurrentTime;
-      currlife = (float)((long)me.receiveK - lastrecvK)/(float)LCF;
-      if (((long)me.receiveK - lrv) > lastrecvK )
-        {
-          if (!LIFESUX)
-            {
-              LIFESUX = 1;
-
-              if (NOISYHTM)
-                {
-                  sprintf(to_send, 
-                        "Entering high-traffic mode - (%.1fk/s > %dk/s)",
-                                (float)currlife, LRV);
-                  sendto_ops(to_send);
-                }
-            }
-          else
-            {
-              LIFESUX++;                /* Ok, life really sucks! */
-              LCF += 2;                 /* Wait even longer */
-              if (NOISYHTM) 
-                {
-                  sprintf(to_send,
-                        "Still high-traffic mode %d%s (%d delay): %.1fk/s",
-                                LIFESUX,
-                                (LIFESUX & 0x04) ?  " (TURBO)" : "",
-                                (int)LCF, (float)currlife);
-                  sendto_ops(to_send);
-                }
-            }
-        }
-      else
-        {
-          LCF = LOADCFREQ;
-          if (LIFESUX)
-            {
-              LIFESUX = 0;
-              if (NOISYHTM)
-                sendto_ops("Resuming standard operation . . . .");
-            }
-        }
-      lastrecvK = (long)me.receiveK;
-    }
-
-  /*
-  ** We only want to connect if a connection is due,
-  ** not every time through.  Note, if there are no
-  ** active C lines, this call to Tryconnections is
-  ** made once only; it will return 0. - avalon
-  */
-  if (nextconnect && CurrentTime >= nextconnect)
-    nextconnect = try_connections(CurrentTime);
-  /*
-   * DNS checks, use smaller of resolver delay or next ping
-   */
-  delay = IRCD_MIN(timeout_resolver(CurrentTime), nextping);
-  /*
-  ** take the smaller of the two 'timed' event times as
-  ** the time of next event (stops us being late :) - avalon
-  ** WARNING - nextconnect can return 0!
-  */
-  if (nextconnect)
-    delay = IRCD_MIN(nextping, nextconnect);
-  delay -= CurrentTime;
-  /*
-  ** Adjust delay to something reasonable [ad hoc values]
-  ** (one might think something more clever here... --msa)
-  ** We don't really need to check that often and as long
-  ** as we don't delay too long, everything should be ok.
-  ** waiting too long can cause things to timeout...
-  ** i.e. PINGS -> a disconnection :(
-  ** - avalon
-  */
-  if (delay < 1)
-    delay = 1;
-  else
-    delay = IRCD_MIN(delay, TIMESEC);
-  /*
-   * We want to read servers on every io_loop, as well
-   * as "busy" clients (which again, includes servers.
-   * If "lifesux", then we read servers AGAIN, and then
-   * flush any data to servers.
-   *    -Taner
-   */
-
-#ifndef NO_PRIORITY
-  read_message(0, FDL_SERVER);
-  read_message(1, FDL_BUSY);
-  if (LIFESUX)
-    {
-      read_message(1, FDL_SERVER);
-      if (LIFESUX & 0x4)
-        {       /* life really sucks */
-          read_message(1, FDL_BUSY);
-          read_message(1, FDL_SERVER);
-        }
-      flush_server_connections();
-    }
-
-  /*
-   * CLIENT_SERVER = TRUE:
-   *    If we're in normal mode, or if "lifesux" and a few
-   *    seconds have passed, then read everything.
-   * CLIENT_SERVER = FALSE:
-   *    If it's been more than lifesux*2 seconds (that is, 
-   *    at most 1 second, or at least 2s when lifesux is
-   *    != 0) check everything.
-   *    -Taner
-   */
-  {
-    static time_t lasttime=0;
-#ifdef CLIENT_SERVER
-    if (!LIFESUX || (lasttime + LIFESUX) < CurrentTime)
-      {
-#else
-    if ((lasttime + (LIFESUX + 1)) < CurrentTime)
-      {
-#endif
-        read_message(delay, FDL_ALL); /*  check everything! */
-        lasttime = CurrentTime;
-      }
-   }
-#else
-  read_message(delay, FDL_ALL); /*  check everything! */
-  flush_server_connections();
-#endif
-
-  /*
-  ** ...perhaps should not do these loops every time,
-  ** but only if there is some chance of something
-  ** happening (but, note that conf->hold times may
-  ** be changed elsewhere--so precomputed next event
-  ** time might be too far away... (similarly with
-  ** ping times) --msa
-  */
-
-  if (CurrentTime >= nextping) {
-    nextping = check_pings(CurrentTime);
-    timeout_auth_queries(CurrentTime);
-  }
-
-  if (dorehash && !LIFESUX)
-    {
-      rehash(&me, &me, 1);
-      dorehash = 0;
-    }
-  /*
-  ** Flush output buffers on all connections now if they
-  ** have data in them (or at least try to flush)
-  ** -avalon
-  */
-  flush_connections(0);
-
-#ifndef NO_PRIORITY
-  fdlist_check(CurrentTime);
-#endif
-
-  return delay;
-
-}
-
-/*
- * simple function added because its used more than once
- * - Dianora
- */
-
-void report_error_on_tty(const char *error_message)
-{
-  int fd;
-  if ((fd = open("/dev/tty", O_WRONLY)) != -1)
-    {
-      write(fd, error_message, strlen(error_message));
-      close(fd);
-    }
-}
-
-
-/*
- * initalialize_global_set_options
- *
- * inputs       - none
- * output       - none
- * side effects - This sets all global set options needed 
- */
-
-static void initialize_global_set_options(void)
-{
-  memset( &GlobalSetOptions, 0, sizeof(GlobalSetOptions));
-
-  MAXCLIENTS = MAX_CLIENTS;
-  NOISYHTM = NOISY_HTM;
-  GlobalSetOptions.autoconn = 1;
-
-#ifdef FLUD
-  FLUDNUM = FLUD_NUM;
-  FLUDTIME = FLUD_TIME;
-  FLUDBLOCK = FLUD_BLOCK;
-#endif
-
-#ifdef IDLE_CHECK
-  IDLETIME = MIN_IDLETIME;
-#endif
-
-#ifdef ANTI_SPAMBOT
-  SPAMTIME = MIN_JOIN_LEAVE_TIME;
-  SPAMNUM = MAX_JOIN_LEAVE_COUNT;
-#endif
-
-#ifdef ANTI_DRONE_FLOOD
-  DRONETIME = DEFAULT_DRONE_TIME;
-  DRONECOUNT = DEFAULT_DRONE_COUNT;
-#endif
-
-#ifdef NEED_SPLITCODE
- SPLITDELAY = (DEFAULT_SERVER_SPLIT_RECOVERY_TIME * 60);
- SPLITNUM = SPLIT_SMALLNET_SIZE;
- SPLITUSERS = SPLIT_SMALLNET_USER_SIZE;
- server_split_time = CurrentTime;
-#endif
-
- /* End of global set options */
-
-}
-
-/*
- * initialize_message_files
- *
- * inputs       - none
- * output       - none
- * side effects - Set up all message files needed, motd etc.
- */
-
-static void initialize_message_files(void)
-  {
-  InitMessageFile( HELP_MOTD, HPATH, &ConfigFileEntry.helpfile );
-  InitMessageFile( USER_MOTD, MPATH, &ConfigFileEntry.motd );
-  InitMessageFile( OPER_MOTD, OPATH, &ConfigFileEntry.opermotd );
-
-  ReadMessageFile( &ConfigFileEntry.helpfile );
-  ReadMessageFile( &ConfigFileEntry.motd );
-  ReadMessageFile( &ConfigFileEntry.opermotd );
-  }
-
-/*
- * write_pidfile
- *
- * inputs       - none
- * output       - none
- * side effects - write the pid of the ircd to PPATH
- */
-
-static void write_pidfile(void)
-{
-  int fd;
-  char buff[20];
-  if ((fd = open(PPATH, O_CREAT|O_WRONLY, 0600))>=0)
-    {
-      ircsprintf(buff,"%d\n", (int)getpid());
-      if (write(fd, buff, strlen(buff)) == -1)
-        log(L_ERROR,"Error writing to pid file %s", PPATH);
-      close(fd);
-      return;
-    }
-  else
-    log(L_ERROR, "Error opening pid file %s", PPATH);
-}
