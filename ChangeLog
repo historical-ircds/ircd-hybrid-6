@@ -1,3 +1,8 @@
+*** 20011129_14 by wcampbel
+RESTART now requires the server name (like die)
+A few small doc changes
+
+
 *** 20011129_13 by wcampbel
 Updated dependencies
 
