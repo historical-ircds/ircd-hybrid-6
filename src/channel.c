@@ -2375,6 +2375,10 @@ int     m_join(struct Client *cptr,
                                   me.name, parv[0], name);
                        continue;
                      }
+                   else
+                     {
+                       flags = CHFL_CHANOP;
+                     }
                  }
 #else
                flags = CHFL_CHANOP;
