@@ -33,7 +33,6 @@
 #include <string.h>
 
 static char buf[BUFSIZE];
-static char buf2[BUFSIZE];
 
 /* m_functions execute protocol messages on this server:
  *
@@ -115,22 +114,20 @@ int     m_userhost(struct Client *cptr,
   if(p)
     *p = '\0';
 
-  (void)ircsprintf(buf, form_str(RPL_USERHOST), me.name, parv[0]);
   if ((acptr = find_person(parv[1], NULL)))
     {
-      ircsprintf(buf2, "%s%s%s=%c%s@%s",
-                 buf,
+      ircsprintf(buf, "%s%s%s=%c%s@%s",
+                 form_str(RPL_USERHOST),
 		 acptr->name,
 		 IsAnOper(acptr) ? "*" : "",
 		 (acptr->user->away) ? '-' : '+',
 		 acptr->username,
 		 acptr->host);
-      p = buf2;
     }
   else
     {
-      p = buf;
+      ircsprintf(buf, "%s", form_str(RPL_USERHOST));
     }
-  sendto_one(sptr, "%s", p);
+  sendto_one(sptr, buf, me.name, parv[0]);
   return 0;
 }
