@@ -964,9 +964,6 @@ static int majority_gline(aClient *sptr,
               if(find_is_glined(host, user))
                 return NO;
 
-              if(find_is_klined(host, user, 0))
-                return NO;
-
               log_gline(sptr,sptr->name,gline_pending_ptr,
                         oper_nick,oper_user,oper_host,oper_server,
                         user,host,reason);
