@@ -107,7 +107,7 @@ extern const unsigned int CharAttrs[];
 #define CHANPFX_C 0x200
 #define USER_C    0x400
 #define HOST_C    0x800
-#define NONSPACE_C 0x1000
+#define NONEOS_C 0x1000
 
 #define IsHostChar(c)   (CharAttrs[(unsigned char)(c)] & HOST_C)
 #define IsUserChar(c)   (CharAttrs[(unsigned char)(c)] & USER_C)
@@ -130,6 +130,6 @@ extern const unsigned int CharAttrs[];
 #define IsPunct(c) (!(CharAttrs[(unsigned char)(c)] & \
                                            (CNTRL_C | ALPHA_C | DIGIT_C)))
 
-#define IsNonSpace(c) (CharAttrs[(unsigned char)(c)] & NONSPACE_C)
+#define IsNonEOS(c) (CharAttrs[(unsigned char)(c)] & NONEOS_C)
 
 #endif /* INCLUDED_irc_string_h */

@@ -356,43 +356,56 @@ int parse(aClient *cptr, char *buffer, char *bufend)
 
   /* Note initially true: s==NULL || *(s-1) == '\0' !! */
 
+  /* ZZZ hmmmmmmmm whats this then? */
+#if 0
   if (me.user)
     para[0] = sender;
+#endif
 
-  i = 0;
+  i = 1;
+
   if (s)
     {
       if (paramcount > MAXPARA)
         paramcount = MAXPARA;
+
       for (;;)
         {
-          /*
-          ** Never "FRANCE " again!! ;-) Clean
-          ** out *all* blanks.. --msa
-          */
-          while (*s == ' ')
-            *s++ = '\0';
+	  /* Never BAD CODE again */
 
-          if (*s == '\0')
-            break;
           if (*s == ':')
             {
               /*
               ** The rest is single parameter--can
               ** include blanks also.
               */
-              para[++i] = s + 1;
+              para[i++] = s + 1;
               break;
             }
-          para[++i] = s;
-          if (i >= paramcount)
-            break;
-          for (; *s != ' ' && *s; s++)
-            /* null statement */ ;
+	  else
+	    {
+	      while(*s == ' ')	/* tabs are not considered space */
+		*s++;
+
+	      para[i++] = s;
+
+	      /* scan for end of string, either ' ' or '\0' */
+	      while (IsNonEOS(*s))
+		s++;
+
+	      if(*s == '\0')
+		break;
+	      else
+		*s++ = '\0';
+	    }
+
+	  if (i > paramcount)
+	    break;
+
         }
     }
 
-  para[++i] = NULL;
+  para[i] = NULL;
   if (mptr == (struct Message *)NULL)
     return (do_numeric(numeric, cptr, from, i, para));
 
