@@ -5,7 +5,9 @@
  */
 #ifndef INCLUDED_motd_h
 #define INCLUDED_motd_h
-
+#ifndef INCLUDED_ircd_defs_h
+#include "ircd_defs.h"    /* MAX_DATE_STRING */
+#endif
 #ifndef INCLUDED_limits_h
 #include <limits.h>       /* PATH_MAX */
 #define INCLUDED_limits_h

@@ -32,7 +32,6 @@ extern  void    send_umode (struct Client *, struct Client *,
 extern  void    send_umode_out (struct Client*, struct Client *, int);
 extern  int     m_umode(struct Client *, struct Client *, int, char **);
 extern  int     show_lusers(struct Client *, struct Client *, int, char **);
-extern  int     hunt_server (struct Client *,struct Client *,char *,int,int,char **);
 extern  struct Client   *next_client (struct Client *, char *);
 extern  struct Client   *next_client_double (struct Client *, char *);
 
