@@ -1,3 +1,7 @@
+*** 20011204_1 by androsyn
+Fixed depend wackiness 
+
+
 *** 20011203_7 by androsyn
 that should be adns.c not adns.o
 
