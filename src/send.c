@@ -60,12 +60,8 @@ static  void vsendto_prefix_one(register aClient *, register aClient *, char *, 
 static  void vsendto_one(aClient *, const char *, va_list);
 static  void vsendto_realops(const char *, va_list);
 
-#ifdef USE_SENTALONG
-static	int	sentalong[MAXCONNECTIONS];
-#else
 static	unsigned long sentalong[MAXCONNECTIONS];
 static unsigned long current_serial=0L;
-#endif
 
 int format(char *,char *,char *,char *,char *,char *,char *,char *,
 	char *,char *,char *,char *,char *,char *);
