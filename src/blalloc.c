@@ -14,6 +14,7 @@
 #include "numeric.h"
 #include "send.h"
 #include <string.h>
+#include <stdlib.h>
 
 #ifdef DEBUG_BLOCK_ALLOCATOR
 const char* BH_CurrentFile = 0;   /* GLOBAL used for BlockHeap debugging */

@@ -31,6 +31,7 @@
 #include "class.h"
 #include "send.h"
 #include <string.h>
+#include <stdlib.h>
 
 /*
  * re-written to use Wohali (joant@cadence.com)

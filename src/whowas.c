@@ -27,6 +27,7 @@
 #include "hash.h"
 
 #include <string.h>
+#include <stdlib.h>
 /*
  * Whowas hash table size
  *

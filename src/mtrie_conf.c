@@ -45,9 +45,7 @@
  *
  * $Id$
  */
-#include <string.h>
-	/* WHAT TO DO HERE?  guess we'll find out --ns */
-#undef STDLIBH
+#include "mtrie_conf.h"
 #include "sys.h"
 #include "numeric.h"
 #include "common.h"
@@ -56,10 +54,10 @@
 #include "class.h"
 #include "h.h"
 #include "send.h"
-
-#include "mtrie_conf.h"
 #include "dline_conf.h"
 
+#include <string.h>
+#include <stdlib.h>
 
 #define MAXPREFIX (HOSTLEN+USERLEN+15)
 

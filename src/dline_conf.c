@@ -8,17 +8,16 @@
 #include "sys.h"
 #include "numeric.h"
 #include "class.h"
-#include <fcntl.h>
-#include <sys/wait.h>
-#if defined(AIX) || defined(DYNIXPTX) || defined(SVR3)
-#include <time.h>
-#endif
-#include <signal.h>
-#include <string.h>
 #include "h.h"
 #include "s_conf.h"
 #include "dline_conf.h"
 #include "send.h"
+
+#include <fcntl.h>
+#include <sys/wait.h>
+#include <signal.h>
+#include <string.h>
+#include <stdlib.h>
 
 
 typedef struct ip_subtree

@@ -39,6 +39,7 @@
 
 #include <netdb.h>               /* struct hostent */
 #include <string.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <assert.h>

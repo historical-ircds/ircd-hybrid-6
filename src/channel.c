@@ -46,6 +46,7 @@
 #include "hash.h"
 
 #include <string.h>
+#include <stdlib.h>
 
 #ifdef NEED_SPLITCODE
 int server_was_split=YES;

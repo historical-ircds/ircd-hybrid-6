@@ -35,23 +35,10 @@
 #include "mtrie_conf.h"
 
 #include <assert.h>
-
-#ifndef __EMX__
-#include <utmp.h> /* old slackware utmp.h defines BYTE_ORDER */
-#endif /* __EMX__ */
-
-#if defined(AIX) || defined(DYNIXPTX) || defined(SVR3)
-#include <time.h>
-#endif
-#include <fcntl.h>
-#if defined( HAVE_STRING_H )
 #include <string.h>
-#else
-/* older unices don't have strchr/strrchr .. help them out */
-#include <strings.h>
-#undef strchr
-#define strchr index
-#endif
+#include <stdlib.h>
+#include <time.h>
+#include <fcntl.h>
 
 
 #ifdef GLINES

@@ -22,14 +22,10 @@
 #include "common.h"
 #include "sys.h"
 #include "h.h"
+
 #include <string.h>
-
+#include <stdlib.h>
 #include <errno.h>
-#if 0
-extern	int errno; /* ...seems that errno.h doesn't define this everywhere */
-#endif
-
-#define FOREVER for(;;)
 
 #if !defined( HAVE_STRTOKEN )
 /*
@@ -37,7 +33,6 @@ extern	int errno; /* ...seems that errno.h doesn't define this everywhere */
 **			of separators
 **			argv 9/90
 **
-**	$Id$
 */
 
 char *strtoken(save, str, fs)

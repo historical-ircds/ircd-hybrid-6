@@ -28,65 +28,54 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#if 0 /* does so :p */
-extern	int errno; /* ...seems that errno.h doesn't define this everywhere */
-#if !defined(__FreeBSD__) && !defined(__NetBSD__) && !defined(__OpenBSD__) && !defined(__bsdi__) && !defined(__linux__) && !defined(__EMX__)
-extern	char	*sys_errlist[];
-#endif
-#endif
-
-VOIDSIG dummy()
+void dummy(int sig)
 {
-#ifndef HAVE_RELIABLE_SIGNALS
-  (void)signal(SIGALRM, dummy);
-  (void)signal(SIGPIPE, dummy);
-#ifndef HPUX	/* Only 9k/800 series require this, but don't know how to.. */
+#if !defined(POSIX_SIGNALS)
+  signal(SIGALRM, dummy);
+  signal(SIGPIPE, dummy);
 # ifdef SIGWINCH
-  (void)signal(SIGWINCH, dummy);
+  signal(SIGWINCH, dummy);
 # endif
 #endif
-#else
-# ifdef POSIX_SIGNALS
+
+#if 0 /* POSIX signals reinstall handlers themselves */
   struct  sigaction       act;
 
   act.sa_handler = dummy;
   act.sa_flags = 0;
-  (void)sigemptyset(&act.sa_mask);
-  (void)sigaddset(&act.sa_mask, SIGALRM);
-  (void)sigaddset(&act.sa_mask, SIGPIPE);
+  sigemptyset(&act.sa_mask);
+  sigaddset(&act.sa_mask, SIGALRM);
+  sigaddset(&act.sa_mask, SIGPIPE);
 #  ifdef SIGWINCH
-  (void)sigaddset(&act.sa_mask, SIGWINCH);
+  sigaddset(&act.sa_mask, SIGWINCH);
+  sigaction(SIGWINCH, &act, NULL);
 #  endif
-  (void)sigaction(SIGALRM, &act, (struct sigaction *)NULL);
-  (void)sigaction(SIGPIPE, &act, (struct sigaction *)NULL);
-#  ifdef SIGWINCH
-  (void)sigaction(SIGWINCH, &act, (struct sigaction *)NULL);
-#  endif
-# endif
-#endif
+  sigaction(SIGALRM, &act, NULL);
+  sigaction(SIGPIPE, &act, NULL);
+#endif /* 0 */
 }
 
 
 /*
-** deliver_it
-**	Attempt to send a sequence of bytes to the connection.
-**	Returns
-**
-**	< 0	Some fatal error occurred, (but not EWOULDBLOCK).
-**		This return is a request to close the socket and
-**		clean up the link.
-**	
-**	>= 0	No real error occurred, returns the number of
-**		bytes actually transferred. EWOULDBLOCK and other
-**		possibly similar conditions should be mapped to
-**		zero return. Upper level routine will have to
-**		decide what to do with those unwritten bytes...
-**
-**	*NOTE*	alarm calls have been preserved, so this should
-**		work equally well whether blocking or non-blocking
-**		mode is used...
-*/
-int	deliver_it(aClient *cptr,char *str,int len)
+ * deliver_it
+ *	Attempt to send a sequence of bytes to the connection.
+ *	Returns
+ *
+ *	< 0	Some fatal error occurred, (but not EWOULDBLOCK).
+ *		This return is a request to close the socket and
+ *		clean up the link.
+ *	
+ *	>= 0	No real error occurred, returns the number of
+ *		bytes actually transferred. EWOULDBLOCK and other
+ *		possibly similar conditions should be mapped to
+ *		zero return. Upper level routine will have to
+ *		decide what to do with those unwritten bytes...
+ *
+ *	*NOTE*	alarm calls have been preserved, so this should
+ *		work equally well whether blocking or non-blocking
+ *		mode is used...
+ */
+int deliver_it(aClient *cptr, char *str, int len)
 {
   int	retval;
 

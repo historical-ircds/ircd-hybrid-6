@@ -32,121 +32,49 @@
 #endif
 
 #if 0
-#ifndef INCLUDED_errno_h
-#include <errno.h>
-#define INCLUDED_errno_h
-#endif
-#endif
-
-#if 0
-#ifndef INCLUDED_stdio_h
-#include <stdio.h>
-#define INCLUDED_stdio_h
-#endif
-#endif
-
 #ifndef INCLUDED_sys_types_h
 #include <sys/types.h>
 #define INCLUDED_sys_types_h
 #endif
+#endif
+#if 0
 #ifndef INCLUDED_sys_param_h
 #include <sys/param.h>
 #define INCLUDED_sys_param_h
 #endif
+#endif
 
+#if 0
 #if defined( HAVE_UNISTD_H )
 #ifndef INCLUDED_unistd_h
 #include <unistd.h>
 #define INCLUDED_unistd_h
 #endif
 #endif
+#endif
 
+#if 0
 #if defined( HAVE_STDLIB_H )
 #ifndef INCLUDED_stdlib_h
 #include <stdlib.h>
 #define INCLUDED_stdlib_h
 #endif
 #endif
-
-#if 0
-#ifndef INCLUDED_zlib_h
-#include "zlib.h"
-#endif
 #endif
 
 #if 0
-#if defined( HAVE_STRINGS_H ) && !defined( __GLIBC__ )
-#include <strings.h>
-#else
-# if defined( HAVE_STRING_H )
-# include <string.h>
-# endif
-#endif
-#define	strcasecmp	irccmp
-#define	strncasecmp	ircncmp
-#if !defined( HAVE_INDEX )
-#define   index   strchr
-#define   rindex  strrchr
-/*
-extern	char	*index (char *, char);
-extern	char	*rindex (char *, char);
-*/
-#endif
-
-#endif
-
-/*
- * XXX - ahem, why do we need to expose <sys/select.h> to every file in
- * the server? feh
- */
-#ifdef AIX
-#include <sys/select.h>
-#endif
-#if defined(HPUX )|| defined(AIX)
-#include <time.h>
-#ifdef AIX
-#include <sys/time.h>
-#endif
-#else
-#include <sys/time.h>
-#endif
-
 #ifdef __EMX__
 #  include <os2.h>
 #endif
-
-/*
- * XXX - hide this in signal code
- */
-#ifdef NEXT
-#define VOIDSIG int	/* whether signal() returns int of void */
-#else
-#define VOIDSIG void	/* whether signal() returns int of void */
 #endif
 
-/*
- * XXX - MOVE THIS
- */
-extern	VOIDSIG	dummy();
-
-#ifdef	DYNIXPTX
-#define	NO_U_TYPES
-#endif
-
-/*
- * XXX --- ARGH!!!!!
- */
-#ifdef	OS_SOLARIS2
-extern	int	gethostname(char *, int);
-extern	long	random();
-extern	void	srandom(unsigned);
-#endif /* OS_SOLARIS2 */
-
+#if 0
 #ifdef	NO_U_TYPES
 typedef	unsigned char	u_char;
 typedef	unsigned short	u_short;
 typedef	unsigned long	u_long;
 typedef	unsigned int	u_int;
+#endif
 #endif
 
 #endif /* INCLUDED_sys_h */

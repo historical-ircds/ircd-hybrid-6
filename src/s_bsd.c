@@ -40,25 +40,19 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <netdb.h>
+#include <unistd.h>
+#include <time.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/file.h>
 #include <sys/ioctl.h>
 #include <sys/resource.h>
+#include <sys/param.h>    /* NOFILE */
 #include <arpa/inet.h>
-
 #if defined(SOL20) 
 #include <sys/filio.h>
 #include <sys/select.h>
-#include <unistd.h>
 #endif
-#ifndef __EMX__
-#include <utmp.h>
-#endif
-#ifdef  AIX
-# include <time.h>
-#endif
-
 /*
  * Stuff for poll()
  */
@@ -246,6 +240,7 @@ static void do_dns_async()
 }
 
 
+
 /*
  * init_sys
  */
@@ -282,7 +277,8 @@ void init_sys()
           fprintf(stderr, "FD_SETSIZE = %d MAXCONNECTIONS = %d\n",
                   FD_SETSIZE, MAXCONNECTIONS);
           fprintf(stderr,
-            "Make sure your kernel supports a larger FD_SETSIZE then recompile with -DFD_SETSIZE=%d\n",MAXCONNECTIONS);
+            "Make sure your kernel supports a larger FD_SETSIZE then " \
+            "recompile with -DFD_SETSIZE=%d\n", MAXCONNECTIONS);
           exit(-1);
         }
 #ifndef HAVE_FD_ALLOC
@@ -292,35 +288,6 @@ void init_sys()
       printf("Value of NOFILE is %d\n", NOFILE);
     }
 #endif        /* RLIMIT_FD_MAX */
-
-#ifdef  sequent
-#ifndef DYNIXPTX
-  int        fd_limit;
-
-  fd_limit = setdtablesize(MAXCONNECTIONS + 1);
-  if (fd_limit < MAXCONNECTIONS)
-    {
-      fprintf(stderr,"ircd fd table too big\n");
-      fprintf(stderr,"Hard Limit: %d IRC max: %d\n",
-                    fd_limit, MAXCONNECTIONS);
-      fprintf(stderr,"Fix MAXCONNECTIONS\n");
-      exit(-1);
-    }
-#endif  /* !DYNIXPIX */
-#endif  /* sequent */
-#if defined(DYNIXPTX) || defined(SVR3)
-  char logbuf[BUFSIZ];
-
-  setvbuf(stderr, logbuf, _IOLBF, sizeof(logbuf));
-#else /* !(defined(HPUX) || defined(__CYGWIN__)) */
-# if defined(HPUX) || defined(__CYGWIN__)
-  setvbuf(stderr, NULL, _IOLBF, 0);
-# else
-#  if !defined(SOL20) && !defined(__EMX__)
-  setlinebuf(stderr);
-#  endif
-# endif /* !(defined(HPUX) || defined(__CYGWIN__)) */
-#endif  /* !(defined(DYNIXPTX) || defined(SVR3)) */
 
 #ifndef USE_POLL
   read_set = &readset;
@@ -363,16 +330,9 @@ void init_sys()
           close(fd);
         }
 #endif
-#if defined(HPUX) || defined(SOL20) || defined(DYNIXPTX) || \
-    defined(_POSIX_SOURCE) || defined(SVR4)
-      setsid();
-#else
-# ifndef __EMX__
-    setpgrp(0, (int)getpid());
-# endif /* __EMX__ */
-#endif
-    close(0);        /* fd 0 opened by inetd */
-    local[0] = NULL;
+     setsid();
+     close(0);        /* fd 0 opened by inetd */
+     local[0] = NULL;
     }
 #endif /* __CYGWIN__ */
   init_resolver();
@@ -381,9 +341,10 @@ void init_sys()
 
                 
 /*
- * Initialize the various name strings used to store hostnames. This is set
- * from either the server's sockhost (if client fd is a tty or localhost)
- * or from the ip# converted into a string. 0 = success, -1 = fail.
+ * check_init - initialize the various name strings used to store hostnames. 
+ * This is set from either the server's sockhost (if client fd is a tty or 
+ * localhost) or from the ip# converted into a string. 
+ * 0 = success, -1 = fail.
  */
 static int check_init(aClient* cptr, char* sockn)
 {
@@ -439,8 +400,13 @@ int check_client(aClient *cptr,char *username,char **reason)
   Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]",
          cptr->name, inetntoa((char *)&cptr->ip)));
 
+#if 0
+  /* 
+   * XXX - already done by the time this is called
+   */
   if (check_init(cptr, sockname))
     return -2;
+#endif
 
   if (cptr->dns_reply)
     hp = cptr->dns_reply->hp;
@@ -541,8 +507,10 @@ int check_server(aClient* cptr, struct DNSReply* dns_reply,
   struct hostent* hp;
 
   ClearAccess(cptr);
-  if (check_init(cptr, sockname))
-    return -2;
+  if (IsConnecting(cptr)) {
+    if (check_init(cptr, sockname))
+      return -2;
+  }
 
   hp = (dns_reply) ? dns_reply->hp : 0;
   if (!hp && cptr->dns_reply)
@@ -841,35 +809,20 @@ void        reset_sock_opts(int fd,int type)
 /*
 ** set_sock_opts
 */
-static        void        set_sock_opts(int fd, aClient *cptr)
+static void set_sock_opts(int fd, aClient *cptr)
 {
   int        opt;
 
+#if 0
 #ifdef SO_REUSEADDR
   opt = 1;
   if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0)
     report_error("setsockopt(SO_REUSEADDR) %s:%s", 
                   get_client_name(cptr, TRUE), errno);
 #endif
+#endif /* 0 */
 
-#if  defined(SO_DEBUG) && defined(DEBUGMODE) && 0
-/* Solaris with SO_DEBUG writes to syslog by default */
-#if !defined(SOL20) || defined(USE_SYSLOG)
-  opt = 1;
-  if (setsockopt(fd, SOL_SOCKET, SO_DEBUG, (char *)&opt, sizeof(opt)) < 0)
-    report_error("setsockopt(SO_DEBUG) %s:%s", 
-                 get_client_name(cptr, TRUE), errno);
-#endif /* SOL20 */
-#endif
-
-#if defined(SO_USELOOPBACK) && !defined(__CYGWIN__)
-  opt = 1;
-  if (setsockopt(fd, SOL_SOCKET, SO_USELOOPBACK, (char *)&opt, sizeof(opt)) < 0)
-    report_error("setsockopt(SO_USELOOPBACK) %s:%s", 
-                 get_client_name(cptr, TRUE), errno);
-#endif
-
-#ifdef        SO_RCVBUF
+#ifdef SO_RCVBUF
 # if defined(MAXBUFFERS) && !defined(SEQUENT)
   if (rcvbufmax==0)
     {
@@ -884,10 +837,14 @@ static        void        set_sock_opts(int fd, aClient *cptr)
       optlen = sizeof(rcvbufmax);
       getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &rcvbufmax,
                  &optlen);
-      while((rcvbufmax<16385)&&(setsockopt(fd, SOL_SOCKET, SO_RCVBUF,
-                  (char *) (char *)&rcvbufmax, optlen) >= 0)) rcvbufmax+=1024;
-      getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &rcvbufmax,
-                 &optlen);
+      /*
+       * XXX - ACK!!!
+       */
+      while ((rcvbufmax < 16385) &&
+             (setsockopt(fd, SOL_SOCKET, SO_RCVBUF,
+                         (char*) &rcvbufmax, optlen) >= 0)) 
+        rcvbufmax += 1024;
+      getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char*) &rcvbufmax, &optlen);
 #endif
       readbuf = (char *)malloc(rcvbufmax * sizeof(char));
     }
@@ -902,8 +859,8 @@ static        void        set_sock_opts(int fd, aClient *cptr)
       report_error("setsockopt(SO_RCVBUF) %s:%s", 
                    get_client_name(cptr, TRUE), errno);
 #endif
-#ifdef        SO_SNDBUF
-# ifdef        _SEQUENT_
+#ifdef SO_SNDBUF
+# ifdef _SEQUENT_
 /* seems that Sequent freezes up if the receving buffer is a different size
  * to the sending buffer (maybe a tcp window problem too).
  */
@@ -936,10 +893,12 @@ static        void        set_sock_opts(int fd, aClient *cptr)
 #if defined(IP_OPTIONS) && defined(IPPROTO_IP)
         {
 # if defined(MAXBUFFERS) && !defined(SEQUENT)
-          char        *s = readbuf, *t = readbuf + (rcvbufmax*sizeof(char))/ 2;
+          char* s = readbuf;
+          char* t = readbuf + rcvbufmax / 2;
           opt = (rcvbufmax*sizeof(char))/8;
 # else
-          char        *s = readbuf, *t = readbuf + sizeof(readbuf) / 2;
+          char* s = readbuf;
+          char* t = readbuf + sizeof(readbuf) / 2;
           opt = sizeof(readbuf) / 8;
 # endif
           if (getsockopt(fd, IPPROTO_IP, IP_OPTIONS, t, &opt) < 0)
@@ -948,7 +907,7 @@ static        void        set_sock_opts(int fd, aClient *cptr)
           else if (opt > 0)
             {
               for (*readbuf = '\0'; opt > 0; opt--, s+= 3)
-                (void)ircsprintf(s, "%02.2x:", *t++);
+                ircsprintf(s, "%02.2x:", *t++);
               *s = '\0';
               sendto_realops("Connection %s using IP opts: (%s)",
                              get_client_name(cptr, TRUE), readbuf);
@@ -1438,21 +1397,17 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
   
 #else /* USE_POLL */
 
-#ifdef AIX
-#define POLLREADFLAGS (POLLIN|POLLMSG)
+#if defined(POLLMSG) && defined(POLLIN) && defined(POLLRDNORM)
+#define POLLREADFLAGS (POLLMSG|POLLIN|POLLRDNORM)
 #else
-# if defined(POLLMSG) && defined(POLLIN) && defined(POLLRDNORM)
-# define POLLREADFLAGS (POLLMSG|POLLIN|POLLRDNORM)
+# if defined(POLLIN) && defined(POLLRDNORM)
+# define POLLREADFLAGS (POLLIN|POLLRDNORM)
 # else
-#  if defined(POLLIN) && defined(POLLRDNORM)
-#  define POLLREADFLAGS (POLLIN|POLLRDNORM)
+#  if defined(POLLIN)
+#  define POLLREADFLAGS POLLIN
 #  else
-#   if defined(POLLIN)
-#   define POLLREADFLAGS POLLIN
-#   else
-#    if defined(POLLRDNORM)
-#    define POLLREADFLAGS POLLRDNORM
-#    endif
+#   if defined(POLLRDNORM)
+#   define POLLREADFLAGS POLLRDNORM
 #   endif
 #  endif
 # endif
@@ -1487,7 +1442,7 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
                 pfd->events = 0;                \
         }
 
-#if defined(SOL20) || defined(AIX)
+#if defined(SOL20)
 #define CONNECTFAST
 #endif
 

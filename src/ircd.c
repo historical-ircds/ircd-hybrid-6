@@ -35,42 +35,41 @@
 #include "s_bsd.h"
 #include "send.h"
 #include "hash.h"
+#include "fdlist.h"
+
 
 #include <string.h>
+#include <time.h>
 #include <sys/file.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <pwd.h>
 #include <signal.h>
 #include <fcntl.h>
 #include <sys/socket.h>
-# include <sys/resource.h>
+#include <sys/resource.h>
+
+#ifdef SETUID_ROOT
+#include <sys/lock.h>
+#include <unistd.h>
+#endif /* SETUID_ROOT */
+
 
 #ifdef  REJECT_HOLD
-int reject_held_fds=0;
+int reject_held_fds = 0;
 #endif
 
 #ifdef NEED_SPLITCODE
 extern time_t server_split_time;
-extern int server_was_split;
+extern int    server_was_split;
 #endif
 
-int cold_start=YES;	/* set if the server has just fired up */
-
-/* this stuff by mnystrom@mit.edu */
-#include "fdlist.h"
-
-#ifdef SETUID_ROOT
-#include <sys/lock.h>
-#include <sys/types.h>
-#include <unistd.h>
-#endif /* SETUID_ROOT */
+int cold_start = YES;	/* set if the server has just fired up */
 
 /* client pointer lists -Dianora */ 
   
-aClient *local_cptr_list=(aClient *)NULL;
-aClient *oper_cptr_list=(aClient *)NULL;
-aClient *serv_cptr_list=(aClient *)NULL;
+aClient *local_cptr_list = NULL;
+aClient *oper_cptr_list  = NULL;
+aClient *serv_cptr_list  = NULL;
 
 /* fdlist's */
 fdlist serv_fdlist;
@@ -94,16 +93,16 @@ time_t	NOW;
 aClient me;			/* That's me */
 aClient* GlobalClientList = 0;	/* Pointer to beginning of Client list */
 
-void	server_reboot();
-void	restart (char *);
-static	void	open_debugfile();
-static  void    setup_signals();
-static  void    write_pidfile(void);
+void	    server_reboot();
+void	    restart(char*);
+static void open_debugfile();
+static void setup_signals();
+static void write_pidfile(void);
 
 static void initialize_global_set_options(void);
 static void initialize_message_files(void);
 
-static  time_t	io_loop(time_t);
+static time_t io_loop(time_t);
 
 
 /* externally needed functions */
@@ -131,50 +130,32 @@ int	autoconn = 1;		/* allow auto conns or not */
 #ifdef	PROFIL
 extern	etext();
 
-VOIDSIG	s_monitor()
+void s_monitor()
 {
-  static int	mon = 0;
-#ifdef	POSIX_SIGNALS
-  struct sigaction act;
-#endif
+  static int mon = 0;
 
-  (void)moncontrol(mon);
+  moncontrol(mon);
   mon = 1 - mon;
-#ifdef	POSIX_SIGNALS
-  act.sa_handler = s_rehash;
-  act.sa_flags = 0;
-  (void)sigemptyset(&act.sa_mask);
-  (void)sigaddset(&act.sa_mask, SIGUSR1);
-  (void)sigaction(SIGUSR1, &act, NULL);
-#else
-  (void)signal(SIGUSR1, s_monitor);
+#if !defined(POSIX_SIGNALS)
+  signal(SIGUSR1, s_monitor);
 #endif
 }
 #endif
 
-VOIDSIG s_die()
+void s_die()
 {
   flush_connections(me.fd);
 #ifdef	USE_SYSLOG
-  (void)syslog(LOG_CRIT, "Server killed By SIGTERM");
+  syslog(LOG_CRIT, "Server killed By SIGTERM");
 #endif
   exit(-1);
 }
 
-static VOIDSIG s_rehash()
+static void s_rehash()
 {
-#ifdef	POSIX_SIGNALS
-  struct	sigaction act;
-#endif
   dorehash = 1;
-#ifdef	POSIX_SIGNALS
-  act.sa_handler = s_rehash;
-  act.sa_flags = 0;
-  (void)sigemptyset(&act.sa_mask);
-  (void)sigaddset(&act.sa_mask, SIGHUP);
-  (void)sigaction(SIGHUP, &act, NULL);
-#else
-  (void)signal(SIGHUP, s_rehash);	/* sysV -argv */
+#if !defined(POSIX_SIGNALS)
+  signal(SIGHUP, s_rehash);	/* sysV -argv */
 #endif
 }
 
@@ -182,29 +163,28 @@ void restart(char *mesg)
 {
   static int was_here = NO; /* redundant due to restarting flag below */
 
-  if(was_here)
+  if (was_here)
     abort();
   was_here = YES;
 
 #ifdef	USE_SYSLOG
-  (void)syslog(LOG_WARNING, "Restarting Server because: %s, memory data limit: %ld",
-     mesg, current_usage.ru_idrss - startup_usage.ru_idrss);
+  syslog(LOG_WARNING, "Restarting Server because: %s, memory data limit: %ld",
+         mesg, current_usage.ru_idrss - startup_usage.ru_idrss);
 #endif
   if (bootopt & BOOT_STDERR)
     {
       fprintf(stderr, "Restarting Server because: %s, memory: %ld\n",
-	      mesg,
-	      startup_usage.ru_idrss);
+	      mesg, startup_usage.ru_idrss);
     }
   server_reboot();
 }
 
-VOIDSIG s_restart()
+void s_restart()
 {
   static int restarting = 0;
 
 #ifdef	USE_SYSLOG
-  (void)syslog(LOG_WARNING, "Server Restarting on SIGINT");
+  syslog(LOG_WARNING, "Server Restarting on SIGINT");
 #endif
   if (restarting == 0)
     {
@@ -215,36 +195,32 @@ VOIDSIG s_restart()
     }
 }
 
-void	server_reboot()
+void server_reboot()
 {
-  int	i;
+  int i;
   
-  (void)getrusage(RUSAGE_SELF,&current_usage);
+  getrusage(RUSAGE_SELF,&current_usage);
 
   sendto_ops("Aieeeee!!!  Restarting server... current data-startup data: %d",
-	current_usage.ru_idrss, startup_usage.ru_idrss);
+             current_usage.ru_idrss, startup_usage.ru_idrss);
 
   Debug((DEBUG_NOTICE,"Restarting server..."));
   flush_connections(me.fd);
 
-  /*
-  ** fd 0 must be 'preserved' if either the -d or -i options have
-  ** been passed to us before restarting.
-  */
 #ifdef USE_SYSLOG
   closelog();
 #endif
+
   for (i = 3; i < MAXCONNECTIONS; i++)
     close(i);
   if (!(bootopt & (BOOT_TTY | BOOT_DEBUG | BOOT_STDERR)))
     close(2);
   close(1);
-  if ((bootopt & BOOT_CONSOLE) || isatty(0))
-    close(0);
+  close(0);
   execv(SPATH, myargv);
+
 #ifdef USE_SYSLOG
   /* Have to reopen since it has been closed above */
-
   openlog(myargv[0], LOG_PID|LOG_NDELAY, LOG_FACILITY);
   syslog(LOG_CRIT, "execv(%s,%s) failed: %m\n", SPATH, myargv[0]);
   closelog();
@@ -255,13 +231,13 @@ void	server_reboot()
 
 
 /*
-** try_connections
-**
-**	Scan through configuration and try new connections.
-**	Returns the calendar time when the next call to this
-**	function should be made latest. (No harm done if this
-**	is called earlier or later...)
-*/
+ * try_connections
+ *
+ *	Scan through configuration and try new connections.
+ *	Returns the calendar time when the next call to this
+ *	function should be made latest. (No harm done if this
+ *	is called earlier or later...)
+ */
 static	time_t	try_connections(time_t currenttime)
 {
   aConfItem	*aconf;
@@ -797,26 +773,17 @@ static	time_t	check_pings(time_t currenttime)
 }
 
 /*
-** bad_command
-**	This is called when the commandline is not acceptable.
-**	Give error message and exit without starting anything.
-*/
-static	int	bad_command()
+ * bad_command
+ *	This is called when the commandline is not acceptable.
+ *	Give error message and exit without starting anything.
+ */
+static int bad_command()
 {
-  (void)printf(
-	 "Usage: ircd %s[-h servername] [-p portnumber] [-x loglevel] [-s] [-t]\n",
-#ifdef CMDLINE_CONFIG
-	 "[-f config] "
-#else
-	 ""
-#endif
-	 );
-  (void)printf("Server not started\n\n");
-  return (-1);
+  fprintf(stderr, 
+          "Usage: ircd [-f config] [-h servername] [-x loglevel] [-s] [-t]\n");
+  fprintf(stderr, "Server not started\n\n");
+  return -1;
 }
-#ifndef TRUE
-#define TRUE 1
-#endif
 
 /* code added by mika nystrom (mnystrom@mit.edu) */
 /* this flag is used to signal globally that the server is heavily loaded,
@@ -831,24 +798,24 @@ int LRV = LOADRECV;
 time_t LCF = LOADCFREQ;
 float currlife = 0.0;
 
-int	main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
-  int	portarg = 0;
-  uid_t	uid, euid;
-  time_t	delay = 0;
+  uid_t	      uid;
+  uid_t       euid;
+  time_t      delay = 0;
+  aConfItem*  aconf;
 
-  aConfItem *aconf;
-
+  memset(&me, 0, sizeof(me));
   GlobalClientList = &me;       /* Pointer to beginning of Client list */
   cold_start = YES;		/* set when server first starts up */
 
   if((timeofday = time(NULL)) == -1)
     {
-      (void)fprintf(stderr,"ERROR: Clock Failure (%d)\n", errno);
+      fprintf(stderr,"ERROR: Clock Failure (%d)\n", errno);
       exit(errno);
     }
   
-  memset( &Count, 0, sizeof(Count));
+  memset(&Count, 0, sizeof(Count));
   Count.server = 1;	/* us */
 
   initialize_global_set_options();
@@ -871,15 +838,15 @@ int	main(int argc, char *argv[])
   dbuf_init();  /* set up some dbuf stuff to control paging */
 #endif
 
-  (void)getrusage(RUSAGE_SELF, &startup_usage);
+  getrusage(RUSAGE_SELF, &startup_usage);
 
   uid = getuid();
   euid = geteuid();
 
 #ifdef	PROFIL
-  (void)monstartup(0, etext);
-  (void)moncontrol(1);
-  (void)signal(SIGUSR1, s_monitor);
+  monstartup(0, etext);
+  moncontrol(1);
+  signal(SIGUSR1, s_monitor);
 #endif
 
   ConfigFileEntry.dpath = DPATH;
@@ -889,17 +856,17 @@ int	main(int argc, char *argv[])
 #ifdef KPATH
   ConfigFileEntry.klinefile = KPATH;         /* Server kline file */
 #else
-	ConfigFileEntry.klinefile = CPATH;
+  ConfigFileEntry.klinefile = CPATH;
 #endif /* KPATH */
 
 #ifdef DLPATH
-	ConfigFileEntry.dlinefile = DLPATH;
+  ConfigFileEntry.dlinefile = DLPATH;
 #else
-	ConfigFileEntry.dlinefile = CPATH;
+  ConfigFileEntry.dlinefile = CPATH;
 #endif /* DLPATH */
 
 #ifdef GLINES
-   ConfigFileEntry.glinefile = GLINEFILE;
+  ConfigFileEntry.glinefile = GLINEFILE;
 #endif
 
 #ifdef	CHROOTDIR
@@ -911,7 +878,7 @@ int	main(int argc, char *argv[])
 
   if (chroot(DPATH))
     {
-      (void)fprintf(stderr,"ERROR:  Cannot chdir/chroot\n");
+      fprintf(stderr,"ERROR:  Cannot chdir/chroot\n");
       exit(5);
     }
 #endif /*CHROOTDIR*/
@@ -934,8 +901,7 @@ int	main(int argc, char *argv[])
 #endif
 
   myargv = argv;
-  (void)umask(077);                /* better safe than sorry --SRB */
-  memset((void *)&me, 0, sizeof(me));
+  umask(077);                /* better safe than sorry --SRB */
 
   setup_signals();
   
@@ -968,39 +934,35 @@ int	main(int argc, char *argv[])
 	  bootopt |= BOOT_CONSOLE;
 	  break;
 	case 'd' :
-	  (void)setuid((uid_t)uid);
+	  setuid((uid_t) uid);
 	  ConfigFileEntry.dpath = p;
 	  break;
 #ifdef CMDLINE_CONFIG
 	case 'f':
-	  (void)setuid((uid_t)uid);
+	  setuid((uid_t) uid);
 	  ConfigFileEntry.configfile = p;
 	  break;
 
 #ifdef KPATH
 	case 'k':
-	  (void)setuid((uid_t)uid);
+	  setuid((uid_t) uid);
 	  ConfigFileEntry.klinefile = p;
 	  break;
 #endif
 
 #endif
 	case 'h':
-	  strncpyzt(me.name, p, sizeof(me.name));
-	  break;
-	case 'p':
-	  if ((portarg = atoi(p)) > 0 )
-	    portnum = portarg;
+	  strncpy(me.name, p, HOSTLEN);
 	  break;
 	case 's':
 	  bootopt |= BOOT_STDERR;
 	  break;
 	case 't':
-	  (void)setuid((uid_t)uid);
+	  setuid((uid_t) uid);
 	  bootopt |= BOOT_TTY;
 	  break;
 	case 'v':
-	  (void)printf("ircd %s\n\tzlib %s\n\tircd_dir: %s\n", version,
+	  printf("ircd %s\n\tzlib %s\n\tircd_dir: %s\n", version,
 #ifndef ZIP_LINKS
 		       "not used",
 #else
@@ -1010,15 +972,14 @@ int	main(int argc, char *argv[])
 	  exit(0);
 	case 'x':
 #ifdef	DEBUGMODE
-	  (void)setuid((uid_t)uid);
+	  setuid((uid_t) uid);
 	  debuglevel = atoi(p);
 	  debugmode = *p ? p : "0";
 	  bootopt |= BOOT_DEBUG;
 	  break;
 #else
-	  (void)fprintf(stderr,
-			"%s: DEBUGMODE must be defined for -x y\n",
-			myargv[0]);
+	  fprintf(stderr, "%s: DEBUGMODE must be defined for -x y\n",
+                  myargv[0]);
 	  exit(0);
 #endif
 	default:
@@ -1038,50 +999,46 @@ int	main(int argc, char *argv[])
 #if !defined(IRC_UID)
   if ((uid != euid) && !euid)
     {
-      (void)fprintf(stderr,
-		    "ERROR: do not run ircd setuid root. Make it setuid a\
-normal user.\n");
+      fprintf(stderr,
+              "ERROR: do not run ircd setuid root. " \
+              "Make it setuid a normal user.\n");
       exit(-1);
     }
 #endif
 
 #if !defined(CHROOTDIR) || (defined(IRC_UID) && defined(IRC_GID))
-# ifndef	AIX
-  (void)setuid((uid_t)euid);
-# endif
 
-  if ((int)getuid() == 0)
+  setuid((uid_t)euid);
+
+  if (getuid() == 0)
     {
 # if defined(IRC_UID) && defined(IRC_GID)
 
       /* run as a specified user */
-      (void)fprintf(stderr,"WARNING: running ircd with uid = %d\n",
-		    IRC_UID);
-      (void)fprintf(stderr,"         changing to gid %d.\n",IRC_GID);
+      fprintf(stderr,"WARNING: running ircd with uid = %d\n", IRC_UID);
+      fprintf(stderr,"         changing to gid %d.\n",IRC_GID);
 
       /* setgid/setuid previous usage noted unsafe by ficus@neptho.net
        */
 
       if(setgid(IRC_GID) < 0)
 	{
-	  (void)fprintf(stderr,"ERROR: can't setgid(%d)\n", IRC_GID);
+	  fprintf(stderr,"ERROR: can't setgid(%d)\n", IRC_GID);
 	  exit(-1);
 	}
 
       if(setuid(IRC_UID) < 0)
 	{
-	  (void)fprintf(stderr,"ERROR: can't setuid(%d)\n", IRC_UID);
+	  fprintf(stderr,"ERROR: can't setuid(%d)\n", IRC_UID);
 	  exit(-1);
 	}
 
 #else
-#  ifndef __EMX__
       /* check for setuid root as usual */
-      (void)fprintf(stderr,
-		    "ERROR: do not run ircd setuid root. Make it setuid a\
- normal user.\n");
+      fprintf(stderr,
+              "ERROR: do not run ircd setuid root. " \
+              "Make it setuid a normal user.\n");
       exit(-1);
-#  endif /* __EMX__ */
 # endif	
 	    } 
 #endif /*CHROOTDIR/UID/GID*/
@@ -1121,17 +1078,11 @@ normal user.\n");
       sendto_ops("Clock Failure (%d), TS can be corrupted", errno);
     }
 
-  if (portnum < 0)
-    portnum = PORTNUM;
-  me.port = portnum;
-  me.flags = FLAGS_LISTEN;
-  me.fd = -1;
 
   init_sys();
 
 #ifdef USE_SYSLOG
-#define SYSLOG_ME     "ircd"
-  openlog(SYSLOG_ME, LOG_PID|LOG_NDELAY, LOG_FACILITY);
+  openlog("ircd", LOG_PID | LOG_NDELAY, LOG_FACILITY);
 #endif
 
   read_conf_files(YES);		/* cold start init conf files */
@@ -1139,6 +1090,8 @@ normal user.\n");
   aconf = find_me();
   strncpy(me.name, aconf->host, HOSTLEN);
   strncpy(me.host, aconf->host, HOSTLEN);
+
+  me.fd = -1;
   me.hopcount = 0;
   me.confs = NULL;
   me.next = NULL;
@@ -1179,11 +1132,11 @@ normal user.\n");
 
 time_t io_loop(time_t delay)
 {
-  static	char	to_send[200];
-  static time_t	lasttime	= 0;
-  static long	lastrecvK	= 0;
-  static int	lrv		= 0;
-  time_t lasttimeofday;
+  static char   to_send[200];
+  static time_t lasttime  = 0;
+  static long   lastrecvK = 0;
+  static int	lrv       = 0;
+  time_t        lasttimeofday;
 
   lasttimeofday = timeofday;
   if((timeofday = time(NULL)) == -1)
@@ -1311,15 +1264,15 @@ time_t io_loop(time_t delay)
    */
 
 #ifndef NO_PRIORITY
-  (void)read_message(0, &serv_fdlist);
-  (void)read_message(1, &busycli_fdlist);
+  read_message(0, &serv_fdlist);
+  read_message(1, &busycli_fdlist);
   if (LIFESUX)
     {
-      (void)read_message(1, &serv_fdlist);
+      read_message(1, &serv_fdlist);
       if (LIFESUX & 0x4)
 	{	/* life really sucks */
-	  (void)read_message(1, &busycli_fdlist);
-	  (void)read_message(1, &serv_fdlist);
+	  read_message(1, &busycli_fdlist);
+	  read_message(1, &serv_fdlist);
 	}
       flush_server_connections();
     }
@@ -1351,12 +1304,12 @@ time_t io_loop(time_t delay)
     if ((lasttime + (LIFESUX + 1)) < timeofday)
       {
 #endif
-	(void)read_message(delay, NULL); /*  check everything! */
+	read_message(delay, NULL); /*  check everything! */
 	lasttime = timeofday;
       }
    }
 #else
-  (void)read_message(delay, NULL); /*  check everything! */
+  read_message(delay, NULL); /*  check everything! */
   flush_server_connections();
 #endif
 
@@ -1376,7 +1329,7 @@ time_t io_loop(time_t delay)
 
   if (dorehash && !LIFESUX)
     {
-      (void)rehash(&me, &me, 1);
+      rehash(&me, &me, 1);
       dorehash = 0;
     }
   /*
@@ -1438,43 +1391,43 @@ static	void	setup_signals()
 
   act.sa_handler = SIG_IGN;
   act.sa_flags = 0;
-  (void)sigemptyset(&act.sa_mask);
-  (void)sigaddset(&act.sa_mask, SIGPIPE);
-  (void)sigaddset(&act.sa_mask, SIGALRM);
+  sigemptyset(&act.sa_mask);
+  sigaddset(&act.sa_mask, SIGPIPE);
+  sigaddset(&act.sa_mask, SIGALRM);
 # ifdef	SIGWINCH
-  (void)sigaddset(&act.sa_mask, SIGWINCH);
-  (void)sigaction(SIGWINCH, &act, NULL);
+  sigaddset(&act.sa_mask, SIGWINCH);
+  sigaction(SIGWINCH, &act, NULL);
 # endif
-  (void)sigaction(SIGPIPE, &act, NULL);
+  sigaction(SIGPIPE, &act, NULL);
   act.sa_handler = dummy;
-  (void)sigaction(SIGALRM, &act, NULL);
+  sigaction(SIGALRM, &act, NULL);
   act.sa_handler = s_rehash;
-  (void)sigemptyset(&act.sa_mask);
-  (void)sigaddset(&act.sa_mask, SIGHUP);
-  (void)sigaction(SIGHUP, &act, NULL);
+  sigemptyset(&act.sa_mask);
+  sigaddset(&act.sa_mask, SIGHUP);
+  sigaction(SIGHUP, &act, NULL);
   act.sa_handler = s_restart;
-  (void)sigaddset(&act.sa_mask, SIGINT);
-  (void)sigaction(SIGINT, &act, NULL);
+  sigaddset(&act.sa_mask, SIGINT);
+  sigaction(SIGINT, &act, NULL);
   act.sa_handler = s_die;
-  (void)sigaddset(&act.sa_mask, SIGTERM);
-  (void)sigaction(SIGTERM, &act, NULL);
+  sigaddset(&act.sa_mask, SIGTERM);
+  sigaction(SIGTERM, &act, NULL);
 
 #else
 # ifndef	HAVE_RELIABLE_SIGNALS
-  (void)signal(SIGPIPE, dummy);
+  signal(SIGPIPE, dummy);
 #  ifdef	SIGWINCH
-  (void)signal(SIGWINCH, dummy);
+  signal(SIGWINCH, dummy);
 #  endif
 # else
 #  ifdef	SIGWINCH
-  (void)signal(SIGWINCH, SIG_IGN);
+  signal(SIGWINCH, SIG_IGN);
 #  endif
-  (void)signal(SIGPIPE, SIG_IGN);
+  signal(SIGPIPE, SIG_IGN);
 # endif
-  (void)signal(SIGALRM, dummy);   
-  (void)signal(SIGHUP, s_rehash);
-  (void)signal(SIGTERM, s_die); 
-  (void)signal(SIGINT, s_restart);
+  signal(SIGALRM, dummy);   
+  signal(SIGHUP, s_rehash);
+  signal(SIGTERM, s_die); 
+  signal(SIGINT, s_restart);
 #endif
 
 #ifdef RESTARTING_SYSTEMCALLS
@@ -1483,7 +1436,7 @@ static	void	setup_signals()
   ** after signal is the default. The following 'siginterrupt'
   ** should change that default to interrupting calls.
   */
-  (void)siginterrupt(SIGALRM, 1);
+  siginterrupt(SIGALRM, 1);
 #endif
 }
 

@@ -36,10 +36,6 @@
 #include "send.h"
 #include "hash.h"
 #include "listener.h"
-
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <assert.h>
 #ifdef FLUD
 #include "blalloc.h"
 #endif /* FLUD */
@@ -47,14 +43,12 @@
 #include "dbuf.h"
 #endif
 
-#ifndef __EMX__
-#include <utmp.h>
-#endif /* __EMX__ */
-#if defined( HAVE_STRING_H)
 #include <string.h>
-#else
-#include <strings.h>
-#endif
+#include <stdlib.h>
+#include <fcntl.h>
+#include <assert.h>
+#include <time.h>
+#include <sys/stat.h>
 
 extern ConfigFileEntryType ConfigFileEntry; /* defined in ircd.c */
 

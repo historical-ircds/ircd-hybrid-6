@@ -34,14 +34,13 @@
 #include "s_bsd.h"
 #include "send.h"
 
-#if defined(AIX) || defined(DYNIXPTX) || defined(SVR3)
-#include <time.h>
-#endif
 #include <string.h>
-#include <netdb.h>
+#include <stdlib.h>
+#include <time.h>
 #include <signal.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 #include <fcntl.h>
 #include <assert.h>
 

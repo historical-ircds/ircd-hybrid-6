@@ -101,6 +101,7 @@ extern  char    *find_or_add(char *);
 extern  void    count_scache(int *,u_long *);
 extern  void    list_scache(aClient *, aClient *,int, char **);
 
+extern void     dummy(int signo);
 extern void*    MyMalloc(size_t size);
 extern void*    MyRealloc(void* p, size_t size);
 /* MyFree is defined as a macro in ircd_defs.h */

@@ -20,8 +20,10 @@
  */
 #ifndef INCLUDED_config_h
 #define INCLUDED_config_h
-
+#ifndef INCLUDED_setup_h
 #include "setup.h"
+#define INCLUDED_setup_h
+#endif
 
 /* PLEASE READ SECTION:
  *
@@ -62,8 +64,6 @@
 #define HARD_FDLIMIT	(HARD_FDLIMIT_ - 10)
 #define MASTER_MAX	(HARD_FDLIMIT - MAX_BUFFER)
 /*******************************************************************/
-
-#include "defs.h"
 
 /* DPATH SPATH CPATH MPATH KPATH - directoy and files locations
  * Full pathnames and defaults of irc system's support files. Please note that

@@ -36,11 +36,14 @@
 #include "hash.h"
 
 #include <assert.h>
-#include <sys/stat.h>
-#include <sys/time.h>
 #include <fcntl.h>
 #include <netdb.h>
 #include <string.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#if 0
+#include <sys/time.h>
+#endif
 
 /* 
  * Number of aClient structures to preallocate at a time

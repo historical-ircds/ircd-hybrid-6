@@ -184,6 +184,9 @@ static struct Listener* find_listener(int port, struct in_addr addr)
   
 /*
  * add_listener- create a new listener 
+ * port - the port number to listen on
+ * vhost_ip - if non-null must contain a valid IP address string in
+ * the format "255.255.255.255"
  */
 void add_listener(int port, const char* vhost_ip) 
 {

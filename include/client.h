@@ -292,7 +292,7 @@ struct Client
 #define	FLAGS_BLOCKED      0x0100 /* socket is in a blocked condition */
 #define FLAGS_REJECT_HOLD  0x0200 /* client has been klined */
 #define	FLAGS_CLOSING      0x0400 /* set when closing to suppress errors */
-#define	FLAGS_LISTEN       0x0800 /* used to mark clients which we listen on */
+/* #define FLAGS_LISTEN    0x0800    UNUSED */
 #define	FLAGS_CHKACCESS    0x1000 /* ok to check clients access if set */
 /* #define FLAGS_DOINGDNS  0x2000    UNUSED */
 /* #define FLAGS_AUTH	   0x4000    UNUSED */
@@ -388,7 +388,6 @@ struct Client
 #define SendSpyNotice(x)	((x)->flags & FLAGS_SPY)
 #define SendDebugNotice(x)	((x)->flags & FLAGS_DEBUG)
 #define SendNickChange(x)	((x)->flags & FLAGS_NCHANGE)
-#define	IsListening(x)		((x)->flags & FLAGS_LISTEN)
 #define	DoAccess(x)		((x)->flags & FLAGS_CHKACCESS)
 #define	IsLocal(x)		((x)->flags & FLAGS_LOCAL)
 #define	IsDead(x)		((x)->flags & FLAGS_DEADSOCKET)
