@@ -1,3 +1,7 @@
+*** 20010608_2 by kreator
+- oops, forgot to do the same with config.h.dist as with config.h
+
+
 *** 20010608_1 by kreator
 - add simple support for EGD seeding of OpenSSL PRNG
 
