@@ -892,19 +892,6 @@
 /* 300 is five minutes, seems reasonable */
 #define ANTI_SPAM_EXIT_MESSAGE_TIME 300
 
-/* ANTI_SPAMBOT_EXTRA
- * look for "suspicious" privmsg to other client count
- * other client count cannot be repeated more than once in a row
- * messaging the same client over and over again will not trigger this
- * messaging 4 clients over and over again =will=
- * *sigh* THAT one is going to catch innocents.. *sorry* ;-(
- * The idea is, a spambot using a relay, will not message a channel
- * if ever.. but so do innocents.. ;-/ suggestions on improvements please...
- * -Dianora
- */
-#define ANTI_SPAMBOT_EXTRA
-#define PRIVMSG_POSSIBLE_SPAMBOT_COUNT	50
-
 #ifdef FLUD
 #define FLUD_NUM	4	/* Number of flud messages to trip alarm */
 #define FLUD_TIME	3	/* Seconds in which FLUD_NUM msgs must occur */
@@ -1065,11 +1052,6 @@ error CLIENT_FLOOD undefined.
 #else
 #  define Debug(x) ;
 #  define LOGFILE "/dev/null"
-#endif
-
-/* If using ANTI_SPAMBOT_EXTRA =must= also use ANTI_SPAMBOT */
-#ifdef ANTI_SPAMBOT_EXTRA
-#define ANTI_SPAMBOT
 #endif
 
 #define REPORT_DLINE_TO_USER

@@ -134,6 +134,5 @@ extern struct SLink *find_user_link(/* struct SLink *, struct Client * */);
 #define SPLITUSERS GlobalSetOptions.split_smallnet_users
 #define SPAMNUM    GlobalSetOptions.spam_num
 #define SPAMTIME   GlobalSetOptions.spam_time
-#define SPAMMSGS   GlobalSetOptions.spambot_privmsg_count
 
 #endif /* __common_include__ */

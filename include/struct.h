@@ -657,11 +657,6 @@ struct Client
   int    oper_warn_count_down; /* warn opers of this possible spambot
 				  every time this gets to 0 */
 #endif
-#ifdef ANTI_SPAMBOT_EXTRA
-  int	channel_privmsgs; /* Count how many times client privmsgs a channel*/
-  int	person_privmsgs;  /* Count how many times client privmsgs a person */
-  struct Client *last_client_messaged; /* who was privmsg'ed last time */
-#endif
 #ifdef ANTI_DRONE_FLOOD
   time_t first_received_message_time;
   int	 received_number_of_privmsgs;
@@ -1092,10 +1087,6 @@ typedef struct
 #ifdef ANTI_SPAMBOT
   int spam_num;
   int spam_time;
-#endif
-
-#ifdef ANTI_SPAMBOT_EXTRA
-  int spambot_privmsg_count;
 #endif
 
 }SetOptionsType;

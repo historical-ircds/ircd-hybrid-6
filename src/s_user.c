@@ -1775,10 +1775,6 @@ static	int	m_message(aClient *cptr,
       if(MyClient(sptr) && sptr->user)
 	sptr->user->last = timeofday;
 #endif
-#ifdef ANTI_SPAMBOT_EXTRA
-      if(MyConnect(sptr) && !IsElined(sptr))
-	sptr->channel_privmsgs++;
-#endif
 #ifdef FLUD
       if(!notice)
 	if(check_for_ctcp(parv[2]))
@@ -1793,21 +1789,6 @@ static	int	m_message(aClient *cptr,
       else if (!notice)
 	sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
 		   me.name, parv[0], nick);
-#ifdef ANTI_SPAMBOT_EXTRA
-      if( MyConnect(sptr) && SPAMMSGS &&
-	  ((sptr->person_privmsgs - sptr->channel_privmsgs)
-	   > SPAMMSGS) )
-	{
-	  sendto_realops_lev(REJ_LEV,
-"Possible spambot %s [%s@%s] : privmsgs to clients %d privmsgs to channels %d",
-			 sptr->name, sptr->user->username,
-			 sptr->user->host,
-			 sptr->person_privmsgs,sptr->channel_privmsgs);
-	  /* and report it if happens again */
-	  sptr->person_privmsgs = 0;
-	  sptr->channel_privmsgs = 0;
-	}
-#endif
       return 0;
     }
       
@@ -1852,10 +1833,6 @@ static	int	m_message(aClient *cptr,
 	  if(MyClient(sptr) && sptr->user)
 	    sptr->user->last = timeofday;
 #endif
-#ifdef ANTI_SPAMBOT_EXTRA
-	  if(MyConnect(sptr) && !IsElined(sptr))
-	    sptr->channel_privmsgs++;
-#endif
 #ifdef FLUD
 	  if(!notice)
 	    if(check_for_ctcp(parv[2]))
@@ -1878,21 +1855,6 @@ static	int	m_message(aClient *cptr,
 				  parv[0], cmd, nick,
 				  parv[2]);
 	    }
-#ifdef ANTI_SPAMBOT_EXTRA
-	  if( MyConnect(sptr) && SPAMMSGS &&
-	      ((sptr->person_privmsgs - sptr->channel_privmsgs)
-	       > SPAMMSGS) )
-	    {
-	      sendto_realops_lev(REJ_LEV,
-"Possible spambot %s [%s@%s] : privmsgs to clients %d privmsgs to channels %d",
-			     sptr->name, sptr->user->username,
-			     sptr->user->host,
-			     sptr->person_privmsgs,sptr->channel_privmsgs);
-	      /* and report it if happens again */
-	      sptr->person_privmsgs = 0;
-	      sptr->channel_privmsgs = 0;
-	    }
-#endif
 	}
       else
 	{
@@ -1912,14 +1874,6 @@ static	int	m_message(aClient *cptr,
       /* reset idle time for message only if target exists */
       if(MyClient(sptr) && sptr->user)
 	sptr->user->last = timeofday;
-#endif
-#ifdef ANTI_SPAMBOT_EXTRA
-      if(MyConnect(sptr) && !IsElined(sptr) &&
-	 (acptr != sptr->last_client_messaged))
-	{
-	  sptr->person_privmsgs++;
-	  sptr->last_client_messaged = acptr;
-	}
 #endif
 #ifdef FLUD
       if(!notice && MyFludConnect(acptr))
@@ -2003,22 +1957,6 @@ static	int	m_message(aClient *cptr,
 	{
 	  if(sptr->user)
 	    sptr->user->last = timeofday;
-	}
-#endif
-
-#ifdef ANTI_SPAMBOT_EXTRA
-      if( MyConnect(sptr) && SPAMMSGS &&
-	  ((sptr->person_privmsgs - sptr->channel_privmsgs)
-	   > SPAMMSGS) )
-	{
-	  sendto_realops_lev(REJ_LEV,
-"Possible spambot %s [%s@%s] : privmsgs to clients %d privmsgs to channels %d",
-			 sptr->name, sptr->user->username,
-			 sptr->user->host,
-			 sptr->person_privmsgs,sptr->channel_privmsgs);
-	  /* and report it if happens again */
-	  sptr->person_privmsgs = 0;
-	  sptr->channel_privmsgs = 0;
 	}
 #endif
       return 0;
@@ -2796,63 +2734,14 @@ int	m_quit(aClient *cptr,
 {
   char *comment = (parc > 1 && parv[1]) ? parv[1] : cptr->name;
 
-/*  What is this doing here?
- *   -Taner
- */
-/*
-  if (MyClient(sptr))
-  if (!strncmp("Local Kill", comment, 10) ||
-  !strncmp(comment, "Killed", 6))
-  comment = parv[0];
-*/
   sptr->flags |= FLAGS_NORMALEX;
   if (strlen(comment) > (size_t) TOPICLEN)
     comment[TOPICLEN] = '\0';
 
-#if defined(ANTI_SPAM_EXIT_MESSAGE) || defined(ANTI_SPAMBOT_EXTRA)
-  if(!IsServer(sptr))
-    {
-#ifdef ANTI_SPAMBOT_EXTRA
-      /* catch the "one shot" spambots, they appear
-       * to message a client, then exit. We can't do anything
-       * to them since they are now exiting, but at least
-       * we know about them now
-       * -Dianora
-       */
-      if( MyConnect(sptr))
-	{
-	  if((sptr->person_privmsgs > 4) && !sptr->channel_privmsgs)
-	    {
-	      sendto_realops_lev(REJ_LEV,
-"Possible spambot exiting %s [%s@%s] [%s] : privmsgs to clients %d, privmsgs to channels %d",
-			     sptr->name, sptr->user->username,
-			     sptr->user->host, 
-			     comment,
-			     sptr->person_privmsgs,sptr->channel_privmsgs);
-	    }
-
-	  /* If its a client that has joined at least one channel
-	   * but not messaged anyone or a channel at all.. it might
-	   * be trying to exit with a spam message.
-	   */
-
-	  if(sptr->last_join_time && !IsElined(sptr) &&
-	     !(sptr->person_privmsgs | sptr->channel_privmsgs))
-	    {
-	      sendto_realops_lev(REJ_LEV,
-				 "Possible spambot exiting %s [%s@%s] [%s]",
-				 sptr->name, sptr->user->username,
-				 sptr->user->host,
-				 comment);
-	    }
-	}
-#endif
-#ifdef ANTI_SPAM_EXIT_MESSAGE
-      if(MyConnect(sptr) && 
-	 (sptr->firsttime + ANTI_SPAM_EXIT_MESSAGE_TIME) > NOW)
-	comment = "Client Quit";
-#endif
-    }
+#ifdef (ANTI_SPAM_EXIT_MESSAGE)
+  if( !IsServer(sptr) && MyConnect(sptr) &&
+     (sptr->firsttime + ANTI_SPAM_EXIT_MESSAGE_TIME) > NOW)
+    comment = "Client Quit";
 #endif
   return IsServer(sptr) ? 0 : exit_client(cptr, sptr, sptr, comment);
 }

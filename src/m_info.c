@@ -90,51 +90,41 @@ int	m_info(aClient *cptr,
 #else
 #define OUT1    "ANTI_SPAMBOT=0"
 #endif
-#ifdef ANTI_SPAMBOT_EXTRA
-#define OUT2    " ANTI_SPAMBOT_EXTRA=1"
-#else
-#define OUT2    " ANTI_SPAMBOT_EXTRA=0"
-#endif
-        sendto_one(sptr, rpl_str(RPL_INFO),
-                   me.name, parv[0], OUT1 OUT2 );
-#undef OUT1
-#undef OUT2
-#undef OUT3
-#undef OUT4
 
 #ifdef ANTI_SPAMBOT_WARN_ONLY
-#define OUT1	"ANTI_SPAMBOT_WARN_ONLY=1"
+#define OUT2	" ANTI_SPAMBOT_WARN_ONLY=1"
 #else
-#define OUT1	"ANTI_SPAMBOT_WARN_ONLY=0"
+#define OUT2	" ANTI_SPAMBOT_WARN_ONLY=0"
 #endif
 #ifdef ANTI_SPAM_EXIT_MESSAGE
-#define OUT2    " ANTI_SPAM_EXIT_MESSAGE=1"
+#define OUT3    " ANTI_SPAM_EXIT_MESSAGE=1"
 #else
-#define OUT2    " ANTI_SPAM_EXIT_MESSAGE=0"
-#endif
-#ifdef B_LINES_OPER_ONLY
-#define OUT3    " B_LINES_OPER_ONLY=1"
-#else
-#define OUT3    " B_LINES_OPER_ONLY=0"
+#define OUT3    " ANTI_SPAM_EXIT_MESSAGE=0"
 #endif
         sendto_one(sptr, rpl_str(RPL_INFO),
                    me.name, parv[0], OUT1 OUT2 OUT3 );
 #undef OUT1
 #undef OUT2
 #undef OUT3
+#undef OUT4
 
-#ifdef BAN_INFO
-#define OUT1 "BAN_INFO=1"
+#ifdef B_LINES_OPER_ONLY
+#define OUT1    "B_LINES_OPER_ONLY=1"
 #else
-#define OUT1 "BAN_INFO=0"
+#define OUT1    "B_LINES_OPER_ONLY=0"
+#endif
+#ifdef BAN_INFO
+#define OUT2 " BAN_INFO=1"
+#else
+#define OUT2 " BAN_INFO=0"
 #endif
 #ifdef BOTCHECK
-#define OUT2 " BOTCHECK=1"
+#define OUT3 " BOTCHECK=1"
 #else
-#define OUT2 " BOTCHECK=0"
+#define OUT3 " BOTCHECK=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-                   me.name, parv[0], OUT1 OUT2 );
+                   me.name, parv[0], OUT1 OUT2 OUT3 );
 #undef OUT1
 #undef OUT2
 #undef OUT3
@@ -720,13 +710,6 @@ int	m_info(aClient *cptr,
         ircsprintf(outstr,"PACE_WAIT=%d",PACE_WAIT);
         sendto_one(sptr, rpl_str(RPL_INFO),
                    me.name, parv[0], outstr);
-#endif
-
-#ifdef ANTI_SPAMBOT_EXTRA
-        ircsprintf(outstr,"PRIVMSG_POSSIBLE_SPAMBOT_COUNT=%d",
-                   PRIVMSG_POSSIBLE_SPAMBOT_COUNT);
-        sendto_one(sptr, rpl_str(RPL_INFO),
-                   me.name, parv[0], outstr); 
 #endif
 
 #ifdef REJECT_HOLD
