@@ -1,5 +1,9 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
+version hybrid-6-b79
+* fixed compile problems if SPLIT_PONG was undefined
+* more cleanup
+* moved TIMED_K's to broken section of conf
 
 version hybrid-6-b78   2-Jun-1999
 * renamed mycmp() to irccmp() and myncmp() to ircncmp()

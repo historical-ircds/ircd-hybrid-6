@@ -3509,9 +3509,9 @@ int	m_pong(aClient *cptr,
   cptr->flags &= ~FLAGS_PINGSENT;
   sptr->flags &= ~FLAGS_PINGSENT;
 
-#if defined(SPLIT_PONG) && (defined(NO_CHANOPS_WHEN_SPLIT) || \
+#if defined(SPLIT_PONG) && ((defined(NO_CHANOPS_WHEN_SPLIT) || \
 	defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)) \
-	 || defined(NO_JOIN_ON_SPLIT_SIMPLE)
+	 || defined(NO_JOIN_ON_SPLIT_SIMPLE))
   if (IsServer(cptr))
     got_server_pong = YES;
 #endif

@@ -240,7 +240,7 @@ int host_is_legal_dline(char *host_name)
           else
             return(NO);
         }
-      else if(!isdigit(*host_name))
+      else if(!isdigit((int) *host_name))
         return(NO);
       host_name++;
     }

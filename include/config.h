@@ -96,7 +96,7 @@
  * -Dianora
  *
  * DPATH must have a trailing /
- * Do not use ~'s in any of these pathes
+ * Do not use ~'s in any of these paths
  *
  */
 
@@ -355,14 +355,6 @@
  * However, the client will still see the real reason upon connect attempts.
  */
 #define KLINE_WITH_CONNECTION_CLOSED
-
-/* TIMED_KLINES - bad bad evil
- * PLEASE don't define this unless you are nuts or absolutely need
- * timed kline support. its not necessary, and is a CPU hog... :-)
- * besides. it hasn't been tested. if you use it, you debug it :-) -Dianora
- * THIS IS NOT THE SAME THING AS TEMP KLINES. -Rodder
- */
-#undef TIMED_KLINES
 
 /* NON_REDUNDANT_KLINES - If you want the server to flag and not apply
  * redundant klines
@@ -718,7 +710,6 @@
  *
  * When this is defined, users will not be allowed to join channels
  * that were present before a split.
- * THIS IS BROKEN - DO NOT USE ON PRODUCTION SERVER --Rodder
  */
 #undef NO_JOIN_ON_SPLIT
 
@@ -1157,6 +1148,14 @@
 #define GLINE_TIME      (12*3600)
 
 /* ----------------- archaic and/or broken section -------------------- */
+/* TIMED_KLINES - bad bad evil
+ * PLEASE don't define this unless you are nuts or absolutely need
+ * timed kline support. its not necessary, and is a CPU hog... :-)
+ * besides. it hasn't been tested. if you use it, you debug it :-) -Dianora
+ * THIS IS NOT THE SAME THING AS TEMP KLINES. -Rodder
+ */
+#undef TIMED_KLINES
+
 #undef DNS_DEBUG
 
 /* SETUID_ROOT - plock - keep the ircd from being swapped out.
