@@ -8,7 +8,6 @@ Ever wondered what those funny chars mean after the version number? Well
 here they are:
 
 'A'	SENDQ_ALWAYS
-'b'     CRYPT_LINKS
 'C'	CMDLINE_CONFIG
 'D'	DEBUGMODE
 'G'	GLINES

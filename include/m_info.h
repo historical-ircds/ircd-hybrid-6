@@ -125,20 +125,6 @@ Info MyInformation[] = {
   { "CPATH", "NONE", 0, "Path to Main Configuration File" },
 #endif /* CPATH */
 
-#ifdef CRYPT_LINKS
-  { "CRYPT_LINKS", "ON", 0, "Encrypt Server to Server Links" },
-#else
-  { "CRYPT_LINKS", "OFF", 0, "Encrypt Server to Server Links" },
-#endif /* CRYPT_LINKS */
-
-#ifdef CRYPT_LINKS
-#ifdef CRYPT_LINKS_PRIVATEKEYFILE
-  { "CRYPT_LINKS_PRIVATEKEYFILE", CRYPT_LINKS_PRIVATEKEYFILE, 0, "Path to the private key File" },
-#else /* CRYPT_LINKS_PRIVATEKEYFILE */
-  { "CRYPT_LINKS_PRIVATEKEYFILE", "NONE", 0, "Path to the private key file" },
-#endif /* CRYPT_LINKS_PRIVATEKEYFILE */
-#endif /* CRYPT_LINKS */
-
 #ifdef CRYPT_OPER_PASSWORD
   { "CRYPT_OPER_PASSWORD", "ON", 0, "Encrypt Operator Passwords" },
 #else

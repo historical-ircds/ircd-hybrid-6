@@ -60,12 +60,6 @@ struct ConfItem
   time_t           hold;     /* Hold action until this time (calendar time) */
   struct Class*    c_class;     /* Class of connection */
   int              dns_pending; /* 1 if dns query pending, 0 otherwise */
-#if defined(CRYPT_LINKS)
-  char *           rsa_public_keyfile; /* RSA public key filename */
-#ifdef CRYPT_LINKS
-  struct CipherDef *cipher;            /* Cipher selection; ptr to Cipher[] */
-#endif
-#endif
 };
 
 typedef struct QlineItem {

@@ -458,11 +458,6 @@ void send_capabilities(struct Client* cptr, int use_zip)
       }
     }
   }
-#ifdef CRYPT_LINKS
-  /* Append "ENC:CIPHER/SIZE" to the CAPAB line. */
-  strcat(msgbuf, "ENC:");
-  strcat(msgbuf, cptr->cipher->name);
-#endif
   sendto_one(cptr, "CAPAB :%s", msgbuf);
 }
 
@@ -507,13 +502,6 @@ const char* show_capabilities(struct Client* acptr)
   struct Capability* cap;
 
   strcpy(msgbuf,"TS ");
-#ifndef CRYPT_LINKS
-  /* Skip the shortcut, ENC ain't in caps.
-     -einride.
-  */
-  if (!acptr->caps)        /* short circuit if no caps */
-    return msgbuf;
-#endif
 
   for (cap = captab; cap->cap; ++cap)
     {
@@ -523,14 +511,6 @@ const char* show_capabilities(struct Client* acptr)
           strcat(msgbuf, " ");
         }
     }
-#ifdef CRYPT_LINKS
-  if (acptr->crypt)
-  {
-    sprintf(msgbuf + strlen(msgbuf), "ENC:%s,%s",
-            acptr->crypt->OutCipher->name,
-            acptr->crypt->InCipher->name);
-  }
-#endif
   return msgbuf;
 }
 
@@ -577,13 +557,6 @@ int server_estab(struct Client *cptr)
       log(L_NOTICE, "Only N (no C) field for server %s",inpath_ip);
       return exit_client(cptr, cptr, cptr, "No C line for server");
     }
-#ifdef CRYPT_LINKS
-  if (n_conf->passwd && (n_conf->passwd[0] == CRYPT_LINKS_CNPREFIX) && !(cptr->crypt)) {
-    sendto_one(cptr, "ERROR :You are not allowed to link unencrypted");
-    sendto_realops("%s attempted a unencrypted link", inpath);
-    return exit_client(cptr, cptr, cptr, "Attempted unencrypted link");
-  }
-#endif
 #ifdef CRYPT_LINK_PASSWORD
   /* use first two chars of the password they send in as salt */
 
@@ -599,9 +572,6 @@ int server_estab(struct Client *cptr)
   encr = cptr->passwd;
 #endif  /* CRYPT_LINK_PASSWORD */
 
-#ifdef CRYPT_LINKS
-  if (!cptr->crypt)
-#endif
   if (*n_conf->passwd && 0 != strcmp(n_conf->passwd, encr))
     {
       ServerStats->is_ref++;
@@ -631,9 +601,6 @@ int server_estab(struct Client *cptr)
 #endif
   if (IsUnknown(cptr))
     {
-#ifdef CRYPT_LINKS
-      if (!cptr->crypt) {
-#endif
 	if (c_conf->passwd[0])
 	  sendto_one(cptr,"PASS %s :TS", c_conf->passwd);
 	/*
@@ -644,9 +611,6 @@ int server_estab(struct Client *cptr)
 	sendto_one(cptr, "SERVER %s 1 :%s",
 		   my_name_for_link(me.name, n_conf), 
 		   (me.info[0]) ? (me.info) : "IRCers United");
-#ifdef CRYPT_LINKS
-      }
-#endif
     }
   else
     {

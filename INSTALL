@@ -15,16 +15,6 @@ follow when building and tuning the daemon:
 
       ./configure
 
-    If you wish to enable support for encrypted server-to-server links,
-    you will need to have OpenSSL 0.9.6 (or newer) installed on the
-    system.  For the impatient, simply try running "configure" as follows:
-
-      ./configure --enable-openssl
-
-    It is recommended that all administrators wishing to use encrypted
-    links read "doc/README.openssl" prior to mindlessly enabling this
-    function.
-
 3.  Edit the "include/config.h" file.  This allows you to change
     various options of how the ircd will operate.  Please make note of
     the following variables in "include/config.h", as they are common

@@ -58,9 +58,6 @@ const char serveropts[] = {
 #ifdef  SENDQ_ALWAYS
   'A',
 #endif
-#ifdef  CRYPT_LINKS
-  'b',
-#endif
 #ifdef  CMDLINE_CONFIG
   'C',
 #endif

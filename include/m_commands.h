@@ -97,7 +97,4 @@ extern int m_hash(struct Client *,struct Client *,int,char **);
 extern int m_dns(struct Client *,struct Client *,int,char **);
 extern int m_htm(struct Client *,struct Client *,int,char **);
 extern int m_set(struct Client *,struct Client *,int,char **);
-#ifdef CRYPT_LINKS
-extern int m_cryptlink(struct Client *,struct Client *,int,char **);
-#endif
 #endif /* INCLUDED_m_commands_h */

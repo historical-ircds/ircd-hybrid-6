@@ -28,10 +28,6 @@
 #include "s_serv.h"
 #include "send.h"
 
-#ifdef CRYPT_LINKS
-#include "s_crypt.h"
-#endif
-
 #include <string.h>
 #include <assert.h>
 
@@ -122,21 +118,6 @@ int m_capab(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
           break;
         }
     }
-#ifdef CRYPT_LINKS
-    if (!strncmp(s, "ENC:", 4))
-    {
-      cdef = crypt_selectcipher(s+4);
-      if (cdef == NULL)
-      {
-        cptr->cipher = NULL;
-        sendto_realops("Unsupported cipher listed in CAPAB");
-        return exit_client(cptr, cptr, cptr,
-                           "Unsupported cipher listed in CAPAB");
-        break;
-      }
-      cptr->cipher = cdef;
-    }
-#endif
   }
   return(0);
 }

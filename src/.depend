@@ -104,15 +104,6 @@ m_connect.o: m_connect.c ../include/m_commands.h ../include/config.h \
  ../include/irc_string.h ../include/numeric.h ../include/s_bsd.h \
  ../include/s_conf.h ../include/fileio.h ../include/motd.h \
  ../include/s_log.h ../include/s_serv.h ../include/send.h
-m_cryptlink.o: m_cryptlink.c ../include/m_commands.h \
- ../include/config.h ../include/setup.h ../include/client.h \
- ../include/ircd_defs.h ../include/dbuf.h ../include/common.h \
- ../include/hash.h ../include/irc_string.h ../include/ircd.h \
- ../include/list.h ../include/numeric.h ../include/s_bsd.h \
- ../include/s_conf.h ../include/fileio.h ../include/motd.h \
- ../include/s_serv.h ../include/s_stats.h ../include/scache.h \
- ../include/send.h ../include/struct.h ../include/s_log.h \
- ../include/s_crypt.h
 m_die.o: m_die.c ../include/m_commands.h ../include/config.h \
  ../include/setup.h ../include/client.h ../include/ircd_defs.h \
  ../include/dbuf.h ../include/ircd.h ../include/irc_string.h \

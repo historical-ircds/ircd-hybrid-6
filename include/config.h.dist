@@ -403,39 +403,6 @@
  */
 #undef TRUE_NO_OPER_FLOOD
 
-/* CRYPT_LINKS - Enable encrypted links between one server and another by
- * use of a defineable password prefix. Requires the other defines below.
- */
-#undef CRYPT_LINKS
-
-/* CRYPT_LINKS_CNPREFIX - This is the prefix that will go in a c/n password
- * field to indicate this will be an encrypted link.
- */
-#define CRYPT_LINKS_CNPREFIX '@'
-
-/* CRYPT_LINKS_CIPHERPREFIX - This is the character that delimits the public
- * key filename for a server and the prefered crypt preference.
- */
-#define CRYPT_LINKS_CIPHERPREFIX ','
-
-/* CRYPT_LINKS_PRIVATEKEYFILE - This is a filename of the RSA private key
- * for this binary. There is no configuration option that will override this,
- * so this will be binary-specific. This is deprecated. The filename now
- * defaults to servername.key if this is left undefined.
- * NOTE: LEAVE UNDEF IF YOU WANT THE DEFAULT BEHAVIOUR (you do)
- #define CRYPT_LINKS_PRIVATEKEYFILE "private.key"
- */
-
-/* USE_EGD -  if your system does not have *random devices and you want to
- * be able to use OpenSSL and CRYPT_LINKS, define this and option below if
- * necessary. Beware - EGD is *very* CPU intensitive process when
- * gathering data for its pool. */
-#undef USE_EGD
-
-/* EGD_POOL - define location of EGD pool. Not necessary for OpenSSL >=
- * 0.9.7 since it will automagically check locations. */
-#undef EGD_POOL "/var/run/egd-pool"
-
 /* SHOW_INVISIBLE_LUSERS - show invisible clients in LUSERS
  * As defined this will show the correct invisible count for anyone who does
  * LUSERS on your server. On a large net this doesnt mean much, but on a
@@ -1069,11 +1036,5 @@ void    free_fludees();
 #endif
 
 #define CONFIG_H_LEVEL_6_1
-
-#ifdef CRYPT_LINKS
-#  ifndef HAVE_LIBCRYPTO
-#    error CRYPT_LINKS is defined, but you lack OpenSSL.  Try using --enable-openssl during configure, or #undef CRYPT_LINKS.
-#  endif
-#endif
 
 #endif /* INCLUDED_config_h */

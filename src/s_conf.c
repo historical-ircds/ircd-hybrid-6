@@ -41,10 +41,6 @@
 #include "struct.h"
 #include "s_debug.h"
 
-#ifdef CRYPT_LINKS
-#include "s_crypt.h"
-#endif
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -199,10 +195,6 @@ struct ConfItem* make_conf()
   aconf->host = NULL;
   aconf->passwd = NULL;
   aconf->name = NULL;
-#ifdef CRYPT_LINKS
-  aconf->rsa_public_keyfile = NULL;
-  aconf->cipher = NULL;
-#endif
   ClassPtr(aconf) = NULL;
 #endif
   return (aconf);
@@ -235,9 +227,6 @@ void free_conf(struct ConfItem* aconf)
   MyFree(aconf->host);
   if (aconf->passwd)
     memset(aconf->passwd, 0, strlen(aconf->passwd));
-#ifdef CRYPT_LINKS
-  MyFree(aconf->rsa_public_keyfile);
-#endif
   MyFree(aconf->passwd);
   MyFree(aconf->user);
   MyFree(aconf->name);
@@ -2291,15 +2280,6 @@ static void initconf(FBFILE* file, int use_include)
               aconf = NULL;
               continue;
             }
-
-#if defined(CRYPT_LINKS)
-          if (crypt_parse_conf(aconf) < 0)
-          {
-            log(L_ERROR, "Bad C/N line information for %s", aconf->host);
-            sendto_realops("Bad C/N line information for %s", aconf->host);
-            continue;
-          }
-#endif
 
           lookup_confhost(aconf);
         }

@@ -4,9 +4,6 @@ README.TSora          - Protocol specs for the TS3 protocol that Hybrid uses
                         to manage user and channel timestamping.
 Tao-of-IRC.940110     - No comment.
 blalloc.txt           - An overview of Wohali's block allocator.
-cryptlink.txt         - Protocol specs for encrypted connections.
-encryption.txt        - An administrator's guide to configuring encrypted
-                        server connections.
 example.conf          - Hybrid's example configuration file.
 example.conf.trillian - Trillian's example configuration file, includes some
                         things that the standard Hybrid conf does not, also

@@ -6,12 +6,9 @@ CC = @CC@
 RM = @RM@
 MKDEP = ${CC} -MM
 
-SSL_LIBS     = @SSL_LIBS@
-SSL_INCLUDES = @SSL_INCLUDES@
+IRCDLIBS = @LIBS@ ../zlib/libz.a
 
-IRCDLIBS = @LIBS@ ../zlib/libz.a $(SSL_LIBS)
-
-INCLUDES = -I../include -I../zlib $(SSL_INCLUDES)
+INCLUDES = -I../include -I../zlib
 CPPFLAGS = ${INCLUDES} @CPPFLAGS@
  
 # For developers
@@ -39,7 +36,6 @@ SRCS = \
 	m_capab.c \
 	m_close.c \
 	m_connect.c \
-	m_cryptlink.c \
 	m_die.c \
 	m_error.c \
 	m_gline.c \

@@ -3,11 +3,8 @@
 CC=@CC@
 RM=@RM@
 
-SSL_LIBS     = @SSL_LIBS@
-SSL_INCLUDES = @SSL_INCLUDES@
-
-IRCDLIBS     = @LIBS@ $(SSL_LIBS)
-INCLUDEDIR   = -I../include -I../zlib $(SSL_INCLUDES)
+IRCDLIBS     = @LIBS@
+INCLUDEDIR   = -I../include -I../zlib
 
 mkpasswd_SOURCES = mkpasswd.c
 mkpasswd_OBJECTS = mkpasswd.o
@@ -15,13 +12,11 @@ viconf_SOURCES = viconf.c
 viconf_OBJECTS = viconf.o
 fixklines_SOURCES = fixklines.c
 fixklines_OBJECTS = fixklines.o
-encspeed_SOURCES = encspeed.c
-encspeed_OBJECTS = encspeed.o
 
-all_OBJECTS = $(viconf_OBJECTS) $(mkpasswd_OBJECTS) $(fixklines_OBJECTS) $(encspeed_OBJECTS)
+all_OBJECTS = $(viconf_OBJECTS) $(mkpasswd_OBJECTS) $(fixklines_OBJECTS)
 
 
-all: viconf mkpasswd fixklines encspeed
+all: viconf mkpasswd fixklines
 
 build: all
 
@@ -34,11 +29,8 @@ viconf: $(viconf_OBJECTS)
 fixklines: $(fixklines_OBJECTS)
 	$(CC) $(LDFLAGS) -o fixklines $(fixklines_OBJECTS) $(IRCDLIBS)
 
-encspeed: $(encspeed_OBJECTS)
-	$(CC) $(LDFLAGS) -o encspeed $(encspeed_OBJECTS) $(IRCDLIBS)
-
 clean:
-	$(RM) -f $(all_OBJECTS) fixklines viconf chkconf encspeed mkpasswd *~ core *.exe
+	$(RM) -f $(all_OBJECTS) fixklines viconf chkconf mkpasswd *~ core *.exe
 
 distclean: clean
 	$(RM) -f Makefile
@@ -52,7 +44,7 @@ install: build
 depend:
 
 lint:
-	lint -aacgprxhH $(INCLUDEDIR) $(mkpasswd_SOURCES) $(viconf_SOURCES) $(fixklines_SOURCES) $(encspeed_SOURCES) >>../lint.out
+	lint -aacgprxhH $(INCLUDEDIR) $(mkpasswd_SOURCES) $(viconf_SOURCES) $(fixklines_SOURCES) >>../lint.out
 	@echo done
 
 # DO NOT DELETE

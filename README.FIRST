@@ -8,11 +8,6 @@ If you don't read this first, we won't help you.
 See the INSTALL document for info on configuring and compiling
 ircd-hybrid.
 
-VERY IMPORTANT. Crypt links have been added to this version of Hybrid.
-This will in the future become a *REQUIREMENT* for EFnet.  Please read
-doc/encryption.txt for configuration of crypt-links, and doc/cryptlink.txt
-for protocol specifications
-
 IMPORTANT. I/K line handling has changed significantly.  There are also
 many new types of conf lines.  Please see RELNOTES and doc/example.conf
 for more information.  The default port is no longer specified in the M

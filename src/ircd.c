@@ -906,12 +906,7 @@ int main(int argc, char *argv[])
   me.servptr = &me;
   SetMe(&me);
   make_server(&me);
-#ifdef CRYPT_LINKS
-  if (crypt_init() != CRYPT_OK) {
-    fprintf(stderr, "Failed to initialize RSA private key\n");
-    exit(-1);
-  }
-#endif
+
   me.serv->up = me.name;
   me.lasttime = me.since = me.firsttime = CurrentTime;
   add_to_client_hash_table(me.name, &me);
