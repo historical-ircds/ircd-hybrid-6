@@ -126,17 +126,6 @@ void add_mtrie_conf_entry(aConfItem *aconf,int flags)
       return;
     }
 
-  if( (aconf->user[0] == 'x') && aconf->host && 
-      is_address(aconf->host,&ip_host,&ip_mask) )
-    {
-      aconf->ip = ip_host & ip_mask;
-      aconf->ip_mask = ip_mask;
-      
-      aconf->next = ip_i_lines;
-      ip_i_lines = aconf;
-      return;
-    }
-
   stack_pointer = 0;
 
   /* check to see if its a kline on user@ip.ip.ip.ip/mask
@@ -217,6 +206,22 @@ void add_mtrie_conf_entry(aConfItem *aconf,int flags)
 
   create_sub_mtrie(trie_list,aconf,flags,aconf->host);
 }
+
+/*
+ * add_ip_Iline()
+ *
+ * tiny function to keep the interface clean...
+ *
+ * inputs       -
+ * output       - NONE
+ * side effects -
+ */
+void add_ip_Iline( struct ConfItem *aconf )
+{
+  aconf->next = ip_i_lines;
+  ip_i_lines = aconf;
+}
+
 
 /*
  * create_sub_mtrie

@@ -10,7 +10,8 @@
 struct ConfItem;
 struct Client;
 
-extern void       add_mtrie_conf_entry(struct ConfItem *,int);
+extern void   add_mtrie_conf_entry(struct ConfItem *,int);
+extern void   add_ip_Iline( struct ConfItem * );
 extern struct ConfItem* find_matching_mtrie_conf(const char* host,
                                            const char* user, 
                                            unsigned long ip);

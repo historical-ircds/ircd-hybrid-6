@@ -592,6 +592,9 @@ void add_ip_Eline(aConfItem *conf_ptr)
 }
 
 
+#if 0
+/* lets add this later, when sure its fully debugged etc. */
+
 /*
  * add_ip_Iline  - modified form of add_Dline
  * -good
@@ -640,6 +643,7 @@ void add_ip_Iline(aConfItem *conf_ptr)
   node->conf=conf_ptr;
   return;
 }
+#endif
 
 
 /*

@@ -2288,9 +2288,10 @@ static void initconf(FBFILE* file, int use_include)
       else if (aconf->host && (aconf->status & CONF_CLIENT))
         {
           char *p;
-
+          unsigned long ip_host;
+          unsigned long ip_mask;
           dontadd = 1;
-
+          
           (void)collapse(aconf->host);
           (void)collapse(aconf->user);
 
@@ -2310,41 +2311,43 @@ static void initconf(FBFILE* file, int use_include)
            * an IP I line only, but I won't enforce it here. 
            */
 
-          if( (p = strchr(aconf->host,'@')) )
+          if( (p = strchr(aconf->host,'@')))
             {
               aconf->flags |= CONF_FLAGS_DO_IDENTD;
               *p = '\0';
-#if 0
-              MyFree(aconf->user);
-              DupString(aconf->user,aconf->host);
-#endif
+              strncpy_irc(aconf->user,aconf->host,USERLEN);	      
               p++;
               strncpy_irc(aconf->host,p, HOSTLEN );      
             }
-          else
-            {
 
-            /* See if there is a name@host part on the 'right side'
-             * in the aconf->name field.
-             */
+           if( is_address(aconf->host,&ip_host,&ip_mask) )
+	     {
+               aconf->ip = ip_host & ip_mask;
+               aconf->ip_mask = ip_mask;
+               add_ip_Iline( aconf );
+             }
+           else
+	     {
+	       /* See if there is a name@host part on the 'right side'
+		* in the aconf->name field.
+		*/
 
-              if( ( p = strchr(aconf->user,'@')) )
-                {
-                  aconf->flags |= CONF_FLAGS_DO_IDENTD;
-                  *p = '\0';
-                  p++;
-                  MyFree(aconf->host);
-                  DupString(aconf->host,p);
-                }
-              else
-                {
-                  MyFree(aconf->host);
-                  aconf->host = aconf->user;
-                  DupString(aconf->user,"*");
-                }
-            }
-          
-          add_mtrie_conf_entry(aconf,CONF_CLIENT);
+	       if( ( p = strchr(aconf->user,'@')) )
+		 {
+		   aconf->flags |= CONF_FLAGS_DO_IDENTD;
+		   *p = '\0';
+		   p++;
+		   MyFree(aconf->host);
+		   DupString(aconf->host,p);
+		 }
+	       else
+		 {
+		   MyFree(aconf->host);
+		   aconf->host = aconf->user;
+		   DupString(aconf->user,"*");
+		 }
+	       add_mtrie_conf_entry(aconf,CONF_CLIENT);
+	     }
         }
       else if (aconf->host && (aconf->status & CONF_KILL))
         {
