@@ -1014,3 +1014,24 @@ char        *comment        /* Reason for the exit */
   return cptr == sptr ? FLUSH_BUFFER : 0;
 }
 
+/*
+ * Count up local client memory
+ */
+void count_local_client_memory(int *local_client_memory_used,
+			       int *local_client_memory_allocated )
+{
+  BlockHeapCountMemory( localClientFreeList,
+			local_client_memory_used,
+			local_client_memory_allocated);
+}
+
+/*
+ * Count up remote client memory
+ */
+void count_remote_client_memory(int *remote_client_memory_used,
+			       int *remote_client_memory_allocated )
+{
+  BlockHeapCountMemory( remoteClientFreeList,
+			remote_client_memory_used,
+			remote_client_memory_allocated);
+}

@@ -312,6 +312,13 @@ void count_memory(aClient *cptr,char *nick)
   u_long totcl = 0;
   u_long totch = 0;
   u_long totww = 0;
+
+  u_long local_client_memory_used = 0;
+  u_long local_client_memory_allocated = 0;
+
+  u_long remote_client_memory_used = 0;
+  u_long remote_client_memory_allocated = 0;
+
   u_long tot = 0;
 
   count_whowas_memory(&wwu, &wwm);	/* no more away memory to count */
@@ -444,6 +451,24 @@ void count_memory(aClient *cptr,char *nick)
   tot += mem_servers_cached;
   sendto_one(cptr, ":%s %d %s :Total: ww %d ch %d cl %d co %d db %d",
 	     me.name, RPL_STATSDEBUG, nick, totww, totch, totcl, com, db);
+
+
+  count_local_client_memory((int *)&local_client_memory_used,
+			    (int *)&local_client_memory_allocated);
+  tot += local_client_memory_allocated;
+
+  sendto_one(cptr, ":%s %d %s :Local client Memory in use: %d Local client Memory allocated: %d",
+	     me.name, RPL_STATSDEBUG, nick,
+	     local_client_memory_used, local_client_memory_allocated);
+
+  count_remote_client_memory( (int *)&remote_client_memory_used,
+			      (int *)&remote_client_memory_allocated);
+  tot += remote_client_memory_allocated;
+
+  sendto_one(cptr, ":%s %d %s :Remote client Memory in use: %d Remote client Memory allocated: %d",
+	     me.name, RPL_STATSDEBUG, nick,
+	     remote_client_memory_used, remote_client_memory_allocated);
+
 
   sendto_one(cptr, ":%s %d %s :TOTAL: %d Available Memory: %u Current sbrk(0) %u",
 	     me.name, RPL_STATSDEBUG, nick, tot,
