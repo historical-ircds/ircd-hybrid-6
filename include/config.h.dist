@@ -710,7 +710,10 @@
  */
 
 /* If this is defined, hack ops is simply not allowed at all
- * 
+ * This needs to be network wide to take effect, else you will get desynchs
+ * on opless channels.  This will have the side effect of preventing users
+ * getting ops themselves via splits, you will probably need some form of
+ * services in conjunction with this.   
  */
 #undef NO_HACK_OPS
 
