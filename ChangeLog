@@ -1,3 +1,12 @@
+*** 20011117_1 by greg
+Yes, I'm doing the unthinkable, commiting against -6..
+
+(Pending flames I get from this, there will be 1, maybe 2 more bugfixes
+in the next little while..)
+
+- Removed bold from a server notice -- that's silly. (thanks Kimy)
+
+
 *** 20011115_1 by leeh
 - moved the CHANMODE_E check up a level - before we add the +e to the list
   ;)
