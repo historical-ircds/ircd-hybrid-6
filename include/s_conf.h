@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.28  1999/07/21 05:45:05  tomh
+ * untabify headers
+ *
  * Revision 1.27  1999/07/20 09:11:21  db
  * - moved getfield from parse.c to s_conf.c which is the only place its used
  * - removed duplicate prototype from h.h , it was in dline_conf.h already
@@ -297,6 +300,10 @@ extern void write_kline_or_dline_to_conf_and_notice_opers(
                                                           );
 extern const char *get_conf_name(KlineType);
 extern int safe_write(struct Client *, const char *, int ,char *);
+extern void add_temp_kline(struct ConfItem *);
+extern  void    flush_temp_klines(void);
+extern  void    report_temp_klines(struct Client *);
+extern  int     is_address(char *,unsigned long *,unsigned long *); 
 
 typedef struct
 {
