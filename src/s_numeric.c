@@ -25,6 +25,7 @@
 #include "numeric.h"
 #include "channel.h"
 #include "h.h"
+#include "parse.h"
 #include "send.h"
 
 #include <string.h>

@@ -49,6 +49,10 @@
 #include "listener.h"
 #include "restart.h"
 #include "s_user.h"
+#include "s_misc.h"
+#include "irc_string.h"
+#include "match.h"
+#include "config.h"
 
 #include <string.h>
 #include <stdlib.h>

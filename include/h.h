@@ -35,6 +35,7 @@
 #include "fdlist.h"
 #endif
 
+struct Client;
 struct Class;
 struct Channel;
 struct ConfItem;
@@ -65,7 +66,6 @@ extern  char*   debugmode;
 extern  time_t  check_fdlists (time_t);
 extern int    lifesux;
 extern struct Counter Count;
-
 extern time_t NOW;
 extern time_t nextconnect;
 extern time_t nextping;
@@ -75,7 +75,7 @@ extern struct Client  me;
 extern struct Client* local[];
 extern struct Channel* channel;
 extern struct stats* ircstp;
-extern  int     bootopt;
+extern int    bootopt;
 
 /* scache.c */
 extern void        clear_scache_hash_table(void);
@@ -102,21 +102,6 @@ extern  int     do_numeric (int, struct Client *, struct Client *, int, char **)
 
 /* packet.c */
 extern  int     dopacket (struct Client *, char *, int);
-
-#ifdef FLUD
-void    free_fluders();
-void    free_fludees();
-#endif /* FLUD */
-
-#ifdef ANTI_SPAMBOT
-#define MIN_SPAM_NUM 5
-#define MIN_SPAM_TIME 60
-#endif
-
-#ifdef IDLE_CHECK
-#define MIN_IDLETIME 1800
-#endif
-
 
 #endif /* INCLUDED_h_h */
 
