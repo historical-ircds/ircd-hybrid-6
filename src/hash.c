@@ -18,6 +18,7 @@
  *
  *  $Id$
  */
+#include "s_conf.h"
 #include "hash.h"
 #include "struct.h"
 #include "common.h"

@@ -177,9 +177,6 @@ extern	void	send_listinfo (struct Client *, char *);
 extern	void	count_memory (struct Client *, char *);
 #endif
 
-/* iphash code */
-extern void iphash_stats(struct Client *,struct Client *,int,char **,int);
-extern void clear_ip_hash_table(void);
 
 #ifdef LIMIT_UH
 void remove_one_ip(struct Client *);

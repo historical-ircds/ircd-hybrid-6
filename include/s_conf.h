@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.24  1999/07/20 04:37:11  tomh
+ * more cleanups
+ *
  * Revision 1.23  1999/07/19 09:05:14  tomh
  * Work on char attributes for nick names, changed isvalid macro
  * Const correctness changes
@@ -217,6 +220,8 @@ struct ConfItem
 extern struct ConfItem* ConfigItemList;        /* GLOBAL - conf list head */
 extern int              specific_virtual_host; /* GLOBAL - used in s_bsd.c */
 
+extern void clear_ip_hash_table(void);
+extern void iphash_stats(struct Client *,struct Client *,int,char **,int);
 extern struct ConfItem* make_conf(void);
 extern void             free_conf(struct ConfItem*);
 
