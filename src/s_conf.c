@@ -1615,15 +1615,6 @@ int rehash(aClient *cptr,aClient *sptr,int sig)
   for (cltmp = ClassList->next; cltmp; cltmp = cltmp->next)
     MaxLinks(cltmp) = -1;
 
-  /* do we really want to flush the DNS entirely on a SIGHUP?
-   * why not let that be controlled by oper /rehash, and use SIGHUP
-   * only to change conf file, if one doesn't have a valid O yet? :-)
-   * -Dianora
-   */
-
-  if (sig != SIGINT)
-    flush_cache();                /* Flush DNS cache */
-
   clear_mtrie_conf_links();
 
   zap_Dlines();
