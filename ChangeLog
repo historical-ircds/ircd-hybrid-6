@@ -1,3 +1,21 @@
+lusky       2001/12/09 12:37:24 EST	(20011209_1)
+
+  Modified files:
+    .                    configure 
+    adns                 adns.h 
+    autoconf             configure.in 
+    include              setup.h.in 
+  Log:
+  - only include sys/select.h if it exists
+  
+  Revision  Changes    Path
+  1.4       +3 -1      ircd-hybrid-6/adns/adns.h
+  1.26      +1 -1      ircd-hybrid-6/autoconf/configure.in
+  1.27      +102 -113  ircd-hybrid-6/configure
+  1.14      +4 -0      ircd-hybrid-6/include/setup.h.in
+
+
+
 jdc         2001/12/08 19:55:53 EST	(20011209_0)
 
   Modified files:
