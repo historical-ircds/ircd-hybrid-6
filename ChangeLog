@@ -1,3 +1,9 @@
+*** 19991227_1 by lusky
+update the oper help file, which was getting out of sync (db)
+fixed a redundant if in channel.c (db)
+core dumps, hangs if USE_IP_I_LINE_FIRST was defined (db)
+
+
 *** 19991223_1 by lusky
 backed out previous change to config.h
 upped MAXSENDQLENGTH slightly
