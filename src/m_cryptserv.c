@@ -126,7 +126,7 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
   /* We should only get this from local clients */
   if (cptr != sptr) 
     {
-#ifndef
+#ifndef HIDE_SERVERS_IPS
       char nbuf[HOSTLEN * 2 + USERLEN + 5]; /* same size as in s_misc.c */
 #endif
       sendto_one(sptr, form_str(ERR_UNKNOWNCOMMAND), me.name, parv[0], "CRYPTSERV");
