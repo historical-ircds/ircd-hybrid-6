@@ -4245,7 +4245,7 @@ int	m_sjoin(aClient *cptr,
    * -Dianora
    */
 
-  if(!newts && oldts)
+  if(!isnew && !newts && oldts)
     {
       sendto_channel_butserv(chptr, &me,
 	     ":%s NOTICE %s :*** Notice -- TS for %s changed from %ld to 0",
