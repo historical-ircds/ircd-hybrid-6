@@ -1505,6 +1505,11 @@ void set_channel_mode(struct Client *cptr,
                              me.name, sptr->name, 
                              chptr->chname);
                 }
+              else
+                {
+                  sendto_one(sptr, form_str(ERR_CHANOPRIVSNEEDED), me.name, 
+                               sptr->name, chptr->chname);
+                }
               break;
             }
           arg = check_string(*parv++);
