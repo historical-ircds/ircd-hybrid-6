@@ -238,10 +238,12 @@ int	check_registered(aClient *sptr)
 **	to internal buffer (nbuf). *NEVER* use the returned pointer
 **	to modify what it points!!!
 */
-char	*get_client_name(aClient *sptr,int showip)
+char* get_client_name(aClient *sptr, int showip)
 {
   static char nbuf[HOSTLEN * 2 + USERLEN + 5];
-  char t_port[7], t_user[USERLEN+2], t_host[HOSTLEN+1];
+  char        t_port[7];
+  char        t_user[USERLEN + 2];
+  char        t_host[HOSTLEN + 1];
   /* t_id[4]; */
   /*
    * The idea here is to build our text first, then do the
@@ -301,12 +303,12 @@ char	*get_client_name(aClient *sptr,int showip)
       return sptr->name;
     }
 
-  if (irccmp(sptr->name,sptr->sockhost) || t_port[0])
+  if (irccmp(sptr->name, sptr->sockhost) || t_port[0])
     return nbuf;
   return sptr->name;
 }
 
-char  *get_client_host(aClient *cptr)
+char* get_client_host(aClient *cptr)
 {
   static char nbuf[HOSTLEN * 2 + USERLEN + 5];
   
@@ -340,13 +342,13 @@ char  *get_client_host(aClient *cptr)
  * Form sockhost such that if the host is of form user@host, only the host
  * portion is copied.
  */
-void	get_sockhost(aClient *cptr,char *host)
+void set_client_sockhost(aClient* cptr, const char* host)
 {
   char	*s;
-  if ((s = (char *)strchr(host, '@')))
+  if ((s = strchr(host, '@')))
     s++;
   else
-    s = host;
+    s = (char*) host;
   strncpyzt(cptr->sockhost, s, sizeof(cptr->sockhost));
 }
 

@@ -802,7 +802,7 @@ int check_server(aClient *cptr,
             n_conf = find_conf_host(lp, name, CONF_NOCONNECT_SERVER );
           if (c_conf && n_conf)
             {
-              get_sockhost(cptr, name);
+              set_client_sockhost(cptr, name);
               break;
             }
         }
@@ -855,7 +855,7 @@ int check_server(aClient *cptr,
    */
   if (!c_conf || !n_conf)
     {
-      get_sockhost(cptr, sockname);
+      set_client_sockhost(cptr, sockname);
       Debug((DEBUG_DNS, "sv_cl: access denied: %s[%s@%s] c %x n %x",
              name, cptr->username, cptr->sockhost,
              c_conf, n_conf));
@@ -871,7 +871,7 @@ int check_server(aClient *cptr,
   if ((c_conf->ipnum.s_addr == -1))
     (void)memcpy((void *)&c_conf->ipnum, (void *)&cptr->ip, 
           sizeof(struct in_addr));
-  get_sockhost(cptr, c_conf->host);
+  set_client_sockhost(cptr, c_conf->host);
   
   Debug((DEBUG_DNS,"sv_cl: access ok: %s[%s]",
          name, cptr->sockhost));
@@ -1256,7 +1256,7 @@ void add_connection(aClient* listener, int fd)
   /* Copy ascii address to 'sockhost' just in case. Then we
    * have something valid to put into error messages...
    */
-  get_sockhost(new_client, (char*) inetntoa((char*) &addr.sin_addr));
+  set_client_sockhost(new_client, inetntoa((char*) &addr.sin_addr));
   new_client->ip.s_addr = addr.sin_addr.s_addr;
   new_client->port      = ntohs(addr.sin_port);
   new_client->fd        = fd;
@@ -1533,7 +1533,7 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
       for (auth = AuthPollList; auth; auth = auth->next) {
         if (IsAuthConnect(auth))
           FD_SET(auth->fd, write_set);
-        else if(IsAuthPending(auth))
+        else /* if(IsAuthPending(auth)) */
           FD_SET(auth->fd, read_set);
       }
       for (i = 0; i <= highest_fd; i++)
@@ -1640,7 +1640,7 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
       if (0 == --nfds)
         break;
     }
-    else if (IsAuthPending(auth) && FD_ISSET(auth->fd, read_set)) {
+    else if (FD_ISSET(auth->fd, read_set)) {
       read_auth_reply(auth);
       if (0 == --nfds)
         break;
@@ -2172,7 +2172,7 @@ int connect_server(aConfItem *aconf, aClient *by, struct hostent *hp)
   cptr->acpt = &me;
   SetConnecting(cptr);
 
-  get_sockhost(cptr, aconf->host);
+  set_client_sockhost(cptr, aconf->host);
   add_client_to_list(cptr);
   nextping = timeofday;
   return 0;
@@ -2206,7 +2206,7 @@ static struct sockaddr* connect_inet(aConfItem *aconf, aClient *cptr,
   mysk.sin_family = AF_INET;
   memset((void *)&server, 0, sizeof(server));
   server.sin_family = AF_INET;
-  get_sockhost(cptr, aconf->host);
+  set_client_sockhost(cptr, aconf->host);
 
   /*
   ** Bind to a local IP# (with unknown port - let unix decide) so
