@@ -33,6 +33,7 @@
 #include "fdlist.h"
 #include "send.h"
 #include "restart.h"
+#include "s_zip.h"
 
 #include <assert.h>
 #include <stdio.h>

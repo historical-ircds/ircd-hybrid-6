@@ -375,7 +375,6 @@ m_kline(aClient *cptr,
   char temphost[HOSTLEN + 1];
   aConfItem *aconf;
   int temporary_kline_time=0;	/* -Dianora */
-  int wild_user;		/* does user part match everything? */
   time_t temporary_kline_time_seconds=0;
   char *argv;
   unsigned long ip;

@@ -143,9 +143,6 @@ extern	struct Client	*next_client (struct Client *, char *);
 extern	struct Client	*next_client_double (struct Client *, char *);
 
 /* s_user.c */
-extern	int	m_umode (struct Client *, struct Client *, int, char **);
-extern	int	m_names (struct Client *, struct Client *, int, char **);
-extern	int	m_server_estab (struct Client *);
 extern	void	send_umode (struct Client *, struct Client *, int, int, char *);
 extern	void	send_umode_out (struct Client*, struct Client *, int);
 

@@ -46,6 +46,7 @@
 #include "s_debug.h"
 #include "listener.h"
 #include "restart.h"
+#include "s_user.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -110,8 +111,9 @@ static void show_opers(aClient *);
 static void show_ports(aClient *); 
 static void set_autoconn(aClient *,char *,char *,int);
 static void report_specials(aClient *,int,int);
-extern void report_qlines(aClient *);
+static int m_server_estab(aClient *cptr);
 static int m_set_parser(char *);
+extern void report_qlines(aClient *);
 
 #ifdef PACE_WALLOPS
 time_t last_used_wallops = 0L;
@@ -826,7 +828,7 @@ static void	sendnick_TS( aClient *cptr, aClient *acptr)
     }
 }
 
-int m_server_estab(aClient *cptr)
+static int m_server_estab(aClient *cptr)
 {
   aChannel*   chptr;
   aClient*    acptr;
