@@ -1,31 +1,35 @@
 
-The hybrid team is a group of ircd coders who were frustrated
+  The hybrid team is a group of ircd coders who were frustrated
 with the instability and all-out "dirtiness" of the efnet ircd's
 available. "hybrid" is the name for the collective efforts of a group
 of people, all of us.
 
-Anyone is welcome to contribute to this effort..
+Anyone is welcome to contribute to this effort. We are serious about this.
 
-We have run the code through "purify", a commercial program designed
-to find memory leaks. The code has been mostly prototyped. Profiling has also
-been done to catch slow portions of the code. Portions of "crufty" code have
-been re-written. We have also looked at making the code as easy to setup
-up and run as possible using configure, checking header files etc.
-Finally speed enhancements and other enhancements have been made to this ircd. 
+  We have run the code through "purify", a commercial program designed
+to find memory leaks. It continues to be checked with malloc tools today.
+The code has been prototyped. Profiling has also been done to catch 
+slow portions of the code. "crufty" code has been re-written, obsolete
+code has been ripped out. We have also looked at making the code as easy
+to setup up and run as possible using configure etc. 
+Finally speed enhancements and other enhancements have been made to this ircd,
+and continue to be made to this ircd. 
 
-That is not to say that there are still not bugs, There are always bugs.
-But we have reviewed each others work on this project, and are open
+ That is not to say that there are still not bugs, There are always bugs.
+But we review each others work on this project, and are open
 to bug reports.
 
 The core team as, of this major release:
 
+Bleep, Thomas Helvey <tomh@inxpress.net>
 Dianora, Diane Bruce <db@db.net>
 FlashMan, Craig A. Huegen <chuegen@quadrunner.com>
-Rodder, Jon Lusky <lusky@blown.net>
-WintrHawk, Jake Khuon <khuon@GCtr.Net>
 Neph|l|m, Adel Mezibra <adel@cybercable.fr>
-Bleep, Thomas Helvey <tomh@inxpress.net>
-
+Rodder, Jon Lusky <lusky@blown.net>
+SideWnder, Patrick Alken <wnder@uwns.underworld.net>
+Slowaris, Ryan Parker <rjp@wpmedia.com>
+White_Dragon, Chip Norkus, <wd@dal.net>
+WintrHawk, Jake Khuon <khuon@GCtr.Net>
 
 The following people have contributed blood, sweat, and/or code to
 this release of hybrid, in nick alphabetical order:
@@ -41,6 +45,6 @@ Shadowfax, Michael Pearce <mpearce@varner.com>
 ThemBones, Brian Kraemer <kraemer@u.washington.edu>
 Wohali, Joan Touzet <joant@cadence.com>
 
-Others are welcome.
+Others are welcome. Always.
 
 email bug fixes/complaints/rotten tomatoes to ircd-hybrid@the-project.org
