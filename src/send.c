@@ -922,7 +922,7 @@ sendto_ops_flags(int flags, const char *pattern, ...)
     {
       for(cptr = local_cptr_list; cptr; cptr = cptr->next_local_client)
 	{
-	  if(cptr->oper_flags & FLAGS_SKILL)
+	  if(cptr->set_flags & FLAGS_SKILL)
 	    {
 	      (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
 			       me.name, cptr->name);
@@ -941,7 +941,7 @@ sendto_ops_flags(int flags, const char *pattern, ...)
     {
       for(cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client)
 	{
-	  if(cptr->oper_flags & flags)
+	  if(cptr->set_flags & flags)
 	    {
 	      (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
 			       me.name, cptr->name);
@@ -1288,72 +1288,6 @@ vsendto_realops(const char *pattern, va_list args)
 } /* vsendto_realops() */
 
 /*
- * sendto_realops_lev
- *
- *    Send to *local* ops only but NOT +s nonopers at a certain level
- */
-
-void
-sendto_realops_lev(int lev, const char *pattern, ...)
-
-{
-  va_list args;
-  register aClient *cptr;
-  char nbuf[1024];
-
-  va_start(args, pattern);
-
-  for (cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client)
-    {
-      switch (lev)
-	{
-	case CCONN_LEV:
-	  if (!SendCConnNotice(cptr))
-	    continue;
-	  break;
-	  
-	case REJ_LEV:
-	  if (!SendRejNotice(cptr))
-	    continue;
-	  break;
-
-	case SKILL_LEV:
-	  if (!SendSkillNotice(cptr))
-	    continue;
-	  break;
-	  
-	case FULL_LEV:
-	  if (!SendFullNotice(cptr))
-	    continue;
-	  break;
-	  
-	case SPY_LEV:
-	  if (!SendSpyNotice(cptr))
-	    continue;
-	  break;
-	  
-	case DEBUG_LEV:
-	  if (!SendDebugNotice(cptr))
-	    continue;
-	  break;
-
-	case NCHANGE_LEV:
-	  if (!SendNickChange(cptr))
-	    continue;
-	  break;
-	} /* switch (lev) */
-
-      (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
-		       me.name, cptr->name);
-      (void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
-
-      vsendto_one(cptr, nbuf, args);
-    } /* for (cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client) */
-
-  va_end(args);
-} /* sendto_realops_lev() */
-
-/*
  * sendto_realops_flags
  *
  *    Send to *local* ops with matching flags
@@ -1371,7 +1305,7 @@ sendto_realops_flags(int flags, const char *pattern, ...)
 
   for (cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client)
     {
-      if(cptr->oper_flags & flags)
+      if(cptr->set_flags & flags)
 	{
 	  (void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
 			   me.name, cptr->name);

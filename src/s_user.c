@@ -442,7 +442,7 @@ static int register_user(aClient *cptr, aClient *sptr,
 
 	case I_LINE_FULL:
 	case I_LINE_FULL2:
-	sendto_realops_lev(FULL_LEV, "%s for %s.",
+	sendto_realops_flags(FLAGS_FULL, "%s for %s.",
 			   "I-line is full", get_client_host(sptr));
 #ifdef USE_SYSLOG
 	syslog(LOG_INFO,"%s from %s.", "Too many connections",
@@ -469,7 +469,7 @@ static int register_user(aClient *cptr, aClient *sptr,
 #endif
 	    {
 	      ircstp->is_ref++;
-	      sendto_realops_lev(CCONN_LEV, "%s from %s [%s].",
+	      sendto_realops_flags(FLAGS_CCONN, "%s from %s [%s].",
 				 "Unauthorized client connection",
 				 get_client_host(sptr),
 				 inetntoa((char *)&sptr->ip));
@@ -574,8 +574,9 @@ static int register_user(aClient *cptr, aClient *sptr,
           ((Count.local + 1) >= (MAXCLIENTS+MAX_BUFFER))) ||
             (((Count.local +1) >= (MAXCLIENTS - 5)) && !(IsFlined(sptr))))
 	{
-	  sendto_realops_lev(FULL_LEV, "Too many clients, rejecting %s[%s].",
-			     nick, sptr->host);
+	  sendto_realops_flags(FLAGS_FULL,
+			       "Too many clients, rejecting %s[%s].",
+			       nick, sptr->host);
 	  ircstp->is_ref++;
 	  return exit_client(cptr, sptr, &me,
 			     "Sorry, server is full - try later");
@@ -586,14 +587,14 @@ static int register_user(aClient *cptr, aClient *sptr,
 	{
 	  if(IsBlined(sptr))
 	    {
-	      sendto_realops_lev(CCONN_LEV,
+	      sendto_realops_flags(FLAGS_CCONN,
 				 "Possible %s: %s (%s@%s) [B-lined]",
 				 type_of_bot[sptr->isbot],
 				 sptr->name, sptr->username, sptr->host);
 	    }
 	  else
 	    {
-	      sendto_realops_lev(REJ_LEV, "Rejecting %s: %s",
+	      sendto_realops_flags(FLAGS_REJ, "Rejecting %s: %s",
 				 type_of_bot[sptr->isbot],
 				 get_client_name(sptr,FALSE));
 	      ircstp->is_ref++;
@@ -607,7 +608,7 @@ static int register_user(aClient *cptr, aClient *sptr,
 
       if (!valid_username(sptr->username))
 	{
-	  sendto_realops_lev(REJ_LEV,"Invalid username: %s (%s@%s)",
+	  sendto_realops_flags(FLAGS_REJ,"Invalid username: %s (%s@%s)",
 			     nick, sptr->username, sptr->host);
 	  ircstp->is_ref++;
 	  ircsprintf(tmpstr2, "Invalid username [%s]", sptr->username);
@@ -629,7 +630,7 @@ static int register_user(aClient *cptr, aClient *sptr,
 	      if(aconf->port)
 		{
 		  ircstp->is_ref++;
-		  sendto_realops_lev(REJ_LEV,
+		  sendto_realops_flags(FLAGS_REJ,
 				     "X-line Rejecting [%s] [%s], user %s",
 				     sptr->info,
 				     reason,
@@ -638,7 +639,7 @@ static int register_user(aClient *cptr, aClient *sptr,
 		  return exit_client(cptr, sptr, &me, "Bad user info");
 		}
 	      else
-		sendto_realops_lev(REJ_LEV,
+		sendto_realops_flags(FLAGS_REJ,
 				   "X-line Warning [%s] [%s], user %s",
 				   sptr->info,
 				   reason,
@@ -647,7 +648,7 @@ static int register_user(aClient *cptr, aClient *sptr,
 
 	  if((find_q_line(nick, sptr->username, sptr->host)))
 	    {
-	      sendto_realops_lev(REJ_LEV,
+	      sendto_realops_flags(FLAGS_REJ,
 				 "Quarantined nick [%s], dumping user %s",
 				 nick,get_client_name(cptr, FALSE));
       
@@ -657,7 +658,7 @@ static int register_user(aClient *cptr, aClient *sptr,
 	}
 
 
-      sendto_realops_lev(CCONN_LEV,
+      sendto_realops_flags(FLAGS_CCONN,
 			 "Client connecting: %s (%s@%s) [%s] {%d}",
 			 nick, sptr->username, sptr->host,
 			 inetntoa((char *)&sptr->ip),
@@ -770,7 +771,7 @@ static int register_user(aClient *cptr, aClient *sptr,
       if ((acptr = find_server(user->server, NULL)) &&
 	  acptr->from != sptr->from)
 	{
-	  sendto_realops_lev(DEBUG_LEV, 
+	  sendto_realops_flags(FLAGS_DEBUG, 
 			     "Bad User [%s] :%s USER %s@%s %s, != %s[%s]",
 			     cptr->name, nick, sptr->username,
 			     sptr->host, user->server,
@@ -1140,7 +1141,7 @@ int	m_nick(aClient *cptr,
       if (IsServer(cptr))
 	{
 	  ircstp->is_kill++;
-	  sendto_realops_lev(DEBUG_LEV, "Bad Nick: %s From: %s %s",
+	  sendto_realops_flags(FLAGS_DEBUG, "Bad Nick: %s From: %s %s",
 			     parv[1], parv[0],
 			     get_client_name(cptr, FALSE));
 	  sendto_one(cptr, ":%s KILL %s :%s (%s <- %s[%s])",
@@ -1167,7 +1168,7 @@ int	m_nick(aClient *cptr,
      !IsAnOper(sptr) && sptr->user &&
      find_q_line(nick, sptr->username, sptr->host)) 
     {
-      sendto_realops_lev(REJ_LEV,
+      sendto_realops_flags(FLAGS_REJ,
 			 "Quarantined nick [%s], dumping user %s",
 			 nick,get_client_name(cptr, FALSE));
 
@@ -1582,7 +1583,7 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
           if(sptr->number_of_nick_changes <= MAX_NICK_CHANGES)
 	    {
 #endif
-	      sendto_realops_lev(NCHANGE_LEV,
+	      sendto_realops_flags(FLAGS_NCHANGE,
 				 "Nick change: From %s to %s [%s@%s]",
 				 parv[0], nick, sptr->username,
 				 sptr->host);
@@ -2949,7 +2950,8 @@ int	m_away(aClient *cptr,
   /* make sure the user exists */
   if (!(sptr->user))
     {
-      sendto_realops_lev(DEBUG_LEV, "Got AWAY from nil user, from %s (%s)\n",cptr->name,sptr->name);
+      sendto_realops_flags(FLAGS_DEBUG,
+			   "Got AWAY from nil user, from %s (%s)\n",cptr->name,sptr->name);
       return 0;
     }
 
@@ -3195,13 +3197,13 @@ int	m_oper(aClient *cptr,
 	  SetLocOp(sptr);
 	  if((int)aconf->hold)
 	    {
-	      sptr->flags |= ((int)aconf->hold & ALL_UMODES); 
+	      sptr->set_flags |= ((int)aconf->hold & ALL_UMODES); 
 	      sendto_one(sptr, ":%s NOTICE %s:*** Oper flags set from conf",
 			 me.name,parv[0]);
 	    }
 	  else
 	    {
-	      sptr->flags |= (LOCOP_UMODES);
+	      sptr->set_flags |= (LOCOP_UMODES);
 	    }
 
 	  /* A local oper can't global kill ever, or do remote re-routes
@@ -3216,16 +3218,16 @@ int	m_oper(aClient *cptr,
 	  SetOper(sptr);
 	  if((int)aconf->hold)
 	    {
-	      sptr->flags |= ((int)aconf->hold & ALL_UMODES); 
+	      sptr->set_flags |= ((int)aconf->hold & ALL_UMODES); 
 	      if( !IsSetOperN(sptr) )
-		sptr->flags &= ~FLAGS_NCHANGE;
+		sptr->set_flags &= ~FLAGS_NCHANGE;
 	      
 	      sendto_one(sptr, ":%s NOTICE %s:*** Oper flags set from conf",
 			 me.name,parv[0]);
 	    }
 	  else
 	    {
-	      sptr->flags |= (OPER_UMODES);
+	      sptr->set_flags |= (OPER_UMODES);
 	    }
 	}
       SetIPHidden(sptr);
@@ -3607,7 +3609,7 @@ int	m_umode(aClient *cptr,
   /* find flags already set for user */
   setflags = 0;
   for (s = user_modes; (flag = *s); s += 2)
-    if (sptr->flags & flag)
+    if (sptr->set_flags & flag)
       setflags |= flag;
   
   /*
@@ -3636,9 +3638,9 @@ int	m_umode(aClient *cptr,
 	    if (*m == (char)(*(s+1)))
 	      {
 		if (what == MODE_ADD)
-		  sptr->flags |= flag;
+		  sptr->set_flags |= flag;
 		else
-		  sptr->flags &= ~flag;	
+		  sptr->set_flags &= ~flag;	
 		break;
 	      }
 	  if (flag == 0 && MyConnect(sptr))
@@ -3656,7 +3658,7 @@ int	m_umode(aClient *cptr,
     ClearOper(sptr);
 
   if (!(setflags & FLAGS_LOCOP) && IsLocOp(sptr) && !IsServer(cptr))
-    sptr->flags &= ~FLAGS_LOCOP;
+    sptr->set_flags &= ~FLAGS_LOCOP;
 
   if ((setflags & (FLAGS_OPER|FLAGS_LOCOP)) && !IsAnOper(sptr) &&
       MyConnect(sptr))
@@ -3671,7 +3673,7 @@ int	m_umode(aClient *cptr,
     {
       sendto_one(sptr,":%s NOTICE %s :*** You need oper and N flag for +n",
 		 me.name,parv[0]);
-      sptr->flags &= ~FLAGS_NCHANGE; /* only tcm's really need this */
+      sptr->set_flags &= ~FLAGS_NCHANGE; /* only tcm's really need this */
     }
 
   if ((setflags & (FLAGS_OPER|FLAGS_LOCOP)) && !IsAnOper(sptr))

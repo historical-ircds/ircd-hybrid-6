@@ -17,15 +17,6 @@
 struct Client;
 struct Channel;
 
-/* for sendto_ops_lev */
-#define CCONN_LEV	1
-#define REJ_LEV		2
-#define SKILL_LEV	3
-#define FULL_LEV	4
-#define SPY_LEV		5
-#define DEBUG_LEV	6
-#define NCHANGE_LEV	7
-
 /* send.c prototypes */
 
 extern  void send_operwall(struct Client *,char *,char *);
@@ -52,7 +43,6 @@ extern  void sendto_match_butone(struct Client *, struct Client *,
 extern  void sendto_ops_flags(int, const char *, ...);
 
 extern  void sendto_realops(const char *, ...);
-extern  void sendto_realops_lev(int, const char *, ...);
 extern  void sendto_realops_flags(int, const char *, ...);
 
 extern  void sendto_ops(const char *, ...);

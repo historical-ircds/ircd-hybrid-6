@@ -190,7 +190,7 @@ void report_error(const char* text, const char* who, int error)
 {
   who = (who) ? who : "";
 
-  sendto_realops_lev(DEBUG_LEV, text, who, strerror(error));
+  sendto_realops_flags(FLAGS_DEBUG, text, who, strerror(error));
 
 #ifdef USE_SYSLOG
   syslog(LOG_WARNING, text, who, strerror(error));
@@ -465,7 +465,7 @@ int check_server_init(aClient *cptr)
       n_conf = find_conf(lp, name, CONF_NOCONNECT_SERVER);
       if (!c_conf || !n_conf)
         {
-          sendto_realops_lev(DEBUG_LEV, "Connecting Error: %s[%s]", name,
+          sendto_realops_flags(FLAGS_DEBUG, "Connecting Error: %s[%s]", name,
                              cptr->host);
           det_confs_butmask(cptr, 0);
           return -1;
@@ -530,9 +530,10 @@ int check_server(aClient* cptr, struct DNSReply* dns_reply,
         }
       if (!hp->h_addr_list[i])
         {
-          sendto_realops_lev(DEBUG_LEV, "Server IP# Mismatch: %s != %s[%08x]",
-                             inetntoa((char *)&cptr->ip), hp->h_name,
-                             *((unsigned long *)hp->h_addr));
+          sendto_realops_flags(FLAGS_DEBUG,
+			       "Server IP# Mismatch: %s != %s[%08x]",
+			       inetntoa((char *)&cptr->ip), hp->h_name,
+			       *((unsigned long *)hp->h_addr));
           hp = NULL;
         }
     }
@@ -797,12 +798,12 @@ void        reset_sock_opts(int fd,int type)
   opt = type ? rcvbufmax : CLIENT_BUFFER_SIZE;
 
   if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&opt, sizeof(opt)) < 0)
-    sendto_realops_lev(CCONN_LEV,
+    sendto_realops_flags(FLAGS_CCONN,
                        "REsetsockopt(SO_RCVBUF) for fd %d (%s) failed", fd, type ? "server" : "client");
   opt = type ? (SEND_BUF_SIZE*4) : SEND_BUF_SIZE;
 
   if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&opt, sizeof(opt)) < 0)
-    sendto_realops_lev(CCONN_LEV,
+    sendto_realops_flags(FLAGS_CCONN,
                        "REsetsockopt(SO_SNDBUF) for fd %d (%s) failed", fd, type ? "server" : "client");
 }
 #endif /* MAXBUFFERS */

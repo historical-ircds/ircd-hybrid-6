@@ -1254,7 +1254,7 @@ int	m_links(aClient *cptr,
     }
 
   if (MyConnect(sptr))
-    sendto_realops_lev(SPY_LEV,
+    sendto_realops_flags(FLAGS_SPY,
 		       "LINKS '%s' requested by %s (%s@%s) [%s]",
 		       mask?clean_mask:"",
 		       sptr->name, sptr->username,
@@ -1762,9 +1762,10 @@ int	m_stats(aClient *cptr,
 
 #ifdef STATS_NOTICE
   if (valid_stats)
-    sendto_realops_lev(SPY_LEV, "STATS %c requested by %s (%s@%s) [%s]", stat,
-		       sptr->name, sptr->username, sptr->host,
-		       sptr->user->server);
+    sendto_realops_flags(FLAGS_SPY,
+			 "STATS %c requested by %s (%s@%s) [%s]", stat,
+			 sptr->name, sptr->username, sptr->host,
+			 sptr->user->server);
 #endif
   return 0;
 }
@@ -2006,41 +2007,41 @@ int show_lusers(aClient *cptr,
 	{
 	  if (m_server != Count.myserver)
 	    {
-	      sendto_realops_lev(DEBUG_LEV, 
+	      sendto_realops_flags(FLAGS_DEBUG, 
 				 "Local server count off by %d",
 				 Count.myserver - m_server);
 	      Count.myserver = m_server;
 	    }
 	  if (s_count != Count.server)
 	    {
-	      sendto_realops_lev(DEBUG_LEV,
+	      sendto_realops_flags(FLAGS_DEBUG,
 				 "Server count off by %d",
 				 Count.server - s_count);
 	      Count.server = s_count;
 	    }
 	  if (i_count != Count.invisi)
 	    {
-	      sendto_realops_lev(DEBUG_LEV,
+	      sendto_realops_flags(FLAGS_DEBUG,
 				 "Invisible client count off by %d",
 				 Count.invisi - i_count);
 	      Count.invisi = i_count;
 	    }
 	  if ((c_count+i_count) != Count.total)
 	    {
-	      sendto_realops_lev(DEBUG_LEV, "Total client count off by %d",
+	      sendto_realops_flags(FLAGS_DEBUG, "Total client count off by %d",
 				 Count.total - (c_count+i_count));
 	      Count.total = c_count+i_count;
 	    }
 	  if (m_client != Count.local)
 	    {
-	      sendto_realops_lev(DEBUG_LEV,
+	      sendto_realops_flags(FLAGS_DEBUG,
 				 "Local client count off by %d",
 				 Count.local - m_client);
 	      Count.local = m_client;
 	    }
 	  if (o_count != Count.oper)
 	    {
-	      sendto_realops_lev(DEBUG_LEV,
+	      sendto_realops_flags(FLAGS_DEBUG,
 				 "Oper count off by %d", Count.oper - o_count);
 	      Count.oper = o_count;
 	    }
@@ -2471,8 +2472,9 @@ int	m_admin(aClient *cptr,
     return 0;
 
   if (IsPerson(sptr))
-    sendto_realops_lev(SPY_LEV, "ADMIN requested by %s (%s@%s) [%s]", sptr->name,
-		       sptr->username, sptr->host, sptr->user->server);
+    sendto_realops_flags(FLAGS_SPY,
+			 "ADMIN requested by %s (%s@%s) [%s]", sptr->name,
+			 sptr->username, sptr->host, sptr->user->server);
   if ((aconf = find_admin()))
     {
       sendto_one(sptr, form_str(RPL_ADMINME),
@@ -3345,7 +3347,7 @@ int	m_trace(aClient *cptr,
     }
 
   if(MyClient(sptr))
-    sendto_realops_lev(SPY_LEV, "trace requested by %s (%s@%s) [%s]",
+    sendto_realops_flags(FLAGS_SPY, "trace requested by %s (%s@%s) [%s]",
 		       sptr->name, sptr->username, sptr->host,
 		       sptr->user->server);
 
@@ -3609,7 +3611,7 @@ int	m_ltrace(aClient *cptr,
 
 
   if(MyClient(sptr))
-    sendto_realops_lev(SPY_LEV, "ltrace requested by %s (%s@%s) [%s]",
+    sendto_realops_flags(FLAGS_SPY, "ltrace requested by %s (%s@%s) [%s]",
 		       sptr->name, sptr->username, sptr->host,
 		       sptr->user->server);
 

@@ -148,7 +148,7 @@ struct Client
   time_t	    firsttime;	/* time client was created */
   time_t	    since;	/* last time we parsed something */
   time_t	    tsinfo;	/* TS on the nick, SVINFO on server */
-  unsigned int      oper_flags; /* opers, normal users subset */
+  unsigned int      set_flags; /* opers, normal users subset */
   unsigned int	    flags;	/* client flags */
   unsigned int      flags2;	/* ugh. overflow */
   int	            fd;  	/* >= 0, for local clients */
@@ -295,16 +295,15 @@ struct Client
 #define	FLAGS_NEEDID	   0x0100 /* I-lines say must use ident return */
 #define	FLAGS_NONL	   0x0200 /* No \n in buffer */
 #define FLAGS_NORMALEX     0x0400 /* Client exited normally */
-#define	FLAGS_NCHANGE      0x0800 /* Nick change notice */
-#define FLAGS_SENDQEX      0x1000 /* Sendq exceeded */
-#define FLAGS_IPHASH       0x2000 /* iphashed this client */
+#define FLAGS_SENDQEX      0x0800 /* Sendq exceeded */
+#define FLAGS_IPHASH       0x1000 /* iphashed this client */
 
-/* user information flags */
-#define	FLAGS_OPER	   0x4000 /* Operator */
-#define	FLAGS_LOCOP        0x8000 /* Local operator -- SRB */
-#define	FLAGS_INVISIBLE   0x10000 /* makes user invisible */
+/* user information flags, only settable by remote mode or local oper */
+#define	FLAGS_OPER	   0x1000 /* Operator */
+#define	FLAGS_LOCOP        0x2000 /* Local operator -- SRB */
 
-/* oper_flags */
+
+/* set_flags, settable flags */
 #define	FLAGS_SERVNOTICE   0x0001 /* server notices such as kill */
 #define FLAGS_CCONN        0x0002 /* Client Connections */
 #define FLAGS_REJ          0x0004 /* Bot Rejections */
@@ -312,8 +311,10 @@ struct Client
 #define FLAGS_FULL         0x0010 /* Full messages */
 #define	FLAGS_SPY          0x0020 /* see STATS / LINKS */
 #define FLAGS_DEBUG        0x0040 /* 'debugging' info */
-#define	FLAGS_WALLOP       0x0080 /* send wallops to them */
-#define FLAGS_OPERWALL     0x0100 /* Operwalls */
+#define	FLAGS_NCHANGE      0x0080 /* Nick change notice */
+#define	FLAGS_WALLOP       0x0100 /* send wallops to them */
+#define FLAGS_OPERWALL     0x0200 /* Operwalls */
+#define	FLAGS_INVISIBLE    0x0400 /* makes user invisible */
 
 /* *sigh* overflow flags */
 #define FLAGS2_RESTRICTED   0x0001      /* restricted client */
@@ -381,36 +382,36 @@ struct Client
 #define	DoAccess(x)		((x)->flags & FLAGS_CHKACCESS)
 #define	IsLocal(x)		((x)->flags & FLAGS_LOCAL)
 #define	IsDead(x)		((x)->flags & FLAGS_DEADSOCKET)
-#define	SetInvisible(x)		((x)->flags |= FLAGS_INVISIBLE)
+#define	SetInvisible(x)		((x)->set_flags |= FLAGS_INVISIBLE)
 #define	SetAccess(x)		((x)->flags |= FLAGS_CHKACCESS)
 #define	NoNewLine(x)		((x)->flags & FLAGS_NONL)
-#define	ClearInvisible(x)	((x)->flags &= ~FLAGS_INVISIBLE)
-#define	ClearWallops(x)		((x)->oper_flags &= ~FLAGS_WALLOP)
+#define	ClearInvisible(x)	((x)->set_flags &= ~FLAGS_INVISIBLE)
+#define	ClearWallops(x)		((x)->set_flags &= ~FLAGS_WALLOP)
 #define	ClearAccess(x)		((x)->flags &= ~FLAGS_CHKACCESS)
 #define	MyConnect(x)		((x)->local_flag != 0)
 #define	MyClient(x)		(MyConnect(x) && IsClient(x))
 
      /* oper flags */
 #define	MyOper(x)		(MyConnect(x) && IsOper(x))
-#define	IsOper(x)		((x)->oper_flags & FLAGS_OPER)
-#define	IsLocOp(x)		((x)->oper_flags & FLAGS_LOCOP)
-#define	IsAnOper(x)		((x)->oper_flags & (FLAGS_OPER|FLAGS_LOCOP))
+#define	IsOper(x)		((x)->set_flags & FLAGS_OPER)
+#define	IsLocOp(x)		((x)->set_flags & FLAGS_LOCOP)
+#define	IsAnOper(x)		((x)->set_flags & (FLAGS_OPER|FLAGS_LOCOP))
 #define	IsPrivileged(x)		(IsAnOper(x) || IsServer(x))
-#define	SendWallops(x)		((x)->oper_flags & FLAGS_WALLOP)
-#define	SendServNotice(x)	((x)->oper_flags & FLAGS_SERVNOTICE)
-#define SendOperwall(x)		((x)->oper_flags & FLAGS_OPERWALL)
-#define SendCConnNotice(x)	((x)->oper_flags & FLAGS_CCONN)
-#define SendRejNotice(x)	((x)->oper_flags & FLAGS_REJ)
-#define SendSkillNotice(x)	((x)->oper_flags & FLAGS_SKILL)
-#define SendFullNotice(x)	((x)->oper_flags & FLAGS_FULL)
-#define SendSpyNotice(x)	((x)->oper_flags & FLAGS_SPY)
-#define SendDebugNotice(x)	((x)->oper_flags & FLAGS_DEBUG)
-#define SendNickChange(x)	((x)->oper_flags & FLAGS_NCHANGE)
-#define	SetOper(x)		((x)->oper_flags |= FLAGS_OPER)
-#define	SetLocOp(x)    		((x)->oper_flags |= FLAGS_LOCOP)
-#define	SetWallops(x)  		((x)->oper_flags |= FLAGS_WALLOP)
-#define	ClearOper(x)		((x)->oper_flags &= ~FLAGS_OPER)
-#define ClearLocOp(x)		((x)->oper_flags &= ~FLAGS_LOCOP)
+#define	SendWallops(x)		((x)->set_flags & FLAGS_WALLOP)
+#define	SendServNotice(x)	((x)->set_flags & FLAGS_SERVNOTICE)
+#define SendOperwall(x)		((x)->set_flags & FLAGS_OPERWALL)
+#define SendCConnNotice(x)	((x)->set_flags & FLAGS_CCONN)
+#define SendRejNotice(x)	((x)->set_flags & FLAGS_REJ)
+#define SendSkillNotice(x)	((x)->set_flags & FLAGS_SKILL)
+#define SendFullNotice(x)	((x)->set_flags & FLAGS_FULL)
+#define SendSpyNotice(x)	((x)->set_flags & FLAGS_SPY)
+#define SendDebugNotice(x)	((x)->set_flags & FLAGS_DEBUG)
+#define SendNickChange(x)	((x)->set_flags & FLAGS_NCHANGE)
+#define	SetOper(x)		((x)->set_flags |= FLAGS_OPER)
+#define	SetLocOp(x)    		((x)->set_flags |= FLAGS_LOCOP)
+#define	SetWallops(x)  		((x)->set_flags |= FLAGS_WALLOP)
+#define	ClearOper(x)		((x)->set_flags &= ~FLAGS_OPER)
+#define ClearLocOp(x)		((x)->set_flags &= ~FLAGS_LOCOP)
 
 
 #ifdef REJECT_HOLD

@@ -628,19 +628,19 @@ static	int	cancel_clients(aClient *cptr,
    */
   if (IsServer(sptr) || IsMe(sptr))
     {
-      sendto_realops_lev(DEBUG_LEV, "Message for %s[%s] from %s",
+      sendto_realops_flags(FLAGS_DEBUG, "Message for %s[%s] from %s",
 			 sptr->name, sptr->from->name,
 			 get_client_name(cptr, TRUE));
       if (IsServer(cptr))
 	{
-	  sendto_realops_lev(DEBUG_LEV,
+	  sendto_realops_flags(FLAGS_DEBUG,
 			     "Not dropping server %s (%s) for Fake Direction",
 			     cptr->name, sptr->name);
 	  return -1;
 	}
 
       if (IsClient(cptr))
-	sendto_realops_lev(DEBUG_LEV,
+	sendto_realops_flags(FLAGS_DEBUG,
 			   "Would have dropped client %s (%s@%s) [%s from %s]",
 			   cptr->name, cptr->username, cptr->host,
 			   cptr->user->server, cptr->from->name);
@@ -664,7 +664,7 @@ static	int	cancel_clients(aClient *cptr,
     if (DoesTS(cptr))
       {
 	if (sptr->user)
-	  sendto_realops_lev(DEBUG_LEV,
+	  sendto_realops_flags(FLAGS_DEBUG,
 	      "Message for %s[%s@%s!%s] from %s (TS, ignored)",
 			     sptr->name, sptr->username, sptr->host,
 			   sptr->from->name, get_client_name(cptr, TRUE));
@@ -674,7 +674,7 @@ static	int	cancel_clients(aClient *cptr,
       {
 	if (sptr->user)
 	  {
-	    sendto_realops_lev(DEBUG_LEV,
+	    sendto_realops_flags(FLAGS_DEBUG,
 			     "Message for %s[%s@%s!%s] from %s",
 			   sptr->name, sptr->username, sptr->host,
 			   sptr->from->name, get_client_name(cptr, TRUE));
@@ -700,7 +700,7 @@ static	void	remove_unknown(aClient *cptr,
 
   if (IsClient(cptr))
     {
-      sendto_realops_lev(DEBUG_LEV,
+      sendto_realops_flags(FLAGS_DEBUG,
 		 "Weirdness: Unknown client prefix (%s) from %s, Ignoring %s",
 			 buffer,
 			 get_client_name(cptr, FALSE), sender);
@@ -723,7 +723,8 @@ static	void	remove_unknown(aClient *cptr,
 	       get_client_name(cptr, FALSE));
   else
     {
-      sendto_realops_lev(DEBUG_LEV, "Unknown prefix (%s) from %s, Squitting %s", buffer, get_client_name(cptr, FALSE), sender);
+      sendto_realops_flags(FLAGS_DEBUG,
+        "Unknown prefix (%s) from %s, Squitting %s", buffer, get_client_name(cptr, FALSE), sender);
       sendto_one(cptr, ":%s SQUIT %s :(Unknown prefix (%s) from %s)",
 		 me.name, sender, buffer, get_client_name(cptr, FALSE));
     }

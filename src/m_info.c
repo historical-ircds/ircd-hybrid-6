@@ -32,7 +32,7 @@ int	m_info(aClient *cptr,
 
   if (hunt_server(cptr,sptr,":%s INFO :%s",1,parc,parv) == HUNTED_ISME)
     {
-      sendto_realops_lev(SPY_LEV, "info requested by %s (%s@%s) [%s]",
+      sendto_realops_flags(FLAGS_SPY, "info requested by %s (%s@%s) [%s]",
 		         sptr->name, sptr->username, sptr->host,
                          sptr->user->server);
       if(!IsAnOper(sptr))
