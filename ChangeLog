@@ -1,3 +1,9 @@
+*** 20010110_1 by lusky
+- revved patchlevel to 6.1
+- removed old ban removel code (db)
+- removed unused locally_created flag (db)
+
+
 *** 20010103_2 by lusky
 - fixed a spelling error (wc)
 
