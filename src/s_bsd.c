@@ -1095,6 +1095,59 @@ void add_connection(struct Listener* listener, int fd)
   start_auth(new_client);
 }
 
+/*
+ * parse_client_queued - parse client queued messages
+ */
+static int parse_client_queued(struct Client* cptr)
+{
+  int dolen  = 0;
+  int done   = 0;
+
+  while (DBufLength(&cptr->recvQ) && !NoNewLine(cptr) &&
+	 ((cptr->status < STAT_UNKNOWN) || (cptr->since - timeofday < 10))) {
+    /*
+     * If it has become registered as a Server
+     * then skip the per-message parsing below.
+     */
+    if (IsServer(cptr)) {
+      /* 
+       * This is actually useful, but it needs the ZIP_FIRST
+       * kludge or it will break zipped links  -orabidoo
+       */
+      dolen = dbuf_get(&cptr->recvQ, readBuf, READBUF_SIZE);
+
+      if (dolen <= 0)
+	break;
+      if ((done = dopacket(cptr, readBuf, dolen)))
+	return done;
+      break;
+    }
+    dolen = dbuf_getmsg(&cptr->recvQ, readBuf, READBUF_SIZE);
+
+    /*
+    ** Devious looking...whats it do ? well..if a client
+    ** sends a *long* message without any CR or LF, then
+    ** dbuf_getmsg fails and we pull it out using this
+    ** loop which just gets the next 512 bytes and then
+    ** deletes the rest of the buffer contents.
+    ** -avalon
+    */
+    while (dolen <= 0) {
+      if (dolen < 0)
+	return exit_client(cptr, cptr, cptr, "dbuf_getmsg fail");
+      if (DBufLength(&cptr->recvQ) < 510) {
+	cptr->flags |= FLAGS_NONL;
+	break;
+      }
+      dolen = dbuf_get(&cptr->recvQ, readBuf, 511);
+      if (dolen > 0 && DBufLength(&cptr->recvQ))
+	DBufClear(&cptr->recvQ);
+    }
+    if (dolen > 0 && (dopacket(cptr, readBuf, dolen) == FLUSH_BUFFER))
+      return FLUSH_BUFFER;
+  }
+  return 1;
+}
 
 /*
  * read_packet - Read a 'packet' of data from a connection and process it.
@@ -1103,9 +1156,8 @@ void add_connection(struct Listener* listener, int fd)
  */
 #define SBSD_MAX_CLIENT 6090
 
-static int read_packet(aClient *cptr)
+static int read_packet(struct Client *cptr)
 {
-  int dolen  = 0;
   int length = 0;
   int done;
 
@@ -1146,7 +1198,7 @@ static int read_packet(aClient *cptr)
    * For server connections, we process as many as we can without
    * worrying about the time of day or anything :)
    */
-  if (IsServer(cptr) || IsConnecting(cptr) || IsHandshake(cptr)) {
+  if (PARSE_AS_SERVER(cptr)) {
     if (length > 0) {
       if ((done = dopacket(cptr, readBuf, length)))
         return done;
@@ -1168,50 +1220,7 @@ static int read_packet(aClient *cptr)
         DBufLength(&cptr->recvQ) > CLIENT_FLOOD) {
       return exit_client(cptr, cptr, cptr, "Excess Flood");
     }
-    while (DBufLength(&cptr->recvQ) && !NoNewLine(cptr) &&
-           ((cptr->status < STAT_UNKNOWN) || (cptr->since - timeofday < 10))) {
-      /*
-       * If it has become registered as a Server
-       * then skip the per-message parsing below.
-       */
-      if (IsServer(cptr)) {
-        /* 
-         * This is actually useful, but it needs the ZIP_FIRST
-         * kludge or it will break zipped links  -orabidoo
-         */
-        dolen = dbuf_get(&cptr->recvQ, readBuf, READBUF_SIZE);
-
-        if (dolen <= 0)
-          break;
-        if ((done = dopacket(cptr, readBuf, dolen)))
-          return done;
-        break;
-      }
-      dolen = dbuf_getmsg(&cptr->recvQ, readBuf, READBUF_SIZE);
-
-      /*
-      ** Devious looking...whats it do ? well..if a client
-      ** sends a *long* message without any CR or LF, then
-      ** dbuf_getmsg fails and we pull it out using this
-      ** loop which just gets the next 512 bytes and then
-      ** deletes the rest of the buffer contents.
-      ** -avalon
-      */
-      while (dolen <= 0) {
-        if (dolen < 0)
-          return exit_client(cptr, cptr, cptr, "dbuf_getmsg fail");
-        if (DBufLength(&cptr->recvQ) < 510) {
-          cptr->flags |= FLAGS_NONL;
-          break;
-        }
-        dolen = dbuf_get(&cptr->recvQ, readBuf, 511);
-        if (dolen > 0 && DBufLength(&cptr->recvQ))
-          DBufClear(&cptr->recvQ);
-      }
-
-      if (dolen > 0 && (dopacket(cptr, readBuf, dolen) == FLUSH_BUFFER))
-        return FLUSH_BUFFER;
-    }
+    return parse_client_queued(cptr);
   }
   return 1;
 }
@@ -1432,24 +1441,24 @@ int read_message(time_t delay, fdlist *listp)        /* mika */
         continue;
       }
     }
-    length = 1;        /* for fall through case */
+    length = 1;     /* for fall through case */
 
     if (FD_ISSET(i, read_set)) {
       --nfds;
-      if (!NoNewLine(cptr))
-        length = read_packet(cptr);
-      
-      if (FLUSH_BUFFER == length)
-        continue;
+      length = read_packet(cptr);
+    }
+    else if (PARSE_AS_CLIENT(cptr) && !NoNewLine(cptr))
+      length = parse_client_queued(cptr);
 
-      if (IsDead(cptr))
-         exit_client(cptr, cptr, &me,
-                     (cptr->flags & FLAGS_SENDQEX) ? "SendQ Exceeded" :
-                     strerror(get_sockerr(cptr->fd)));
+    if (length > 0 || length == FLUSH_BUFFER)
+      continue;
+    if (length == FLUSH_BUFFER)
+      continue;
+    if (IsDead(cptr)) {
+       exit_client(cptr, cptr, &me,
+		    strerror(get_sockerr(cptr->fd)));
        continue;
     }
-    if (length > 0)
-      continue;
     error_exit_client(cptr, length);
     errno = 0;
   }
@@ -1712,20 +1721,20 @@ int read_message(time_t delay, fdlist *listp)
             }
         }
       length = 1;     /* for fall through case */
-      if (rr) {
-        if (!NoNewLine(cptr))
-          length = read_packet(cptr);
+      if (rr)
+        length = read_packet(cptr);
+      else if (PARSE_AS_CLIENT(cptr) && !NoNewLine(cptr))
+        length = parse_client_queued(cptr);
 
-        if (length == FLUSH_BUFFER)
-          continue;
-        if (IsDead(cptr)) {
-           exit_client(cptr, cptr, &me,
-                        strerror(get_sockerr(cptr->fd)));
-           continue;
-        }
-      }
-      if (length > 0)
+      if (length > 0 || length == FLUSH_BUFFER)
         continue;
+      if (length == FLUSH_BUFFER)
+        continue;
+      if (IsDead(cptr)) {
+         exit_client(cptr, cptr, &me,
+                      strerror(get_sockerr(cptr->fd)));
+         continue;
+      }
       error_exit_client(cptr, length);
       errno = 0;
     }
