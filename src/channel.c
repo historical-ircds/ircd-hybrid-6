@@ -3295,7 +3295,7 @@ int	m_invite(aClient *cptr,
 	  if(acptr->user)
 	    {
 	      (void)ircsprintf(message,
-		      ":INVITE: %s (%s invited %s [%s@%s])",
+		      "INVITE: %s (%s invited %s [%s@%s])",
 				chptr->chname,
 				sptr->name,
 				acptr->name,
