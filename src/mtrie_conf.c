@@ -59,10 +59,6 @@
 #include "mtrie_conf.h"
 #include "dline_conf.h"
 
-#if !defined(SYSV) && !defined(SOL20)
-#define memmove(x,y,N) bcopy(y,x,N)
-#endif
-
 #ifndef lint
 static char *rcs_version="$Id$";
 #endif /* lint */
