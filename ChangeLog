@@ -1,3 +1,19 @@
+androsyn    2002/01/27 23:36:55 EST	(20020128_2)
+
+  Modified files:
+    .                    configure 
+    autoconf             configure.in 
+    include              setup.h.in 
+  Log:
+  Added check for inline.
+  
+  Revision  Changes    Path
+  1.28      +1 -0      ircd-hybrid-6/autoconf/configure.in
+  1.29      +117 -77   ircd-hybrid-6/configure
+  1.17      +4 -1      ircd-hybrid-6/include/setup.h.in
+
+
+
 androsyn    2002/01/27 23:30:32 EST	(20020128_1)
 
   Modified files:
