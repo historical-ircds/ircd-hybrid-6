@@ -24,6 +24,8 @@
 #include "common.h"
 #include "s_zip.h"
 #include "h.h"
+#include "ircd.h"
+#include "s_bsd.h"
 #include "class.h"
 #include "numeric.h"
 #include "channel.h"

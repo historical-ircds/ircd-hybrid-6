@@ -19,6 +19,7 @@
  *
  * $Id$
  */
+#include "ircd.h"
 #include "struct.h"
 #include "common.h"
 #include "dline_conf.h"

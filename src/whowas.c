@@ -22,6 +22,7 @@
 #include "common.h"
 #include "numeric.h"
 #include "h.h"
+#include "ircd.h"
 #include "send.h"
 #include "hash.h"
 

@@ -35,6 +35,8 @@
 #include "send.h"
 #include "restart.h"
 #include "s_zip.h"
+#include "ircd.h"
+#include "s_misc.h"
 
 #include <assert.h>
 #include <stdio.h>

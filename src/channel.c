@@ -41,6 +41,7 @@
 #include "numeric.h"
 #include "channel.h"
 #include "h.h"
+#include "ircd.h"
 #include "list.h"
 #include "parse.h"
 #include "send.h"
@@ -66,8 +67,6 @@ static void check_still_split();
 aChannel *empty_channel_list=(aChannel*)NULL;
 void remove_empty_channels();
 #endif
-
-extern int cold_start;  /* defined in ircd.c */
 
 aChannel *channel = NullChn;
 

@@ -25,6 +25,7 @@
 #include "msg.h"
 #include "s_zip.h"
 #include "h.h"
+#include "ircd.h"
  
 /*
 ** dopacket

@@ -12,6 +12,7 @@
 #include "send.h"
 #include "fdlist.h"
 #include "h.h"
+#include "ircd.h"
 
 #include <time.h>
 #include <string.h>

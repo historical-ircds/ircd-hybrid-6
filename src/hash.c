@@ -20,11 +20,13 @@
  */
 #include "s_conf.h"
 #include "hash.h"
+#include "channel.h"
 #include "struct.h"
 #include "common.h"
 #include "numeric.h"
 #include "msg.h"
 #include "h.h"
+#include "ircd.h"
 #include "send.h"
 
 #include <assert.h>

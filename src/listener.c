@@ -24,6 +24,8 @@
 #include "ircd_defs.h"
 #include "client.h"
 #include "h.h"
+#include "s_misc.h"
+#include "ircd.h"
 #include "struct.h"
 #include "send.h"
 #include "irc_string.h"

@@ -20,6 +20,7 @@
 #ifndef __channel_include__
 #define __channel_include__
 
+struct Client;
 struct Channel;
 
 #define CREATE 1        /* whether a channel should be
@@ -34,16 +35,17 @@ struct Channel;
 /* Maximum mode changes allowed per client, per server is different */
 #define MAXMODEPARAMS   4
 
-extern void sync_channels();
-extern  struct Channel *find_channel (char *, struct Channel *);
-extern  void    remove_user_from_channel (aClient *, aChannel *,int);
-extern  void    del_invite (aClient *, aChannel *);
-extern  void    send_user_joins (aClient *, aClient *);
-extern  int     can_send (aClient *, aChannel *);
-extern  int     is_chan_op (aClient *, aChannel *);
-extern  int     has_voice (aClient *, aChannel *);
-extern  int     count_channels (aClient *);
-extern  int     m_names(aClient *, aClient *,int, char **);
+extern  void sync_channels();
+extern  struct  Channel *find_channel (char *, struct Channel *);
+extern  void    remove_user_from_channel(struct Client *,struct Channel *,int);
+extern  void    del_invite (struct Client *, struct Channel *);
+extern  void    send_user_joins (struct Client *, struct Client *);
+extern  int     can_send (struct Client *, struct Channel *);
+extern  int     is_chan_op (struct Client *, struct Channel *);
+extern  int     has_voice (struct Client *, struct Channel *);
+extern  int     count_channels (struct Client *);
+extern  int     m_names(struct Client *, struct Client *,int, char **);
 extern  void    send_channel_modes (struct Client *, struct Channel *);
+extern  struct  Channel *channel;
 
 #endif

@@ -9,6 +9,7 @@
 #include "numeric.h"
 #include "class.h"
 #include "h.h"
+#include "ircd.h"
 #include "s_conf.h"
 #include "send.h"
 

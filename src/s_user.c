@@ -32,6 +32,8 @@
 #include "class.h"
 #include "s_bsd.h"
 #include "h.h"
+#include "ircd.h"
+#include "s_misc.h"
 #include "send.h"
 #include "hash.h"
 #include "whowas.h"

@@ -26,6 +26,8 @@
 #undef MSGTAB
 #include "numeric.h"
 #include "h.h"
+#include "ircd.h"
+#include "s_misc.h"
 #include "send.h"
 #include "hash.h"
 

@@ -30,6 +30,7 @@
 #include "s_conf.h"
 #include "send.h"
 #include "h.h"
+#include "ircd.h"
 #include "dline_conf.h"
 #include "mtrie_conf.h"
 #include "m_kline.h"

@@ -24,6 +24,7 @@
  */
 
 #include "h.h"
+#include "ircd.h"
 #include "s_bsd.h"
 #include "fileio.h"
 #include "res.h"

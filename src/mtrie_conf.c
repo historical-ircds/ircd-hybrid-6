@@ -52,6 +52,7 @@
 #include "s_conf.h"
 #include "class.h"
 #include "h.h"
+#include "ircd.h"
 #include "send.h"
 #include "dline_conf.h"
 

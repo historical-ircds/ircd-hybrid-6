@@ -120,6 +120,8 @@ char    serveropts[] = {
 #include "numeric.h"
 #include "common.h"
 #include "hash.h"
+#include "ircd.h"
+#include "channel.h"
 #include <sys/file.h>
 #ifdef HPUX
 #include <fcntl.h>

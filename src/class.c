@@ -23,6 +23,7 @@
 #include "common.h"
 #include "numeric.h"
 #include "h.h"
+#include "ircd.h"
 #include "s_conf.h"
 #include "send.h"
 

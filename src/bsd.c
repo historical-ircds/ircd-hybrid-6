@@ -21,7 +21,8 @@
  */
 #include "struct.h"
 #include "common.h"
-#include "h.h"
+#include "ircd.h"
+
 #include <errno.h>
 #include <signal.h>
 #include <sys/types.h>
