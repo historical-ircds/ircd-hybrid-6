@@ -73,8 +73,6 @@ static int valid_username(const char* username);
 static void report_and_set_user_flags( aClient *, aConfItem * );
 static int tell_user_off(aClient *,char **);
 
-static char buf[BUFSIZE], buf2[BUFSIZE];
-
 /* table of ascii char letters to corresponding bitmask */
 
 static FLAG_ITEM user_modes[] =
@@ -1804,6 +1802,7 @@ int user_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
   aClient *acptr;
   int   what, setflags;
   int   badflag = NO;   /* Only send one bad flag notice -Dianora */
+  char  buf[BUFSIZE];
 
   what = MODE_ADD;
 
@@ -1965,11 +1964,8 @@ int user_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * send the MODE string for user (user) to connection cptr
  * -avalon
  */
-void    send_umode(aClient *cptr,
-                   aClient *sptr,
-                   int old,
-                   int sendmask,
-                   char *umode_buf)
+void send_umode(aClient *cptr, aClient *sptr, int old, int sendmask,
+                char *umode_buf)
 {
   int   i;
   int flag;
@@ -2027,11 +2023,12 @@ void    send_umode(aClient *cptr,
  * extra argument evenTS no longer needed with TS only th+hybrid
  * server -Dianora
  */
-void    send_umode_out(aClient *cptr,
+void send_umode_out(aClient *cptr,
                        aClient *sptr,
                        int old)
 {
   aClient *acptr;
+  char buf[BUFSIZE];
 
   send_umode(NULL, sptr, old, SEND_UMODES, buf);
 

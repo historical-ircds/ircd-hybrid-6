@@ -138,7 +138,7 @@ struct Client
   time_t            firsttime;  /* time client was created */
   time_t            since;      /* last time we parsed something */
   time_t            tsinfo;     /* TS on the nick, SVINFO on server */
-  unsigned int      umodes; /* opers, normal users subset */
+  unsigned int      umodes;     /* opers, normal users subset */
   unsigned int      flags;      /* client flags */
   unsigned int      flags2;     /* ugh. overflow */
   int               fd;         /* >= 0, for local clients */
@@ -146,8 +146,8 @@ struct Client
   unsigned short    status;     /* Client type */
   char              nicksent;
   unsigned char     local_flag; /* if this is 1 this client is local */
-  short    listprogress; /* where were we when the /list blocked? */
-  int      listprogress2; /* where in the current bucket were we? */
+  short    listprogress;        /* where were we when the /list blocked? */
+  int      listprogress2;       /* where in the current bucket were we? */
 
   /*
    * client->name is the unique name for a client nick or host
@@ -457,9 +457,9 @@ struct Client
 #define ClearDoingList(x)       ((x)->flags2 &= ~FLAGS2_DOINGLIST)
 #define SetDoingList(x)         ((x)->flags2 |= FLAGS2_DOINGLIST)
 #define IsDoingList(x)          ((x)->flags2 & FLAGS2_DOINGLIST)
-#define ClearSendqPop(x)  ((x)->flags2 &= ~FLAGS2_SENDQ_POP)
-#define SetSendqPop(x)    ((x)->flags2 |= FLAGS2_SENDQ_POP)
-#define IsSendqPopped(x)  ((x)->flags2 & FLAGS2_SENDQ_POP)
+#define ClearSendqPop(x)        ((x)->flags2 &= ~FLAGS2_SENDQ_POP)
+#define SetSendqPop(x)          ((x)->flags2 |= FLAGS2_SENDQ_POP)
+#define IsSendqPopped(x)        ((x)->flags2 & FLAGS2_SENDQ_POP)
 #define IsElined(x)             ((x)->flags2 & FLAGS2_E_LINED)
 #define SetElined(x)            ((x)->flags2 |= FLAGS2_E_LINED)
 #define IsBlined(x)             ((x)->flags2 & FLAGS2_B_LINED)
@@ -514,6 +514,7 @@ struct Client
 #define SHOW_IP 1
 #define MASK_IP 2
 
+extern time_t         check_pings(time_t current);
 extern const char*    get_client_name(struct Client* client, int show_ip);
 extern const char*    get_client_host(struct Client* client);
 extern void           release_client_dns_reply(struct Client* client);

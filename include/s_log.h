@@ -30,7 +30,7 @@
 #define L_INFO    5
 #define L_DEBUG   6
 
-extern void init_log(void);
+extern void init_log(const char* filename);
 extern void close_log(void);
 extern void set_log_level(int level);
 extern void log(int priority, const char* fmt, ...);

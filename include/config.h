@@ -926,27 +926,7 @@
  */
 #undef CHROOTDIR
 
-/*
- * NOTE: On some systems, valloc() causes many problems.
- */
-#undef  VALLOC                  /* Define this if you have valloc(3) */
-
-
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
-#ifdef __EMX__
-#  undef IRC_UID
-#  undef IRC_GID
-#  undef USE_SYSLOG /* OS/2 doesn't have syslog */
-#endif
-
-#ifdef APOLLO
-#define RESTARTING_SYSTEMCALLS
-#endif                            /* read/write are restarted after signals
-                                     defining this 1, gets siginterrupt call
-                                     compiled, which attempts to remove this
-                                     behaviour (apollo sr10.1/bsd4.3 needs
-                                     this) */
-
 #define MAX_CLIENTS INIT_MAXCLIENTS
 
 #if defined(CLIENT_FLOOD) && ((CLIENT_FLOOD > 8000) || (CLIENT_FLOOD < 512))

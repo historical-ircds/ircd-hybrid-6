@@ -23,14 +23,17 @@
  *  $Id$
  */
 #include "client.h"
+#include "class.h"
 #include "blalloc.h"
 #include "channel.h"
 #include "common.h"
+#include "dline_conf.h"
 #include "fdlist.h"
 #include "hash.h"
 #include "irc_string.h"
 #include "ircd.h"
 #include "list.h"
+#include "m_gline.h"
 #include "numeric.h"
 #include "res.h"
 #include "s_bsd.h"
@@ -69,6 +72,12 @@ static BlockHeap*        remoteClientFreeList;
 static const char* const BH_FREE_ERROR_MESSAGE = \
         "client.c BlockHeapFree failed for cptr = %p";
 
+struct Client* dying_clients[MAXCONNECTIONS]; /* list of dying clients */
+char*          dying_clients_reason[MAXCONNECTIONS];
+
+/*
+ * init_client_heap - initialize client free memory
+ */
 void init_client_heap(void)
 {
   /* 
@@ -210,6 +219,440 @@ void _free_client(struct Client* cptr)
 
       log(L_WARN, BH_FREE_ERROR_MESSAGE, cptr);
     }
+}
+
+/*
+ * I re-wrote check_pings a tad
+ *
+ * check_pings - go through the local client list and check activity
+ * kill off stuff that should die
+ *
+ * inputs       - current time
+ * output       - next time_t when check_pings() should be called again
+ *
+ * side effects - 
+ *
+ * Clients can be k-lined/d-lined/g-lined/r-lined and exit_client
+ * called for each of these.
+ *
+ * A PING can be sent to clients as necessary.
+ *
+ * Client/Server ping outs are handled.
+ *
+ * -Dianora
+ */
+
+/* Note, that dying_clients and dying_clients_reason
+ * really don't need to be any where near as long as MAXCONNECTIONS
+ * but I made it this long for now. If its made shorter,
+ * then a limit check is going to have to be added as well
+ * -Dianora
+ */
+time_t check_pings(time_t currenttime)
+{               
+  struct Client *cptr;          /* current local cptr being examined */
+  struct ConfItem     *aconf = (struct ConfItem *)NULL;
+  int           ping = 0;               /* ping time value from client */
+  int           i;                      /* used to index through fd/cptr's */
+  time_t        oldest = 0;             /* next ping time */
+  time_t        timeout;                /* found necessary ping time */
+  char          *reason;                /* pointer to reason string */
+  int           die_index=0;            /* index into list */
+  char          ping_time_out_buffer[64];   /* blech that should be a define */
+
+#if defined(IDLE_CHECK) && defined(SEND_FAKE_KILL_TO_CLIENT)
+  int           fakekill=0;
+#endif /* IDLE_CHECK && SEND_FAKE_KILL_TO_CLIENT */
+
+                                        /* of dying clients */
+  dying_clients[0] = (struct Client *)NULL;   /* mark first one empty */
+
+  /*
+   * I re-wrote the way klines are handled. Instead of rescanning
+   * the local[] array and calling exit_client() right away, I
+   * mark the client thats dying by placing a pointer to its struct Client
+   * into dying_clients[]. When I have examined all in local[],
+   * I then examine the dying_clients[] for struct Client's to exit.
+   * This saves the rescan on k-lines, also greatly simplifies the code,
+   *
+   * Jan 28, 1998
+   * -Dianora
+   */
+
+   for (i = 0; i <= highest_fd; i++)
+    {
+      if (!(cptr = local[i]) || IsMe(cptr))
+        continue;               /* and go examine next fd/cptr */
+      /*
+      ** Note: No need to notify opers here. It's
+      ** already done when "FLAGS_DEADSOCKET" is set.
+      */
+      if (cptr->flags & FLAGS_DEADSOCKET)
+        {
+          /* N.B. EVERY single time dying_clients[] is set
+           * it must be followed by an immediate continue,
+           * to prevent this cptr from being marked again for exit.
+           * If you don't, you could cause exit_client() to be called twice
+           * for the same cptr. i.e. bad news
+           * -Dianora
+           */
+
+          dying_clients[die_index] = cptr;
+          dying_clients_reason[die_index++] =
+            ((cptr->flags & FLAGS_SENDQEX) ?
+             "SendQ exceeded" : "Dead socket");
+          dying_clients[die_index] = (struct Client *)NULL;
+          continue;             /* and go examine next fd/cptr */
+        }
+
+      if (rehashed)
+        {
+          if(dline_in_progress)
+            {
+              if(IsPerson(cptr))
+                {
+                  if( (aconf = match_Dline(ntohl(cptr->ip.s_addr))) )
+
+                      /* if there is a returned 
+                       * struct ConfItem then kill it
+                       */
+                    {
+                      if(IsConfElined(aconf))
+                        {
+                          sendto_realops("D-line over-ruled for %s client is E-lined",
+                                     get_client_name(cptr,FALSE));
+                                     continue;
+                          continue;
+                        }
+
+                      sendto_realops("D-line active for %s",
+                                 get_client_name(cptr, FALSE));
+
+                      dying_clients[die_index] = cptr;
+/* Wintrhawk */
+#ifdef KLINE_WITH_CONNECTION_CLOSED
+                      /*
+                       * We use a generic non-descript message here on 
+                       * purpose so as to prevent other users seeing the
+                       * client disconnect from harassing the IRCops
+                       */
+                      reason = "Connection closed";
+#else
+#ifdef KLINE_WITH_REASON
+                      reason = aconf->passwd ? aconf->passwd : "D-lined";
+#else
+                      reason = "D-lined";
+#endif /* KLINE_WITH_REASON */
+#endif /* KLINE_WITH_CONNECTION_CLOSED */
+
+                      dying_clients_reason[die_index++] = reason;
+                      dying_clients[die_index] = (struct Client *)NULL;
+                      sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
+                                 me.name, cptr->name, reason);
+                      continue;         /* and go examine next fd/cptr */
+                    }
+                }
+            }
+          else
+            {
+              if(IsPerson(cptr))
+                {
+#ifdef GLINES
+                  if( (aconf = find_gkill(cptr)) )
+                    {
+                      if(IsElined(cptr))
+                        {
+                          sendto_realops("G-line over-ruled for %s client is E-lined",
+                                     get_client_name(cptr,FALSE));
+                                     continue;
+                        }
+
+                      sendto_realops("G-line active for %s",
+                                 get_client_name(cptr, FALSE));
+
+                      dying_clients[die_index] = cptr;
+/* Wintrhawk */
+#ifdef KLINE_WITH_CONNECTION_CLOSED
+                      /*
+                       * We use a generic non-descript message here on 
+                       * purpose so as to prevent other users seeing the
+                       * client disconnect from harassing the IRCops
+                       */
+                      reason = "Connection closed";
+#else
+#ifdef KLINE_WITH_REASON
+                      reason = aconf->passwd ? aconf->passwd : "G-lined";
+#else
+                      reason = "G-lined";
+#endif /* KLINE_WITH_REASON */
+#endif /* KLINE_WITH_CONNECTION_CLOSED */
+
+                      dying_clients_reason[die_index++] = reason;
+                      dying_clients[die_index] = (struct Client *)NULL;
+                      sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
+                                 me.name, cptr->name, reason);
+                      continue;         /* and go examine next fd/cptr */
+                    }
+                  else
+#endif
+                  if((aconf = find_kill(cptr))) /* if there is a returned
+                                                   struct ConfItem.. then kill it */
+                    {
+                      if(aconf->status & CONF_ELINE)
+                        {
+                          sendto_realops("K-line over-ruled for %s client is E-lined",
+                                     get_client_name(cptr,FALSE));
+                                     continue;
+                        }
+
+                      sendto_realops("K-line active for %s",
+                                 get_client_name(cptr, FALSE));
+                      dying_clients[die_index] = cptr;
+
+/* Wintrhawk */
+#ifdef KLINE_WITH_CONNECTION_CLOSED
+                      /*
+                       * We use a generic non-descript message here on 
+                       * purpose so as to prevent other users seeing the
+                       * client disconnect from harassing the IRCops
+                       */
+                      reason = "Connection closed";
+#else
+#ifdef KLINE_WITH_REASON
+                      reason = aconf->passwd ? aconf->passwd : "K-lined";
+#else
+                      reason = "K-lined";
+#endif /* KLINE_WITH_REASON */
+#endif /* KLINE_WITH_CONNECTION_CLOSED */
+
+                      dying_clients_reason[die_index++] = reason;
+                      dying_clients[die_index] = (struct Client *)NULL;
+                      sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
+                                 me.name, cptr->name, reason);
+                      continue;         /* and go examine next fd/cptr */
+                    }
+                }
+            }
+        }
+
+#ifdef IDLE_CHECK
+      if (IsPerson(cptr))
+        {
+          if( !IsElined(cptr) &&
+              IDLETIME && 
+#ifdef OPER_IDLE
+              !IsAnOper(cptr) &&
+#endif /* OPER_IDLE */
+              !IsIdlelined(cptr) && 
+              ((CurrentTime - cptr->user->last) > IDLETIME))
+            {
+              struct ConfItem *aconf;
+
+              dying_clients[die_index] = cptr;
+              dying_clients_reason[die_index++] = "Idle time limit exceeded";
+#if defined(SEND_FAKE_KILL_TO_CLIENT) && defined(IDLE_CHECK)
+              fakekill = 1;
+#endif /* SEND_FAKE_KILL_TO_CLIENT && IDLE_CHECK */
+              dying_clients[die_index] = (struct Client *)NULL;
+
+              aconf = make_conf();
+              aconf->status = CONF_KILL;
+              DupString(aconf->host, cptr->user->host);
+              DupString(aconf->passwd, "idle exceeder" );
+              DupString(aconf->name, cptr->user->username);
+              aconf->port = 0;
+              aconf->hold = CurrentTime + 60;
+              add_temp_kline(aconf);
+              sendto_realops("Idle time limit exceeded for %s - temp k-lining",
+                         get_client_name(cptr,FALSE));
+              continue;         /* and go examine next fd/cptr */
+            }
+        }
+#endif
+
+#ifdef REJECT_HOLD
+      if (IsRejectHeld(cptr))
+        {
+          if( CurrentTime > (cptr->firsttime + REJECT_HOLD_TIME) )
+            {
+              if( reject_held_fds )
+                reject_held_fds--;
+
+              dying_clients[die_index] = cptr;
+              dying_clients_reason[die_index++] = "reject held client";
+              dying_clients[die_index] = (struct Client *)NULL;
+              continue;         /* and go examine next fd/cptr */
+            }
+        }
+#endif
+
+      if (!IsRegistered(cptr))
+        ping = CONNECTTIMEOUT;
+      else
+        ping = get_client_ping(cptr);
+
+      /*
+       * Ok, so goto's are ugly and can be avoided here but this code
+       * is already indented enough so I think its justified. -avalon
+       */
+       /*  if (!rflag &&
+               (ping >= currenttime - cptr->lasttime))
+              goto ping_timeout; */
+
+      /*
+       * *sigh* I think not -Dianora
+       */
+
+      if (ping < (currenttime - cptr->lasttime))
+        {
+
+          /*
+           * If the server hasnt talked to us in 2*ping seconds
+           * and it has a ping time, then close its connection.
+           * If the client is a user and a KILL line was found
+           * to be active, close this connection too.
+           */
+          if (((currenttime - cptr->lasttime) >= (2 * ping) &&
+               (cptr->flags & FLAGS_PINGSENT)))
+            {
+              if (IsServer(cptr) || IsConnecting(cptr) ||
+                  IsHandshake(cptr))
+                {
+                  sendto_ops("No response from %s, closing link",
+                             get_client_name(cptr, FALSE));
+                }
+              /*
+               * this is used for KILL lines with time restrictions
+               * on them - send a messgae to the user being killed
+               * first.
+               * *** Moved up above  -taner ***
+               */
+              cptr->flags2 |= FLAGS2_PING_TIMEOUT;
+              dying_clients[die_index++] = cptr;
+              /* the reason is taken care of at exit time */
+      /*      dying_clients_reason[die_index++] = "Ping timeout"; */
+              dying_clients[die_index] = (struct Client *)NULL;
+              
+              /*
+               * need to start loop over because the close can
+               * affect the ordering of the local[] array.- avalon
+               *
+               ** Not if you do it right - Dianora
+               */
+
+              continue;
+            }
+          else if ((cptr->flags & FLAGS_PINGSENT) == 0)
+            {
+              /*
+               * if we havent PINGed the connection and we havent
+               * heard from it in a while, PING it to make sure
+               * it is still alive.
+               */
+              cptr->flags |= FLAGS_PINGSENT;
+              /* not nice but does the job */
+              cptr->lasttime = currenttime - ping;
+              sendto_one(cptr, "PING :%s", me.name);
+            }
+        }
+      /* ping_timeout: */
+      timeout = cptr->lasttime + ping;
+      while (timeout <= currenttime)
+        timeout += ping;
+      if (timeout < oldest || !oldest)
+        oldest = timeout;
+
+      /*
+       * Check UNKNOWN connections - if they have been in this state
+       * for > 100s, close them.
+       */
+
+      if (IsUnknown(cptr))
+        {
+          if (cptr->firsttime ? ((CurrentTime - cptr->firsttime) > 100) : 0)
+            {
+              dying_clients[die_index] = cptr;
+              dying_clients_reason[die_index++] = "Connection Timed Out";
+              dying_clients[die_index] = (struct Client *)NULL;
+              continue;
+            }
+        }
+    }
+
+  /* Now exit clients marked for exit above.
+   * it doesn't matter if local[] gets re-arranged now
+   *
+   * -Dianora
+   */
+
+  for(die_index = 0; (cptr = dying_clients[die_index]); die_index++)
+    {
+      if(cptr->flags2 & FLAGS2_PING_TIMEOUT)
+        {
+          (void)ircsprintf(ping_time_out_buffer,
+                            "Ping timeout: %d seconds",
+                            currenttime - cptr->lasttime);
+
+          /* ugh. this is horrible.
+           * but I can get away with this hack because of the
+           * block allocator, and right now,I want to find out
+           * just exactly why occasional already bit cleared errors
+           * are still happening
+           */
+          if(cptr->flags2 & FLAGS2_ALREADY_EXITED)
+            {
+              sendto_realops("Client already exited doing ping timeout %X",cptr);
+            }
+          else
+            (void)exit_client(cptr, cptr, &me, ping_time_out_buffer );
+          cptr->flags2 |= FLAGS2_ALREADY_EXITED;
+        }
+      else
+#if defined(SEND_FAKE_KILL_TO_CLIENT) && defined(IDLE_CHECK)
+        {
+          if (fakekill)
+            sendto_prefix_one(cptr, cptr, ":AutoKILL KILL %s :(%s)",
+            cptr->name, dying_clients_reason[die_index]);
+          /* ugh. this is horrible.
+           * but I can get away with this hack because of the
+           * block allocator, and right now,I want to find out
+           * just exactly why occasional already bit cleared errors
+           * are still happening
+           */
+          if(cptr->flags2 & FLAGS2_ALREADY_EXITED)
+            {
+              sendto_realops("Client already exited %X",cptr);
+            }
+          else
+            (void)exit_client(cptr, cptr, &me, dying_clients_reason[die_index]);
+          cptr->flags2 |= FLAGS2_ALREADY_EXITED;
+        }
+#else 
+          /* ugh. this is horrible.
+           * but I can get away with this hack because of the
+           * block allocator, and right now,I want to find out
+           * just exactly why occasional already bit cleared errors
+           * are still happening
+           */
+          if(cptr->flags2 & FLAGS2_ALREADY_EXITED)
+            {
+              sendto_realops("Client already exited %X",cptr);
+            }
+          else
+            (void)exit_client(cptr, cptr, &me, dying_clients_reason[die_index]);
+          cptr->flags2 |= FLAGS2_ALREADY_EXITED;          
+#endif /* SEND_FAKE_KILL_TO_CLIENT && IDLE_CHECK */
+    }
+
+  rehashed = 0;
+  dline_in_progress = 0;
+
+  if (!oldest || oldest < currenttime)
+    oldest = currenttime + PINGFREQUENCY;
+  Debug((DEBUG_NOTICE, "Next check_ping() call at: %s, %d %d %d",
+         myctime(oldest), ping, oldest, currenttime));
+  
+  return (oldest);
 }
 
 
@@ -890,7 +1333,7 @@ static void remove_dependents(struct Client* cptr,
 {
   struct Client *to;
   int i;
-  aConfItem *aconf;
+  struct ConfItem *aconf;
   static char myname[HOSTLEN+1];
 
   for (i=0; i<=highest_fd; i++)

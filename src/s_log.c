@@ -47,6 +47,7 @@ static int sysLogLevel[] = {
   LOG_WARNING,
   LOG_NOTICE,
   LOG_INFO,
+  LOG_INFO,
   LOG_INFO
 };
 
@@ -105,9 +106,9 @@ void log(int priority, const char* fmt, ...)
   write_log(buf);
 }
   
-void init_log(void)
+void init_log(const char* filename)
 {
-  open_log(LPATH);
+  open_log(filename);
 #ifdef USE_SYSLOG
   openlog("ircd", LOG_PID | LOG_NDELAY, LOG_FACILITY);
 #endif

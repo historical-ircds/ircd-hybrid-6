@@ -65,19 +65,7 @@
 #ifdef USE_POLL
 #include <stropts.h>
 #include <poll.h>
-#else
-
-/*
- * Stuff for select()
- */
-
-fd_set*  read_set;
-fd_set*  write_set;
-
-fd_set  readset;
-fd_set  writeset;
-
-#endif /* USE_POLL_ */
+#endif
 
 #ifndef IN_LOOPBACKNET
 #define IN_LOOPBACKNET        0x7f
@@ -93,35 +81,44 @@ const char* const NONB_ERROR_MSG   = "set_non_blocking failed for %s:%s";
 const char* const OPT_ERROR_MSG    = "disable_sock_options failed for %s:%s";
 const char* const SETBUF_ERROR_MSG = "set_sock_buffers failed for server %s:%s";
 
-struct Client*       local[MAXCONNECTIONS];
+struct Client* local[MAXCONNECTIONS];
 
 int            highest_fd = 0;
 
 static struct sockaddr_in mysk;
 static char               readBuf[READBUF_SIZE];
 
-static void do_dns_async(void);
-
-
+#ifndef USE_POLL
 /*
- * Try and find the correct name to use with getrlimit() for setting the max.
- * number of files allowed to be open by this process.
+ * Stuff for select()
  */
-#ifdef RLIMIT_FDMAX
-# define RLIMIT_FD_MAX   RLIMIT_FDMAX
-#else
-# ifdef RLIMIT_NOFILE
-#  define RLIMIT_FD_MAX RLIMIT_NOFILE
-# else
-#  ifdef RLIMIT_OPEN_MAX
-#   define RLIMIT_FD_MAX RLIMIT_OPEN_MAX
-#  else
-#   undef RLIMIT_FD_MAX
-#  endif
-# endif
+
+static fd_set readSet;
+static fd_set writeSet;
+
+fd_set*  read_set  = &readSet;
+fd_set*  write_set = &writeSet;
+
+#endif /* USE_POLL */
+
+void close_all_connections(void)
+{
+  int i;
+  for (i = 0; i < MAXCONNECTIONS; ++i) {
+    close(i);
+    local[i] = 0;
+  }
+}
+
+void init_netio(void)
+{
+#ifndef USE_POLL
+  read_set  = &readSet;
+  write_set = &writeSet;
 #endif
-
-
+  init_resolver();
+}
+ 
 /*
  * get_sockerr - get the error value from the socket or the current errno
  *
@@ -331,90 +328,6 @@ int deliver_it(aClient *cptr, char *str, int len)
         }
     }
   return(retval);
-}
-
-
-/*
- * init_sys
- */
-void init_sys()
-{
-  int fd;
-
-#ifdef RLIMIT_FD_MAX
-  struct rlimit limit;
-
-  if (!getrlimit(RLIMIT_FD_MAX, &limit))
-    {
-
-      if (limit.rlim_max < MAXCONNECTIONS)
-        {
-          fprintf(stderr,"ircd fd table too big\n");
-          fprintf(stderr,"Hard Limit: %ld IRC max: %d\n",
-                        (long) limit.rlim_max, MAXCONNECTIONS);
-          fprintf(stderr,"Fix MAXCONNECTIONS\n");
-          exit(-1);
-        }
-
-      limit.rlim_cur = limit.rlim_max; /* make soft limit the max */
-      if (setrlimit(RLIMIT_FD_MAX, &limit) == -1)
-        {
-          fprintf(stderr,"error setting max fd's to %ld\n",
-                        (long) limit.rlim_cur);
-          exit(-1);
-        }
-
-#ifndef USE_POLL
-      if( MAXCONNECTIONS > FD_SETSIZE )
-        {
-          fprintf(stderr, "FD_SETSIZE = %d MAXCONNECTIONS = %d\n",
-                  FD_SETSIZE, MAXCONNECTIONS);
-          fprintf(stderr,
-            "Make sure your kernel supports a larger FD_SETSIZE then " \
-            "recompile with -DFD_SETSIZE=%d\n", MAXCONNECTIONS);
-          exit(-1);
-        }
-      printf("Value of FD_SETSIZE is %d\n", FD_SETSIZE);
-#endif /* USE_POLL */
-      printf("Value of NOFILE is %d\n", NOFILE);
-    }
-#endif        /* RLIMIT_FD_MAX */
-
-#ifndef USE_POLL
-  read_set = &readset;
-  write_set = &writeset;
-#endif
-
-  for (fd = 0; fd < MAXCONNECTIONS; fd++)
-    {
-      close(fd);
-      local[fd] = NULL;
-    }
-
-#ifndef __CYGWIN__
-  /* This is needed to not fork if -s is on */
-  if( !(bootopt & BOOT_STDERR) )
-    {
-      int pid;
-      if( (pid = fork()) < 0)
-        {
-          if ((fd = open("/dev/tty", O_RDWR)) >= 0)
-          report_error_on_tty("Couldn't fork!\n");
-          exit(0);
-        }
-      else if (pid > 0)
-        exit(0);
-#ifdef TIOCNOTTY
-      if ((fd = open("/dev/tty", O_RDWR)) >= 0)
-        {
-          ioctl(fd, TIOCNOTTY, (char *)NULL);
-          close(fd);
-        }
-#endif
-     setsid();
-    }
-#endif /* __CYGWIN__ */
-  init_resolver();
 }
 
 /*

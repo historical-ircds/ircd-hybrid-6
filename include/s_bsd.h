@@ -42,10 +42,11 @@ extern const char* const SETBUF_ERROR_MSG;
 extern void  add_connection(struct Listener* listener, int fd);
 extern int   check_client(struct Client* client, char *,char **);
 extern void  close_connection(struct Client* client);
+extern void  close_all_connections(void);
 extern int   connect_server(struct ConfItem* conf, struct Client* cptr, 
                             struct DNSReply* dns_reply);
 extern void  get_my_name(struct Client *, char *, int);
-extern void  init_sys();
+extern void  init_netio(void);
 extern int   read_message (time_t timeout, unsigned char mask);
 extern void  report_error(const char* message, const char* who, int error);
 extern int   set_non_blocking(int fd);
