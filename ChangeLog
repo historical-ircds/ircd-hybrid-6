@@ -1,3 +1,15 @@
+jdc         2001/12/06 23:01:56 EST	(20011207_1)
+
+  Modified files:
+    src                  ircd.c 
+  Log:
+  - Follow-up to the previous commit (re: IRC_UID, etc.).
+  
+  Revision  Changes    Path
+  1.152     +0 -1      ircd-hybrid-6/src/ircd.c
+
+
+
 jdc         2001/12/06 22:22:20 EST	(20011207_0)
 
   Modified files:
