@@ -1,7 +1,7 @@
 CC=@CC@
 RM=@RM@
 IRCDLIBS=@LIBS@
-INCLUDEDIR=-I../include
+INCLUDEDIR=-I../include -I../zlib
 
 mkpasswd_SOURCES = mkpasswd.c
 mkpasswd_OBJECTS = mkpasswd.o
