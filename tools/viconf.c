@@ -37,7 +37,7 @@ static char lockpath[PATH_MAX + 1];
 
 int main(int argc, char *argv[])
 {
-  char *ed, *p, *filename = MPATH;
+  char *ed, *p, *filename = CPATH;
 
   if( chdir(DPATH) < 0 )
     {
