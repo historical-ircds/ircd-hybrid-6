@@ -72,6 +72,7 @@ char *infotext[] =
 	"Dianora             Diane Bruce         db@db.net",
 	"FlashMan            Craig A. Huegen     chuegen@quadrunner.com",
 	"Rodder              Jon Lusky           lusky@blown.net",
+        "SideWnder           Patrick Alken       wnder@uwns.underworld.net",
         "Slowaris            Ryan Parker         rjp@wpmedia.com",
         "White_Dragon        Chip Norkus         wd@dal.net",
 	"WintrHawk           Jake Khuon          khuon@GCtr.Net",
