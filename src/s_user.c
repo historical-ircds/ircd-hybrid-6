@@ -3356,8 +3356,13 @@ int	m_oper(aClient *cptr,
   else if (IsAnOper(sptr))
     {
       if (MyConnect(sptr))
-	sendto_one(sptr, rpl_str(RPL_YOUREOPER),
-		   me.name, parv[0]);
+	{
+	  sendto_one(sptr, rpl_str(RPL_YOUREOPER),
+		     me.name, parv[0]);
+#ifdef OPER_MOTD
+	  (void)send_oper_motd(sptr, sptr, 1, parv,opermotd);
+#endif
+	}
       return 0;
     }
   if (!(aconf = find_conf_exact(name, sptr->username, sptr->sockhost,
