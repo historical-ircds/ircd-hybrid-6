@@ -1,3 +1,7 @@
+*** 20010613_5 by leeh
+- more fixes to HIDE_SERVERS_IPS
+
+
 *** 20010613_4 by jdc
 * Added support for U_LINES_OPER_ONLY (capital U, not lowercase).
 
