@@ -137,7 +137,7 @@ s_auth.o: ../include/struct.h ../include/config.h ../include/setup.h
 s_auth.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
 s_auth.o: ../include/class.h ../include/dbuf.h ../include/common.h
 s_auth.o: ../include/sys.h ../include/res.h ../include/numeric.h
-s_auth.o: ../include/patchlevel.h ../include/sock.h ../include/h.h
+s_auth.o: ../include/patchlevel.h ../include/h.h
 s_auth.o: ../include/mtrie_conf.h ../include/fdlist.h
 s_bsd.o: ../include/struct.h ../include/config.h ../include/setup.h
 s_bsd.o: ../include/defs.h ../zlib/zlib.h ../zlib/zconf.h ../include/hash.h
