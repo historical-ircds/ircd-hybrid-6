@@ -5105,6 +5105,8 @@ int	m_rehash(aClient *cptr,
 		 int parc,
 		 char *parv[])
 {
+  int found = NO;
+
 #ifndef	LOCOP_REHASH
   if (!MyClient(sptr) || !IsOper(sptr))
 #else
@@ -5121,18 +5123,13 @@ int	m_rehash(aClient *cptr,
 
   if(parc > 1)
     {
-#ifdef USE_SYSLOG
-	syslog(LOG_NOTICE, "REHASH %s From %s\n",
-	       parv[1],get_client_name(sptr, FALSE));
-#endif
-
       if(mycmp(parv[1],"DNS") == 0)
 	{
 	  sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], "DNS");
 	  restart_resolver();	/* re-read /etc/resolv.conf */
 	  sendto_ops("%s is rehashing DNS while whistling innocently",
 		 parv[0]);
-	  return 0;
+	  found = YES;
 	}
       else if(mycmp(parv[1],"TKLINES") == 0)
 	{
@@ -5140,7 +5137,7 @@ int	m_rehash(aClient *cptr,
 	  flush_temp_klines();
 	  sendto_ops("%s is clearing temp klines while whistling innocently",
 		 parv[0]);
-	  return 0;
+	  found = YES;
 	}
 #ifdef GLINES
       else if(mycmp(parv[1],"GLINES") == 0)
@@ -5149,7 +5146,7 @@ int	m_rehash(aClient *cptr,
 	  flush_glines();
 	  sendto_ops("%s is clearing G-lines while whistling innocently",
 		 parv[0]);
-	  return 0;
+	  found = YES;
 	}
 #endif
       else if(mycmp(parv[1],"GC") == 0)
@@ -5158,7 +5155,7 @@ int	m_rehash(aClient *cptr,
 	  block_garbage_collect();
 	  sendto_ops("%s is garbage collecting while whistling innocently",
 		 parv[0]);
-	  return 0;
+	  found = YES;
 	}
       else if(mycmp(parv[1],"MOTD") == 0)
         {
@@ -5167,18 +5164,28 @@ int	m_rehash(aClient *cptr,
 #ifdef AMOTD
 	  read_amotd();
 #endif
-	  return(0);
+	  found = YES;
         }
       else if(mycmp(parv[1],"HELP") == 0)
         {
 	  sendto_ops("%s is forcing re-reading of oper help file",parv[0]);
           read_help();
-	  return(0);
+	  found = YES;
         }
       else if(mycmp(parv[1],"dump") == 0)
 	{
+	  sendto_ops("%s is dumping conf file",parv[0]);
 	  rehash_dump(sptr,parv[0]);
-	  return(0);
+	  found = YES;
+	}
+      if(found)
+	{
+#ifdef USE_SYSLOG
+	  syslog(LOG_NOTICE, "REHASH %s From %s\n",
+		 parv[1],
+		 get_client_name(sptr, FALSE));
+#endif
+	  return 0;
 	}
       else
 	{
