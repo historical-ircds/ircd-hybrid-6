@@ -727,7 +727,6 @@ int main(int argc, char *argv[])
   myargv = argv;
   umask(077);                /* better safe than sorry --SRB */
 
-  setup_signals();
   setuid(uid);
   parse_command_line(argc, argv); 
 
@@ -785,6 +784,8 @@ int main(int argc, char *argv[])
 # endif 
             } 
 #endif /*CHROOTDIR/UID/GID*/
+
+  setup_signals();
 
   init_sys(bootDaemon);
   init_log(logFileName);
