@@ -1,3 +1,8 @@
+*** 20000809_2 by lusky
+changed the sendto_ops to sendto_realops for dupe gline votes (gp)
+add G to the version flags to indicate G-line capability (gp)
+
+
 *** 20000809_1 by lusky
 revved patchlevel to rc4
 syslog() format fix (wnder)
