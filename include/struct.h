@@ -95,42 +95,6 @@ typedef struct  Zdata   aZdata;
 #define DEBUG_MALLOC 9  /* malloc/free calls */
 #define DEBUG_LIST  10  /* debug list use */
 
-/*
- * statistics structures
- */
-struct  stats {
-        unsigned int    is_cl;  /* number of client connections */
-        unsigned int    is_sv;  /* number of server connections */
-        unsigned int    is_ni;  /* connection but no idea who it was */
-        unsigned short  is_cbs; /* bytes sent to clients */
-        unsigned short  is_cbr; /* bytes received to clients */
-        unsigned short  is_sbs; /* bytes sent to servers */
-        unsigned short  is_sbr; /* bytes received to servers */
-        unsigned long   is_cks; /* k-bytes sent to clients */
-        unsigned long   is_ckr; /* k-bytes received to clients */
-        unsigned long   is_sks; /* k-bytes sent to servers */
-        unsigned long   is_skr; /* k-bytes received to servers */
-        time_t          is_cti; /* time spent connected by clients */
-        time_t          is_sti; /* time spent connected by servers */
-        unsigned int    is_ac;  /* connections accepted */
-        unsigned int    is_ref; /* accepts refused */
-        unsigned int    is_unco; /* unknown commands */
-        unsigned int    is_wrdi; /* command going in wrong direction */
-        unsigned int    is_unpf; /* unknown prefix */
-        unsigned int    is_empt; /* empty message */
-        unsigned int    is_num; /* numeric message */
-        unsigned int    is_kill; /* number of kills generated on collisions */
-        unsigned int    is_fake; /* MODE 'fakes' */
-        unsigned int    is_asuc; /* successful auth requests */
-        unsigned int    is_abad; /* bad auth requests */
-        unsigned int    is_udp; /* packets recv'd on udp port */
-        unsigned int    is_loc; /* local connections made */
-#ifdef FLUD
-        unsigned int    is_flud;        /* users/channels flood protected */
-#endif /* FLUD */
-};
-
-
 
 /* general link structure used for chains */
 
