@@ -2538,10 +2538,10 @@ static void do_include_conf(void)
     {
       nextinclude = include_list->next;
       if ((file = openconf(include_list->name)) == 0)
-        sendto_ops("Can't open %s include file",include_list->name);
+        sendto_realops("Can't open %s include file",include_list->name);
       else
         {
-          sendto_ops("Hashing in %s include file",include_list->name);
+          sendto_realops("Hashing in %s include file",include_list->name);
           initconf(file, NO);
         }
       free_conf(include_list);
@@ -3440,7 +3440,7 @@ void get_printable_conf(struct ConfItem *aconf, char **name, char **host,
 void read_conf_files(int cold)
 {
   FBFILE* file = 0;     /* initconf */
-  const char *filename; /* kline or conf filename */
+  const char *filename,*kfilename,*dfilename; /* conf filenames */
 
   filename = get_conf_name(CONF_TYPE);
 
@@ -3453,7 +3453,7 @@ void read_conf_files(int cold)
         }
       else
         {
-          sendto_ops("Can't open %s file aborting rehash!", filename );
+          sendto_realops("Can't open %s file aborting rehash!", filename );
           return;
         }
     }
@@ -3470,24 +3470,44 @@ void read_conf_files(int cold)
    * or *filename == '\0'; and then just ignoring it 
    */
 
-#ifdef KPATH
-  filename = get_conf_name(KLINE_TYPE);
-
-  if ((file = openconf(filename)) == 0)
+  kfilename = get_conf_name(KLINE_TYPE);
+  if (irccmp(filename,kfilename) != 0)
     {
-      if(cold)
+      if ((file = openconf(kfilename)) == 0)
         {
-          log(L_ERROR,"Failed reading kline file %s", filename);
+          if(cold)
+            {
+              log(L_ERROR,"Failed reading kline file %s", kfilename);
+            }
+          else
+            {
+              sendto_realops("Can't open %s file klines could be missing!",
+                         kfilename);
+            }
         }
       else
-        {
-          sendto_ops("Can't open %s file klines could be missing!",
-                     filename);
-        }
+        initconf(file, NO);
     }
-  else
-    initconf(file, NO);
-#endif
+
+  dfilename = get_conf_name(DLINE_TYPE);
+  if ((irccmp(filename,dfilename) != 0) && (irccmp(kfilename,dfilename) !=0))
+    {
+      if ((file = openconf(dfilename)) == 0)
+        {
+          if(cold)
+            {
+              log(L_ERROR,"Failed reading dline file %s", dfilename);
+            }
+          else
+            {
+              sendto_realops("Can't open %s file dlines could be missing!",
+                         dfilename);
+            }
+        }
+      else
+        initconf(file, NO);
+    }
+
 }
 
 /*

@@ -36,6 +36,7 @@
 #include "struct.h"
 #include "s_bsd.h"
 #include "s_conf.h"
+#include "s_log.h"
 #include "s_stats.h"
 #include "s_user.h"
 #include "s_zip.h"
@@ -511,6 +512,7 @@ int server_estab(struct Client *cptr)
   struct ConfItem*  n_conf;
   struct ConfItem*  c_conf;
   const char*       inpath;
+  static char       inpath_ip[HOSTLEN * 2 + USERLEN + 5];
   char*             host;
   char*             encr;
   int               split;
@@ -518,7 +520,9 @@ int server_estab(struct Client *cptr)
   assert(0 != cptr);
   ClearAccess(cptr);
 
-  inpath = get_client_name(cptr, TRUE); /* "refresh" inpath with host */
+  strcpy(inpath_ip, get_client_name(cptr, SHOW_IP));
+  inpath = get_client_name(cptr, MASK_IP); /* "refresh" inpath with host */
+
   split = irccmp(cptr->name, cptr->host);
   host = cptr->name;
 
@@ -526,8 +530,9 @@ int server_estab(struct Client *cptr)
     {
       ServerStats->is_ref++;
       sendto_one(cptr,
-                 "ERROR :Access denied. No N line for server %s", inpath);
+                 "ERROR :Access denied. No N line for server %s", inpath_ip);
       sendto_ops("Access denied. No N line for server %s", inpath);
+      log(L_NOTICE, "Access denied. No N line for server %s", inpath_ip);
       return exit_client(cptr, cptr, cptr, "No N line for server");
     }
   if (!(c_conf = find_conf_name(cptr->confs, host, CONF_CONNECT_SERVER )))
@@ -535,6 +540,7 @@ int server_estab(struct Client *cptr)
       ServerStats->is_ref++;
       sendto_one(cptr, "ERROR :Only N (no C) field for server %s", inpath);
       sendto_ops("Only N (no C) field for server %s",inpath);
+      log(L_NOTICE, "Only N (no C) field for server %s",inpath_ip);
       return exit_client(cptr, cptr, cptr, "No C line for server");
     }
 
@@ -558,6 +564,7 @@ int server_estab(struct Client *cptr)
       sendto_one(cptr, "ERROR :No Access (passwd mismatch) %s",
                  inpath);
       sendto_ops("Access denied (passwd mismatch) %s", inpath);
+      log(L_NOTICE, "Access denied (passwd mismatch) %s", inpath_ip);
       return exit_client(cptr, cptr, cptr, "Bad Password");
     }
   memset((void *)cptr->passwd, 0,sizeof(cptr->passwd));
@@ -663,6 +670,8 @@ int server_estab(struct Client *cptr)
   /* ircd-hybrid-6 can do TS links, and  zipped links*/
   sendto_ops("Link with %s established: (%s) link",
              inpath,show_capabilities(cptr));
+  log(L_NOTICE, "Link with %s established: (%s) link",
+             inpath_ip,show_capabilities(cptr));
 
   add_to_client_hash_table(cptr->name, cptr);
   /* doesnt duplicate cptr->serv if allocated this struct already */

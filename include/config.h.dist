@@ -301,6 +301,11 @@
  */
 #define WHOIS_WAIT 1
 
+/* NO_WHOIS_WILDCARDS - disable the use of wildcards in WHOIS.
+ * this will probably be permanently enabled in the next release.
+ */
+#define NO_WHOIS_WILDCARDS
+
 /* PACE_WAIT - minimum seconds between use of MOTD, INFO, HELP, LINKS, TRACE
  * -Dianora
  */

@@ -310,48 +310,54 @@ time_t check_pings(time_t currenttime)
         {
           if(dline_in_progress)
             {
-              if(IsPerson(cptr))
+              if( (aconf = match_Dline(ntohl(cptr->ip.s_addr))) )
+
+                  /* if there is a returned 
+                   * struct ConfItem then kill it
+                   */
                 {
-                  if( (aconf = match_Dline(ntohl(cptr->ip.s_addr))) )
-
-                      /* if there is a returned 
-                       * struct ConfItem then kill it
-                       */
+                  if(IsConfElined(aconf))
                     {
-                      if(IsConfElined(aconf))
-                        {
-                          sendto_realops("D-line over-ruled for %s client is E-lined",
-                                     get_client_name(cptr,FALSE));
-                                     continue;
-                          continue;
-                        }
+                      sendto_realops("D-line over-ruled for %s client is E-lined",
+                                 get_client_name(cptr,FALSE));
+                                 continue;
+                      continue;
+                    }
 
-                      sendto_realops("D-line active for %s",
+                  sendto_realops("D-line active for %s",
                                  get_client_name(cptr, FALSE));
 
-                      dying_clients[die_index] = cptr;
+                  dying_clients[die_index] = cptr;
 /* Wintrhawk */
 #ifdef KLINE_WITH_CONNECTION_CLOSED
-                      /*
-                       * We use a generic non-descript message here on 
-                       * purpose so as to prevent other users seeing the
-                       * client disconnect from harassing the IRCops
-                       */
-                      reason = "Connection closed";
+                  /*
+                   * We use a generic non-descript message here on 
+                   * purpose so as to prevent other users seeing the
+                   * client disconnect from harassing the IRCops
+                   */
+                  reason = "Connection closed";
 #else
 #ifdef KLINE_WITH_REASON
-                      reason = aconf->passwd ? aconf->passwd : "D-lined";
+                  reason = aconf->passwd ? aconf->passwd : "D-lined";
 #else
-                      reason = "D-lined";
+                  reason = "D-lined";
 #endif /* KLINE_WITH_REASON */
 #endif /* KLINE_WITH_CONNECTION_CLOSED */
 
-                      dying_clients_reason[die_index++] = reason;
-                      dying_clients[die_index] = (struct Client *)NULL;
+                  dying_clients_reason[die_index++] = reason;
+                  dying_clients[die_index] = (struct Client *)NULL;
+                  if(IsPerson(cptr))
+                    {
                       sendto_one(cptr, form_str(ERR_YOUREBANNEDCREEP),
                                  me.name, cptr->name, reason);
-                      continue;         /* and go examine next fd/cptr */
                     }
+#ifdef REPORT_DLINE_TO_USER
+                  else
+                    {
+                      sendto_one(cptr, "NOTICE DLINE :*** You have been D-lined");
+                    }
+#endif
+                  continue;         /* and go examine next fd/cptr */
                 }
             }
           else
