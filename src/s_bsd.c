@@ -1020,14 +1020,14 @@ static void error_exit_client(struct Client* cptr, int error)
         sendto_ops("Server %s closed the connection",
 		   get_client_name(cptr, MASK_IP));
       else
-        report_error("Lost connection to %s:%s",
+        report_error("Lost connection to %s: %s",
 		   get_client_name(cptr, MASK_IP), current_error);
 #else		   
       if (0 == error)
         sendto_ops("Server %s closed the connection",
                    get_client_name(cptr, TRUE));
       else
-        report_error("Lost connection to %s:%s", 
+        report_error("Lost connection to %s: %s", 
                      get_client_name(cptr, TRUE), current_error);
 #endif		     
       sendto_realops("%s had been connected for %d day%s, %2d:%02d:%02d",

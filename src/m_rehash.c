@@ -129,6 +129,12 @@ int m_rehash(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
         }
       else if(irccmp(parv[1],"TKLINES") == 0)
         {
+		  /* see the note for glines and such .. -gnp */
+		  if (!SetOperK(sptr))
+		    {
+			  sendto_one(sptr,":%s NOTICE %s :You have no K flag",me.name,parv[0]);
+			  return 0;
+		    }
           sendto_one(sptr, form_str(RPL_REHASHING), me.name, parv[0], "temp klines");
           flush_temp_klines();
 #ifdef CUSTOM_ERR
@@ -142,6 +148,14 @@ int m_rehash(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 #ifdef GLINES
       else if(irccmp(parv[1],"GLINES") == 0)
         {
+          /* i submitted this bug a while ago .. people without G should not
+		   * be able to clear glines :) -gnp */
+	      if (!IsSetOperGline(sptr))
+            {
+              sendto_one(sptr,":%s NOTICE %s :You have no G flag",me.name,parv[0]);
+              return 0;
+            }
+
           sendto_one(sptr, form_str(RPL_REHASHING), me.name, parv[0], "g-lines");
           flush_glines();
 #ifdef CUSTOM_ERR
@@ -173,7 +187,7 @@ int m_rehash(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
         }
       else if(irccmp(parv[1],"OMOTD") == 0)
         {
-          sendto_ops("%s is forcing re-reading of OPER MOTD file",parv[0]);
+          sendto_ops("%s is forcing re-reading of oper MOTD file",parv[0]);
           ReadMessageFile( &ConfigFileEntry.opermotd );
           found = YES;
         }
@@ -212,14 +226,13 @@ int m_rehash(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
         }
       else
         {
-#undef OUT
-
 #ifdef GLINES
-#define OUT "rehash one of :DNS TKLINES GLINES GC HELP MOTD OMOTD DUMP"
+          sendto_one(sptr, ":%s NOTICE %s :Rehash one of: DNS, TKLINES, GLINES, GC, HELP, MOTD, OMOTD, DUMP",
+	                 me.name, sptr->name);
 #else
-#define OUT "rehash one of :DNS TKLINES GC HELP MOTD OMOTD DUMP"
+          sendto_one(sptr, ":%s NOTICE %s :Rehash one of: DNS, TKLINES, GC, HELP, MOTD, OMOTD, DUMP", 
+	                 me.name, sptr->name);
 #endif
-          sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, OUT);
           return(0);
         }
     }

@@ -407,12 +407,12 @@ m_kline(aClient *cptr,
 
       if(!find_special_conf(sptr->name,CONF_ULINE))
         {
-          sendto_realops("received Unauthorized kline from %s",sptr->name);
+          sendto_realops("Received unauthorized K-line from %s",sptr->name);
           return 0;
         }
       else
         {
-          sendto_realops("received kline from %s", sptr->name);
+          sendto_realops("Received K-line from %s", sptr->name);
         }
 
 #ifdef HUB

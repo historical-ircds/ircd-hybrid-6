@@ -113,14 +113,18 @@ int m_cryptauth(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
 
   if (cptr != sptr)
     {
+#ifndef HIDE_SERVERS_IPS
+      char nbuf[HOSTLEN * 2 + USERLEN + 5]; /* same size as in s_misc.c */
+#endif
       sendto_one(sptr, form_str(ERR_UNKNOWNCOMMAND), me.name, parv[0], "CRYPTAUTH");
 
 #ifdef HIDE_SERVERS_IPS
       sendto_realops("CRYPTAUTH command from %s -- %s is a hacked server",
       		     sptr->name, cptr->name);
-#else		     
+#else
+      strcpy(nbuf, get_client_name(sptr, SHOW_IP));
       sendto_realops("CRYPTAUTH command from %s -- %s is a hacked server",
-		     get_client_name(sptr,SHOW_IP),
+		     nbuf,
 		     get_client_name(cptr,SHOW_IP));
 #endif		     
       cptr->crypt->flags &= ~CRYPTFLAG_ENCRYPT;

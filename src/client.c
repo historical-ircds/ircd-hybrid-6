@@ -461,7 +461,7 @@ time_t check_pings(time_t currenttime)
               aconf = make_conf();
               aconf->status = CONF_KILL;
               DupString(aconf->host, cptr->host);
-              DupString(aconf->passwd, "idle exceeder" );
+              DupString(aconf->passwd, "Idle time limit exceeded" );
               DupString(aconf->name, cptr->username);
               aconf->port = 0;
               aconf->hold = CurrentTime + 60;

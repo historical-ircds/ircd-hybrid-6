@@ -126,13 +126,17 @@ int m_cryptserv(struct Client *cptr, struct Client *sptr, int parc, char *parv[]
   /* We should only get this from local clients */
   if (cptr != sptr) 
     {
+#ifndef
+      char nbuf[HOSTLEN * 2 + USERLEN + 5]; /* same size as in s_misc.c */
+#endif
       sendto_one(sptr, form_str(ERR_UNKNOWNCOMMAND), me.name, parv[0], "CRYPTSERV");
 #ifdef HIDE_SERVERS_IPS
       sendto_realops("CRYPTSERV command from %s -- %s is a hacked server",
                      sptr->name, cptr->name);
-#else		   
+#else
+	  strcpy(nbuf,get_client_name(sptr,SHOW_IP));
       sendto_realops("CRYPTSERV command from %s -- %s is a hacked server",
-	  	     get_client_name(sptr,SHOW_IP),
+	  	     nbuf,
 		     get_client_name(cptr,SHOW_IP));
 #endif		   
       return exit_client(cptr, cptr, cptr, "Hacked server");
