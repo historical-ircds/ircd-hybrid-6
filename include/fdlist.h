@@ -3,26 +3,31 @@
  *
  * $Id$
  */
-#ifndef _IRCD_DOG3_FDLIST
-#define _IRCD_DOG3_FDLIST
+#ifndef INCLUDED_fdlist_h
+#define INCLUDED_fdlist_h
 #ifndef INCLUDED_config_h
 #include "config.h"       /* MAXCONNECTIONS */
 #endif
+#ifndef INCLUDED_sys_types_h
+#include <sys/types.h>
+#define INCLUDED_sys_types_h
+#endif
 
-struct FDList {
-  unsigned char entry[MAXCONNECTIONS + 2];
-};
+extern unsigned char GlobalFDList[];
 
-extern struct FDList serv_fdlist;
-extern struct FDList busycli_fdlist;
-extern struct FDList default_fdlist;
-extern struct FDList oper_fdlist;
+/*
+ * priority values used in fdlist code
+ */
+#define FDL_SERVER   0x01
+#define FDL_BUSY     0x02
+#define FDL_OPER     0x04
+#define FDL_DEFAULT  0x08 
+#define FDL_ALL      0xFF
 
-typedef struct FDList fdlist;
+void fdlist_add(int fd, unsigned char mask);
+void fdlist_delete(int fd, unsigned char mask);
+void fdlist_init(void);
+void fdlist_check(time_t now);
 
-void addto_fdlist(int a, struct FDList* b);
-void delfrom_fdlist( int a, struct FDList* b);
-void init_fdlist(struct FDList* b);
-
-#endif /* _IRCD_DOG3_FDLIST */
+#endif /* INCLUDED_fdlist_h */
 

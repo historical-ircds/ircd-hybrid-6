@@ -377,42 +377,6 @@ extern unsigned long tsdms;
 #endif /* DEFAULT_SERVER_SPLIT_RECOVERY_TIME */
 #endif
 
-struct SetOptions
-{
-  int maxclients;       /* max clients allowed */
-  int autoconn;         /* autoconn enabled for all servers? */
-  int noisy_htm;        /* noisy htm or not ? */
-  int lifesux;
-
-#ifdef IDLE_CHECK
-  int idletime;
-#endif
-
-#ifdef FLUD
-  int fludnum;
-  int fludtime;
-  int fludblock;
-#endif
-
-#ifdef ANTI_DRONE_FLOOD
-  int dronetime;
-  int dronecount;
-#endif
-
-#ifdef NEED_SPLITCODE
-  time_t server_split_recovery_time;
-  int split_smallnet_size;
-  int split_smallnet_users;
-#endif
-
-#ifdef ANTI_SPAMBOT
-  int spam_num;
-  int spam_time;
-#endif
-
-};
-
-extern struct SetOptions GlobalSetOptions;  /* defined in ircd.c */
 
 #ifdef FLUD
 struct fludbot {
