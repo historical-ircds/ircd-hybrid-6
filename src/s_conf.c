@@ -223,13 +223,6 @@ void free_conf(struct ConfItem* aconf)
 {
   assert(0 != aconf);
 
-  /*
-   * check aconf->c_class in case we have one we didn't know about
-   */
-  if (ClassPtr(aconf)) {
-    if (ConfMaxLinks(aconf) == -1 && ConfLinks(aconf) == 0)
-      free_class(ClassPtr(aconf));
-  }
   if (aconf->dns_pending)
     delete_resolver_queries(aconf);
   MyFree(aconf->host);
