@@ -669,6 +669,31 @@ sendto_channel_type_notice(aClient *from, aChannel *chptr, int type, char *messa
         }
 } /* sendto_channel_type_notice() */
 
+/* send_knock()
+ * 
+ * send the knock to local clients in the channel
+ */
+void
+send_knock(aClient *from, aChannel *chptr, int type, char *message)
+{
+  register Link *lp;
+  register aClient *acptr;
+  register int i;
+
+  for(lp = chptr->members; lp; lp = lp->next)
+  {
+    if(!(lp->flags& type))
+      continue;
+
+    acptr = lp->value.cptr;
+
+    if(!MyClient(acptr))
+      continue;
+
+    sendto_prefix_one(acptr, from, ":%s NOTICE %s :%s",
+                      from->name, acptr->name, message);
+  }
+}
 
 /*
  * sendto_serv_butone

@@ -69,6 +69,9 @@ struct Channel
   int		  juped;
 #endif  
   time_t          channelts;
+#ifdef USE_KNOCK
+  time_t          last_knock;
+#endif
 #ifdef FLUD
   time_t          fludblock;
   struct fludbot* fluders;

@@ -335,6 +335,7 @@ Info MyInformation[] = {
 #endif /* KLINE_WITH_REASON */
 
   { "KNOCK_DELAY", "", KNOCK_DELAY, "Delay between KNOCK Attempts" },
+  { "KNOCK_DELAY_CHANNEL", "", KNOCK_DELAY_CHANNEL, "Delay between KNOCK Attempts on channel" },
 
 #ifdef KPATH
   { "KPATH", KPATH, 0, "Path to K-line File" },

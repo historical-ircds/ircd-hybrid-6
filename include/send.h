@@ -22,6 +22,8 @@ struct Channel;
 extern  void send_operwall(struct Client *,char *,char *);
 extern  void sendto_channel_type_notice(struct Client *, 
                                         struct Channel *, int, char *);
+extern  void send_knock(struct Client *, struct Channel *, int, char *);
+
 extern  int sendto_slaves(struct Client *, char *, char *, int, char **);
 
 extern  void sendto_one(struct Client *, const char *, ...);

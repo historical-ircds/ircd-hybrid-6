@@ -2802,7 +2802,6 @@ int     count_channels(struct Client *sptr)
   return (count);
 }
 
-#ifdef USE_KNOCK
 
 /* m_knock
 **    parv[0] = sender prefix
@@ -2826,6 +2825,7 @@ int     m_knock(struct Client *cptr,
 {
   struct Channel      *chptr;
   char  *p, *name;
+  int local = 0;
 
   /* anti flooding code,
    * I did have this in parse.c with a table lookup
@@ -2836,13 +2836,26 @@ int     m_knock(struct Client *cptr,
    */
   static time_t last_used=0L;
 
+  if(IsServer(sptr))
+    return 0;
+
+  if(MyClient(sptr))
+#ifdef USE_KNOCK
+    local = 1;
+#else
+  {
+    sendto_one(sptr, form_str(ERR_UNKNOWNCOMMAND),
+               me.name, sptr->name, "knock");
+    return 0;
+  }
+#endif
+
   if (parc < 2)
     {
       sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
                  "KNOCK");
       return 0;
     }
-
 
   /* We will cut at the first comma reached, however we will not *
    * process anything afterwards.                                */
@@ -2852,10 +2865,13 @@ int     m_knock(struct Client *cptr,
     *p = '\0';
   name = parv[1]; /* strtoken(&p, parv[1], ","); */
 
+#ifdef USE_KNOCK
   if (!IsChannelName(name) || !(chptr = hash_find_channel(name, NullChn)))
     {
-      sendto_one(sptr, form_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
-                 name);
+      if(local)    
+        sendto_one(sptr, form_str(ERR_NOSUCHCHANNEL), 
+	           me.name, parv[0], name);
+		   
       return 0;
     }
 
@@ -2864,14 +2880,14 @@ int     m_knock(struct Client *cptr,
        (chptr->mode.limit && chptr->users >= chptr->mode.limit )
        ))
     {
-      sendto_one(sptr,":%s NOTICE %s :*** Notice -- Channel is open!",
-                 me.name,
-                 sptr->name);
+      if(local)
+        sendto_one(sptr,":%s NOTICE %s :*** Notice -- Channel is open!",
+                   me.name, sptr->name);
       return 0;
     }
 
   /* don't allow a knock if the user is banned, or the channel is secret */
-  if ((chptr->mode.mode & MODE_SECRET) || 
+  if (local && (chptr->mode.mode & MODE_SECRET) || 
       (is_banned(sptr, chptr) == CHFL_BAN) )
     {
       sendto_one(sptr, form_str(ERR_CANNOTSENDTOCHAN), me.name, parv[0],
@@ -2882,17 +2898,19 @@ int     m_knock(struct Client *cptr,
   /* if the user is already on channel, then a knock is pointless! */
   if (IsMember(sptr, chptr))
     {
-      sendto_one(sptr,":%s NOTICE %s :*** Notice -- You are on channel already!",
-                 me.name,
-                 sptr->name);
+      if(local)
+        sendto_one(sptr,":%s NOTICE %s :*** Notice -- You are on channel already!",
+                   me.name,
+                   sptr->name);
       return 0;
     }
 
   /* flood control server wide, clients on KNOCK
    * opers are not flood controlled.
    */
-
-  if(!IsAnOper(sptr))
+  if(local)
+  {
+    if(!IsAnOper(sptr))
     {
       if((last_used + PACE_WAIT) > CurrentTime)
         return 0;
@@ -2900,15 +2918,14 @@ int     m_knock(struct Client *cptr,
         last_used = CurrentTime;
     }
 
-  /* flood control individual clients on KNOCK
-   * the ugly possibility still exists, 400 clones could all KNOCK
-   * on a channel at once, flooding all the ops. *ugh*
-   * Remember when life was simpler?
-   * -Dianora
-   */
-
-  /* opers are not flow controlled here */
-  if( !IsAnOper(sptr) && (sptr->last_knock + KNOCK_DELAY) > CurrentTime)
+    /* flood control individual clients on KNOCK
+     * the ugly possibility still exists, 400 clones could all KNOCK
+     * on a channel at once, flooding all the ops. *ugh*
+     * Remember when life was simpler?
+     * -Dianora
+     */
+  
+    if((sptr->last_knock + KNOCK_DELAY) > CurrentTime)
     {
       sendto_one(sptr,":%s NOTICE %s :*** Notice -- Wait %d seconds before another knock",
                  me.name,
@@ -2917,12 +2934,24 @@ int     m_knock(struct Client *cptr,
       return 0;
     }
 
-  sptr->last_knock = CurrentTime;
+    if((chptr->last_knock + KNOCK_DELAY_CHANNEL) > CurrentTime)
+    {
+      sendto_one(sptr, ":%s NOTICE %s :*** Notice -- Wait %d seconds before another knock to %s",
+                 me.name, sptr->name,
+		 KNOCK_DELAY_CHANNEL - (CurrentTime - chptr->last_knock),
+		 name);
+      return 0;
+    }
 
-  sendto_one(sptr,":%s NOTICE %s :*** Notice -- Your KNOCK has been delivered",
+    sptr->last_knock = CurrentTime;
+
+    sendto_one(sptr,":%s NOTICE %s :*** Notice -- Your KNOCK has been delivered",
                  me.name,
                  sptr->name);
-
+  }
+  
+  chptr->last_knock = CurrentTime;
+  
   /* using &me and me.name won't deliver to clients not on this server
    * so, the notice will have to appear from the "knocker" ick.
    *
@@ -2945,12 +2974,17 @@ int     m_knock(struct Client *cptr,
                    sptr->name,
                    sptr->username,
                    sptr->host);
-        sendto_channel_type_notice(cptr, chptr, MODE_CHANOP, message);
+        send_knock(sptr, chptr, MODE_CHANOP, message);
       }
   }
+
+#endif
+
+  sendto_match_cap_servs(NULL, cptr, CAP_KNOCK,
+                         ":%s KNOCK %s %s",
+			 sptr->name, name, (parc > 3) ? parv[3] : "");
   return 0;
 }
-#endif
 
 /*
 ** m_topic

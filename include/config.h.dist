@@ -393,9 +393,13 @@
  */
 #define PACE_WAIT 10
 
-/* KNOCK_DELAY 5 minutes per each KNOCK should be enough
+/* KNOCK_DELAY - minimum seconds between a users use of knock
  */
 #define KNOCK_DELAY 300
+
+/* KNOCK_DELAY_CHANNEL - minimum seconds between knocks to a channel
+ */
+#define KNOCK_DELAY_CHANNEL 60
 
 /* SHORT_MOTD
  * There are client ignoring the FORCE_MOTD MOTD numeric, there is
@@ -749,7 +753,11 @@
 #undef CHANMODE_E
 
 /* USE_KNOCK
- * KNOCK allows users to send a "knock" to a +i channel.
+ * KNOCK allows users to send a "knock" to a +ikl channel.
+ */
+/* Added always-on propagation.. the messages will always be passed to other
+ * servers, but not allowed to originate here, or be sent to our clients if
+ * this is undeffed.. -- fl_
  */
 #undef USE_KNOCK
 
@@ -1002,6 +1010,14 @@
 #endif
 
 #define REPORT_DLINE_TO_USER
+
+#ifndef KNOCK_DELAY
+#define KNOCK_DELAY 300
+#endif
+
+#ifndef KNOCK_DELAY_CHANNEL
+#define KNOCK_DELAY_CHANNEL 60
+#endif
 
 #ifdef NO_JOIN_ON_SPLIT
 #define NEED_SPLITCODE
