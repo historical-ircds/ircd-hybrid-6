@@ -28,9 +28,6 @@
 #endif
 #include "fdlist.h"
 
-/* internal variables */
-static	char	buf[BUFSIZE]; 
-
 /*
 ** m_info
 **	parv[0] = sender prefix

@@ -722,7 +722,7 @@ static	void recurse_remove_clients(aClient *sptr, char *comment)
   if (!sptr->serv)	/* oooops. uh this is actually a major bug */
     return;
 
-  while (acptr = sptr->serv->servers)
+  while ( (acptr = sptr->serv->servers) )
     {
       recurse_remove_clients(acptr, comment);
       /*
@@ -733,7 +733,7 @@ static	void recurse_remove_clients(aClient *sptr, char *comment)
       exit_one_client(NULL, acptr, &me, me.name);
     }
 
-  while (acptr = sptr->serv->users)
+  while ( (acptr = sptr->serv->users) )
     {
       acptr->flags |= FLAGS_KILLED;
       exit_one_client(NULL, acptr, &me, comment);

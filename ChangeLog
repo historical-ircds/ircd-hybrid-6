@@ -2,6 +2,8 @@
 *** Newest entries at top
 
 version hybrid-6-b77   2-Jun-1999
+* more minor clean
+-Rodder
 * duh. just realized that hostip is now obsolete because of the way
   IP klines are being done. removing it saves 15 bytes per local client.
 -Dianora
