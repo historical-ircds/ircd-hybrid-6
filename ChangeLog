@@ -1,3 +1,8 @@
+*** 20011115_1 by leeh
+- moved the CHANMODE_E check up a level - before we add the +e to the list
+  ;)
+
+
 *** 20011106_2 by wcampbel
 Corrected
 
