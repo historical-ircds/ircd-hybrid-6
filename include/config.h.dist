@@ -183,13 +183,16 @@
  * cause desync on a mixed TS3/TS5 network.
  *
  * See doc/ts5.txt for more details
+ * This is an EFnet requirement now.
  */
 #define  TS5 
 
 /* TS5_ONLY
  * This will disallow TS3 servers from linking
+ *
+ * This is an EFNet requirement now.
  */
-#undef  TS5_ONLY
+#define  TS5_ONLY
 
 /* SLAVE_SERVERS - Use this to send LOCOPS and KLINES to servers you define
  * uses U: lines in ircd.conf, each server defined in an U: line
@@ -576,11 +579,25 @@
  */
 #define NOISY_HTM YES
 
+/* JUPE_CHANNEL - jupes a channel from being joined on this server only
+ * if added to Q lines e.g. Q:\#packet_channel:Tired of packets.
+ * This also enables local channel mode +j.
+ */
+#define  JUPE_CHANNEL
+
 /*
  * define either NO_CHANOPS_ON_SPLIT or NO_JOIN_ON_SPLIT
  *
  * choose =one= only or undef on small networks
  *
+ */
+
+/* ****NOTE NOTE NOTE****
+ *
+ * with TS5 an user cannot hack ops anyway, so NO_CHANOPS_ON_SPLIT
+ * is no longer useful. However, they can still join on a split
+ * gaining channel member information, you might want to define
+ * NO_JOIN_ON_SPLIT.
  */
 
 /* NO_CHANOPS_ON_SPLIT
@@ -707,17 +724,17 @@
  */
 #undef  NO_PRIORITY
 
-/* LITTLE_I_LINE support
- * clients with a little i instead of an I in their I line
- * can be chanopped, but cannot chanop anyone else.
- */
-#define LITTLE_I_LINES
-
 /* ----------------- not approved on EFnet section --------------------
  *
  * if you are an efnet admin, some of these are not officially supported, so
  * you may want to undef some -- fl_
  */
+
+/* LITTLE_I_LINE support
+ * clients with a little i instead of an I in their I line
+ * can be chanopped, but cannot chanop anyone else.
+ */
+#undef LITTLE_I_LINES
 
 /* Ignore bogus timestamps from other servers. Yes this will desync
  * the network, but it will allow chanops to resync with a valid non TS 0
@@ -760,12 +777,12 @@
  * stop server "+e patches" and desyncs across a hub where leaf servers
  * +e lists differ.   --fl_
  */
-#define CHANMODE_E
+#undef CHANMODE_E
 
 /* USE_KNOCK
  * KNOCK allows users to send a "knock" to a +i channel.
  */
-#define USE_KNOCK
+#undef USE_KNOCK
 
 /* -------------- END NOT APPROVED ON EFNET SECTION --------------------- */
 
@@ -894,11 +911,6 @@
 #define DEFAULT_DRONE_TIME  1
 #define DEFAULT_DRONE_COUNT 8
 
-/* JUPE_CHANNEL - jupes a channel from being joined on this server only
- * if added to Q lines e.g. Q:\#packet_channel:Tired of packets.
- * This also enables local channel mode +j.
- */
-#undef  JUPE_CHANNEL
 
 /*
  * ANTI_SPAMBOT
