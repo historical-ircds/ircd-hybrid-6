@@ -18,6 +18,7 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 
+#include <arpa/nameser.h>
 #include <resolv.h>
 #include <netdb.h>
 #include <arpa/inet.h>

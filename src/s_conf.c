@@ -35,6 +35,7 @@ static char *rcs_version = "$Id$";
 #endif
 #include <netdb.h>
 #include <signal.h>
+#include <sys/socket.h>
 #include "h.h"
 extern int rehashed;
 #include "mtrie_conf.h"
