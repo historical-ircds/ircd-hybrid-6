@@ -24,6 +24,10 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.2  1999/07/21 05:20:52  db
+ * - you guessed it, more cleanups. removed undefined function that had
+ *   a prototype in h.h cool
+ *
  * Revision 1.1  1999/07/16 02:40:34  db
  * - removed #ifdef HAVE_GET_RUSAGE, it still needs to be removed from configure
  * - removed some debug counters that weren't terribly useful
@@ -35,9 +39,7 @@
 struct Client;
 
 extern void send_usage(struct Client*, char *);
-#ifdef DEBUGMODE
 extern	void	count_memory (struct Client *, char *);
-#endif
 
 extern	void	debug(int, char *, ...);
 

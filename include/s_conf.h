@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.32  1999/07/22 03:19:11  tomh
+ * work on socket code
+ *
  * Revision 1.31  1999/07/22 02:44:22  db
  * - built m_gline.h, scache.h , moved more stuff from h.h
  *
@@ -333,6 +336,13 @@ typedef struct
   MessageFile opermotd;
 }ConfigFileEntryType;
 
+/* aConfItems */
+/* conf uline link list root */
+extern aConfItem *u_conf;
+/* conf xline link list root */
+extern aConfItem *x_conf;
+/* conf qline link list root */
+extern aConfItem *q_conf;
 
 #endif /* INCLUDED_s_conf_h */
 
