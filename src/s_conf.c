@@ -132,11 +132,6 @@ aConfItem* ConfigItemList = NULL;
 /* conf xline link list root */
 aConfItem        *x_conf = ((aConfItem *)NULL);
 
-typedef struct QlineItem {
-  char      *name;
-  aConfItem *confList;
-  struct    QlineItem *next;
-}aQlineItem;
 
 static void makeQlineEntry(aQlineItem *, aConfItem *, char *);
 
