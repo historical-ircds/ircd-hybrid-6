@@ -80,17 +80,17 @@ static aPendingLine *
 AddPending()
 
 {
-        aPendingLine *temp;
+  aPendingLine *temp;
 
-        temp = (aPendingLine *) MyMalloc(sizeof(aPendingLine));
+  temp = (aPendingLine *) MyMalloc(sizeof(aPendingLine));
 
-        /*
-         * insert the new entry into our list
-         */
-        temp->next = PendingLines;
-        PendingLines = temp;
+  /*
+   * insert the new entry into our list
+   */
+  temp->next = PendingLines;
+  PendingLines = temp;
 
-        return (temp);
+  return (temp);
 } /* AddPending() */
 
 /*
@@ -103,15 +103,15 @@ static void
 DelPending(aPendingLine *pendptr)
 
 {
-        if (!pendptr)
-                return;
+  if (!pendptr)
+    return;
 
-        if (pendptr->user)
-                MyFree(pendptr->user);
-        MyFree(pendptr->host);
-        MyFree(pendptr->reason);
-        MyFree(pendptr->when);
-        MyFree(pendptr);
+  if (pendptr->user)
+    MyFree(pendptr->user);
+  MyFree(pendptr->host);
+  MyFree(pendptr->reason);
+  MyFree(pendptr->when);
+  MyFree(pendptr);
 } /* DelPending() */
 
 /*
@@ -129,95 +129,95 @@ static int
 LockedFile(const char *filename)
 
 {
-        char lockpath[PATH_MAX + 1];
-        char buffer[1024];
-        FBFILE *fileptr;
-        int killret;
+  char lockpath[PATH_MAX + 1];
+  char buffer[1024];
+  FBFILE *fileptr;
+  int killret;
 
-        if (!filename)
-                return (0);
+  if (!filename)
+    return (0);
 
-        ircsprintf(lockpath, "%s.lock", filename);
+  ircsprintf(lockpath, "%s.lock", filename);
 
-        if ((fileptr = fbopen(lockpath, "r")) == (FBFILE *) NULL)
-        {
-                /*
-                 * lockfile does not exist
-                 */
-                return (0);
-        }
+  if ((fileptr = fbopen(lockpath, "r")) == (FBFILE *) NULL)
+  {
+    /*
+     * lockfile does not exist
+     */
+    return (0);
+  }
 
-        if (fbgets(buffer, sizeof(buffer) - 1, fileptr))
-        {
-                /*
-                 * If it is a valid lockfile, 'buffer' should now
-                 * contain the pid number of the editing process.
-                 * Send the pid a SIGCHLD to see if it is a valid
-                 * pid - it could be a remnant left over from a
-                 * crashed editor or system reboot etc.
-                 */
-                killret = kill(atoi(buffer), SIGCHLD);
-                if (killret == 0)
-                {
-                        fbclose(fileptr);
-                        return (1);
-                }
+  if (fbgets(buffer, sizeof(buffer) - 1, fileptr))
+  {
+    /*
+     * If it is a valid lockfile, 'buffer' should now
+     * contain the pid number of the editing process.
+     * Send the pid a SIGCHLD to see if it is a valid
+     * pid - it could be a remnant left over from a
+     * crashed editor or system reboot etc.
+     */
+    killret = kill(atoi(buffer), SIGCHLD);
+    if (killret == 0)
+    {
+      fbclose(fileptr);
+      return (1);
+    }
 
-                /*
-                 * killret must be -1, which indicates an error (most
-                 * likely ESRCH - No such process), so it is ok to
-                 * proceed writing klines.
-                 */
-        }
+    /*
+     * killret must be -1, which indicates an error (most
+     * likely ESRCH - No such process), so it is ok to
+     * proceed writing klines.
+     */
+  }
 
-        fbclose(fileptr);
+  fbclose(fileptr);
 
-         /*
-          * Delete the outdated lock file
-          */
-        unlink(lockpath);
+  /*
+   * Delete the outdated lock file
+   */
+  unlink(lockpath);
 
-        return (0);
+  return (0);
 } /* LockedFile() */
 
 static void
 WritePendingLines(const char *filename)
 
 {
-        aPendingLine *ptmp;
+  aPendingLine *ptmp;
 
-        if (!filename)
-                return;
+  if (!filename)
+    return;
 
-        while (PendingLines)
-        {
-                if (PendingLines->type == KLINE_TYPE)
-                {
-                        WriteKline(filename,
-                                PendingLines->sptr,
-                                PendingLines->rcptr,
-                                PendingLines->user,
-                                PendingLines->host,
-                                PendingLines->reason,
-                                PendingLines->when);
-                }
-                else
-                {
-                        WriteDline(filename,
-                                PendingLines->sptr,
-                                PendingLines->host,
-                                PendingLines->reason,
-                                PendingLines->when);
-                }
+  while (PendingLines)
+  {
+    if (PendingLines->type == KLINE_TYPE)
+    {
+      WriteKline(filename,
+        PendingLines->sptr,
+        PendingLines->rcptr,
+        PendingLines->user,
+        PendingLines->host,
+        PendingLines->reason,
+        PendingLines->when);
+    }
+    else
+    {
+      WriteDline(filename,
+        PendingLines->sptr,
+        PendingLines->host,
+        PendingLines->reason,
+        PendingLines->when);
+    }
 
-                /*
-                 * Delete the K/D line from the list after we write
-                 * it out to the conf
-                 */
-                ptmp = PendingLines->next;
-                DelPending(PendingLines);
-                PendingLines = ptmp;
-        } /* while (PendingLines) */
+    /*
+     * Delete the K/D line from the list after we write
+     * it out to the conf
+     */
+    ptmp = PendingLines->next;
+    DelPending(PendingLines);
+    PendingLines = ptmp;
+  } /* while (PendingLines) */
 } /* WritePendingLines() */
 
 /*
@@ -230,63 +230,64 @@ WriteKline(const char *filename, aClient *sptr, aClient *rcptr,
            char *user, char *host, char *reason, char *when)
 
 {
-        char buffer[1024];
-        int out;
+  char buffer[1024];
+  int out;
 
-        if (!filename)
-                return;
+  if (!filename)
+    return;
 
-        if ((out = open(filename, O_RDWR|O_APPEND|O_CREAT, 0644)) == (-1))
-        {
-                sendto_realops("Error opening %s: %s",
-                        filename,
-                        strerror(errno));
-                return;
-        }
+  if ((out = open(filename, O_RDWR|O_APPEND|O_CREAT, 0644)) == (-1))
+  {
+    sendto_realops("Error opening %s: %s",
+      filename,
+      strerror(errno));
+    return;
+  }
 
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-        fchmod(out, 0660);
+  fchmod(out, 0660);
 #endif
 
 #ifdef SLAVE_SERVERS
-        if (IsServer(sptr))
-        {
-                if (rcptr)
-                        ircsprintf(buffer,
-                                "#%s!%s@%s from %s K'd: %s@%s:%s\n",
-                                rcptr->name,
-                                rcptr->username,
-                                rcptr->host,
-                                sptr->name,
-                                user,
-                                host,
-                                reason);
-        }
-        else
+  if (IsServer(sptr))
+  {
+    if (rcptr)
+      ircsprintf(buffer,
+        "#%s!%s@%s from %s K'd: %s@%s:%s\n",
+        rcptr->name,
+        rcptr->username,
+        rcptr->host,
+        sptr->name,
+        user,
+        host,
+        reason);
+  }
+  else
 #endif /* SLAVE_SERVERS */
-        {
-                ircsprintf(buffer,
-                        "#%s!%s@%s K'd: %s@%s:%s\n",
-                        sptr->name,
-                        sptr->username,
-                        sptr->host,
-                        user, host,
-                        reason);
-        }
+  {
+    ircsprintf(buffer,
+      "#%s!%s@%s K'd: %s@%s:%s\n",
+      sptr->name,
+      sptr->username,
+      sptr->host,
+      user,
+      host,
+      reason);
+  }
 
-        if (safe_write(sptr, filename, out, buffer) == (-1))
-                return;
+  if (safe_write(sptr, filename, out, buffer) == (-1))
+    return;
 
-        ircsprintf(buffer, "K:%s:%s (%s):%s\n",
-                host,
-                reason,
-                when,
-                user);
+  ircsprintf(buffer, "K:%s:%s (%s):%s\n",
+    host,
+    reason,
+    when,
+    user);
 
-        if (safe_write(sptr, filename, out, buffer) == (-1))
-                return;
+  if (safe_write(sptr, filename, out, buffer) == (-1))
+    return;
 
-        (void) close(out);
+  (void) close(out);
 } /* WriteKline() */
 
 /*
@@ -299,45 +300,45 @@ WriteDline(const char *filename, aClient *sptr,
            char *host, char *reason, char *when)
 
 {
-        char buffer[1024];
-        int out;
+  char buffer[1024];
+  int out;
 
-        if (!filename)
-                return;
+  if (!filename)
+    return;
 
-        if ((out = open(filename, O_RDWR|O_APPEND|O_CREAT, 0644)) == (-1))
-        {
-                sendto_realops("Error opening %s: %s",
-                        filename,
-                        strerror(errno));
-                return;
-        }
+  if ((out = open(filename, O_RDWR|O_APPEND|O_CREAT, 0644)) == (-1))
+  {
+    sendto_realops("Error opening %s: %s",
+      filename,
+      strerror(errno));
+    return;
+  }
 
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
-        fchmod(out, 0660);
+  fchmod(out, 0660);
 #endif
 
-        ircsprintf(buffer,
-                "#%s!%s@%s D'd: %s:%s (%s)\n",
-                sptr->name,
-                sptr->username,
-                sptr->host,
-                host,
-                reason,
-                when);
+  ircsprintf(buffer,
+    "#%s!%s@%s D'd: %s:%s (%s)\n",
+    sptr->name,
+    sptr->username,
+    sptr->host,
+    host,
+    reason,
+    when);
 
-        if (safe_write(sptr, filename, out, buffer) == (-1))
-                return;
+  if (safe_write(sptr, filename, out, buffer) == (-1))
+    return;
 
-        ircsprintf(buffer, "D:%s:%s (%s)\n",
-                host,
-                reason,
-                when);
+  ircsprintf(buffer, "D:%s:%s (%s)\n",
+    host,
+    reason,
+    when);
 
-        if (safe_write(sptr, filename, out, buffer) == (-1))
-                return;
+  if (safe_write(sptr, filename, out, buffer) == (-1))
+    return;
 
-        (void) close(out);
+  (void) close(out);
 } /* WriteDline() */
 
 /*
@@ -358,7 +359,7 @@ m_kline(aClient *cptr,
   char *p;
   char cidr_form_host[HOSTLEN + 1];
   char *user, *host;
-  char *reason;
+  char *reason = NULL;
   char *current_date;
   int  ip_kline = NO;
   aClient *acptr;
@@ -561,11 +562,7 @@ m_kline(aClient *cptr,
 
       if(*argv)
         reason = argv;
-      else
-        reason = "No reason";
     }
-  else
-    reason = "No reason";
 
   /*
    * Now we must check the user and host to make sure there
@@ -583,7 +580,6 @@ m_kline(aClient *cptr,
   p = user;
   while ((tmpch = *p++))
   {
-        fprintf(stderr, "char = [%c]\n", tmpch);
     if (!IsKWildChar(tmpch))
     {
       /*
@@ -593,8 +589,6 @@ m_kline(aClient *cptr,
       if (++nonwild >= NONWILDCHARS)
         break;
     }
-    else
-        fprintf(stderr, "char is a WILD\n");
   }
 
   if (nonwild < NONWILDCHARS)
@@ -702,8 +696,10 @@ m_kline(aClient *cptr,
   if(temporary_kline_time)
     {
       ircsprintf(buffer,
-                 "Temporary K-line %d min. - %s (%s)",
-                 temporary_kline_time,reason,current_date);
+        "Temporary K-line %d min. - %s (%s)",
+        temporary_kline_time,
+        reason ? reason : "No reason",
+        current_date);
       DupString(aconf->passwd, buffer );
       aconf->hold = CurrentTime + temporary_kline_time_seconds;
       add_temp_kline(aconf);
@@ -711,12 +707,18 @@ m_kline(aClient *cptr,
       dline_in_progress = NO;
       nextping = CurrentTime;
       sendto_realops("%s added temporary %d min. K-Line for [%s@%s] [%s]",
-                 parv[0], temporary_kline_time, user, host, reason);
+        parv[0],
+        temporary_kline_time,
+        user,
+        host,
+        reason ? reason : "No reason");
       return 0;
     }
   else
     {
-      ircsprintf(buffer, "%s (%s)",reason,current_date);
+      ircsprintf(buffer, "%s (%s)",
+        reason ? reason : "No reason",
+        current_date);
       DupString(aconf->passwd, buffer );
     }
   ClassPtr(aconf) = find_class(0);
@@ -730,80 +732,92 @@ m_kline(aClient *cptr,
   else
     add_mtrie_conf_entry(aconf,CONF_KILL);
 
-        sendto_realops("%s added K-Line for [%s@%s] [%s]",
-                sptr->name,
-                user,
-                host,
-                reason);
+  sendto_realops("%s added K-Line for [%s@%s] [%s]",
+    sptr->name,
+    user,
+    host,
+    reason ? reason : "No reason");
 
 #ifdef USE_SYSLOG
 
-        syslog(LOG_NOTICE,
-                "%s added K-Line for [%s@%s] [%s]",
-                sptr->name,
-                user,
-                host,
-                reason);
+  syslog(LOG_NOTICE,
+    "%s added K-Line for [%s@%s] [%s]",
+    sptr->name,
+    user,
+    host,
+    reason ? reason : "No reason");
 
 #endif /* USE_SYSLOG */
 
-        kconf = get_conf_name(KLINE_TYPE);
+  kconf = get_conf_name(KLINE_TYPE);
 
-        /*
-         * Check if the conf file is locked - if so, add the kline
-         * to our pending kline list, to be written later, if not,
-         * allow this kline to be written, and write out all other
-         * pending klines as well
-         */
-        if (LockedFile(kconf))
-        {
-                aPendingLine *pptr;
+  /*
+   * Check if the conf file is locked - if so, add the kline
+   * to our pending kline list, to be written later, if not,
+   * allow this kline to be written, and write out all other
+   * pending klines as well
+   */
+  if (LockedFile(kconf))
+  {
+    aPendingLine *pptr;
 
-                pptr = AddPending();
+    pptr = AddPending();
 
-                /*
-                 * Now fill in the fields
-                 */
-                pptr->type = KLINE_TYPE;
-                pptr->sptr = sptr;
-                pptr->user = strdup(user);
-                pptr->host = strdup(host);
-                pptr->reason = strdup(reason);
-                pptr->when = strdup(current_date);
+    /*
+     * Now fill in the fields
+     */
+    pptr->type = KLINE_TYPE;
+    pptr->sptr = sptr;
+    DupString(pptr->user, user);
+    DupString(pptr->host, host);
+    DupString(pptr->reason, reason ? reason : "No reason");
+    DupString(pptr->when, current_date);
 
-        #ifdef SLAVE_SERVERS
-                pptr->rcptr = rcptr;
-        #else
-                pptr->rcptr = (aClient *) NULL;
-        #endif
+  #ifdef SLAVE_SERVERS
+    pptr->rcptr = rcptr;
+  #else
+    pptr->rcptr = (aClient *) NULL;
+  #endif
 
-                sendto_one(sptr,
-                        ":%s NOTICE %s :Added K-Line [%s@%s] (config file write delayed)",
-                        me.name,
-                        sptr->name,
-                        user,
-                        host);
+    sendto_one(sptr,
+      ":%s NOTICE %s :Added K-Line [%s@%s] (config file write delayed)",
+      me.name,
+      sptr->name,
+      user,
+      host);
 
-                return 0;
-        }
-        else if (PendingLines)
-                WritePendingLines(kconf);
+    return 0;
+  }
+  else if (PendingLines)
+    WritePendingLines(kconf);
 
-        sendto_one(sptr,
-                ":%s NOTICE %s :Added K-Line [%s@%s] to %s",
-                me.name,
-                sptr->name,
-                user,
-                host,
-                kconf ? kconf : "configuration file");
+  sendto_one(sptr,
+    ":%s NOTICE %s :Added K-Line [%s@%s] to %s",
+    me.name,
+    sptr->name,
+    user,
+    host,
+    kconf ? kconf : "configuration file");
 
-        /*
-         * Write kline to configuration file
-         */
+  /*
+   * Write kline to configuration file
+   */
 #ifdef SLAVE_SERVERS
-        WriteKline(kconf, sptr, rcptr, user, host, reason, current_date);
+  WriteKline(kconf,
+    sptr,
+    rcptr,
+    user,
+    host,
+    reason ? reason : "No reason",
+    current_date);
 #else
-        WriteKline(kconf, sptr, (aClient *) NULL, user, host, reason, current_date);
+  WriteKline(kconf,
+    sptr,
+    (aClient *) NULL,
+    user,
+    host,
+    reason ? reason : "No reason",
+    current_date);
 #endif
 
   rehashed = YES;
