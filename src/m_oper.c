@@ -238,7 +238,7 @@ int m_oper(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
                  IsOper(sptr) ? 'O' : 'o');
       send_umode_out(cptr, sptr, old);
       sendto_one(sptr, form_str(RPL_YOUREOPER), me.name, parv[0]);
-      sendto_one(sptr, ":%s NOTICE %s:*** Oper privs are %s",me.name,parv[0],
+      sendto_one(sptr, ":%s NOTICE %s :*** Oper privs are %s",me.name,parv[0],
                  operprivs);
 
       SendMessageFile(sptr, &ConfigFileEntry.opermotd);
