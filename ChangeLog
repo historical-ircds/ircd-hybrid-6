@@ -1,3 +1,10 @@
+*** 19991017_1 by lusky
+revved patchlevel to b111
+commented about NO_JOIN_ON_SPLIT being broken in config.h
+removed (+) cruft from idented clients as this was a Tanerism (db)
+fixed missing mask check in IP kline code (db)
+
+
 *** 19991013_5 by lusky
 revved patchlevel.h to b110
 fixed m_ison to put trailing space on 303 responses
