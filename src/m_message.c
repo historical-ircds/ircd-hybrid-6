@@ -36,10 +36,6 @@
 
 #include <string.h>
 
-/* used when sending to #mask or $mask */
-
-#define MATCH_SERVER  1
-#define MATCH_HOST    2
 
 /*
  * m_functions execute protocol messages on this server:

@@ -58,4 +58,9 @@ extern  void sendto_prefix_one(struct Client *, struct Client *,
 extern  void    flush_server_connections(void);
 extern void flush_connections(struct Client* cptr);
 
+/* used when sending to #mask or $mask */
+
+#define MATCH_SERVER  1
+#define MATCH_HOST    2
+
 #endif /* INCLUDED_send_h */
