@@ -1,3 +1,6 @@
+*** 20010606_8 by davidt
+backport fix for empty SJOINs to hybrid-6, as my patch appeared to get lost somewhere..
+
 *** 20010606_7 by db
 - removed bad example in example.conf.
 
