@@ -1894,7 +1894,7 @@ int	m_stats(aClient *cptr,
   aClient	*acptr;
   char	stat = parc > 1 ? parv[1][0] : '\0';
   Reg	int	i;
-  int	doall = 0, wilds = 0;
+  int	doall = 0, wilds = 0, valid_stats = 0;
   char	*name;
   /* anti flooding code,
    * I did have this in parse.c with a table lookup
@@ -1937,10 +1937,6 @@ int	m_stats(aClient *cptr,
   else
     name = me.name;
 
-  if (stat != (char)0)
-    sendto_realops_lev(SPY_LEV, "STATS %c requested by %s (%s@%s) [%s]", stat,
-		       sptr->name, sptr->user->username, sptr->user->host,
-		       sptr->user->server);
 
   switch (stat)
     {
@@ -1987,8 +1983,7 @@ int	m_stats(aClient *cptr,
 		     (int)acptr->receiveM, (int)acptr->receiveK,
 		     timeofday - acptr->firsttime,
 		     (timeofday > acptr->since) ? (timeofday - acptr->since):0,
-		     IsServer(acptr) ? (DoesTS(acptr) ?
-					"TS" : "NoTS") : "-");
+		     IsServer(acptr) ? "TS" : "-");
               }
             else
               {
@@ -2001,8 +1996,7 @@ int	m_stats(aClient *cptr,
                      (int)acptr->receiveM, (int)acptr->receiveK,
                      timeofday - acptr->firsttime,
                      (timeofday > acptr->since) ? (timeofday - acptr->since):0,
-                     IsServer(acptr) ? (DoesTS(acptr) ?
-                                        "TS" : "NoTS") : "-");
+                     IsServer(acptr) ? "TS" : "-");
                  else
                   sendto_one(sptr, Lformat, me.name,
                      RPL_STATSLINKINFO, parv[0],
@@ -2014,14 +2008,15 @@ int	m_stats(aClient *cptr,
                      (int)acptr->receiveM, (int)acptr->receiveK,
                      timeofday - acptr->firsttime,
                      (timeofday > acptr->since) ? (timeofday - acptr->since):0,
-                     IsServer(acptr) ? (DoesTS(acptr) ?
-                                        "TS" : "NoTS") : "-");
+                     IsServer(acptr) ? "TS" : "-");
               }
 	}
+      valid_stats++;
       break;
     case 'C' : case 'c' :
       report_configured_links(sptr, CONF_CONNECT_SERVER|
 			      CONF_NOCONNECT_SERVER);
+      valid_stats++;
       break;
 
     case 'B' : case 'b' :
@@ -2035,6 +2030,7 @@ int	m_stats(aClient *cptr,
 	  break;
 	}
       report_dline_hash(sptr, CONF_DLINE);
+      valid_stats++;
       break;
 
     case 'E' : case 'e' :
@@ -2048,6 +2044,7 @@ int	m_stats(aClient *cptr,
     case 'G': case 'g' :
 #ifdef GLINES
       report_glines(sptr);
+      valid_stats++;
 #else
       sendto_one(sptr,":%s NOTICE %s :This server does not support G lines",
                me.name, parv[0]);
@@ -2056,14 +2053,17 @@ int	m_stats(aClient *cptr,
 
     case 'H' : case 'h' :
       report_configured_links(sptr, CONF_HUB|CONF_LEAF);
+      valid_stats++;
       break;
 
     case 'I' : case 'i' :
       report_mtrie_conf_links(sptr, CONF_CLIENT);
+      valid_stats++;
       break;
 
     case 'k' :
       report_temp_klines(sptr);
+      valid_stats++;
       break;
 
     case 'K' :
@@ -2075,6 +2075,7 @@ int	m_stats(aClient *cptr,
 	  report_mtrie_conf_links(sptr, CONF_KILL);
 	else
 	  report_matching_host_klines(sptr,sptr->sockhost);
+      valid_stats++;
       break;
 
     case 'M' : case 'm' :
@@ -2085,14 +2086,17 @@ int	m_stats(aClient *cptr,
 	  sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
 		     me.name, parv[0], mptr->cmd,
 		     mptr->count, mptr->bytes);
+      valid_stats++;
       break;
 
     case 'o' : case 'O' :
       report_configured_links(sptr, CONF_OPS);
+      valid_stats++;
       break;
 
     case 'p' : case 'P' :
       show_opers(sptr, parv[0]);
+      valid_stats++;
       break;
 
     case 'Q' : case 'q' :
@@ -2104,6 +2108,7 @@ int	m_stats(aClient *cptr,
 #ifdef DEBUGMODE
       send_usage(sptr,parv[0]);
 #endif
+      valid_stats++;
       break;
 
     case 'S' : case 's':
@@ -2111,6 +2116,7 @@ int	m_stats(aClient *cptr,
 	list_scache(cptr,sptr,parc,parv);
       else
 	sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      valid_stats++;
       break;
 
     case 'T' : case 't' :
@@ -2120,6 +2126,7 @@ int	m_stats(aClient *cptr,
 	  break;
 	}
       tstats(sptr, parv[0]);
+      valid_stats++;
       break;
 
     case 'U' : case 'u' :
@@ -2133,15 +2140,18 @@ int	m_stats(aClient *cptr,
 	sendto_one(sptr, rpl_str(RPL_STATSCONN), me.name, parv[0],
 		   max_connection_count, max_client_count);
 #endif
+	valid_stats++;
 	break;
       }
 
     case 'v' : case 'V' :
       show_servers(sptr, parv[0]);
+      valid_stats++;
       break;
 
     case 'Y' : case 'y' :
       report_classes(sptr);
+      valid_stats++;
       break;
 
     case 'Z' : case 'z' :
@@ -2151,16 +2161,24 @@ int	m_stats(aClient *cptr,
 	}
       else
 	sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      valid_stats++;
       break;
 
     case '?':
       serv_info(sptr, parv[0]);
+      valid_stats++;
+      break;
 
     default :
       stat = '*';
       break;
     }
   sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, parv[0], stat);
+
+  if (valid_stats && stat != (char)0)
+    sendto_realops_lev(SPY_LEV, "STATS %c requested by %s (%s@%s) [%s]", stat,
+		       sptr->name, sptr->user->username, sptr->user->host,
+		       sptr->user->server);
   return 0;
 }
 

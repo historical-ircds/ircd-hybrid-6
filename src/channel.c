@@ -1681,6 +1681,8 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 #endif
 	      return 0;
 	    }
+
+
 #ifdef ANTI_SPAMBOT 	  /* Dianora */
           if(flags == 0)	/* if channel doesn't exist, don't penalize */
             successful_join_count++;
@@ -1723,8 +1725,12 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 
       chptr = get_channel(sptr, name, CREATE);
 
-      if (!chptr ||
-	  (MyConnect(sptr) && (i = can_join(sptr, chptr, key))))
+      if(chptr)
+	{
+	  if (IsMember(sptr, chptr))	/* already a member, ignore this */
+	    continue;
+	}
+      else
 	{
 	  sendto_one(sptr,
 		     ":%s %d %s %s :Sorry, cannot join channel.",
@@ -1735,12 +1741,23 @@ int spam_num = MAX_JOIN_LEAVE_COUNT;
 #endif
 	  continue;
 	}
-      if (IsMember(sptr, chptr))
-	continue;
+
+      if (MyConnect(sptr) && (i = can_join(sptr, chptr, key)))
+	{
+	  sendto_one(sptr,
+		     ":%s %d %s %s :Sorry, cannot join channel.",
+		     me.name, i, parv[0], name);
+#ifdef ANTI_SPAMBOT
+	  if(successful_join_count > 0)
+	    successful_join_count--;
+#endif
+	  continue;
+	}
 
       /*
       **  Complete user entry to the new channel (if any)
       */
+
 #ifdef USE_ALLOW_OP
       if(allow_op)
 	add_user_to_channel(chptr, sptr, flags);
