@@ -1,3 +1,8 @@
+  On a stand alone server, make sure you #undef all of
+NO_CHANOPS_ON_SPLIT, NO_JOIN_ON_SPLIT, PRESERVE_CHANNEL_ON_SPLIT
+NO_JOIN_ON_SPLIT_SIMPLE in config.h Otherwise, you will have trouble
+with non opered clients gaining ops in new channels.
+
   ircd-hybrid has been primarily geared for EFnet, where 40k clients
 is becoming the norm. But for smaller non EFnet nets, thats going
 to cost your server memory, because it will be expecting the large numbers

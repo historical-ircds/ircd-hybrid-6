@@ -477,11 +477,11 @@ Link *make_link()
 
 void free_link(Link *lp)
 {
-      if(BlockHeapFree(free_Links,lp))
-	{
-	  sendto_ops("list.c couldn't BlockHeapFree(free_Links,lp) lp = %lX", lp );
- 	  sendto_ops("Please report to the hybrid team!");
-	}
+  if(BlockHeapFree(free_Links,lp))
+    {
+      sendto_ops("list.c couldn't BlockHeapFree(free_Links,lp) lp = %lX", lp );
+      sendto_ops("Please report to the hybrid team!");
+    }
 }
 
 aClass *make_class()

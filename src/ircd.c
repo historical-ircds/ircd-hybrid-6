@@ -163,8 +163,8 @@ char	*debugmode = "";		/*  -"-    -"-   -"-  */
 char	*sbrk0;				/* initial sbrk(0) */
 static	int	dorehash = 0;
 static	char	*dpath = DPATH;
-int     rehashed = 1;
-int     dline_in_progress = 0;	/* killing off matching D lines ? */
+int     rehashed = YES;
+int     dline_in_progress = NO;	/* killing off matching D lines ? */
 int     noisy_htm=NOISY_HTM;	/* Is high traffic mode noisy or not? */
 time_t	nextconnect = 1;	/* time for next try_connections call */
 time_t	nextping = 1;		/* same as above for check_pings() */

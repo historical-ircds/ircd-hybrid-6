@@ -3469,6 +3469,8 @@ int	is_address(char *host,
 	      *ip_mask_ptr = 0xFFFFFF00L;
 	      return( 1 );
 	    }
+	  else
+	    return( 0 );
 	}
       else
 	return( 0 );
