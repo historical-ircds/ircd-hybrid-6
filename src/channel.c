@@ -1072,8 +1072,19 @@ static  void     set_mode(aClient *cptr,
 	      break;
 	    }
 
-	  if (who == sptr && whatt == MODE_ADD && (c == 'o') && !isok)
-	    break;
+	  if ((who == sptr) && (c == 'o'))
+	    {
+	      if((whatt == MODE_ADD) && !isok)
+		break;
+	      /* This mod dedicated to Martyn on Efnet, the biggest
+	       * sickest bigot I have ever met. He finds it ok to "out" others
+	       * yet finds it ok to be in the closet himself about his
+	       * his own bisexuality. Hypocrite.
+	       * - with love, Dianora
+	       */
+	      if(whatt == MODE_DEL)
+		isok = 0;
+	      }
 
 	  /* ignore server-generated MODE +-ovh */
 	  if (IsServer(sptr))
@@ -1189,24 +1200,30 @@ static  void     set_mode(aClient *cptr,
 		break;
 	      if (errsent(SM_ERR_RPL_E, &errors_sent))
 		break;
+	      /* don't allow a non chanop to see the exception list
+	       * suggested by Matt on operlist nov 25 1998
+	       */
+	      if(isok)
+		{
 #ifdef BAN_INFO
-	      for (lp = chptr->exceptlist; lp; lp = lp->next)
-		sendto_one(cptr, rpl_str(RPL_EXCEPTLIST),
-			   me.name, cptr->name,
-			   chptr->chname,
-			   lp->value.banptr->banstr,
-			   lp->value.banptr->who,
-			   lp->value.banptr->when);
+		  for (lp = chptr->exceptlist; lp; lp = lp->next)
+		    sendto_one(cptr, rpl_str(RPL_EXCEPTLIST),
+			       me.name, cptr->name,
+			       chptr->chname,
+			       lp->value.banptr->banstr,
+			       lp->value.banptr->who,
+			       lp->value.banptr->when);
 #else 
-	      for (lp = chptr->exceptlist; lp; lp = lp->next)
-		sendto_one(cptr, rpl_str(RPL_EXCEPTLIST),
-			   me.name, cptr->name,
-			   chptr->chname,
-			   lp->value.cp);
+		  for (lp = chptr->exceptlist; lp; lp = lp->next)
+		    sendto_one(cptr, rpl_str(RPL_EXCEPTLIST),
+			       me.name, cptr->name,
+			       chptr->chname,
+			       lp->value.cp);
 #endif
-	      sendto_one(sptr, rpl_str(RPL_ENDOFEXCEPTLIST),
-			 me.name, sptr->name, 
-			 chptr->chname);
+		  sendto_one(sptr, rpl_str(RPL_ENDOFEXCEPTLIST),
+			     me.name, sptr->name, 
+			     chptr->chname);
+		}
 	      break;
 	    }
 	  arg = check_string(*parv++);

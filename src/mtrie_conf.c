@@ -49,6 +49,7 @@
 #include "h.h"
 
 #include "mtrie_conf.h"
+#include "dline_conf.h"
 
 #if !defined(SYSV) && !defined(SOL20)
 #define memmove(x,y,N) bcopy(y,x,N)
@@ -67,7 +68,7 @@ static void tokenize_and_stack(char *,char *);
 static void create_sub_mtrie(DOMAIN_LEVEL *,aConfItem *,int,char *);
 static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *,char *,char *,int);
 static int wildcmp(char *,char *);
-static char *show_iline_prefix(aClient *,aConfItem *,char *);
+char *show_iline_prefix(aClient *,aConfItem *,char *);
 static DOMAIN_PIECE *find_or_add_host_piece(DOMAIN_LEVEL *,int,char *);
 static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *,int,char *,char *);
 static void find_or_add_user_piece(DOMAIN_PIECE *,aConfItem *,int,char *);
@@ -135,7 +136,7 @@ void add_mtrie_conf_entry(aConfItem *aconf,int flags)
 
   if(host_is_legal_ip(aconf->host) && (aconf->status & CONF_KILL))
     {
-      add_to_dline_hash(aconf);
+      add_ip_Kline(aconf);
       return;
     }
 
@@ -352,7 +353,7 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
 	{
 	  found_aconf = piece_ptr->wild_conf_ptr;
 
-	  if(found_aconf->status & CONF_ELINE)
+	  if(found_aconf->flags & CONF_FLAGS_E_LINED)
 	    {
 	      /* if requested kline aconf =exactly=
 	       * matches an already present aconf
@@ -417,7 +418,7 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
 	  found_aconf->status |= flags;
 	  piece_ptr->flags |= flags;
 
-	  if(found_aconf->status & CONF_ELINE)
+	  if(found_aconf->flags & CONF_FLAGS_E_LINED)
 	    {
 	      free_conf(aconf);		/* toss it in the garbage */
 	      found_aconf->status &= ~CONF_KILL;
@@ -491,7 +492,7 @@ static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr,
 	  (!matches(aconf->name,user)))
 	{
 	  match = YES;
-	  if(aconf->status & CONF_ELINE)
+	  if(aconf->flags & CONF_FLAGS_E_LINED)
 	    {
 	      return(aconf);
 	    }
@@ -522,9 +523,11 @@ static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr,
 
   if(wild_aconf)
     {
-      if((wild_aconf->status & CONF_ELINE) && (aconf->status & CONF_KILL))
+      if((wild_aconf->flags & CONF_FLAGS_E_LINED) &&
+	 (aconf->status & CONF_KILL))
 	return(wild_aconf);
-      else if((wild_aconf->status & CONF_KILL) && (aconf->status & CONF_ELINE))
+      else if((wild_aconf->status & CONF_KILL) &&
+	      (aconf->flags & CONF_FLAGS_E_LINED))
 	return(aconf);
     }
   return(aconf);
@@ -603,7 +606,8 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
    * there is no point checking for a k-line
    */
 
-  if(iline_aconf_unsortable && (iline_aconf_unsortable->status & CONF_ELINE))
+  if(iline_aconf_unsortable &&
+     (iline_aconf_unsortable->flags & CONF_FLAGS_E_LINED))
     return(iline_aconf_unsortable);
 
   /* I now look in the mtrie tree, if I found an I line
@@ -612,12 +616,11 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
    * in the mtrie tree.
    */
 
-  stack_pointer = 0;
-  tokenize_and_stack(tokenized_host,host);
-  top_of_stack = stack_pointer;
-
   if(trie_list)
     {
+      stack_pointer = 0;
+      tokenize_and_stack(tokenized_host,host);
+      top_of_stack = stack_pointer;
       saved_stack_pointer = -1;
       first_kline_trie_list = (DOMAIN_LEVEL *)NULL;
 
@@ -644,7 +647,8 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
        * return it.
        */
 
-      if(iline_aconf && (iline_aconf->status & (CONF_ELINE|CONF_KILL)))
+      if(iline_aconf && ((iline_aconf->status & CONF_KILL) ||
+			 (iline_aconf->flags & CONF_FLAGS_E_LINED)))
 	return(iline_aconf);
     }
   else
@@ -656,7 +660,8 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
        * return it.
        */
 
-      if(iline_aconf && (iline_aconf->status & (CONF_ELINE|CONF_KILL)))
+      if(iline_aconf && ((iline_aconf->status & CONF_KILL) ||
+			 (iline_aconf->flags & CONF_FLAGS_E_LINED)))
 	return(iline_aconf);
     }
 
@@ -708,7 +713,7 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
   /* Try an IP hostname ban */
 
   if(!kline_aconf)
-    kline_aconf = find_user_host_in_dline_hash(ip,user,CONF_KILL);
+    kline_aconf = match_ip_Kline(ip,user);
 
   /* If this client isn't k-lined return the I line found */
 
@@ -1097,7 +1102,7 @@ void report_matching_host_klines(aClient *sptr,char *host)
     return;
 
   report_sub_mtrie(sptr,CONF_KILL,cur_level);
-  report_dline_hash(sptr,CONF_KILL);
+  report_ip_Klines(sptr);
   report_unsortable_klines(sptr,host);
 
 }
@@ -1246,7 +1251,7 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
     }
   else
     {
-      report_dline_hash(sptr,CONF_KILL);
+      report_ip_Klines(sptr);
 
       for(found_conf = unsortable_list_klines;
 	  found_conf;found_conf=found_conf->next)
@@ -1273,7 +1278,8 @@ void report_mtrie_conf_links(aClient *sptr, int flags)
  * side effects	- NONE
  */
 
-static char *show_iline_prefix(aClient *sptr,aConfItem *aconf,char *name)
+/* urgh. now used also in dline_conf.c */
+char *show_iline_prefix(aClient *sptr,aConfItem *aconf,char *name)
 {
   static char prefix_of_host[MAXPREFIX];
   char *prefix_ptr;

@@ -59,6 +59,7 @@ static char *rcs_version = "$Id$";
 #undef strchr
 #define strchr index
 #endif
+#include "dline_conf.h"
 #include "mtrie_conf.h"
 
 
@@ -1263,22 +1264,14 @@ int	m_info(aClient *cptr,
       if (IsAnOper(sptr))
       {
 #ifdef ANTI_NICK_FLOOD
-#define OUT1	"ANTI_NICK_FLOOD=1"
+	ircsprintf(outstr,
+		   "ANTI_NICK_FLOOD=1 MAX_NICK_TIME=%d MAX_NICK_CHANGES=%d",
+		   MAX_NICK_TIME,MAX_NICK_CHANGES);
+	sendto_one(sptr, rpl_str(RPL_INFO), me.name, parv[0], outstr);
 #else
-#define OUT1	"ANTI_NICK_FLOOD=0"
+	sendto_one(sptr, rpl_str(RPL_INFO), me.name, parv[0],
+		   "ANTI_NICK_FLOOD=0");
 #endif
-#ifdef ANTI_IP_SPOOF
-#define OUT2	" ANTI_IP_SPOOF=1"
-#else
-#define OUT2	" ANTI_IP_SPOOF=0"
-#endif
-	sendto_one(sptr, rpl_str(RPL_INFO),
-		   me.name, parv[0], OUT1 OUT2 );
-
-#undef OUT1
-#undef OUT2
-#undef OUT3
-#undef OUT4
 
 #ifdef ANTI_SPAMBOT
 #define OUT1	"ANTI_SPAMBOT=1"
@@ -2206,7 +2199,7 @@ int	m_stats(aClient *cptr,
 	  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 	  break;
 	}
-      report_dline_hash(sptr, CONF_DLINE);
+      report_dlines(sptr);
       valid_stats++;
       break;
 
@@ -4334,7 +4327,7 @@ int     m_kline(aClient *cptr,
  */
 
   if(ip_kline)
-    add_to_dline_hash(aconf);
+    add_ip_Kline(aconf);
   else
     add_mtrie_conf_entry(aconf,CONF_KILL);
 
@@ -5176,7 +5169,7 @@ int     place_dline(aClient *sptr,
     }
 
 #ifdef NON_REDUNDANT_KLINES
-  if( (aconf = find_host_in_dline_hash(ip_host_network_order,CONF_DLINE)) )
+  if( aconf = match_Dline(ip_host_network_order)) 
      {
        char *reason;
        reason = aconf->passwd ? aconf->passwd : "<No Reason>";
@@ -5206,7 +5199,7 @@ int     place_dline(aClient *sptr,
   DupString(aconf->host,host);
   DupString(aconf->passwd,buffer);
 
-  add_to_dline_hash(aconf);
+  add_Dline(aconf);
   sendto_realops("%s added D-Line for [%s] [%s]",
 		 parv0, host, reason);
 

@@ -28,7 +28,6 @@ static char *version = "$Id$";
 extern	void	count_whowas_memory(int *, u_long *);
 extern	u_long	cres_mem(aClient *);
 extern  void    count_ip_hash(int *,u_long *);	  /* defined in s_conf.c */
-extern	void	count_dline_hash(int *,u_long *); /* defined in s_conf.c */
 extern  int	maxdbufblocks;			  /* defined in dbuf.c */
 /*
  * Option string.  Must be before #ifdef DEBUGMODE.
@@ -474,12 +473,6 @@ void	count_memory(aClient *cptr,char *nick)
 	     me.name, RPL_STATSDEBUG, nick,
 	     number_ips_stored,
 	     mem_ips_stored);
-
-  count_dline_hash(&number_dlines_stored,&mem_dlines_stored);
-  sendto_one(cptr, ":%s %d %s :dhash %d(%d)",
-	     me.name, RPL_STATSDEBUG, nick,
-	     number_dlines_stored,
-	     mem_dlines_stored);
 
   tot = totww + totch + totcl + com + cl*sizeof(aClass) + db + rm;
   tot += sizeof(aHashEntry) * U_MAX;

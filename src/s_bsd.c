@@ -1873,7 +1873,8 @@ int read_packet(aClient *cptr, int msg_ready)
 		    (char *)inetntoa((char *)&addr.sin_addr),
 		    sizeof(host));
 
-	  if (find_dline(addr.sin_addr))
+	  if (match_Dline(ntohl((unsigned long)addr.sin_addr.s_addr)))
+
 	    {
 	      ircstp->is_ref++;
 #ifdef REPORT_DLINE_TO_USER
@@ -2312,7 +2313,7 @@ int	read_message(time_t delay)
 		    (char *)inetntoa((char *)&addr.sin_addr),
 		    sizeof(host));
 
-	  if (find_dline(addr.sin_addr))
+	  if (match_Dline(ntohl((unsigned long)addr.sin_addr.s_addr)))
 	    {
 	      ircstp->is_ref++;
 #ifdef REPORT_DLINE_TO_USER

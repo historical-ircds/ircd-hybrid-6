@@ -26,6 +26,7 @@ static char *rcs_version="$Id$";
 
 #include "struct.h"
 #include "common.h"
+#include "dline_conf.h"
 #include "sys.h"
 #include "numeric.h"
 #include "msg.h"
@@ -471,8 +472,11 @@ static	time_t	check_pings(time_t currenttime)
 	    {
 	      if(IsPerson(cptr))
 		{
-		  if( (aconf = find_dkill(cptr)) ) /* if there is a returned 
-						      aConfItem then kill it */
+		  if( aconf = match_Dline(ntohl(cptr->ip.s_addr)))
+
+		      /* if there is a returned 
+		       * aConfItem then kill it
+		       */
 		    {
 		      sendto_realops("D-line active for %s",
 				 get_client_name(cptr, FALSE));
@@ -1068,12 +1072,11 @@ normal user.\n");
   read_amotd();
 #endif
   read_help();
-
   clear_client_hash_table();
   clear_channel_hash_table();
   clear_scache_hash_table();	/* server cache name table */
   clear_ip_hash_table();	/* client host ip hash table */
-  clear_dline_hash_table();
+  clear_Dline_table();		/* d line tree */
   initlists();
   initclass();
   initwhowas();

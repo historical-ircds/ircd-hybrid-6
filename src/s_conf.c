@@ -27,6 +27,7 @@ static char *rcs_version = "$Id$";
 
 #include "struct.h"
 #include "common.h"
+#include "dline_conf.h"
 #include "sys.h"
 #include "numeric.h"
 #include "inet.h"
@@ -75,7 +76,6 @@ extern  void    outofmemory(void);	/* defined in list.c */
  */
 
 #define IP_HASH_SIZE 0x1000
-#define DLINE_HASH_SIZE 0x1000
 
 typedef struct ip_entry
 {
@@ -88,18 +88,9 @@ typedef struct ip_entry
 #endif
 }IP_ENTRY;
 
-typedef struct d_line_entry
-{
-  unsigned long ip;
-  unsigned long mask;
-  aConfItem *conf_entry;
-  struct d_line_entry *next;
-}DLINE_ENTRY;
-
 IP_ENTRY *ip_hash_table[IP_HASH_SIZE];
-DLINE_ENTRY *dline_hash_table[DLINE_HASH_SIZE];
 
-static void clear_dlines(void);		/* clear current d lines */
+extern void zap_Dlines();
 
 static int hash_ip(unsigned long);
 static int hash_dline_ip(unsigned long);
@@ -206,7 +197,7 @@ int	attach_Iline(aClient *cptr,
       /*      (void)strncpy(user, cptr->username,sizeof(user)-1); */
     }
 
-  aconf = find_matching_mtrie_conf(host,username,cptr->ip.s_addr);
+  aconf = find_matching_mtrie_conf(host,username,ntohl(cptr->ip.s_addr));
 
   if(aconf)
     {
@@ -612,39 +603,6 @@ void count_ip_hash(int *number_ips_stored,u_long *mem_ips_stored)
     }
 }
 
-/*
- * count_dline_hash
- *
- * inputs	- pointer to counter of number of dlines hashed 
- *		- pointer to memory used for dline hash
- * output	- returned via pointers input
- * side effects	- NONE
- *
- * number of dlined #'s is counted up, plus the amount of memory
- * used in the hash.
- */
-
-void count_dline_hash(int *number_dlines_stored,u_long *mem_dlines_stored)
-{
-  DLINE_ENTRY *dline_hash_ptr;
-  int i;
-
-  *number_dlines_stored = 0;
-  *mem_dlines_stored = 0;
-
-  for(i = 0; i < DLINE_HASH_SIZE ;i++)
-    {
-      dline_hash_ptr = dline_hash_table[i];
-      while(dline_hash_ptr)
-        {
-          *number_dlines_stored = *number_dlines_stored + 1;
-          *mem_dlines_stored = *mem_dlines_stored +
-             sizeof(DLINE_ENTRY);
-
-          dline_hash_ptr = dline_hash_ptr->next;
-        }
-    }
-}
 
 /*
  * iphash_stats()
@@ -1348,7 +1306,7 @@ int	rehash(aClient *cptr,aClient *sptr,int sig)
 
   clear_mtrie_conf_links();
 
-  clear_dlines();
+  zap_Dlines();
   clear_special_conf(&q_conf);
   clear_special_conf(&x_conf);
   clear_special_conf(&u_conf);
@@ -1915,7 +1873,7 @@ int 	initconf(int opt, int fd,int use_include)
       if (aconf->host && (aconf->status & CONF_KILL))
 	{
 	  if(host_is_legal_ip(aconf->host))
-	    add_to_dline_hash(aconf);
+	    add_ip_Kline(aconf);
 	  else
 	    add_mtrie_conf_entry(aconf,CONF_KILL);
 	  dontadd = 1;
@@ -1924,7 +1882,11 @@ int 	initconf(int opt, int fd,int use_include)
       if (aconf->host && (aconf->status & CONF_DLINE))
 	{
 	  dontadd = 1;
-	  add_to_dline_hash(aconf);
+	  DupString(aconf->mask,aconf->host);
+	  if(aconf->status & CONF_ELINE)
+	    add_dline(aconf);
+	  else
+	    add_Dline(aconf);
 	}
 
       if (aconf->status & CONF_XLINE)
@@ -2085,32 +2047,6 @@ static	int	lookup_confhost(aConfItem *aconf)
 }
 
 /*
- * find_dline
- *
- * input	- host_ip as unsigned long in =network= order
- * output	- 1 if D line was found
- * side effects	- none
- */
-
-int find_dline(struct in_addr raw_ip)
-{
-  aConfItem *aconf;
-  unsigned long host_ip;
-
-  memcpy(&host_ip, &raw_ip, sizeof(host_ip));
-
-  aconf = find_host_in_dline_hash(host_ip,CONF_DLINE);
-  if(aconf)
-    {
-      if(aconf->status & CONF_ELINE)
-	return(0);
-      else
-	return(1);
-    }
-  return(0);
-}
-
-/*
  * find_kill
  *
  * See if this user is klined already, and if so, return aConfItem pointer
@@ -2198,7 +2134,6 @@ aConfItem *find_is_klined(char *host,char *name,unsigned long ip)
 	}
     }
 
-
   /*
       if (tmp->name && (!name || !match(tmp->name, name)))
 	if(tmp->passwd)
@@ -2214,45 +2149,11 @@ aConfItem *find_is_klined(char *host,char *name,unsigned long ip)
    * or a CONF_CLIENT
    */
 
-  tmp = find_matching_mtrie_conf(host,name,ip);
+  tmp = find_matching_mtrie_conf(host,name,ntohl(ip));
   if(tmp && tmp->status & CONF_KILL)
     return(tmp);
   else
     return((aConfItem *)NULL);
-}
-
-/*
- * find_dkill is only called when a /quote dline is applied
- * all quote dlines are sortable, of the form nnn.nnn.nnn.* or nnn.nnn.nnn.nnn
- * There is no reason to check for all three possible formats as in klines
- * 
- * - Dianora
- * 
- * inputs	- client pointer
- * output	- return 1 if match is found, and loser should die
- *		  return 0 if no match is found and loser shouldn't die
- * side effects	- only sortable dline tree is searched
-*/
-
-aConfItem *find_dkill(aClient *cptr)
-{
-  aConfItem *aconf;
-
-  if (!cptr->user)
-    return 0;
-
-  if(IsElined(cptr))
-     return((aConfItem *)NULL);
-
-  aconf = find_host_in_dline_hash(cptr->ip.s_addr,CONF_DLINE);
-  if(aconf)
-    {
-      if(aconf->status & CONF_ELINE)
-	return((aConfItem *)NULL);
-      else
-	return(aconf);
-    }
-  return((aConfItem *)NULL);
 }
 
 /* add_temp_kline
@@ -3038,203 +2939,6 @@ static int check_time_interval(char *interval)
 }
 #endif
 
-
-/* 
- * D line hash table implementation 
- *
- * Diane Bruce (Dianora/db)
- */
-
-/*
- * clear_dline_hash_table
- *
- * input	- NONE
- * output	- NONE
- * side effects	- Initialize the dline hash table
- */
-
-void clear_dline_hash_table()
-{
-  memset((void *)dline_hash_table, 0, sizeof(dline_hash_table));
-}
-
-/*
- * clear_dlines
- *
- * input	- NONE
- * output	- NONE
- * side effects - clear the dline hash table
- */
-
-static void clear_dlines()
-{
-  int i;
-  DLINE_ENTRY *p;
-  DLINE_ENTRY *next_p;
-  aConfItem *aconf;
-
-  for(i = 0; i < DLINE_HASH_SIZE; i++)
-    {
-      p = dline_hash_table[i];
-      while(p)
-	{
-	  next_p = p->next;
-	  if(p->conf_entry)
-	    {
-	      aconf = p->conf_entry;
-	      free_conf(aconf);
-	    }
-	  (void)free(p);
-	  p = next_p;
-	}
-      dline_hash_table[i] = (DLINE_ENTRY *)NULL;
-    }
-}
-
-/*
- * add_to_dline_hash()
- *
- * inputs	- pointer to aConfItem 
- *		with following setup
- *
- *		- host ip as string
- *		- reason
- *
- * output	- none
- * side effects	- none
-*/
-
-void add_to_dline_hash(aConfItem *aconf)
-{
-  DLINE_ENTRY *p;
-  DLINE_ENTRY *new_entry;
-  unsigned long host_mask;
-  unsigned host_ip;
-  int i;
-
-  host_ip = host_name_to_ip(aconf->host,&host_mask),
-  host_ip &= host_mask;
-
-  new_entry = (DLINE_ENTRY *)MyMalloc(sizeof(DLINE_ENTRY));
-  new_entry->ip = host_ip;
-  new_entry->mask = host_mask;
-  new_entry->conf_entry = aconf;
-  new_entry->next = (DLINE_ENTRY *)NULL;
-
-  i = hash_dline_ip(host_ip);
-
-  if((p = dline_hash_table[i]) == (DLINE_ENTRY *)NULL)
-    {
-      dline_hash_table[i] = new_entry;
-      return;
-    }
-
-  new_entry->next = p;
-  dline_hash_table[i] = new_entry;
-}
-
-/*
- * find_host_in_dline_hash
- *
- * inputs	- host ip in =network= order
- * output	- aConfItem if dlined NULL if not
- * side effects	- none
- */
-
-aConfItem *find_host_in_dline_hash(unsigned long host_ip,int mask)
-{
-  int i;
-  DLINE_ENTRY *p;
-  unsigned long host_ip_host_order;
-  aConfItem *aconf=(aConfItem *)NULL;
-  aConfItem *bconf;
-
-  host_ip_host_order = ntohl(host_ip);
-
-  i = hash_dline_ip(host_ip_host_order);
-
-  /*
-   * find the matches for this ip and mask 
-   */
-
-  for(p = dline_hash_table[i]; p; p = p->next)
-    {
-      if( (host_ip_host_order & p->mask) == p->ip)
-	{
-	  if(p->conf_entry)
-	    {
-	      bconf = p->conf_entry;
-
-	      if(bconf->status & mask)
-		aconf = bconf;
-	      if(bconf->status & CONF_ELINE)
-		return(bconf);
-	    }
-	}
-    }
-  return(aconf);
-}
-
-/*
- * find_user_host_in_dline_hash
- *
- * inputs	- host ip in =network= order
- *		- user name to fine
- * output	- aConfItem if dlined/klined NULL if not
- * side effects	- none
- */
-
-aConfItem *find_user_host_in_dline_hash(unsigned long host_ip,char *name,
-					int mask)
-{
-  int i;
-  DLINE_ENTRY *p;
-  unsigned long host_ip_host_order;
-  aConfItem *aconf=(aConfItem *)NULL;
-  aConfItem *bconf;
-
-  host_ip_host_order = ntohl(host_ip);
-
-  i = hash_dline_ip(host_ip_host_order);
-
-  /*
-   * find the matches for this ip/mask and username
-   */
-
-  for(p = dline_hash_table[i]; p; p = p->next)
-    {
-      if((host_ip_host_order & p->mask) == p->ip)
-	{
-	  if(p->conf_entry)
-	    {
-	      bconf = p->conf_entry;
-	      if((bconf->status & mask) && (!matches(bconf->name,name)))
-		{
-		  aconf = bconf;
-		  if(bconf->status & CONF_ELINE)
-		    return(bconf);
-		}
-	    }
-	}
-    }
-  return(aconf);
-}
-
-/*
- * hash_dline_ip()
- *
- * input	- unsigned long ip address in host order
- * output	- integer value used as index into hash table
- * side effects	- none
- */
-
-static int hash_dline_ip(unsigned long ip)
-{
-  int hash;
-  hash = ( (ip >>= 10)  & DLINE_HASH_SIZE-1);
-  return(hash);
-}
-
 /*
  * host_name_to_ip
  *
@@ -3333,123 +3037,6 @@ unsigned long host_name_to_ip(char *host,unsigned long *ip_mask_ptr)
       *ip_mask_ptr = 0xFFFFFFFFL;
     }
   return(generated_host_ip);
-}
-
-
-/*
- * report_dline_hash()
- *
- * inputs	- aClient to source requesting stats D
- * output	- none
- * side effects	- 
- */
-
-void report_dline_hash(aClient *sptr, int mask)
-{
-  aConfItem *aconf;
-  int i;
-  DLINE_ENTRY *p;
-  char *host,*pass,*name;
-  int port;
-  static  char	null[] = "<NULL>";
-
-  for(i = 0; i < DLINE_HASH_SIZE; i++)
-    {
-      for( p = dline_hash_table[i]; p; p = p->next)
-	{
-	  aconf = p->conf_entry;
-	  if (!aconf)
-	    continue;
-
-	  if(!(aconf->status & mask))
-	    continue;
-
-	  host = BadPtr(aconf->host) ? null : aconf->host;
-	  pass = BadPtr(aconf->passwd) ? null : aconf->passwd;
-	  name = BadPtr(aconf->name) ? null : aconf->name;
-	  port = (int)aconf->port;
-
-	  if(mask & CONF_DLINE)
-	    {
-	      if(aconf->status & CONF_ELINE)
-		sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name,
-			   sptr->name, 'd', host,
-			   pass);
-	      else
-		sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name,
-			   sptr->name, 'D', host,
-			   pass);
-	    }
-	  else if(mask & CONF_KILL)
-	    {
-	      sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-			 me.name,
-			 sptr->name,
-			 'K',
-			 host,
-			 name,
-			 pass);
-	    }
-	}
-    }
-
-}
-
-/*
- * dhash_stats()
- *
- * inputs		- 
- * output		-
- * side effects
- */
-
-void dhash_stats(aClient *cptr, aClient *sptr,int parc, char *parv[],int out)
-{
-  aConfItem *tmp;
-  int i;
-  DLINE_ENTRY *p;
-  int collision_count;
-  char result_buf[256];
-
-  if(out < 0)
-    sendto_one(sptr,":%s NOTICE %s :*** hash stats for dhash",
-	       me.name,cptr->name);
-  else
-    {
-      (void)sprintf(result_buf,"*** hash stats for dhash\n");
-      (void)write(out,result_buf,strlen(result_buf));
-    }
-
-  for(i = 0; i < DLINE_HASH_SIZE; i++)
-    {
-      p = dline_hash_table[i];
-
-      collision_count = 0;
-      while(p)
-	{
-	  tmp = p->conf_entry;
-	  if (tmp == (aConfItem *)NULL)
-	    {
-	      collision_count++;
-	      p = p->next;
-	      continue;
-	    }
-          collision_count++;
-	  p = p->next;
-	}
-      if(collision_count)
-	{
-	  if(out < 0)
-	    sendto_one(sptr,":%s NOTICE %s :Entry %d (0x%X) Collisions %d",
-		       me.name,cptr->name,i,i,collision_count);
-	  else
-	    {
-	      (void)sprintf(result_buf,"Entry %d (0x%X) Collisions %d\n",
-			    i,i,collision_count);
-	      (void)write(out,result_buf,strlen(result_buf));
-	    }
-	}
-    }
 }
 
 /* get_oper_privs
