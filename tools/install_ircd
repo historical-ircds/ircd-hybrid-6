@@ -138,12 +138,18 @@ fi
 # install viconf
 if [ ! -f ${DPATH}viconf ]; then
   echo installing viconf as ${DPATH}viconf${EXESUFFIX}
-  $INSTALL_SH -c tools/viconf${EXESUFFIX} ${DPATH}viconf${EXESUFFIX};
+  $INSTALL_SH -c tools/viconf${EXESUFFIX} ${DPATH}viconf${EXESUFFIX}
+  rm -f ${DPATH}vimotd${EXESUFFIX} ${DPATH}viklines${EXESUFFIX}
+  ln ${DPATH}viconf${EXESUFFIX} ${DPATH}vimotd${EXESUFFIX}
+  ln ${DPATH}viconf${EXESUFFIX} ${DPATH}viklines${EXESUFFIX};
 else
    echo installing viconf as ${DPATH}viconf${EXESUFFIX}
    echo previous viconf saved as viconf${EXESUFFIX}.old
    mv ${DPATH}viconf${EXESUFFIX} ${DPATH}viconf${EXESUFFIX}.old
-   $INSTALL_SH -c tools/viconf${EXESUFFIX} ${DPATH}viconf${EXESUFFIX};
+   $INSTALL_SH -c tools/viconf${EXESUFFIX} ${DPATH}viconf${EXESUFFIX}
+   rm -f ${DPATH}vimotd${EXESUFFIX} ${DPATH}viklines${EXESUFFIX}
+   ln ${DPATH}viconf${EXESUFFIX} ${DPATH}vimotd${EXESUFFIX}
+   ln ${DPATH}viconf${EXESUFFIX} ${DPATH}viklines${EXESUFFIX};
 fi
 
 # install ircd.8

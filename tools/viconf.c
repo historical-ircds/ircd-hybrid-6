@@ -49,6 +49,9 @@ int main(int argc, char *argv[])
     filename = KPATH;
 #endif /* KPATH */
 
+  if(strcmp(p, "vimotd") == 0)
+    filename = MPATH;
+
   if(LockedFile(filename))
     {
       fprintf(stderr,"Cant' lock %s\n", filename);
