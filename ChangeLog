@@ -1,3 +1,7 @@
+*** 19991009_3 by lusky
+updated RELNOTES to indicate that AIX is unsupported
+
+
 *** 19991009_2 by lusky
 revved patchlevel to b108
 fixed -DNDEBUG in Makefile.in (th)
