@@ -1046,7 +1046,7 @@ void    free_fludees();
 #define MIN_IDLETIME 1800
 #endif
 
-#define CONFIG_H_LEVEL_6_1_1
+#define CONFIG_H_LEVEL_6_1
 
 #ifdef CRYPT_LINKS
 #  ifndef HAVE_LIBCRYPTO

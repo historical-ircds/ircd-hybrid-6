@@ -28,7 +28,7 @@
 #ifndef INCLUDED_config_h
 #include "config.h"
 #endif
-#if !defined(CONFIG_H_LEVEL_6_1_1)
+#if !defined(CONFIG_H_LEVEL_6_1)
 #  error Incorrect config.h for this revision of ircd.
 #endif
 
