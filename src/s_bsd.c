@@ -220,6 +220,7 @@ void	report_error(char *text,aClient *cptr)
     {
 	fprintf(stderr, text, host, strerror(errtmp));
 	fprintf(stderr, "\n");
+	fflush(stderr);
     }
 }
 
@@ -559,7 +560,6 @@ void	init_sys()
     (void)close(0);	/* fd 0 opened by inetd */
     local[0] = NULL;
     }
-
   resfd = init_resolver(0x1f);
   return;
 }

@@ -3,3 +3,4 @@ update Hybrid-team
 add example *::* and NOMATCH::* I: lines to example.conf
 add more stderr debugging (ircd -s)... one for every place we syslog()
 make wrapper function for res_init() to do spare_fd crap
+ircd -s doesn't work through a restart

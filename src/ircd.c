@@ -203,12 +203,12 @@ void	restart(char *mesg)
   (void)syslog(LOG_WARNING, "Restarting Server because: %s, sbrk(0)-etext: %d",
      mesg,(u_long)sbrk((size_t)0)-(u_long)sbrk0);
 #endif
-  server_reboot();
   if (bootopt & BOOT_STDERR)
     {
       fprintf(stderr, "Restarting Server because: %s, sbrk(0)-etext: %d\n",
         mesg,(u_long)sbrk((size_t)0)-(u_long)sbrk0);
     }
+  server_reboot();
 }
 
 VOIDSIG s_restart()
@@ -246,7 +246,7 @@ void	server_reboot()
 #endif
   for (i = 3; i < MAXCONNECTIONS; i++)
     (void)close(i);
-  if (!(bootopt & (BOOT_TTY|BOOT_DEBUG)))
+  if (!(bootopt & (BOOT_TTY|BOOT_DEBUG|BOOT_STDERR)))
     (void)close(2);
   (void)close(1);
   if ((bootopt & BOOT_CONSOLE) || isatty(0))
@@ -1099,7 +1099,6 @@ normal user.\n");
     }
   (void)initconf(bootopt,fd,YES);
   (void)do_include_conf();
-
 /* comstuds SEPARATE_QUOTE_KLINES_BY_DATE code */
 #ifdef SEPARATE_QUOTE_KLINES_BY_DATE
   {
@@ -1196,6 +1195,8 @@ normal user.\n");
     write_pidfile();
 
   Debug((DEBUG_NOTICE,"Server ready..."));
+  if (bootopt & BOOT_STDERR)
+    fprintf(stderr,"Server Ready\n");
 #ifdef USE_SYSLOG
   syslog(LOG_NOTICE, "Server Ready");
 #endif

@@ -5159,7 +5159,7 @@ int	m_rehash(aClient *cptr,
               ircsprintf(sparemsg,"invalid spare_fd %d",spare_fd);
               restart(sparemsg);
             }
-	  return 0;
+/*(	  return 0;
 	  restart_resolver();	/* re-read /etc/resolv.conf AGAIN?
 				   and close/re-open res socket */
 	  found = YES;
