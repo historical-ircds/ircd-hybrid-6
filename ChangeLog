@@ -1,3 +1,8 @@
+*** 20010618_1 by db
+- missing arg to #ifndef HIDE_SERVERS_IPS
+
+
+
 *** 20010617_5 by db
 - default to HIDE_SERVERS_IPS on
 
