@@ -216,7 +216,7 @@ static void query_usetcp(adns_query qu, struct timeval now) {
   qu->state= query_tcpw;
   qu->timeout= now;
   timevaladd(&qu->timeout,TCPWAITMS);
-  LIST_LINK_TAIL(qu->ads->tcpw,qu);
+  DLIST_LINK_TAIL(qu->ads->tcpw,qu);
   adns__querysend_tcp(qu,now);
   adns__tcp_tryconnect(qu->ads,now);
 }
@@ -255,5 +255,5 @@ void adns__query_send(adns_query qu, struct timeval now) {
   qu->udpsent |= (1<<serv);
   qu->udpnextserver= (serv+1)%ads->nservers;
   qu->retries++;
-  LIST_LINK_TAIL(ads->udpw,qu);
+  DLIST_LINK_TAIL(ads->udpw,qu);
 }
