@@ -33,8 +33,10 @@ extern int m_admin(struct Client *,struct Client *,int,char **);
 extern int m_kline(struct Client *,struct Client *,int,char **);
 extern int m_unkline(struct Client *,struct Client *,int,char **);
 extern int m_dline(struct Client *,struct Client *,int,char **);
+extern int m_undline(struct Client *,struct Client *,int,char **);
 
 extern int m_gline(struct Client *,struct Client *,int,char **);
+extern int m_ungline(struct Client *,struct Client *,int,char **);
 
 extern int m_locops(struct Client *,struct Client *,int,char **);
 

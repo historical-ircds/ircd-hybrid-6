@@ -193,6 +193,9 @@ COMMAND         - USAGE and DESCRIPTION
                   In order to use <nick> rather than <ip>, <nick> must
                   be on your server.
 
++ UNDLINE       - UNDLINE <ip>
+                  Will attempt to undline the given <ip>
+
 + HTM           - HTM [option]
                   When no [option] is given, HTM shows the current 
                   High Traffic Mode rate and whether HTM is on or off.
@@ -256,6 +259,12 @@ COMMAND         - USAGE and DESCRIPTION
                    It takes three different opers on three different 
                    servers to do the same GLINE within a short interval,
                    to have a GLINE triggered for a compiled time of hours.
+
++ UNGLINE        - UNGLINE <user@host>
+                   -- if compiled with GLINE --
+                   Will attempt to remove gline matching <user@host>
+                   This will only remove the gline from YOUR server, it
+                   does not try to remove it globally.
 
 + TESTLINE       - TESTLINE <user@host>|ip
                    -- Looks up given user@host or user@ip 

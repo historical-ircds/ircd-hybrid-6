@@ -44,6 +44,7 @@ extern struct ConfItem* find_gkill(struct Client *, char *);
 extern struct ConfItem* find_is_glined(const char *, const char *);
 extern void   flush_glines(void);             
 extern void   report_glines(struct Client *); 
+extern int    remove_gline_match(const char* user, const char* host);
 
 typedef struct gline_pending
 {

@@ -763,6 +763,58 @@ void report_glines(aClient *sptr)
 }
 
 /*
+ * remove_gline_match
+ *
+ * inputs       - user@host
+ * output       - 1 if successfully removed, otherwise 0
+ * side effects -
+ */
+int remove_gline_match(const char* user, const char* host)
+{
+  aConfItem *kill_list_ptr;     /* used for the link list only */
+  aConfItem *last_list_ptr;
+  aConfItem *tmp_list_ptr;
+
+  if(glines)
+    {
+      kill_list_ptr = last_list_ptr = glines;
+
+      while(kill_list_ptr)
+        {
+          if(!irccmp(kill_list_ptr->host,host) &&
+             !irccmp(kill_list_ptr->name,user))  /* this gline matches */
+            {
+              if(glines == kill_list_ptr)
+                {
+                  /* Its pointing to first one in link list*/
+                  /* so, bypass this one, remember bad things can happen
+                     if you try to use an already freed pointer.. */
+
+                  glines = last_list_ptr = tmp_list_ptr =
+                    kill_list_ptr->next;
+                }
+              else
+                {
+                  /* its in the middle of the list, so link around it */
+                  tmp_list_ptr = last_list_ptr->next = kill_list_ptr->next;
+                }
+              free_conf(kill_list_ptr);
+              kill_list_ptr = tmp_list_ptr;
+              return 1;
+            }
+          else
+            {
+              last_list_ptr = kill_list_ptr;
+              kill_list_ptr = kill_list_ptr->next;
+            }
+        }
+      return 0;
+    }
+  else
+    return 0;
+}
+
+/*
  * expire_pending_glines
  * 
  * inputs       - NONE

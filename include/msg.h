@@ -115,10 +115,12 @@ typedef struct MessageTree MESSAGE_TREE;
 #define MSG_KLINE    "KLINE"    /* KLINE */
 #define MSG_UNKLINE  "UNKLINE"  /* UNKLINE */
 #define MSG_DLINE    "DLINE"    /* DLINE */
+#define MSG_UNDLINE  "UNDLINE"  /* UNDLINE */
 #define MSG_HTM      "HTM"      /* HTM */
 #define MSG_SET      "SET"      /* SET */
 
 #define MSG_GLINE    "GLINE"    /* GLINE */
+#define MSG_UNGLINE  "UNGLINE"  /* UNGLINE */
 
 #define MSG_LOCOPS   "LOCOPS"   /* LOCOPS */
 #ifdef LWALLOPS
@@ -242,7 +244,9 @@ struct Message msgtab[] = {
   { MSG_KLINE,   m_kline,    0, MAXPARA, 1, 0, 0, 0L },
   { MSG_UNKLINE, m_unkline,  0, MAXPARA, 1, 0, 0, 0L },
   { MSG_DLINE,   m_dline,    0, MAXPARA, 1, 0, 0, 0L },
+  { MSG_UNDLINE, m_undline,  0, MAXPARA, 1, 0, 0, 0L },
   { MSG_GLINE,   m_gline,    0, MAXPARA, 1, 0, 0, 0L },
+  { MSG_UNGLINE, m_ungline,  0, MAXPARA, 1, 0, 0, 0L },
   { MSG_HASH,    m_hash,     0, MAXPARA, 1, 0, 0, 0L },
   { MSG_DNS,     m_dns,      0, MAXPARA, 1, 0, 0, 0L },
   { MSG_REHASH,  m_rehash,   0, MAXPARA, 1, 0, 0, 0L },
