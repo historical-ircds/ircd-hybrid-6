@@ -2439,54 +2439,6 @@ int m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
   return exit_client(cptr, acptr, sptr, buf2);
 }
 
-/*
- * m_userhost added by Darren Reed 13/8/91 to aid clients and reduce
- * the need for complicated requests like WHOIS. It returns user/host
- * information only (no spurious AWAY labels or channels).
- */
-int     m_userhost(aClient *cptr,
-                   aClient *sptr,
-                   int parc,
-                   char *parv[])
-{
-  char  *p = NULL;
-  aClient       *acptr;
-  char  *s;
-  int   i, len;
-
-  if (parc > 2)
-    (void)m_userhost(cptr, sptr, parc-1, parv+1);
-
-  if (parc < 2)
-    {
-      sendto_one(sptr, form_str(ERR_NEEDMOREPARAMS),
-                 me.name, parv[0], "USERHOST");
-      return 0;
-    }
-
-  ircsprintf(buf, form_str(RPL_USERHOST), me.name, parv[0]);
-  len = strlen(buf);
-  *buf2 = '\0';
-
-  for (i = 5, s = strtoken(&p, parv[1], " "); i && s;
-       s = strtoken(&p, (char *)NULL, " "), i--)
-    if ((acptr = find_person(s, NULL)))
-      {
-        if (*buf2)
-          (void)strcat(buf, " ");
-        ircsprintf(buf2, "%s%s=%c%s@%s",
-                   acptr->name,
-                   IsAnOper(acptr) ? "*" : "",
-                   (acptr->user->away) ? '-' : '+',
-                   acptr->username,
-                   acptr->host);
-        
-        (void)strncat(buf, buf2, sizeof(buf) - len);
-        len += strlen(buf2);
-      }
-  sendto_one(sptr, "%s", buf);
-  return 0;
-}
 
 /*
  * m_umode() added 15/10/91 By Darren Reed.
