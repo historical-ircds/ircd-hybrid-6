@@ -35,6 +35,7 @@
 #include "struct.h"
 #include "s_conf.h"
 #include "s_debug.h"
+#include "s_log.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -44,6 +45,7 @@
 #include <assert.h>
 
 #define NEWLINE "\r\n"
+#define LOG_BUFSIZE 2048
 
 static  char    sendbuf[2048];
 static  int     send_message (aClient *, char *, int);
@@ -1358,6 +1360,7 @@ ts_warn(const char *pattern, ...)
 
 {
   va_list args;
+  char buf[LOG_BUFSIZE];
   static time_t last = 0;
   static int warnings = 0;
   time_t now;
@@ -1387,6 +1390,8 @@ ts_warn(const char *pattern, ...)
     }
 
   vsendto_realops(pattern, args);
+  vsprintf(buf, pattern, args);
+  log(L_CRIT,buf);
 
   va_end(args);
 } /* ts_warn() */

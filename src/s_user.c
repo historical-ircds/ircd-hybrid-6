@@ -1156,7 +1156,7 @@ static int nickkilldone(aClient *cptr, aClient *sptr, int parc,
       else
         {
           newts = sptr->tsinfo = CurrentTime;
-          ts_warn("Remote nick %s introduced without a TS", nick);
+          ts_warn("Remote nick %s (%s) introduced without a TS", nick, parv[0]);
         }
       /* copy the nick in place */
       (void)strcpy(sptr->name, nick);
