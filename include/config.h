@@ -823,8 +823,6 @@
  */
 #define MAXBUFFERS
 
-#ifdef	OPER_KILL
-
 /* PORTNUM - default port where ircd resides
  * Port where ircd resides. NOTE: This *MUST* be greater than 1024 if you
  * plan to run ircd under any other uid than root.

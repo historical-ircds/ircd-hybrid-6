@@ -809,7 +809,7 @@ void walk_the_ip_Klines(aClient *sptr, struct ip_subtree *tree,
       if(!(scan->status & MASK))
 	continue;
 
-      GetPrintableaConfItem(scan, name, host, pass, user, &port);
+      GetPrintableaConfItem(scan, &name, &host, &pass, &user, &port);
 
       if(scan->status & CONF_KILL)
 	{

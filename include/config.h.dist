@@ -474,7 +474,7 @@
  */
 #define ZIP_LEVEL       2
 
-/* OPER_KILL OPER_REHASH OPER_RESTART OPER_DIE
+/* OPER_REHASH OPER_RESTART OPER_DIE
  *      restrict what local global-Opers can do
  *
  * OPER_REHASH and OPER_RESTART allow operators to
@@ -828,8 +828,6 @@
  * keeps clients at 8K and only raises servers to 64K
  */
 #define MAXBUFFERS
-
-#ifdef	OPER_KILL
 
 /* PORTNUM - default port where ircd resides
  * Port where ircd resides. NOTE: This *MUST* be greater than 1024 if you

@@ -590,19 +590,13 @@ int	m_info(aClient *cptr,
 #undef OUT3
 #undef OUT4
 
-
-#ifdef TIMED_KLINES
-#define OUT1 "TIMED_KLINES=1"
-#else
-#define OUT1 "TIMED_KLINES=0"
-#endif
 #ifdef TOPIC_INFO
-#define OUT2 " TOPIC_INFO=1"
+#define OUT1 "TOPIC_INFO=1"
 #else
-#define OUT2 " TOPIC_INFO=0"
+#define OUT1 "TOPIC_INFO=0"
 #endif
 	sendto_one(sptr, rpl_str(RPL_INFO),
-                   me.name, parv[0], OUT1 OUT2 OUT3 );
+                   me.name, parv[0], OUT1 );
 
 #undef OUT1
 #undef OUT2
