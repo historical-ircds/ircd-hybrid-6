@@ -77,8 +77,8 @@ static  int     can_join (struct Client *, struct Channel *, char *,int *);
 static  int     del_banid (struct Channel *, char *);
 static  int     del_exceptid (struct Channel *, char *);
 static  int     del_denyid (struct Channel *, char *);
-static  void    clear_bans_exceptions_denies(struct Client *,struct Channel *);
 static  void    free_bans_exceptions_denies(struct Channel *);
+static  void    free_a_ban_list(Link *ban_ptr);
 static  int     is_banned (struct Client *, struct Channel *);
 static  void    sub1_from_channel (struct Channel *);
 
@@ -1121,7 +1121,6 @@ static  int     errsent(int err, int *errs)
  * For example, isok could be replaced witout half ops, with ischop() or
  * chan_op depending.
  *
- * -Dianora
  */
 
 void set_channel_mode(struct Client *cptr,
@@ -1178,10 +1177,7 @@ void set_channel_mode(struct Client *cptr,
   int   isok;
   int   isdeop;
   int   chan_op;
-  int   self_lose_ops;
   int   user_mode;
-
-  self_lose_ops = 0;
 
   user_mode = user_channel_mode(sptr, chptr);
   chan_op = (user_mode & CHFL_CHANOP);
@@ -1194,9 +1190,6 @@ void set_channel_mode(struct Client *cptr,
 
   /* is an op or server or remote user on a TS channel */
   isok = ischop || (!isdeop && IsServer(cptr) && chptr->channelts);
-
-  if(isok)
-    chptr->keep_their_modes = YES;
 
   /* isok_c calculated later, only if needed */
 
@@ -1311,10 +1304,7 @@ void set_channel_mode(struct Client *cptr,
             {
               if(whatt == MODE_ADD)
                 break;
-              
-              if(whatt == MODE_DEL)
-                self_lose_ops = 1;
-              }
+	    }
 
           /* ignore server-generated MODE +-ovh */
           if (IsServer(sptr))
@@ -1360,9 +1350,6 @@ void set_channel_mode(struct Client *cptr,
           opcnt++;
 
           change_chan_flag(chptr, who, the_mode|whatt);
-
-          if (self_lose_ops)
-            isok = 0;
 
           break;
 
@@ -1542,15 +1529,6 @@ void set_channel_mode(struct Client *cptr,
               break;
             }
           
-          if(MyClient(sptr))
-            chptr->keep_their_modes = YES;
-          else if(!chptr->keep_their_modes)
-            {
-              parc--;
-              parv++;
-              break;
-            }
-
           /* user-friendly ban mask generation, taken
           ** from Undernet's ircd  -orabidoo
           */
@@ -1647,15 +1625,6 @@ void set_channel_mode(struct Client *cptr,
               break;
             }
           
-          if(MyClient(sptr))
-            chptr->keep_their_modes = YES;
-          else if(!chptr->keep_their_modes)
-            {
-              parc--;
-              parv++;
-              break;
-            }
-
           if(*arg == ':')
             {
               parc--;
@@ -1735,15 +1704,6 @@ void set_channel_mode(struct Client *cptr,
               sendto_one(sptr, form_str(RPL_ENDOFBANLIST),
                          me.name, sptr->name, 
                          chptr->chname);
-              break;
-            }
-
-          if(MyClient(sptr))
-            chptr->keep_their_modes = YES;
-          else if(!chptr->keep_their_modes)
-            {
-              parc--;
-              parv++;
               break;
             }
 
@@ -2274,7 +2234,6 @@ void set_channel_mode(struct Client *cptr,
   *mbufw_newer = *pbufw_newer = '\0';
 
   collapse_signs(modebuf);
-/*  collapse_signs(modebuf2); */
   collapse_signs(modebuf_new);
   collapse_signs(modebuf_newer);
 
@@ -2416,9 +2375,6 @@ static struct Channel* get_channel(struct Client *cptr, char *chname, int flag)
       chptr->prevch = NULL;
       chptr->nextch = channel;
       channel = chptr;
-      if (Count.myserver == 0)
-        chptr->locally_created = YES;
-      chptr->keep_their_modes = YES;
       chptr->channelts = CurrentTime;     /* doesn't hurt to set it here */
       add_to_channel_hash_table(chname, chptr);
       Count.chan++;
@@ -2572,183 +2528,6 @@ static  void    sub1_from_channel(struct Channel *chptr)
 }
 
 /*
- * clear_bans_exceptions_denies
- *
- * I could have re-written del_banid/del_exceptid to do this
- *
- * still need a bit of cleanup on the MODE -b stuff...
- * -Dianora
- */
-
-static void clear_bans_exceptions_denies(struct Client *sptr, struct Channel *chptr)
-{
-  static char modebuf[MODEBUFLEN];
-  register Link *ban;
-  char *b1,*b2,*b3,*b4;
-  char *mp;
-
-  b1="";
-  b2="";
-  b3="";
-  b4="";
-
-  mp= modebuf;
-  *mp = '\0';
-
-  for(ban = chptr->banlist; ban; ban = ban->next)
-    {
-      if(!*b1)
-        {
-          b1 = BANSTR(ban);
-          *mp++ = '-';
-          *mp++ = 'b';
-          *mp = '\0';
-        }
-      else if(!*b2)
-        {
-          b2 = BANSTR(ban);
-          *mp++ = 'b';
-          *mp = '\0';
-        }
-      else if(!*b3)
-        {
-          b3 = BANSTR(ban);
-          *mp++ = 'b';
-          *mp = '\0';
-        }
-      else if(!*b4)
-        {
-          b4 = BANSTR(ban);
-          *mp++ = 'b';
-          *mp = '\0';
-
-          sendto_channel_butserv(chptr, &me,
-                                 ":%s MODE %s %s %s %s %s %s",
-                                 sptr->name,chptr->chname,modebuf,b1,b2,b3,b4);
-          b1="";
-          b2="";
-          b3="";
-          b4="";
-
-          mp = modebuf;
-          *mp = '\0';
-        }
-    }
-
-  if(*modebuf)
-    sendto_channel_butserv(chptr, &me,
-                           ":%s MODE %s %s %s %s %s %s",
-                           sptr->name,chptr->chname,modebuf,b1,b2,b3,b4);
-  b1="";
-  b2="";
-  b3="";
-  b4="";
-
-  mp= modebuf;
-  *mp = '\0';
-
-  for(ban = chptr->exceptlist; ban; ban = ban->next)
-    {
-      if(!*b1)
-        {
-          b1 = BANSTR(ban);
-          *mp++ = '-';
-          *mp++ = 'e';
-          *mp = '\0';
-        }
-      else if(!*b2)
-        {
-          b2 = BANSTR(ban);
-          *mp++ = 'e';
-          *mp = '\0';
-        }
-      else if(!*b3)
-        {
-          b3 = BANSTR(ban);
-          *mp++ = 'e';
-          *mp = '\0';
-        }
-      else if(!*b4)
-        {
-          b4 = BANSTR(ban);
-          *mp++ = 'e';
-          *mp = '\0';
-
-          sendto_channel_butserv(chptr, &me,
-                                 ":%s MODE %s %s %s %s %s %s",
-                                 sptr->name,chptr->chname,modebuf,b1,b2,b3,b4);
-          b1="";
-          b2="";
-          b3="";
-          b4="";
-          mp = modebuf;
-          *mp = '\0';
-        }
-    }
-
-  if(*modebuf)
-    sendto_channel_butserv(chptr, &me,
-                           ":%s MODE %s %s %s %s %s %s",
-                           sptr->name,chptr->chname,modebuf,b1,b2,b3,b4);
-
-  b1="";
-  b2="";
-  b3="";
-  b4="";
-
-  mp= modebuf;
-  *mp = '\0';
-
-  for(ban = chptr->denylist; ban; ban = ban->next)
-    {
-      if(!*b1)
-        {
-          b1 = BANSTR(ban);
-          *mp++ = '-';
-          *mp++ = 'd';
-          *mp = '\0';
-        }
-      else if(!*b2)
-        {
-          b2 = BANSTR(ban);
-          *mp++ = 'd';
-          *mp = '\0';
-        }
-      else if(!*b3)
-        {
-          b3 = BANSTR(ban);
-          *mp++ = 'd';
-          *mp = '\0';
-        }
-      else if(!*b4)
-        {
-          b4 = BANSTR(ban);
-          *mp++ = 'd';
-          *mp = '\0';
-
-          sendto_channel_butserv(chptr, &me,
-                                 ":%s MODE %s %s %s %s %s %s",
-                                 sptr->name,chptr->chname,modebuf,b1,b2,b3,b4);
-          b1="";
-          b2="";
-          b3="";
-          b4="";
-          mp = modebuf;
-          *mp = '\0';
-        }
-    }
-
-  if(*modebuf)
-    sendto_channel_butserv(chptr, &me,
-                           ":%s MODE %s %s %s %s %s %s",
-                           sptr->name,chptr->chname,modebuf,b1,b2,b3,b4);
-
-
-  /* free all bans/exceptions/denies */
-  free_bans_exceptions_denies(chptr);
-}
-
-/*
  * free_bans_exceptions_denies
  *
  * inputs	- pointer to channel structure
@@ -2758,50 +2537,32 @@ static void clear_bans_exceptions_denies(struct Client *sptr, struct Channel *ch
 
 static void free_bans_exceptions_denies(struct Channel *chptr)
 {
-  Link *ban;
-  Link *next_ban;
-
-  for(ban = chptr->banlist; ban; ban = next_ban)
-    {
-      next_ban = ban->next;
-#ifdef BAN_INFO
-      MyFree(ban->value.banptr->banstr);
-      MyFree(ban->value.banptr->who);
-      MyFree(ban->value.banptr);
-#else
-      MyFree(ban->value.cp);
-#endif
-      free_link(ban);
-    }
-
-  for(ban = chptr->exceptlist; ban; ban = next_ban)
-    {
-      next_ban = ban->next;
-#ifdef BAN_INFO
-      MyFree(ban->value.banptr->banstr);
-      MyFree(ban->value.banptr->who);
-      MyFree(ban->value.banptr);
-#else
-      MyFree(ban->value.cp);
-#endif
-      free_link(ban);
-    }
-
-  for(ban = chptr->denylist; ban; ban = next_ban)
-    {
-      next_ban = ban->next;
-#ifdef BAN_INFO
-      MyFree(ban->value.banptr->banstr);
-      MyFree(ban->value.banptr->who);
-      MyFree(ban->value.banptr);
-#else
-      MyFree(ban->value.cp);
-#endif
-      free_link(ban);
-    }
+  free_a_ban_list(chptr->banlist);
+  free_a_ban_list(chptr->exceptlist);
+  free_a_ban_list(chptr->denylist);
 
   chptr->banlist = chptr->exceptlist = chptr->denylist = NULL;
   chptr->num_bed = 0;
+}
+
+static void
+free_a_ban_list(Link *ban_ptr)
+{
+  Link *ban;
+  Link *next_ban;
+
+  for(ban = ban_ptr; ban; ban = next_ban)
+    {
+      next_ban = ban->next;
+#ifdef BAN_INFO
+      MyFree(ban->value.banptr->banstr);
+      MyFree(ban->value.banptr->who);
+      MyFree(ban->value.banptr);
+#else
+      MyFree(ban->value.cp);
+#endif
+      free_link(ban);
+    }
 }
 
 
@@ -4419,40 +4180,6 @@ int     m_sjoin(struct Client *cptr,
   isnew = ChannelExists(parv[2]) ? 0 : 1;
   chptr = get_channel(sptr, parv[2], CREATE);
 
-
-  /*
-   * bogus ban removal code.
-   * If I see that this SJOIN will mean I keep my ops, but lose
-   * the ops from the joining server, I keep track of that in the channel
-   * structure. I set keep_their_modes to NO
-   * since the joining server will not be keeping their ops, I can
-   * ignore any of the bans sent from that server. The moment
-   * I see a chanop MODE being sent, I can set this flag back to YES.
-   *
-   * There is one degenerate case. Two servers connect bursting
-   * at the same time. It might cause a problem, or it might not.
-   * In the case that it becomes an issue, then a short list
-   * of servers having their modes ignored would have to be linked
-   * into the channel structure. This would be only an issue
-   * on hubs.
-   * Hopefully, it will be much of a problem.
-   *
-   * Bogus bans on the server losing its chanops is trivial. All
-   * bans placed on the local server during its split, with bogus chanops
-   * I can just remove.
-   *
-   * -Dianora
-   */
-  
-  chptr->keep_their_modes = YES;
-
-  /* locally created channels do not get created from SJOIN's
-   * any SJOIN destroys the locally_created flag
-   *
-   * -Dianora
-   */
-
-  chptr->locally_created = NO;
   oldts = chptr->channelts;
 
   /*
@@ -4463,7 +4190,6 @@ int     m_sjoin(struct Client *cptr,
   /* If the TS goes to 0 for whatever reason, flag it
    * ya, I know its an invasion of privacy for those channels that
    * want to keep TS 0 *shrug* sorry
-   * -Dianora
    */
 
   if(!isnew && !newts && oldts)
@@ -4496,9 +4222,6 @@ int     m_sjoin(struct Client *cptr,
     {
       if (doesop)
         keep_our_modes = NO;
-
-      clear_bans_exceptions_denies(sptr,chptr);
-
       if (haveops && !doesop)
           tstosend = oldts;
       else
@@ -4506,8 +4229,6 @@ int     m_sjoin(struct Client *cptr,
     }
   else
     {
-      chptr->keep_their_modes = NO;
-
       if (haveops)
         keep_new_modes = NO;
       if (doesop && !haveops)
