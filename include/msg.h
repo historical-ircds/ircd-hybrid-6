@@ -222,7 +222,7 @@ struct Message msgtab[] = {
   { MSG_TIME,    m_time,     0, MAXPARA, 1, 0, 0, 0L },
   { MSG_OPER,    m_oper,     0, MAXPARA, 1, 0, 0, 0L },
   { MSG_CONNECT, m_connect,  0, MAXPARA, 1, 0, 0, 0L },
-  { MSG_VERSION, m_version,  0, MAXPARA, 1, 1, 0, 0L },
+  { MSG_VERSION, m_version,  0, MAXPARA, 1, 0, 0, 0L },
   { MSG_STATS,   m_stats,    0, MAXPARA, 1, 0, 0, 0L },
   { MSG_LINKS,   m_links,    0, MAXPARA, 1, 0, 0, 0L },
   { MSG_ADMIN,   m_admin,    0, MAXPARA, 1, 1, 0, 0L },
