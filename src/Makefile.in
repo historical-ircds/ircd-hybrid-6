@@ -9,7 +9,6 @@ SRC_2 = hash.c inet_addr.c ircd.c ircsprintf.c dline_conf.c
 SRC_3 = list.c match.c packet.c parse.c res.c s_zip.c fdlist.c
 SRC_4 = s_auth.c s_bsd.c s_conf.c s_debug.c s_err.c s_misc.c s_numeric.c
 SRC_5 = s_serv.c s_user.c send.c support.c whowas.c scache.c blalloc.c
-SRC_6 = addrmatch.c
 RES_SRC =
 
 # Do it this way for Ultrix, and its portable at least
@@ -20,7 +19,6 @@ OBJ_2 = hash.o inet_addr.o ircd.o ircsprintf.o dline_conf.o
 OBJ_3 = list.o match.o packet.o parse.o res.o s_zip.o fdlist.o
 OBJ_4 = s_auth.o s_bsd.o s_conf.o s_debug.o s_err.o s_misc.o s_numeric.o
 OBJ_5 = s_serv.o s_user.o send.o support.o whowas.o scache.o blalloc.o
-OBJ_6 = addrmatch.o
 
 #This is only for very old systems that NEED this
 #RES_SRC = res_mkquery.c res_init.c res_comp.c
