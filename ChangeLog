@@ -1,3 +1,22 @@
+lusky       2001/12/08 04:04:06 EST	(20011208_15)
+
+  Modified files:
+    .                    README.FIRST 
+    adns                 internal.h 
+    src                  adns.c ircd.c 
+  Log:
+  - Updated the list of supported platforms to reflect my test environment
+  - check whether we have RLIMIT_CORE (cygwin doesn't)
+  - check for missing time.h macros (cygwin stikes again)
+  
+  Revision  Changes    Path
+  1.12      +4 -13     ircd-hybrid-6/README.FIRST
+  1.6       +11 -0     ircd-hybrid-6/adns/internal.h
+  1.4       +2 -2      ircd-hybrid-6/src/adns.c
+  1.156     +2 -0      ircd-hybrid-6/src/ircd.c
+
+
+
 jdc         2001/12/08 03:53:48 EST	(20011208_14)
 
   Modified files:
