@@ -4437,15 +4437,7 @@ int     m_sjoin(struct Client *cptr,
       clear_bans_exceptions_denies(sptr,chptr);
 
       if (haveops && !doesop)
-        {
           tstosend = oldts;
-          /* Only warn of Hacked ops if the ops are hacked
-           * on a channel from this side of the join
-           */
-
-          sendto_realops("Hacked ops locally on opless channel: %s",
-                         chptr->chname);
-        }
       else
         chptr->channelts = tstosend = newts;
     }

@@ -2393,6 +2393,7 @@ static void initconf(FBFILE* file, int use_include)
         {
           dontadd = 1;
           MyFree(aconf->user);
+          aconf->user = (char *)NULL;
           aconf->name = aconf->host;
           aconf->host = (char *)NULL;
           aconf->next = u_conf;
