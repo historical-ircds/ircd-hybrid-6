@@ -19,6 +19,8 @@ struct DNSQuery {
   void (*callback)(void* , struct hostent* );  /* callback to call */
 };
 
+extern int ResolverFileDescriptor;  /* GLOBAL - file descriptor (s_bsd.c) */
+
 extern void get_res(void);
 extern struct hostent* gethost_byname(const char* name, 
                                       const struct DNSQuery* req);
@@ -26,10 +28,9 @@ extern struct hostent* gethost_byaddr(const char* name,
                                       const struct DNSQuery* req);
 extern void            flush_cache(void);
 extern int	       init_resolver(void);
-extern time_t	       timeout_query_list(time_t);
-extern time_t	       expire_cache(time_t);
-extern void            del_queries(const void* vptr);
 extern void            restart_resolver(void);
+extern time_t          timeout_resolver(time_t now);
+extern void            delete_resolver_queries(const void* vptr);
 extern unsigned long   cres_mem(struct Client* cptr);
 
 /*

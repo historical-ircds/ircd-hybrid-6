@@ -39,8 +39,6 @@ extern struct tm	*motd_tm;
 
 extern aMessageFile	*helpfile;
 
-
-
 extern int lifesux;
 extern fdlist serv_fdlist;
 extern fdlist busycli_fdlist;
@@ -48,9 +46,13 @@ extern fdlist default_fdlist;
 extern fdlist oper_fdlist;
 extern	struct	Counter	Count;
 
-extern	time_t	NOW;
-extern	time_t	nextconnect, nextdnscheck, nextping, timeofday;
-extern	aClient	*client, me, *local[];
+extern time_t NOW;
+extern time_t nextconnect;
+extern time_t nextping;
+extern time_t timeofday;
+extern struct Client* GlobalClientList;
+extern struct Client  me;
+extern struct Client* local[];
 extern	aChannel *channel;
 extern	struct	stats	*ircstp;
 extern	int	bootopt;
@@ -248,12 +250,10 @@ extern	void	send_umode_out (aClient*, aClient *, int);
 
 extern	void	_free_client (aClient *);
 extern	void	_free_link (Link *);
-extern	void	free_conf (aConfItem *);
 extern	void	free_class(struct Class* c);
 extern	void	_free_user (anUser *, aClient *);
 extern	Link	*make_link (void);
 extern	anUser	*make_user (aClient *);
-extern	aConfItem *make_conf (void);
 extern	struct Class* make_class(void);
 extern	aServer	*make_server (aClient *);
 extern	aClient	*make_client (aClient *);
