@@ -438,7 +438,9 @@ void send_capabilities(struct Client* cptr, int use_zip)
 {
   struct Capability* cap;
   char  msgbuf[BUFSIZE];
-
+#ifdef CRYPT_LINKS
+  int i;
+#endif
   msgbuf[0] = '\0';
 
   for (cap = captab; cap->name; ++cap)
@@ -459,6 +461,13 @@ void send_capabilities(struct Client* cptr, int use_zip)
             }
         }
     }
+#ifdef CRYPT_LINKS
+  strcat(msgbuf, "ENC:");
+  for (i=0;Ciphers[i].name[0];i++)
+    sprintf(msgbuf + strlen(msgbuf), "%s/%i,", Ciphers[i].name, Ciphers[i].keysize);
+  if (i)
+    msgbuf[strlen(msgbuf)-1] = 0;
+#endif
   sendto_one(cptr, "CAPAB :%s", msgbuf);
 }
 
@@ -492,6 +501,9 @@ static void sendnick_TS(struct Client *cptr, struct Client *acptr)
  * inputs       - pointer to an aClient
  * output       - pointer to static string
  * side effects - build up string representing capabilities of server listed
+ *
+ * Added ENC showing as a capability although it isn't implemented as one.
+ * -einride.
  */
 
 const char* show_capabilities(struct Client* acptr)
@@ -500,8 +512,13 @@ const char* show_capabilities(struct Client* acptr)
   struct Capability* cap;
 
   strcpy(msgbuf,"TS ");
+#ifndef CRYPT_LINKS
+  /* Skip the shortcut, ENC ain't in caps.
+     -einride.
+  */
   if (!acptr->caps)        /* short circuit if no caps */
     return msgbuf;
+#endif
 
   for (cap = captab; cap->cap; ++cap)
     {
@@ -511,6 +528,12 @@ const char* show_capabilities(struct Client* acptr)
           strcat(msgbuf, " ");
         }
     }
+#ifdef CRYPT_LINKS
+  if (acptr->crypt)
+    sprintf(msgbuf + strlen(msgbuf), "ENC:%s/%i,%s/%i",
+	    acptr->crypt->OutCipher->name, acptr->crypt->OutCipher->keysize,
+	    acptr->crypt->InCipher->name, acptr->crypt->InCipher->keysize);
+#endif
   return msgbuf;
 }
 
@@ -552,7 +575,13 @@ int server_estab(struct Client *cptr)
       log(L_NOTICE, "Only N (no C) field for server %s",inpath_ip);
       return exit_client(cptr, cptr, cptr, "No C line for server");
     }
-
+#ifdef CRYPT_LINKS
+  if (n_conf->passwd && (n_conf->passwd[0] == CRYPT_LINKS_CNPREFIX) && !(cptr->crypt)) {
+    sendto_one(cptr, "ERROR :You are not allowed to link unencrypted");
+    sendto_realops("%s attempted a unencrypted link", inpath);
+    return exit_client(cptr, cptr, cptr, "Attempted unencrypted link");
+  }
+#endif
 #ifdef CRYPT_LINK_PASSWORD
   /* use first two chars of the password they send in as salt */
 
@@ -567,11 +596,15 @@ int server_estab(struct Client *cptr)
 #else
   encr = cptr->passwd;
 #endif  /* CRYPT_LINK_PASSWORD */
+
+#ifdef CRYPT_LINKS
+  if (!cptr->crypt)
+#endif
   if (*n_conf->passwd && 0 != strcmp(n_conf->passwd, encr))
     {
       ServerStats->is_ref++;
       sendto_one(cptr, "ERROR :No Access (passwd mismatch) %s",
-                 inpath);
+		 inpath);
       sendto_realops("Access denied (passwd mismatch) %s", inpath);
       log(L_NOTICE, "Access denied (passwd mismatch) %s", inpath_ip);
       return exit_client(cptr, cptr, cptr, "Bad Password");
@@ -596,16 +629,22 @@ int server_estab(struct Client *cptr)
 #endif
   if (IsUnknown(cptr))
     {
-      if (c_conf->passwd[0])
-        sendto_one(cptr,"PASS %s :TS", c_conf->passwd);
-      /*
-      ** Pass my info to the new server
-      */
-
-      send_capabilities(cptr,(c_conf->flags & CONF_FLAGS_ZIP_LINK));
-      sendto_one(cptr, "SERVER %s 1 :%s",
-                 my_name_for_link(me.name, n_conf), 
-                 (me.info[0]) ? (me.info) : "IRCers United");
+#ifdef CRYPT_LINKS
+      if (!cptr->crypt) {
+#endif
+	if (c_conf->passwd[0])
+	  sendto_one(cptr,"PASS %s :TS", c_conf->passwd);
+	/*
+	** Pass my info to the new server
+	*/
+	
+	send_capabilities(cptr,(c_conf->flags & CONF_FLAGS_ZIP_LINK));
+	sendto_one(cptr, "SERVER %s 1 :%s",
+		   my_name_for_link(me.name, n_conf), 
+		   (me.info[0]) ? (me.info) : "IRCers United");
+#ifdef CRYPT_LINKS
+      }
+#endif
     }
   else
     {
@@ -621,7 +660,6 @@ int server_estab(struct Client *cptr)
           return exit_client(cptr, cptr, cptr, "Bad User");
         }
     }
-  
 
 #ifdef ZIP_LINKS
   if (IsCapable(cptr, CAP_ZIP) && (c_conf->flags & CONF_FLAGS_ZIP_LINK))

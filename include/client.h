@@ -48,6 +48,10 @@
 #include "dbuf.h"
 #endif
 
+#ifdef CRYPT_LINKS
+#include "s_crypt.h"
+#endif
+
 #define HOSTIPLEN       16      /* Length of dotted quad form of IP        */
                                 /* - Dianora                               */
 #define PASSWDLEN       20
@@ -209,6 +213,10 @@ struct Client
   char  buffer[CLIENT_BUFSIZE]; /* Incoming message buffer */
 #ifdef ZIP_LINKS
   struct Zdata*     zip;        /* zip data */
+#endif
+#ifdef CRYPT_LINKS
+  struct CryptData *crypt;      /* Encrypted link info */
+  char * ciphers;               /* Supported ciphers */
 #endif
   short             lastsq;     /* # of 2k blocks when sendqueued called last*/
   struct DBuf       sendQ;      /* Outgoing message queue--if socket full */

@@ -677,6 +677,11 @@ Info MyInformation[] = {
   { "ZIP_LINKS", "OFF", 0, "Compress Server to Server Links" },
 #endif /* ZIP_LINKS */
 
+#ifdef CRYPT_LINKS
+  { "CRYPT_LINKS", "ON", 0, "Encrypt Server to Server Links" },
+#else
+  { "CRYPT_LINKS", "OFF", 0, "Encrypt Server to Server Links" },
+#endif /* CRYPT_LINKS */
   /*
    * since we don't want to include the world here, NULL probably
    * isn't defined by the time we read this, just use plain 0 instead

@@ -18,8 +18,8 @@
  *
  *   $Id$
  */
-#include "s_zip.h"
 #include "client.h"
+#include "s_zip.h"
 #include "irc_string.h"
 #include "packet.h"
 #include "s_bsd.h"

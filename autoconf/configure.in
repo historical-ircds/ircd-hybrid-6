@@ -25,6 +25,7 @@ AC_CHECK_LIB(nsl, gethostbyname)
 AC_CHECK_FUNC(res_mkquery,, AC_CHECK_LIB(resolv, res_mkquery))
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_FUNC(crypt,, AC_CHECK_LIB(descrypt, crypt,,AC_CHECK_LIB(crypt, crypt,,)))
+AC_CHECK_LIB(crypto, RSA_free)
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -38,6 +39,27 @@ AC_PROG_GCC_TRADITIONAL
 
 dnl check for poll() call
 AC_CHECK_FUNC(poll, AC_DEFINE(USE_POLL),)
+
+dnl Check OpenSSL version
+AC_MSG_CHECKING(for required OpenSSL version)
+AC_TRY_RUN(
+[
+#include <openssl/opensslv.h>
+int main() {
+  if (OPENSSL_VERSION_NUMBER < 0x00906000)
+    exit(1);
+  exit(0);		
+}
+], AC_MSG_RESULT(ok), AC_MSG_ERROR(** OpenSSL version below 0.9.6 - ircd-hybrid will not compile **), 
+AC_MSG_ERROR(Unable to test))
+
+dnl Check for ciphers supported by OpenSSL crypto lib
+AC_CHECK_FUNCS(BF_cfb64_encrypt,,)
+AC_CHECK_FUNCS(idea_cfb64_encrypt,,)
+AC_CHECK_FUNCS(CAST_cfb64_encrypt,,)
+AC_CHECK_FUNCS(RC5_32_cfb64_encrypt,,)
+AC_CHECK_FUNCS(des_cfb64_encrypt,,)
+AC_CHECK_FUNCS(des_ede3_cfb64_encrypt,,)
 
 dnl taken from ircd's Config script
 AC_MSG_CHECKING(for non-blocking socket implementation)

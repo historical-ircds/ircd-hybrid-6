@@ -11,10 +11,13 @@ viconf_SOURCES = viconf.c
 viconf_OBJECTS = viconf.o
 fixklines_SOURCES = fixklines.c
 fixklines_OBJECTS = fixklines.o
+encspeed_SOURCES = encspeed.c
+encspeed_OBJECTS = encspeed.o
 
-all_OBJECTS = $(viconf_OBJECTS) $(mkpasswd_OBJECTS) $(fixklines_OBJECTS)
+all_OBJECTS = $(viconf_OBJECTS) $(mkpasswd_OBJECTS) $(fixklines_OBJECTS) $(encspeed_OBJECTS)
 
-all: viconf mkpasswd fixklines
+
+all: viconf mkpasswd fixklines encspeed
 
 build: all
 
@@ -26,6 +29,9 @@ viconf: $(viconf_OBJECTS)
 
 fixklines: $(fixklines_OBJECTS)
 	$(CC) $(LDFLAGS) -o fixklines $(fixklines_OBJECTS) $(IRCDLIBS)
+
+encspeed: $(encspeed_OBJECTS)
+	$(CC) $(LDFLAGS) -o encspeed $(encspeed_OBJECTS) $(IRCDLIBS)
 
 clean:
 	$(RM) -f $(all_OBJECTS) fixklines viconf chkconf mkpasswd *~ core *.exe

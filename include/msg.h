@@ -119,7 +119,10 @@ typedef struct MessageTree MESSAGE_TREE;
 #define MSG_SET      "SET"      /* SET */
 
 #define MSG_GLINE    "GLINE"    /* GLINE */
-
+#ifdef CRYPT_LINKS
+#define MSG_CRYPTSERV "CRYPTSERV"
+#define MSG_CRYPTAUTH "CRYPTAUTH"
+#endif
 
 #define MSG_LOCOPS   "LOCOPS"   /* LOCOPS */
 #ifdef LWALLOPS
@@ -246,6 +249,10 @@ struct Message msgtab[] = {
   { MSG_DIE, m_die,          0, MAXPARA, 1, 0, 0, 0L },
   { MSG_HTM,    m_htm,       0, MAXPARA, 1, 0, 0, 0L },
   { MSG_SET,    m_set,       0, MAXPARA, 1, 0, 0, 0L },
+#ifdef CRYPT_LINKS
+  { MSG_CRYPTSERV, m_cryptserv, 0, MAXPARA, 1, 1, 0, 0L },
+  { MSG_CRYPTAUTH, m_cryptauth, 0, MAXPARA, 1, 1, 0, 0L },
+#endif
   { MSG_TESTLINE,       m_testline,          0, MAXPARA, 1, 0, 0, 0L },
   { (char *) 0, (int (*)()) 0 , 0, 0,    0, 0, 0, 0L }
 };

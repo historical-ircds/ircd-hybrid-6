@@ -185,8 +185,8 @@
  *
  * These need to be defined if you want to use SYSLOG logging, too.
  */
-#define FNAME_USERLOG "/usr/local/ircd/users" /* */
-#define FNAME_OPERLOG "/usr/local/ircd/opers" /* */
+#define FNAME_USERLOG "/home/hybrid6/ircd/users" /* */
+#define FNAME_OPERLOG "/home/hybrid6/ircd/opers" /* */
 
 /* RFC1035_ANAL
  * Defining this causes ircd to reject hostnames with non-compliant chars.
@@ -331,6 +331,7 @@
  * spoofed I: line
  * err, this also will now not show spoofed i-lines to opers who
  * /stats i.
+#define SPOOF_FREEFORM
  */
 #define SPOOF_NOTICE
 
@@ -355,7 +356,7 @@
  * Why do opers need this at all? Its an invasion of privacy. bah.
  * you don't need this. -Dianora
  */
-#undef WHOIS_NOTICE
+#define WHOIS_NOTICE
 
 /* WHOIS_WAIT - minimum seconds between remote use of WHOIS before
  * max use count is reset
@@ -401,6 +402,30 @@
  * THIS.
  */
 #undef TRUE_NO_OPER_FLOOD
+#define CRYPT_LINKS             /* allow encrypted server-server links */
+#define CRYPT_LINKS_CNPREFIX '@'
+#define CRYPT_LINKS_PRIVATEKEYFILE "private.key"
+
+/* Cipher selection. Define the ciphers you want to support, at least one. 
+ * The numeric value is the ciphers priority, the cipher selection will
+ * be the lowest numbered cipher that is supported by both ends of a 
+ * link. As a link may use differing ciphers each direction, these defines
+ * can be changed at will. If there's no ciphers in common with the other
+ * end, the link won't happen.
+ * Use tools/encspeed to look at throughput of each cipher.
+ * -einride.
+*/
+#define CRYPT_BLOWFISH256 1 /* Blowfish 256-bit */
+#define CRYPT_BLOWFISH128 2 /* Blowfish 128-bit */
+#define CRYPT_CAST        3 /* CAST 128-bit */
+#define CRYPT_IDEA        4 /* IDEA 128-bit */
+#define CRYPT_RC5_16      5 /* 16 round RC5 128-bit */
+#define CRYPT_RC5_12      6 /* 12 round RC5 128-bit */
+#define CRYPT_3DES        7 /* Triple DES 168-bit */
+#define CRYPT_RC5_8       8 /* 8 round RC5 128-bit */
+#define CRYPT_DES         9 /* Standard DES 56-bit */ 
+
+
 
 /* SHOW_INVISIBLE_LUSERS - show invisible clients in LUSERS
  * As defined this will show the correct invisible count for anyone who does
@@ -467,7 +492,7 @@
  * to a leaf which just has 1 server (typically the uplink). Define this
  * correctly for performance reasons.
  */
-#undef  HUB
+#define  HUB
 
 /* CMDLINE_CONFIG - allow conf-file to be specified on command line
  * NOTE: defining CMDLINE_CONFIG and installing ircd SUID or SGID is a MAJOR
@@ -480,7 +505,7 @@
  * options are:
  *   L_CRIT, L_ERROR, L_WARN, L_NOTICE, L_TRACE, L_INFO, L_DEBUG
  */
-#define INIT_LOG_LEVEL L_NOTICE
+#define INIT_LOG_LEVEL L_DEBUG
 
 /* USE_LOGFILE - log errors and such to LPATH
  * If you wish to have the server send 'vital' messages about server
@@ -496,7 +521,7 @@
  * this option is used unless you tell the system administrator beforehand
  * and obtain their permission to send messages to the system log files.
  */
-#define USE_SYSLOG
+#undef USE_SYSLOG
 
 #ifdef  USE_SYSLOG
 /* SYSLOG_KILL SYSLOG_SQUIT SYSLOG_CONNECT SYSLOG_USERS SYSLOG_OPER
@@ -966,7 +991,7 @@
  * to make your client server very sluggish.
  * You usually shouldn't need this. -Dianora
 */
-#undef DEBUGMODE               /* define DEBUGMODE to enable debugging mode.*/
+#define DEBUGMODE               /* define DEBUGMODE to enable debugging mode.*/
 
 /*
  * viconf option, if USE_RCS is defined, viconf will use rcs "ci"

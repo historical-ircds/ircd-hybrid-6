@@ -2,7 +2,6 @@
 # Makefile.in for ircd/src
 #
 # $Id$
-#
 CC = @CC@
 RM = @RM@
 MKDEP = ${CC} -MM
@@ -12,9 +11,8 @@ IRCDLIBS = @LIBS@ ../zlib/libz.a
 INCLUDES = -I../include -I../zlib
 CPPFLAGS = ${INCLUDES} @CPPFLAGS@
  
-#
 # For developers
-# CFLAGS= -g -O2 -Wall 
+# CFLAGS= -g -O2 -Wall
 #
 
 SRCS = \
@@ -38,6 +36,8 @@ SRCS = \
 	m_capab.c \
 	m_close.c \
 	m_connect.c \
+	m_cryptauth.c \
+	m_cryptserv.c \
 	m_die.c \
 	m_error.c \
 	m_gline.c \
@@ -88,6 +88,7 @@ SRCS = \
 	s_auth.c \
 	s_bsd.c \
 	s_conf.c \
+        s_crypt.c \
 	s_debug.c \
 	s_log.c \
 	s_misc.c \

@@ -134,6 +134,9 @@ struct Client* make_client(struct Client* from)
 #ifdef ZIP_LINKS
       cptr->zip       = NULL;
 #endif
+#ifdef CRYPT_LINKS
+      cptr->crypt     = NULL;
+#endif
       cptr->listener  = NULL;
       cptr->confs     = NULL;
 

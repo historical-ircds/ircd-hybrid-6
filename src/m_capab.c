@@ -26,7 +26,10 @@
 #include "client.h"
 #include "irc_string.h"
 #include "s_serv.h"
-
+#ifdef CRYPT_LINKS
+#include "s_crypt.h"
+#include <string.h>
+#endif
 #include <assert.h>
 
 /*
@@ -115,8 +118,15 @@ int m_capab(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
               break;
             }
          }
-    }
-  
+#ifdef CRYPT_LINKS
+      if (!strncmp(s, "ENC:", 4)) {
+	if (cptr->ciphers)
+	  free(cptr->ciphers);
+	cptr->ciphers = (char *) malloc(strlen(s)-3);
+	strcpy(cptr->ciphers, s+4);
+      }
+#endif
+    }  
   return 0;
 }
 

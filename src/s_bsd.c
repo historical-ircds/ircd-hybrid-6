@@ -41,6 +41,9 @@
 #include "s_zip.h"
 #include "send.h"
 #include "struct.h"
+#ifdef CRYPT_LINKS
+#include "s_crypt.h"
+#endif
 
 #ifdef DEBUGMODE
 #include "s_debug.h"
@@ -90,8 +93,14 @@ struct Client* local[MAXCONNECTIONS];
 int            highest_fd = 0;
 
 static struct sockaddr_in mysk;
-static char               readBuf[READBUF_SIZE];
-
+#ifdef CRYPT_LINKS
+static char readBuf[READBUF_SIZE+1]; /* Need to 0-term this while reading unencrypted
+					data on a link which is about to be 
+					encrypted, so need an extra byte 
+					-einride. */
+#else
+static char readBuf[READBUF_SIZE];
+#endif
 #ifndef USE_POLL
 /*
  * Stuff for select()
@@ -358,7 +367,10 @@ static int completed_connection(struct Client* cptr)
 {
   struct ConfItem* c_conf;
   struct ConfItem* n_conf;
-
+#ifdef CRYPT_LINKS
+  int res;
+  char tmp[CRYPT_RSASIZE*2];
+#endif
   c_conf = find_conf_name(cptr->confs, cptr->name, CONF_CONNECT_SERVER);
   if (!c_conf)
     {
@@ -373,16 +385,25 @@ static int completed_connection(struct Client* cptr)
     }
   
   SetHandshake(cptr);
-
-  if (!EmptyString(c_conf->passwd))
-    sendto_one(cptr, "PASS %s :TS", c_conf->passwd);
-  
-  send_capabilities(cptr, (c_conf->flags & CONF_FLAGS_ZIP_LINK));
-
-  sendto_one(cptr, "SERVER %s 1 :%s",
-             my_name_for_link(me.name, n_conf), me.info);
-
-  return (IsDead(cptr)) ? 0 : 1;
+#ifdef CRYPT_LINKS
+  if ((res=crypt_initserver(cptr, c_conf, n_conf)) == CRYPT_NOT_ENCRYPTED) {
+#endif
+    if (!EmptyString(c_conf->passwd))
+      sendto_one(cptr, "PASS %s :TS", c_conf->passwd);
+    send_capabilities(cptr, (c_conf->flags & CONF_FLAGS_ZIP_LINK));
+    sendto_one(cptr, "SERVER %s 1 :%s",
+	       my_name_for_link(me.name, n_conf), me.info);
+    return (IsDead(cptr)) ? 0 : 1;
+#ifdef CRYPT_LINKS
+  } else if (res == CRYPT_ENCRYPTED) {
+    if (crypt_rsa_encode(cptr->crypt->RSAKey, cptr->crypt->inkey, tmp, sizeof(cptr->crypt->inkey)) != CRYPT_ENCRYPTED)
+      return exit_client(cptr, cptr, cptr, "Failed to generate session key data");
+    send_capabilities(cptr, (c_conf->flags & CONF_FLAGS_ZIP_LINK));
+    sendto_one(cptr, "CRYPTSERV %s %s :%s", my_name_for_link(me.name, n_conf), tmp, me.info);
+    return 1;
+  } else
+    return 0;
+#endif
 }
 
 /*
@@ -702,6 +723,9 @@ void close_connection(struct Client *cptr)
   if (IsServer(cptr))
     zip_free(cptr);
 #endif
+#ifdef CRYPT_LINKS
+  crypt_free(cptr);
+#endif
   DBufClear(&cptr->sendQ);
   DBufClear(&cptr->recvQ);
   memset(cptr->passwd, 0, sizeof(cptr->passwd));
@@ -830,8 +854,8 @@ static int parse_client_queued(struct Client* cptr)
 static int read_packet(struct Client *cptr)
 {
   int length = 0;
-  int done;
-
+  int done = 0;
+  char *rb;
   if (!(IsPerson(cptr) && DBufLength(&cptr->recvQ) > SBSD_MAX_CLIENT)) {
     errno = 0;
     length = recv(cptr->fd, readBuf, READBUF_SIZE, 0);
@@ -869,10 +893,45 @@ static int read_packet(struct Client *cptr)
    * For server connections, we process as many as we can without
    * worrying about the time of day or anything :)
    */
+  rb = readBuf;
+
+#ifdef CRYPT_LINKS
+  /*
+    Until one of these are true, we do line by line:
+    1) client is a person (received USER)
+    2) client is a server and crypt isn't set (received SERVER)
+    3) client is a server, crypt is set and decrypt flag is set (received CRYPTAUTH)
+    4) no more data
+  */
+  readBuf[length]=0;
+  while (
+	 !IsPerson(cptr) && 
+	 !(IsServer(cptr) && !cptr->crypt) && 
+	 !(cptr->crypt && (cptr->crypt->flags & CRYPTFLAG_DECRYPT)) &&
+	 length
+	 ) {
+    char *p;
+    p = strchr(rb, '\n');
+    if (!p)
+      p = strchr(rb, '\r');
+    if (!p)
+      break;
+    p++;
+    done = dopacket(cptr, rb, (p-rb)) || done;
+    length -= (p - rb);
+    rb = p;
+  }
+  if (!length)
+    return 1;
+#endif
   if (PARSE_AS_SERVER(cptr)) {
     if (length > 0) {
-      if ((done = dopacket(cptr, readBuf, length)))
-        return done;
+#ifdef CRYPT_LINKS
+      if ((cptr->crypt) && (crypt_decrypt(cptr, rb, length) == CRYPT_ERROR)) 
+	return exit_client(cptr, cptr, cptr, "Decryption failure");
+#endif      
+      if ((done = dopacket(cptr, rb, length)))
+	return done;
     }
   }
   else {
@@ -881,9 +940,9 @@ static int read_packet(struct Client *cptr)
      * it on the end of the receive queue and do it when its
      * turn comes around.
      */
-    if (!dbuf_put(&cptr->recvQ, readBuf, length))
+    if (!dbuf_put(&cptr->recvQ, rb, length))
       return exit_client(cptr, cptr, cptr, "dbuf_put fail");
-    
+
     if (IsPerson(cptr) &&
 #ifdef NO_OPER_FLOOD
         !IsAnOper(cptr) &&
