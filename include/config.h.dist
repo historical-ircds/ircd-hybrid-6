@@ -551,33 +551,6 @@
  */
 #undef	HUB
 
-/* R_LINES - support for R: LINES
- * The conf file now allows the existence of R lines, or
- * restrict lines.  These allow more freedom in the ability to restrict
- * who is to sign on and when.  What the R line does is call an outside
- * program which returns a reply indicating whether to let the person on.
- * Because there is another program involved, Delays and overhead could
- * result. It is for this reason that there is a line in config.h to
- * decide whether it is something you want or need. -Hoppie
- *
- * The default is no R_LINES as most people probably don't need it. --Jto
- */
-#undef	R_LINES
-
-#ifdef	R_LINES
-/* R_LINES_REHASH R_LINES_OFTEN - when to check R: lines
- * Also, even if you have R lines defined, you might not want them to be 
- * checked everywhere, since it could cost lots of time and delay.  Therefore, 
- * The following two options are also offered:  R_LINES_REHASH rechecks for 
- * R lines after a rehash, and R_LINES_OFTEN, which rechecks it as often
- * as it does K lines.  Note that R_LINES_OFTEN is *very* likely to cause 
- * a resource drain, use at your own risk.  R_LINES_REHASH shouldn't be too
- * bad, assuming the programs are fairly short.
- */
-#define R_LINES_REHASH
-#define R_LINES_OFTEN
-#endif
-
 /* CMDLINE_CONFIG - allow conf-file to be specified on command line
  * NOTE: defining CMDLINE_CONFIG and installing ircd SUID or SGID is a MAJOR
  * security problem - they can use the "-f" option to read any files

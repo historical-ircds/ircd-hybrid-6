@@ -1,6 +1,11 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b83 14-Jun-1999
+* removed more dead code for now (R lines)
+* redid Q lines to allow user@host exceptions
+-Dianora
+	
 version hybrid-6-b83 12-Jun-1999
 * removed TIMED_KLINES entirely
 * fixed stupid in s_conf.c

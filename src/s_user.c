@@ -112,6 +112,7 @@ unsigned long my_rand(void);	/* provided by orabidoo */
 extern Link *find_channel_link(Link *,aChannel *);	/* defined in list.c */
 extern char *oper_privs(aClient *,int);		 /* defined in s_conf.c */
 extern aConfItem *find_special_conf(char *,int); /* defined in s_conf.c */
+extern int find_q_line(char *,char *,char *); /* defined in s_conf.c */
 
 #ifdef FLUD
 int flud_num = FLUD_NUM;
@@ -542,6 +543,7 @@ static	int	register_user(aClient *cptr,
 		      (void)strncpy(user->username, username, USERLEN);
 		  }
 		  
+
 		/* Ok... if we are using REJECT_HOLD, I'm not going to dump
 		 * the client immediately, but just mark the client for exit
 		 * at some future time, .. this marking also disables reads/
@@ -588,11 +590,6 @@ static	int	register_user(aClient *cptr,
 #else
 		return exit_client(cptr, sptr, &me, "K-lined");
 #endif
-#endif
-#ifdef RK_NOTICES
-		if(sptr->user)
-		  sendto_realops("K-lined %s@%s. for %s",sptr->user->username,
-			       sptr->sockhost,reason);
 #endif
 	      }
 	    else
@@ -717,6 +714,7 @@ static	int	register_user(aClient *cptr,
 	  return exit_client(cptr, sptr, &me, "Bad Password");
 	}
       memset((void *)sptr->passwd,0, sizeof(sptr->passwd));
+
 
       /* If this user is being spoofed, tell them so */
       if(IsConfDoSpoofIp(aconf))
@@ -867,7 +865,8 @@ static	int	register_user(aClient *cptr,
       /* anti clone.c catcher, it will have to be updated as they catch on
       * *sigh* -Dianora
       */
-
+      /* They caught on, historical interest only */
+#if 0
   if(!strcmp(user->host,"xdfdx"))
     {
       sendto_realops_lev(REJ_LEV,"Rejecting clone.c Bot: %s",
@@ -875,6 +874,7 @@ static	int	register_user(aClient *cptr,
       ircstp->is_ref++;
       return exit_client(cptr, sptr, sptr, "clone.c detected, rejected.");
     }
+#endif
 
 #ifdef ANTI_SPAMBOT
       /* It appears, this is catching normal clients */
@@ -1136,6 +1136,17 @@ static	int	register_user(aClient *cptr,
 			   get_client_name(cptr, FALSE));
       
     }
+
+
+  if(!IsAnOper(sptr) && find_q_line(nick,user->username,user->host)) 
+    {
+      sendto_realops_lev(REJ_LEV,
+			 "Quarantined nick [%s], dumping user %s",
+			 nick,get_client_name(cptr, FALSE));
+      
+      return exit_client(cptr, sptr, &me, "quarantined nick");
+    }
+
 
   sendto_realops_lev(CCONN_LEV,
 		     "Client connecting: %s (%s@%s) [%s] {%d}",
@@ -1458,7 +1469,10 @@ int	m_nick(aClient *cptr,
     }
 
   if(MyConnect(sptr) && !IsServer(sptr) &&
-     !IsAnOper(sptr) && find_special_conf(nick,CONF_QUARANTINED_NICK)) 
+     !IsAnOper(sptr) && sptr->user &&
+     find_q_line(nick,
+		 sptr->username,
+		 sptr->user->host)) 
     {
       sendto_realops_lev(REJ_LEV,
 			 "Quarantined nick [%s], dumping user %s",

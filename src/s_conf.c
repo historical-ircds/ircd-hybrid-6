@@ -61,6 +61,10 @@ static  int     attach_iline(aClient *, aConfItem *,char *);
 static  int     attach_iline(aClient *, aConfItem *);
 #endif
 aConfItem *find_special_conf(char *, int );
+int       find_q_line(char *, char *,char *);
+
+void add_q_line(aConfItem *);
+void clear_q_lines(void);
 void clear_special_conf(aConfItem **);
 static aConfItem *find_tkline(char *,char *);
 
@@ -125,8 +129,16 @@ aConfItem	*conf = ((aConfItem *)NULL);
 
 /* conf xline link list root */
 aConfItem	*x_conf = ((aConfItem *)NULL);
+
+typedef struct QlineItem {
+  char      *name;
+  aConfItem *confList;
+  struct    QlineItem *next;
+}aQlineItem;
+
 /* conf qline link list root */
-aConfItem	*q_conf = ((aConfItem *)NULL);
+aQlineItem 	*q_conf = ((aQlineItem *)NULL);
+
 /* conf uline link list root */
 aConfItem	*u_conf = ((aConfItem *)NULL);
 
@@ -1140,9 +1152,7 @@ aConfItem *find_special_conf(char *to_find, int mask)
   register aConfItem *aconf;
   register aConfItem *this_conf;
 
-  if(mask & CONF_QUARANTINED_NICK)
-    this_conf = q_conf;
-  else if(mask & CONF_XLINE)
+  if(mask & CONF_XLINE)
     this_conf = x_conf;
   else if(mask & CONF_ULINE)
     this_conf = u_conf;
@@ -1160,10 +1170,173 @@ aConfItem *find_special_conf(char *to_find, int mask)
       
       if (BadPtr(aconf->name))
 	  continue;
+
       if(!match(aconf->name,to_find))
 	return aconf;
+
     }
   return((aConfItem *)NULL);
+}
+
+/*
+ * find_q_line
+ *
+ * - looks for matches on Q lined nick
+ */
+int find_q_line(char *nickToFind,char *user,char *host)
+{
+  aQlineItem *qp;
+  aConfItem *aconf;
+
+  for (qp = q_conf; qp; qp = qp->next)
+    {
+      if (BadPtr(qp->name))
+	  continue;
+
+      if(!match(qp->name,nickToFind))
+	{
+	  if(qp->confList)
+	    {
+	      for(aconf=qp->confList;aconf;aconf=aconf->next)
+		{
+		  if(!match(aconf->name,user) && !match(aconf->host,host))
+		    return NO;
+		}
+	      return YES;
+	    }
+	  else
+	    return YES;
+	}
+    }
+  return NO;
+}
+
+/*
+ * clear_q_lines
+ *
+ * - clear out the q lines
+ */
+void clear_q_lines()
+{
+  aQlineItem *qp;
+  aQlineItem *qp_next;
+  aConfItem *aconf;
+  aConfItem *next_aconf;
+
+  for (qp = q_conf; qp; qp = qp_next)
+    {
+      qp_next = qp->next;
+
+      if(qp->name)
+	{
+	  MyFree(qp->name);
+	  qp->name = (char *)NULL;
+	}
+
+      if (qp->confList)
+	{
+	  for (aconf = qp->confList; aconf; aconf = next_aconf)
+	    {
+	      next_aconf = aconf->next;
+	      free_conf(aconf);
+	    }
+	}
+      MyFree(qp);
+    }
+  q_conf = (aQlineItem *)NULL;
+}
+
+
+void report_qlines(aClient *sptr)
+{
+  static	char	null[] = "<NULL>";
+  aQlineItem *qp;
+  aConfItem *aconf;
+  char *host;
+  char *mask;
+  char *pass;
+  char *name;
+
+  for (qp = q_conf; qp; qp = qp->next)
+    {
+      if(!qp->name)
+	{
+	  continue;
+	}
+
+      for (aconf=qp->confList;aconf;aconf = aconf->next)
+	{
+	  name = BadPtr(aconf->name)   ? null : aconf->name;
+	  pass = BadPtr(aconf->passwd) ? null : aconf->passwd;
+	  host = BadPtr(aconf->host)   ? null : aconf->host;
+	  mask = BadPtr(aconf->mask)   ? null : aconf->mask;
+
+	  sendto_one(sptr, rpl_str(RPL_STATSQLINE),
+		     me.name,
+		     sptr->name,
+		     mask,
+		     pass,
+		     name,
+		     host);
+	}
+    }
+}
+
+void add_q_line(aConfItem *aconf)
+{
+  char *p;
+  aQlineItem *qp;
+  aQlineItem *newqp;
+
+  aconf->next = (aConfItem *)NULL;
+  /* aconf->mask =should= be already NULL here */
+  MyFree(aconf->mask);
+  DupString(aconf->mask,aconf->host); /* keep nick in mask */
+
+  MyFree(aconf->host);	/* destroy original copy of nick */
+  if(aconf->name)
+    {
+      p = strchr(aconf->name,'@');
+      if(p)
+	{
+	  *p = '\0';
+	  p++;
+	  DupString(aconf->host,p);
+	}
+      else
+	{
+	  DupString(aconf->host,"@");
+	}
+    }
+  else
+    {
+      DupString(aconf->name,"@");
+      DupString(aconf->host,"@");
+    }
+
+  for (qp = q_conf; qp; qp = qp->next)
+    {
+      if(!qp->name)
+	{
+	  continue;
+	}
+
+      if(!strcasecmp(aconf->mask,qp->name))
+	{
+	  if (qp->confList)
+	    {
+	      aconf->next = qp->confList;
+	    }
+	  qp->confList = aconf;
+	  return;
+	}
+    }
+
+  newqp = (aQlineItem *)MyMalloc(sizeof(aQlineItem));
+  DupString(newqp->name,aconf->mask);
+  newqp->confList = aconf;
+  newqp->next = q_conf;
+  q_conf = newqp;
 }
 
 /*
@@ -1364,9 +1537,10 @@ int	rehash(aClient *cptr,aClient *sptr,int sig)
   clear_mtrie_conf_links();
 
   zap_Dlines();
-  clear_special_conf(&q_conf);
+  /*  clear_special_conf(&q_conf); */
   clear_special_conf(&x_conf);
   clear_special_conf(&u_conf);
+  clear_q_lines();
 
   (void) initconf(0,fd,YES);
   do_include_conf();
@@ -2057,6 +2231,7 @@ int 	initconf(int opt, int fd,int use_include)
 	}
       else if (aconf->status & CONF_QUARANTINED_NICK)
 	{
+	  char *p;
 	  dontadd = 1;
 #ifdef JUPE_CHANNEL
 	  if(aconf->host[0] == '#')
@@ -2087,15 +2262,17 @@ int 	initconf(int opt, int fd,int use_include)
 		  (void)add_to_channel_hash_table(aconf->host, chptr);
 		  Count.chan++;
 		}
+
 	      if(aconf->passwd)
 		strncpyzt(chptr->topic, aconf->passwd, sizeof(chptr->topic));
+	      DupString(aconf->name,"*");
 	    }
 #endif
-	  MyFree(aconf->name);
-	  aconf->name = aconf->host;
-	  aconf->host = (char *)NULL;
-	  aconf->next = q_conf;
-	  q_conf = aconf;
+	  
+	  /* host, password, name, port, class */
+	  /* nick, reason, user@host */
+
+	  add_q_line(aconf);
 	}
 
       if (!dontadd)
@@ -2681,12 +2858,6 @@ void expire_pending_glines()
 	  else
 	    pending_glines = gline_pending_ptr->next;
 
-	  /*Some malloc packages get terribly upset if you 
-	    try to dereference a pointer you have freed,
-	    hence I need to dereference the pointer then free it,
-	    so I need to keep a pointer to the item I am about to free.
-	    -Dianora */
-
 	  tmp_pending_ptr = gline_pending_ptr;
 	  gline_pending_ptr = gline_pending_ptr->next;
 	  MyFree(tmp_pending_ptr->reason1);
@@ -2953,127 +3124,6 @@ void report_temp_klines(aClient *sptr)
         }
     }
 }
-
-/* urgh. consider this a place holder for a new version of R-lining
- * to be done in next version of hybrid. don't use this. it will
- * likely break... :-) -Dianora
- */ 
-
-#ifdef R_LINES
-/* find_restrict works against host/name and calls an outside program 
- * to determine whether a client is allowed to connect.  This allows 
- * more freedom to determine who is legal and who isn't, for example
- * machine load considerations.  The outside program is expected to 
- * return a reply line where the first word is either 'Y' or 'N' meaning 
- * "Yes Let them in" or "No don't let them in."  If the first word 
- * begins with neither 'Y' or 'N' the default is to let the person on.
- * It returns a value of 0 if the user is to be let through -Hoppie
- */
-int	find_restrict(aClient *cptr)
-{
-  aConfItem *tmp;
-  char	reply[80], temprpl[80];
-  char	*rplhold = reply, *host, *name, *s;
-  char	rplchar = 'Y';
-  int	pi[2], rc = 0, n;
-  
-  if (!cptr->user)
-    return 0;
-  name = cptr->user->username;
-  host = cptr->sockhost;
-  Debug((DEBUG_INFO, "R-line check for %s[%s]", name, host));
-
-  for (tmp = conf; tmp; tmp = tmp->next)
-    {
-      if (tmp->status != CONF_RESTRICT ||
-	  (tmp->host && host && match(tmp->host, host)) ||
-	  (tmp->name && name && match(tmp->name, name)))
-	continue;
-
-      if (BadPtr(tmp->passwd))
-	{
-	  sendto_ops("Program missing on R-line %s/%s, ignoring",
-		     name, host);
-	  continue;
-	}
-
-      if (pipe(pi) == -1)
-	{
-	  report_error("Error creating pipe for R-line %s:%s",
-		       &me);
-	  return 0;
-	}
-      switch (rc = fork())
-	{
-	case -1 :
-	  report_error("Error forking for R-line %s:%s", &me);
-	  return 0;
-	case 0 :
-	  {
-	    Reg	int	i;
-
-	    (void)close(pi[0]);
-	    for (i = 2; i < MAXCONNECTIONS; i++)
-	      if (i != pi[1])
-		(void)close(i);
-	    if (pi[1] != 2)
-	      (void)dup2(pi[1], 2);
-	    (void)dup2(2, 1);
-	    if (pi[1] != 2 && pi[1] != 1)
-	      (void)close(pi[1]);
-	    (void)execlp(tmp->passwd, tmp->passwd, name, host, 0);
-	    exit(-1);
-	  }
-	default :
-	  (void)close(pi[1]);
-	  break;
-	}
-      *reply = '\0';
-      (void)dgets(-1, NULL, 0); /* make sure buffer marked empty */
-      while ((n = dgets(pi[0], temprpl, sizeof(temprpl)-1)) > 0)
-	{
-	  temprpl[n] = '\0';
-	  if ((s = (char *)strchr(temprpl, '\n')))
-	    *s = '\0';
-	  if (strlen(temprpl) + strlen(reply) < sizeof(reply)-2)
-	    (void)ircsprintf(rplhold, "%s %s", rplhold,
-			     temprpl);
-	  else
-	    {
-	      sendto_ops("R-line %s/%s: reply too long!",
-			 name, host);
-	      break;
-	    }
-	}
-      (void)dgets(-1, NULL, 0); /* make sure buffer marked empty */
-      (void)close(pi[0]);
-      (void)kill(rc, SIGKILL); /* cleanup time */
-      (void)wait(0);
-
-      rc = 0;
-      while (*rplhold == ' ')
-	rplhold++;
-      rplchar = *rplhold; /* Pull out the yes or no */
-      while (*rplhold != ' ')
-	rplhold++;
-      while (*rplhold == ' ')
-	rplhold++;
-      (void)strcpy(reply,rplhold);
-      rplhold = reply;
-      
-      if ((rc = (rplchar == 'n' || rplchar == 'N')))
-	break;
-    }
-  if (rc)
-    {
-      sendto_one(cptr, ":%s %d %s :Restriction: %s",
-		 me.name, ERR_YOUREBANNEDCREEP, cptr->name,
-		 reply);
-      return -1;
-    }
-  return 0;
-}
-#endif
 
 /* get_oper_privs
  *

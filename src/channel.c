@@ -302,24 +302,35 @@ static	int	add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
   Reg	int	cnt = 0, len = 0;
 
   if (MyClient(cptr))
+    (void)collapse(eid);
+
+  if (MyClient(cptr))
     {
       for (ban = chptr->banlist; ban; ban = ban->next)
 	{
-	  len += strlen(BANSTR(ban));
-	  if (len > MAXBANLENGTH || ++cnt >= MAXBANS)
+	  len = strlen(BANSTR(ban));
+	  if ((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
 		  return -1;
 	}
     }
 
   for (ex = chptr->exceptlist; ex; ex = ex->next)
     {
-      len += strlen(BANSTR(ex));
+      len = strlen(BANSTR(ex));
 
-      if (MyClient(cptr) &&
-	  ((len > MAXBANLENGTH) || (++cnt >= MAXBANS) ||
-	   !match(BANSTR(ex), eid) ||
-	   !match(eid,BANSTR(ex))))
-	return -1;
+      if (MyClient(cptr))
+	{
+	  if((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
+	    {
+	      sendto_one(cptr, err_str(ERR_BANLISTFULL),
+			 me.name, cptr->name,
+			 chptr->chname, eid);
+	      return -1;
+	    }
+	  if(!match(BANSTR(ex), eid) ||
+	     !match(eid,BANSTR(ex)))
+	    return -1;
+	}
       else if (!irccmp(BANSTR(ex), eid))
 	return -1;
     }
