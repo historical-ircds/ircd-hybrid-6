@@ -102,7 +102,7 @@ int m_lusers(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
   if (!IsAnOper(sptr))
     {
-      if ((last_used + PACE_WAIT) > CurrentTime)
+      if ((last_used + WHOIS_WAIT) > CurrentTime)
         {
           /* safe enough to give this on a local connect only */
           if (MyClient(sptr))
