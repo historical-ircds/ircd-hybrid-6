@@ -146,10 +146,8 @@ static  int     m_message(struct Client *cptr,
         return 0;
 #endif
 #endif
-      if (strchr(parv[1],','))
-        parv[1] = canonize(parv[1]);
+      parv[1] = canonize(parv[1]);
     }
-
 
   /*
   ** channels are privmsg'd a lot more than other clients, moved up here

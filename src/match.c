@@ -211,9 +211,9 @@ int ircncmp(const char* s1, const char *s2, int n)
 */
 char    *canonize(char *buffer)
 {
-  static        char    cbuf[BUFSIZE];
-  register char *s, *t, *cp = cbuf;
-  register int  l = 0;
+  static char    cbuf[BUFSIZE];
+  char *s, *t, *cp = cbuf;
+  int  l = 0;
   char  *p = 0, *p2;
 
   *cp = '\0';
