@@ -1,5 +1,5 @@
 +hybrid-6 (9/23/98)
-- added +e, send it always instead of checking for TS4 (orabido)
+- added +e, send it always instead of checking for TS4 (orabidoo)
 - Q lines are back, quarantine nick, X line reject gecos info (Dianora)
 - allow users who are invited to walk through any bans/limits (David-R)
 - disallow class -1 in conf file (David-R)
@@ -31,7 +31,6 @@
 - added LIMIT_UH code (Dianora)
 - fixed missing USE_SYLOG in ircd.c (ThemBones)
 - use Count.local instead of sptr->fd in s_user for SET MAX (ThemBones)
-- remove unnecessary report if for D lines in dich_conf.c (Dianora)
 - reworked s_err.c/numeric.h (Dianora)
 - added hash debug on /quote hash (Dianora)
 - d-line hash, use a hash table for numeric ip's allows use of CIDR style

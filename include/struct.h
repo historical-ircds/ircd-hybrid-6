@@ -747,9 +747,10 @@ struct Channel
   Link	*members;
   Link	*invites;
   Link	*banlist;
-  Link  *exceptlist;	/* for future use */
+  Link  *exceptlist;
   ts_val channelts;
-  int locally_created;
+  int locally_created;	/* used only to flag a locally created channel */
+  int keep_their_modes;	/* used only on mode after sjoin */
 #ifdef FLUD
   time_t fludblock;
   struct fludbot *fluders;
@@ -804,6 +805,7 @@ struct Channel
 /*
  * Undefined here, these are used in conjunction with the above modes in
  * the source.
+#define	MODE_QUERY	0x10000000
 #define	MODE_DEL       0x40000000
 #define	MODE_ADD       0x80000000
  */
@@ -845,6 +847,7 @@ struct Channel
 /* used in SetMode() in channel.c and m_umode() in s_msg.c */
 
 #define	MODE_NULL      0
+#define	MODE_QUERY     0x10000000
 #define	MODE_ADD       0x40000000
 #define	MODE_DEL       0x20000000
 

@@ -55,16 +55,21 @@ static	int	can_join (aClient *, aChannel *, char *);
 static	void	channel_modes (aClient *, char *, char *, aChannel *);
 static	int	del_banid (aChannel *, char *);
 static	int	del_exceptid (aChannel *, char *);
+static  void	clear_bans_exceptions(aClient *,aChannel *);
 static	Link	*is_banned (aClient *, aChannel *);
-static	int	set_mode (aClient *, aClient *, aChannel *, int,
-			        char **, char *,char *);
+static	void	set_mode (aClient *, aClient *, aChannel *, int, char **);
 static	void	sub1_from_channel (aChannel *);
 
 void	clean_channelname(unsigned char *);
 void	del_invite (aClient *, aChannel *);
 
+/* static functions used in set_mode */
 static char *pretty_mask(char *);
 static char *fix_key(char *);
+static void collapse_signs(char *);
+static int errsent(int,int *);
+static void change_chan_flag(aChannel *, aClient *, int );
+static void set_deopped(aClient *,aChannel *,int);
 
 #ifdef ORATIMING
 struct timeval tsdnow, tsdthen; 
@@ -95,7 +100,8 @@ static	char	*PartFmt = ":%s PART %s";
  */
 
 static	char	buf[BUFSIZE];
-static	char	modebuf[MODEBUFLEN], parabuf[MODEBUFLEN];
+static	char	modebuf[MODEBUFLEN], modebuf2[MODEBUFLEN];
+static	char	parabuf[MODEBUFLEN], parabuf2[MODEBUFLEN];
 
 /* externally defined function */
 extern Link *find_channel_link(Link *,aChannel *);	/* defined in list.c */
@@ -342,8 +348,13 @@ static	int	add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
 }
 
 /*
- * del_banid - delete an id belonging to cptr
- * if banid is null, deleteall banids belonging to cptr.
+ * This original comment makes no sense to me -Dianora
+ *
+ * "del_banid - delete an id belonging to cptr
+ * if banid is null, deleteall banids belonging to cptr."
+ *
+ * "cptr" what cptr? if banid is null,it just returns with an -1
+ * -Dianora
  *
  * from orabidoo
  */
@@ -495,27 +506,27 @@ void	remove_user_from_channel(aClient *sptr,aChannel *chptr)
 
 }
 
-static	void	change_chan_flag(Link *lp, aChannel *chptr)
+static	void	change_chan_flag(aChannel *chptr,aClient *cptr, int flag)
 {
   Reg	Link *tmp;
 
-  if ((tmp = find_user_link(chptr->members, lp->value.cptr)))
-    if (lp->flags & MODE_ADD)
+  if ((tmp = find_user_link(chptr->members, cptr)))
+    if (flag & MODE_ADD)
       {
-	tmp->flags |= lp->flags & MODE_FLAGS;
-	if (lp->flags & MODE_CHANOP)
+	tmp->flags |= flag & MODE_FLAGS;
+	if (flag & MODE_CHANOP)
 	  tmp->flags &= ~MODE_DEOPPED;
       }
     else
-      tmp->flags &= ~lp->flags & MODE_FLAGS;
+      tmp->flags &= ~flag & MODE_FLAGS;
 }
 
-static	void	set_deopped(Link *lp, aChannel *chptr)
+static	void	set_deopped(aClient *cptr, aChannel *chptr,int flag)
 {
   Reg	Link	*tmp;
 
-  if ((tmp = find_user_link(chptr->members, lp->value.cptr)))
-    if ((tmp->flags & MODE_CHANOP) == 0)
+  if ((tmp = find_user_link(chptr->members, cptr)))
+    if ((tmp->flags & flag) == 0)
       tmp->flags |= MODE_DEOPPED;
 }
 
@@ -778,12 +789,12 @@ int	m_mode(aClient *cptr,
 	       int parc,
 	       char *parv[])
 {
-  int	mcount = 0, chanop;
   aChannel *chptr;
 
   /* Now, try to find the channel in question */
   if (parc > 1)
     {
+      clean_channelname((unsigned char *)parv[1]);
       chptr = find_channel(parv[1], NullChn);
       if (chptr == NullChn)
 	return m_umode(cptr, sptr, parc, parv);
@@ -794,9 +805,6 @@ int	m_mode(aClient *cptr,
 		 me.name, parv[0], "MODE");
       return 0;
     }
-
-  clean_channelname((unsigned char *)parv[1]);
-  chanop = is_chan_op(sptr, chptr) || IsServer(sptr);
 
   if (parc < 3)
     {
@@ -809,38 +817,9 @@ int	m_mode(aClient *cptr,
 		 chptr->chname, chptr->channelts);
       return 0;
     }
-  mcount = set_mode(cptr, sptr, chptr, parc - 2, parv + 2,
-		    modebuf, parabuf);
 
-  if (strlen(modebuf) > (size_t)1)
-    switch (mcount)
-      {
-      case 0:
-	break;
-      case -1:
-	if (MyClient(sptr))
-	  sendto_one(sptr,
-		     err_str(ERR_CHANOPRIVSNEEDED),
-		     me.name, parv[0], chptr->chname);
-	else
-	  {
-#ifndef DONT_SEND_FAKES
-	    sendto_ops_lev(REJ_LEV,"Fake: %s MODE %s %s %s",
-		       parv[0], parv[1], modebuf, parabuf);
-#endif
-	    ircstp->is_fake++;
-	  }
-	break;
-      default:
-	sendto_channel_butserv(chptr, sptr,
-			       ":%s MODE %s %s %s", parv[0],
-			       chptr->chname, modebuf,
-			       parabuf);
-	sendto_match_servs(chptr, cptr,
-			   ":%s MODE %s %s %s",
-			   parv[0], chptr->chname,
-			   modebuf, parabuf);
-      }
+  set_mode(cptr, sptr, chptr, parc - 2, parv + 2);
+
   return 0;
 }
 
@@ -882,162 +861,248 @@ static	char	*fix_key(char *arg)
 }
 
 /*
- * Check and try to apply the channel modes passed in the parv array for
- * the client ccptr to channel chptr.  The resultant changes are printed
- * into mbuf and pbuf (if any) and applied to the channel.
+ * like the name says...  take out the redundant signs in a modechange list
  */
-static	int	set_mode(aClient *cptr,
-			 aClient *sptr,
-			 aChannel *chptr,
-			 int parc,
-			 char *parv[],
-			 char *mbuf,
-			 char *pbuf)
+static	void	collapse_signs(char *s)
 {
-  static	Link	chops[MAXMODEPARAMS];
-  static	FLAG_ITEM	flags[] = {
-    {MODE_PRIVATE,    'p'},
-    {MODE_SECRET,     's'},
-    {MODE_MODERATED,  'm'},
-    {MODE_NOPRIVMSGS, 'n'},
-    {MODE_TOPICLIMIT, 't'},
-    {MODE_INVITEONLY, 'i'},
-    {MODE_VOICE,      'v'},
-    {MODE_KEY,	       'k'},
-    {0x0, 0x0} };
-
-  Reg	Link	*lp;
-  Reg	char	*curr = parv[0], *cp = (char *)NULL;
-  Reg	int	ip;
-  u_int	whatt = MODE_ADD;
-  int	limitset = 0, count = 0, chasing = 0;
-  int	nusers = 0, ischop, isok, isdeop, new, len, length_of_arg;
-  int	keychange = 0, opcnt = 0;
-  char	fm = '\0';
-  aClient *who;
-  Mode	*mode, oldm;
-  char *arg;
-
-  *mbuf = *pbuf = '\0';
-  if (parc < 1)
-    return 0;
-
-  mode = &(chptr->mode);
-  bcopy((char *)mode, (char *)&oldm, sizeof(Mode));
-  ischop = IsServer(sptr) || is_chan_op(sptr, chptr);
-  isdeop = !ischop && !IsServer(sptr) && is_deopped(sptr, chptr);
-  isok = ischop || (!isdeop && IsServer(cptr) && 
-		    chptr->channelts);
-  new = mode->mode;
-
-  while (curr && *curr && count >= 0)
+  char	plus = '\0', *t = s, c;
+  while ((c = *s++))
     {
-      switch (*curr)
+      if (c != plus)
+	*t++ = c;
+      if (c == '+' || c == '-')
+	plus = c;
+    }
+  *t = '\0';
+}
+
+/* little helper function to avoid returning duplicate errors */
+static	int	errsent(int err, int *errs)
+{
+  if (err & *errs)
+    return 1;
+  *errs |= err;
+  return 0;
+}
+
+/* bitmasks for various error returns that set_mode should only return
+ * once per call  -orabidoo
+ */
+
+#define SM_ERR_NOTS		0x00000001	/* No TS on channel */
+#define SM_ERR_NOOPS		0x00000002	/* No chan ops */
+#define SM_ERR_UNKNOWN		0x00000004
+#define SM_ERR_RPL_C		0x00000008
+#define SM_ERR_RPL_B		0x00000010
+#define SM_ERR_RPL_E		0x00000020
+#define SM_ERR_NOTONCHANNEL	0x00000040	/* Not on channel */
+
+/*
+** Apply the mode changes passed in parv to chptr, sending any error
+** messages and MODE commands out.  Rewritten to do the whole thing in
+** one pass, in a desperate attempt to keep the code sane.  -orabidoo
+*/
+/*
+ * rewritten to remove +h/+c/z 
+ * in spirit with the one pass idea, I've re-written how "imnspt"
+ * handling was done
+ * -Dianora
+ */
+
+static  void     set_mode(aClient *cptr,
+                         aClient *sptr,
+                         aChannel *chptr,
+                         int parc,
+                         char *parv[])
+{
+  int	errors_sent = 0, opcnt = 0, len = 0, tmp, nusers;
+  int   ip;
+  int	keychange = 0, passet = 0, limitset = 0;
+  int	whatt = MODE_ADD, the_mode, done_s_or_p = NO;
+  aClient *who;
+  Link	*lp;
+  char	*curr = parv[0], c, cc, *arg, plus = '+', *tmpc, *clear;
+  char	numeric[16];
+  /* mbufw gets the param-less mode chars, always with their sign
+   * mbuf2w gets the paramed mode chars, always with their sign
+   * pbufw gets the params, in ID form whenever possible
+   * pbuf2w gets the params, no ID's
+   */
+  /* no ID code at the moment
+   * pbufw gets the params, no ID's
+   * grrrr for now I'll stick the params into pbufw without ID's
+   * -Dianora
+   */
+
+  char	*mbufw = modebuf, *mbuf2w = modebuf2;
+  char	*pbufw = parabuf, *pbuf2w = parabuf2;
+  ts_val zapts;
+  int	curr_type, fm_type = 0;  
+	  /* 0 = none,
+	   * 1 = other modes of different types that can mix 
+	   * on a single mode change from the user
+	   */
+  int	ischop, isok, isdeop, chan_op;
+
+  chan_op = is_chan_op(sptr, chptr);
+
+  /* has ops or is a server */
+  ischop = IsServer(sptr) || (chan_op & MODE_CHANOP);
+
+  /* is client marked as deopped */
+  isdeop = !ischop && !IsServer(sptr) && is_deopped(sptr, chptr);
+
+  /* is an op or server or remote user on a TS channel */
+  isok = ischop || (!isdeop && IsServer(cptr) && chptr->channelts);
+
+  /* isok_c calculated later, only if needed */
+
+  /* parc is the number of _remaining_ args (where <0 means 0);
+  ** parv points to the first remaining argument
+  */
+  parc--;
+  parv++;
+
+  FOREVER
+    {
+      if (BadPtr(curr))
 	{
-	case '+':
+	  /*
+	   * Deal with mode strings like "+m +o blah +i"
+	   */
+	  if (parc-- > 0)
+	    {
+	      curr = *parv++;
+	      continue;
+	    }
+	  break;
+	}
+      c = *curr++;
+
+      switch (c)
+	{
+	case '+' :
 	  whatt = MODE_ADD;
+	  plus = '+';
+	  continue;
+	  /* NOT REACHED */
 	  break;
-	case '-':
+
+	case '-' :
 	  whatt = MODE_DEL;
+	  plus = '-';
+	  continue;
+	  /* NOT REACHED */
 	  break;
+
+	case '=' :
+	  whatt = MODE_QUERY;
+	  plus = '=';	
+	  continue;
+	  /* NOT REACHED */
+	  break;
+
 	case 'o' :
 	case 'v' :
-	  if (--parc <= 0)
-	    break;
-	  parv++;
-	  *parv = check_string(*parv);
-	  if (MyClient(sptr) && opcnt >= MAXMODEPARAMS)
-	    break;
-
-	  /* You have to be on channel before you can op or voice
-	   * -Dianora
-	   */
+	  chptr->keep_their_modes = YES;
 
 	  if (MyClient(sptr) && !IsMember(sptr, chptr))
 	    {
-	      sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
-			 me.name,
-			 sptr->name,
-			 chptr->chname);
+	      if(!errsent(SM_ERR_NOTONCHANNEL, &errors_sent))
+		 sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
+			    me.name, sptr, chptr->chname);
+	      /* eat the parameter */
+	      parc--;
+	      parv++;
 	      break;
 	    }
-	  /*
-	   * Check for nickname changes and try to follow these
-	   * to make sure the right client is affected by the
-	   * mode change.
-	   */
-	  if (!(who = find_chasing(sptr, parv[0], &chasing)))
+	  if (whatt == MODE_QUERY)
 	    break;
+	  if (parc-- <= 0)
+	    break;
+	  arg = check_string(*parv++);
+
+	  if (MyClient(sptr) && opcnt >= MAXMODEPARAMS)
+	    break;
+
+	  if (!(who = find_chasing(sptr, arg, NULL)))
+	    break;
+	  /* no more of that mode bouncing crap */
 	  if (!IsMember(who, chptr))
 	    {
-	      sendto_one(cptr, err_str(ERR_USERNOTINCHANNEL),
-			 me.name, cptr->name,
-			 parv[0], chptr->chname);
+	      if (MyClient(sptr))
+		sendto_one(sptr, err_str(ERR_USERNOTINCHANNEL), me.name, 
+			   sptr->name, arg, chptr->chname);
 	      break;
 	    }
-	  /*
-	  ** If this server noticed the nick change, the
-	  ** information must be propagated back upstream.
-	  ** This is a bit early, but at most this will generate
-	  ** just some extra messages if nick appeared more than
-	  ** once in the MODE message... --msa
-	  */
-	  /*
-	  ** This is actually useless - if we notice a nick
-	  ** change it means the server the mode comes from       
-	  ** dealt with the mode with the old nick, and already
-	  ** applied it, and the nick change must be coming
-	  ** from another server; besides, we don't want to
-	  ** be resetting the channel's TS -orabidoo
-	  */
 
-	  if (who == cptr && whatt == MODE_ADD && *curr == 'o')
+	  if (who == sptr && whatt == MODE_ADD && (c == 'o') && !isok)
 	    break;
-	  /*
-	   * to stop problems, don't allow +v and +o to mix
-	   * into the one message if from a client.
-	   */
-	  if (!fm)
-	    fm = *curr;
-	  else if (MyClient(sptr) && (*curr != fm))
-	    break;
-	  if (whatt == MODE_ADD)
+
+	  /* ignore server-generated MODE +-ovh */
+	  if (IsServer(sptr))
 	    {
+	      ts_warn( "MODE %c%c on %s from server %s (ignored)", 
+		       (whatt == MODE_ADD ? '+' : '-'), c, chptr->chname, 
+		       sptr->name);
+	      break;
+	    }
+
+	  if (c == 'o')
+	    the_mode = MODE_CHANOP;
+	  else if (c == 'v')
+	    the_mode = MODE_VOICE;
+
+/* I'm still letting i:lined people get half-ops, which makes i:lines
+ * less brutal and possibly more useful  -orabidoo
+ */
 #ifdef LITTLE_I_LINES
-	      if(MyClient(who) && !IsAnOper(who) 
-		 && isok && (*curr=='o') && IsRestricted(who))
-		{
-		  sendto_one(who, ":%s NOTICE %s :*** Notice -- %s attempted to chanop you. You are restricted and cannot be chanopped",
-			     me.name,
-			     who->name,
-			     sptr->name);
-		  sendto_one(sptr, ":%s NOTICE %s :*** Notice -- %s is restricted and cannot be chanopped",
-			     me.name,
-			     sptr->name,
-			     who->name);
-		}
-	      else
-#endif
-		{
-		  lp = &chops[opcnt++];
-		  lp->value.cptr = who;
-		  lp->flags = (*curr == 'o') ? MODE_CHANOP:
-		    MODE_VOICE;
-		  lp->flags |= MODE_ADD;
-		}
-	    }
-	  else if (whatt == MODE_DEL)
+	  if (MyClient(who) && !IsAnOper(who) && isok && (c == 'o') && 
+	      IsRestricted(who))
 	    {
-	      lp = &chops[opcnt++];
-	      lp->value.cptr = who;
-	      lp->flags = (*curr == 'o') ? MODE_CHANOP:
-		MODE_VOICE;
-	      lp->flags |= MODE_DEL;
+	      sendto_one(who, ":%s NOTICE %s :*** Notice -- %s attempted to chanop you. You are restricted and cannot be chanopped",
+			 me.name,
+			 who->name,
+			 sptr->name);
+	      sendto_one(sptr, ":%s NOTICE %s :*** Notice -- %s is restricted and cannot be chanopped",
+			 me.name,
+			 sptr->name,
+			 who->name);
+	      break;
 	    }
-	  count++;
+#endif
+
+	  if (isdeop && (c == 'o') && whatt == MODE_ADD)
+	    set_deopped(who, chptr, the_mode);
+
+	  if (!isok)
+	    {
+	      if (MyClient(sptr) && !errsent(SM_ERR_NOOPS, &errors_sent))
+		sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED), me.name, 
+			   sptr->name, chptr->chname);
+	      break;
+	    }
+	
+	  tmp = strlen(arg);
+	  if (len + tmp + 2 >= MODEBUFLEN)
+	    break;
+
+	  *mbufw++ = plus;
+	  *mbufw++ = c;
+	  strcpy(pbufw, arg);
+	  pbufw += strlen(pbufw);
+	  *pbufw++ = ' ';
+	  len += tmp + 1;
+	  opcnt++;
+
+	  change_chan_flag(chptr, who, the_mode|whatt);
+
 	  break;
+
 	case 'k':
-	  if (--parc <= 0)
+	  if (whatt == MODE_QUERY)
+	    break;
+	  if (parc-- <= 0)
 	    {
 	      /* allow arg-less mode -k */
 	      if (whatt == MODE_DEL)
@@ -1046,57 +1111,56 @@ static	int	set_mode(aClient *cptr,
 		break;
 	    }
 	  else
-	    arg = fix_key(check_string(*++parv));
+	    arg = fix_key(check_string(*parv++));
 
-	  /* check now so we eat the parameter if present */
-	  if (keychange)
+	  if (keychange++)
 	    break;
-
 	  if (MyClient(sptr) && opcnt >= MAXMODEPARAMS)
 	    break;
-	  if (!fm)
-	    fm = *curr;
-	  else if (MyClient(sptr) && (*curr != fm))
+	  if (!*arg)
 	    break;
-	  if (whatt == MODE_ADD)
+
+	  if (!isok)
 	    {
-	      if (*mode->key && !IsServer(cptr))
-		sendto_one(cptr, err_str(ERR_KEYSET),
-			   me.name, cptr->name,
-			   chptr->chname);
-	      else if (isok &&
-		       (!*mode->key || IsServer(cptr)))
-		{
-		  lp = &chops[opcnt++];
-		  lp->value.cp = arg;
-		  if (strlen(lp->value.cp) >
-		      (size_t) KEYLEN)
-		    lp->value.cp[KEYLEN] = '\0';
-		  lp->flags = MODE_KEY|MODE_ADD;
-		  keychange = 1;
-		}
+	      if (!errsent(SM_ERR_NOOPS, &errors_sent) && MyClient(sptr))
+		sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED), me.name, 
+			   sptr->name, chptr->chname);
+	      break;
 	    }
-	  else if (whatt == MODE_DEL)
-	    {
-	      if (isok && (mycmp(mode->key, arg) == 0 ||
-			     IsServer(cptr)))
-		{
-		  lp = &chops[opcnt++];
-		  lp->value.cp = mode->key;
-		  lp->flags = MODE_KEY|MODE_DEL;
-		  keychange = 1;
-	        }
-	    }
-	  count++;
+
+	  if (strlen(arg) > KEYLEN)
+	    arg[KEYLEN] = '\0';
+
+	  /* don't check the arg when removing the key */
+	  if (whatt == MODE_DEL && *chptr->mode.key)
+	    arg = chptr->mode.key;
+
+	  tmp = strlen(arg);
+	  if (len + tmp + 2 >= MODEBUFLEN)
+	    break;
+
+	  *mbufw++ = plus;
+	  *mbufw++ = 'k';
+	  strcpy(pbufw, arg);
+	  pbufw += strlen(pbufw);
+	  *pbufw++ = ' ';
+	  len += tmp + 1;
+	  opcnt++;
+
+	  if (whatt == MODE_DEL)
+	    *chptr->mode.key = '\0';
+	  else
+	    strncpyzt(chptr->mode.key, arg, KEYLEN+1);
+
 	  break;
 
-	  /* Roger (orabidoo) had +e combined with +b
-	   * just harder to read IMO, so I have separated it
-	   * -Dianora
-	   */
 	case 'e':
-	  if (--parc <= 0)
+	  if (whatt == MODE_QUERY || parc-- <= 0)
 	    {
+	      if (!MyClient(sptr))
+		break;
+	      if (errsent(SM_ERR_RPL_E, &errors_sent))
+		break;
 #ifdef BAN_INFO
 	      for (lp = chptr->exceptlist; lp; lp = lp->next)
 		sendto_one(cptr, rpl_str(RPL_EXCEPTLIST),
@@ -1112,57 +1176,73 @@ static	int	set_mode(aClient *cptr,
 			   chptr->chname,
 			   lp->value.cp);
 #endif
-	      sendto_one(cptr, rpl_str(RPL_ENDOFEXCEPTLIST),
-			 me.name, cptr->name, chptr->chname);
+	      sendto_one(sptr, rpl_str(RPL_ENDOFEXCEPTLIST),
+			 me.name, sptr->name, 
+			 chptr->chname);
 	      break;
 	    }
-       
-	  parv++;
-	  if (BadPtr(*parv))
-	    break;
+	  arg = check_string(*parv++);
+
 	  if (MyClient(sptr) && opcnt >= MAXMODEPARAMS)
 	    break;
+
+	  if (!isok)
+	    {
+	      if (!errsent(SM_ERR_NOOPS, &errors_sent) && MyClient(sptr))
+		sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+			   me.name, sptr->name, 
+			   chptr->chname);
+	      break;
+	    }
+	  
+	  if(MyClient(sptr))
+	    chptr->keep_their_modes = YES;
+	  else if(!chptr->keep_their_modes)
+	    {
+	      parc--;
+	      parv++;
+	      break;
+	    }
 
 	  /* user-friendly ban mask generation, taken
 	  ** from Undernet's ircd  -orabidoo
 	  */
-
 	  if (MyClient(sptr))
-	    arg = collapse(pretty_mask(*parv));
+	    arg = collapse(pretty_mask(arg));
 
-	  if (whatt == MODE_ADD)
+	  if(*arg == ':')
 	    {
-	      /* Ignore colon at beginning of ban string
-	       * unfortunately,  I can't ignore all such strings
-	       * because otherwise the channel gets desynced.
-	       * but I can at least stop local clients from placing it
-	       *
-	       * Roger uses check_string() combined with an earlier test
-	       * in his TS4 code. The problem is, this means on a mixed net
-	       * one can't =remove= a colon prefixed ban if set from
-	       * an older server.
-	       *
-	       * -Dianora
-	       */
+	      parc--;
+	      parv++;
+	      break;
+	    }
 
-	      if(MyClient(sptr) && (arg[0] == ':'))
-		break;
-	      lp = &chops[opcnt++];
-	      lp->value.cp = arg;
-	      lp->flags = MODE_ADD|MODE_EXCEPTION;
-	    }
-	  else if (whatt == MODE_DEL)
-	    {
-	      lp = &chops[opcnt++];
-	      lp->value.cp = arg;
-	      lp->flags = MODE_DEL|MODE_EXCEPTION;
-	    }
-	  count++;
+	  tmp = strlen(arg);
+	  if (len + tmp + 2 >= MODEBUFLEN)
+	    break;
+
+	  if (!(((whatt & MODE_ADD) && !add_exceptid(sptr, chptr, arg)) ||
+		((whatt & MODE_DEL) && !del_exceptid(chptr, arg))))
+	    break;
+
+	  *mbufw++ = plus;
+	  *mbufw++ = 'e';
+	  strcpy(pbufw, arg);
+	  pbufw += strlen(pbufw);
+	  *pbufw++ = ' ';
+	  len += tmp + 1;
+	  opcnt++;
+
 	  break;
 
 	case 'b':
-	  if (--parc <= 0)
+	  if (whatt == MODE_QUERY || parc-- <= 0)
 	    {
+	      if (!MyClient(sptr))
+		break;
+
+	      if (errsent(SM_ERR_RPL_B, &errors_sent))
+		break;
 #ifdef BAN_INFO
 	      for (lp = chptr->banlist; lp; lp = lp->next)
 		sendto_one(cptr, rpl_str(RPL_BANLIST),
@@ -1178,333 +1258,392 @@ static	int	set_mode(aClient *cptr,
 			   chptr->chname,
 			   lp->value.cp);
 #endif
-	      sendto_one(cptr, rpl_str(RPL_ENDOFBANLIST),
-			 me.name, cptr->name, chptr->chname);
+	      sendto_one(sptr, rpl_str(RPL_ENDOFBANLIST),
+			 me.name, sptr->name, 
+			 chptr->chname);
 	      break;
 	    }
-       
-	  parv++;
-	  if (BadPtr(*parv))
-	    break;
+
+	  if(MyClient(sptr))
+	    chptr->keep_their_modes = YES;
+	  else if(!chptr->keep_their_modes)
+	    {
+	      parc--;
+	      parv++;
+	      break;
+	    }
+
+	  arg = check_string(*parv++);
+
 	  if (MyClient(sptr) && opcnt >= MAXMODEPARAMS)
 	    break;
+
+	  if (!isok)
+	    {
+	      if (!errsent(SM_ERR_NOOPS, &errors_sent) && MyClient(sptr))
+		sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+			   me.name, sptr->name, 
+			   chptr->chname);
+	      break;
+	    }
+
+
+	  /* Ignore colon at beginning of ban string
+	   * unfortunately,  I can't ignore all such strings
+	   * because otherwise the channel gets desynced.
+	   * but I can at least stop local clients from placing it
+	   *
+	   * Roger uses check_string() combined with an earlier test
+	   * in his TS4 code. The problem is, this means on a mixed net
+	   * one can't =remove= a colon prefixed ban if set from
+	   * an older server.
+	   * His code is more efficient though ;-/ Perhaps
+	   * when we've all upgraded this code can be moved up.
+	   *
+	   * -Dianora
+	   */
 
 	  /* user-friendly ban mask generation, taken
 	  ** from Undernet's ircd  -orabidoo
 	  */
 	  if (MyClient(sptr))
-	    arg = collapse(pretty_mask(*parv));
-
-	  if (whatt == MODE_ADD)
 	    {
-	      /* Ignore colon at beginning of ban string
-	       * unfortunately,  I can't ignore all such strings
-	       * because otherwise the channel gets desynced.
-	       * but I can at least stop local clients from placing it
-	       * -Dianora
-	       */
+	      if( (*arg == ':') && (whatt & MODE_ADD) )
+		{
+		  parc--;
+		  parv++;
+		  break;
+		}
+	      arg = collapse(pretty_mask(arg));
+	    }
 
-	      if(MyClient(sptr) && (arg[0] == ':'))
-		break;
-	      lp = &chops[opcnt++];
-	      lp->value.cp = arg;
-	      lp->flags = MODE_ADD|MODE_BAN;
-	    }
-	  else if (whatt == MODE_DEL)
-	    {
-	      lp = &chops[opcnt++];
-	      lp->value.cp = arg;
-	      lp->flags = MODE_DEL|MODE_BAN;
-	    }
-	  count++;
+	  tmp = strlen(arg);
+	  if (len + tmp + 2 >= MODEBUFLEN)
+	    break;
+
+	  if (!(((whatt & MODE_ADD) && !add_banid(sptr, chptr, arg)) ||
+		((whatt & MODE_DEL) && !del_banid(chptr, arg))))
+	    break;
+
+	  *mbufw++ = plus;
+	  *mbufw++ = 'b';
+	  strcpy(pbufw, arg);
+	  pbufw += strlen(pbufw);
+	  *pbufw++ = ' ';
+	  len += tmp + 1;
+	  opcnt++;
+
 	  break;
+
 	case 'l':
-	  /*
-	   * limit 'l' to only *1* change per mode command but
-	   * eat up others.
-	   */
-	  if (limitset || !isok)
+	  if (whatt == MODE_QUERY)
+	    break;
+	  if (!isok || limitset++)
 	    {
-	      if (whatt == MODE_ADD && --parc > 0)
+	      if (whatt == MODE_ADD && parc-- > 0)
 		parv++;
 	      break;
 	    }
-	  if (whatt == MODE_DEL)
+
+	  if (whatt == MODE_ADD)
 	    {
-	      limitset = 1;
-	      nusers = 0;
-	      count++;
-	      break;
-	    }
-	  if (--parc > 0)
-	    {
-	      if (BadPtr(*parv))
-		break;
+	      if (parc-- <= 0)
+		{
+		  if (MyClient(sptr))
+		    sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+			       me.name, sptr->name, "MODE +l");
+		  break;
+		}
+	      
+	      arg = check_string(*parv++);
 	      if (MyClient(sptr) && opcnt >= MAXMODEPARAMS)
 		break;
-	      if ( (nusers = atoi(*++parv)) <= 0)
-	        break;
-	      lp = &chops[opcnt++];
-	      lp->flags = MODE_ADD|MODE_LIMIT;
-	      limitset = 1;
-	      count++;
-	      break;
-	    }
-	  sendto_one(cptr, err_str(ERR_NEEDMOREPARAMS),
-		     me.name, cptr->name, "MODE +l");
-	  break;
-	case 'i' : /* falls through for default case */
-	  if ((whatt == MODE_DEL) && isok)
-	    while ( (lp = chptr->invites) )
-	      del_invite(lp->value.cptr, chptr);
-	default:
-	  for (ip = 0; flags[ip].mode; ip++)
-	    if (flags[ip].letter == *curr)
-	      break;
-      
-	  if (flags[ip].mode)
-	    {
-	      if (whatt == MODE_ADD)
-		{
-		  if (flags[ip].mode == MODE_PRIVATE)
-		    new &= ~MODE_SECRET;
-		  else if (flags[ip].mode == MODE_SECRET)
-		    new &= ~MODE_PRIVATE;
-		  new |= flags[ip].mode;
-		}
-	      else
-		new &= ~flags[ip].mode;
-	      count++;
+	      if (!(nusers = atoi(arg)))
+		break;
+	      ircsprintf(numeric, "%-15d", nusers);
+	      if ((tmpc = index(numeric, ' ')))
+		*tmpc = '\0';
+	      arg = numeric;
+
+	      tmp = strlen(arg);
+	      if (len + tmp + 2 >= MODEBUFLEN)
+		break;
+
+	      chptr->mode.limit = nusers;
+	      chptr->mode.mode |= MODE_LIMIT;
+
+	      *mbufw++ = '+';
+	      *mbufw++ = 'l';
+	      strcpy(pbufw, arg);
+	      pbufw += strlen(pbufw);
+	      *pbufw++ = ' ';
+	      len += tmp + 1;
+	      opcnt++;
 	    }
 	  else
-	    sendto_one(cptr, err_str(ERR_UNKNOWNMODE),
-		       me.name, cptr->name, *curr);
+	    {
+	      chptr->mode.limit = 0;
+	      chptr->mode.mode &= ~MODE_LIMIT;
+	      *mbufw++ = '-';
+	      *mbufw++ = 'l';
+	    }
+
+	  break;
+
+	  /* Traditionally, these are handled separately
+	   * but I decided to combine them all into this one case
+	   * statement keeping it all sane
+	   * -Dianora
+	   */
+
+	case 'i' :
+	  if (!isok)
+	    {
+	      if (MyClient(sptr) && !errsent(SM_ERR_NOOPS, &errors_sent))
+		sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED), me.name, 
+			   sptr->name, chptr->chname);
+	      break;
+	    }
+
+	  if(whatt == MODE_ADD)
+	    {
+	      if (len + 2 >= MODEBUFLEN)
+		break;
+	      chptr->mode.mode |= MODE_INVITEONLY;
+	      *mbufw++ = '+';
+	      *mbufw++ = 'i';
+	      len += 2;
+	      opcnt++;
+	    }
+	  else
+	    {
+	      if (len + 2 >= MODEBUFLEN)
+		break;
+	      chptr->mode.mode &= ~MODE_INVITEONLY;
+	      *mbufw++ = '-';
+	      *mbufw++ = 'i';
+	      len += 2;
+	      opcnt++;
+	    }
+	  break;
+
+	case 'm' :
+	  if (!isok)
+	    {
+	      if (MyClient(sptr) && !errsent(SM_ERR_NOOPS, &errors_sent))
+		sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED), me.name, 
+			   sptr->name, chptr->chname);
+	      break;
+	    }
+
+	  if(whatt == MODE_ADD)
+	    {
+	      if (len + 2 >= MODEBUFLEN)
+		break;
+	      chptr->mode.mode |= MODE_MODERATED;
+	      *mbufw++ = '+';
+	      *mbufw++ = 'm';
+	      len += 2;
+	      opcnt++;
+	    }
+	  else
+	    {
+	      if (len + 2 >= MODEBUFLEN)
+		break;
+	      chptr->mode.mode &= ~MODE_MODERATED;
+	      *mbufw++ = '-';
+	      *mbufw++ = 'm';
+	      len += 2;
+	      opcnt++;
+	    }
+	  break;
+
+	case 'n' :
+	  if (!isok)
+	    {
+	      if (MyClient(sptr) && !errsent(SM_ERR_NOOPS, &errors_sent))
+		sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED), me.name, 
+			   sptr->name, chptr->chname);
+	      break;
+	    }
+
+	  if(whatt == MODE_ADD)
+	    {
+	      if (len + 2 >= MODEBUFLEN)
+		break;
+	      chptr->mode.mode |= MODE_NOPRIVMSGS;
+	      *mbufw++ = '+';
+	      *mbufw++ = 'n';
+	      len += 2;
+	      opcnt++;
+	    }
+	  else
+	    {
+	      if (len + 2 >= MODEBUFLEN)
+		break;
+	      chptr->mode.mode &= ~MODE_NOPRIVMSGS;
+	      *mbufw++ = '-';
+	      *mbufw++ = 'n';
+	      len += 2;
+	      opcnt++;
+	    }
+	  break;
+
+	case 'p' :
+	  if (!isok)
+	    {
+	      if (MyClient(sptr) && !errsent(SM_ERR_NOOPS, &errors_sent))
+		sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED), me.name, 
+			   sptr->name, chptr->chname);
+	      break;
+	    }
+
+	  if(done_s_or_p)
+	    break;
+	  done_s_or_p = YES;
+
+	  if(whatt == MODE_ADD)
+	    {
+	      if (len + 2 >= MODEBUFLEN)
+		break;
+	      if(chptr->mode.mode & MODE_SECRET)
+		{
+		  if (len + 2 >= MODEBUFLEN)
+		    break;
+		  *mbufw++ = '-';
+		  *mbufw++ = 's';
+		  len += 2;
+		  chptr->mode.mode &= ~MODE_SECRET;
+		}
+	      chptr->mode.mode |= MODE_PRIVATE;
+	      *mbufw++ = '+';
+	      *mbufw++ = 'p';
+	      len += 2;
+	      opcnt++;
+	    }
+	  else
+	    {
+	      if (len + 2 >= MODEBUFLEN)
+		break;
+	      chptr->mode.mode &= ~MODE_PRIVATE;
+	      *mbufw++ = '-';
+	      *mbufw++ = 'p';
+	      len += 2;
+	      opcnt++;
+	    }
+	  break;
+
+	case 's' :
+	  if (!isok)
+	    {
+	      if (MyClient(sptr) && !errsent(SM_ERR_NOOPS, &errors_sent))
+		sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED), me.name, 
+			   sptr->name, chptr->chname);
+	      break;
+	    }
+
+	  /* ickity poo, traditional +p-s nonsense */
+
+	  if(done_s_or_p)
+	    break;
+	  done_s_or_p = YES;
+
+	  if(whatt == MODE_ADD)
+	    {
+	      if (len + 2 >= MODEBUFLEN)
+		break;
+	      if(chptr->mode.mode & MODE_PRIVATE)
+		{
+		  if (len + 2 >= MODEBUFLEN)
+		    break;
+		  *mbufw++ = '-';
+		  *mbufw++ = 'p';
+		  len += 2;
+		  chptr->mode.mode &= ~MODE_PRIVATE;
+		}
+	      chptr->mode.mode |= MODE_SECRET;
+	      *mbufw++ = '+';
+	      *mbufw++ = 's';
+	      len += 2;
+	      opcnt++;
+	    }
+	  else
+	    {
+	      if (len + 2 >= MODEBUFLEN)
+		break;
+	      chptr->mode.mode &= ~MODE_SECRET;
+	      *mbufw++ = '-';
+	      *mbufw++ = 's';
+	      len += 2;
+	      opcnt++;
+	    }
+	  break;
+
+	case 't' :
+	  if (!isok)
+	    {
+	      if (MyClient(sptr) && !errsent(SM_ERR_NOOPS, &errors_sent))
+		sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED), me.name, 
+			   sptr->name, chptr->chname);
+	      break;
+	    }
+
+	  if(whatt == MODE_ADD)
+	    {
+	      if (len + 2 >= MODEBUFLEN)
+		break;
+	      chptr->mode.mode |= MODE_TOPICLIMIT;
+	      *mbufw++ = '+';
+	      *mbufw++ = 't';
+	      len += 2;
+	      opcnt++;
+	    }
+	  else
+	    {
+	      if (len + 2 >= MODEBUFLEN)
+		break;
+	      chptr->mode.mode &= ~MODE_TOPICLIMIT;
+	      *mbufw++ = '-';
+	      *mbufw++ = 't';
+	      len += 2;
+	      opcnt++;
+	    }
+	  break;
+
+	default:
+	  if (whatt == MODE_QUERY)
+	    break;
+
+	  /* only one "UNKNOWNMODE" per mode... we don't want
+	  ** to generate a storm, even if it's just to a 
+	  ** local client  -orabidoo
+	  */
+	  if (MyClient(sptr) && !errsent(SM_ERR_UNKNOWN, &errors_sent))
+	    sendto_one(sptr, err_str(ERR_UNKNOWNMODE), me.name, sptr->name, c);
 	  break;
 	}
-      curr++;
-      /*
-       * Make sure modes strings such as "+m +t +p +i" are parsed
-       * fully.
-       */
-      if (!*curr && parc > 0)
-	{
-	  curr = *++parv;
-	  parc--;
-	}
-    }/* end of while loop for MODE processing */
-
-  whatt = 0;
-
-  for (ip = 0; flags[ip].mode; ip++)
-    if ((flags[ip].mode & new) && !(flags[ip].mode & oldm.mode))
-      {
-	if (whatt == 0)
-	  {
-	    *mbuf++ = '+';
-	    whatt = 1;
-	  }
-	if (isok)
-	  mode->mode |= flags[ip].mode;
-	*mbuf++ = flags[ip].letter;
-      }
-
-  for (ip = 0; flags[ip].mode; ip++)
-    if ((flags[ip].mode & oldm.mode) && !(flags[ip].mode & new))
-      {
-	if (whatt != -1)
-	  {
-	    *mbuf++ = '-';
-	    whatt = -1;
-	  }
-	if (ischop)
-	  mode->mode &= ~flags[ip].mode;
-	*mbuf++ = flags[ip].letter;
-      }
-  
-  if (limitset && !nusers && mode->limit)
-    {
-      if (whatt != -1)
-	{
-	  *mbuf++ = '-';
-	  whatt = -1;
-	}
-      mode->mode &= ~MODE_LIMIT;
-      mode->limit = 0;
-      *mbuf++ = 'l';
     }
 
   /*
-   * Reconstruct "+bkov" chain.
-   */
-  if (opcnt)
-    {
-      Reg	int	i = 0;
-      Reg	char	c = '\0';
-      char	*user, *host, numeric[16];
-
-      /* restriction for 2.7 servers */
-      if (!IsServer(cptr) && opcnt > (MAXMODEPARAMS-2))
-	opcnt = (MAXMODEPARAMS-2);
-
-      for (; i < opcnt; i++)
-	{
-	  lp = &chops[i];
-	  /*
-	   * make sure we have correct mode change sign
-	   */
-	  if (whatt != (lp->flags & (MODE_ADD|MODE_DEL)))
-	    if (lp->flags & MODE_ADD)
-	      {
-		*mbuf++ = '+';
-		whatt = MODE_ADD;
-	      }
-	    else
-	      {
-		*mbuf++ = '-';
-		whatt = MODE_DEL;
-	      }
-	  len = strlen(pbuf);
-	  /*
-	   * get c as the mode char and tmp as a pointer to
-	   * the paramter for this mode change.
-	   */
-	  switch(lp->flags & MODE_WPARAS)
-	    {
-	    case MODE_CHANOP :
-	      c = 'o';
-	      cp = lp->value.cptr->name;
-	      break;
-	    case MODE_VOICE :
-	      c = 'v';
-	      cp = lp->value.cptr->name;
-	      break;
-	    case MODE_EXCEPTION :
-	      c = 'e';
-	      cp = lp->value.cp;
-	      break;
-	    case MODE_BAN :
-	      c = 'b';
-	      cp = lp->value.cp;
-	      break;
-	    case MODE_KEY :
-	      c = 'k';
-	      cp = lp->value.cp;
-	      break;
-	    case MODE_LIMIT :
-	      c = 'l';
-	      (void)ircsprintf(numeric, "%-15d", nusers);
-	      if ((cp = index(numeric, ' ')))
-		*cp = '\0';
-	      cp = numeric;
-	      break;
-	    }
-
-	  if(!cp)	/* a little sanity test -Dianora */
-	    break;
-
-	  if (len + strlen(cp) + 2 > (size_t) MODEBUFLEN)
-				break;
-	  /*
-	   * pass on +/-o/v regardless of whether they are
-	   * redundant or effective but check +b's to see if
-	   * it existed before we created it.
-	   */
-	  switch(lp->flags & MODE_WPARAS)
-	    {
-	    case MODE_KEY :
-	      *mbuf++ = c;
-	      (void)strcat(pbuf, cp);
-	      len += strlen(cp);
-	      (void)strcat(pbuf, " ");
-	      len++;
-	      if (!isok)
-		break;
-	      if (strlen(cp) > (size_t) KEYLEN)
-		*(cp+KEYLEN) = '\0';
-	      if (whatt == MODE_ADD)
-		{	
-		  strncpyzt(mode->key, cp,
-			    sizeof(mode->key));
-		}
-	      else
-		*mode->key = '\0';
-	      break;
-	    case MODE_LIMIT :
-	      *mbuf++ = c;
-	      (void)strcat(pbuf, cp);
-	      len += strlen(cp);
-	      (void)strcat(pbuf, " ");
-	      len++;
-	      if (!isok)
-		break;
-	      mode->limit = nusers;
-	      break;
-	    case MODE_CHANOP :
-	    case MODE_VOICE :
-	      *mbuf++ = c;
-	      (void)strcat(pbuf, cp);
-	      len += strlen(cp);
-	      (void)strcat(pbuf, " ");
-	      len++;
-	      if (isok)
-		change_chan_flag(lp, chptr);
-	      if (IsServer(sptr) && c == 'o' && 
-		  whatt == MODE_ADD)
-		{
-		  chptr->channelts = 0;
-		  ts_warn("Server %s setting +o and blasting TS on %s", sptr->name,
-			  chptr->chname);
-		}
-	      if (c == 'o' && whatt == MODE_ADD && isdeop &&
-		  !is_chan_op(lp->value.cptr, chptr))
-		set_deopped(lp, chptr);
-	      break;
-	    case MODE_EXCEPTION :
-	      if (isok && (((whatt & MODE_ADD) &&
-			     !add_exceptid(sptr, chptr, cp)) ||
-			     ((whatt & MODE_DEL) &&
-			     !del_exceptid(chptr, cp))))
-		{
-		  *mbuf++ = c;
-		  (void)strcat(pbuf, cp);
-		  len += strlen(cp);
-		  (void)strcat(pbuf, " ");
-		  len++;
-		}
-	      break;
-	    case MODE_BAN :
-	      if (isok && (((whatt & MODE_ADD) &&
-			     !add_banid(sptr, chptr, cp)) ||
-			     ((whatt & MODE_DEL) &&
-			     !del_banid(chptr, cp))))
-		{
-		  *mbuf++ = c;
-		  (void)strcat(pbuf, cp);
-		  len += strlen(cp);
-		  (void)strcat(pbuf, " ");
-		  len++;
-		}
-	      break;
-	    }
-	} /* for (; i < opcnt; i++) */
-    } /* if (opcnt) */
-  
-  *mbuf++ = '\0';
-
-/* returns:
-  ** -1  = mode changes were generated but ignored, and a FAKE
-  **       must be sent for remote clients and a CHANOPRIVSNEEDED
-  **       for local ones
-  **  0  = ignore whatever was generated, do not propagate anything
-  ** >0  = modes were accepted, propagate
+  ** WHEW!!  now all that's left to do is put the various bufs
+  ** together and send it along.
   */
 
-  if (isok)
-    return count;
-  if (isdeop && !MyClient(sptr))
-    return 0;
-  else
-    return -1;
+  *mbufw = *mbuf2w = *pbufw = *pbuf2w = '\0';
+  collapse_signs(modebuf);
+/*  collapse_signs(modebuf2); */
+
+  if (!*modebuf)
+    return;
+
+  sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", 
+			 sptr->name, chptr->chname,
+			 modebuf, parabuf);
+  sendto_match_servs(chptr, cptr, ":%s MODE %s %s %s",
+		     cptr->name, chptr->chname,
+		     modebuf, parabuf);
+		     
+  return;
 }
 
 static	int	can_join(aClient *sptr, aChannel *chptr, char *key)
@@ -1568,6 +1707,15 @@ void	clean_channelname(unsigned char *cn)
     if (*cn == '\007' || *cn == ' ' || *cn == ',' || (*cn > 127 && *cn <= 160))
       {
 	*cn = '\0';
+	/* pathological case only on longest channel name.
+	** If not dealt with here, causes desynced channel ops
+	** since ChannelExists() doesn't see the same channel
+	** as one being joined. cute bug. Oct 11 1997, Dianora/comstud
+	*/
+
+	if(strlen(name) >  CHANNELLEN) /* same thing is done in get_channel()*/
+	name[CHANNELLEN] = '\0';
+
 	return;
       }
 }
@@ -1612,6 +1760,7 @@ static	aChannel *get_channel(aClient *cptr,
       channel = chptr;
       if(Count.myserver == 0)
 	chptr->locally_created = YES;
+      chptr->keep_their_modes = YES;
       (void)add_to_channel_hash_table(chname, chptr);
       Count.chan++;
     }
@@ -1716,6 +1865,23 @@ static	void	sub1_from_channel(aChannel *chptr)
 #endif
 	      free_link(obtmp);
 	    }
+
+	  tmp = chptr->exceptlist;
+	  while (tmp)
+	    {
+	      obtmp = tmp;
+	      tmp = tmp->next;
+#ifdef BAN_INFO
+	      MyFree(obtmp->value.banptr->banstr);
+	      MyFree(obtmp->value.banptr->who);
+	      MyFree(obtmp->value.banptr);
+#else
+	      MyFree(obtmp->value.cp);
+#endif
+	      free_link(obtmp);
+	    }
+	  chptr->banlist = chptr->exceptlist = NULL;
+
 	  if (chptr->prevch)
 	    chptr->prevch->nextch = chptr->nextch;
 	  else
@@ -1732,6 +1898,157 @@ static	void	sub1_from_channel(aChannel *chptr)
 	}
     }
 }
+
+/*
+ * clear_bans_exceptions
+ *
+ * I could have re-written del_banid/del_exceptid to do this
+ *
+ * still need a bit of cleanup on the MODE -b stuff...
+ * -Dianora
+ */
+
+static void clear_bans_exceptions(aClient *sptr, aChannel *chptr)
+{
+  static char modebuf[MODEBUFLEN];
+  register Link *next_ban;
+  register Link *ban;
+  char *b1,*b2,*b3,*b4;
+  char *mp;
+
+  b1="";
+  b2="";
+  b3="";
+  b4="";
+
+  mp= modebuf;
+  *mp = '\0';
+
+  for(ban = chptr->banlist; ban; ban = ban->next)
+    {
+      if(!*b1)
+	{
+	  b1 = BANSTR(ban);
+	  *mp++ = '-';
+	  *mp++ = 'b';
+	  *mp = '\0';
+	}
+      else if(!*b2)
+	{
+	  b2 = BANSTR(ban);
+	  *mp++ = 'b';
+	  *mp = '\0';
+	}
+      else if(!*b3)
+	{
+	  b3 = BANSTR(ban);
+	  *mp++ = 'b';
+	  *mp = '\0';
+	}
+      else if(!*b4)
+	{
+	  b4 = BANSTR(ban);
+	  *mp++ = 'b';
+	  *mp = '\0';
+
+	  sendto_channel_butserv(chptr, &me,
+				 ":%s MODE %s %s %s %s %s %s",
+				 sptr->name,chptr->chname,modebuf,b1,b2,b3,b4);
+	  b1="";
+	  b2="";
+	  b3="";
+	  b4="";
+
+	  mp = modebuf;
+	  *mp = '\0';
+	}
+    }
+
+  if(*modebuf)
+    sendto_channel_butserv(chptr, &me,
+			   ":%s MODE %s %s %s %s %s %s",
+			   sptr->name,chptr->chname,modebuf,b1,b2,b3,b4);
+  b1="";
+  b2="";
+  b3="";
+  b4="";
+
+  mp= modebuf;
+  *mp = '\0';
+
+  for(ban = chptr->exceptlist; ban; ban = ban->next)
+    {
+      if(!*b1)
+	{
+	  b1 = BANSTR(ban);
+	  *mp++ = '-';
+	  *mp++ = 'e';
+	  *mp = '\0';
+	}
+      else if(!*b2)
+	{
+	  b2 = BANSTR(ban);
+	  *mp++ = 'e';
+	  *mp = '\0';
+	}
+      else if(!*b3)
+	{
+	  b3 = BANSTR(ban);
+	  *mp++ = 'e';
+	  *mp = '\0';
+	}
+      else if(!*b4)
+	{
+	  b4 = BANSTR(ban);
+	  *mp++ = 'e';
+	  *mp = '\0';
+
+	  sendto_channel_butserv(chptr, &me,
+				 ":%s MODE %s %s %s %s %s %s",
+				 sptr->name,chptr->chname,modebuf,b1,b2,b3,b4);
+	  b1="";
+	  b2="";
+	  b3="";
+	  b4="";
+	  mp = modebuf;
+	  *mp = '\0';
+	}
+    }
+
+  if(*modebuf)
+    sendto_channel_butserv(chptr, &me,
+			   ":%s MODE %s %s %s %s %s %s",
+			   sptr->name,chptr->chname,modebuf,b1,b2,b3,b4);
+
+  for(ban = chptr->banlist; ban; ban = next_ban)
+    {
+      next_ban = ban->next;
+#ifdef BAN_INFO
+      MyFree(ban->value.banptr->banstr);
+      MyFree(ban->value.banptr->who);
+      MyFree(ban->value.banptr);
+#else
+      MyFree(ban->value.cp);
+#endif
+      free_link(ban);
+    }
+
+  for(ban = chptr->exceptlist; ban; ban = next_ban)
+    {
+      next_ban = ban->next;
+#ifdef BAN_INFO
+      MyFree(ban->value.banptr->banstr);
+      MyFree(ban->value.banptr->who);
+      MyFree(ban->value.banptr);
+#else
+      MyFree(ban->value.cp);
+#endif
+      free_link(ban);
+    }
+
+  chptr->banlist = chptr->exceptlist = NULL;
+}
+
 
 /*
 ** m_join
@@ -1778,14 +2095,6 @@ int	m_join(aClient *cptr,
   for (i = 0, name = strtoken(&p, parv[1], ","); name;
        name = strtoken(&p, (char *)NULL, ","))
     {
-      /* pathological case only on longest channel name.
-      ** If not dealt with here, causes desynced channel ops
-      ** since ChannelExists() doesn't see the same channel
-      ** as one being joined. cute bug. Oct 11 1997, Dianora/comstud
-      */
-
-      if(strlen(name) >  CHANNELLEN)  /* same thing is done in get_channel() */
-	name[CHANNELLEN] = '\0';
       clean_channelname((unsigned char *)name);
       if (*name == '&' && !MyConnect(sptr))
 	continue;
@@ -2956,7 +3265,7 @@ int	m_sjoin(aClient *cptr,
   ts_val	newts, oldts, tstosend;
   static	Mode mode, *oldmode;
   Link	*l;
-  int	args = 0, haveops = 0, keepourmodes = 1, keepnewmodes = 1;
+  int	args = 0, haveops = 0, keep_our_modes = 1, keep_new_modes = 1;
   int   doesop = 0, what = 0, pargs = 0, fl, people = 0, isnew;
   int ip;
   register	char *s, *s0;
@@ -3024,6 +3333,31 @@ int	m_sjoin(aClient *cptr,
    * -Dianora
    */
 
+  /*
+   * bogus ban removal code.
+   * If I see that this SJOIN will mean I keep my ops, but lose
+   * the ops from the joining server, I keep track of that in the channel
+   * structure. I set keep_their_modes to NO
+   * since the joining server will not be keeping their ops, I can
+   * ignore any of the bans sent from that server. The moment
+   * I see a chanop MODE being sent, I can set this flag back to YES.
+   *
+   * There is one degenerate case. Two servers connect bursting
+   * at the same time. It might cause a problem, or it might not.
+   * In the case that it becomes an issue, then a short list
+   * of servers having their modes ignored would have to be linked
+   * into the channel structure. This would be only an issue
+   * on hubs.
+   * Hopefully, it will be much of a problem.
+   *
+   * Bogus bans on the server losing its chanops is trivial. All
+   * bans placed on the local server during its split, with bogus chanops
+   * I can just remove.
+   *
+   * -Dianora
+   */
+
+  chptr->keep_their_modes = YES;
 
   chptr->locally_created = NO;
   oldts = chptr->channelts;
@@ -3071,7 +3405,10 @@ int	m_sjoin(aClient *cptr,
   else if (newts < oldts)
     {
       if (doesop)
-	keepourmodes = 0;
+	keep_our_modes = NO;
+
+      clear_bans_exceptions(sptr,chptr);
+
       if (haveops && !doesop)
 	tstosend = oldts;
       else
@@ -3079,8 +3416,11 @@ int	m_sjoin(aClient *cptr,
     }
   else
     {
+      chptr->keep_their_modes = NO;
+
       if (haveops)
-	keepnewmodes = 0;
+	keep_new_modes = NO;
+
       if (doesop && !haveops)
 	{
 	  chptr->channelts = tstosend = newts;
@@ -3092,9 +3432,9 @@ int	m_sjoin(aClient *cptr,
 	tstosend = oldts;
     }
 
-  if (!keepnewmodes)
+  if (!keep_new_modes)
     mode = *oldmode;
-  else if (keepourmodes)
+  else if (keep_our_modes)
     {
       mode.mode |= oldmode->mode;
       if (oldmode->limit > mode.limit)
@@ -3175,7 +3515,7 @@ int	m_sjoin(aClient *cptr,
   
   chptr->mode = mode;
 
-  if (!keepourmodes)
+  if (!keep_our_modes)
     {
       what = 0;
       for (l = chptr->members; l && l->value.cptr; l = l->next)
@@ -3236,7 +3576,7 @@ int	m_sjoin(aClient *cptr,
     }
 
   *modebuf = *parabuf = '\0';
-  if (parv[3][0] != '0' && keepnewmodes)
+  if (parv[3][0] != '0' && keep_new_modes)
     channel_modes(sptr, modebuf, parabuf, chptr);
   else
     {
@@ -3261,7 +3601,7 @@ int	m_sjoin(aClient *cptr,
 	fl |= MODE_CHANOP;
       if (*s == '+' || s[1] == '+')
 	fl |= MODE_VOICE;
-      if (!keepnewmodes)
+      if (!keep_new_modes)
 	if (fl & MODE_CHANOP)
 	  fl = MODE_DEOPPED;
 	else
@@ -3279,7 +3619,7 @@ int	m_sjoin(aClient *cptr,
 	  sendto_channel_butserv(chptr, acptr, ":%s JOIN :%s",
 				 s, parv[2]);
 	}
-      if (keepnewmodes)
+      if (keep_new_modes)
 	strcpy(t, s0);
       else
 	strcpy(t, s);
