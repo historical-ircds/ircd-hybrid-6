@@ -56,7 +56,7 @@ if test "X$cf_enable_openssl" != "Xno" ; then
      cf_openssl_basedir="${cf_enable_openssl}"
   else
     dnl Do the auto-probe here.  Check some common directory paths.
-    for dirs in /usr/local/ssl \
+    for dirs in /usr/local/ssl /usr/pkg /usr/local \
                 /usr/local/openssl ; do
       if test -f "${dirs}/include/openssl/opensslv.h" ; then
         cf_openssl_basedir="${dirs}"

@@ -1755,7 +1755,7 @@ if test "X$cf_enable_openssl" != "Xno" ; then
      test "X$cf_enable_openssl" != "Xyes" ; then
           cf_openssl_basedir="${cf_enable_openssl}"
   else
-        for dirs in /usr/local/ssl \
+        for dirs in /usr/local/ssl /usr/pkg /usr/local \
                 /usr/local/openssl ; do
       if test -f "${dirs}/include/openssl/opensslv.h" ; then
         cf_openssl_basedir="${dirs}"
