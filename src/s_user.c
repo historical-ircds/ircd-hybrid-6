@@ -4359,21 +4359,22 @@ struct fludbot *remove_fluder_reference(struct fludbot **fluders,
 
   prev = NULL;
   current = *fluders;
-  while(current) { 
-    next = current->next;
-    if(current->fluder == fluder)
-      {
-	if(prev)
-	  prev->next = next; 
-	else
-	  *fluders = next;
-	
-	free_fludbot(current );
-      }
-    else
-      prev = current;
-    current = next; 
-  }
+  while(current)
+    { 
+      next = current->next;
+      if(current->fluder == fluder)
+	{
+	  if(prev)
+	    prev->next = next; 
+	  else
+	    *fluders = next;
+	  
+	  free_fludbot(current );
+	}
+      else
+	prev = current;
+      current = next; 
+    }
 
   return(*fluders);       
 }

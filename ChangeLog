@@ -1,8 +1,14 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
-version hybrid-6-b81 12-Jun-1999
+version hybrid-6-b83 12-Jun-1999
+* removed TIMED_KLINES entirely
+* fixed stupid in s_conf.c
+-Dianora
+	
+version hybrid-6-b82 12-Jun-1999
 * added more rudimentary block allocator debugging	
+	
 -Dianora	
 version hybrid-6-b81
 * only show hacked ops if from this server to an opless channel

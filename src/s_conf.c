@@ -49,10 +49,6 @@ static char *rcs_version = "$Id$";
 extern int rehashed;
 #include "mtrie_conf.h"
 
-#ifdef	TIMED_KLINES
-static	int	check_time_interval(char *);
-#endif
-
 struct sockaddr_in vserv;
 char	specific_virtual_host;
 
@@ -1507,6 +1503,7 @@ int 	initconf(int opt, int fd,int use_include)
   aConfItem *include_conf = NULL;
   unsigned long ip;
   unsigned long ip_mask;
+  int sendq;
 
   (void)dgets(-1, NULL, 0); /* make sure buffer is at empty pos */
   while ((i = dgets(fd, line, sizeof(line) - 1)) > 0)
@@ -1734,6 +1731,7 @@ int 	initconf(int opt, int fd,int use_include)
 	case 'Y':
 	case 'y':
 	  aconf->status = CONF_CLASS;
+	  sendq = 0;
 	  break;
 
 	default:
@@ -1796,12 +1794,21 @@ int 	initconf(int opt, int fd,int use_include)
 	    break;
 	  Debug((DEBUG_DEBUG,"class tmp = %s",tmp));
 
-	  Class(aconf) = find_class(atoi(tmp));
+	  if(aconf->status & CONF_CLASS)
+	    {
+	      sendq = atoi(tmp);
+	    }
+	  else
+	    {
+	      Class(aconf) = find_class(atoi(tmp));
+	    }
 
-	  if ((tmp = getfield(NULL)) == NULL)
-	    break;
-	  (int)aconf->hold = get_oper_flags(tmp);
-
+	  if(aconf->status & (CONF_LOCOP|CONF_OPERATOR))
+	    {
+	      if ((tmp = getfield(NULL)) == NULL)
+		break;
+	      (int)aconf->hold = get_oper_flags(tmp);
+	    }
 
 	  break;
           /* NOTREACHED */
@@ -1832,13 +1839,13 @@ int 	initconf(int opt, int fd,int use_include)
       /*
       ** If conf line is a class definition, create a class entry
       ** for it and make the conf_line illegal and delete it.
-	** Negative class numbers are not accepted.
+      ** Negative class numbers are not accepted.
       */
       if (aconf->status & CONF_CLASS && atoi(aconf->host) > -1)
 	{
 	  add_class(atoi(aconf->host), atoi(aconf->passwd),
 		    atoi(aconf->name), aconf->port,
-		    tmp ? atoi(tmp) : 0);
+		    sendq );
 	  continue;
 	}
       /*
@@ -3063,95 +3070,6 @@ int	find_restrict(aClient *cptr)
 		 me.name, ERR_YOUREBANNEDCREEP, cptr->name,
 		 reply);
       return -1;
-    }
-  return 0;
-}
-#endif
-
-
-/* check_time_interval
- * inputs	- comment field of k-line
- * output	- 1 if its NOT a time_interval or it is :-)
- *		  0 if its a time interval, but its not in the interval
- * side effects	-
- *
- * There doesn't seem to be much need for this kind of kline anymore,
- * and it is a bit of a CPU hog. The previous version of hybrid only supported
- * it if you didn't have KLINE_COMMENT_ONLY....
- * It still needs some rethinking/recoding.. but not today...
- * In most cases, its not needed, esp. on a busy server. don't
- * #define TIMED_KLINES, if you ban them on one server, they'll just
- * use another server. Just doesn't make sense to me any more.
- *
- * -Dianora
- */
-
-#ifdef TIMED_KLINES
-/*
-** check against a set of time intervals
-*/
-
-static int check_time_interval(char *interval)
-{
-  struct tm *tptr;
-  time_t tick;
-  char	 *p;
-  int	 perm_min_hours, perm_min_minutes;
-  int    perm_max_hours, perm_max_minutes;
-  int    now, perm_min, perm_max;
-  /*   char   reply[512];	*//* BLAH ! */
-
-  tick = timeofday;
-  tptr = localtime(&tick);
-  now = tptr->tm_hour * 60 + tptr->tm_min;
-
-  while (interval)
-    {
-      if( (p = (char *)strchr(interval, ',')) )
-	*p = '\0';
-      if (sscanf(interval, "%2d%2d-%2d%2d",
-		 &perm_min_hours, &perm_min_minutes,
-		 &perm_max_hours, &perm_max_minutes) != 4)
-	{
-	  if (p)
-	    *p = ',';
-	  return(1);	/* Not an interval, let the caller deal with it */
-	}
-      if (p)
-	*(p++) = ',';
-      perm_min = 60 * perm_min_hours + perm_min_minutes;
-      perm_max = 60 * perm_max_hours + perm_max_minutes;
-      /*
-      ** The following check allows intervals over midnight ...
-      */
-      if ((perm_min < perm_max)
-	  ? (perm_min <= now && now <= perm_max)
-	  : (perm_min <= now || now <= perm_max))
-	{
-	  /*
-	  (void)ircsprintf(reply,
-			   ":%%s %%d %%s :%s %d:%02d to %d:%02d.",
-			   "You are not allowed to connect from",
-			   perm_min_hours, perm_min_minutes,
-			   perm_max_hours, perm_max_minutes);
-			   */
-	  return 1;
-
-	  /*	  return(ERR_YOUREBANNEDCREEP); */
-	}
-      if ((perm_min < perm_max)
-	  ? (perm_min <= now + 5 && now + 5 <= perm_max)
-	  : (perm_min <= now + 5 || now + 5 <= perm_max))
-	{
-	  /*
-	  (void)ircsprintf(reply, ":%%s %%d %%s :%d minute%s%s",
-			   perm_min-now,(perm_min-now)>1?"s ":" ",
-			   "and you will be denied for further access");
-			   */
-	  return 1;
-	  /* return(ERR_YOUWILLBEBANNED); */
-	}
-      interval = p;
     }
   return 0;
 }

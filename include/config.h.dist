@@ -1154,14 +1154,6 @@
 #define GLINE_TIME      (12*3600)
 
 /* ----------------- archaic and/or broken section -------------------- */
-/* TIMED_KLINES - bad bad evil
- * PLEASE don't define this unless you are nuts or absolutely need
- * timed kline support. its not necessary, and is a CPU hog... :-)
- * besides. it hasn't been tested. if you use it, you debug it :-) -Dianora
- * THIS IS NOT THE SAME THING AS TEMP KLINES. -Rodder
- */
-#undef TIMED_KLINES
-
 #undef DNS_DEBUG
 
 /* SETUID_ROOT - plock - keep the ircd from being swapped out.

@@ -2549,7 +2549,7 @@ int     m_operwall(aClient *cptr,
   if( MyClient(sptr) && ((last_used_wallops + WALLOPS_WAIT) > NOW) )
     {
       sendto_one(sptr, ":%s NOTICE %s :Oh, one of those annoying opers who doesn't know how to use a channel",
-		 me.name,parv[0]);
+		 me.name,parv[0]); 
       return 0;
     }
   last_used_wallops = NOW;
