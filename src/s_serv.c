@@ -3110,7 +3110,6 @@ int   m_htm(aClient *cptr,
   return 0;
 }
 
-#if defined(OPER_REHASH) || defined(LOCOP_REHASH)
 /*
 ** m_rehash
 **
@@ -3122,17 +3121,15 @@ int	m_rehash(aClient *cptr,
 {
   int found = NO;
 
-#ifndef	LOCOP_REHASH
-  if (!MyClient(sptr) || !IsOper(sptr))
-#else
-# ifdef	OPER_REHASH
   if (!MyClient(sptr) || !IsAnOper(sptr))
-# else
-  if (!MyClient(sptr) || !IsLocOp(sptr))
-# endif
-#endif
     {
       sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      return 0;
+    }
+
+  if ( !IsOperRehash(sptr) )
+    {
+      sendto_one(sptr,":%s NOTICE %s: You have no H flag", me.name, parv[0]);
       return 0;
     }
 
@@ -3272,9 +3269,7 @@ int	m_rehash(aClient *cptr,
     }
   return 0; /* shouldn't ever get here */
 }
-#endif
 
-#if defined(OPER_RESTART) || defined(LOCOP_RESTART)
 /*
 ** m_restart
 **
@@ -3285,19 +3280,18 @@ int	m_restart(aClient *cptr,
 		  char *parv[])
 {
   char buf[BUFSIZE]; 
-#ifndef	LOCOP_RESTART
-  if (!MyClient(sptr) || !IsOper(sptr))
-#else
-# ifdef	OPER_RESTART
   if (!MyClient(sptr) || !IsAnOper(sptr))
-# else
-  if (!MyClient(sptr) || !IsLocOp(sptr))
-# endif
-#endif
     {
       sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
       return 0;
     }
+
+  if ( !IsOperDie(sptr) )
+    {
+      sendto_one(sptr,":%s NOTICE %s: You have no D flag", me.name, parv[0]);
+      return 0;
+    }
+
 #ifdef USE_SYSLOG
   syslog(LOG_WARNING, "Server RESTART by %s\n",
 	 get_client_name(sptr,FALSE));
@@ -3306,7 +3300,6 @@ int	m_restart(aClient *cptr,
   restart(buf);
   return 0; /*NOT REACHED*/
 }
-#endif
 
 /*
 ** m_trace
@@ -4073,7 +4066,6 @@ int	m_close(aClient *cptr,
   return 0;
 }
 
-#if defined(OPER_DIE) || defined(LOCOP_DIE)
 int	m_die(aClient *cptr,
 	      aClient *sptr,
 	      int parc,
@@ -4082,17 +4074,15 @@ int	m_die(aClient *cptr,
   aClient	*acptr;
   int	i;
 
-#ifndef	LOCOP_DIE
-  if (!MyClient(sptr) || !IsOper(sptr))
-#else
-# ifdef	OPER_DIE
   if (!MyClient(sptr) || !IsAnOper(sptr))
-# else
-  if (!MyClient(sptr) || !IsLocOp(sptr))
-# endif
-#endif
     {
       sendto_one(sptr, form_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+      return 0;
+    }
+
+  if ( !IsOperDie(sptr) )
+    {
+      sendto_one(sptr,":%s NOTICE %s: You have no D flag", me.name, parv[0]);
       return 0;
     }
 
@@ -4136,7 +4126,6 @@ int	m_die(aClient *cptr,
   (void)s_die();
   return 0;
 }
-#endif
 
 
 /*

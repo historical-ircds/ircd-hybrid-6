@@ -2018,7 +2018,7 @@ void initconf(int opt, FBFILE* file, int use_include)
 	      /* defaults */
 	      aconf->port = 
 		CONF_OPER_GLOBAL_KILL|CONF_OPER_REMOTE|CONF_OPER_UNKLINE|
-		CONF_OPER_K|CONF_OPER_GLINE;
+		CONF_OPER_K|CONF_OPER_GLINE|CONF_OPER_REHASH;
 	      if ((tmp = getfield(NULL)) == NULL)
 		break;
 	      aconf->port = get_oper_privs(aconf->port,tmp);
@@ -2789,6 +2789,14 @@ int get_oper_privs(int int_privs,char *privs)
       else if(*privs == 'g')		/* disallow gline */
 	int_privs &= ~CONF_OPER_GLINE;
 #endif
+      else if(*privs == 'H')		/* allow rehash */
+	int_privs |= CONF_OPER_REHASH;
+      else if(*privs == 'h')		/* disallow rehash */
+	int_privs &= ~CONF_OPER_REHASH;
+      else if(*privs == 'D')
+	int_privs &= CONF_OPER_DIE;	/* allow die */
+      else if(*privs == 'd')
+	int_privs &= CONF_OPER_DIE; 	/* disallow die */
       privs++;
     }
 
@@ -2808,7 +2816,7 @@ int get_oper_privs(int int_privs,char *privs)
 
 char *oper_privs(aClient *cptr,int port)
 {
-  static char privs_out[10];
+  static char privs_out[16];
   char *privs_ptr;
 
   privs_ptr = privs_out;
@@ -2864,6 +2872,24 @@ char *oper_privs(aClient *cptr,int port)
     }
   else
     *privs_ptr++ = 'u';
+
+  if(port & CONF_OPER_REHASH)
+    {
+      if(cptr)
+	SetOperRehash(cptr);
+      *privs_ptr++ = 'H';
+    }
+  else
+    *privs_ptr++ = 'h';
+
+  if(port & CONF_OPER_DIE)
+    {
+      if(cptr)
+	SetOperDie(cptr);
+      *privs_ptr++ = 'D';
+    }
+  else
+    *privs_ptr++ = 'd';
 
   *privs_ptr = '\0';
 

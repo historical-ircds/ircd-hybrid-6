@@ -237,26 +237,29 @@ typedef struct	MessageFileItem aMessageFile;
 #define FLAGS2_OPER_GLINE	0x0100	/* oper can use gline */
 #define FLAGS2_OPER_N		0x0200	/* oper can umode n */
 #define FLAGS2_OPER_K		0x0400	/* oper can kill/kline */
+#define FLAGS2_OPER_DIE         0x0800  /* oper can die */
+#define FLAGS2_OPER_REHASH      0x1000  /* oper can rehash */
 #define FLAGS2_OPER_FLAGS	(FLAGS2_OPER_GLOBAL_KILL | \
 				 FLAGS2_OPER_REMOTE | \
 				 FLAGS2_OPER_UNKLINE | \
 				 FLAGS2_OPER_GLINE | \
 				 FLAGS2_OPER_N | \
-				 FLAGS2_OPER_K)
+				 FLAGS2_OPER_K | \
+                                 FLAGS2_OPER_REHASH)
 /* ZIP_LINKS */
 
-#define FLAGS2_ZIP	0x1000	/* (server) link is zipped */
-#define FLAGS2_ZIPFIRST	0x2000	/* start of zip (ignore any CR/LF) */
-#define FLAGS2_CBURST	0x4000	/* connection burst being sent */
+#define FLAGS2_ZIP	0x4000	/* (server) link is zipped */
+#define FLAGS2_ZIPFIRST	0x8000	/* start of zip (ignore any CR/LF) */
+#define FLAGS2_CBURST	0x10000	/* connection burst being sent */
 
-#define FLAGS2_DOINGLIST 	0x8000  /* client is doing a list */
+#define FLAGS2_DOINGLIST 	0x20000  /* client is doing a list */
 #ifdef IDLE_CHECK
-#define FLAGS2_IDLE_LINED   0x10000
+#define FLAGS2_IDLE_LINED   0x40000
 #endif
-#define FLAGS2_ALREADY_EXITED	0x20000 /* kludge grrrr */
-#define FLAGS2_IP_SPOOFING	0x40000	/* client IP is spoofed */
-#define FLAGS2_IP_HIDDEN	0x80000	/* client IP should be hidden
-					   from non opers */
+#define FLAGS2_ALREADY_EXITED	0x80000         /* kludge grrrr */
+#define FLAGS2_IP_SPOOFING	0x100000	/* client IP is spoofed */
+#define FLAGS2_IP_HIDDEN	0x200000	/* client IP should be hidden
+					           from non opers */
 
 /* for sendto_ops_lev */
 #define CCONN_LEV	1
@@ -374,7 +377,10 @@ typedef struct	MessageFileItem aMessageFile;
 #define IsSetOperN(x)		((x)->flags2 & FLAGS2_OPER_N)
 #define SetOperK(x)		((x)->flags2 |= FLAGS2_OPER_K)
 #define IsSetOperK(x)		((x)->flags2 & FLAGS2_OPER_K)
-
+#define SetOperDie(x)           ((x)->flags2 |= FLAGS2_OPER_DIE)
+#define IsOperDie(x)            ((x)->flags2 & FLAGS2_OPER_DIE)
+#define SetOperRehash(x)        ((x)->flags2 |= FLAGS2_OPER_REHASH)
+#define IsOperRehash(x)      ((x)->flags2 &= FLAGS2_OPER_REHASH)
 #define CBurst(x)		((x)->flags2 & FLAGS2_CBURST)
 
 /*
@@ -480,6 +486,8 @@ struct Zdata {
 #define CONF_OPER_GLINE	      8
 #define CONF_OPER_N	     16
 #define CONF_OPER_K	     32
+#define CONF_OPER_REHASH     64
+#define CONF_OPER_DIE       128
 
 /*
  * Client structures
