@@ -1,3 +1,9 @@
+*** 20010616_2 by jdc
+* Updated INSTALL; better explanation, and mentions encrypted links
+  via OpenSSL.
+* Added doc/README.openssl for hybrid-6.
+
+
 *** 20010616_1 by db
 - missing a newts = oldts; in the bogus ts ignore code
 
