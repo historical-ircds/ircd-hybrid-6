@@ -23,6 +23,7 @@
  */
 #include "struct.h"
 #include "numeric.h"
+#include "irc_string.h"
 #include "h.h"
 
 

@@ -136,7 +136,7 @@ static int
 LockedFile(const char *filename)
 
 {
-	const char lockpath[PATH_MAX + 1];
+	char lockpath[PATH_MAX + 1];
 	char buffer[1024];
 	FBFILE *fileptr;
 	int killret;

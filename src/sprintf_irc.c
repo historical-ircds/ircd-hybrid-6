@@ -19,12 +19,11 @@
  *
  *   $Id$
  */
-#include <stdio.h>
-
+#include "irc_string.h"
 #include "send.h"
 #include "common.h"
 
-#include <stdarg.h>
+#include <stdio.h>
 
 
 const char atoi_tab[4000] = {

@@ -24,6 +24,11 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.19  1999/07/17 03:23:15  db
+ * - my bad.
+ * - fixed prototype in s_conf.h
+ * - fixed typo of password for passwd in s_conf.c
+ *
  * Revision 1.18  1999/07/17 03:13:03  db
  * - corrected type casting problems, mainly const char *
  * - moved prototype for safe_write into s_conf.h
@@ -215,7 +220,8 @@ extern void             det_confs_butmask (struct Client *, int);
 extern int              detach_conf (struct Client *, struct ConfItem *);
 extern struct ConfItem* det_confs_butone (struct Client *, struct ConfItem *);
 extern struct ConfItem* find_conf (struct SLink *, char*, int);
-extern struct ConfItem* find_conf_exact (char *, char *, char *, int);
+extern struct ConfItem* find_conf_exact(const char* name, const char* user, 
+                                        const char* host, int statmask);
 extern struct ConfItem* find_conf_host (struct SLink *, char *, int);
 extern struct ConfItem* find_conf_ip (struct SLink *, char *, char *, int);
 extern struct ConfItem* find_conf_name (char *, int);

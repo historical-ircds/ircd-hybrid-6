@@ -1043,10 +1043,8 @@ aConfItem *attach_confs_host(aClient *cptr,char *host,int statmask)
 /*
  * find a conf entry which matches the hostname and has the same name.
  */
-aConfItem *find_conf_exact(char *name,
-                           char *user,
-                           char *host,
-                           int statmask)
+aConfItem* find_conf_exact(const char* name, const char* user, 
+                           const char* host, int statmask)
 {
   aConfItem *tmp;
 
@@ -1061,7 +1059,7 @@ aConfItem *find_conf_exact(char *name,
       ** of the configuration.
       */
       if (!match(tmp->host, host) || !match(tmp->user,user)
-          || strcasecmp(tmp->name,name) )
+          || strcasecmp(tmp->name, name) )
         continue;
       if (tmp->status & (CONF_OPERATOR|CONF_LOCOP))
         {
@@ -1073,7 +1071,7 @@ aConfItem *find_conf_exact(char *name,
       else
         return tmp;
     }
-  return((aConfItem *)NULL);
+  return NULL;
 }
 
 /*

@@ -35,6 +35,7 @@
 #include "s_conf.h"
 #include "numeric.h"
 #include "client.h"
+#include "irc_string.h"
 
 #include <string.h>
 #include <stdlib.h>

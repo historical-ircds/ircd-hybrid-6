@@ -3358,7 +3358,7 @@ int	m_trace(aClient *cptr,
                               /* lets also do this for opers tracing nicks */
     {
       const char* name;
-      char*       ip;
+      const char* ip;
       int         c_class;
 
       acptr = hash_find_client(tname,(aClient *)NULL);
@@ -3436,7 +3436,7 @@ int	m_trace(aClient *cptr,
   for (i = 0; i <= highest_fd; i++)
     {
       const char* name;
-      char*       ip;
+      const char* ip;
       int         c_class;
       
       if (!(acptr = local[i])) /* Local Connection? */
@@ -3450,7 +3450,7 @@ int	m_trace(aClient *cptr,
       if (!dow && irccmp(tname, acptr->name))
 	continue;
       name = get_client_name(acptr, FALSE);
-      ip = inetntoa((char*) &acptr->ip);
+      ip = inetntoa((const char*) &acptr->ip);
 
       c_class = get_client_class(acptr);
       
@@ -3642,7 +3642,7 @@ int	m_ltrace(aClient *cptr,
   for (i = 0; i <= highest_fd; i++)
     {
       const char* name;
-      char*       ip;
+      const char* ip;
       int         c_class;
       
       if (!(acptr = local[i])) /* Local Connection? */
@@ -3656,7 +3656,7 @@ int	m_ltrace(aClient *cptr,
       if (!dow && irccmp(tname, acptr->name))
 	continue;
       name = get_client_name(acptr, FALSE);
-      ip = inetntoa((char*) &acptr->ip);
+      ip = inetntoa((const char*) &acptr->ip);
 
       c_class = get_client_class(acptr);
       

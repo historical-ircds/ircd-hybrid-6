@@ -21,6 +21,7 @@
 #include "struct.h"
 #include "h.h"
 #include "send.h"
+#include "irc_string.h"
 
 #include <string.h>
 #include <stdlib.h>

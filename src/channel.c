@@ -82,7 +82,7 @@ int	clean_channelname(unsigned char *, aClient *);
 void	del_invite (aClient *, aChannel *);
 
 /* static functions used in set_mode */
-static char *pretty_mask(char *);
+static char* pretty_mask(char *);
 static char *fix_key(char *);
 static void collapse_signs(char *);
 static int errsent(int,int *);
@@ -157,45 +157,48 @@ aClient *find_chasing(aClient *sptr, char *user, int *chasing)
  * string marker (`\-`).  returns the 'fixed' string or "*" if the string
  * was NULL length or a NULL pointer.
  */
-static	char	*check_string(char *s)
+static char* check_string(char* s)
 {
   static char star[2] = "*";
-  char	*str = s;
+  char* str = s;
 
   if (BadPtr(s))
     return star;
 
-  for ( ;*s; s++)
+  for ( ; *s; ++s) {
     if (isspace(*s))
       {
 	*s = '\0';
 	break;
       }
-
-  return (str);
+  }
+  return str;
 }
 
 /*
  * create a string of form "foo!bar@fubar" given foo, bar and fubar
  * as the parameters.  If NULL, they become "*".
  */
-static	char *make_nick_user_host(char *nick, char *name, char *host)
+static char* make_nick_user_host(const char* nick, 
+                                 const char* name, const char* host)
 {
-  static char	namebuf[NICKLEN+USERLEN+HOSTLEN+6];
+  static char namebuf[NICKLEN + USERLEN + HOSTLEN + 6];
   int	n;
-  char	*ptr1,*ptr2;
+  char* s;
+  const char* p;
 
-  ptr1 = namebuf;
-  for(ptr2=check_string(nick),n=NICKLEN;*ptr2 && n--;)
-    *ptr1++ = *ptr2++;
-  *ptr1++ = '!';
-  for(ptr2=check_string(name),n=USERLEN;*ptr2 && n--;)
-    *ptr1++ = *ptr2++;
-  *ptr1++ = '@';
-  for(ptr2=check_string(host),n=HOSTLEN;*ptr2 && n--;)
-    *ptr1++ = *ptr2++;
-  *ptr1 = '\0';
-  return (namebuf);
+  s = namebuf;
+
+  for (p = nick, n = NICKLEN; *p && n--; )
+    *s++ = *p++;
+  *s++ = '!';
+  for(p = name, n = USERLEN; *p && n--; )
+    *s++ = *p++;
+  *s++ = '@';
+  for(p = host, n = HOSTLEN; *p && n--; )
+    *s++ = *p++;
+  *s = '\0';
+  return namebuf;
 }
 
 /*
@@ -209,7 +212,7 @@ static	int	add_banid(aClient *cptr, aChannel *chptr, char *banid)
   int	cnt = 0;
 
   if (MyClient(cptr))
-    (void)collapse(banid);
+    collapse(banid);
 
   for (ban = chptr->banlist; ban; ban = ban->next)
     {
@@ -432,16 +435,15 @@ static void del_matching_exception(aClient *cptr,aChannel *chptr)
 {
   register Link **ex;
   register Link *tmp;
-  char	s[NICKLEN+USERLEN+HOSTLEN+6];
+  char	s[NICKLEN + USERLEN + HOSTLEN+6];
   char  *s2;
 
   if (!IsPerson(cptr))
     return;
 
-  strcpy(s,make_nick_user_host(cptr->name, cptr->username,
-			       cptr->host));
+  strcpy(s, make_nick_user_host(cptr->name, cptr->username, cptr->host));
   s2 = make_nick_user_host(cptr->name, cptr->username,
-			   inetntoa((char *)&cptr->ip));
+			   inetntoa((char*) &cptr->ip));
 
   for (ex = &(chptr->exceptlist); *ex; ex = &((*ex)->next))
     {
@@ -505,10 +507,9 @@ static	int is_banned(aClient *cptr,aChannel *chptr)
   if (!IsPerson(cptr))
     return (0);
 
-  strcpy(s,make_nick_user_host(cptr->name, cptr->username,
-			       cptr->host));
+  strcpy(s, make_nick_user_host(cptr->name, cptr->username, cptr->host));
   s2 = make_nick_user_host(cptr->name, cptr->username,
-			   inetntoa((char *)&cptr->ip));
+			   inetntoa((char*) &cptr->ip));
 
   for (tmp = chptr->banlist; tmp; tmp = tmp->next)
     if (match(BANSTR(tmp), s) ||
@@ -947,21 +948,24 @@ int	m_mode(aClient *cptr,
  *
  */
 
-static	char	*pretty_mask(char *mask)
+static char* pretty_mask(char* mask)
 {
-  register	char	*cp, *user, *host;
+  register char* cp = mask;
+  register char* user;
+  register char* host;
 
-  if ((user = strchr((cp = mask), '!')))
+  if ((user = strchr(cp, '!')))
     *user++ = '\0';
   if ((host = strrchr(user ? user : cp, '@')))
     {
       *host++ = '\0';
       if (!user)
-	return make_nick_user_host(NULL, cp, host);
+	return make_nick_user_host("*", check_string(cp), check_string(host));
     }
   else if (!user && strchr(cp, '.'))
-    return make_nick_user_host(NULL, NULL, cp);
-  return make_nick_user_host(cp, user, host);
+    return make_nick_user_host("*", "*", check_string(cp));
+  return make_nick_user_host(check_string(cp), check_string(user), 
+                             check_string(host));
 }
 
 static	char	*fix_key(char *arg)

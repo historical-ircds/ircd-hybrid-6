@@ -25,7 +25,7 @@
  * $Id$
  *
  */
-#include "match.h"
+#include "irc_string.h"
 #include <assert.h>
 
 /*
