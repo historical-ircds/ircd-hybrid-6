@@ -548,7 +548,7 @@ sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
         }
     }
 
-        va_end(args);
+  va_end(args);
 } /* sendto_channel_butone() */
 
 void
@@ -792,9 +792,9 @@ sendto_channel_chanops_butserv(aChannel *chptr, aClient *from,
 	{
 	  vsendto_prefix_one(acptr, from, pattern, args);
 	}
-
   
   va_end(args);
+
 } /* sendto_channel_butserv() */
 /*
  * sendto_channel_chanops_butserv
@@ -820,9 +820,9 @@ sendto_channel_non_chanops_butserv(aChannel *chptr, aClient *from,
 	{
 	  vsendto_prefix_one(acptr, from, pattern, args);
 	}
-
   
   va_end(args);
+
 } /* sendto_channel_butserv() */
 
 /*
@@ -855,14 +855,14 @@ sendto_match_servs(aChannel *chptr, aClient *from, const char *pattern, ...)
 {
   va_list args;
   register aClient *cptr;
-  
-  va_start(args, pattern);
 
   if (chptr)
     {
       if (*chptr->chname == '&')
         return;
     }
+
+  va_start(args, pattern);
 
   for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
     {
@@ -873,6 +873,7 @@ sendto_match_servs(aChannel *chptr, aClient *from, const char *pattern, ...)
     }
 
   va_end(args);
+
 } /* sendto_match_servs() */
 
 /*
@@ -890,13 +891,13 @@ sendto_match_cap_servs(aChannel *chptr, aClient *from, int cap,
   va_list args;
   register aClient *cptr;
 
-  va_start(args, pattern);
-
   if (chptr)
     {
       if (*chptr->chname == '&')
         return;
     }
+
+  va_start(args, pattern);
 
   for(cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client)
     {
@@ -910,6 +911,7 @@ sendto_match_cap_servs(aChannel *chptr, aClient *from, int cap,
     }
 
   va_end(args);
+
 } /* sendto_match_cap_servs() */
 
 /*
@@ -974,6 +976,7 @@ sendto_match_butone(aClient *one, aClient *from, char *mask,
     } /* for (cptr = serv_cptr_list; cptr; cptr = cptr->next_server_client) */
 
   va_end(args);
+
 } /* sendto_match_butone() */
 
 /*
@@ -1027,6 +1030,7 @@ sendto_ops_flags(int flags, const char *pattern, ...)
         } /* for(cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client) */
     }
   va_end(args);
+
 }  /* sendto_ops_flags */
 
 /*
@@ -1058,6 +1062,7 @@ sendto_ops(const char *pattern, ...)
     }
 
   va_end(args);
+
 } /* sendto_ops() */
 
 
@@ -1104,6 +1109,7 @@ sendto_ops_butone(aClient *one, aClient *from, const char *pattern, ...)
     }
 
   va_end(args);
+
 } /* sendto_ops_butone() */
 
 /*
@@ -1152,7 +1158,8 @@ sendto_wallops_butone(aClient *one, aClient *from, const char *pattern, ...)
       vsendto_prefix_one(cptr->from, from, pattern, args);
     }
 
-        va_end(args);
+  va_end(args);
+
 } /* sendto_wallops_butone() */
 
 /*
@@ -1219,6 +1226,7 @@ sendto_prefix_one(register aClient *to, register aClient *from,
   vsendto_prefix_one(to, from, pattern, args);
 
   va_end(args);
+
 } /* sendto_prefix_one() */
 
 /*
@@ -1346,6 +1354,7 @@ sendto_realops(const char *pattern, ...)
   vsendto_realops(pattern, args);
 
   va_end(args);
+
 } /* sendto_realops() */
 
 /*
@@ -1402,6 +1411,7 @@ sendto_realops_flags(int flags, const char *pattern, ...)
     } /* for (cptr = oper_cptr_list; cptr; cptr = cptr->next_oper_client) */
 
   va_end(args);
+
 } /* sendto_realops_flags() */
 
 /*
@@ -1419,8 +1429,6 @@ ts_warn(const char *pattern, ...)
   static time_t last = 0;
   static int warnings = 0;
   time_t now;
-
-  va_start(args, pattern);
  
   /*
   ** if we're running with TS_WARNINGS enabled and someone does
@@ -1444,11 +1452,12 @@ ts_warn(const char *pattern, ...)
       warnings = 0;
     }
 
+  va_start(args, pattern);
   vsendto_realops(pattern, args);
   vsprintf(buf, pattern, args);
   log(L_CRIT, "%s", buf);
-
   va_end(args);
+
 } /* ts_warn() */
 
 void
