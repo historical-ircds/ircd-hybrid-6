@@ -266,7 +266,7 @@ int	parse(aClient *cptr, char *buffer, char *bufend)
   */
 
   if( *(ch + 3) == ' ' && /* ok, lets see if its a possible numeric.. */
-      isdigit(*ch) && isdigit(*(ch + 1)) && isdigit(*(ch + 2)) )
+      IsDigit(*ch) && IsDigit(*(ch + 1)) && IsDigit(*(ch + 2)) )
     {
       mptr = (struct Message *)NULL;
       numeric = (*ch - '0') * 100 + (*(ch + 1) - '0') * 10

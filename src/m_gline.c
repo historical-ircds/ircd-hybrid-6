@@ -59,19 +59,22 @@ extern char *smalldate(time_t);		/* defined in s_misc.c */
 
 /* internal functions */
 static void add_gline(aConfItem *);
-static void log_gline_request(char*,char*,char*,const char* oper_server,
-			      char *,char *,char *);
+static void log_gline_request(const char*,const char*,const char*,
+                              const char* oper_server,
+			      const char *,const char *,const char *);
 
-static void log_gline(aClient *,char *,GLINE_PENDING *,
-		      char *,char *,char *,const char* oper_server,
-                      char *,char *,char *);
+static void log_gline(aClient *,const char *,GLINE_PENDING *,
+		      const char *, const char *,const char *,
+                      const char* oper_server,
+                      const char *,const char *,const char *);
 
 
 static void expire_pending_glines();
 
-static int majority_gline(aClient*, char *,char *, char *, 
+static int majority_gline(aClient*, const char *,const char *, const char *, 
                           const char* serv_name,
-			  char *,char *,char *); /* defined in s_conf.c */
+			  const char *,const char *,const char *); 
+/* defined in s_conf.c */
 
 
 
@@ -272,7 +275,7 @@ int     m_gline(aClient *cptr,
       aconf->status = CONF_KILL;
       DupString(aconf->host, host);
 
-      (void)ircsprintf(buffer, "%s (%s)",reason,current_date);
+      ircsprintf(buffer, "%s (%s)",reason,current_date);
       
       DupString(aconf->passwd, buffer);
       DupString(aconf->name, user);
@@ -305,22 +308,22 @@ int     m_gline(aClient *cptr,
  *
  */
 static void log_gline_request(
-		      char *oper_nick,
-		      char *oper_user,
-		      char *oper_host,
+		      const char *oper_nick,
+		      const char *oper_user,
+		      const char *oper_host,
 		      const char* oper_server,
-		      char *user,
-		      char *host,
-		      char *reason)
+		      const char *user,
+		      const char *host,
+		      const char *reason)
 {
-  char buffer[512];
-  char filenamebuf[1024];
-  static  char    timebuffer[MAX_DATE_STRING];
-  struct tm *tmptr;
-  int out;
+  char        buffer[1024];
+  char        filenamebuf[PATH_MAX + 1];
+  static char timebuffer[MAX_DATE_STRING];
+  struct tm*  tmptr;
+  int         out;
 
-  (void)ircsprintf(filenamebuf, "%s.%s", 
-		ConfigFileEntry.glinefile, small_file_date((time_t)0));
+  ircsprintf(filenamebuf, "%s.%s", 
+             ConfigFileEntry.glinefile, small_file_date((time_t)0));
   if ((out = open(filenamebuf, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
     {
       sendto_realops("*** Problem opening %s",filenamebuf);
@@ -330,44 +333,41 @@ static void log_gline_request(
   tmptr = localtime(&NOW);
   strftime(timebuffer, MAX_DATE_STRING, "%Y/%m/%d %H:%M:%S", tmptr);
 
-  (void)ircsprintf(buffer,
-		   "#Gline for %s@%s [%s] requested by %s!%s@%s on %s at %s\n",
-		   user,host,reason,
-		   oper_nick,oper_user,oper_host,oper_server,
-		   timebuffer);
+  ircsprintf(buffer,
+	   "#Gline for %s@%s [%s] requested by %s!%s@%s on %s at %s\n",
+	   user,host,reason,
+	   oper_nick,oper_user,oper_host,oper_server,
+	   timebuffer);
 
-  if (write(out,buffer,strlen(buffer)) <= 0)
+  if (write(out, buffer, strlen(buffer)) <= 0)
     {
       sendto_realops("*** Problem writing to %s",filenamebuf);
-      (void)close(out);
-      return;
     }
-  return;
+  close(out);
 }
 
 /*
  * log_gline()
  *
  */
-static void log_gline(
-		      aClient *sptr,
-		      char *parv0,
+static void log_gline(aClient *sptr,
+		      const char *parv0,
 		      GLINE_PENDING *gline_pending_ptr,
-		      char *oper_nick,
-		      char *oper_user,
-		      char *oper_host,
+		      const char *oper_nick,
+		      const char *oper_user,
+		      const char *oper_host,
 		      const char *oper_server,
-		      char *user,
-		      char *host,
-		      char *reason)
+		      const char *user,
+		      const char *host,
+		      const char *reason)
 {
-  char buffer[512];
-  char filenamebuf[1024];
-  static  char    timebuffer[MAX_DATE_STRING];
-  struct tm *tmptr;
-  int out;
+  char         buffer[1024];
+  char         filenamebuf[PATH_MAX + 1];
+  static  char timebuffer[MAX_DATE_STRING + 1];
+  struct tm*   tmptr;
+  int          out;
 
-  (void)ircsprintf(filenamebuf, "%s.%s", 
+  ircsprintf(filenamebuf, "%s.%s", 
 		ConfigFileEntry.glinefile, small_file_date((time_t) 0));
   if ((out = open(filenamebuf, O_RDWR|O_APPEND|O_CREAT,0644))==-1)
     {
@@ -377,13 +377,16 @@ static void log_gline(
   tmptr = localtime(&NOW);
   strftime(timebuffer, MAX_DATE_STRING, "%Y/%m/%d %H:%M:%S", tmptr);
 
-  (void)ircsprintf(buffer,"#Gline for %s@%s %s added by the following\n",
+  ircsprintf(buffer,"#Gline for %s@%s %s added by the following\n",
 		   user,host,timebuffer);
 
-  if (safe_write(sptr,filenamebuf,out,buffer))
+  /*
+   * NOTE: safe_write closes the file if an error occurs
+   */
+  if (safe_write(sptr, filenamebuf, out, buffer))
     return;
 
-  (void)ircsprintf(buffer, "#%s!%s@%s on %s [%s]\n",
+  ircsprintf(buffer, "#%s!%s@%s on %s [%s]\n",
 		   gline_pending_ptr->oper_nick1,
 		   gline_pending_ptr->oper_user1,
 		   gline_pending_ptr->oper_host1,
@@ -394,7 +397,7 @@ static void log_gline(
   if (safe_write(sptr,filenamebuf,out,buffer))
     return;
 
-  (void)ircsprintf(buffer, "#%s!%s@%s on %s [%s]\n",
+  ircsprintf(buffer, "#%s!%s@%s on %s [%s]\n",
 		   gline_pending_ptr->oper_nick2,
 		   gline_pending_ptr->oper_user2,
 		   gline_pending_ptr->oper_host2,
@@ -402,10 +405,10 @@ static void log_gline(
 		   (gline_pending_ptr->reason2)?
 		   (gline_pending_ptr->reason2):"No reason");
 
-  if (safe_write(sptr,filenamebuf,out,buffer))
+  if (safe_write(sptr, filenamebuf, out, buffer))
     return;
 
-  (void)ircsprintf(buffer, "#%s!%s@%s on %s [%s]\n",
+  ircsprintf(buffer, "#%s!%s@%s on %s [%s]\n",
 		   oper_nick,
 		   oper_user,
 		   oper_host,
@@ -415,12 +418,11 @@ static void log_gline(
   if (safe_write(sptr,filenamebuf,out,buffer))
     return;
 
-  (void)ircsprintf(buffer, "K:%s:%s:%s\n",
-	host,user,reason);
+  ircsprintf(buffer, "K:%s:%s:%s\n", host,user,reason);
   if (safe_write(sptr,filenamebuf,out,buffer))
     return;
 
-  (void)close(out);
+  close(out);
 }
 
 /*
@@ -687,6 +689,42 @@ static void expire_pending_glines()
     }
 }
 
+static void add_new_majority_gline(const char* oper_nick,
+			     const char* oper_user,
+			     const char* oper_host,
+			     const char* oper_server,
+			     const char* user,
+			     const char* host,
+			     const char* reason)
+{
+  GLINE_PENDING* pending = (GLINE_PENDING*) MyMalloc(sizeof(GLINE_PENDING));
+  assert(0 != pending);
+
+  memset(pending, 0, sizeof(GLINE_PENDING));
+
+  strncpy_irc(pending->oper_nick1, oper_nick, NICKLEN);
+  /* pending->oper_nick2[0] = '\0'; */
+
+  strncpy_irc(pending->oper_user1, oper_user, USERLEN);
+  /* pending->oper_user2[0] = '\0'; */
+
+  strncpy_irc(pending->oper_host1, oper_host, HOSTLEN);
+   /* pending->oper_host2[0] = '\0'; */
+
+  pending->oper_server1 = find_or_add(oper_server);
+
+  strncpy_irc(pending->user, user, USERLEN);
+  strncpy_irc(pending->host, host, HOSTLEN);
+  DupString(pending->reason1, reason);
+  pending->reason2 = NULL;
+
+  pending->last_gline_time = NOW;
+  pending->time_request1 = NOW;
+
+  pending->next = pending_glines;
+  pending_glines = pending;
+}
+
 /*
  * majority_gline()
  *
@@ -703,53 +741,28 @@ static void expire_pending_glines()
  */
 
 static int majority_gline(aClient *sptr,
-			  char *oper_nick,
-			  char *oper_user,
-			  char *oper_host,
+			  const char *oper_nick,
+			  const char *oper_user,
+			  const char *oper_host,
 			  const char* oper_server,
-			  char *user,
-			  char *host,
-			  char *reason)
+			  const char *user,
+			  const char *host,
+			  const char *reason)
 {
-  GLINE_PENDING* new_pending_gline;
   GLINE_PENDING* gline_pending_ptr;
 
   /* special case condition where there are no pending glines */
 
   if (pending_glines == NULL) /* first gline request placed */
     {
-      new_pending_gline = (GLINE_PENDING*) MyMalloc(sizeof(GLINE_PENDING));
-      assert(0 != new_pending_gline);
-
-      memset(new_pending_gline, 0, sizeof(GLINE_PENDING));
-
-      strncpy_irc(new_pending_gline->oper_nick1, oper_nick, NICKLEN);
-      new_pending_gline->oper_nick2[0] = '\0';
-
-      strncpy_irc(new_pending_gline->oper_user1, oper_user, USERLEN);
-      new_pending_gline->oper_user2[0] = '\0';
-
-      strncpy_irc(new_pending_gline->oper_host1, oper_host, HOSTLEN);
-      new_pending_gline->oper_host2[0] = '\0';
-
-      new_pending_gline->oper_server1 = find_or_add(oper_server);
-
-      strncpy_irc(new_pending_gline->user, user, USERLEN);
-      strncpy_irc(new_pending_gline->host, host, HOSTLEN);
-      new_pending_gline->reason1 = strdup(reason);
-      new_pending_gline->reason2 = NULL;
-
-      new_pending_gline->last_gline_time = NOW;
-      new_pending_gline->time_request1 = NOW;
-
-      new_pending_gline->next = pending_glines;
-      pending_glines = new_pending_gline;
+      add_new_majority_gline(oper_nick, oper_user, oper_host, oper_server,
+                             user, host, reason);
       return NO;
     }
 
   expire_pending_glines();
 
-  for(gline_pending_ptr = pending_glines;
+  for (gline_pending_ptr = pending_glines;
       gline_pending_ptr; gline_pending_ptr = gline_pending_ptr->next)
     {
       if( (irccmp(gline_pending_ptr->user,user) == 0) &&
@@ -777,10 +790,10 @@ static int majority_gline(aClient *sptr,
 		  return NO;
 		}
 
-	      if(find_is_glined(host,user))
+	      if(find_is_glined(host, user))
 		return NO;
 
-	      if(find_is_klined(host,user,0L))
+	      if(find_is_klined(host, user, 0))
 		return NO;
 
 	      log_gline(sptr,sptr->name,gline_pending_ptr,
@@ -793,7 +806,7 @@ static int majority_gline(aClient *sptr,
 	      strncpy_irc(gline_pending_ptr->oper_nick2, oper_nick, NICKLEN);
 	      strncpy_irc(gline_pending_ptr->oper_user2, oper_user, USERLEN);
 	      strncpy_irc(gline_pending_ptr->oper_host2, oper_host, HOSTLEN);
-	      gline_pending_ptr->reason2 = strdup(reason);
+	      DupString(gline_pending_ptr->reason2, reason);
 	      gline_pending_ptr->oper_server2 = find_or_add(oper_server);
 	      gline_pending_ptr->last_gline_time = NOW;
 	      gline_pending_ptr->time_request1 = NOW;
@@ -804,37 +817,8 @@ static int majority_gline(aClient *sptr,
   /* Didn't find this user@host gline in pending gline list
    * so add it.
    */
-
-  new_pending_gline = (GLINE_PENDING *)malloc(sizeof(GLINE_PENDING));
-  if(new_pending_gline == (GLINE_PENDING *)NULL)
-    {
-      sendto_realops("No memory for GLINE, GLINE dropped");
-      return NO;
-    }
-
-  memset((void *)new_pending_gline,0,sizeof(GLINE_PENDING));
-
-  strncpy_irc(new_pending_gline->oper_nick1, oper_nick, NICKLEN);
-  new_pending_gline->oper_nick2[0] = '\0';
-
-  strncpy_irc(new_pending_gline->oper_user1, oper_user, USERLEN);
-  new_pending_gline->oper_user2[0] = '\0';
-
-  strncpy_irc(new_pending_gline->oper_host1, oper_host, HOSTLEN);
-  new_pending_gline->oper_host2[0] = '\0';
-
-  new_pending_gline->oper_server1 = find_or_add(oper_server);
-
-  strncpy_irc(new_pending_gline->user, user, USERLEN);
-  strncpy_irc(new_pending_gline->host, host, HOSTLEN);
-  new_pending_gline->reason1 = strdup(reason);
-  new_pending_gline->reason2 = (char *)NULL;
-
-  new_pending_gline->last_gline_time = NOW;
-  new_pending_gline->time_request1 = NOW;
-  new_pending_gline->next = pending_glines;
-  pending_glines = new_pending_gline;
-  
+  add_new_majority_gline(oper_nick, oper_user, oper_host, oper_server,
+                         user, host, reason);
   return NO;
 }
 

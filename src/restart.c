@@ -1,7 +1,8 @@
+#include "restart.h"
 #include "common.h"
 #include "h.h"
 #include "send.h"
-#include "restart.h"
+#include "struct.h"
 
 #include <signal.h>
 

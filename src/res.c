@@ -904,7 +904,7 @@ static int proc_answer(ResRQ* request, HEADER* header,
         address += sizeof(struct in_addr);
 
         if (!hp->h_name) {
-          strncpy_irc(name, hostbuf, endp - name);
+          strcpy(name, hostbuf);
           hp->h_name = name;
           name += strlen(name) + 1;
         }
@@ -935,7 +935,7 @@ static int proc_answer(ResRQ* request, HEADER* header,
        * ignore duplicate ptr records
        */
       if (!hp->h_name) {
-        strncpy_irc(name, hostbuf, endp - name);
+        strcpy(name, hostbuf);
         hp->h_name = name;
         name += strlen(name) + 1;
       }

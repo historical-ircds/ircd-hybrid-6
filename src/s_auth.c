@@ -35,6 +35,7 @@
 #include "s_bsd.h"
 #include "res.h"
 #include "h.h"
+#include "struct.h"
 
 #include <netdb.h>               /* struct hostent */
 #include <string.h>
@@ -527,7 +528,7 @@ void read_auth_reply(struct AuthRequest* auth)
 	if(*s == '@') {
 	    break;
 	  }
-        if ( !isspace(*s) && *s != ':' ) {
+        if ( !IsSpace(*s) && *s != ':' ) {
           *t++ = *s;
           count--;
         }

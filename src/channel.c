@@ -161,7 +161,7 @@ static char* check_string(char* s)
     return star;
 
   for ( ; *s; ++s) {
-    if (isspace(*s))
+    if (IsSpace(*s))
       {
 	*s = '\0';
 	break;
@@ -1104,7 +1104,7 @@ static  void     set_mode(aClient *cptr,
   parc--;
   parv++;
 
-  FOREVER
+  for ( ; ; )
     {
       if (BadPtr(curr))
 	{
@@ -1336,8 +1336,12 @@ static  void     set_mode(aClient *cptr,
 
 	  if (whatt == MODE_DEL)
 	    *chptr->mode.key = '\0';
-	  else
+	  else {
+            /*
+             * chptr was zeroed
+             */
 	    strncpy_irc(chptr->mode.key, arg, KEYLEN);
+          }
 
 	  break;
 
@@ -3534,6 +3538,9 @@ int	m_topic(aClient *cptr,
 	       is_chan_op(sptr, chptr))
 	    {
 	      /* setting a topic */
+              /*
+               * chptr zeroed
+               */
 	      strncpy_irc(chptr->topic, topic, TOPICLEN);
 #ifdef TOPIC_INFO
               /*
@@ -3953,25 +3960,25 @@ int	m_names( aClient *cptr,
 	    continue;
 	  if (lp->flags & CHFL_CHANOP)
 	    {
-	      (void)strcat(buf, "@");
+	      strcat(buf, "@");
 	      idx++;
 	    }
 	  else if (lp->flags & CHFL_VOICE)
 	    {
-	      (void)strcat(buf, "+");
+	      strcat(buf, "+");
 	      idx++;
 	    }
-	  (void)strncat(buf, c2ptr->name, NICKLEN);
+	  strncat(buf, c2ptr->name, NICKLEN);
 	  idx += strlen(c2ptr->name) + 1;
 	  flag = 1;
-	  (void)strcat(buf," ");
+	  strcat(buf," ");
 	  if (mlen + idx + NICKLEN > BUFSIZE - 3)
 	    {
 	      sendto_one(sptr, form_str(RPL_NAMREPLY),
 			 me.name, parv[0], buf);
-	      (void)strncpy_irc(buf, "* ", 3);
-	      (void)strncpy_irc(buf+2, chptr->chname, len + 1);
-	      (void)strcat(buf, " :");
+	      strncpy_irc(buf, "* ", 3);
+	      strncpy_irc(buf + 2, chptr->chname, len + 1);
+	      strcat(buf, " :");
 	      if (PubChannel(chptr))
 		*buf = '=';
 	      else if (SecretChannel(chptr))
@@ -3993,7 +4000,7 @@ int	m_names( aClient *cptr,
 
   /* Second, do all non-public, non-secret channels in one big sweep */
 
-  (void)strncpy_irc(buf, "* * :", 6);
+  strncpy_irc(buf, "* * :", 6);
   idx = 5;
   flag = 0;
   for (c2ptr = GlobalClientList; c2ptr; c2ptr = c2ptr->next)
@@ -4030,7 +4037,7 @@ int	m_names( aClient *cptr,
 	{
 	  sendto_one(sptr, form_str(RPL_NAMREPLY),
 		     me.name, parv[0], buf);
-	  (void)strncpy_irc(buf, "* * :", 6);
+	  strncpy_irc(buf, "* * :", 6);
 	  idx = 5;
 	  flag = 0;
 	}

@@ -80,9 +80,9 @@ aConfItem *find_special_conf(char *, int );
 static void add_q_line(aConfItem *);
 static void clear_q_lines(void);
 static void clear_special_conf(aConfItem **);
-static aConfItem *find_tkline(char *,char *);
+static aConfItem* find_tkline(const char* host, const char* name);
 
-aConfItem *temporary_klines = (aConfItem *)NULL;
+aConfItem *temporary_klines = NULL;
 
 static  char *set_conf_flags(aConfItem *,char *);
 static  int  oper_privs_from_string(int,char *);
@@ -281,6 +281,7 @@ int attach_Iline(aClient* cptr, struct hostent* hp,
   else
     {
       strncpy_irc(host, sockhost, HOSTLEN);
+      host[HOSTLEN] = '\0';
     }
 
   if (IsGotId(cptr))
@@ -289,7 +290,7 @@ int attach_Iline(aClient* cptr, struct hostent* hp,
                                        ntohl(cptr->ip.s_addr));
       if(aconf && !IsConfElined(aconf))
         {
-          if( (tkline_conf = find_tkline(host,cptr->username)) )
+          if( (tkline_conf = find_tkline(host, cptr->username)) )
             aconf = tkline_conf;
         }
     }
@@ -302,7 +303,7 @@ int attach_Iline(aClient* cptr, struct hostent* hp,
                                        ntohl(cptr->ip.s_addr));
       if(aconf && !IsConfElined(aconf))
         {
-          if( (tkline_conf = find_tkline(host,non_ident)) )
+          if( (tkline_conf = find_tkline(host, non_ident)) )
             aconf = tkline_conf;
         }
     }
@@ -2469,37 +2470,6 @@ aConfItem *find_kill(aClient* cptr)
 }
 
 /*
- * find_is_klined()
- *
- * inputs        - hostname
- *                - username
- *                - ip of possible "victim"
- * output        - matching aConfItem or NULL
- * side effects        -
- *
- * WARNING, no sanity checking on length of name,host etc.
- * thats expected to be done by caller.... *sigh* -Dianora
- */
-
-aConfItem *find_is_klined(char *host,char *name,unsigned long ip)
-{
-  aConfItem *found_aconf;
-
-  if( (found_aconf = find_tkline(host,name)) )
-    return(found_aconf);
-
-  /* find_matching_mtrie_conf() can return either CONF_KILL,
-   * CONF_CLIENT or NULL, i.e. no I line at all.
-   */
-
-  found_aconf = find_matching_mtrie_conf(host,name,ntohl(ip));
-  if(found_aconf && (found_aconf->status & (CONF_ELINE|CONF_DLINE|CONF_KILL)))
-    return(found_aconf);
-  else
-    return((aConfItem *)NULL);
-}
-
-/*
  * find_tkline
  *
  * inputs        - hostname
@@ -2511,7 +2481,7 @@ aConfItem *find_is_klined(char *host,char *name,unsigned long ip)
  * thats expected to be done by caller.... *sigh* -Dianora
  */
 
-static aConfItem *find_tkline(char *host,char *user)
+static aConfItem* find_tkline(const char* host, const char* user)
 {
   aConfItem *kill_list_ptr;        /* used for the link list only */
   aConfItem *last_list_ptr;
@@ -2552,7 +2522,38 @@ static aConfItem *find_tkline(char *host,char *user)
         }
     }
 
-  return((aConfItem *)NULL);
+  return NULL;
+}
+
+/*
+ * find_is_klined()
+ *
+ * inputs        - hostname
+ *                - username
+ *                - ip of possible "victim"
+ * output        - matching aConfItem or NULL
+ * side effects        -
+ *
+ * WARNING, no sanity checking on length of name,host etc.
+ * thats expected to be done by caller.... *sigh* -Dianora
+ */
+
+aConfItem *find_is_klined(const char* host, const char* name, unsigned long ip)
+{
+  aConfItem *found_aconf;
+
+  if( (found_aconf = find_tkline(host, name)) )
+    return(found_aconf);
+
+  /* find_matching_mtrie_conf() can return either CONF_KILL,
+   * CONF_CLIENT or NULL, i.e. no I line at all.
+   */
+
+  found_aconf = find_matching_mtrie_conf(host, name, ntohl(ip));
+  if(found_aconf && (found_aconf->status & (CONF_ELINE|CONF_DLINE|CONF_KILL)))
+    return(found_aconf);
+  else
+    return NULL;
 }
 
 /* add_temp_kline
@@ -2965,7 +2966,7 @@ int        is_address(char *host,
 
   while( (c = *host) )
     {
-      if(isdigit(c))
+      if(IsDigit(c))
         {
           octet *= 10;
           octet += (*host & 0xF);
@@ -3464,7 +3465,8 @@ void write_kline_or_dline_to_conf_and_notice_opers(
 }
 
 /*
- * safe_write
+ * safe_write - write string to file, if an error occurs close the file
+ * and notify opers
  *
  * inputs	- client pointer
  * 		- filename to write to
@@ -3475,17 +3477,15 @@ void write_kline_or_dline_to_conf_and_notice_opers(
  *		  i.e. checking for disk full errors etc.
  */
        
-int
-safe_write(aClient *sptr,
-	   const char *filename, int out,char *buffer)
+int safe_write(aClient *sptr, const char *filename, int out, char *buffer)
 {
-  if (write(out,buffer,strlen(buffer)) <= 0)
+  if (write(out, buffer, strlen(buffer)) <= 0)
     {
       sendto_realops("*** Problem writing to %s",filename);
-      (void)close(out);
-      return (-1);
+      close(out);
+      return -1;
     }
-  return(0);
+  return 0;
 }
 
 /* get_conf_name

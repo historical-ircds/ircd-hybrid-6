@@ -365,7 +365,7 @@ m_kline(aClient *cptr,
 {
   char buffer[512];
   char *p;
-  char cidr_form_host[64];
+  char cidr_form_host[HOSTLEN + 1];
   char *user, *host;
   char *reason;
   char *current_date;
@@ -615,11 +615,15 @@ m_kline(aClient *cptr,
    * Don't do the CIDR conversion for now of course.
    */
 
-  if(!temporary_kline_time && (ip_kline = is_address(host,&ip,&ip_mask)))
+  if(!temporary_kline_time && (ip_kline = is_address(host, &ip, &ip_mask)))
      {
-       strncpy_irc(cidr_form_host,host,32);
+       /*
+        * XXX - ack
+        */
+       strncpy_irc(cidr_form_host, host, 32);
+       cidr_form_host[32] = '\0';
        p = strchr(cidr_form_host,'*');
-       if(p)
+       if (p)
 	 {
 	   *p++ = '0';
 	   *p++ = '/';
@@ -792,7 +796,7 @@ static int isnumber(char *p)
 
   while(*p)
     {
-      if(isdigit(*p))
+      if(IsDigit(*p))
         {
           result *= 10;
           result += ((*p) & 0xF);
@@ -868,7 +872,7 @@ static char *cluster(char *hostname)
 	    zap_point = ipp;
 	  ipp++;
 	}
-      else if(!isdigit(*ipp))
+      else if(!IsDigit(*ipp))
 	{
 	  is_ip_number = NO;
 	  break;
@@ -882,6 +886,7 @@ static char *cluster(char *hostname)
       *zap_point++ = '*';		/* turn 111.222.333.444 into */
       *zap_point = '\0';		/*      111.222.333.*	     */
       strncpy_irc(result, temphost, HOSTLEN);
+      result[HOSTLEN] = '\0';
       return(result);
     }
   else
@@ -902,24 +907,27 @@ static char *cluster(char *hostname)
 	    host_mask = tld;		/* degenerate case hostname is
 					   '.com' etc. */
 
-	  while(host_mask != temphost)
+	  while (host_mask != temphost)
 	    {
 	      if(*host_mask == '.')
 		number_of_dots--;
 	      if(number_of_dots == 0)
 		{
 		  result[0] = '*';
-		  strncpy_irc(result+1,host_mask,HOSTLEN-1);
+		  strncpy_irc(result + 1, host_mask, HOSTLEN - 1);
+                  result[HOSTLEN] = '\0';
 		  return(result);
 		}
 	      host_mask--;
 	    }
 	  result[0] = '*';			/* foo.com => *foo.com */
-	  strncpy_irc(result+1,temphost,HOSTLEN);
+	  strncpy_irc(result + 1, temphost, HOSTLEN - 1);
+          result[HOSTLEN] = '\0';
 	}
       else	/* no tld found oops. just return it as is */
 	{
 	  strncpy_irc(result, temphost, HOSTLEN);
+          result[HOSTLEN] = '\0';
 	  return(result);
 	}
     }
@@ -949,7 +957,7 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
   char *host, *reason;
   char *p;
   aClient *acptr;
-  char cidr_form_host[64];
+  char cidr_form_host[HOSTLEN + 1];
   unsigned long ip_host;
   unsigned long ip_mask;
   aConfItem *aconf;
@@ -977,7 +985,8 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
     }
 
   host = parv[1];
-  strncpy_irc(cidr_form_host,host,32);
+  strncpy_irc(cidr_form_host, host, 32);
+  cidr_form_host[32] = '\0';
 
   if((p = strchr(cidr_form_host,'*')))
     {
@@ -1021,7 +1030,14 @@ m_dline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  return 0;
 	}
 
-      strncpy_irc(cidr_form_host,inetntoa((char *)&acptr->ip),32);
+      /*
+       * XXX - this is always a fixed length output, we can get away
+       * with strcpy here
+       *
+       * strncpy_irc(cidr_form_host, inetntoa((char *)&acptr->ip), 32);
+       * cidr_form_host[32] = '\0';
+       */
+       strcpy(cidr_form_host, inetntoa((char*) &acptr->ip));
       
       p = strchr(cidr_form_host,'.');
       if(!p)

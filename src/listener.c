@@ -22,7 +22,9 @@
 #include "s_bsd.h"
 #include "s_conf.h"
 #include "ircd_defs.h"
+#include "client.h"
 #include "h.h"
+#include "struct.h"
 #include "send.h"
 #include "irc_string.h"
 
@@ -30,6 +32,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>

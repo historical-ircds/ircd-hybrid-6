@@ -110,7 +110,7 @@ unsigned int hash_nick_name(const char* name)
 
   while (*name)
     {
-      h = (h << 4) - (h + (unsigned char)tolower(*name++));
+      h = (h << 4) - (h + (unsigned char)ToLower(*name++));
     }
 
   return(h & (U_MAX - 1));
@@ -131,7 +131,7 @@ unsigned int hash_channel_name(const char* name)
 
   while (*name && --i)
     {
-      h = (h << 4) - (h + (unsigned char)tolower(*name++));
+      h = (h << 4) - (h + (unsigned char)ToLower(*name++));
     }
 
   return(h & (CH_MAX - 1));
@@ -481,7 +481,7 @@ int m_hash(struct Client *cptr, struct Client *sptr,int parc,char *parv[])
         }
 
       ch = *parv[1];
-      if (islower(ch))
+      if (IsLower(ch))
         {
           table = clientTable;
           

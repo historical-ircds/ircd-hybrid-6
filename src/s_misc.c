@@ -146,7 +146,7 @@ char* small_file_date(time_t clock)
  */
 const char* my_name_for_link(const char* name, aConfItem* aconf)
 {
-  static char          namebuf[HOSTLEN];
+  static char          namebuf[HOSTLEN + 1];
   register int         count = aconf->port;
   register const char* start = name;
 
@@ -163,7 +163,7 @@ const char* my_name_for_link(const char* name, aConfItem* aconf)
 
   namebuf[0] = '*';
   strncpy_irc(&namebuf[1], name, HOSTLEN - 1);
-  namebuf[HOSTLEN - 1] = '\0';
+  namebuf[HOSTLEN] = '\0';
   return namebuf;
 }
 

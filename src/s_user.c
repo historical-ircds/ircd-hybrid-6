@@ -36,6 +36,7 @@
 #include "hash.h"
 #include "whowas.h"
 #include "listener.h"
+// #include "irc_string.h"
 #ifdef FLUD
 #include "blalloc.h"
 #endif /* FLUD */
@@ -381,36 +382,37 @@ int	hunt_server(aClient *cptr,
 }
 
 /*
-** 'do_nick_name' ensures that the given parameter (nick) is
-** really a proper string for a nickname (note, the 'nick'
-** may be modified in the process...)
-**
-**	RETURNS the length of the final NICKNAME (0, if
-**	nickname is illegal)
-**
-**  Nickname characters are in range
-**	'A'..'}', '_', '-', '0'..'9'
-**  anything outside the above set will terminate nickname.
-**  In addition, the first character cannot be '-'
-**  or a Digit.
-**
-**  Note:
-**	'~'-character should be allowed, but
-**	a change should be global, some confusion would
-**	result if only few servers allowed it...
-*/
-
-static	int do_nick_name(char *nick)
+ * clean_nick_name - ensures that the given parameter (nick) is
+ * really a proper string for a nickname (note, the 'nick'
+ * may be modified in the process...)
+ *
+ *	RETURNS the length of the final NICKNAME (0, if
+ *	nickname is illegal)
+ *
+ *  Nickname characters are in range
+ *	'A'..'}', '_', '-', '0'..'9'
+ *  anything outside the above set will terminate nickname.
+ *  In addition, the first character cannot be '-'
+ *  or a Digit.
+ *
+ *  Note:
+ *	'~'-character should be allowed, but
+ *	a change should be global, some confusion would
+ *	result if only few servers allowed it...
+ */
+static int clean_nick_name(char* nick)
 {
-  char *ch;
+  char* ch   = nick;
+  char* endp = ch + NICKLEN;
+  assert(0 != nick);
 
-  if (*nick == '-' || isdigit(*nick)) /* first character in [0..9-] */
+  if (*nick == '-' || IsDigit(*nick)) /* first character in [0..9-] */
     return 0;
   
-  for (ch = nick; *ch && (ch - nick) < NICKLEN; ch++)
-    if (!isvalid(*ch) || isspace(*ch))
+  for ( ; ch < endp && *ch; ++ch) {
+    if (!IsNickChar(*ch))
       break;
-
+  }
   *ch = '\0';
 
   return (ch - nick);
@@ -580,7 +582,7 @@ static int register_user(aClient *cptr, aClient *sptr,
                 *sptr->username = '~';
                 strncpy_irc(&sptr->username[1], username, USERLEN - 1);
              }
-             sptr->username[USERLEN] = '\0';
+           sptr->username[USERLEN] = '\0';
 	}
 
       /* password check */
@@ -896,7 +898,7 @@ static int valid_hostname(const char* hostname)
   bad_dns = NO;
   while(*p)
     {
-      if (!isalnum(*p))
+      if (!IsAlNum(*p))
 	{
 #ifdef RFC1035_ANAL
 	  if ((*p != '-') && (*p != '.'))
@@ -966,7 +968,7 @@ static int valid_username(const char* username)
   if(*p == '~')
     p++;
 
-  if( !isalnum(*p))
+  if( !IsAlNum(*p))
     return ( NO );
 
   return ( YES );
@@ -1097,10 +1099,7 @@ report_and_set_user_flags(aClient *sptr,aConfItem *aconf)
 **	parv[7]	= optional server
 **	parv[8]	= optional ircname
 */
-int	m_nick(aClient *cptr,
-	       aClient *sptr,
-	       int parc,
-	       char *parv[])
+int m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
   aClient* acptr;
   char	   nick[NICKLEN + 2];
@@ -1159,18 +1158,27 @@ int	m_nick(aClient *cptr,
     }
 
   fromTS = (parc > 6);
-  
-  if (MyConnect(sptr) && (s = (char *)strchr(parv[1], '~')))
-    *s = '\0';
-  strncpy_irc(nick, parv[1], NICKLEN);
 
   /*
-   * if do_nick_name() returns a null name OR if the server sent a nick
-   * name and do_nick_name() changed it in some way (due to rules of nick
+   * XXX - ok, we terminate the nick with the first '~' ?  hmmm..
+   *  later we allow them? isvalid used to think '~'s were ok
+   *  IsNickChar allows them as well
+   */
+  if (MyConnect(sptr) && (s = strchr(parv[1], '~')))
+    *s = '\0';
+  /*
+   * nick is an auto, need to terminate the string
+   */
+  strncpy_irc(nick, parv[1], NICKLEN);
+  nick[NICKLEN] = '\0';
+
+  /*
+   * if clean_nick_name() returns a null name OR if the server sent a nick
+   * name and clean_nick_name() changed it in some way (due to rules of nick
    * creation) then reject it. If from a server and we reject it,
    * and KILL it. -avalon 4/4/92
    */
-  if (do_nick_name(nick) == 0 ||
+  if (clean_nick_name(nick) == 0 ||
       (IsServer(cptr) && strcmp(nick, parv[1])))
     {
       sendto_one(sptr, form_str(ERR_ERRONEUSNICKNAME),
@@ -1571,8 +1579,8 @@ int nickkilldone(aClient *cptr, aClient *sptr, int parc,
       (void)add_to_client_hash_table(nick, sptr);
       if (parc > 8)
 	{
-	  int *s, flag;
-	  char *m;
+	  int   flag;
+	  char* m;
 	  
 	  /*
 	  ** parse the usermodes -orabidoo

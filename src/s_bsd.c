@@ -1918,7 +1918,7 @@ static struct sockaddr* connect_inet(aConfItem *aconf, aClient *cptr,
    * conf line, whether as a result of the hostname lookup or the ip#
    * being present instead. If we dont know it, then the connect fails.
    */
-  if (isdigit(*aconf->host) && INADDR_NONE == aconf->ipnum.s_addr)
+  if (IsDigit(*aconf->host) && INADDR_NONE == aconf->ipnum.s_addr)
     aconf->ipnum.s_addr = inet_addr(aconf->host);
   if (INADDR_NONE == aconf->ipnum.s_addr)
     {

@@ -46,7 +46,7 @@ static int hash(const char* string)
   hash_value = 0;
   while (*string)
     {
-      hash_value += tolower(*string);
+      hash_value += ToLower(*string);
       /* I don't like auto increments inside macro calls... -db */
       string++;
     }

@@ -130,7 +130,7 @@ depend:
 	${MKDEP} ${CPPFLAGS} ${SRCS} > .depend
 
 clean:
-	${RM} -f ${OBJS} *~ ircd.core core ircd 
+	${RM} -f *.o *~ ircd.core core ircd 
 
 distclean: clean
 	${RM} -f Makefile version.c.last

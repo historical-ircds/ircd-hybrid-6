@@ -53,7 +53,7 @@ static unsigned int hash_whowas_name(const char* name)
 
   while (*name)
     {
-      h = (h << 4) - (h + (unsigned char)tolower(*name++));
+      h = (h << 4) - (h + (unsigned char)ToLower(*name++));
     }
   return(h & (WW_MAX - 1));
 }
@@ -66,7 +66,6 @@ void add_history(aClient* cptr, int online)
   /*
    * XXX - can these be checked at compile time instead??
    */
-  assert(sizeof(cptr->name)     == sizeof(who->name));
   assert(sizeof(cptr->username) == sizeof(who->username));
   assert(sizeof(cptr->host)     == sizeof(who->hostname));
   assert(sizeof(cptr->info)     == sizeof(who->realname));
@@ -83,7 +82,8 @@ void add_history(aClient* cptr, int online)
    * NOTE: strcpy ok here, the sizes in the client struct MUST
    * match the sizes in the whowas struct
    */
-  strcpy(who->name,     cptr->name);
+  strncpy_irc(who->name, cptr->name, NICKLEN);
+  who->name[NICKLEN] = '\0';
   strcpy(who->username, cptr->username);
   strcpy(who->hostname, cptr->host);
   strcpy(who->realname, cptr->info);
@@ -91,7 +91,7 @@ void add_history(aClient* cptr, int online)
   /* Its not string copied, a pointer to the scache hash is copied
      -Dianora
    */
-  /*  strncpy_irc(who->servername, cptr->user->server,HOSTLEN); */
+  /*  strncpy_irc(who->servername, cptr->user->server, HOSTLEN); */
   who->servername = cptr->user->server;
 
   if (online)

@@ -102,7 +102,7 @@ int match(const char *mask, const char *name)
         m++;
       return (*m == 0);
     }
-    if (tolower(*m) != tolower(*n) && *m != '?') {
+    if (ToLower(*m) != ToLower(*n) && *m != '?') {
       if (!wild)
         return 0;
       m = ma;
@@ -175,7 +175,7 @@ int irccmp(const char *s1, const char *s2)
   assert(0 != s1);
   assert(0 != s2);
 
-  while ((res = toupper(*str1) - toupper(*str2)) == 0) {
+  while ((res = ToUpper(*str1) - ToUpper(*str2)) == 0) {
     if (*str1 == '\0')
       return 0;
     str1++;
@@ -192,7 +192,7 @@ int ircncmp(const char* s1, const char *s2, int n)
   assert(0 != s1);
   assert(0 != s2);
 
-  while ((res = toupper(*str1) - toupper(*str2)) == 0) {
+  while ((res = ToUpper(*str1) - ToUpper(*str2)) == 0) {
     str1++; str2++; n--;
     if (n == 0 || (*str1 == '\0' && *str2 == '\0'))
       return 0;
@@ -201,7 +201,7 @@ int ircncmp(const char* s1, const char *s2, int n)
 }
 
 
-unsigned char tolowertab[] = { 
+unsigned char ToLowerTab[] = { 
   0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa,
   0xb, 0xc, 0xd, 0xe, 0xf, 0x10, 0x11, 0x12, 0x13, 0x14,
   0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d,
@@ -236,7 +236,7 @@ unsigned char tolowertab[] = {
   0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff
 };
 
-unsigned char touppertab[] = { 
+unsigned char ToUpperTab[] = { 
   0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa,
   0xb, 0xc, 0xd, 0xe, 0xf, 0x10, 0x11, 0x12, 0x13, 0x14,
   0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d,
@@ -271,49 +271,63 @@ unsigned char touppertab[] = {
   0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff 
 };
 
-unsigned char char_atribs[] = {
-/* 0-7 */	CNTRL, CNTRL, CNTRL, CNTRL, CNTRL, CNTRL, CNTRL, CNTRL,
-/* 8-12 */	CNTRL, CNTRL|SPACE, CNTRL|SPACE, CNTRL|SPACE, CNTRL|SPACE,
-/* 13-15 */	CNTRL|SPACE, CNTRL, CNTRL,
-/* 16-23 */	CNTRL, CNTRL, CNTRL, CNTRL, CNTRL, CNTRL, CNTRL, CNTRL,
-/* 24-31 */	CNTRL, CNTRL, CNTRL, CNTRL, CNTRL, CNTRL, CNTRL, CNTRL,
-/* space */	PRINT|SPACE,
-/* !"#$%&'( */	PRINT, PRINT, PRINT, PRINT, PRINT, PRINT, PRINT, PRINT,
-/* )*+,-./ */	PRINT, PRINT, PRINT, PRINT, PRINT, PRINT, PRINT,
-/* 0123 */	PRINT|DIGIT, PRINT|DIGIT, PRINT|DIGIT, PRINT|DIGIT,
-/* 4567 */	PRINT|DIGIT, PRINT|DIGIT, PRINT|DIGIT, PRINT|DIGIT,
-/* 89:; */	PRINT|DIGIT, PRINT|DIGIT, PRINT, PRINT,
-/* <=>? */	PRINT, PRINT, PRINT, PRINT,
-/* @ */		PRINT,
-/* ABC */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* DEF */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* GHI */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* JKL */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* MNO */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* PQR */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* STU */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* VWX */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* YZ[ */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* \]^ */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* _   */	PRINT,
-/* abc */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* def */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* ghi */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* jkl */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* mno */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* pqr */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* stu */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* vwx */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* yz{ */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* \}~ */	PRINT|ALPHA, PRINT|ALPHA, PRINT|ALPHA,
-/* del */	0,
-/* 80-8f */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* 90-9f */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* a0-af */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* b0-bf */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* c0-cf */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* d0-df */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* e0-ef */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* f0-ff */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-		};
+unsigned int CharAttrs[] = {
+/* 0-6 */   CNTRL_C, CNTRL_C, CNTRL_C, CNTRL_C, CNTRL_C, CNTRL_C, CNTRL_C, 
+/* 7-10 */  CNTRL_C, CNTRL_C, CNTRL_C|SPACE_C,  CNTRL_C|SPACE_C, 
+/* 11-14 */ CNTRL_C|SPACE_C,  CNTRL_C|SPACE_C,  CNTRL_C|SPACE_C,  CNTRL_C, 
+/* 15-21 */ CNTRL_C, CNTRL_C, CNTRL_C, CNTRL_C, CNTRL_C, CNTRL_C, CNTRL_C, 
+/* 22-28 */ CNTRL_C, CNTRL_C, CNTRL_C, CNTRL_C, CNTRL_C, CNTRL_C, CNTRL_C, 
+/* 29-31 */ CNTRL_C, CNTRL_C, CNTRL_C,
+/* space */ PRINT_C|SPACE_C,
+/* !"#$% */ PRINT_C, PRINT_C, PRINT_C, PRINT_C, PRINT_C,
+/* &'()* */ PRINT_C, PRINT_C, PRINT_C, PRINT_C, PRINT_C, 
+/* +,-./ */ PRINT_C, PRINT_C, PRINT_C|NICK_C, PRINT_C, PRINT_C,
+/* 01 */    PRINT_C|DIGIT_C|NICK_C, PRINT_C|DIGIT_C|NICK_C,
+/* 23 */    PRINT_C|DIGIT_C|NICK_C, PRINT_C|DIGIT_C|NICK_C,
+/* 45 */    PRINT_C|DIGIT_C|NICK_C, PRINT_C|DIGIT_C|NICK_C,
+/* 67 */    PRINT_C|DIGIT_C|NICK_C, PRINT_C|DIGIT_C|NICK_C,
+/* 89 */    PRINT_C|DIGIT_C|NICK_C, PRINT_C|DIGIT_C|NICK_C,
+/* :;<=> */ PRINT_C, PRINT_C, PRINT_C, PRINT_C, PRINT_C, PRINT_C,
+/* ?@ */    PRINT_C, PRINT_C,
+/* AB */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* CD */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* EF */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* GH */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* IJ */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* KL */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* MN */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* OP */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C, 
+/* QR */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* ST */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* UV */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C, 
+/* WX */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* YZ */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* [\ */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* ]^ */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* _  */    PRINT_C|NICK_C,
+/* ab */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* cd */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* ef */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* gh */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* ij */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C, 
+/* kl */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* mn */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* op */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* qr */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* st */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* uv */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* wx */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* yz */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* {| */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* }~ */    PRINT_C|ALPHA_C|NICK_C, PRINT_C|ALPHA_C|NICK_C,
+/* del */   0,
+/* 80-8f */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 90-9f */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* a0-af */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* b0-bf */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* c0-cf */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* d0-df */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* e0-ef */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* f0-ff */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
 

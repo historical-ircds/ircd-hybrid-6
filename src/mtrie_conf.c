@@ -57,26 +57,30 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
-#define MAXPREFIX (HOSTLEN+USERLEN+15)
+#define MAXPREFIX (HOSTLEN + USERLEN + 15)
 
 /* internally defined functions */
 
 static void report_dup(char,aConfItem *);
 static int sortable(char *,char *);
-static void tokenize_and_stack(char *,char *);
+static void tokenize_and_stack(char* tokenized_out, const char* host);
 static void create_sub_mtrie(DOMAIN_LEVEL *,aConfItem *,int,char *);
-static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *,char *,char *,int);
+static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *, const char* host,
+                                 const char* user, int);
 char *show_iline_prefix(aClient *,aConfItem *,char *);
 static DOMAIN_PIECE *find_or_add_host_piece(DOMAIN_LEVEL *,int,char *);
-static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *,int,char *,char *);
-static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *,int,char *,char *);
+static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *,int,char *,
+                                     const char* host);
+static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *,int,char *, 
+                                       const char* user);
 static void find_or_add_user_piece(DOMAIN_PIECE *,aConfItem *,int,char *);
-static aConfItem *find_user_piece(DOMAIN_PIECE *,int,char *,char *);
+static aConfItem *find_user_piece(DOMAIN_PIECE *,int,char *, const char* user);
 
-static aConfItem *look_in_unsortable_ilines(char *,char *);
-static aConfItem *look_in_unsortable_klines(char *,char *);
-static aConfItem *find_wild_card_iline(char *);
+static aConfItem* look_in_unsortable_ilines(const char* host, const char* user);
+static aConfItem* look_in_unsortable_klines(const char* host, const char* user);
+static aConfItem* find_wild_card_iline(const char* user);
 
 static void report_sub_mtrie(aClient *sptr,int,DOMAIN_LEVEL *);
 static void report_unsortable_klines(aClient *,char *);
@@ -494,12 +498,12 @@ static void find_or_add_user_piece(DOMAIN_PIECE *piece_ptr,
  */
 
 static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr, int flags,
-		     char *host_piece,char *user)
+		     char *host_piece, const char* user)
 {
   DOMAIN_PIECE *ptr;
-  aConfItem *aconf=(aConfItem *)NULL;
-  aConfItem *first_aconf=(aConfItem *)NULL;
-  aConfItem *wild_aconf=(aConfItem *)NULL;
+  aConfItem *aconf=NULL;
+  aConfItem *first_aconf=NULL;
+  aConfItem *wild_aconf=NULL;
 
   wild_aconf = piece_ptr->wild_conf_ptr;
 
@@ -562,7 +566,7 @@ static aConfItem *find_user_piece(DOMAIN_PIECE *piece_ptr, int flags,
  */
 
 static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
-				     char *host_piece,char *user)
+				     char *host_piece, const char* user)
 {
   DOMAIN_PIECE *ptr;
   DOMAIN_PIECE *piece_ptr;
@@ -599,11 +603,11 @@ static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
  *
  */
 static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
-				     char *host_piece,char *user)
+				     char *host_piece, const char* user)
 {
-  aConfItem *first_aconf=(aConfItem *)NULL;
-  aConfItem *wild_aconf=(aConfItem *)NULL;
-  aConfItem *aconf=(aConfItem *)NULL;
+  aConfItem *first_aconf=NULL;
+  aConfItem *wild_aconf=NULL;
+  aConfItem *aconf=NULL;
   DOMAIN_PIECE *ptr;
   DOMAIN_PIECE *pptr;
   DOMAIN_PIECE *piece_ptr;
@@ -681,16 +685,16 @@ static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 
  */
 
-aConfItem *find_matching_mtrie_conf(char *host,char *user,
+aConfItem* find_matching_mtrie_conf(const char* host, const char* user,
 				    unsigned long ip)
 {
-  aConfItem *iline_aconf_unsortable=(aConfItem *)NULL;
+  aConfItem *iline_aconf_unsortable = NULL;
 #ifdef USE_IP_I_LINE_FIRST
-  aConfItem *ip_iline_aconf=(aConfItem *)NULL;
+  aConfItem *ip_iline_aconf = NULL;
 #endif
-  aConfItem *iline_aconf=(aConfItem *)NULL;
-  aConfItem *kline_aconf=(aConfItem *)NULL;
-  char tokenized_host[HOSTLEN+1];
+  aConfItem *iline_aconf = NULL;
+  aConfItem *kline_aconf = NULL;
+  char tokenized_host[HOSTLEN + 1];
   int top_of_stack = 0;
 
   /* I look in the unsortable i line list first, to find
@@ -713,7 +717,7 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
    * in the mtrie tree.
    */
 
-  last_found_iline_aconf = (aConfItem *)NULL;
+  last_found_iline_aconf = NULL;
 
 #ifdef USE_IP_I_LINE_FIRST
   /* 
@@ -733,12 +737,12 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
     {
 #endif
       stack_pointer = 0;
-      tokenize_and_stack(tokenized_host,host);
+      tokenize_and_stack(tokenized_host, host);
       top_of_stack = stack_pointer;
       saved_stack_pointer = -1;
       first_kline_trie_list = (DOMAIN_LEVEL *)NULL;
 
-      iline_aconf = find_sub_mtrie(trie_list,host,user,CONF_CLIENT);
+      iline_aconf = find_sub_mtrie(trie_list, host, user, CONF_CLIENT);
 
       if(!iline_aconf)
 	iline_aconf = last_found_iline_aconf;
@@ -882,7 +886,7 @@ aConfItem *find_matching_mtrie_conf(char *host,char *user,
 
 
 static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
-				 char *host,char *user,int flags)
+				 const char* host, const char* user,int flags)
 {
   DOMAIN_PIECE *cur_piece;
   char *cur_dns_piece;
@@ -1067,17 +1071,17 @@ static int sortable(char *tokenized,char *p)
  * scanning for sortability.
  */
 
-static void tokenize_and_stack(char *tokenized,char *p)
+static void tokenize_and_stack(char* tokenized, const char* p)
 {
-  char *d;
+  char* d = tokenized;
+  assert(0 != d);
 
   if (!p)
     return;
 
-  d = tokenized;
-  *tokenized = '\0';
+  *d = '\0';
 
-  while(*p)
+  while (*p)
     {
       if(*p == '.')
 	{
@@ -1106,7 +1110,7 @@ static void tokenize_and_stack(char *tokenized,char *p)
  * scan the link list of unsortable patterns
  */
 
-static aConfItem *look_in_unsortable_ilines(char *host,char *user)
+static aConfItem *look_in_unsortable_ilines(const char* host, const char* user)
 {
   aConfItem *found_conf;
 
@@ -1132,7 +1136,7 @@ static aConfItem *look_in_unsortable_ilines(char *host,char *user)
  * scan the link list of unsortable patterns
  */
 
-static aConfItem *look_in_unsortable_klines(char *host,char *user)
+static aConfItem *look_in_unsortable_klines(const char* host, const char* user)
 {
   aConfItem *found_conf;
 
@@ -1155,7 +1159,7 @@ static aConfItem *look_in_unsortable_klines(char *host,char *user)
  * scan the link list of top level domain *
  */
 
-static aConfItem *find_wild_card_iline(char *user)
+static aConfItem* find_wild_card_iline(const char* user)
 {
   aConfItem *found_conf;
 

@@ -7,15 +7,14 @@
  * $Id$
  */
 #include "blalloc.h"
-#include "struct.h"
-#include "common.h"
-#include "h.h"
-#include "numeric.h"
-#include "send.h"
+#include "ircd_defs.h"      /* DEBUG_BLOCK_ALLOCATOR */
+#include "irc_string.h"     /* MyMalloc */
 #include <string.h>
 #include <stdlib.h>
 
 #ifdef DEBUG_BLOCK_ALLOCATOR
+#include "send.h"           /* sendto_ops */
+
 const char* BH_CurrentFile = 0;   /* GLOBAL used for BlockHeap debugging */
 int         BH_CurrentLine = 0;   /* GLOBAL used for BlockHeap debugging */
 #endif
@@ -274,15 +273,17 @@ int BlockHeapFree(BlockHeap *bh, void *ptr)
 
 	  if( (walker->allocMap[ctr] & bitmask) == 0 )
 	    {
+#ifdef DEBUG_BLOCK_ALLOCATOR
 #if defined(USE_SYSLOG) && defined(SYSLOG_BLOCK_ALLOCATOR)
-	      syslog(LOG_DEBUG,"blalloc.c bit already clear in map caller %s %d",
+      syslog(LOG_DEBUG,"blalloc.c bit already clear in map caller %s %d",
 		     BH_CurrentFile, BH_CurrentLine);
 #endif
-	      sendto_ops("blalloc.c bit already clear in map elemSize %d caller %s %d",
+      sendto_ops("blalloc.c bit already clear in map elemSize %d caller %s %d",
 			 bh->elemSize,
 			 BH_CurrentFile,
 			 BH_CurrentLine);
 	      sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
+#endif /* DEBUG_BLOCK_ALLOCATOR */
 	    }
 	  else
 	    {
