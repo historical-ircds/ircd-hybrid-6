@@ -86,9 +86,9 @@ dead_link(aClient *to, char *notice)
   DBufClear(&to->recvQ);
   DBufClear(&to->sendQ);
   if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
-    sendto_realops(notice, get_client_name(to, FALSE));
+    sendto_realops(notice, get_client_name(to, MASK_IP));
   
-  Debug((DEBUG_ERROR, notice, get_client_name(to, FALSE)));
+  Debug((DEBUG_ERROR, notice, get_client_name(to, MASK_IP)));
 
   return (-1);
 } /* dead_link() */

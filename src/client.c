@@ -519,7 +519,7 @@ time_t check_pings(time_t currenttime)
                   IsHandshake(cptr))
                 {
                   sendto_ops("No response from %s, closing link",
-                             get_client_name(cptr, FALSE));
+                             get_client_name(cptr, MASK_IP));
                 }
               /*
                * this is used for KILL lines with time restrictions
@@ -1556,11 +1556,11 @@ const char* comment        /* Reason for the exit */
           if (sptr->fd >= 0)
             {
               if (cptr != NULL && sptr != cptr)
-                sendto_one(sptr, "ERROR :Closing Link: %s %s (%s)",
-                           sptr->host, sptr->name, comment);
+                sendto_one(sptr, "ERROR :Closing Link: %s (%s)",
+                           get_client_name(sptr, MASK_IP), comment);
               else
                 sendto_one(sptr, "ERROR :Closing Link: %s (%s)",
-                           sptr->host, comment);
+                           get_client_name(sptr, MASK_IP), comment);
             }
           /*
           ** Currently only server connections can have

@@ -447,7 +447,8 @@ int m_stats(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
         sendto_one(sptr, form_str(RPL_STATSUPTIME), me.name, parv[0],
                    now/86400, (now/3600)%24, (now/60)%60, now%60);
         sendto_one(sptr, form_str(RPL_STATSCONN), me.name, parv[0],
-                   MaxConnectionCount, MaxClientCount);
+                   MaxConnectionCount, MaxClientCount,
+                   Count.totalrestartcount);
         valid_stats++;
         break;
       }

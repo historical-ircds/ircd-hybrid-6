@@ -918,7 +918,7 @@ static void error_exit_client(struct Client* cptr, int error)
       
       if (0 == error)
         sendto_ops("Server %s closed the connection",
-                   get_client_name(cptr, FALSE));
+                   get_client_name(cptr, MASK_IP));
       else
         report_error("Lost connection to %s:%s", 
                      get_client_name(cptr, TRUE), current_error);
