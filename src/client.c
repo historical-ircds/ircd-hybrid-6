@@ -567,12 +567,13 @@ time_t check_pings(time_t currenttime)
 
       /*
        * Check UNKNOWN connections - if they have been in this state
-       * for > 100s, close them.
+       * for > UNKNOWN_TIME, close them.
        */
 
       if (IsUnknown(cptr))
         {
-          if (cptr->firsttime ? ((CurrentTime - cptr->firsttime) > 100) : 0)
+          if (cptr->firsttime ?
+	      ((CurrentTime - cptr->firsttime) > UNKNOWN_TIME) : 0)
             {
               dying_clients[die_index] = cptr;
               dying_clients_reason[die_index++] = "Connection Timed Out";

@@ -556,5 +556,9 @@ extern struct Client* next_client(struct Client* next, const char* name);
 extern struct Client* next_client_double(struct Client* next, 
                                          const char* name);
 
+/* 
+ * Time we allow clients to spend in unknown state, before tossing.
+ */
+#define UNKNOWN_TIME 20
 
 #endif /* INCLUDED_client_h */
