@@ -214,7 +214,8 @@ static  int     add_banid(aClient *cptr, aChannel *chptr, char *banid)
 {
   Link  *ban;
 
-  if (chptr->num_bed == MAXBANS)
+  /* dont let local clients overflow the banlist */
+  if ((!IsServer(cptr)) && (chptr->num_bed == MAXBANS))
 	  if (MyClient(cptr))
 	    {
 	      sendto_one(cptr, form_str(ERR_BANLISTFULL),
@@ -282,7 +283,8 @@ static  int     add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
 {
   Link  *ex, *ban;
 
-  if (chptr->num_bed == MAXBANS)
+  /* dont let local clients overflow the banlist */
+  if ((!IsServer(cptr)) && (chptr->num_bed == MAXBANS))
     if (MyClient(cptr))
       {
         sendto_one(cptr, form_str(ERR_BANLISTFULL),
@@ -359,20 +361,24 @@ static  int     add_denyid(aClient *cptr, aChannel *chptr, char *banid)
   /* truncate stuff to some sort of reasonable length */
   banid[NICKLEN+USERLEN+HOSTLEN]='\0';
 
+  /* trust servers, otherwise */
   /* check if its a valid regular expression */
-  regfree(&my_regex);
-  if (regcomp(&my_regex, banid,
-              REG_EXTENDED|REG_NOSUB|REG_NEWLINE))
-    return -1;
-  
-  if (chptr->num_bed == MAXBANS)
-    if (MyClient(cptr))
-	    {
-	      sendto_one(cptr, form_str(ERR_BANLISTFULL),
-                   me.name, cptr->name,
-                   chptr->chname, banid);
-	      return -1;
-	    }
+  if (!IsServer(cptr)) {
+    regfree(&my_regex);
+    if (regcomp(&my_regex, banid,
+                REG_EXTENDED|REG_NOSUB|REG_NEWLINE))
+      return -1;
+ 
+    /* dont allow local users to overflow the ban list */
+    if (chptr->num_bed == MAXBANS)
+      if (MyClient(cptr))
+        {
+          sendto_one(cptr, form_str(ERR_BANLISTFULL),
+                     me.name, cptr->name,
+                     chptr->chname, banid);
+          return -1;
+        }
+  }
   
   for (ban = chptr->denylist; ban; ban = ban->next)
     if (strcmp(BANSTR(ban), banid)==0) 
