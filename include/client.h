@@ -293,7 +293,7 @@ struct Client
 /*
  * ts stuff
  */
-#define TS_CURRENT      4       /* current TS protocol version */
+#define TS_CURRENT      3       /* current TS protocol version */
 #define TS_MIN          3       /* minimum supported TS protocol version */
 #define TS_DOESTS       0x20000000
 #define DoesTS(x)       ((x)->tsinfo == TS_DOESTS)
