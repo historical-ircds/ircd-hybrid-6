@@ -2,6 +2,17 @@
 *** HYBRID CHANGELOG
 *** Newest entries at top
 
+version hybrid-6-b54   23-Mar-1999
+* rewrote kline code (mtrie_conf.c), no more reverse, its faster now
+  and ... works
+* no more arbritray spoofs. too many complaints, it spoofs as 
+  oper.server.name now
+-Dianora
+
+version hybrid-6-b54   19-Mar-1999
+* fixed SLAVE_SERVERS in LOCOPS
+-Dianora
+	
 version hybrid-6-b53   17-Mar-1999
 * fixed misplaced #ifdef's and } causing undef'ed ANTI_SPAMBOT_EXTRA to fail
 in s_serv.c s_user.c

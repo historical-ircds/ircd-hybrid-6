@@ -145,6 +145,13 @@ aClient *find_name(char *name, aClient *cptr)
     return (c2ptr);
   if (!strchr(name, '*'))
     return c2ptr;
+
+  /* hmmm hot spot for host masked servers (ick)
+   * a separate link list for all servers would help here
+   * instead of having to scan 50k client structs. (ick)
+   * -Dianora
+   */
+
   for (c2ptr = client; c2ptr; c2ptr = c2ptr->next)
     {
       if (!IsServer(c2ptr) && !IsMe(c2ptr))
@@ -442,17 +449,6 @@ int	parse(aClient *cptr, char *buffer, char *bufend)
 }
 
 
-/*
-init_tree_parse()
-
-inputs		- pointer to msg_table defined in msg.h 
-output		- NONE
-side effects	- MUST MUST be called at startup ONCE before
-		  any other keyword hash routine is used.
-
-	-Dianora, orabidoo
-*/
-
 /* for qsort'ing the msgtab in place -orabidoo */
 static int mcmp(struct Message *m1, struct Message *m2)
 {
@@ -460,6 +456,16 @@ static int mcmp(struct Message *m1, struct Message *m2)
 }
 
 
+/*
+ * init_tree_parse()
+ *
+ * inputs		- pointer to msg_table defined in msg.h 
+ * output	- NONE
+ * side effects	- MUST MUST be called at startup ONCE before
+ *		  any other keyword hash routine is used.
+ *
+ * 	-Dianora, orabidoo
+ */
 /* Initialize the msgtab parsing tree -orabidoo
  */
 void init_tree_parse(struct Message *mptr)
@@ -553,15 +559,15 @@ static struct Message *do_msg_tree(MESSAGE_TREE *mtree, char *prefix,
 }
 
 /*
-tree_parse()
-
-inputs		- pointer to command in upper case
-output		- NULL pointer if not found
-		  struct Message pointer to command entry if found
-side effects	- NONE
-
-	-Dianora, orabidoo
-*/
+ * tree_parse()
+ * 
+ * inputs	- pointer to command in upper case
+ * output	- NULL pointer if not found
+ *		  struct Message pointer to command entry if found
+ * side effects	- NONE
+ *
+ *	-Dianora, orabidoo
+ */
 
 static struct Message *tree_parse(char *cmd)
 {

@@ -68,11 +68,10 @@ static int sortable(char *,char *);
 static void tokenize_and_stack(char *,char *);
 static void create_sub_mtrie(DOMAIN_LEVEL *,aConfItem *,int,char *);
 static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *,char *,char *,int);
-static int wildcmp(char *,char *);
 char *show_iline_prefix(aClient *,aConfItem *,char *);
 static DOMAIN_PIECE *find_or_add_host_piece(DOMAIN_LEVEL *,int,char *);
 static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *,int,char *,char *);
-static DOMAIN_PIECE *find_wild_host_piece(DOMAIN_LEVEL *,int,char *,char *);
+static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *,int,char *,char *);
 static void find_or_add_user_piece(DOMAIN_PIECE *,aConfItem *,int,char *);
 static aConfItem *find_user_piece(DOMAIN_PIECE *,char *,char *);
 
@@ -600,42 +599,56 @@ static DOMAIN_PIECE *find_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
  * inputs	- pointer to current level 
  *		- piece of domain name being looked for
  *		- usename
- * output	- pointer to next DOMAIN_LEVEL to use
+ * output	- aConfItem or NULL
  * side effects -
+ * 
+ * Eventually the mtrie code could be extended to deal with
+ * such cases as "*foo*.some.host.com" ,
+ * the mtrie handling the sortable portion down to the "*foo*"
+ * portion, this would reduce the length of the unsortable link list,
+ * speeding up this code. I'll do that later, or someone else can.
+ * This would necessitate logic changes in sortable()
  *
  */
 
-static DOMAIN_PIECE *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
+static aConfItem *find_wild_host_piece(DOMAIN_LEVEL *level_ptr,int flags,
 				     char *host_piece,char *user)
 {
+  aConfItem *aconf;
   DOMAIN_PIECE *ptr;
+  DOMAIN_PIECE *pptr;
   DOMAIN_PIECE *piece_ptr;
   int index;
   
+  if(*host_piece != '*')
+    return((aConfItem *)NULL);
+
   index = *host_piece&(MAX_PIECE_LIST-1);
   piece_ptr = level_ptr->piece_list[index];
-
+  
   for(ptr=piece_ptr;ptr;ptr=ptr->next_piece)
     {
-      if(!wildcmp(ptr->host_piece,host_piece) && (ptr->flags & flags))
+      if(!match(ptr->host_piece,host_piece) && (ptr->flags & flags))
 	{
-	  return(ptr);
+	  for(pptr = ptr; pptr; pptr=pptr->next_piece)
+	    {
+	      if(!pptr->conf_ptr)
+		continue;
+	      aconf = pptr->conf_ptr;
+	      if( (!matches(pptr->host_piece,host_piece)) &&
+		  (!matches(aconf->name,user)))
+		{
+		  if(aconf->flags & flags)
+		    {
+		      return(aconf);
+		    }
+		}
+	      
+	    }
 	}
     }
 
-  index = '*'&(MAX_PIECE_LIST-1);
-  piece_ptr = level_ptr->piece_list[index];
-
-  for(ptr=piece_ptr;ptr;ptr=ptr->next_piece)
-    {
-      if( ((ptr->host_piece[0] == '*') && (ptr->host_piece[1] == '\0'))
-	  && (ptr->flags & flags))
-	{
-	  return(ptr);
-	}
-    }
-
-  return((DOMAIN_PIECE *)NULL);
+  return((aConfItem *)NULL);
 }
 
 
@@ -857,56 +870,15 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
   if(flags & CONF_KILL)
     {
       /* looking for CONF_KILL, look first for a kline at this level */
+      /* This handles: "*foobar.com" type of kline "*.bar.com" type of kline
+       */
 
-      cur_piece = find_host_piece(cur_level,flags,"*",user);
-      if(cur_piece)
-	{
-	  aconf = find_user_piece(cur_piece,"*",user);
-	  if(aconf && aconf->status & CONF_KILL)
-	    return(aconf);
+      aconf = find_wild_host_piece(cur_level,flags,cur_dns_piece,user);
+      if(aconf && aconf->status & CONF_KILL)
+	return(aconf);
 
-	  aconf = find_user_piece(cur_piece,cur_dns_piece,user);
-	  if(aconf && aconf->status & CONF_KILL)
-	    return(aconf);
-
-	  aconf= (aConfItem *)NULL;
-	}
+      /* no k-line yet, so descend deeper yet if possible */
       cur_piece = find_host_piece(cur_level,flags,cur_dns_piece,user);
-
-      /* look for a match at this level of the tree */
-
-      if(cur_piece)
-	{
-	  aconf = find_user_piece(cur_piece,"*",user);
-	  if(aconf && aconf->status & CONF_KILL)
-	    return(aconf);
-
-	  aconf = find_user_piece(cur_piece,cur_dns_piece,user);
-	  if(aconf && aconf->status & CONF_KILL)
-	    return(aconf);
-
-	  aconf= (aConfItem *)NULL;
-	}
-
-      if(!aconf)
-	{
-	  cur_wild_piece =
-	    find_wild_host_piece(cur_level,flags,cur_dns_piece,user);
-
-	  if(cur_wild_piece)
-	    {
-	      aconf = find_user_piece(cur_wild_piece,"*",user);
-	      if(aconf && aconf->status & CONF_KILL)
-		return(aconf);
-
-	      aconf = find_user_piece(cur_wild_piece,cur_dns_piece,user);
-	      if(aconf && aconf->status & CONF_KILL)
-		return(aconf);
-
-	    }
-	  else
-	    return((aConfItem *)NULL);
-	}
     }
   else
     {
@@ -931,11 +903,13 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
     cur_level = cur_piece->next_level;
   else
     {
+      aconf = find_wild_host_piece(cur_level,flags,cur_dns_piece,user);
+
       if(aconf = find_user_piece(cur_piece,cur_dns_piece,user))
 	return(aconf);
       else
 	{
-	  cur_piece = find_wild_host_piece(cur_level,flags,cur_dns_piece,user);
+
 	  if(!cur_piece)
 	    return((aConfItem *)NULL);
 	  return(find_user_piece(cur_piece,cur_dns_piece,user));
@@ -961,6 +935,7 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
 static int sortable(char *tokenized,char *p)
 {
   int  state=0;
+  char *d;		/* destination */
 
   if (!p)
     return(0);			/* NULL patterns aren't allowed in ordered
@@ -976,12 +951,8 @@ static int sortable(char *tokenized,char *p)
 				 *  whoever uses '?' patterns anyway ? -Sol
 				 */
 
+  d = tokenized;
 
-  tokenized = tokenized+HOSTLEN;
-  *tokenized-- = '\0';
-
-  if((*p == '*') && (*(p+1) == '\0'))	/* special case a single '*' */
-    return(-2);
 
   FOREVER
     {
@@ -990,89 +961,58 @@ static int sortable(char *tokenized,char *p)
 	case 0:
 	  if(*p == '*')
 	    {
-	      *tokenized = *p;
-	      state = 1;
-	    }
-	  else if(*p == '.')
-	    {
-	      *tokenized = '\0';
-	      dns_stack[stack_pointer++] = tokenized+1;
+	      *d = *p;
+	      state = 1;	/* Go into state 1 if first char is '*' */
 	    }
 	  else
 	    {
-	      *tokenized = *p;
+	      *d = *p;		/* Go into state 2 if first char is not '*' */
 	      state = 2;
 	    }
 	  break;
 
 	case 1:
-	  if(!*p)		/* '*' followed by anything other than '*' */
-	    {
-	      *tokenized = *p;
-	      dns_stack[stack_pointer++] = tokenized;
-	      return(-1);	/* then by null terminator is sortable */
-	    }
+	  if(*p == '\0')	
+	    return(-2);		/* followed by null terminator is special */
 	  else if(*p == '*')	/* '*' followed by another '*' is unsortable */
 	    return(0);
-	  else if(*p == '.')
+	  else if(*p == '.')	/* this is a "*.foo" type kline */
 	    {
-	      *tokenized = '\0';
-	      dns_stack[stack_pointer++] = tokenized+1;
+	      *d = '\0';
+	      dns_stack[stack_pointer++] = tokenized;
+	      tokenized = d+1;
 	    }
 	  else
-	    {
-	      *tokenized = *p;
-	      state = 3;	/*  '*' followed by non '*' sit in state 3 */
-	    }
+	    *d = *p;
 	  break;
 	 
 	case 2:
 	  if(*p == '\0')	/* state 2, sit here if no '*' seen and */
 	    {
-	      *tokenized = *p;
-	      dns_stack[stack_pointer++] = tokenized+1;
+	      *d = '\0';
+	      dns_stack[stack_pointer++] = tokenized;
 	      return(-1);	/* if null terminator seen, its sortable */
 	    }
-	  else if(*p == '*')	/* '*' on end of string is still fine */
+	  else if(*p == '*')
 	    {
-	      if(*(p+1) == '\0')  /* use look ahead, if p+1 is null */
-		return(1);	/* its sortable in forward order */
-	      else		/* else its "blah*blah" which is not sortable*/
-		return(0);
+	      /* its "blah*blah/or blah*" which is not sortable*/
+	      return(0);
 	    }
 	  else if (*p == '.')
 	    {
-	      *tokenized = '\0';
-	      dns_stack[stack_pointer++] = tokenized+1;
+	      *d = '\0';
+	      dns_stack[stack_pointer++] = tokenized;
+	      tokenized = d+1;
 	    }
 	  else
-	    *tokenized = *p;
+	    *d = *p;
 	  break;
 	 
-	case 3:
-	  if(*p== '\0')		/* I got a '*' already then "blah" */
-	    {
-	      *tokenized = *p;
-	      dns_stack[stack_pointer++] = tokenized+1;
-	      return(-1);	/* so its a "*blah" which is sortable */
-	    }
-	  else if(*p == '*')	/* I got a '*' already, so its not sortable */
-	    return(0);
-	  else if(*p == '.')
-	    {
-	      *tokenized = '\0';
-	      dns_stack[stack_pointer++] = tokenized+1;
-	    }
-	  else
-	    *tokenized = *p;
-	  break;		/* else just stick in state 3 */
-
 	default:
-	  *tokenized = *p;
-	  state = 0;
+	  return(0);
 	  break;
 	}
-      tokenized--;
+      d++;
       p++;
     }
 }
@@ -1080,7 +1020,7 @@ static int sortable(char *tokenized,char *p)
 /*
  * tokenize_and_stack
  *
- * inputs	- pointer to where reversed output
+ * inputs	- pointer to tokenized output
  * output	- none
  * side effects	-
  * This function tokenizes the input, reversing it onto
@@ -1090,28 +1030,30 @@ static int sortable(char *tokenized,char *p)
 
 static void tokenize_and_stack(char *tokenized,char *p)
 {
+  char *d;
+
   if (!p)
     return;
 
-  tokenized = tokenized+HOSTLEN;
-  *tokenized-- = '\0';
+  d = tokenized;
+  *tokenized = '\0';
 
   while(*p)
     {
       if(*p == '.')
 	{
-	  *tokenized = '\0';
-	  dns_stack[stack_pointer++] = tokenized+1;
+	  *d = '\0';
+	  dns_stack[stack_pointer++] = tokenized;
+	  tokenized = d+1;
 	}
       else
-	{
-	  *tokenized = *p;
-	}
+	*d = *p;
 
-      tokenized--;
+      d++;
       p++;
     }
-  dns_stack[stack_pointer++] = tokenized+1;
+  *d = '\0';
+  dns_stack[stack_pointer++] = tokenized;
 }
 
 /*
@@ -1746,42 +1688,6 @@ static void clear_sub_mtrie(DOMAIN_LEVEL *dl_ptr)
   MyFree(dl_ptr);
 }
 
-/*
- * wildcmp
- *
- * inputs	- pointer s1 to string
- *		- pointer s2 to string
- * output	- 0 or 1, 0 if string "match" 1 if they do not
- * side effects	-
- *
- * walk the pointers until either both strings match
- * or there is a wildcard '*' char found at the end of s1
- * (Thank you sean, "walk the pointers" indeed.)
- *
- */
-
-static int wildcmp(char *s1,char *s2)
-{
-  while (*s1 & *s2)
-    {
-      if(*s1 == '*')	/* match everything at this point */
-	return(0);
-
-      /* very unportable, 0xDF force upper case of ASCII characters */
-
-      if( (*s1 & 0xDF) != (*s2 & 0xDF) )
-	return(1);
-      s1++;
-      s2++;
-    }
-
-  /* special case *foo matching foo */
-
-  if(*s1 == '*')
-    return(0);
-  else
-    return((*s1 & 0xDF) - (*s2 * 0xDF));
-}
 
 /*
  * add_to_ip_ilines

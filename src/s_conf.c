@@ -234,9 +234,15 @@ int	attach_Iline(aClient *cptr,
 	  /* Thanks for spoof idea amm */
 	  if(IsConfDoSpoofIp(aconf))
 	    {
+	      /* abuse it, lose it. */
+	      /*
 	      sendto_realops("%s spoofing: %s as %s",
 			     cptr->name,host,aconf->mask);
 	      strncpyzt(cptr->sockhost,aconf->mask,sizeof(cptr->sockhost));
+	      */
+	      /* default to oper.server.name.tld */
+	      strncpyzt(cptr->sockhost,"oper.",sizeof(cptr->sockhost));
+	      strcat(cptr->sockhost,me.name);
 	    }
 	  else
 	    strncpyzt(cptr->sockhost,host,sizeof(cptr->sockhost));
