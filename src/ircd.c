@@ -98,8 +98,9 @@ static  time_t	io_loop(time_t);
 /* externally needed functions */
 
 extern	void dbuf_init();		/* defined in dbuf.c */
-extern  void   read_motd();		/* defined in s_serv.c */
-extern  void   read_help();		/* defined in s_serv.c */
+extern  void read_motd();		/* defined in s_serv.c */
+extern  void read_help();		/* defined in s_serv.c */
+extern  void sync_channels(time_t);	/* defined in channel.c */
 
 char	**myargv;
 int	portnum = -1;		    /* Server port number, listening this */
@@ -1212,7 +1213,7 @@ time_t io_loop(time_t delay)
 		       "System clock was reset into the future - (%d+60 > %d)",
 		       timeofday, lasttimeofday);
       report_error(to_send, &me);
-      sync_channels();
+      sync_channels(timeofday - lasttimeofday);
     }
 
   NOW = timeofday;

@@ -2819,7 +2819,7 @@ int	m_topic(aClient *cptr,
 		char *parv[])
 {
   aChannel *chptr = NullChn;
-  char	*topic = NULL, *name, *p = NULL;
+  char	*topic = (char *)NULL, *name, *p = (char *)NULL;
   
   if (parc < 2)
     {
@@ -2830,80 +2830,72 @@ int	m_topic(aClient *cptr,
 
   name = strtoken(&p, parv[1], ",");
 
-  /* multi channel topic's are known now to be used by cloners
+  /* multi channel topic's are now known to be used by cloners
    * trying to flood off servers.. so disable it *sigh* - Dianora
    */
 
   /* disabled multi channel topic */
   /*  while(name) */
-
+  if(name)
     {
-      if (parc > 1 && IsChannelName(name))
+      if (IsChannelName(name))
 	{
 	  chptr = find_channel(name, NullChn);
 	  if (!chptr || !IsMember(sptr, chptr))
 	    {
 	      sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
 			 me.name, parv[0], name);
-	      name = strtoken(&p, (char *)NULL, ",");
-	      /* disabled multi channel topic */
-	      /*	      continue; */
 	      return 0;
 	    }
-	  if (parc > 2)
-	    topic = parv[2];
-	}
 
-      if (!chptr)
-	{
-	  if (!IsChannelName(name))
-            sendto_one(sptr, rpl_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
-               name);
-          else
-            sendto_one(sptr, rpl_str(RPL_NOTOPIC), me.name, parv[0], name);
-	  return 0;
-	}
-
-      if (!topic)  /* only asking  for topic  */
-	{
-	  if (chptr->topic[0] == '\0')
-	    sendto_one(sptr, rpl_str(RPL_NOTOPIC),
-		       me.name, parv[0], chptr->chname);
-	  else
+	  if (parc > 2) /* setting topic */
 	    {
-	      sendto_one(sptr, rpl_str(RPL_TOPIC),
-			 me.name, parv[0],
-			 chptr->chname, chptr->topic);
+	      topic = parv[2];
+
+	      if (((chptr->mode.mode & MODE_TOPICLIMIT) == 0 ||
+		   is_chan_op(sptr, chptr)) && topic)
+		{
+		  /* setting a topic */
+		  strncpyzt(chptr->topic, topic, sizeof(chptr->topic));
 #ifdef TOPIC_INFO
-	      sendto_one(sptr, rpl_str(RPL_TOPICWHOTIME),
-			 me.name, parv[0], chptr->chname,
-			 chptr->topic_nick,
-			 chptr->topic_time);
+		  strcpy(chptr->topic_nick, sptr->name);
+		  chptr->topic_time = timeofday;
 #endif
+		  sendto_match_servs(chptr, cptr,":%s TOPIC %s :%s",
+				     parv[0], chptr->chname,
+				     chptr->topic);
+		  sendto_channel_butserv(chptr, sptr, ":%s TOPIC %s :%s",
+					 parv[0],
+					 chptr->chname, chptr->topic);
+		}
+	      else
+		sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+			   me.name, parv[0], chptr->chname);
 	    }
-	} 
-      else if (((chptr->mode.mode & MODE_TOPICLIMIT) == 0 ||
-		is_chan_op(sptr, chptr)) && topic)
-	{
-	  /* setting a topic */
-	  strncpyzt(chptr->topic, topic, sizeof(chptr->topic));
+	  else  /* only asking  for topic  */
+	    {
+	      if (chptr->topic[0] == '\0')
+		sendto_one(sptr, rpl_str(RPL_NOTOPIC),
+			   me.name, parv[0], chptr->chname);
+	      else
+		{
+		  sendto_one(sptr, rpl_str(RPL_TOPIC),
+			     me.name, parv[0],
+			     chptr->chname, chptr->topic);
 #ifdef TOPIC_INFO
-	  strcpy(chptr->topic_nick, sptr->name);
-	  chptr->topic_time = timeofday;
+		  sendto_one(sptr, rpl_str(RPL_TOPICWHOTIME),
+			     me.name, parv[0], chptr->chname,
+			     chptr->topic_nick,
+			     chptr->topic_time);
 #endif
-	  sendto_match_servs(chptr, cptr,":%s TOPIC %s :%s",
-			     parv[0], chptr->chname,
-			     chptr->topic);
-	  sendto_channel_butserv(chptr, sptr, ":%s TOPIC %s :%s",
-				 parv[0],
-				 chptr->chname, chptr->topic);
+		}
+	    } 
 	}
       else
-	sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-		   me.name, parv[0], chptr->chname);
-
-      /* disabled multi channel topics */
-      /*      name = strtoken(&p, (char *)NULL, ","); */
+	{
+	  sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
+		     name);
+	}
     }
   return 0;
 }
@@ -3736,17 +3728,21 @@ int	m_sjoin(aClient *cptr,
  * -Dianora
  */
 
-void sync_channels()
+void sync_channels(time_t delta)
 {
-  Reg	aChannel	*chptr;
+  register	aChannel	*chptr;
+  time_t newts;
 
   for (chptr = channel; chptr; chptr = chptr->nextch)
     {
       if(chptr->locally_created)
 	{
+	  newts = chptr->channelts + delta;
 	  sendto_realops("*** resetting TS on locally created %s from %d to %d",
-			 chptr->chname,chptr->channelts,timeofday);
-	  chptr->channelts = timeofday;
+			 chptr->chname,chptr->channelts,
+			 newts);
+
+	  chptr->channelts = newts;
 	}
     }
  
