@@ -19,13 +19,14 @@
  *   $Id$
  */
 #include "class.h"
-#include "struct.h"
+#include "client.h"
 #include "common.h"
-#include "numeric.h"
 #include "ircd.h"
+#include "list.h"
+#include "numeric.h"
 #include "s_conf.h"
 #include "send.h"
-#include "list.h"
+#include "struct.h"
 
 #define BAD_CONF_CLASS          -1
 #define BAD_PING                -2

@@ -20,6 +20,7 @@
  */
 #include "s_conf.h"
 #include "channel.h"
+#include "client.h"
 #include "common.h"
 #include "hash.h"
 #include "irc_string.h"
@@ -31,6 +32,7 @@
 #include <assert.h>
 #include <fcntl.h>     /* O_RDWR ... */
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
@@ -137,7 +139,7 @@ unsigned int hash_channel_name(const char* name)
       h = (h << 4) - (h + (unsigned char)ToLower(*name++));
     }
 
-  return(h & (CH_MAX - 1));
+  return (h & (CH_MAX - 1));
 }
 
 /*
@@ -145,7 +147,7 @@ unsigned int hash_channel_name(const char* name)
  *
  * Nullify the hashtable and its contents so it is completely empty.
  */
-void clear_client_hash_table()
+static void clear_client_hash_table()
 {
 #ifdef        DEBUGMODE
   clhits = 0;
@@ -157,7 +159,7 @@ void clear_client_hash_table()
   memset(clientTable, 0, sizeof(struct HashEntry) * U_MAX);
 }
 
-void clear_channel_hash_table()
+static void clear_channel_hash_table()
 {
 #ifdef        DEBUGMODE
   chmiss = 0;
@@ -167,6 +169,12 @@ void clear_channel_hash_table()
                                                 sizeof(struct HashEntry));
 #endif
   memset(channelTable, 0, sizeof(struct HashEntry) * CH_MAX);
+}
+
+void init_hash(void)
+{
+  clear_client_hash_table();
+  clear_channel_hash_table();
 }
 
 /*

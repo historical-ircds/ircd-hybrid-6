@@ -3,12 +3,16 @@
  *
  * $Id$
  */
-#include "struct.h"
+
+#include "client.h"
 #include "common.h"
-#include "numeric.h"
-#include "ircd.h"
-#include "send.h"
 #include "irc_string.h"
+#include "ircd.h"
+#include "numeric.h"
+#include "send.h"
+#include "struct.h"
+
+
 #include <assert.h>
 #include <string.h>
 

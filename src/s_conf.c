@@ -24,6 +24,7 @@
 #include "s_conf.h"
 #include "channel.h"
 #include "class.h"
+#include "client.h"
 #include "common.h"
 #include "dline_conf.h"
 #include "hash.h"
@@ -39,6 +40,7 @@
 #include "send.h"
 #include "struct.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>

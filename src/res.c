@@ -11,6 +11,7 @@
  *     --Bleep (Thomas Helvey <tomh@inxpress.net>)
  */
 #include "res.h"
+#include "client.h"
 #include "common.h"
 #include "irc_string.h"
 #include "ircd.h"

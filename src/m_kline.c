@@ -25,6 +25,7 @@
 #include "m_kline.h"
 #include "channel.h"
 #include "class.h"
+#include "client.h"
 #include "common.h"
 #include "dline_conf.h"
 #include "irc_string.h"

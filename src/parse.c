@@ -21,11 +21,13 @@
  */
 #include "parse.h"
 #include "channel.h"
+#include "client.h"
 #include "common.h"
 #include "hash.h"
 #include "irc_string.h"
 #include "ircd.h"
 #include "numeric.h"
+#include "s_log.h"
 #include "s_stats.h"
 #include "send.h"
 #include "struct.h"
@@ -34,6 +36,7 @@
 #include "msg.h"
 #undef MSGTAB
 
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -373,7 +376,7 @@ void init_tree_parse(struct Message *mptr)
    */
   if (mpt->cmd)
     {
-      fprintf(stderr, "bad msgtab entry: ``%s''\n", mpt->cmd);
+      log(L_CRIT, "bad msgtab entry: ``%s''\n", mpt->cmd);
       exit(1);
     }
 }
@@ -440,7 +443,7 @@ static struct Message *do_msg_tree(MESSAGE_TREE *mtree, char *prefix,
     } 
   else
     {
-      fprintf(stderr, "do_msg_tree: this should never happen!\n");
+      assert(0);
       exit(1);
     }
 }

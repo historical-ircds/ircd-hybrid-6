@@ -24,6 +24,7 @@
  */
 #include "m_gline.h"
 #include "channel.h"
+#include "client.h"
 #include "common.h"
 #include "config.h"
 #include "dline_conf.h"

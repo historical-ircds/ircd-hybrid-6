@@ -52,8 +52,7 @@ struct HashEntry {
 extern struct HashEntry hash_get_channel_block(int i);
 extern size_t hash_get_client_table_size(void);
 extern size_t hash_get_channel_table_size(void);
-extern void   clear_channel_hash_table(void);
-extern void   clear_client_hash_table(void);
+extern void   init_hash(void);
 extern void   add_to_client_hash_table(const char* name, 
                                        struct Client* client);
 extern void   del_from_client_hash_table(const char* name, 

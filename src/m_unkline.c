@@ -25,6 +25,7 @@
  */
 #include "m_commands.h"
 #include "channel.h"
+#include "client.h"
 #include "common.h"
 #include "dline_conf.h"
 #include "fileio.h"
@@ -38,6 +39,7 @@
 #include "send.h"
 #include "struct.h"
 
+#include <stdio.h>
 #include <time.h>
 #include <string.h>
 #include <unistd.h>

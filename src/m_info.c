@@ -6,6 +6,7 @@
 #define DEFINE_M_INFO_DATA
 #include "m_info.h"
 #include "channel.h"
+#include "client.h"
 #include "common.h"
 #include "irc_string.h"
 #include "ircd.h"

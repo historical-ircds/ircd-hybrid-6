@@ -25,6 +25,7 @@
 #include "s_user.h"
 #include "channel.h"
 #include "class.h"
+#include "client.h"
 #include "common.h"
 #include "fdlist.h"
 #include "flud.h"

@@ -21,13 +21,16 @@
  *   $Id$
  */ 
 #include "packet.h"
-#include "struct.h"
+#include "client.h"
 #include "common.h"
-#include "s_zip.h"
 #include "ircd.h"
 #include "list.h"
 #include "parse.h"
- 
+#include "s_zip.h"
+#include "struct.h"
+
+
+
 /*
 ** dopacket
 **      cptr - pointer to client structure for which the buffer data

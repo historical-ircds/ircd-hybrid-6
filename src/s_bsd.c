@@ -21,6 +21,7 @@
  */
 #include "s_bsd.h"
 #include "class.h"
+#include "client.h"
 #include "common.h"
 #include "config.h"
 #include "fdlist.h"

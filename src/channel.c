@@ -37,17 +37,18 @@
  * $Id$
  */
 #include "channel.h"
-#include "struct.h"
+#include "client.h"
 #include "common.h"
-#include "numeric.h"
+#include "hash.h"
+#include "irc_string.h"
 #include "ircd.h"
 #include "list.h"
-#include "send.h"
-#include "hash.h"
-#include "whowas.h"
-#include "s_user.h"
+#include "numeric.h"
 #include "s_serv.h"       /* captab */
-#include "irc_string.h"
+#include "s_user.h"
+#include "send.h"
+#include "struct.h"
+#include "whowas.h"
 
 #include <assert.h>
 #include <string.h>

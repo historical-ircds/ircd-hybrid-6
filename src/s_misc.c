@@ -23,6 +23,7 @@
  *  $Id$
  */
 #include "s_misc.h"
+#include "client.h"
 #include "common.h"
 #include "irc_string.h"
 #include "ircd.h"
