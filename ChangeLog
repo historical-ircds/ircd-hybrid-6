@@ -1,3 +1,10 @@
+*** 19991009_2 by lusky
+revved patchlevel to b108
+fixed -DNDEBUG in Makefile.in (th)
+fix for resolver blocking on Linux 2.0 /libc5 (th)
+workaround for broken poll() in Linux 2.0 / libc5 (th)
+
+
 *** 19991009_1 by lusky
 added -DNDEBUG back to CFLAGS (jl)
 put channel topic back before names (db)
