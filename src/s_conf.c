@@ -2311,7 +2311,8 @@ static void initconf(FBFILE* file, int use_include)
             {
               aconf->flags |= CONF_FLAGS_DO_IDENTD;
               *p = '\0';
-              strncpy_irc(aconf->user,aconf->host,USERLEN);	      
+	      MyFree(aconf->user);
+	      DupString(aconf->user,aconf->host);
               p++;
               strncpy_irc(aconf->host,p, HOSTLEN );      
             }
