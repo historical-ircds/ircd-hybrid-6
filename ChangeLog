@@ -1,3 +1,7 @@
+*** 19990805_2 by lusky
+fixed rehash dump, would core on bad admin line
+
+
 *** 19990805_1 by lusky
 bumped patchlevel for new tarball
 added KNOWN BUGS to relnotes
