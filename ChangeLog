@@ -1,3 +1,16 @@
+androsyn    2002/03/04 18:07:26 EST	(20020304_0)
+
+  Modified files:
+    src                  adns.c 
+  Log:
+  Fixed Lamego's bug.  I'm not sure how the hell this got pass..and its
+  working for most everybody..
+  
+  Revision  Changes    Path
+  1.10      +4 -1      ircd-hybrid-6/src/adns.c
+
+
+
 lusky       2002/02/17 13:28:31 EST	(20020217_2)
 
   Modified files:
