@@ -1177,7 +1177,7 @@ static void initialize_global_set_options(void)
 
   MAXCLIENTS = MAX_CLIENTS;
   NOISYHTM = NOISY_HTM;
-  AUTOCONN = 1;
+  GlobalSetOptions.autoconn = 1;
 
 #ifdef FLUD
   FLUDNUM = FLUD_NUM;

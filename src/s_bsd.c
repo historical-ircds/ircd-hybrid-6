@@ -93,14 +93,14 @@ const char* const NONB_ERROR_MSG   = "set_non_blocking failed for %s:%s";
 const char* const OPT_ERROR_MSG    = "disable_sock_options failed for %s:%s";
 const char* const SETBUF_ERROR_MSG = "set_sock_buffers failed for server %s:%s";
 
-aClient*       local[MAXCONNECTIONS];
+struct Client*       local[MAXCONNECTIONS];
 
 int            highest_fd = 0;
 
 static struct sockaddr_in mysk;
 static char               readBuf[READBUF_SIZE];
 
-static int        completed_connection (aClient *);
+static int        completed_connection (struct Client *);
 static void       do_dns_async(void);
 
 
@@ -192,7 +192,7 @@ void report_error(const char* text, const char* who, int error)
  */
 static void connect_dns_callback(void* vptr, struct DNSReply* reply)
 {
-  aConfItem* aconf = (aConfItem*) vptr;
+  struct ConfItem* aconf = (struct ConfItem*) vptr;
   aconf->dns_pending = 0;
   if (reply) {
     memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
@@ -389,7 +389,7 @@ void init_sys()
  * localhost) or from the ip# converted into a string. 
  * 0 = success, -1 = fail.
  */
-static int check_init(aClient* cptr, char* sockn)
+static int check_init(struct Client* cptr, char* sockn)
 {
   struct sockaddr_in sk;
   int                len = sizeof(struct sockaddr_in);
@@ -434,7 +434,7 @@ static int check_init(aClient* cptr, char* sockn)
  * also updates reason if a K-line
  *
  */
-int check_client(aClient *cptr,char *username,char **reason)
+int check_client(struct Client *cptr,char *username,char **reason)
 {
   static char     sockname[HOSTLEN + 1];
   int             i;
@@ -459,8 +459,8 @@ int check_client(aClient *cptr,char *username,char **reason)
   return 0;
 }
 
-static int check_server(aClient* cptr, struct DNSReply* dns_reply,
-                        aConfItem *c_conf, aConfItem *n_conf)
+static int check_server(struct Client* cptr, struct DNSReply* dns_reply,
+                        struct ConfItem *c_conf, struct ConfItem *n_conf)
 {
   char*           name;
   Link*           lp = cptr->confs;
@@ -594,7 +594,7 @@ static int check_server(aClient* cptr, struct DNSReply* dns_reply,
  * -1 = Access denied
  * -2 = Bad socket.
  */
-int check_server_init(aClient* cptr)
+int check_server_init(struct Client* cptr)
 {
   struct ConfItem* c_conf    = NULL;
   struct ConfItem* n_conf    = NULL;
@@ -663,10 +663,10 @@ int check_server_init(aClient* cptr)
  * Return         TRUE, if successfully completed
  *                FALSE, if failed and ClientExit
  */
-static int completed_connection(aClient *cptr)
+static int completed_connection(struct Client *cptr)
 {
-  aConfItem *c_conf;
-  aConfItem *n_conf;
+  struct ConfItem *c_conf;
+  struct ConfItem *n_conf;
 
   SetHandshake(cptr);
         
@@ -698,7 +698,7 @@ static int completed_connection(aClient *cptr)
  * connect_inet - open a socket and connect to another server
  * returns true (1) if successful, false (0) otherwise
  */
-static int connect_inet(aConfItem *aconf, aClient *cptr)
+static int connect_inet(struct ConfItem *aconf, struct Client *cptr)
 {
   static struct sockaddr_in sin;
   assert(0 != aconf);
@@ -783,8 +783,19 @@ static int connect_inet(aConfItem *aconf, aClient *cptr)
 /*
  * connect_server - start or complete a connection to another server
  * returns true (1) if successful, false (0) otherwise
+ *
+ * aconf must point to a valid C:line
+ * m_connect            calls this with a valid by client and a null reply
+ * try_connections      calls this with a null by client, and a null reply
+ * connect_dns_callback call this with a null by client, and a valid reply
+ *
+ * XXX - if this comes from an m_connect message and a dns query needs to
+ * be done, we loose the information about who started the connection and
+ * it's considered an auto connect. This should only happen if the server
+ * was started with the quick boot option, which is rarely if ever used.
  */
-int connect_server(aConfItem* aconf, aClient* by, struct DNSReply* reply)
+int connect_server(struct ConfItem* aconf, 
+                   struct Client* by, struct DNSReply* reply)
 {
   struct Client* cptr;
 
@@ -813,25 +824,26 @@ int connect_server(aConfItem* aconf, aClient* by, struct DNSReply* reply)
   /*
    * If we dont know the IP# for this host and it is a hostname and
    * not a ip# string, then try and find the appropriate host record.
+   *
+   * NOTE: if this is called from connect_dns_callback, the aconf ip
+   * address will have been set so we don't need to worry about 
+   * looping dns queries.
    */
   if (INADDR_NONE == aconf->ipnum.s_addr) {
-    if (reply)
-      memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
-    else {
-      if ((aconf->ipnum.s_addr = inet_addr(aconf->host)) == INADDR_NONE) {
-        struct DNSQuery  query;
-        
-        query.vptr     = aconf;
-        query.callback = connect_dns_callback;
-        reply = gethost_byname(aconf->host, &query);
-        Debug((DEBUG_NOTICE, "co_sv: reply %x ac %x na %s ho %s",
-               reply, aconf, aconf->name, aconf->host));
-        if (!reply) {
-          aconf->dns_pending = 1;
-          return 0;
-        }
-        memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
+    assert(0 == reply);
+    if ((aconf->ipnum.s_addr = inet_addr(aconf->host)) == INADDR_NONE) {
+      struct DNSQuery  query;
+      
+      query.vptr     = aconf;
+      query.callback = connect_dns_callback;
+      reply = gethost_byname(aconf->host, &query);
+      Debug((DEBUG_NOTICE, "co_sv: reply %x ac %x na %s ho %s",
+             reply, aconf, aconf->name, aconf->host));
+      if (!reply) {
+        aconf->dns_pending = 1;
+        return 0;
       }
+      memcpy(&aconf->ipnum, reply->hp->h_addr, sizeof(struct in_addr));
     }
   }
   cptr = make_client(NULL);
@@ -915,9 +927,9 @@ int connect_server(aConfItem* aconf, aClient* by, struct DNSReply* reply)
  *        Close the physical connection. This function must make
  *        MyConnect(cptr) == FALSE, and set cptr->from == NULL.
  */
-void close_connection(aClient *cptr)
+void close_connection(struct Client *cptr)
 {
-  aConfItem *aconf;
+  struct ConfItem *aconf;
 
   if (IsServer(cptr))
     {
@@ -1030,7 +1042,7 @@ void close_connection(aClient *cptr)
  */
 void add_connection(struct Listener* listener, int fd)
 {
-  aClient*           new_client;
+  struct Client*           new_client;
   struct sockaddr_in addr;
   int                len = sizeof(struct sockaddr_in);
 
@@ -1254,7 +1266,7 @@ int read_message(time_t delay, unsigned char mask)        /* mika */
         else in the code.--msa
       */
 {
-  aClient*            cptr;
+  struct Client*      cptr;
   int                 nfds;
   struct timeval      wait;
   time_t              delay2 = delay;
@@ -1485,7 +1497,7 @@ int read_message(time_t delay, unsigned char mask)        /* mika */
 
 int read_message(time_t delay, unsigned char mask)
 {
-  aClient*             cptr;
+  struct Client*       cptr;
   int                  nfds;
   struct timeval       wait;
 

@@ -79,8 +79,6 @@ static int  m_set_parser(char *);
 time_t last_used_wallops = 0L;
 #endif
 
-static int autoconn = 1;           /* allow auto conns or not */
-
 /*
  * hunt_server - Do the basic thing in delivering the message (command)
  *      across the relays to the specific server (server) for
@@ -100,10 +98,10 @@ static int autoconn = 1;           /* allow auto conns or not */
  *
  *      returns: (see #defines)
  */
-int hunt_server(aClient *cptr, aClient *sptr, char *command,
+int hunt_server(struct Client *cptr, struct Client *sptr, char *command,
                 int server, int parc, char *parv[])
 {
-  aClient *acptr;
+  struct Client *acptr;
   int wilds;
 
   /*
@@ -187,47 +185,48 @@ int hunt_server(aClient *cptr, aClient *sptr, char *command,
  */
 time_t try_connections(time_t currenttime)
 {
-  aConfItem     *aconf;
-  aClient       *cptr;
-  aConfItem     **pconf;
-  int           connecting, confrq;
-  time_t        next = 0;
-  aClass        *cltmp;
-  aConfItem     *con_conf = (aConfItem *)NULL;
-  int           con_class = 0;
+  struct ConfItem*   aconf;
+  struct Client*     cptr;
+  struct ConfItem**  pconf;
+  int                connecting = FALSE;
+  int                confrq;
+  time_t             next = 0;
+  struct Class*      cltmp;
+  struct ConfItem*   con_conf = NULL;
+  int                con_class = 0;
 
-  connecting = FALSE;
-  Debug((DEBUG_NOTICE,"Connection check at   : %s",
-         myctime(currenttime)));
+  Debug((DEBUG_NOTICE,"Connection check at: %s", myctime(currenttime)));
+
   for (aconf = ConfigItemList; aconf; aconf = aconf->next )
     {
-      /* Also when already connecting! (update holdtimes) --SRB */
+      /*
+       * Also when already connecting! (update holdtimes) --SRB 
+       */
       if (!(aconf->status & CONF_CONNECT_SERVER) || aconf->port <= 0)
         continue;
       cltmp = ClassPtr(aconf);
       /*
-      ** Skip this entry if the use of it is still on hold until
-      ** future. Otherwise handle this entry (and set it on hold
-      ** until next time). Will reset only hold times, if already
-      ** made one successfull connection... [this algorithm is
-      ** a bit fuzzy... -- msa >;) ]
-      */
-
-      if ((aconf->hold > currenttime))
+       * Skip this entry if the use of it is still on hold until
+       * future. Otherwise handle this entry (and set it on hold
+       * until next time). Will reset only hold times, if already
+       * made one successfull connection... [this algorithm is
+       * a bit fuzzy... -- msa >;) ]
+       */
+      if (aconf->hold > currenttime)
         {
-          if ((next > aconf->hold) || (next == 0))
+          if (next > aconf->hold || next == 0)
             next = aconf->hold;
           continue;
         }
 
-      if( (confrq = get_con_freq(cltmp)) < MIN_CONN_FREQ )
+      if ((confrq = get_con_freq(cltmp)) < MIN_CONN_FREQ )
         confrq = MIN_CONN_FREQ;
 
       aconf->hold = currenttime + confrq;
       /*
-      ** Found a CONNECT config with port specified, scan clients
-      ** and see if this server is already connected?
-      */
+       * Found a CONNECT config with port specified, scan clients
+       * and see if this server is already connected?
+       */
       cptr = find_server(aconf->name);
       
       if (!cptr && (Links(cltmp) < MaxLinks(cltmp)) &&
@@ -242,33 +241,43 @@ time_t try_connections(time_t currenttime)
         next = aconf->hold;
     }
 
-  if(autoconn == 0)
+  if (0 == GlobalSetOptions.autoconn)
     {
-      if(connecting)
-        sendto_ops("Connection to %s[%s] activated.",
+      /*
+       * auto connects disabled, send message to ops and bail
+       */
+      if (connecting)
+        sendto_ops("Connection to %s[%s] not activated.",
                  con_conf->name, con_conf->host);
       sendto_ops("WARNING AUTOCONN is 0, autoconns are disabled");
       Debug((DEBUG_NOTICE,"Next connection check : %s", myctime(next)));
-      return (next);
+      return next;
     }
 
   if (connecting)
     {
+#if 0
+      /*
+       * XXX - wheee modify the list as we traverse it
+       * pointless, put the current one at the end of the list so we
+       * spin through it again?
+       */
       if (con_conf->next)  /* are we already last? */
         {
           for (pconf = &ConfigItemList; (aconf = *pconf);
                pconf = &(aconf->next))
-            /* put the current one at the end and
+            /* 
+             * put the current one at the end and
              * make sure we try all connections
              */
             if (aconf == con_conf)
               *pconf = aconf->next;
           (*pconf = con_conf)->next = 0;
         }
-
-      if(!(con_conf->flags & CONF_FLAGS_ALLOW_AUTO_CONN))
+#endif
+      if (!(con_conf->flags & CONF_FLAGS_ALLOW_AUTO_CONN))
         {
-          sendto_ops("Connection to %s[%s] activated but autoconn is off.",
+          sendto_ops("Connection to %s[%s] not activated, autoconn is off.",
                      con_conf->name, con_conf->host);
           sendto_ops("WARNING AUTOCONN on %s[%s] is disabled",
                      con_conf->name, con_conf->host);
@@ -281,7 +290,7 @@ time_t try_connections(time_t currenttime)
         }
     }
   Debug((DEBUG_NOTICE,"Next connection check : %s", myctime(next)));
-  return (next);
+  return next;
 }
 
 /*
@@ -349,7 +358,7 @@ time_t try_connections(time_t currenttime)
 */
 int m_squit(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 {
-  aConfItem *aconf;
+  struct ConfItem *aconf;
   char  *server;
   struct Client       *acptr;
   char  *comment = (parc > 2 && parv[2]) ? parv[2] : cptr->name;
@@ -626,10 +635,10 @@ static void sendnick_TS(struct Client *cptr, struct Client *acptr)
 
 int server_estab(struct Client *cptr)
 {
-  aChannel*   chptr;
+  struct Channel*   chptr;
   struct Client*    acptr;
-  aConfItem*  aconf;
-  aConfItem*  bconf;
+  struct ConfItem*  aconf;
+  struct ConfItem*  bconf;
   const char* inpath;
   char*       host;
   char*       encr;
@@ -893,8 +902,8 @@ int server_estab(struct Client *cptr)
       */
 
   {
-    Link        *l;
-    static      char nickissent = 1;
+    struct SLink* l;
+    static char   nickissent = 1;
       
     nickissent = 3 - nickissent;
     /* flag used for each nick to check if we've sent it
@@ -1088,7 +1097,7 @@ static REPORT_STRUCT report_array[] = {
 
 static  void    report_configured_links(struct Client *sptr,int mask)
 {
-  aConfItem *tmp;
+  struct ConfItem *tmp;
   REPORT_STRUCT *p;
   char  *host, *pass, *user, *name;
   int   port;
@@ -1161,16 +1170,16 @@ static  void    report_configured_links(struct Client *sptr,int mask)
  * report_specials
  *
  * inputs       - struct Client pointer to client to report to
- *              - int flags type of special aConfItem to report
- *              - int numeric for aConfItem to report
+ *              - int flags type of special struct ConfItem to report
+ *              - int numeric for struct ConfItem to report
  * output       - none
  * side effects -
  */
 
 static  void    report_specials(struct Client *sptr,int flags,int numeric)
 {
-  aConfItem *this_conf;
-  aConfItem *aconf;
+  struct ConfItem *this_conf;
+  struct ConfItem *aconf;
   char  *name, *host, *pass, *user;
   int port;
 
@@ -2058,7 +2067,7 @@ int     m_admin(struct Client *cptr,
                 int parc,
                 char *parv[])
 {
-  aConfItem *aconf;
+  struct ConfItem *aconf;
   static time_t last_used=0L;
 
   if(!IsAnOper(sptr))
@@ -2238,7 +2247,7 @@ int   m_set(struct Client *cptr,
                   sendto_realops(
                                  "%s has changed AUTOCONN ALL to %i",
                                  parv[0], newval);
-                  AUTOCONN = newval;
+                  GlobalSetOptions.autoconn = newval;
                 }
               else
                 set_autoconn(sptr,parv[0],parv[2],newval);
@@ -2246,7 +2255,7 @@ int   m_set(struct Client *cptr,
           else
             {
               sendto_one(sptr, ":%s NOTICE %s :AUTOCONN ALL is currently %i",
-                         me.name, parv[0], AUTOCONN);
+                         me.name, parv[0], GlobalSetOptions.autoconn);
             }
           return 0;
           break;
@@ -2879,7 +2888,7 @@ int     m_trace(struct Client *cptr,
 {
   int   i;
   struct Client       *acptr = NULL;
-  aClass        *cltmp;
+  struct Class        *cltmp;
   char  *tname;
   int   doall, link_s[MAXCONNECTIONS], link_u[MAXCONNECTIONS];
   int   cnt = 0, wilds, dow;
@@ -3444,11 +3453,11 @@ int m_die(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
 static void set_autoconn(struct Client *sptr,char *parv0,char *name,int newval)
 {
-  aConfItem *aconf;
+  struct ConfItem *aconf;
 
   if((aconf= find_conf_by_name(name, CONF_CONNECT_SERVER)))
     {
-      if(newval)
+      if (newval)
         aconf->flags |= CONF_FLAGS_ALLOW_AUTO_CONN;
       else
         aconf->flags &= ~CONF_FLAGS_ALLOW_AUTO_CONN;
