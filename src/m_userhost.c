@@ -32,6 +32,9 @@
 #include "irc_string.h"
 #include <string.h>
 
+static char buf[BUFSIZE];
+static char buf2[BUFSIZE];
+
 /* m_functions execute protocol messages on this server:
  *
  *      cptr    is always NON-NULL, pointing to a *LOCAL* client
@@ -112,16 +115,22 @@ int     m_userhost(struct Client *cptr,
   if(p)
     *p = '\0';
 
+  (void)ircsprintf(buf, form_str(RPL_USERHOST), me.name, parv[0]);
   if ((acptr = find_person(parv[1], NULL)))
     {
-      sendto_one(sptr, form_str(RPL_USERHOST), 
-		 me.name, 
-		 parv[0],
+      ircsprintf(buf2, "%s%s%s=%c%s@%s",
+                 buf,
 		 acptr->name,
 		 IsAnOper(acptr) ? "*" : "",
 		 (acptr->user->away) ? '-' : '+',
 		 acptr->username,
 		 acptr->host);
+      p = buf2;
     }
+  else
+    {
+      p = buf;
+    }
+  sendto_one(sptr, "%s", p);
   return 0;
 }
