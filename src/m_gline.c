@@ -823,7 +823,7 @@ static int majority_gline(aClient *sptr,
                   (irccmp(gline_pending_ptr->oper_server2,oper_server)==0))
                 {
                   /* This oper or server has already "voted" */
-                  sendto_ops("oper or server has already voted");
+                  sendto_realops("oper or server has already voted");
                   return NO;
                 }
 

@@ -76,6 +76,9 @@ const char serveropts[] = {
 #ifdef  OPER_REHASH
   'E',
 #endif
+#ifdef GLINES
+  'G',
+#endif
 #ifdef  HUB
   'H',
 #endif
