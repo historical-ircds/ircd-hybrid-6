@@ -433,7 +433,7 @@ int attach_Iline(aClient* cptr, const char* username, char **preason)
       if (aconf->status & CONF_CLIENT)
         {
 #ifdef GLINES
-          if ( !IsConfElined(aconf) )
+          if ( !IsConfElined(aconf) && !IsConfExemptGline(aconf) )
             {
               if (IsGotId(cptr))
                 gkill_conf = find_gkill(cptr,cptr->username);
@@ -1783,6 +1783,9 @@ static char *set_conf_flags(struct ConfItem *aconf,char *tmp)
           break;
         case '>':        /* can exceed max connects */
           aconf->flags |= CONF_FLAGS_F_LINED;
+          break;
+        case '_':        /* exempt from glines */
+          aconf->flags |= CONF_FLAGS_EXEMPTGLINE;
           break;
 #ifdef IDLE_CHECK
         case '<':        /* can idle */

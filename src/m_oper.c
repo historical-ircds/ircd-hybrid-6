@@ -213,6 +213,7 @@ int m_oper(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
       Count.oper++;
 
       SetElined(cptr);
+      SetExemptGline(cptr);
       
       /* LINKLIST */  
       /* add to oper link list -Dianora */

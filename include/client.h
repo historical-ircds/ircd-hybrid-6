@@ -338,6 +338,7 @@ struct Client
 #define FLAGS2_E_LINED      0x0004      /* client is graced with E line */
 #define FLAGS2_B_LINED      0x0008      /* client is graced with B line */
 #define FLAGS2_F_LINED      0x0010      /* client is graced with F line */
+#define FLAGS2_EXEMPTGLINE  0x2000      /* client can't be G-lined */
 
 /* oper priv flags */
 #define FLAGS2_OPER_GLOBAL_KILL 0x0020  /* oper can global kill */
@@ -465,6 +466,8 @@ struct Client
 #define SetBlined(x)            ((x)->flags2 |= FLAGS2_B_LINED)
 #define IsFlined(x)             ((x)->flags2 & FLAGS2_F_LINED)
 #define SetFlined(x)            ((x)->flags2 |= FLAGS2_F_LINED)
+#define IsExemptGline(x)        ((x)->flags2 & FLAGS2_EXEMPTGLINE)
+#define SetExemptGline(x)       ((x)->flags2 |= FLAGS2_EXEMPTGLINE)
 #define SetIPSpoof(x)           ((x)->flags2 |= FLAGS2_IP_SPOOFING)
 #define IsIPSpoof(x)            ((x)->flags2 & FLAGS2_IP_SPOOFING)
 #define SetIPHidden(x)          ((x)->flags2 |= FLAGS2_IP_HIDDEN)

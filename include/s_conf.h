@@ -24,6 +24,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.44  2000/08/22 05:03:55  lusky
+ * added support for CIDR IP tklines, just like normal klines
+ *
  * Revision 1.43  1999/08/10 03:32:14  lusky
  * remove <sys/syslog.h> check from configure, assume <syslog.h> exists (sw)
  * cleaned up attach_Iline some more (db)
@@ -272,6 +275,7 @@ typedef struct QlineItem {
 #define CONF_FLAGS_E_LINED              0x0020
 #define CONF_FLAGS_B_LINED              0x0040
 #define CONF_FLAGS_F_LINED              0x0080
+#define CONF_FLAGS_EXEMPTGLINE          0x2000
 
 #ifdef IDLE_CHECK
 #define CONF_FLAGS_IDLE_LINED           0x0100
@@ -298,6 +302,7 @@ typedef struct QlineItem {
 #define IsConfElined(x)         ((x)->flags & CONF_FLAGS_E_LINED)
 #define IsConfBlined(x)         ((x)->flags & CONF_FLAGS_B_LINED)
 #define IsConfFlined(x)         ((x)->flags & CONF_FLAGS_F_LINED)
+#define IsConfExemptGline(x)    ((x)->flags & CONF_FLAGS_EXEMPTGLINE)
 
 #ifdef IDLE_CHECK
 #define IsConfIdlelined(x)      ((x)->flags & CONF_FLAGS_IDLE_LINED)

@@ -1404,6 +1404,12 @@ char *show_iline_prefix(aClient *sptr,aConfItem *aconf,char *name)
 #ifdef E_LINES_OPER_ONLY
   if(IsAnOper(sptr))
 #endif
+    if (IsConfExemptGline(aconf))
+      *prefix_ptr++ = '_';
+
+#ifdef E_LINES_OPER_ONLY
+  if(IsAnOper(sptr))
+#endif
     if (IsConfElined(aconf))
       *prefix_ptr++ = '^';
 

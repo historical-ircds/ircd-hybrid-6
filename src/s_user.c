@@ -1097,6 +1097,15 @@ report_and_set_user_flags(aClient *sptr,aConfItem *aconf)
          ":%s NOTICE %s :*** You are exempt from K/D/G lines. congrats.",
                  me.name,sptr->name);
     }
+#ifdef GLINES
+  else if(IsConfExemptGline(aconf))
+    {
+      SetExemptGline(sptr);
+      sendto_one(sptr,
+         ":%s NOTICE %s :*** You are exempt from G lines. congrats.",
+                 me.name,sptr->name);
+    }
+#endif /* GLINES */
 
   /* If this user can run bots set it "B lined" */
   if(IsConfBlined(aconf))

@@ -497,8 +497,12 @@ void flush_glines()
 
 aConfItem *find_gkill(aClient* cptr, char* username)
 {
+  aConfItem *foundgline;
   assert(0 != cptr);
-  return (IsElined(cptr)) ? 0 : find_is_glined(cptr->host, username);
+  if ((foundgline = find_is_glined(cptr->host, username)) 
+      && (IsElined(cptr)||IsExemptGline(cptr)))
+    foundgline = (aConfItem *) NULL;
+  return (foundgline);
 }
 
 /*

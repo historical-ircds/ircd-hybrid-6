@@ -367,13 +367,6 @@ time_t check_pings(time_t currenttime)
 #ifdef GLINES
                   if( (aconf = find_gkill(cptr,cptr->username)) )
                     {
-                      if(IsElined(cptr))
-                        {
-                          sendto_realops("G-line over-ruled for %s client is E-lined",
-                                     get_client_name(cptr,FALSE));
-                                     continue;
-                        }
-
                       sendto_realops("G-line active for %s",
                                  get_client_name(cptr, FALSE));
 
