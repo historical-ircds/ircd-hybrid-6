@@ -366,7 +366,6 @@ extern int              attach_confs(struct Client* client,
 extern int              attach_cn_lines(struct Client* client, 
                                         const char* host);
 extern int              attach_Iline(struct Client* client, 
-                                     struct hostent* hp,
                                      const char* username, char** reason);
 extern struct ConfItem* find_me(void);
 extern struct ConfItem* find_admin(void);

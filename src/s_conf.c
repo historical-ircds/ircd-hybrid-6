@@ -382,40 +382,20 @@ void report_specials(struct Client* sptr, int flags, int numeric)
  *  Cleaned up again Sept 7 1998 - Dianora
  */
 
-int attach_Iline(aClient* cptr, struct hostent* hp,
-                 const char* username, char **preason)
+int attach_Iline(aClient* cptr, const char* username, char **preason)
 {
   struct ConfItem* aconf;
   struct ConfItem* gkill_conf;
   struct ConfItem* tkline_conf;
-  char       host[HOSTLEN + 3];
   char       non_ident[USERLEN + 1];
-
-  host[HOSTLEN] = '\0';
-
-  /* who cares about aliases? sheeeshhh -db */
-
-  if (hp && hp->h_name)
-    {
-      strncpy_irc(host, hp->h_name, HOSTLEN);
-      /*
-       * XXX - this probably isn't needed, but ...
-       */
-      add_local_domain(host, HOSTLEN);
-    }
-  else
-    {
-      strncpy_irc(host, cptr->sockhost, HOSTLEN);
-      host[HOSTLEN] = '\0';
-    }
 
   if (IsGotId(cptr))
     {
-      aconf = find_matching_mtrie_conf(host,cptr->username,
+      aconf = find_matching_mtrie_conf(cptr->host,cptr->username,
                                        ntohl(cptr->ip.s_addr));
       if(aconf && !IsConfElined(aconf))
         {
-          if( (tkline_conf = find_tkline(host, cptr->username)) )
+          if( (tkline_conf = find_tkline(cptr->host, cptr->username)) )
             aconf = tkline_conf;
         }
     }
@@ -424,11 +404,11 @@ int attach_Iline(aClient* cptr, struct hostent* hp,
       non_ident[0] = '~';
       strncpy_irc(&non_ident[1],username, USERLEN - 1);
       non_ident[USERLEN] = '\0';
-      aconf = find_matching_mtrie_conf(host,non_ident,
+      aconf = find_matching_mtrie_conf(cptr->host,non_ident,
                                        ntohl(cptr->ip.s_addr));
       if(aconf && !IsConfElined(aconf))
         {
-          if( (tkline_conf = find_tkline(host, non_ident)) )
+          if( (tkline_conf = find_tkline(cptr->host, non_ident)) )
             aconf = tkline_conf;
         }
     }
@@ -456,12 +436,12 @@ int attach_Iline(aClient* cptr, struct hostent* hp,
               /* abuse it, lose it. */
 #ifdef SPOOF_FREEFORM
               sendto_realops("%s spoofing: %s as %s", cptr->name,
-                             host, aconf->name);
+                             cptr->host, aconf->name);
               strncpy_irc(cptr->host, aconf->name, HOSTLEN);
 #else
               /* default to oper.server.name.tld */
               sendto_realops("%s spoofing: %s(%s) as oper.%s", cptr->name, 
-                             host, inetntoa((char*) &cptr->ip), me.name);
+                             cptr->host, inetntoa((char*) &cptr->ip), me.name);
               strcpy(cptr->host, "oper.");
               strncpy_irc(&cptr->host[5], me.name, HOSTLEN - 5);
 #endif

@@ -27,7 +27,7 @@ AC_CHECK_FUNC(crypt,, AC_CHECK_LIB(descrypt, crypt,,AC_CHECK_LIB(crypt, crypt,,)
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(sys/param.h unistd.h errno.h string.h sys/syslog.h stdlib.h stddef.h) 
+AC_CHECK_HEADERS(sys/param.h unistd.h errno.h string.h stdlib.h stddef.h) 
 
 dnl Check for stdarg.h - if we can't find it, halt configure
 AC_CHECK_HEADER(stdarg.h, , AC_MSG_ERROR(** stdarg.h could not be found - ircd-hybrid will not compile without it **))

@@ -347,17 +347,15 @@ int deliver_it(aClient *cptr, char *str, int len)
  */
 int check_client(struct Client *cptr,char *username,char **reason)
 {
+  static char     sockname[HOSTLEN + 1];
   int             i;
   struct hostent* hp = 0;
  
   ClearAccess(cptr);
 
-  if (cptr->dns_reply)
-    hp = cptr->dns_reply->hp;
-
-  if ((i = attach_Iline(cptr, hp, username, reason)))
+  if ((i = attach_Iline(cptr, username, reason)))
     {
-      log(L_INFO, "Access denied: %s[%s]", cptr->name, cptr->sockhost);
+      log(L_INFO, "Access denied: %s[%s]", cptr->name, sockname);
       return i;
     }
 
