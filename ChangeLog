@@ -1,3 +1,12 @@
+*** 19990805_1 by lusky
+bumped patchlevel for new tarball
+added KNOWN BUGS to relnotes
+bug in stats Q line found by Dustin Marquess (Jailbird)
+in client.h, umodes were moved to umodes in client, forgot to redefine the macros for SetInvisible etc.
+user_mode allowed decrement of oper count even if client was not opered
+
+
+
 *** 19990804_2 by lusky
 bumped patchlevel to b92 for new beta snapshot
 
