@@ -1,3 +1,8 @@
+*** 20010727_2 by leeh
+- added a warning about the NO_HACK_OPS code, it needs to be network
+  wide or not defined
+
+
 *** 20010727_1 by leeh
 - finished off the NO_HACK_OPS code
 
