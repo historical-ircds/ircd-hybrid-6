@@ -1,3 +1,18 @@
+db          2002/02/02 15:58:32 EST	(20020202_2)
+
+  Modified files:
+    include              send.h 
+    src                  channel.c send.c 
+  Log:
+  If a server does not have CAPAB KNOCK, send it the old fashioned way for now
+  
+  Revision  Changes    Path
+  1.15      +3 -2      ircd-hybrid-6/include/send.h
+  1.232     +12 -5     ircd-hybrid-6/src/channel.c
+  1.112     +29 -5     ircd-hybrid-6/src/send.c
+
+
+
 db          2002/02/02 10:58:22 EST	(20020202_1)
 
   Modified files:
