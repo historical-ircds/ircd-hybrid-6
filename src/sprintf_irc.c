@@ -23,6 +23,7 @@
 #include "send.h"
 #include "common.h"
 #include "sys.h"
+#include "sprintf_irc.h"
 
 #ifdef HAVE_STDARG_H
 
@@ -42,7 +43,7 @@
 
 static char *rcs_version = "$Id$";
 
-const char atoi_tab[4000] = {
+static const char atoi_tab[4000] = {
     '0','0','0',0, '0','0','1',0, '0','0','2',0, '0','0','3',0, '0','0','4',0,
     '0','0','5',0, '0','0','6',0, '0','0','7',0, '0','0','8',0, '0','0','9',0,
     '0','1','0',0, '0','1','1',0, '0','1','2',0, '0','1','3',0, '0','1','4',0,
@@ -277,12 +278,13 @@ static char scratch_buffer[32];
  * --Run
  */
 
-void
+int
 vsprintf_irc(register char *str, register const char *format,
              register va_list args)
 
 {
 	register char c;
+	register int bytes = 0;
 
 	while ((c = *format++))
 	{
@@ -294,13 +296,20 @@ vsprintf_irc(register char *str, register const char *format,
 			{
 				register const char *p1 = va_arg(args, const char *);
 				if ((*str = *p1))
-					while ((*++str = *++p1));
+				{
+					++bytes;
+					while ((*++str = *++p1))
+						++bytes;
+				}
+
 				continue;
 			}
 
 			if (c == 'c')
 			{
 				*str++ = (char) va_arg(args, int);
+				++bytes;
+
 				continue;
 			}
 
@@ -321,6 +330,7 @@ vsprintf_irc(register char *str, register const char *format,
 					v2 = v1 / 1000000000;
 					v1 -= v2 * 1000000000;
 					*str++ = '0' + v2;
+					++bytes;
 				}
 
 				v2 = v1 / 1000000;
@@ -340,6 +350,8 @@ vsprintf_irc(register char *str, register const char *format,
 				*str++ = *ap++;
 				*str++ = *ap;
 
+				bytes += 9;
+
 				continue;
 			}
 			if (c == 't')
@@ -350,6 +362,8 @@ vsprintf_irc(register char *str, register const char *format,
 			    
 			    *str++ = (v1/10) + '0';
 			    *str++ = v1%10 + '0';
+
+			    bytes += 2;
 
 			    continue;
 			  }
@@ -366,9 +380,11 @@ vsprintf_irc(register char *str, register const char *format,
 					if (v1 == 0)
 					{
 						*str++ = '0';
+						++bytes;
 						continue;
 					}
 					*str++ = '-';
+					++bytes;
 					v1 = -v1;
 				}
 
@@ -385,7 +401,10 @@ vsprintf_irc(register char *str, register const char *format,
 				while ('0' == *++s);
 
 				*str = *s;
-				while ((*++str = *++s));
+				++bytes;
+
+				while ((*++str = *++s))
+					++bytes;
 
 				continue;
 			}
@@ -400,6 +419,7 @@ vsprintf_irc(register char *str, register const char *format,
 				if (v1 == 0)
 				{
 					*str++ = '0';
+					++bytes;
 					continue;
 				}
 
@@ -416,40 +436,46 @@ vsprintf_irc(register char *str, register const char *format,
 				while ('0' == *++s);
 
 				*str = *s;
+				++bytes;
 
-				while ((*++str = *++s));
+				while ((*++str = *++s))
+					++bytes;
 
 				continue;
 			}
 
 			if (c != '%')
 			{
+				register int ret;
+
 				format -= 2;
-				str += vsprintf(str, format, args);
+				ret = vsprintf(str, format, args);
+				str += ret;
+				bytes += ret;
+
 				break;
 			}
 		}
+
 		*str++ = c;
+		++bytes;
 	}
 
 	*str = '\0';
+
+	return (bytes);
 } /* vsprintf_irc() */
 
 #ifdef HAVE_STDARG_H
 
-void
-#if 0
-sprintf_irc(register char *str, const char *format, ...)
-#endif
+int
 ircsprintf(register char *str, const char *format, ...)
+
 #else
 
-void
-#if 0
-sprintf_irc(str, format, va_alist)
-#endif
-
+int
 ircsprintf(str, format, va_alist)
+
 register char *str;
 const char *format;
 va_dcl
@@ -458,11 +484,14 @@ va_dcl
 
 {
 	register va_list args;
+	register int bytes;
 
 	MyVaStart(args, format);
 
-	vsprintf_irc(str, format, args);
+	bytes = vsprintf_irc(str, format, args);
 
 	va_end(args);
-} /* sprintf_irc() */
+
+	return (bytes);
+} /* ircsprintf() */
 
