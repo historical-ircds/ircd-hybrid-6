@@ -1,3 +1,16 @@
+androsyn    2002/01/13 18:31:28 EST	(20020113_2)
+
+  Modified files:
+    src                  blalloc.c 
+  Log:
+  Error checking is your friend.  We weren't checking to see if mmap() fails
+  at all.  Doh..
+  
+  Revision  Changes    Path
+  1.24      +15 -5     ircd-hybrid-6/src/blalloc.c
+
+
+
 androsyn    2002/01/13 17:32:46 EST	(20020113_1)
 
   Modified files:
