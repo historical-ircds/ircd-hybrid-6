@@ -152,17 +152,10 @@ extern	void	initlists (void);
 extern  void	block_garbage_collect(void);	/* list.c */
 extern  void	block_destroy(void);		/* list.c */
 
-extern  void    GetPrintableaConfItem(aConfItem *, char **, char **, char **,
-				      char **, int *);
-
 extern int     zip_init (aClient *);
 extern void    zip_free (aClient *);
 extern char    *unzip_packet (aClient *, char *, int *);
 extern char    *zip_buffer (aClient *, char *, int *, int);
-
-extern void	add_history (aClient *, int);
-extern aClient	*get_history (char *, time_t);
-extern void	initwhowas (void);
 
 extern	int	dopacket (aClient *, char *, int);
 
