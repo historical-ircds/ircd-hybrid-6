@@ -664,6 +664,9 @@ static void update_client_exit_stats(struct Client* cptr)
     {
       --Count.server;
 
+      sendto_realops_flags(FLAGS_EXTERNAL, "Server %s split from %s",
+                           cptr->name, cptr->servptr->name);
+
 #ifdef NEED_SPLITCODE
       /* Don't bother checking for a split, if split code
        * is deactivated with server_split_recovery_time == 0

@@ -376,8 +376,8 @@ int m_server(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
                          
         }
       
-      sendto_realops_flags(FLAGS_EXTERNAL, "Server %s being introduced by %s",
-                           acptr->name, sptr->name);
+      sendto_realops_flags(FLAGS_EXTERNAL, "Server %s[%s] being introduced by %s[%d hops]",
+                           acptr->name, acptr->info, sptr->name, acptr->hopcount);
       return 0;
     }
 

@@ -3018,6 +3018,8 @@ char *oper_privs_as_string(aClient *cptr,int port)
         SetOperN(cptr);
       *privs_ptr++ = 'N';
     }
+  else
+    *privs_ptr++ = 'n';
 
   if(port & CONF_OPER_GLOBAL_KILL)
     {
