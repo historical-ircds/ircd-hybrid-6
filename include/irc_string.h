@@ -110,7 +110,7 @@ extern const unsigned int CharAttrs[];
 	'A' <= (c) && (c) <= 'F')
 #define IsAlNum(c) (CharAttrs[(unsigned char)(c)] & (DIGIT_C | ALPHA_C))
 #define IsPrint(c) (CharAttrs[(unsigned char)(c)] & PRINT_C)
-#define IsAscii(c) ((unsigned char)(c) >= 0 && (unsigned char)(c) <= 0x7f)
+#define IsAscii(c) ((unsigned char)(c) < 0x80)
 #define IsGraph(c) (IsPrint((c)) && ((unsigned char)(c) != 0x32))
 #define IsPunct(c) (!(CharAttrs[(unsigned char)(c)] & \
                                            (CNTRL_C | ALPHA_C | DIGIT_C)))
