@@ -1,4 +1,5 @@
 /************************************************************************
+ *
  *   IRC - Internet Relay Chat, ircd/channel.h
  *   Copyright (C) 1990 Jarkko Oikarinen
  *
