@@ -20,6 +20,7 @@
  *   $Id$
  */
 
+#include "send.h"
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -27,7 +28,6 @@
 #include "class.h"
 #include <stdio.h>
 #include "numeric.h"
-#include "send.h"
 
 #ifdef HAVE_STDARG_H
 
@@ -57,8 +57,8 @@ static	char	sendbuf[2048];
 static	int	send_message (aClient *, char *, int);
 
 static  void vsendto_prefix_one(register aClient *, register aClient *, char *, va_list);
-static  void vsendto_one(aClient *, char *, va_list);
-static  void vsendto_realops(char *, va_list);
+static  void vsendto_one(aClient *, const char *, va_list);
+static  void vsendto_realops(const char *, va_list);
 
 #ifdef USE_SENTALONG
 static	int	sentalong[MAXCONNECTIONS];
@@ -399,7 +399,7 @@ int	send_queued(aClient *to)
 #ifdef HAVE_STDARG_H
 
 void
-sendto_one(aClient *to, char *pattern, ...)
+sendto_one(aClient *to, const char *pattern, ...)
 
 #else
 
@@ -430,7 +430,7 @@ arguements to client 'to'
 */
 
 static void
-vsendto_one(aClient *to, char *pattern, va_list args)
+vsendto_one(aClient *to, const char *pattern, va_list args)
 
 {
   int len; /* used for the length of the current message */
@@ -500,7 +500,8 @@ vsendto_one(aClient *to, char *pattern, va_list args)
 #ifdef HAVE_STDARG_H
 
 void
-sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr, char *pattern, ...)
+sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr, 
+                      const char *pattern, ...)
 
 #else
 
@@ -557,7 +558,8 @@ va_dcl
 #ifdef HAVE_STDARG_H
 
 void
-sendto_channel_type(aClient *one, aClient *from, aChannel *chptr, int type, char *pattern, ...)
+sendto_channel_type(aClient *one, aClient *from, aChannel *chptr, 
+                    int type, const char *pattern, ...)
 
 #else
 
@@ -696,7 +698,7 @@ sendto_channel_type_notice(aClient *from, aChannel *chptr, int type, char *messa
 #ifdef HAVE_STDARG_H
 
 void
-sendto_serv_butone(aClient *one, char *pattern, ...)
+sendto_serv_butone(aClient *one, const char *pattern, ...)
 
 #else
 
@@ -743,7 +745,7 @@ va_dcl
 #ifdef HAVE_STDARG_H
 
 void
-sendto_common_channels(aClient *user, char *pattern, ...)
+sendto_common_channels(aClient *user, const char *pattern, ...)
 
 #else
 
@@ -799,7 +801,8 @@ va_dcl
 #ifdef HAVE_STDARG_H
 
 void
-sendto_channel_butserv(aChannel *chptr, aClient *from, char *pattern, ...)
+sendto_channel_butserv(aChannel *chptr, aClient *from, 
+                       const char *pattern, ...)
 
 #else
 
@@ -854,7 +857,7 @@ match_it(const aClient *one, const char *mask, int what)
 #ifdef HAVE_STDARG_H
 
 void
-sendto_match_servs(aChannel *chptr, aClient *from, char *pattern, ...)
+sendto_match_servs(aChannel *chptr, aClient *from, const char *pattern, ...)
 
 #else
 
@@ -901,7 +904,8 @@ va_dcl
 #ifdef HAVE_STDARG_H
 
 void
-sendto_match_cap_servs(aChannel *chptr, aClient *from, int cap, char *pattern, ...)
+sendto_match_cap_servs(aChannel *chptr, aClient *from, int cap, 
+                       const char *pattern, ...)
 
 #else
 
@@ -952,7 +956,8 @@ va_dcl
 #ifdef HAVE_STDARG_H
 
 void
-sendto_match_butone(aClient *one, aClient *from, char *mask, int what, char *pattern, ...)
+sendto_match_butone(aClient *one, aClient *from, char *mask, 
+                    int what, const char *pattern, ...)
 
 #else
 
@@ -1033,7 +1038,7 @@ va_dcl
 #ifdef HAVE_STDARG_H
 
 void
-sendto_ops_lev(int lev, char *pattern, ...)
+sendto_ops_lev(int lev, const char *pattern, ...)
 
 #else
 
@@ -1109,7 +1114,7 @@ va_dcl
 #ifdef HAVE_STDARG_H
 
 void
-sendto_ops(char *pattern, ...)
+sendto_ops(const char *pattern, ...)
 
 #else
 
@@ -1154,7 +1159,7 @@ va_dcl
 #ifdef HAVE_STDARG_H
 
 void
-sendto_ops_butone(aClient *one, aClient *from, char *pattern, ...)
+sendto_ops_butone(aClient *one, aClient *from, const char *pattern, ...)
 
 #else
 
@@ -1212,7 +1217,7 @@ va_dcl
 #ifdef HAVE_STDARG_H
 
 void
-sendto_wallops_butone(aClient *one, aClient *from, char *pattern, ...)
+sendto_wallops_butone(aClient *one, aClient *from, const char *pattern, ...)
 
 #else
 
@@ -1324,7 +1329,8 @@ send_operwall(aClient *from, char *type_message, char *message)
 #ifdef HAVE_STDARG_H
 
 void
-sendto_prefix_one(register aClient *to, register aClient *from, char *pattern, ...)
+sendto_prefix_one(register aClient *to, register aClient *from, 
+                  const char *pattern, ...)
 
 #else
 
@@ -1594,7 +1600,7 @@ int format(char *outp,char *formp,char *in0p,char *in1p,char *in2p,
 #ifdef HAVE_STDARG_H
 
 void
-sendto_realops(char *pattern, ...)
+sendto_realops(const char *pattern, ...)
 
 #else
 
@@ -1622,7 +1628,7 @@ vsendto_realops()
 */
 
 static void
-vsendto_realops(char *pattern, va_list args)
+vsendto_realops(const char *pattern, va_list args)
 
 {
   register aClient *cptr;
@@ -1650,7 +1656,7 @@ vsendto_realops(char *pattern, va_list args)
 #ifdef HAVE_STDARG_H
 
 void
-sendto_realops_lev(int lev, char *pattern, ...)
+sendto_realops_lev(int lev, const char *pattern, ...)
 
 #else
 
@@ -1734,7 +1740,7 @@ va_dcl
 #ifdef HAVE_STDARG_H
 
 void
-ts_warn(char *pattern, ...)
+ts_warn(const char *pattern, ...)
 
 #else
 
