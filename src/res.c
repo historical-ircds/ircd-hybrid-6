@@ -1566,6 +1566,9 @@ static aCache* make_cache(ResRQ* request)
    */
   if (!hp->h_name || !hp->h_addr_list[0])
     return NULL;
+
+  /* Spoofing bug here from ircnet (Q <Q@ping.be>) */
+#if 0
   /*
    * Make cache entry.  First check to see if the cache already exists
    * and if so, return a pointer to it.
@@ -1574,6 +1577,7 @@ static aCache* make_cache(ResRQ* request)
     if ((cp = find_cache_number(request, hp->h_addr_list[i])))
       return cp;
   }
+#endif
   /*
    * a matching entry wasnt found in the cache so go and make one up.
    */ 
