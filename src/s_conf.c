@@ -1801,7 +1801,7 @@ int 	initconf(int opt, int fd,int use_include)
 	  (CONF_SERVER_MASK|CONF_LOCOP|CONF_OPERATOR))
 	if (!strchr(aconf->host, '@') && *aconf->host != '/')
 	  {
-	    char	*newhost;
+	    char *newhost;
 	    int	len;		
 	    
 	    len = strlen(aconf->host) + 3; /* *@\0 = 3 */
@@ -1854,6 +1854,8 @@ int 	initconf(int opt, int fd,int use_include)
 	{
 	  char *p;
 
+	  dontadd = 1;
+
 	  DupString(aconf->mask,aconf->host);
 	  p = strchr(aconf->name,'@');
 	  if(p)
@@ -1872,16 +1874,15 @@ int 	initconf(int opt, int fd,int use_include)
 	    }
 
 	  add_mtrie_conf_entry(aconf,CONF_CLIENT);
-	  dontadd = 1;
 	}
 
       if (aconf->host && (aconf->status & CONF_KILL))
 	{
+	  dontadd = 1;
 	  if(host_is_legal_ip(aconf->host))
 	    add_ip_Kline(aconf);
 	  else
 	    add_mtrie_conf_entry(aconf,CONF_KILL);
-	  dontadd = 1;
 	}
 
       if (aconf->host && (aconf->status & CONF_DLINE))
@@ -1936,6 +1937,8 @@ int 	initconf(int opt, int fd,int use_include)
     }
   if (aconf)
     free_conf(aconf);
+  aconf = NULL;
+
   (void)dgets(-1, NULL, 0); /* make sure buffer is at empty pos */
   (void)close(fd);
   check_class();

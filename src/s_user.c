@@ -21,6 +21,11 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/*
+ * #define CANONIZE if you want canonize()
+ * its no longer used in channel.c, and is commented out in whowas.c
+ */
+
 #ifndef lint
 static  char sccsid[] = "@(#)s_user.c	2.68 07 Nov 1993 (C) 1988 University of Oulu, \
 Computing Center and Jarkko Oikarinen";
@@ -376,6 +381,7 @@ static	int do_nick_name(char *nick)
 }
 
 
+#ifdef CANONIZE
 /*
 ** canonize
 **
@@ -420,7 +426,7 @@ char	*canonize(char *buffer)
     }
   return cbuf;
 }
-
+#endif
 
 /*
 ** register_user
@@ -2249,24 +2255,25 @@ static	void	do_who(aClient *sptr,
 		       Link *lp)
 {
   char	status[5];
-  int	i = 0;
+  /* Using a pointer will compile faster than an index */
+  char *p = status;
 
   if (acptr->user->away)
-    status[i++] = 'G';
+    *p++ = 'G';
   else
-    status[i++] = 'H';
+    *p++ = 'H';
   if (IsAnOper(acptr))
-    status[i++] = '*';
+    *p++ = '*';
   if ((repchan != NULL) && (lp == NULL))
     lp = find_user_link(repchan->members, acptr);
   if (lp != NULL)
     {
       if (lp->flags & CHFL_CHANOP)
-	status[i++] = '@';
+	*p++ = '@';
       else if (lp->flags & CHFL_VOICE)
-	status[i++] = '+';
+	*p++ = '+';
     }
-  status[i] = '\0';
+  *p = '\0';
   sendto_one(sptr, rpl_str(RPL_WHOREPLY), me.name, sptr->name,
 	     (repchan) ? (repchan->chname) : "*", acptr->user->username,
 	     acptr->user->host, acptr->user->server, acptr->name,

@@ -18,6 +18,23 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/*
+ * a number of behaviours in set_mode() have been rewritten
+ * These flags can be set in a define if you wish.
+ *
+ * OLD_P_S	- restore xor of p vs. s modes per channel
+ *		  currently p is rather unused, so using +p
+ *		  to disable "knock" seemed worth while.
+ * OLD_MODE_K	- new mode k behaviour means user can set new key
+ *		  while old one is present, mode * -k of old key is done
+ *		  on behalf of user, with mode * +k of new key.
+ *		  /mode * -key results in the sending of a *, which
+ *		  can be used to resynchronize a channel.
+ * OLD_NON_RED	- Current code allows /mode * -s etc. to be applied
+ *		  even if +s is not set. Old behaviour was not to allow
+ *		  mode * -p etc. if flag was clear
+ */
+
 #ifndef	lint
 static	char sccsid[] = "@(#)channel.c	2.58 2/18/94 (C) 1990 University of Oulu, Computing\
  Center and Jarkko Oikarinen";
@@ -1162,16 +1179,6 @@ static  void     set_mode(aClient *cptr,
 	      break;
 	    }
 #endif
-
-	  /* don't check the arg when removing the key */
-	  if (whatt == MODE_DEL)
-	    {
-	      if(*chptr->mode.key)
-		arg = chptr->mode.key;
-	      else
-		break;			/* just ignore it */
-	    }
-
 	  if ( (tmp = strlen(arg)) > KEYLEN)
 	    {
 	      arg[KEYLEN] = '\0';
@@ -2763,6 +2770,8 @@ int	m_part(aClient *cptr,
  * though, there are still remnants left ie..
  * "name = strtoken(&p, parv[1], ",");" in a normal kick
  * it will just be "KICK #channel nick"
+ * A strchr() is going to be faster than a strtoken(), so rewritten
+ * to use a strchr()
  *
  * It appears the original code was supposed to support 
  * "kick #channel1,#channel2 nick1,nick2,nick3." For example, look at
@@ -2799,7 +2808,10 @@ int	m_kick(aClient *cptr,
     comment[TOPICLEN] = '\0';
 
   *buf = '\0';
-  name = strtoken(&p, parv[1], ",");
+  p = strchr(parv[1],',');
+  if(p)
+    *p = '\0';
+  name = parv[1]; /* strtoken(&p, parv[1], ","); */
 
   chptr = get_channel(sptr, name, !CREATE);
   if (!chptr)
@@ -2873,7 +2885,10 @@ int	m_kick(aClient *cptr,
        */
     }
 
-  user = strtoken(&p2, parv[2], ",");
+  p = strchr(parv[2],',');
+  if(p)
+    *p = '\0';
+  user = parv[2]; /* strtoken(&p2, parv[2], ","); */
 
   if (!(who = find_chasing(sptr, user, &chasing)))
     {
@@ -2953,7 +2968,10 @@ int	m_knock(aClient *cptr,
   /* We will cut at the first comma reached, however we will not *
    * process anything afterwards.  -- David-R                    */
 
-  name = strtoken(&p, parv[1], ",");
+  p = strchr(parv[1],',');
+  if(p)
+    *p = '\0';
+  name = parv[1]; /* strtoken(&p, parv[1], ","); */
 
   if (!IsChannelName(name) || !(chptr = find_channel(name, NullChn)))
     {
@@ -3063,7 +3081,10 @@ int	m_topic(aClient *cptr,
       return 0;
     }
 
-  name = strtoken(&p, parv[1], ",");
+  p = strchr(parv[1],',');
+  if(p)
+    *p = '\0';
+  name = parv[1]; /* strtoken(&p, parv[1], ","); */
 
   /* multi channel topic's are now known to be used by cloners
    * trying to flood off servers.. so disable it *sigh* - Dianora
@@ -3280,7 +3301,10 @@ int	m_list(aClient *cptr,
     if (hunt_server(cptr, sptr, ":%s LIST %s %s", 2, parc, parv))
       return 0;
 
-  name = strtoken(&p, parv[1], ",");
+  p = strchr(parv[1],',');
+  if(p)
+    *p = '\0';
+  name = parv[1]; /* strtoken(&p, parv[1], ","); */
 
   /* while(name) */
   if(name)
