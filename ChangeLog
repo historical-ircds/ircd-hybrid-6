@@ -1,3 +1,7 @@
+*** 19991013_2 by lusky
+backported set log from -7, really needs to be here
+
+
 *** 19991013_1 by lusky
 revved patchlevel to b109
 fixed botched wild card matching for K/I lines (db)
