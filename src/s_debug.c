@@ -22,6 +22,7 @@
 #include "struct.h"
 #include "s_conf.h"
 #include "class.h"
+#include "list.h"
 #include "res.h"
 #include "send.h"
 
@@ -319,6 +320,12 @@ void count_memory(aClient *cptr,char *nick)
   u_long remote_client_memory_used = 0;
   u_long remote_client_memory_allocated = 0;
 
+  u_long user_memory_used = 0;
+  u_long user_memory_allocated = 0;
+
+  u_long links_memory_used = 0;
+  u_long links_memory_allocated = 0;
+
   u_long tot = 0;
 
   count_whowas_memory(&wwu, &wwm);	/* no more away memory to count */
@@ -469,6 +476,24 @@ void count_memory(aClient *cptr,char *nick)
 	     me.name, RPL_STATSDEBUG, nick,
 	     remote_client_memory_used, remote_client_memory_allocated);
 
+
+  count_user_memory( (int *)&user_memory_used,
+		    (int *)&user_memory_allocated);
+  tot += user_memory_allocated;
+
+  sendto_one(cptr, ":%s %d %s :anUser Memory in use: %d anUser Memory allocated: %d",
+	     me.name, RPL_STATSDEBUG, nick,
+	     user_memory_used,
+	     user_memory_allocated);
+
+  count_links_memory( (int *)&links_memory_used,
+		    (int *)&links_memory_allocated);
+  sendto_one(cptr, ":%s %d %s :Links Memory in use: %d Links Memory allocated: %d",
+	     me.name, RPL_STATSDEBUG, nick,
+	     links_memory_used,
+	     links_memory_allocated);
+
+  tot += links_memory_allocated;
 
   sendto_one(cptr, ":%s %d %s :TOTAL: %d Available Memory: %u Current sbrk(0) %u",
 	     me.name, RPL_STATSDEBUG, nick, tot,

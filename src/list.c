@@ -30,6 +30,7 @@
 #include "res.h"
 #include "class.h"
 #include "send.h"
+#include "list.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -137,6 +138,7 @@ anUser* make_user(aClient *cptr)
     }
   return user;
 }
+
 
 aServer *make_server(aClient *cptr)
 {
@@ -275,4 +277,35 @@ void block_garbage_collect()
   BlockHeapGarbageCollect(free_fludbots);
 #endif /* FLUD */
 }
+
+/*
+ */
+void count_user_memory(int *user_memory_used,
+		       int *user_memory_allocated )
+{
+  BlockHeapCountMemory( free_anUsers,
+			user_memory_used,
+			user_memory_allocated);
+}
+
+/*
+ */
+void count_links_memory(int *links_memory_used,
+		       int *links_memory_allocated )
+{
+  BlockHeapCountMemory( free_Links,
+			links_memory_used,
+			links_memory_allocated);
+}
+
+/*
+ */
+void count_flud_memory(int *flud_memory_used,
+		       int *flud_memory_allocated )
+{
+  BlockHeapCountMemory( free_fludbots,
+			flud_memory_used,
+			flud_memory_allocated);
+}
+
 

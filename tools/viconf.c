@@ -34,8 +34,7 @@ static char lockpath[PATH_MAX + 1];
 
 int main(int argc, char *argv[])
 {
-  int fd;
-  char s[20], *ed, *p, *filename = MPATH;
+  char *ed, *p, *filename = MPATH;
 
   if( chdir(DPATH) < 0 )
     {
