@@ -1,3 +1,8 @@
+*** 20010716_1 by leeh
+- dont show ips for servers we're connecting to, or handshaking with
+  (reported by cbehrens)
+
+
 *** 20010715_1 by leeh
 - HIDE_SERVERS_IP -> HIDE_SERVERS_IPS
 - in get_client_name()
