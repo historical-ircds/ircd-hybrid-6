@@ -632,7 +632,7 @@ do_query_name(const struct DNSQuery* query,
   }
   else
   {
-    /* XXX if request _is_ NULL is there any point calling query_name?
+    /* XXX if request _is_ NULL is there any point calling query_name? */
     return;
   }
 
@@ -664,7 +664,7 @@ do_query_number(const struct DNSQuery* query,
   }
   else
   {
-    /* XXX if request _is_ NULL is there any point calling query_name?
+    /* XXX if request _is_ NULL is there any point calling query_name? */
     return;
   }
 
