@@ -894,7 +894,10 @@ static aConfItem *find_sub_mtrie(DOMAIN_LEVEL *cur_level,
   else
     {
       if((aconf = find_user_piece(cur_piece,flags,cur_dns_piece,user)))
-        return(aconf);
+      {
+        if (match(aconf->host,host))
+          return(aconf);
+      }
       if((aconf = find_wild_host_piece(cur_level,flags,cur_dns_piece,user)))
         return(aconf);
       return(last_found_iline_aconf);
