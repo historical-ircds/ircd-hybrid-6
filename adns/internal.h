@@ -178,7 +178,6 @@ struct adns__query {
   struct { allocnode *head, *tail; } allocations;
   int interim_allocd, preserved_allocd;
   void *final_allocspace;
-
   const typeinfo *typei;
   byte *query_dgram;
   int query_dglen;
@@ -202,6 +201,8 @@ struct adns__query {
 
   byte *cname_dgram;
   int cname_dglen, cname_begin;
+  int cname_count;
+
   /* If non-0, has been allocated using . */
 
   vbuf search_vb;

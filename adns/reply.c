@@ -185,7 +185,7 @@ void adns__procdgram(adns_state ads, const byte *dgram, int dglen,
       if (qu->flags & adns_qf_cname_forbid) {
 	adns__query_fail(qu,adns_s_prohibitedcname);
 	return;
-      } else if (qu->cname_dgram) { /* Ignore second and subsequent CNAME(s) */
+      } else if (qu->cname_dgram && ++qu->cname_count >= 2 ) { 
 	adns__debug(ads,serv,qu,"allegedly canonical name %s is actually alias for %s",
 		    qu->answer->cname,
 		    adns__diag_domain(ads,serv,qu, &qu->vb, dgram,dglen,rdstart));
