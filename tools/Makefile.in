@@ -38,7 +38,7 @@ encspeed: $(encspeed_OBJECTS)
 	$(CC) $(LDFLAGS) -o encspeed $(encspeed_OBJECTS) $(IRCDLIBS)
 
 clean:
-	$(RM) -f $(all_OBJECTS) fixklines viconf chkconf mkpasswd *~ core *.exe
+	$(RM) -f $(all_OBJECTS) fixklines viconf chkconf encspeed mkpasswd *~ core *.exe
 
 distclean: clean
 	$(RM) -f Makefile

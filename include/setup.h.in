@@ -19,9 +19,6 @@
 /* Define if you have the poll() system call.  */
 #undef USE_POLL
 
-/* Define if you have OpenSSL available. */
-#undef HAVE_LIBCRYPTO
-
 /* Chose only one of NBLOCK_POSIX, NBLOCK_BSD, and NBLOCK_SYSV */
 /* Define if you have posix non-blocking sockets (O_NONBLOCK) */
 #undef NBLOCK_POSIX
@@ -46,9 +43,6 @@
 
 /* Define if you have the RC5_32_cfb64_encrypt function.  */
 #undef HAVE_RC5_32_CFB64_ENCRYPT
-
-/* Define if you have the RSA_free function.  */
-#undef HAVE_RSA_FREE
 
 /* Define if you have the des_cfb64_encrypt function.  */
 #undef HAVE_DES_CFB64_ENCRYPT
@@ -79,6 +73,9 @@
 
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
+
+/* Define if you have the crypto library (-lcrypto).  */
+#undef HAVE_LIBCRYPTO
 
 /* Define if you have the descrypt library (-ldescrypt).  */
 #undef HAVE_LIBDESCRYPT
