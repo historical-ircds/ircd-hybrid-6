@@ -1,3 +1,8 @@
+*** 19990812_1 by lusky
+revved patchlevel to b97
+ip hash function fix (th)
+
+
 *** 19990811_1 by lusky
 fake direction bug fix to send.c (th)
 throttle accept errors in listener.c
