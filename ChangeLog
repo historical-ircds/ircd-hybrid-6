@@ -1,3 +1,8 @@
+*** 20011204_13 by db
+- put the | in the wrong place on a write
+
+
+
 *** 20011204_12 by db
 - added separate oper_reason to struct ConfItem. I got tired of the BS
 
