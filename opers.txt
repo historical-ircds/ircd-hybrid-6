@@ -145,7 +145,7 @@ COMMAND         - USAGE and DESCRIPTION
                     HELP    - Re-reads this HELP file
                     DLINES  - Re-hashes D-lines
 
-  RESTART       - RESTART
+  RESTART       - RESTART server.name
                   Restarts the IRC server.
 
   CLOSE         - CLOSE

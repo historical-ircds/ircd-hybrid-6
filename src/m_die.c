@@ -110,7 +110,7 @@ int m_die(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
 
   if (parc < 2)
     {
-      sendto_one(sptr,":%s NOTICE %s :Need server name /die %s",
+      sendto_one(sptr,":%s NOTICE %s :Need server name: /die %s",
                  me.name,sptr->name,me.name);
       return 0;
     }

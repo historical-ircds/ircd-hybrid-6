@@ -111,6 +111,22 @@ int     m_restart(struct Client *cptr,
       return 0;
     }
 
+  if (parc < 2)
+    {
+      sendto_one(sptr,":%s NOTICE %s :Need server name: /restart %s",
+                 me.name,sptr->name,me.name);
+      return 0;
+    }
+  else
+    {
+      if (irccmp(parv[1], me.name))
+        {
+          sendto_one(sptr,":%s NOTICE %s :Mismatch on /restart %s",
+                     me.name,sptr->name,me.name);
+          return 0;
+        }
+    }
+
   log(L_WARN, "Server RESTART by %s\n", get_client_name(sptr, SHOW_IP));
   ircsprintf(buf, "Server RESTART by %s", get_client_name(sptr, SHOW_IP));
   restart(buf);
