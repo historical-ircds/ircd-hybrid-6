@@ -293,6 +293,13 @@ char	*get_client_name(aClient *sptr,int showip)
       (void)ircsprintf(nbuf, "%s[%s%s%s]", sptr->name,
         t_user, t_host, t_port);
     }
+  else
+    {
+      /* As pointed out by Adel Mezibra 
+       * Neph|l|m@EFnet. Was missing a return here.
+       */
+      return sptr->name;
+    }
 
   if (mycmp(sptr->name,sptr->sockhost) || t_port[0])
     return nbuf;
