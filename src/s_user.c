@@ -671,7 +671,7 @@ static int register_user(aClient *cptr, aClient *sptr,
 	}
     }
   else
-    strncpyzt(sptr->username, username, USERLEN + 1);
+    strncpy(sptr->username, username, USERLEN);
 
   SetClient(sptr);
 
@@ -1062,10 +1062,12 @@ int	m_nick(aClient *cptr,
 	       int parc,
 	       char *parv[])
 {
-  aClient *acptr;
-  char	nick[NICKLEN+2], *s;
-  time_t newts = 0;
-  int	sameuser = 0, fromTS = 0;
+  aClient* acptr;
+  char	   nick[NICKLEN + 2];
+  char*    s;
+  time_t   newts = 0;
+  int	   sameuser = 0;
+  int      fromTS = 0;
 
   if (parc < 2)
     {
@@ -1120,7 +1122,7 @@ int	m_nick(aClient *cptr,
   
   if (MyConnect(sptr) && (s = (char *)strchr(parv[1], '~')))
     *s = '\0';
-  strncpyzt(nick, parv[1], NICKLEN+1);
+  strncpy(nick, parv[1], NICKLEN);
 
   /*
    * if do_nick_name() returns a null name OR if the server sent a nick
@@ -2679,7 +2681,7 @@ static int do_user(char* nick, aClient* cptr, aClient* sptr,
        * coming from another server, take the servers word for it
        */
       user->server = find_or_add(server);
-      strncpyzt(sptr->host, host, sizeof(sptr->host)); 
+      strncpy(sptr->host, host, HOSTLEN); 
     }
   else
     {
@@ -2696,11 +2698,11 @@ static int do_user(char* nick, aClient* cptr, aClient* sptr,
 	Count.invisi++;
       /*
        * don't take the clients word for it, ever
-       *  strncpyzt(user->host, host, sizeof(user->host)); 
+       *  strncpy(user->host, host, HOSTLEN); 
        */
       user->server = me.name;
     }
-  strncpyzt(sptr->info, realname, sizeof(sptr->info));
+  strncpy(sptr->info, realname, REALLEN);
 
   if (sptr->name[0]) /* NICK already received, now I have USER... */
     return register_user(cptr, sptr, sptr->name, username);
@@ -2712,7 +2714,6 @@ static int do_user(char* nick, aClient* cptr, aClient* sptr,
            * save the username in the client
            */
           strncpy(sptr->username, username, USERLEN);
-          sptr->username[USERLEN] = '\0';
         }
     }
   return 0;
@@ -3339,7 +3340,7 @@ int	m_pass(aClient *cptr,
 		 me.name, parv[0]);
       return 0;
     }
-  strncpyzt(cptr->passwd, password, sizeof(cptr->passwd));
+  strncpy(cptr->passwd, password, PASSWDLEN);
   if (parc > 2)
     {
       /* It looks to me as if orabidoo wanted to have more

@@ -725,9 +725,9 @@ static void remove_dependents(aClient *cptr,
 
 #endif
       if ((aconf = to->serv->nline))
-        strncpyzt(myname, my_name_for_link(me.name, aconf), HOSTLEN+1);
+        strncpy(myname, my_name_for_link(me.name, aconf), HOSTLEN);
       else
-        strncpyzt(myname, me.name, HOSTLEN+1);
+        strncpy(myname, me.name, HOSTLEN);
       recurse_send_quits(cptr, sptr, to, comment1, myname);
     }
 

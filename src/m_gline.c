@@ -59,19 +59,18 @@ extern char *smalldate(time_t);		/* defined in s_misc.c */
 
 /* internal functions */
 static void add_gline(aConfItem *);
-static void log_gline_request(
-			      char *,char *,char *,char *,
+static void log_gline_request(char*,char*,char*,const char* oper_server,
 			      char *,char *,char *);
 
 static void log_gline(aClient *,char *,GLINE_PENDING *,
-		      char *,char *,char *,char *,char *,char *,char *);
+		      char *,char *,char *,const char* oper_server,
+                      char *,char *,char *);
 
 
 static void expire_pending_glines();
 
-static int majority_gline(aClient *,
-			  char *,char *,
-			  char *,char *,
+static int majority_gline(aClient*, char *,char *, char *, 
+                          const char* serv_name,
 			  char *,char *,char *); /* defined in s_conf.c */
 
 
@@ -100,14 +99,14 @@ int     m_gline(aClient *cptr,
   char *oper_name;		/* nick of oper requesting GLINE */
   char *oper_username;		/* username of oper requesting GLINE */
   char *oper_host;		/* hostname of oper requesting GLINE */
-  char *oper_server;		/* server of oper requesting GLINE */
+  const char* oper_server;	/* server of oper requesting GLINE */
   char *user, *host;		/* user and host of GLINE "victim" */
   char *reason;			/* reason for "victims" demise */
 #ifdef GLINES
   char buffer[512];
   char *current_date;
-  char tempuser[USERLEN+2];
-  char temphost[HOSTLEN+1];
+  char tempuser[USERLEN + 2];
+  char temphost[HOSTLEN + 1];
   aConfItem *aconf;
 #endif
 
@@ -152,8 +151,10 @@ int     m_gline(aClient *cptr,
 	  if (!*host)		/* duh. no host found, assume its '*' host */
 	    host = "*";
 
-	  strncpyzt(tempuser, user, USERLEN+2);	/* allow for '*' */
-	  strncpyzt(temphost, host, HOSTLEN);
+	  strncpy(tempuser, user, USERLEN + 1);	/* allow for '*' */
+          tempuser[USERLEN + 1] = '\0';
+	  strncpy(temphost, host, HOSTLEN);
+          temphost[HOSTLEN] = '\0';
 	  user = tempuser;
 	  host = temphost;
 	}
@@ -307,7 +308,7 @@ static void log_gline_request(
 		      char *oper_nick,
 		      char *oper_user,
 		      char *oper_host,
-		      char *oper_server,
+		      const char* oper_server,
 		      char *user,
 		      char *host,
 		      char *reason)
@@ -355,7 +356,7 @@ static void log_gline(
 		      char *oper_nick,
 		      char *oper_user,
 		      char *oper_host,
-		      char *oper_server,
+		      const char *oper_server,
 		      char *user,
 		      char *host,
 		      char *reason)
@@ -705,46 +706,43 @@ static int majority_gline(aClient *sptr,
 			  char *oper_nick,
 			  char *oper_user,
 			  char *oper_host,
-			  char *oper_server,
+			  const char* oper_server,
 			  char *user,
 			  char *host,
 			  char *reason)
 {
-  GLINE_PENDING *new_pending_gline;
-  GLINE_PENDING *gline_pending_ptr;
+  GLINE_PENDING* new_pending_gline;
+  GLINE_PENDING* gline_pending_ptr;
 
   /* special case condition where there are no pending glines */
 
-  if(pending_glines == (GLINE_PENDING *)NULL) /* first gline request placed */
+  if (pending_glines == NULL) /* first gline request placed */
     {
-      new_pending_gline = (GLINE_PENDING *)malloc(sizeof(GLINE_PENDING));
-      if(new_pending_gline == (GLINE_PENDING *)NULL)
-	{
-	  sendto_realops("No memory for GLINE, GLINE dropped");
-	  return NO;
-	}
+      new_pending_gline = (GLINE_PENDING*) MyMalloc(sizeof(GLINE_PENDING));
+      assert(0 != new_pending_gline);
 
-      memset((void *)new_pending_gline,0,sizeof(GLINE_PENDING));
+      memset(new_pending_gline, 0, sizeof(GLINE_PENDING));
 
-      strncpyzt(new_pending_gline->oper_nick1,oper_nick,NICKLEN+1);
+      strncpy(new_pending_gline->oper_nick1, oper_nick, NICKLEN);
       new_pending_gline->oper_nick2[0] = '\0';
 
-      strncpyzt(new_pending_gline->oper_user1,oper_user,USERLEN);
+      strncpy(new_pending_gline->oper_user1, oper_user, USERLEN);
       new_pending_gline->oper_user2[0] = '\0';
 
-      strncpyzt(new_pending_gline->oper_host1,oper_host,HOSTLEN);
+      strncpy(new_pending_gline->oper_host1, oper_host, HOSTLEN);
       new_pending_gline->oper_host2[0] = '\0';
 
       new_pending_gline->oper_server1 = find_or_add(oper_server);
 
-      strncpyzt(new_pending_gline->user,user,USERLEN);
-      strncpyzt(new_pending_gline->host,host,HOSTLEN);
+      strncpy(new_pending_gline->user, user, USERLEN);
+      strncpy(new_pending_gline->host, host, HOSTLEN);
       new_pending_gline->reason1 = strdup(reason);
-      new_pending_gline->reason2 = (char *)NULL;
+      new_pending_gline->reason2 = NULL;
 
-      new_pending_gline->next = (GLINE_PENDING *)NULL;
       new_pending_gline->last_gline_time = NOW;
       new_pending_gline->time_request1 = NOW;
+
+      new_pending_gline->next = pending_glines;
       pending_glines = new_pending_gline;
       return NO;
     }
@@ -792,9 +790,9 @@ static int majority_gline(aClient *sptr,
 	    }
 	  else
 	    {
-	      strncpyzt(gline_pending_ptr->oper_nick2,oper_nick,NICKLEN+1);
-	      strncpyzt(gline_pending_ptr->oper_user2,oper_user,USERLEN);
-	      strncpyzt(gline_pending_ptr->oper_host2,oper_host,HOSTLEN);
+	      strncpy(gline_pending_ptr->oper_nick2, oper_nick, NICKLEN);
+	      strncpy(gline_pending_ptr->oper_user2, oper_user, USERLEN);
+	      strncpy(gline_pending_ptr->oper_host2, oper_host, HOSTLEN);
 	      gline_pending_ptr->reason2 = strdup(reason);
 	      gline_pending_ptr->oper_server2 = find_or_add(oper_server);
 	      gline_pending_ptr->last_gline_time = NOW;
@@ -816,19 +814,19 @@ static int majority_gline(aClient *sptr,
 
   memset((void *)new_pending_gline,0,sizeof(GLINE_PENDING));
 
-  strncpyzt(new_pending_gline->oper_nick1,oper_nick,NICKLEN+1);
+  strncpy(new_pending_gline->oper_nick1, oper_nick, NICKLEN);
   new_pending_gline->oper_nick2[0] = '\0';
 
-  strncpyzt(new_pending_gline->oper_user1,oper_user,USERLEN);
+  strncpy(new_pending_gline->oper_user1, oper_user, USERLEN);
   new_pending_gline->oper_user2[0] = '\0';
 
-  strncpyzt(new_pending_gline->oper_host1,oper_host,HOSTLEN);
+  strncpy(new_pending_gline->oper_host1, oper_host, HOSTLEN);
   new_pending_gline->oper_host2[0] = '\0';
 
   new_pending_gline->oper_server1 = find_or_add(oper_server);
 
-  strncpyzt(new_pending_gline->user,user,USERLEN);
-  strncpyzt(new_pending_gline->host,host,HOSTLEN);
+  strncpy(new_pending_gline->user, user, USERLEN);
+  strncpy(new_pending_gline->host, host, HOSTLEN);
   new_pending_gline->reason1 = strdup(reason);
   new_pending_gline->reason2 = (char *)NULL;
 

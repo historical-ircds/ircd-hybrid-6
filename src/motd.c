@@ -222,7 +222,8 @@ int ReadMessageFile(MessageFile *MessageFileptr)
 	*p = '\0';
       newMessageLine = (MessageFileLine*) MyMalloc(sizeof(MessageFileLine));
 
-      strncpyzt(newMessageLine->line, buffer, MESSAGELINELEN);
+      strncpy(newMessageLine->line, buffer, MESSAGELINELEN);
+      newMessageLine->line[MESSAGELINELEN] = '\0';
       newMessageLine->next = (MessageFileLine *)NULL;
 
       if (MessageFileptr->contentsOfFile)

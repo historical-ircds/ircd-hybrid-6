@@ -126,12 +126,12 @@ struct	Counter	{
  */
 typedef struct Whowas
 {
-  int hashv;
-  char name[NICKLEN+1];
-  char username[USERLEN+1]; 
-  char hostname[HOSTLEN+1];
-  char *servername;
-  char realname[REALLEN+1];
+  int  hashv;
+  char name[NICKLEN + 1];
+  char username[USERLEN + 1]; 
+  char hostname[HOSTLEN + 1];
+  const char* servername;
+  char realname[REALLEN + 1];
   time_t logoff;
   struct Client *online; /* Pointer to new nickname for chasing or NULL */
   struct Whowas *next;  /* for hash table... */
@@ -232,7 +232,7 @@ struct	SMode
 {
   unsigned int	mode;
   int	limit;
-  char	key[KEYLEN+1];
+  char	key[KEYLEN + 1];
 };
 
 /* Message table structure */
@@ -315,29 +315,32 @@ struct SLink
 
 struct Channel
 {
-  struct	Channel *nextch, *prevch, *hnextch;
-  Mode	mode;
-  char	topic[TOPICLEN+1];
+  struct Channel* nextch;
+  struct Channel* prevch;
+  struct Channel* hnextch;
+  Mode	          mode;
+  char	          topic[TOPICLEN + 1];
 #ifdef TOPIC_INFO
-  char    topic_nick[NICKLEN+1];
-  time_t  topic_time;
+  char            topic_nick[NICKLEN + 1];
+  time_t          topic_time;
 #endif
-  int	users;
-  Link	*members;
-  Link	*invites;
-  Link	*banlist;
-  Link  *exceptlist;
-  time_t channelts;
-  int locally_created;	/* used only to flag a locally created channel */
-  int keep_their_modes;	/* used only on mode after sjoin */
+  int             users;
+  Link*           members;
+  Link*           invites;
+  Link*           banlist;
+  Link*           exceptlist;
+  time_t          channelts;
+  int             locally_created;  /* used to flag a locally created channel */
+  int             keep_their_modes; /* used only on mode after sjoin */
 #ifdef FLUD
-  time_t fludblock;
-  struct fludbot *fluders;
+  time_t          fludblock;
+  struct fludbot* fluders;
 #endif
 #if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-  struct Channel *last_empty_channel, *next_empty_channel;
+  struct Channel* last_empty_channel;
+  struct Channel* next_empty_channel;
 #endif
-  char	chname[1];
+  char	          chname[1];
 };
 
 #define	TS_CURRENT	3	/* current TS protocol version */
@@ -463,13 +466,6 @@ extern struct Capability captab[];
 
 #define	isvalid(c) (((c) >= 'A' && (c) <= '~') || isdigit(c) || (c) == '-')
 
-/* String manipulation macros */
-
-/* strncopynt --> strncpyzt to avoid confusion, sematics changed
-   N must be now the number of bytes in the array --msa */
-#define	strncpyzt(x, y, N) \
-  do { strncpy((x),(y),(N)); x[(N) - 1]='\0'; } while(0)
-
 /* used in SetMode() in channel.c and m_umode() in s_msg.c */
 
 #define	MODE_NULL      0
@@ -581,23 +577,23 @@ struct fludbot {
 #ifdef GLINES
 typedef struct gline_pending
 {
-  char oper_nick1[NICKLEN+1];
-  char oper_user1[USERLEN+1];
-  char oper_host1[HOSTLEN+1];
-  char *oper_server1;		/* point to scache */
+  char oper_nick1[NICKLEN + 1];
+  char oper_user1[USERLEN + 1];
+  char oper_host1[HOSTLEN + 1];
+  const char* oper_server1;	/* point to scache */
   char *reason1;
   time_t time_request1;
 
-  char oper_nick2[NICKLEN+1];
-  char oper_user2[USERLEN+1];
-  char oper_host2[HOSTLEN+1];
-  char *oper_server2;		/* point to scache */
+  char oper_nick2[NICKLEN + 1];
+  char oper_user2[USERLEN + 1];
+  char oper_host2[HOSTLEN + 1];
+  const char* oper_server2;	/* point to scache */
   char *reason2;
   time_t time_request2;
   
   time_t last_gline_time;	/* for expiring entry */
-  char user[USERLEN+1];
-  char host[HOSTLEN+1];
+  char user[USERLEN + 1];
+  char host[HOSTLEN + 1];
 
   struct gline_pending *next;
 }GLINE_PENDING;

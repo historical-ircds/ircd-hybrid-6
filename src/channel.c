@@ -230,7 +230,7 @@ static	int	add_banid(aClient *cptr, aChannel *chptr, char *banid)
     }
 
   ban = make_link();
-  memset((void *)ban, 0, sizeof(Link));
+  memset(ban, 0, sizeof(Link));
   ban->flags = CHFL_BAN;
   ban->next = chptr->banlist;
 
@@ -309,7 +309,7 @@ static	int	add_exceptid(aClient *cptr, aChannel *chptr, char *eid)
     }
 
   ex = make_link();
-  memset((void *)ex, 0, sizeof(Link));
+  memset(ex, 0, sizeof(Link));
   ex->flags = CHFL_EXCEPTION;
   ex->next = chptr->exceptlist;
 
@@ -1338,7 +1338,7 @@ static  void     set_mode(aClient *cptr,
 	  if (whatt == MODE_DEL)
 	    *chptr->mode.key = '\0';
 	  else
-	    strncpyzt(chptr->mode.key, arg, KEYLEN+1);
+	    strncpy(chptr->mode.key, arg, KEYLEN);
 
 	  break;
 
@@ -2135,9 +2135,9 @@ static	aChannel *get_channel(aClient *cptr,
   if (MyClient(cptr) && len > CHANNELLEN)
     {
       len = CHANNELLEN;
-      *(chname+CHANNELLEN) = '\0';
+      *(chname + CHANNELLEN) = '\0';
     }
-  if ((chptr = find_channel(chname, (aChannel *)NULL)))
+  if ((chptr = find_channel(chname, NULL)))
     return (chptr);
 
   /*
@@ -2152,19 +2152,22 @@ static	aChannel *get_channel(aClient *cptr,
 
   if (flag == CREATE)
     {
-      chptr = (aChannel *)MyMalloc(sizeof(aChannel) + len);
-      memset((void *)chptr, 0, sizeof(aChannel));
-      strncpyzt(chptr->chname, chname, len+1);
+      chptr = (aChannel*) MyMalloc(sizeof(aChannel) + len + 1);
+      memset(chptr, 0, sizeof(aChannel));
+      /*
+       * NOTE: strcpy ok here, we have allocated strlen + 1
+       */
+      strcpy(chptr->chname, chname);
       if (channel)
 	channel->prevch = chptr;
       chptr->prevch = NULL;
       chptr->nextch = channel;
       channel = chptr;
-      if(Count.myserver == 0)
+      if (Count.myserver == 0)
 	chptr->locally_created = YES;
       chptr->keep_their_modes = YES;
       chptr->channelts = timeofday;	/* doesn't hurt to set it here */
-      (void)add_to_channel_hash_table(chname, chptr);
+      add_to_channel_hash_table(chname, chptr);
       Count.chan++;
     }
   return chptr;
@@ -3531,9 +3534,13 @@ int	m_topic(aClient *cptr,
 	       is_chan_op(sptr, chptr))
 	    {
 	      /* setting a topic */
-	      strncpyzt(chptr->topic, topic, sizeof(chptr->topic));
+	      strncpy(chptr->topic, topic, TOPICLEN);
 #ifdef TOPIC_INFO
-	      strcpy(chptr->topic_nick, sptr->name);
+              /*
+               * XXX - this truncates the topic_nick if
+               * strlen(sptr->name) > NICKLEN
+               */
+	      strncpy(chptr->topic_nick, sptr->name, NICKLEN);
 	      chptr->topic_time = timeofday;
 #endif
 	      sendto_match_servs(chptr, cptr,":%s TOPIC %s :%s",
@@ -4146,7 +4153,7 @@ int	m_sjoin(aClient *cptr,
     return 0;
 
   newts = atol(parv[1]);
-  memset((void *)&mode, 0, sizeof(mode));
+  memset(&mode, 0, sizeof(mode));
 
   s = parv[3];
   while (*s)
@@ -4171,7 +4178,7 @@ int	m_sjoin(aClient *cptr,
 	mode.mode |= MODE_TOPICLIMIT;
 	break;
       case 'k':
-	strncpyzt(mode.key, parv[4+args], KEYLEN+1);
+	strncpy(mode.key, parv[4 + args], KEYLEN);
 	args++;
 	if (parc < 5+args) return 0;
 	break;

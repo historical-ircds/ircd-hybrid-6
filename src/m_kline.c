@@ -370,8 +370,8 @@ m_kline(aClient *cptr,
   char *current_date;
   int  ip_kline = NO;
   aClient *acptr;
-  char tempuser[USERLEN+2];
-  char temphost[HOSTLEN+1];
+  char tempuser[USERLEN + 2];
+  char temphost[HOSTLEN + 1];
   aConfItem *aconf;
   int temporary_kline_time=0;	/* -Dianora */
   int wild_user;		/* does user part match everything? */
@@ -486,8 +486,10 @@ m_kline(aClient *cptr,
 
       if (!*host)		/* duh. no host found, assume its '*' host */
 	host = "*";
-      strncpyzt(tempuser, user, USERLEN+2); /* allow for '*' in front */
-      strncpyzt(temphost, host, HOSTLEN);
+      strncpy(tempuser, user, USERLEN + 1); /* allow for '*' in front */
+      tempuser[USERLEN + 1] = '\0';
+      strncpy(temphost, host, HOSTLEN);
+      temphost[HOSTLEN] = '\0';
       user = tempuser;
       host = temphost;
     }
@@ -821,11 +823,11 @@ static int isnumber(char *p)
 
 static char *cluster(char *hostname)
 {
-  static char result[HOSTLEN+1];	/* result to return */
-  char        temphost[HOSTLEN+1];	/* work place */
+  static char result[HOSTLEN + 1];	/* result to return */
+  char        temphost[HOSTLEN + 1];	/* work place */
   char	      *ipp;		/* used to find if host is ip # only */
   char	      *host_mask;	/* used to find host mask portion to '*' */
-  char	      *zap_point=(char *)NULL;	/* used to zap last nnn portion of an ip # */
+  char	      *zap_point = NULL; /* used to zap last nnn portion of an ip # */
   char 	      *tld;		/* Top Level Domain */
   int	      is_ip_number;	/* flag if its an ip # */	      
   int	      number_of_dots;	/* count number of dots for both ip# and
@@ -843,11 +845,13 @@ static char *cluster(char *hostname)
 
   if(strchr(hostname,'@'))	
     {
-      strncpyzt(result, hostname, HOSTLEN);      
+      strncpy(result, hostname, HOSTLEN);      
+      result[HOSTLEN] = '\0';
       return(result);
     }
 
-  strncpyzt(temphost, hostname, HOSTLEN);
+  strncpy(temphost, hostname, HOSTLEN);
+  temphost[HOSTLEN] = '\0';
 
   is_ip_number = YES;	/* assume its an IP# */
   ipp = temphost;

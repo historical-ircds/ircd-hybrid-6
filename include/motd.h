@@ -11,7 +11,7 @@
 #define INCLUDED_limits_h
 #endif
 
-#define MESSAGELINELEN	90
+#define MESSAGELINELEN 89	
 
 typedef enum {
   USER_MOTD,
@@ -21,16 +21,16 @@ typedef enum {
 
 typedef struct MessageFileLineStruct
 {
-  char	line[MESSAGELINELEN];
+  char	line[MESSAGELINELEN + 1];
   struct MessageFileLineStruct *next;
 }MessageFileLine;
 
 typedef struct
 {
-  char fileName[PATH_MAX+1];
+  char fileName[PATH_MAX + 1];
   MotdType motdType;
   MessageFileLine *contentsOfFile;
-  char lastChangedDate[MAX_DATE_STRING];
+  char lastChangedDate[MAX_DATE_STRING + 1];
 }MessageFile;
 
 

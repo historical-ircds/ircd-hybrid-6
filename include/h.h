@@ -68,7 +68,7 @@ extern  aClient *find_chasing (aClient *, char *, int *);
 extern aClient* find_client(const char* name, aClient* client);
 extern	aClient	*find_name (char *, aClient *);
 extern	aClient	*find_person (char *, aClient *);
-extern	aClient	*find_server (char *, aClient *);
+extern struct Client* find_server(const char* name, struct Client* dflt_client);
 extern	aClient	*find_service (char *, aClient *);
 extern	aClient	*find_userhost (char *, char *, aClient *, int *);
 
@@ -96,10 +96,10 @@ extern	int	rehash (aClient *, aClient *, int);
 extern  int     lock_kline_file ();
 extern  void    report_error_on_tty(const char* message); /* ircd.c */
 
-extern  void    clear_scache_hash_table(void);
-extern  char    *find_or_add(char *);
-extern  void    count_scache(int *,u_long *);
-extern  void    list_scache(aClient *, aClient *,int, char **);
+extern void        clear_scache_hash_table(void);
+extern const char* find_or_add(const char* name);
+extern void        count_scache(int *,u_long *);
+extern void        list_scache(aClient *, aClient *,int, char **);
 
 extern void     dummy(int signo);
 extern void*    MyMalloc(size_t size);

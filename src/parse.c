@@ -110,7 +110,7 @@ aClient *find_userhost(char *user,
 **	string.
 */
 
-aClient *find_server(char *name, aClient *cptr)
+aClient* find_server(const char* name, aClient *cptr)
 {
   if (name)
     cptr = hash_find_server(name, cptr);

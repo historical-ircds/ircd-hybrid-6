@@ -25,8 +25,10 @@
 #include "send.h"
 #include "hash.h"
 
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+
 /*
  * Whowas hash table size
  *
@@ -56,39 +58,50 @@ static unsigned int hash_whowas_name(const char* name)
   return(h & (WW_MAX - 1));
 }
 
-void add_history(aClient *cptr, int online)
+void add_history(aClient* cptr, int online)
 {
-  aWhowas *new;
+  aWhowas* who = &WHOWAS[whowas_next];
 
-  new = &WHOWAS[whowas_next];
+  assert(0 != cptr);
+  /*
+   * XXX - can these be checked at compile time instead??
+   */
+  assert(sizeof(cptr->name)     == sizeof(who->name));
+  assert(sizeof(cptr->username) == sizeof(who->username));
+  assert(sizeof(cptr->host)     == sizeof(who->hostname));
+  assert(sizeof(cptr->info)     == sizeof(who->realname));
 
-  if (new->hashv != -1)
+  if (who->hashv != -1)
     {
-      if (new->online)
-	del_whowas_from_clist(&(new->online->whowas),new);
-      del_whowas_from_list(&WHOWASHASH[new->hashv], new);
+      if (who->online)
+	del_whowas_from_clist(&(who->online->whowas),who);
+      del_whowas_from_list(&WHOWASHASH[who->hashv], who);
     }
-  new->hashv = hash_whowas_name(cptr->name);
-  new->logoff = NOW;
-  strncpyzt(new->name, cptr->name,NICKLEN+1);
-  strncpyzt(new->username, cptr->username,USERLEN+1);
-  strncpyzt(new->hostname, cptr->host, HOSTLEN);
-  strncpyzt(new->realname, cptr->info,REALLEN);
+  who->hashv = hash_whowas_name(cptr->name);
+  who->logoff = NOW;
+  /*
+   * NOTE: strcpy ok here, the sizes in the client struct MUST
+   * match the sizes in the whowas struct
+   */
+  strcpy(who->name,     cptr->name);
+  strcpy(who->username, cptr->username);
+  strcpy(who->hostname, cptr->host);
+  strcpy(who->realname, cptr->info);
 
   /* Its not string copied, a pointer to the scache hash is copied
      -Dianora
    */
-  /*  strncpyzt(new->servername, cptr->user->server,HOSTLEN); */
-  new->servername = cptr->user->server;
+  /*  strncpy(who->servername, cptr->user->server,HOSTLEN); */
+  who->servername = cptr->user->server;
 
   if (online)
     {
-      new->online = cptr;
-      add_whowas_to_clist(&(cptr->whowas), new);
+      who->online = cptr;
+      add_whowas_to_clist(&(cptr->whowas), who);
     }
   else
-    new->online = NULL;
-  add_whowas_to_list(&WHOWASHASH[new->hashv], new);
+    who->online = NULL;
+  add_whowas_to_list(&WHOWASHASH[who->hashv], who);
   whowas_next++;
   if (whowas_next == NICKNAMEHISTORYLENGTH)
     whowas_next = 0;

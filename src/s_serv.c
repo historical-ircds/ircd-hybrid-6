@@ -469,19 +469,16 @@ void send_capabilities(aClient *cptr,int use_zip)
 **	parv[2] = serverinfo/hopcount
 **      parv[3] = serverinfo
 */
-int	m_server(aClient *cptr,
-		 aClient *sptr,
-		 int parc,
-		 char *parv[])
+int m_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-  int	i;
-  char	info[REALLEN+1];
-  /*  char *inpath; */
-  char  *host;
-  aClient *acptr, *bcptr;
-  aConfItem *aconf;
-  int	hop;
-  char clean_host[(2*HOSTLEN)+1];
+  int        i;
+  char       info[REALLEN + 1];
+  char*      host;
+  aClient*   acptr;
+  aClient*   bcptr;
+  aConfItem* aconf;
+  int	     hop;
+  char       clean_host[(2 * HOSTLEN) + 1];
 
   info[0] = '\0';
   /*  inpath = get_client_name(cptr,FALSE); */
@@ -495,15 +492,19 @@ int	m_server(aClient *cptr,
   if (parc > 3 && atoi(parv[2]))
     {
       hop = atoi(parv[2]);
-      strncpyzt(info, parv[3], REALLEN);
+      strncpy(info, parv[3], REALLEN);
+      info[REALLEN] = '\0';
     }
   else if (parc > 2)
     {
-      strncpyzt(info, parv[2], REALLEN);
-      if ((parc > 3) && ((i = strlen(info)) < (REALLEN-2)))
+      /*
+       * XXX - hmmmm
+       */
+      strncpy(info, parv[2], REALLEN);
+      if ((parc > 3) && ((i = strlen(info)) < (REALLEN - 2)))
 	{
-	  (void)strcat(info, " ");
-	  (void)strncat(info, parv[3], REALLEN - i - 2);
+	  strcat(info, " ");
+	  strncat(info, parv[3], REALLEN - i - 2);
 	  info[REALLEN] = '\0';
 	}
     }
@@ -719,10 +720,10 @@ int	m_server(aClient *cptr,
 	}
 
       acptr = make_client(cptr);
-      (void)make_server(acptr);
+      make_server(acptr);
       acptr->hopcount = hop;
-      strncpyzt(acptr->name, host, sizeof(acptr->name));
-      strncpyzt(acptr->info, info, sizeof(acptr->info));
+      strncpy(acptr->name, host, HOSTLEN);
+      strncpy(acptr->info, info, REALLEN);
       acptr->serv->up = find_or_add(parv[0]);
 
       SetServer(acptr);
@@ -730,7 +731,7 @@ int	m_server(aClient *cptr,
       Count.server++;
 
       add_client_to_list(acptr);
-      (void)add_to_client_hash_table(acptr->name, acptr);
+      add_to_client_hash_table(acptr->name, acptr);
       acptr->servptr = sptr;
       add_client_to_llist(&(acptr->servptr->serv->servers), acptr);
 
@@ -777,8 +778,8 @@ int	m_server(aClient *cptr,
       return exit_client(cptr, cptr, cptr, "Non-TS server");
     }
 
-  strncpyzt(cptr->name, host, sizeof(cptr->name));
-  strncpyzt(cptr->info, info[0] ? info:me.name, sizeof(cptr->info));
+  strncpy(cptr->name, host, HOSTLEN);
+  strncpy(cptr->info, info[0] ? info:me.name, REALLEN);
   cptr->hopcount = hop;
 
   switch (check_server_init(cptr))

@@ -2112,12 +2112,11 @@ static void initconf(FBFILE* file, int use_include)
       */
       if (aconf->status == CONF_ME)
         {
-          strncpyzt(me.info, aconf->user, sizeof(me.info));
+          strncpy(me.info, aconf->user, REALLEN);
 
           if (me.name[0] == '\0' && aconf->host[0])
           {
-            strncpyzt(me.name, aconf->host,
-                      sizeof(me.name));
+            strncpy(me.name, aconf->host, HOSTLEN);
             if ((aconf->passwd[0] != '\0') && (aconf->passwd[0] != '*'))
             {
                 memset(&vserv,0, sizeof(vserv));
@@ -2262,9 +2261,12 @@ static void initconf(FBFILE* file, int use_include)
                    */
 
                   len = strlen(aconf->name);
-                  chptr = (aChannel *)MyMalloc(sizeof(aChannel) + len);
-                  memset((void *)chptr, 0, sizeof(aChannel));
-                  strncpyzt(chptr->chname, aconf->name, len+1);
+                  chptr = (aChannel*) MyMalloc(sizeof(aChannel) + len + 1);
+                  memset(chptr, 0, sizeof(aChannel));
+                  /*
+                   * NOTE: strcpy ok since we already know the length
+                   */
+                  strcpy(chptr->chname, aconf->name);
                   chptr->mode.mode = MODE_JUPED;
                   if (channel)
                     channel->prevch = chptr;
@@ -2278,7 +2280,7 @@ static void initconf(FBFILE* file, int use_include)
                 }
 
               if(aconf->passwd)
-                strncpyzt(chptr->topic, aconf->passwd, sizeof(chptr->topic));
+                strncpy(chptr->topic, aconf->passwd, TOPICLEN);
             }
 #endif
 

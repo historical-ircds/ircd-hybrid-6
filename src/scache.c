@@ -8,10 +8,10 @@
 #include "numeric.h"
 #include "h.h"
 #include "send.h"
+
+#include <assert.h>
 #include <string.h>
 
-
-static int hash(char *);	/* keep it hidden here */
 
 /*
  * ircd used to store full servernames in anUser as well as in the 
@@ -42,16 +42,16 @@ static SCACHE *scache_hash[SCACHE_HASH_SIZE];
 
 void clear_scache_hash_table(void)
 {
-  memset((void *)scache_hash, 0, sizeof(scache_hash));
+  memset(scache_hash, 0, sizeof(scache_hash));
 }
 
-static int hash(char *string)
+static int hash(const char* string)
 {
   int hash_value;
 
   hash_value = 0;
-  while(*string)
-    hash_value += (*string++&0xDF);
+  while (*string)
+    hash_value += (*string++ & 0xDF);
 
   return hash_value % SCACHE_HASH_SIZE;
 }
@@ -64,35 +64,27 @@ static int hash(char *string)
  * existing, servername.  use the hash in list.c for those.  -orabidoo
  */
 
-char *find_or_add(char *name)
+const char* find_or_add(const char* name)
 {
-  int hash_index;
-  SCACHE *ptr, *newptr;
+  int     hash_index;
+  SCACHE* ptr;
 
   ptr = scache_hash[hash_index = hash(name)];
-  while(ptr)
+  for ( ; ptr; ptr = ptr->next) 
     {
-      if(!irccmp(ptr->name, name))
+      if (!irccmp(ptr->name, name))
 	return(ptr->name);
-      else
-	ptr = ptr->next;
     }
 
-  /* not found -- add it */
-  if ( ( ptr = scache_hash[hash_index]) )
-    {
-      newptr = scache_hash[hash_index] = (SCACHE *)MyMalloc(sizeof(SCACHE));
-      strncpyzt(newptr->name, name, HOSTLEN);
-      newptr->next = ptr;
-      return (newptr->name);
-    }
-  else
-    {
-      ptr = scache_hash[hash_index] = (SCACHE *)MyMalloc(sizeof(SCACHE));
-      strncpyzt(ptr->name, name, HOSTLEN);
-      ptr->next = (SCACHE *)NULL;
-      return (ptr->name);
-    }
+  ptr = (SCACHE*) MyMalloc(sizeof(SCACHE));
+  assert(0 != ptr);
+
+  strncpy(ptr->name, name, HOSTLEN);
+  ptr->name[HOSTLEN] = '\0';
+
+  ptr->next = scache_hash[hash_index];
+  scache_hash[hash_index] = ptr;
+  return ptr->name;  
 }
 
 /* Added so s_debug could check memory usage in here -Dianora */
@@ -127,7 +119,7 @@ void list_scache(aClient *cptr,aClient *sptr,int parc,char *parv[])
   int hash_index;
   SCACHE *ptr;
 
-  for(hash_index = 0; hash_index < SCACHE_HASH_SIZE ;hash_index++)
+  for (hash_index = 0; hash_index < SCACHE_HASH_SIZE ;hash_index++)
     {
       ptr = scache_hash[hash_index];
       while(ptr)
