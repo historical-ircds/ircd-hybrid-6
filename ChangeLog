@@ -1,3 +1,9 @@
+*** 20000824_1 by lusky
+- server_estab() - mask IP in the op notices, but log the real ip
+- disable wildcards in WHOIS (configurable for now)
+- DLPATH didn't get loaded on REHASH
+
+
 *** 20000822_1 by lusky
 added support for CIDR IP tklines, just like normal klines
 
