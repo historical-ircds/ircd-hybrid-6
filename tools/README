@@ -1,7 +1,11 @@
-  Couple of unsupported startup programs for ircd, they simply
-set the process limits correctly for ircd, before startup.
-Be nice to have one crontab script in here (hint)
+A directory of support programs for ircd.
+
+mkpasswd - makes password for O lines
 
 start_ircd.c - start program for fbsd and bsd/os systems
 ircd_start.c - start program for solaris
 
+klineParse.c  -cleans out redundant klines
+
+viconf - edit your conf file without having to chdir su etc. etc.
+         also locks the file if file locking is used.
