@@ -1,3 +1,15 @@
+lusky       2001/12/08 01:23:19 EST	(20011208_9)
+
+  Modified files:
+    src                  dline_conf.c 
+  Log:
+  fixed compile warning...  NULL is a pointer, 0 is an int.
+  
+  Revision  Changes    Path
+  1.41      +1 -1      ircd-hybrid-6/src/dline_conf.c
+
+
+
 jdc         2001/12/08 00:56:32 EST	(20011208_8)
 
   Modified files:
