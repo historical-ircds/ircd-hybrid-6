@@ -457,22 +457,11 @@ int attach_Iline(aClient* cptr, const char* username, char **preason)
           /* Thanks for spoof idea amm */
           if(IsConfDoSpoofIp(aconf))
             {
-              /* abuse it, lose it. */
-#ifdef SPOOF_FREEFORM
 #ifdef SPOOF_NOTICE
               sendto_realops("%s spoofing: %s(%s) as %s", cptr->name,
                              cptr->host, inetntoa((char*) &cptr->ip), aconf->name);
 #endif /* SPOOF_NOTICE */
               strncpy_irc(cptr->host, aconf->name, HOSTLEN);
-#else
-              /* default to oper.server.name.tld */
-#ifdef SPOOF_NOTICE
-              sendto_realops("%s spoofing: %s(%s) as oper.%s", cptr->name,
-                             cptr->host, inetntoa((char*) &cptr->ip), me.name);
-#endif /* SPOOF_NOTICE */
-              strcpy(cptr->host, "oper.");
-              strncpy_irc(&cptr->host[5], me.name, HOSTLEN - 5);
-#endif
               SetIPSpoof(cptr);
               SetIPHidden(cptr);
             }

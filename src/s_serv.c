@@ -835,12 +835,7 @@ int server_estab(struct Client *cptr)
                   sendnick_TS(cptr, acptr);
               }
           }
-#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-        /* don't send 0 user channels on rejoin (Mortiis)
-         */
-        if(chptr->users != 0)
-#endif
-          send_channel_modes(cptr, chptr);
+	send_channel_modes(cptr, chptr);
       }
     /*
     ** also send out those that are not on any channel

@@ -419,9 +419,6 @@ int m_set(struct Client *cptr, struct Client *sptr, int parc, char *parv[])
                           server_was_split = NO;
                           sendto_ops("split-mode deactived by manual override");
                         }
-#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-                      remove_empty_channels();
-#endif
 #if defined(SPLIT_PONG)
                       got_server_pong = YES;
 #endif

@@ -61,10 +61,6 @@ int server_was_split=YES;
 int got_server_pong;
 time_t server_split_time;
 
-#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-struct Channel *empty_channel_list=(struct Channel*)NULL;
-void remove_empty_channels();
-#endif
 #endif
 
 struct Channel *channel = NullChn;
@@ -639,24 +635,6 @@ static  int is_banned(struct Client *cptr,struct Channel *chptr)
 static  void    add_user_to_channel(struct Channel *chptr, struct Client *who, int flags)
 {
   Link *ptr;
-
-#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-  if( chptr->mode.mode & MODE_SPLIT )
-    {
-      /* Unmark the split mode */
-      chptr->mode.mode &= ~MODE_SPLIT;
-
-      /* remove from the empty channel double link list */
-      if (chptr->last_empty_channel)
-        chptr->last_empty_channel->next_empty_channel =
-          chptr->next_empty_channel;
-      else
-        empty_channel_list = chptr->next_empty_channel;
-      if (chptr->next_empty_channel)
-        chptr->next_empty_channel->last_empty_channel =
-          chptr->last_empty_channel;
-    }
-#endif
 
   if (who->user)
     {
@@ -2455,39 +2433,6 @@ static  void    sub1_from_channel(struct Channel *chptr)
       chptr->users = 0; /* if chptr->users < 0, make sure it sticks at 0
                          * It should never happen but...
                          */
-
-#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-      if(server_was_split && (chptr->chname[0] != '&'))
-        {
-          /*
-           * Now, find all invite links from channel structure
-           */
-          /* The idea here is, not to "forget" the channel mode
-           * the ban list, exception lists, and not to release
-           * the channel at this time.
-           * The invite list should be forgotten now, as well
-           * as the flooder lists
-           * -db
-           */
-
-          while ((tmp = chptr->invites))
-            del_invite(tmp->value.cptr, chptr);
-
-#ifdef FLUD
-          free_fluders(NULL, chptr);
-#endif
-          /* flag the channel as split */
-          chptr->mode.mode |= MODE_SPLIT;
-
-          /* Add to double linked empty channel list */
-          if(empty_channel_list)
-            empty_channel_list->last_empty_channel = chptr;
-          chptr->last_empty_channel = (struct Channel *)NULL;
-          chptr->next_empty_channel = empty_channel_list;
-          empty_channel_list = chptr;
-        }
-      else
-#endif
 #ifdef JUPE_CHANNEL
         if( chptr->mode.mode & MODE_JUPED )
           {
@@ -2597,113 +2542,12 @@ static void check_still_split()
           server_was_split = NO;
           sendto_ops("Net Rejoined, split-mode deactivated");
           cold_start = NO;
-#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-          remove_empty_channels();
-#endif
         }
       else
         {
           server_split_time = CurrentTime; /* still split */
           server_was_split = YES;
         }
-    }
-}
-#endif
-
-#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-/*
- * remove_empty_channels
- *
- * inputs       - none
- * output       - none
- * side effects - remove all channels on empty_channel_list that have
- * 
- * Any channel struct on this link list, is here because it had
- * no members, hence normally would not exist through a split.
- * If after the split is over, there are any channels left in this
- * list, they must be removed. Whenever a channel gains a member
- * whether locally or from a remote SJOIN it is removed from this list.
- */
-
-void remove_empty_channels()
-{
-  Link *tmp;
-  Link  *obtmp;
-  struct Channel *next_empty_channel;
-
-  for(;empty_channel_list;
-      empty_channel_list = next_empty_channel )
-    {
-      next_empty_channel = empty_channel_list->next_empty_channel;
-
-      if(empty_channel_list->users)             /* sanity test */
-        {
-	  /* This is an oddity, rather than an out and out error
-	   * if this happens, a client managed to join the channel
-	   * making it non zero users, and I didn't notice. That means
-	   * strictly speaking its an error. However, if this entry is
-	   * ignored, its a non fatal one.
-	   */
-#if 0
-          sendto_ops("non zero user count in remove_empty_channels");
-          sendto_ops("Please report to the hybrid team! ircd-hybrid@the-project.org");
-#endif
-          empty_channel_list->next_empty_channel = (struct Channel *)NULL;
-          empty_channel_list->last_empty_channel = (struct Channel *)NULL;
-          continue;
-        }
-
-      /*
-       * Now, find all invite links from channel structure
-       */
-      while ((tmp = empty_channel_list->invites))
-        del_invite(tmp->value.cptr, empty_channel_list);
-      
-      tmp = empty_channel_list->banlist;
-      while (tmp)
-        {
-          obtmp = tmp;
-          tmp = tmp->next;
-#ifdef BAN_INFO
-          MyFree(obtmp->value.banptr->banstr);
-          MyFree(obtmp->value.banptr->who);
-          MyFree(obtmp->value.banptr);
-#else
-          MyFree(obtmp->value.cp);
-#endif
-          free_link(obtmp);
-        }
-
-      tmp = empty_channel_list->exceptlist;
-      while (tmp)
-        {
-          obtmp = tmp;
-          tmp = tmp->next;
-#ifdef BAN_INFO
-          MyFree(obtmp->value.banptr->banstr);
-          MyFree(obtmp->value.banptr->who);
-          MyFree(obtmp->value.banptr);
-#else
-          MyFree(obtmp->value.cp);
-#endif
-          free_link(obtmp);
-        }
-      empty_channel_list->banlist = empty_channel_list->exceptlist = NULL;
-      
-      if (empty_channel_list->prevch)
-        empty_channel_list->prevch->nextch = empty_channel_list->nextch;
-      else
-        channel = empty_channel_list->nextch;
-      if (empty_channel_list->nextch)
-        empty_channel_list->nextch->prevch = empty_channel_list->prevch;
-      
-#ifdef FLUD
-      free_fluders(NULL, empty_channel_list);
-#endif
-      del_from_channel_hash_table(empty_channel_list->chname, 
-                                        empty_channel_list);
-      MyFree((char*) empty_channel_list);
-      Count.chan--;
     }
 }
 #endif
@@ -2786,7 +2630,7 @@ int     m_join(struct Client *cptr,
         }
 
 
-#ifdef NO_JOIN_ON_SPLIT_SIMPLE
+#ifdef NO_JOIN_ON_SPLIT
       if (server_was_split && MyClient(sptr) && (*name != '&') &&
           !IsAnOper(sptr))
         {
@@ -2794,24 +2638,8 @@ int     m_join(struct Client *cptr,
                          me.name, parv[0], name);
               continue;
         }
-#endif /* NO_JOIN_ON_SPLIT_SIMPLE */
+#endif /* NO_JOIN_ON_SPLIT */
 
-#if defined(PRESERVE_CHANNEL_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT)
-      /* If from a cold start, there were never any channels
-       * joined, hence all of them must be considered off limits
-       * until this server joins the network
-       *
-       * cold_start is set to NO if SPLITDELAY is set to 0 in m_set()
-       */
-
-      if(cold_start && MyClient(sptr) && (*name != '&') &&
-         !IsAnOper(sptr))
-        {
-              sendto_one(sptr, form_str(ERR_UNAVAILRESOURCE),
-                         me.name, parv[0], name);
-              continue;
-        }
-#endif
       if (*jbuf)
         (void)strcat(jbuf, ",");
       (void)strncat(jbuf, name, sizeof(jbuf) - i - 1);
@@ -2971,27 +2799,6 @@ int     m_join(struct Client *cptr,
                     sptr->user->server);
         }
 
-#if defined(NO_JOIN_ON_SPLIT)
-      if(server_was_split && (*name != '&'))
-        {
-          if( chptr )   /* The channel existed, so I can't join it */
-            {
-              if (IsMember(sptr, chptr)) /* already a member, ignore this */
-                continue;
-
-              /* allow local joins to this channel */
-              if( (chptr->users == 0) && !IsAnOper(sptr) )
-                {
-                  sendto_one(sptr, form_str(ERR_UNAVAILRESOURCE),
-                             me.name, parv[0], name);
-                  continue;
-                }
-            }
-          else
-            chptr = get_channel(sptr, name, CREATE);        
-        }
-      else
-#endif
       if(!chptr)        /* If I already have a chptr, no point doing this */
         chptr = get_channel(sptr, name, CREATE);
 

@@ -345,14 +345,6 @@
  */
 #define SPOOF_NOTICE
 
-/* SPOOF_FREEFORM - Allow a spoofed iline to specify a target
- * host which the user will receive. If this is not defined all
- * users who fall into a spoofed iline will be "oper.servername".
- * everyone and their mother knows this define exists, we might
- * as well acknowledge it.
- */
-#undef SPOOF_FREEFORM
-
 /* STATS_NOTICE - See a notice when a user does a /stats
  *
  * This is a violation of privacy.  Arguments for this have been
@@ -489,7 +481,7 @@
  * options are:
  *   L_CRIT, L_ERROR, L_WARN, L_NOTICE, L_TRACE, L_INFO, L_DEBUG
  */
-#define INIT_LOG_LEVEL L_DEBUG
+#define INIT_LOG_LEVEL L_NOTICE
 
 /* USE_LOGFILE - log errors and such to LPATH
  * If you wish to have the server send 'vital' messages about server
@@ -551,7 +543,7 @@
 /* MAXSENDQLENGTH - Max amount of internal send buffering
  * Max amount of internal send buffering when socket is stuck (bytes)
  */
-#define MAXSENDQLENGTH 7050000    /* Recommended value: 7050000 for efnet */
+#define MAXSENDQLENGTH 9000000    /* Recommended value: 9000000 for efnet */
 
 /*  BUFFERPOOL - the maximum size of the total of all sendq's.
  *  Recommended value is 4 times MAXSENDQLENGTH.
@@ -586,12 +578,10 @@
 #define LITTLE_I_LINES
 
 /*
- * define ONE of NO_CHANOPS_ON_SPLIT, NO_JOIN_ON_SPLIT
- * PRESERVE_CHANNEL_ON_SPLIT, NO_JOIN_ON_SPLIT_SIMPLE
+ * define either NO_CHANOPS_ON_SPLIT or NO_JOIN_ON_SPLIT
  *
- * choose =one= only
+ * choose =one= only or undef on small networks
  *
- * For small networks, admins can disable all four.
  */
 
 /* NO_CHANOPS_WHEN_SPLIT
@@ -599,41 +589,22 @@
  * if there are no servers presently connected to this server
  * opers are not affected. 
  */
-#define NO_CHANOPS_WHEN_SPLIT
+#undef NO_CHANOPS_WHEN_SPLIT
 
 /* 
- * NO_JOIN_ON_SPLIT_SIMPLE
+ * NO_JOIN_ON_SPLIT
  * 
  * When this is defined, users will not be allowed to join channels
  * while the server is split.
  */
-#undef NO_JOIN_ON_SPLIT_SIMPLE
-
-/*
- * NO_JOIN_ON_SPLIT
- *
- * When this is defined, users will not be allowed to join channels
- * that were present before a split. THIS IS BROKEN - DO NOT USE
- * ON A PRODUCTION SERVER --Rodder
- */
 #undef NO_JOIN_ON_SPLIT
 
 /*
- * PRESERVE_CHANNEL_ON_SPLIT
- *
- * When this is defined, channel modes are preserved when this
- * server is split from net until rejoin. i.e. if the channel
- * was +i before this server split, it remains +i during the split
- * THIS IS BROKEN - DO NOT USE ON PRODUCTION SERVER --Rodder
- */
-#undef PRESERVE_CHANNEL_ON_SPLIT
-
-/*
  * SPLIT_SMALLNET_SIZE defines what constitutes a split from 
- * the net. for a leaf, 2 is fine. If the number of servers seen
- * on the net gets less than 2, a split is deemed to have happened.
+ * the net. for a leaf, 5 is fine. If the number of servers seen
+ * on the net gets less than 5, a split is deemed to have happened.
  */
-#define SPLIT_SMALLNET_SIZE 2
+#define SPLIT_SMALLNET_SIZE 5
 
 /*
  * SPLIT_SMALLNET_USER_SIZE defines how many global users on the
@@ -643,7 +614,7 @@
  * number of users seen on net > SPLIT_SMALLNET_USER_SIZE start
  * counting down the SERVER_SPLIT_RECOVERY_TIME
  */
-#define SPLIT_SMALLNET_USER_SIZE 10000
+#define SPLIT_SMALLNET_USER_SIZE 15000
 
 /*
  * SPLIT_PONG will send a PING to a server after the connect burst.
@@ -745,7 +716,7 @@
 
 /* INITIAL_DBUFS - how many dbufs to preallocate
  */
-#define INITIAL_DBUFS 1000 /* preallocate 4 megs of dbufs */ 
+#define INITIAL_DBUFS 4000 /* preallocate 16 megs of dbufs */ 
 
 /* MAXBUFFERS - increase socket buffers
  *
@@ -798,7 +769,7 @@
  * (HANGONGOODLINK) and we give the net few seconds to steady
  * (HANGONRETRYDELAY). This latter has to be long enough that the
  * other end of the connection has time to notice it broke too.
- * 1997/09/18 recommended values by ThemBones for modern Efnet
+ * 1997/09/18 recommended values by ThemBones for modern EFnet
  */
 
 #define HANGONGOODLINK 3600     /* Recommended value: 30-60 minutes */
@@ -826,7 +797,7 @@
 /* MAXCHANNELSPERUSER -
  * Max number of channels a user is allowed to join.
  */
-#define MAXCHANNELSPERUSER  10  /* Recommended value: 10 */
+#define MAXCHANNELSPERUSER  20  /* Recommended value: 20 */
 
 /* SENDQ_ALWAYS - should always be defined.
  * SendQ-Always causes the server to put all outbound data into the sendq and
@@ -969,7 +940,7 @@
  * to make your client server very sluggish.
  * You usually shouldn't need this. -Dianora
 */
-#define DEBUGMODE               /* define DEBUGMODE to enable debugging mode.*/
+#undef DEBUGMODE               /* define DEBUGMODE to enable debugging mode.*/
 
 /*
  * viconf option, if USE_RCS is defined, viconf will use rcs "ci"
@@ -997,33 +968,6 @@
  */
 #undef IGNORE_BOGUS_TS
 
-/* ----------------- archaic and/or broken section -------------------- */
-#undef DNS_DEBUG
-
-/* SETUID_ROOT - plock - keep the ircd from being swapped out.
- * BSD swapping criteria do not match the requirements of ircd.
- * Note that the server needs to be setuid root for this to work.
- * The result of this is that the text segment of the ircd will be
- * locked in core; thus swapper cannot touch it and the behavior
- * noted above will not occur.  This probably doesn't work right
- * anymore.  IRCD_UID MUST be defined correctly if SETUID_ROOT.
- */
-#undef SETUID_ROOT
- 
-/* SUN_GSO_BUG support removed
- *
- * if you still have a machine with this bug, it doesn't belong on EFnet
- */
-
-/* CHROOTDIR - chroot() before reading conf
- * Define for value added security if you are paranoid.
- * All files you access must be in the directory you define as DPATH.
- * (This may effect the PATH locations above, though you can symlink it)
- *
- * You may want to define IRC_UID and IRC_GID
- */
-#undef CHROOTDIR
-
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MAX_CLIENTS INIT_MAXCLIENTS
 
@@ -1045,8 +989,7 @@ error CLIENT_FLOOD undefined.
 
 #define REPORT_DLINE_TO_USER
 
-#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-        defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
+#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 #define NEED_SPLITCODE
 #endif
 

@@ -345,14 +345,6 @@
  */
 #define SPOOF_NOTICE
 
-/* SPOOF_FREEFORM - Allow a spoofed iline to specify a target
- * host which the user will receive. If this is not defined all
- * users who fall into a spoofed iline will be "oper.servername".
- * everyone and their mother knows this define exists, we might
- * as well acknowledge it.
- */
-#undef SPOOF_FREEFORM
-
 /* STATS_NOTICE - See a notice when a user does a /stats
  *
  * This is a violation of privacy.  Arguments for this have been
@@ -586,12 +578,10 @@
 #define LITTLE_I_LINES
 
 /*
- * define ONE of NO_CHANOPS_ON_SPLIT, NO_JOIN_ON_SPLIT
- * PRESERVE_CHANNEL_ON_SPLIT, NO_JOIN_ON_SPLIT_SIMPLE
+ * define either NO_CHANOPS_ON_SPLIT or NO_JOIN_ON_SPLIT
  *
- * choose =one= only
+ * choose =one= only or undef on small networks
  *
- * For small networks, admins can disable all four.
  */
 
 /* NO_CHANOPS_WHEN_SPLIT
@@ -602,31 +592,12 @@
 #undef NO_CHANOPS_WHEN_SPLIT
 
 /* 
- * NO_JOIN_ON_SPLIT_SIMPLE
+ * NO_JOIN_ON_SPLIT
  * 
  * When this is defined, users will not be allowed to join channels
  * while the server is split.
  */
-#define NO_JOIN_ON_SPLIT_SIMPLE
-
-/*
- * NO_JOIN_ON_SPLIT
- *
- * When this is defined, users will not be allowed to join channels
- * that were present before a split. THIS IS BROKEN - DO NOT USE
- * ON A PRODUCTION SERVER --Rodder
- */
 #undef NO_JOIN_ON_SPLIT
-
-/*
- * PRESERVE_CHANNEL_ON_SPLIT
- *
- * When this is defined, channel modes are preserved when this
- * server is split from net until rejoin. i.e. if the channel
- * was +i before this server split, it remains +i during the split
- * THIS IS BROKEN - DO NOT USE ON PRODUCTION SERVER --Rodder
- */
-#undef PRESERVE_CHANNEL_ON_SPLIT
 
 /*
  * SPLIT_SMALLNET_SIZE defines what constitutes a split from 
@@ -997,28 +968,6 @@
  */
 #undef IGNORE_BOGUS_TS
 
-/* ----------------- archaic and/or broken section -------------------- */
-#undef DNS_DEBUG
-
-/* SETUID_ROOT - plock - keep the ircd from being swapped out.
- * BSD swapping criteria do not match the requirements of ircd.
- * Note that the server needs to be setuid root for this to work.
- * The result of this is that the text segment of the ircd will be
- * locked in core; thus swapper cannot touch it and the behavior
- * noted above will not occur.  This probably doesn't work right
- * anymore.  IRCD_UID MUST be defined correctly if SETUID_ROOT.
- */
-#undef SETUID_ROOT
- 
-/* CHROOTDIR - chroot() before reading conf
- * Define for value added security if you are paranoid.
- * All files you access must be in the directory you define as DPATH.
- * (This may effect the PATH locations above, though you can symlink it)
- *
- * You may want to define IRC_UID and IRC_GID
- */
-#undef CHROOTDIR
-
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MAX_CLIENTS INIT_MAXCLIENTS
 
@@ -1040,8 +989,7 @@ error CLIENT_FLOOD undefined.
 
 #define REPORT_DLINE_TO_USER
 
-#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(PRESERVE_CHANNEL_ON_SPLIT) || \
-        defined(NO_JOIN_ON_SPLIT) || defined(NO_JOIN_ON_SPLIT_SIMPLE)
+#if defined(NO_CHANOPS_WHEN_SPLIT) || defined(NO_JOIN_ON_SPLIT)
 #define NEED_SPLITCODE
 #endif
 
